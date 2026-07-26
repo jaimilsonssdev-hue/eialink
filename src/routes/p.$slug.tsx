@@ -78,7 +78,7 @@ function PublicBio() {
               <Instagram className="h-4 w-4" /> Instagram
             </a>
           )}
-          {links.map((l) => (
+          {links.map((l: { id: string; url: string; title: string }) => (
             <a key={l.id} href={l.url} target="_blank" rel="noopener" onClick={() => track("link_click", l.id)}
               className="flex items-center justify-center gap-2 rounded-xl bg-surface-elevated border border-border py-3 font-medium hover:border-[color:var(--primary)] transition-colors">
               {l.title} <ExternalLink className="h-3 w-3 opacity-60" />

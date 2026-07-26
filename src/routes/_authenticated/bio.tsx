@@ -42,12 +42,13 @@ function BioEditor() {
         pix_key: bio.bio.pix_key ?? "", instagram: bio.bio.instagram ?? "", published: bio.bio.published,
       });
     } else if (bio.profile) {
+      const p = bio.profile;
       setForm((f) => ({
         ...f,
-        display_name: bio.profile.company_name,
-        slug: slugify(bio.profile.company_name),
-        whatsapp: bio.profile.whatsapp ?? "",
-        instagram: bio.profile.instagram ?? "",
+        display_name: p.company_name,
+        slug: slugify(p.company_name),
+        whatsapp: p.whatsapp ?? "",
+        instagram: p.instagram ?? "",
       }));
     }
   }, [bio]);

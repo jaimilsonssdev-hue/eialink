@@ -14,16 +14,262 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      analytics_events: {
+        Row: {
+          bio_page_id: string
+          created_at: string
+          device: string | null
+          event_type: string
+          id: string
+          referrer: string | null
+          target_id: string | null
+          utm_campaign: string | null
+          utm_medium: string | null
+          utm_source: string | null
+        }
+        Insert: {
+          bio_page_id: string
+          created_at?: string
+          device?: string | null
+          event_type: string
+          id?: string
+          referrer?: string | null
+          target_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Update: {
+          bio_page_id?: string
+          created_at?: string
+          device?: string | null
+          event_type?: string
+          id?: string
+          referrer?: string | null
+          target_id?: string | null
+          utm_campaign?: string | null
+          utm_medium?: string | null
+          utm_source?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_events_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bio_links: {
+        Row: {
+          active: boolean
+          bio_page_id: string
+          created_at: string
+          icon: string | null
+          id: string
+          position: number
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          bio_page_id: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          position?: number
+          title: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          active?: boolean
+          bio_page_id?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          position?: number
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bio_links_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bio_pages: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          description: string | null
+          display_name: string
+          id: string
+          instagram: string | null
+          pix_key: string | null
+          published: boolean
+          slug: string
+          theme: string
+          updated_at: string
+          user_id: string
+          whatsapp: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          description?: string | null
+          display_name: string
+          id?: string
+          instagram?: string | null
+          pix_key?: string | null
+          published?: boolean
+          slug: string
+          theme?: string
+          updated_at?: string
+          user_id: string
+          whatsapp?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          id?: string
+          instagram?: string | null
+          pix_key?: string | null
+          published?: boolean
+          slug?: string
+          theme?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          city: string | null
+          company_name: string
+          created_at: string
+          email: string
+          full_name: string
+          has_website: boolean | null
+          id: string
+          instagram: string | null
+          lead_score: number
+          lgpd_accepted_at: string | null
+          main_goal: string | null
+          niche: string | null
+          state: string | null
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          city?: string | null
+          company_name: string
+          created_at?: string
+          email: string
+          full_name: string
+          has_website?: boolean | null
+          id: string
+          instagram?: string | null
+          lead_score?: number
+          lgpd_accepted_at?: string | null
+          main_goal?: string | null
+          niche?: string | null
+          state?: string | null
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          city?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          has_website?: boolean | null
+          id?: string
+          instagram?: string | null
+          lead_score?: number
+          lgpd_accepted_at?: string | null
+          main_goal?: string | null
+          niche?: string | null
+          state?: string | null
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
+      service_requests: {
+        Row: {
+          created_at: string
+          id: string
+          message: string | null
+          service_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          service_type: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string | null
+          service_type?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +396,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "admin"],
+    },
   },
 } as const

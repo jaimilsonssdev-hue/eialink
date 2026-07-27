@@ -112,7 +112,9 @@ export function PageBuilder({
                 onChange={(e) => {
                   try {
                     update(JSON.parse(e.target.value));
-                  } catch {}
+                  } catch {
+                    // Keep the current configuration until the JSON becomes valid.
+                  }
                 }}
               />
             </label>

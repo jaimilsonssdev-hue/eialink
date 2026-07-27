@@ -1,4 +1,4 @@
-import { Eye, Sparkles } from "lucide-react";
+import { Sparkles } from "lucide-react";
 const templates = [
   "Restaurante",
   "Clínica",
@@ -41,13 +41,9 @@ export function TemplateMarketplace() {
               <p className="mt-1 text-sm text-muted-foreground">
                 Visual profissional pronto para personalizar.
               </p>
-              <div className="mt-4 flex gap-2">
-                <button className="btn-secondary flex-1 px-3 py-2 text-xs">
-                  <Eye className="h-3.5 w-3.5" />
-                  Visualizar
-                </button>
-                <button className="btn-primary flex-1 px-3 py-2 text-xs">Utilizar</button>
-              </div>
+              <span className="mt-4 inline-flex rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                Em breve
+              </span>
             </div>
           </article>
         ))}

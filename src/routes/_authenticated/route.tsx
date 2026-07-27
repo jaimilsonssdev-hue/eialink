@@ -10,12 +10,8 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
-  User,
-  Link2,
   BarChart3,
   Sparkles,
-  Send,
-  ClipboardCheck,
   Settings,
   LogOut,
   Shield,

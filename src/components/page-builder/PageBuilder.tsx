@@ -81,7 +81,7 @@ export function PageBuilder({
             </DndContext>
             {!blocks.length && (
               <p className="py-20 text-center text-sm text-slate-400">
-                Adicione seu primeiro bloco
+                Adicione seu primeiro conteúdo
               </p>
             )}
           </div>
@@ -101,10 +101,10 @@ export function PageBuilder({
                   )
                 }
               />{" "}
-              Bloco ativo
+              Seção visível
             </label>
             <label className="mt-3 block text-sm">
-              Dados do bloco
+              Detalhes da seção
               <textarea
                 className="input-base mt-1 font-mono text-xs"
                 rows={12}

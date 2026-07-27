@@ -29,7 +29,7 @@ export function PageBuilder({
   return (
     <div className="grid gap-4 lg:grid-cols-[15rem_minmax(18rem,1fr)_18rem]">
       <aside className="card-surface h-fit">
-        <h2 className="font-semibold">Adicionar bloco</h2>
+        <h2 className="font-semibold">Adicionar conteúdo</h2>
         <div className="mt-3 grid gap-2">
           {blockCatalog.map((x) => (
             <button
@@ -88,7 +88,7 @@ export function PageBuilder({
         </div>
       </main>
       <aside className="card-surface h-fit">
-        <h2 className="font-semibold">Configurações</h2>
+        <h2 className="font-semibold">Editar seção</h2>
         {active ? (
           <>
             <label className="mt-4 flex gap-2 text-sm">
@@ -118,7 +118,7 @@ export function PageBuilder({
             </label>
           </>
         ) : (
-          <p className="mt-3 text-sm text-muted-foreground">Selecione um bloco no preview.</p>
+          <p className="mt-3 text-sm text-muted-foreground">Selecione uma seção no preview.</p>
         )}
         <button
           disabled={saving}

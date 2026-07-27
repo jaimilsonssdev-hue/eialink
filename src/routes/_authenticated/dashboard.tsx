@@ -14,6 +14,7 @@ import {
   MessageCircle,
   PanelsTopLeft,
 } from "lucide-react";
+import { TemplateMarketplace } from "@/components/templates/TemplateMarketplace";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -267,6 +268,7 @@ function Dashboard() {
           color="var(--brand-lime)"
         />
       </div>
+      <TemplateMarketplace />
     </div>
   );
 }

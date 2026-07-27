@@ -10,8 +10,8 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "EIA Digital — Crie sua presença digital gratuitamente" },
       { name: "description", content: "Tenha uma página profissional com WhatsApp, Pix, redes sociais e analytics. Ferramenta gratuita da EIA Digital para pequenos negócios." },
-      { property: "og:title", content: "EIA Digital — Presença digital gratuita" },
-      { property: "og:description", content: "Crie uma página profissional em minutos. WhatsApp, Pix, links, analytics — tudo grátis." },
+      { property: "og:title", content: "EIA Digital — Crie sua presença digital gratuitamente" },
+      { property: "og:description", content: "Tenha uma página profissional com WhatsApp, Pix, redes sociais e analytics. Ferramenta gratuita da EIA Digital para pequenos negócios." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

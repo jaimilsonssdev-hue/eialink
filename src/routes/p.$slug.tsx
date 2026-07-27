@@ -7,6 +7,10 @@ import { Footer } from "@/components/public-profile/Footer";
 import { FutureSections } from "@/components/public-profile/FutureSections";
 import { PixCard } from "@/components/public-profile/PixCard";
 import { ProfileHeader } from "@/components/public-profile/ProfileHeader";
+import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
+import type { PageBlock } from "@/components/page-builder/types";
+
+const blockStore = supabase as never as { from: (table: "page_blocks") => any };
 
 export const Route = createFileRoute("/p/$slug")({
   ssr: true,
@@ -24,7 +28,13 @@ export const Route = createFileRoute("/p/$slug")({
       .eq("bio_page_id", bio.id)
       .eq("active", true)
       .order("position");
-    return { bio, links: links ?? [] };
+    const { data: blocks } = await blockStore
+      .from("page_blocks")
+      .select("*")
+      .eq("bio_page_id", bio.id)
+      .eq("enabled", true)
+      .order("position");
+    return { bio, links: links ?? [], blocks: (blocks ?? []) as PageBlock[] };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -57,7 +67,7 @@ export const Route = createFileRoute("/p/$slug")({
 const VALID_THEMES = new Set(["aurora", "sunset", "ocean", "midnight", "mono", "forest"]);
 
 function PublicBio() {
-  const { bio, links } = Route.useLoaderData();
+  const { bio, links, blocks } = Route.useLoaderData();
   const theme = VALID_THEMES.has(bio.theme) ? bio.theme : "aurora";
 
   useEffect(() => {
@@ -98,14 +108,25 @@ function PublicBio() {
 
   return (
     <main className={`bio-theme ${theme} public-profile-shell`}>
-      <Banner name={bio.display_name} onShare={share} />
-      <div className="public-profile-content">
-        <ProfileHeader bio={bio} onTrack={track} />
-        {bio.pix_key && <PixCard pixKey={bio.pix_key} onTrack={track} />}
-        <ActionButtons bio={bio} links={links} onTrack={track} />
-        <FutureSections />
-        <Footer />
-      </div>
+      {blocks.length ? (
+        <div className="mx-auto max-w-xl space-y-4 px-4 py-8">
+          {blocks.map((block) => (
+            <BlockRenderer key={block.id} block={block} />
+          ))}
+          <Footer />
+        </div>
+      ) : (
+        <>
+          <Banner name={bio.display_name} onShare={share} />
+          <div className="public-profile-content">
+            <ProfileHeader bio={bio} onTrack={track} />
+            {bio.pix_key && <PixCard pixKey={bio.pix_key} onTrack={track} />}
+            <ActionButtons bio={bio} links={links} onTrack={track} />
+            <FutureSections />
+            <Footer />
+          </div>
+        </>
+      )}
     </main>
   );
 }

@@ -85,7 +85,7 @@ function PublicBio() {
   // The established bio page remains the canonical source for the public
   // profile. Only additive layout blocks are rendered here, preventing an
   // existing draft block from hiding saved profile, link, and contact data.
-  const supplementalBlocks = blocks.filter((block) =>
+  const supplementalBlocks = blocks.filter((block: PageBlock) =>
     ["contact", "divider", "spacer"].includes(block.type),
   );
 

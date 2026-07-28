@@ -293,7 +293,7 @@ export function UnifiedPageEditor({
             Preview da sua página
           </p>
           <div
-            className={`bio-theme ${previewBio.theme || "aurora"} mx-auto max-w-[25rem] overflow-hidden rounded-[2rem] border border-border bg-background shadow-xl`}
+            className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} mx-auto max-w-[25rem] overflow-hidden bg-background`}
           >
             <TemplateRenderer
               bio={previewBio}

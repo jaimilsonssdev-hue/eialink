@@ -1,49 +1,40 @@
 import { Sparkles } from "lucide-react";
-const templates = [
-  "Restaurante",
-  "Clínica",
-  "Loja",
-  "Prestador",
-  "Influenciador",
-  "Dentista",
-  "Advogado",
-  "Corretor",
-  "Academia",
-  "Salão",
-];
+import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
+import { TemplateService } from "@/modules/templates/services/TemplateService";
+
 export function TemplateMarketplace() {
+  const templates = TemplateService.list();
   return (
-    <section className="mt-8">
-      <div className="flex items-end justify-between">
+    <section className="template-marketplace mt-10">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[.18em] text-[color:var(--primary)]">
-            Template atual
+          <p className="eyebrow">Biblioteca de templates</p>
+          <h2 className="premium-heading mt-2">Uma identidade para o seu negocio</h2>
+          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+            Explore aparencias pensadas para diferentes momentos e segmentos.
           </p>
-          <h2 className="mt-1 text-2xl font-bold">Escolha um visual que combina com você</h2>
         </div>
-        <Sparkles className="h-5 w-5 text-[color:var(--primary)]" />
+        <Sparkles className="text-[color:var(--primary)]" aria-hidden="true" />
       </div>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {templates.map((name, i) => (
-          <article
-            key={name}
-            className="overflow-hidden rounded-2xl border border-border bg-surface transition-transform hover:-translate-y-1"
-          >
-            <img
-              src="/templates/premium-template-collection.png"
-              loading="lazy"
-              alt={`Mockup do template ${name}`}
-              className="h-32 w-full object-cover"
-              style={{ objectPosition: `${(i % 5) * 25}% ${Math.floor(i / 5) * 100}%` }}
-            />
-            <div className="p-4">
-              <h3 className="font-semibold">{name}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Visual profissional pronto para personalizar.
+      <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        {templates.map((template) => (
+          <article key={template.id} className="template-gallery-card">
+            <TemplateThumbnail template={template} />
+            <div className="p-5">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold">{template.name}</p>
+                {template.badge && <span className="template-badge">{template.badge}</span>}
+              </div>
+              <p className="mt-2 text-sm text-muted-foreground">{template.description}</p>
+              <p className="mt-4 text-xs font-medium text-muted-foreground">
+                Melhor para: {template.bestFor ?? "uma pagina clara e profissional"}
               </p>
-              <span className="mt-4 inline-flex rounded-full border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">
-                Em breve
-              </span>
+              <button
+                type="button"
+                className="mt-5 text-sm font-semibold text-[color:var(--primary)]"
+              >
+                Visualizar
+              </button>
             </div>
           </article>
         ))}

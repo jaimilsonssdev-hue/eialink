@@ -14,7 +14,10 @@ export const SettingsService = {
   async updateProfile(data: Record<string, unknown>) {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) throw new Error("Sessão inválida.");
-    const { error } = await supabase.from("profiles").update(data).eq("id", auth.user.id);
+    const { error } = await supabase
+      .from("profiles")
+      .update(data as never)
+      .eq("id", auth.user.id);
     if (error) throw error;
   },
 };

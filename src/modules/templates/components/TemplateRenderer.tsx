@@ -25,7 +25,7 @@ export function TemplateRenderer({
     whatsapp: bio.whatsapp,
     pix: bio.pix_key,
   };
-  const model = TemplateService.render(data, bio.template_id);
+  const model = TemplateService.render(data, bio.template_id ?? undefined);
   const layout = layoutResolver.resolve(model);
   return (
     <main

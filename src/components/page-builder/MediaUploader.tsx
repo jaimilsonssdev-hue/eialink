@@ -1,6 +1,6 @@
 import { ImagePlus, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { PageService } from "@/modules/page/services/PageService";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const MAX_SIZE = 5 * 1024 * 1024;
@@ -26,25 +26,26 @@ export function MediaUploader({
     }
     setStatus("uploading");
     setError(undefined);
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
+    let userId: string;
+    try {
+      userId = await PageService.getCurrentUserId();
+    } catch {
       setStatus("error");
       setError("Sua sessão expirou. Entre novamente.");
       return;
     }
     const ext = file.name.split(".").pop() || "jpg";
-    const path = `${user.user.id}/${crypto.randomUUID()}.${ext}`;
-    const { error: uploadError } = await supabase.storage
-      .from("bio-media")
-      .upload(path, file, { upsert: false, contentType: file.type });
-    if (uploadError) {
+    const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+    try {
+      const publicUrl = await PageService.uploadMedia(file, path);
+      onChange(publicUrl);
+      setStatus("success");
+    } catch (uploadError) {
       setStatus("error");
-      setError(uploadError.message);
-      return;
+      setError(
+        uploadError instanceof Error ? uploadError.message : "Não foi possível enviar a imagem.",
+      );
     }
-    const { data } = supabase.storage.from("bio-media").getPublicUrl(path);
-    onChange(data.publicUrl);
-    setStatus("success");
   }
   return (
     <div>

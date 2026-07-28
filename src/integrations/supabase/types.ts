@@ -108,6 +108,11 @@ export type Database = {
       bio_pages: {
         Row: {
           avatar_url: string | null
+          cover_fit: string
+          cover_overlay: boolean
+          cover_overlay_opacity: number
+          cover_position: string
+          cover_url: string | null
           created_at: string
           description: string | null
           display_name: string
@@ -116,6 +121,7 @@ export type Database = {
           pix_key: string | null
           published: boolean
           slug: string
+          template_id: string | null
           theme: string
           updated_at: string
           user_id: string
@@ -123,6 +129,11 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          cover_fit?: string
+          cover_overlay?: boolean
+          cover_overlay_opacity?: number
+          cover_position?: string
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           display_name: string
@@ -131,6 +142,7 @@ export type Database = {
           pix_key?: string | null
           published?: boolean
           slug: string
+          template_id?: string | null
           theme?: string
           updated_at?: string
           user_id: string
@@ -138,6 +150,11 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          cover_fit?: string
+          cover_overlay?: boolean
+          cover_overlay_opacity?: number
+          cover_position?: string
+          cover_url?: string | null
           created_at?: string
           description?: string | null
           display_name?: string
@@ -146,12 +163,110 @@ export type Database = {
           pix_key?: string | null
           published?: boolean
           slug?: string
+          template_id?: string | null
           theme?: string
           updated_at?: string
           user_id?: string
           whatsapp?: string | null
         }
         Relationships: []
+      }
+      catalog_items: {
+        Row: {
+          active: boolean
+          bio_page_id: string
+          button_label: string
+          button_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          position: number
+          price: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bio_page_id: string
+          button_label?: string
+          button_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          position?: number
+          price?: number | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bio_page_id?: string
+          button_label?: string
+          button_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          position?: number
+          price?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_items_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      page_blocks: {
+        Row: {
+          bio_page_id: string
+          created_at: string
+          data: Json
+          enabled: boolean
+          id: string
+          position: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          bio_page_id: string
+          created_at?: string
+          data?: Json
+          enabled?: boolean
+          id?: string
+          position?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          bio_page_id?: string
+          created_at?: string
+          data?: Json
+          enabled?: boolean
+          id?: string
+          position?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "page_blocks_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

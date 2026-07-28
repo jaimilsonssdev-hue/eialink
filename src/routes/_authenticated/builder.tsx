@@ -30,7 +30,10 @@ function BuilderPage() {
         .select("*")
         .eq("bio_page_id", bio.id)
         .order("position");
-      if (blocksError) throw new Error(blocksError.message);
+      // Keep the existing Bio editor available while a connected environment
+      // has not yet applied the optional page_blocks migration.
+      const blocksTableMissing = blocksError?.code === "PGRST205" || blocksError?.code === "42P01";
+      if (blocksError && !blocksTableMissing) throw new Error(blocksError.message);
       return { bio, blocks: (data ?? []) as PageBlock[] };
     },
   });

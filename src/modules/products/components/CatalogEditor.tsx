@@ -1,6 +1,18 @@
-import { ArrowDown, ArrowUp, Plus, Trash2 } from "lucide-react";
-import type { CatalogItem, CatalogItemType } from "../types";
+import { ArrowDown, ArrowUp, Plus, Trash2, X } from "lucide-react";
+import { useState } from "react";
 import { MediaUploader } from "@/components/page-builder/MediaUploader";
+import type { CatalogItem, CatalogItemType } from "../types";
+
+const blankDraft = (type: CatalogItemType): Omit<CatalogItem, "id" | "position"> => ({
+  type,
+  name: "",
+  description: null,
+  price: null,
+  image_url: null,
+  button_label: "Saiba mais",
+  button_url: null,
+  active: true,
+});
 
 export function CatalogEditor({
   items,
@@ -9,22 +21,8 @@ export function CatalogEditor({
   items: CatalogItem[];
   onChange(items: CatalogItem[]): void;
 }) {
-  const add = (type: CatalogItemType) =>
-    onChange([
-      ...items,
-      {
-        id: `draft-${crypto.randomUUID()}`,
-        type,
-        name: type === "product" ? "Novo produto" : "Novo serviÃ§o",
-        description: null,
-        price: null,
-        image_url: null,
-        button_label: "Saiba mais",
-        button_url: null,
-        position: items.length,
-        active: true,
-      },
-    ]);
+  const [draft, setDraft] = useState<Omit<CatalogItem, "id" | "position">>();
+  const [error, setError] = useState<string>();
   const update = (id: string, patch: Partial<CatalogItem>) =>
     onChange(items.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   const move = (index: number, direction: -1 | 1) => {
@@ -33,6 +31,24 @@ export function CatalogEditor({
     const next = [...items];
     [next[index], next[target]] = [next[target], next[index]];
     onChange(next);
+  };
+  const confirm = () => {
+    if (!draft) return;
+    if (!draft.name.trim()) {
+      setError("Informe o nome antes de adicionar.");
+      return;
+    }
+    onChange([
+      ...items,
+      {
+        ...draft,
+        id: `draft-${crypto.randomUUID()}`,
+        name: draft.name.trim(),
+        position: items.length,
+      },
+    ]);
+    setDraft(undefined);
+    setError(undefined);
   };
   return (
     <div className="space-y-3">
@@ -51,54 +67,7 @@ export function CatalogEditor({
               Exibir
             </label>
           </div>
-          <input
-            className="input-base mt-2"
-            value={item.name}
-            onChange={(event) => update(item.id, { name: event.target.value })}
-            aria-label="Nome"
-          />
-          <input
-            className="input-base mt-2"
-            value={item.button_label}
-            onChange={(event) => update(item.id, { button_label: event.target.value })}
-            placeholder="Texto do botÃ£o"
-            aria-label="Texto do botÃ£o"
-          />
-          <input
-            className="input-base mt-2"
-            value={item.button_url ?? ""}
-            onChange={(event) => update(item.id, { button_url: event.target.value || null })}
-            placeholder="Link do botÃ£o (opcional)"
-            aria-label="Link do botÃ£o"
-          />
-          <textarea
-            className="input-base mt-2"
-            value={item.description ?? ""}
-            onChange={(event) => update(item.id, { description: event.target.value || null })}
-            placeholder="DescriÃ§Ã£o"
-            aria-label="DescriÃ§Ã£o"
-          />
-          <div className="mt-2">
-            <MediaUploader
-              label="Imagem"
-              value={item.image_url}
-              onChange={(image_url) => update(item.id, { image_url })}
-            />
-          </div>
-          <input
-            className="input-base mt-2"
-            type="number"
-            min="0"
-            step="0.01"
-            value={item.price ?? ""}
-            onChange={(event) =>
-              update(item.id, {
-                price: event.target.value === "" ? null : Number(event.target.value),
-              })
-            }
-            placeholder="PreÃ§o opcional"
-            aria-label="PreÃ§o"
-          />
+          <CatalogFields item={item} onChange={(patch) => update(item.id, patch)} />
           <div className="mt-2 flex gap-2">
             <button
               type="button"
@@ -132,14 +101,129 @@ export function CatalogEditor({
           Nenhum produto ou serviÃ§o cadastrado ainda.
         </p>
       )}
-      <div className="grid grid-cols-2 gap-2">
-        <button type="button" className="btn-secondary" onClick={() => add("product")}>
-          <Plus size={16} /> Produto
-        </button>
-        <button type="button" className="btn-secondary" onClick={() => add("service")}>
-          <Plus size={16} /> ServiÃ§o
-        </button>
-      </div>
+      {draft ? (
+        <div className="catalog-editor-item">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold">
+              Novo {draft.type === "product" ? "produto" : "serviÃ§o"}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setDraft(undefined);
+                setError(undefined);
+              }}
+              aria-label="Cancelar"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <CatalogFields
+            item={draft}
+            onChange={(patch) =>
+              setDraft((current) => (current ? { ...current, ...patch } : current))
+            }
+          />
+          {error && (
+            <p role="alert" className="mt-2 text-xs text-[color:var(--destructive)]">
+              {error}
+            </p>
+          )}
+          <div className="mt-3 flex gap-2">
+            <button type="button" className="btn-primary" onClick={confirm}>
+              Adicionar
+            </button>
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => {
+                setDraft(undefined);
+                setError(undefined);
+              }}
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setDraft(blankDraft("product"))}
+          >
+            <Plus size={16} /> Produto
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            onClick={() => setDraft(blankDraft("service"))}
+          >
+            <Plus size={16} /> ServiÃ§o
+          </button>
+        </div>
+      )}
     </div>
+  );
+}
+
+function CatalogFields({
+  item,
+  onChange,
+}: {
+  item: Omit<CatalogItem, "id" | "position">;
+  onChange(patch: Partial<CatalogItem>): void;
+}) {
+  return (
+    <>
+      <input
+        className="input-base mt-2"
+        value={item.name}
+        onChange={(event) => onChange({ name: event.target.value })}
+        placeholder="Nome"
+        aria-label="Nome"
+      />
+      <textarea
+        className="input-base mt-2"
+        value={item.description ?? ""}
+        onChange={(event) => onChange({ description: event.target.value || null })}
+        placeholder="DescriÃ§Ã£o"
+        aria-label="DescriÃ§Ã£o"
+      />
+      <div className="mt-2">
+        <MediaUploader
+          label="Imagem"
+          value={item.image_url}
+          maxSizeBytes={3 * 1024 * 1024}
+          onChange={(image_url) => onChange({ image_url })}
+        />
+      </div>
+      <input
+        className="input-base mt-2"
+        type="number"
+        min="0"
+        step="0.01"
+        value={item.price ?? ""}
+        onChange={(event) =>
+          onChange({ price: event.target.value === "" ? null : Number(event.target.value) })
+        }
+        placeholder="PreÃ§o opcional"
+        aria-label="PreÃ§o"
+      />
+      <input
+        className="input-base mt-2"
+        value={item.button_label}
+        onChange={(event) => onChange({ button_label: event.target.value })}
+        placeholder="Texto do botÃ£o"
+        aria-label="Texto do botÃ£o"
+      />
+      <input
+        className="input-base mt-2"
+        value={item.button_url ?? ""}
+        onChange={(event) => onChange({ button_url: event.target.value || null })}
+        placeholder="Link do botÃ£o (opcional)"
+        aria-label="Link do botÃ£o"
+      />
+    </>
   );
 }

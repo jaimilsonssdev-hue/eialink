@@ -28,3 +28,7 @@ Módulos não importam componentes internos de outros módulos. Dependências pe
 ## Contratos públicos e dívida técnica
 
 Os Types explícitos ficam em cada `types/index.ts`. Não foram criados diretórios vazios de `components`, `hooks` ou `utils`: eles serão criados apenas quando houver código real. A arquitetura está **pronta com ressalvas** para Templates: o módulo pode evoluir visualmente, mas aplicação persistente de template exige um contrato de aparência persistido no futuro.
+
+## Template Engine
+
+O módulo Templates possui Engine, Registry, Theme Tokens, Service e hooks isolados. Não há integração com editor, preview, página pública ou persistência nesta Sprint. Essas etapas ocorrerão na Sprint 03.

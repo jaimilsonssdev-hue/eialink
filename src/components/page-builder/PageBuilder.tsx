@@ -7,7 +7,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import { Plus, Save } from "lucide-react";
+import { Eye, Save, Smartphone } from "lucide-react";
 import { useState } from "react";
 import { BlockRenderer } from "./BlockRenderer";
 import { SortableBlock } from "./SortableBlock";
@@ -27,15 +27,18 @@ export function PageBuilder({
   const update = (data: Record<string, unknown>) =>
     setBlocks((v) => v.map((b) => (b.id === selected ? { ...b, data } : b)));
   return (
-    <div className="grid gap-4 lg:grid-cols-[15rem_minmax(18rem,1fr)_18rem]">
-      <aside className="card-surface h-fit">
-        <h2 className="font-semibold">Adicionar conteúdo</h2>
+    <div className="grid gap-6 xl:grid-cols-[19rem_minmax(24rem,1fr)_22rem]">
+      <aside className="card-surface h-fit xl:sticky xl:top-8">
+        <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+          Seções da sua página
+        </p>
+        <h2 className="mt-1 font-display text-xl font-semibold">Adicionar uma seção</h2>
         <div className="mt-3 grid gap-2">
           {blockCatalog.map((x) => (
             <button
               key={x.type}
               onClick={() => setBlocks((v) => [...v, newBlock(x.type, v.length)])}
-              className="rounded-lg border p-2 text-left text-sm hover:border-[color:var(--primary)]"
+              className="rounded-xl border border-border p-3 text-left text-sm transition-all hover:-translate-y-0.5 hover:border-[color:var(--primary)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[color:var(--primary)]"
             >
               <b>{x.label}</b>
               <span className="block text-xs text-muted-foreground">{x.description}</span>
@@ -43,9 +46,13 @@ export function PageBuilder({
           ))}
         </div>
       </aside>
-      <main>
-        <div className="mx-auto max-w-sm rounded-[2rem] bg-slate-900 p-3 shadow-2xl">
-          <div className="min-h-[38rem] space-y-3 rounded-[1.5rem] bg-white p-4">
+      <main className="min-w-0">
+        <div className="mb-3 flex items-center justify-center gap-2 text-xs font-medium text-muted-foreground">
+          <Smartphone className="h-4 w-4" />
+          Preview da sua página
+        </div>
+        <div className="mx-auto max-w-[25rem] rounded-[2.4rem] bg-slate-900 p-2.5 shadow-[0_24px_55px_-25px_rgba(0,0,0,.7)]">
+          <div className="h-[min(70vh,46rem)] min-h-[34rem] space-y-3 overflow-y-auto rounded-[2rem] bg-white p-4">
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
@@ -81,14 +88,17 @@ export function PageBuilder({
             </DndContext>
             {!blocks.length && (
               <p className="py-20 text-center text-sm text-slate-400">
-                Adicione seu primeiro conteúdo
+                Sua página começa aqui. Adicione uma seção ao lado.
               </p>
             )}
           </div>
         </div>
       </main>
-      <aside className="card-surface h-fit">
-        <h2 className="font-semibold">Editar seção</h2>
+      <aside className="card-surface h-fit xl:sticky xl:top-8">
+        <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+          Personalização
+        </p>
+        <h2 className="mt-1 font-display text-xl font-semibold">Editar seção</h2>
         {active ? (
           <>
             <label className="mt-4 flex gap-2 text-sm">
@@ -104,7 +114,7 @@ export function PageBuilder({
               Seção visível
             </label>
             <label className="mt-3 block text-sm">
-              Detalhes da seção
+              Conteúdo da seção
               <textarea
                 className="input-base mt-1 font-mono text-xs"
                 rows={12}
@@ -120,7 +130,10 @@ export function PageBuilder({
             </label>
           </>
         ) : (
-          <p className="mt-3 text-sm text-muted-foreground">Selecione uma seção no preview.</p>
+          <div className="mt-5 rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+            <Eye className="mb-2 h-5 w-5 text-[color:var(--primary)]" />
+            Escolha uma seção no preview para personalizá-la.
+          </div>
         )}
         <button
           disabled={saving}

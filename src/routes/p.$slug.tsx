@@ -10,6 +10,8 @@ import { ProfileHeader } from "@/components/public-profile/ProfileHeader";
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import type { PageBlock } from "@/components/page-builder/types";
 
+// The generated Supabase types predate page_blocks; keep the compatibility adapter local.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const blockStore = supabase as never as { from: (table: "page_blocks") => any };
 
 export const Route = createFileRoute("/p/$slug")({
@@ -117,7 +119,15 @@ function PublicBio() {
         </div>
       ) : (
         <>
-          <Banner name={bio.display_name} onShare={share} />
+          <Banner
+            name={bio.display_name}
+            coverUrl={bio.cover_url}
+            coverPosition={bio.cover_position}
+            coverFit={bio.cover_fit}
+            overlay={bio.cover_overlay}
+            overlayOpacity={bio.cover_overlay_opacity}
+            onShare={share}
+          />
           <div className="public-profile-content">
             <ProfileHeader bio={bio} onTrack={track} />
             {bio.pix_key && <PixCard pixKey={bio.pix_key} onTrack={track} />}

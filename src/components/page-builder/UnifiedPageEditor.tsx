@@ -130,7 +130,11 @@ export function UnifiedPageEditor({
   initialLinks: EditableLink[];
   initialProducts?: CatalogItem[];
   defaults: { displayName: string; whatsapp: string; instagram: string };
-  onSave(data: { bio: BioForm; links: EditableLink[]; products: CatalogItem[] }): Promise<void>;
+  onSave(data: {
+    bio: BioForm;
+    links: EditableLink[];
+    products: CatalogItem[];
+  }): Promise<{ products: CatalogItem[] }>;
 }) {
   const [bio, setBio] = useState<BioForm>(initialBio);
   const [links, setLinks] = useState<EditableLink[]>(initialLinks);
@@ -206,21 +210,23 @@ export function UnifiedPageEditor({
     setSaving(true);
     setSaveState("idle");
     try {
-      await onSave({
+      const result = await onSave({
         bio: { ...bio, slug: slugify(bio.slug || bio.display_name) },
         links,
         products,
       });
+      setProducts(result.products);
       setBio((current) => ({ ...current, slug: slugify(current.slug || current.display_name) }));
       setSavedSnapshot(
         JSON.stringify({
           bio: { ...bio, slug: slugify(bio.slug || bio.display_name) },
           links,
-          products,
+          products: result.products,
         }),
       );
       setSaveState("success");
-    } catch {
+    } catch (error) {
+      if (import.meta.env.DEV) console.error("Catalog save failed", error);
       setSaveState("error");
     } finally {
       setSaving(false);

@@ -107,7 +107,7 @@ function BuilderPage() {
           bioPageId = data.id;
         }
 
-        await ProductService.replace(bioPageId!, editedProducts);
+        const savedProducts = await ProductService.sync(bioPageId!, editedProducts);
 
         const savedLinks = editedLinks.map((link, position) => ({
           ...link,
@@ -131,6 +131,7 @@ function BuilderPage() {
           if (error) throw new Error(error.message);
         }
         await page.refetch();
+        return { products: savedProducts };
       }}
     />
   );

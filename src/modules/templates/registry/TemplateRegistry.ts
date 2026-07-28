@@ -3,6 +3,12 @@ export class TemplateRegistry {
   private readonly templates = new Map<string, TemplateDefinition>();
   constructor(private readonly defaultId: string) {}
   register(template: TemplateDefinition) {
+    if (this.templates.has(template.id)) {
+      throw new Error(`Template '${template.id}' is already registered.`);
+    }
+    if (this.list().some((registered) => registered.slug === template.slug)) {
+      throw new Error(`Template slug '${template.slug}' is already registered.`);
+    }
     this.templates.set(template.id, template);
     return this;
   }

@@ -12,6 +12,7 @@ export type TemplateComponentContext = {
   links: PublicLink[];
   onTrack: TrackEvent;
   onShare: () => void;
+  componentVariants?: Partial<Record<TemplateComponentType, string>>;
 };
 type Renderer = (context: TemplateComponentContext) => ReactNode;
 export class ComponentRegistry {

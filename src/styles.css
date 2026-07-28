@@ -573,6 +573,33 @@
   opacity: 0.82;
   transition: opacity 0.2s ease;
 }
+.template-variant-banner-compact .public-profile-banner {
+  height: clamp(9rem, 22vw, 13rem);
+}
+.template-variant-profile-overlap .public-profile-header {
+  margin-top: -3.6rem;
+}
+.template-variant-profile-business .public-profile-header {
+  text-align: left;
+}
+.template-variant-links-minimal .public-profile-action {
+  border-radius: 0.65rem;
+  box-shadow: none;
+}
+.template-variant-links-elevated .public-profile-action {
+  box-shadow: 0 12px 26px rgb(15 23 42 / 0.14);
+}
+.template-variant-links-glass .public-profile-action {
+  backdrop-filter: blur(12px);
+  border-color: rgb(255 255 255 / 0.44);
+}
+.template-variant-pix-highlighted .public-profile-pix {
+  box-shadow: 0 12px 28px rgb(15 23 42 / 0.12);
+}
+.template-variant-footer-discreet .public-profile-footer {
+  opacity: 0.72;
+  font-size: 0.75rem;
+}
 .public-profile-footer:hover {
   opacity: 1;
 }

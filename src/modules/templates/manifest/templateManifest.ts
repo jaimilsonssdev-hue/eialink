@@ -13,6 +13,27 @@ const theme = (colors: ThemeTokens["colors"], fontFamily = "inherit"): ThemeToke
 
 const define = (template: TemplateInput): TemplateDefinition => ({
   ...template,
+  badge:
+    template.badge ??
+    ({
+      creator: "Popular",
+      business: "Mais usado",
+      restaurant: "Novo",
+      beauty: "Novo",
+      store: "Popular",
+    }[template.category] as TemplateDefinition["badge"]),
+  bestFor:
+    template.bestFor ??
+    {
+      minimal: "perfis objetivos",
+      creator: "criadores e influenciadores",
+      business: "serviÃ§os profissionais",
+      store: "lojas e catÃ¡logos",
+      restaurant: "restaurantes e pedidos",
+      beauty: "beleza e bem-estar",
+      portfolio: "portfÃ³lios criativos",
+      premium: "marcas que buscam sofisticaÃ§Ã£o",
+    }[template.category],
   version: "1.0.0",
   status: "active",
   theme: theme(template.theme.colors, template.theme.typography?.fontFamily),

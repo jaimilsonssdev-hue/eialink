@@ -38,6 +38,9 @@ export type TemplateDefinition = {
   category: TemplateCategory;
   version: string;
   previewImage?: string;
+  badge?: "Novo" | "Popular" | "Mais usado" | "Premium";
+  bestFor?: string;
+  benefits?: string[];
   theme: ThemeTokens;
   layout: "vertical" | "cards" | "business" | "minimal" | "store" | "creator";
   components: TemplateComponentType[];

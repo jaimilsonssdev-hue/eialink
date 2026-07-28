@@ -141,8 +141,8 @@ function Dashboard() {
             <h3 className="font-semibold text-lg">Você ainda não criou sua página.</h3>
             <p className="text-sm text-muted-foreground mt-1">Leva 1 minuto e já fica no ar.</p>
           </div>
-          <Link to="/bio" className="btn-primary">
-            Criar minha bio
+          <Link to="/builder" className="btn-primary">
+            Criar minha página
           </Link>
         </div>
       )}
@@ -227,24 +227,10 @@ function Dashboard() {
       <div className="grid gap-4 md:grid-cols-3">
         <QuickCard
           icon={PanelsTopLeft}
-          title="Editar Página"
+          title="Minha Página"
           to="/builder"
-          desc="Monte sua página com blocos"
+          desc="Personalize capa, perfil, contato e links"
           color="var(--brand-pink)"
-        />
-        <QuickCard
-          icon={User}
-          title="Editar Bio"
-          to="/bio"
-          desc="Tema, foto, WhatsApp, Pix"
-          color="var(--brand-cyan)"
-        />
-        <QuickCard
-          icon={Link2}
-          title="Gerenciar Links"
-          to="/links"
-          desc="Adicione ou reordene links"
-          color="var(--brand-violet)"
         />
         <QuickCard
           icon={BarChart3}

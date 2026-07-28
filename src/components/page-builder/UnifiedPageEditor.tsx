@@ -1,0 +1,593 @@
+import { ExternalLink, Image, Link2, Palette, Save, UserRound, WalletCards } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { ActionButtons } from "@/components/public-profile/ActionButtons";
+import { Banner } from "@/components/public-profile/Banner";
+import { Footer } from "@/components/public-profile/Footer";
+import { PixCard } from "@/components/public-profile/PixCard";
+import { ProfileHeader } from "@/components/public-profile/ProfileHeader";
+import type { PublicBio, PublicLink } from "@/components/public-profile/types";
+import type { Tables } from "@/integrations/supabase/types";
+import { MediaUploader } from "./MediaUploader";
+
+type BioForm = Pick<
+  Tables<"bio_pages">,
+  | "slug"
+  | "display_name"
+  | "description"
+  | "avatar_url"
+  | "whatsapp"
+  | "pix_key"
+  | "instagram"
+  | "published"
+  | "theme"
+  | "cover_url"
+  | "cover_position"
+  | "cover_fit"
+  | "cover_overlay"
+  | "cover_overlay_opacity"
+>;
+
+type EditorSection = "appearance" | "photo" | "profile" | "social" | "contact" | "pix" | "links";
+
+type EditableLink = Pick<PublicLink, "id" | "title" | "url" | "active" | "position">;
+
+const MENU: {
+  id: EditorSection;
+  group: string;
+  label: string;
+  description: string;
+  icon: typeof Image;
+}[] = [
+  {
+    id: "appearance",
+    group: "Aparência",
+    label: "Fundo e capa",
+    description: "Imagem, posição e tema",
+    icon: Image,
+  },
+  {
+    id: "photo",
+    group: "Aparência",
+    label: "Foto de perfil",
+    description: "Imagem e prévia",
+    icon: UserRound,
+  },
+  {
+    id: "profile",
+    group: "Informações",
+    label: "Nome e descrição",
+    description: "Como sua marca aparece",
+    icon: UserRound,
+  },
+  {
+    id: "social",
+    group: "Informações",
+    label: "Redes sociais",
+    description: "Instagram e presença online",
+    icon: Link2,
+  },
+  {
+    id: "contact",
+    group: "Contato",
+    label: "WhatsApp",
+    description: "Seu contato principal",
+    icon: WalletCards,
+  },
+  {
+    id: "pix",
+    group: "Contato",
+    label: "Pix",
+    description: "Receba pagamentos",
+    icon: WalletCards,
+  },
+  {
+    id: "links",
+    group: "Conteúdo",
+    label: "Links e botões",
+    description: "Links da sua página",
+    icon: Link2,
+  },
+];
+
+const THEMES = [
+  { id: "aurora", label: "Aurora" },
+  { id: "sunset", label: "Pôr do sol" },
+  { id: "ocean", label: "Oceano" },
+  { id: "forest", label: "Floresta" },
+  { id: "midnight", label: "Noite" },
+  { id: "mono", label: "Claro" },
+];
+
+function slugify(value: string) {
+  return (
+    value
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40) || "minha-pagina"
+  );
+}
+
+export function UnifiedPageEditor({
+  initialBio,
+  initialLinks,
+  defaults,
+  onSave,
+}: {
+  initialBio: BioForm;
+  initialLinks: EditableLink[];
+  defaults: { displayName: string; whatsapp: string; instagram: string };
+  onSave(data: { bio: BioForm; links: EditableLink[] }): Promise<void>;
+}) {
+  const [bio, setBio] = useState<BioForm>(initialBio);
+  const [links, setLinks] = useState<EditableLink[]>(initialLinks);
+  const [selected, setSelected] = useState<EditorSection>();
+  const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
+  const [savedSnapshot, setSavedSnapshot] = useState(() =>
+    JSON.stringify({ initialBio, initialLinks }),
+  );
+  const previewRef = useRef<HTMLDivElement>(null);
+  const snapshot = JSON.stringify({ bio, links });
+  const hasPendingChanges = snapshot !== savedSnapshot;
+  const previewBio = useMemo(
+    () =>
+      ({
+        id: "preview",
+        user_id: "preview",
+        created_at: "",
+        updated_at: "",
+        ...bio,
+        display_name: bio.display_name || defaults.displayName || "Seu negócio",
+        slug: bio.slug || "minha-pagina",
+      }) as PublicBio,
+    [bio, defaults.displayName],
+  );
+  const previewLinks = useMemo(
+    () =>
+      links.map(
+        (link) =>
+          ({
+            ...link,
+            bio_page_id: "preview",
+            created_at: "",
+            updated_at: "",
+            icon: null,
+          }) as PublicLink,
+      ),
+    [links],
+  );
+
+  useEffect(() => {
+    const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
+      if (!hasPendingChanges) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnBeforeLeaving);
+    return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
+  }, [hasPendingChanges]);
+
+  const updateBio = (patch: Partial<BioForm>) => setBio((current) => ({ ...current, ...patch }));
+  const select = (section: EditorSection) => {
+    setSelected(section);
+    setSaveState("idle");
+  };
+  const addLink = () =>
+    setLinks((current) => [
+      ...current,
+      {
+        id: crypto.randomUUID(),
+        title: "Novo link",
+        url: "https://",
+        active: true,
+        position: current.length,
+      },
+    ]);
+  const updateLink = (id: string, patch: Partial<EditableLink>) =>
+    setLinks((current) => current.map((link) => (link.id === id ? { ...link, ...patch } : link)));
+
+  async function save() {
+    setSaving(true);
+    setSaveState("idle");
+    try {
+      await onSave({ bio: { ...bio, slug: slugify(bio.slug || bio.display_name) }, links });
+      setBio((current) => ({ ...current, slug: slugify(current.slug || current.display_name) }));
+      setSavedSnapshot(
+        JSON.stringify({ bio: { ...bio, slug: slugify(bio.slug || bio.display_name) }, links }),
+      );
+      setSaveState("success");
+    } catch {
+      setSaveState("error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <header className="sticky top-0 z-20 -mx-6 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/95 px-6 py-4 backdrop-blur md:-mx-10 md:px-10">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+            Minha Página
+          </p>
+          <h1 className="mt-1 text-2xl font-bold">
+            Personalize como seus clientes encontram você.
+          </h1>
+        </div>
+        <div className="flex items-center gap-2">
+          {hasPendingChanges && (
+            <span className="hidden text-sm text-muted-foreground sm:inline">
+              Alterações pendentes
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => previewRef.current?.scrollIntoView({ behavior: "smooth" })}
+            className="btn-secondary xl:hidden"
+          >
+            Ver preview
+          </button>
+          <a
+            href={`/p/${previewBio.slug}`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-secondary hidden sm:inline-flex"
+          >
+            <ExternalLink className="h-4 w-4" /> Ver página
+          </a>
+          <button
+            type="button"
+            onClick={() => void save()}
+            disabled={saving || !hasPendingChanges}
+            className="btn-primary"
+          >
+            <Save className="h-4 w-4" />
+            {saving
+              ? "Salvando..."
+              : saveState === "error"
+                ? "Tentar novamente"
+                : hasPendingChanges
+                  ? "Salvar"
+                  : "Salvo"}
+          </button>
+        </div>
+      </header>
+
+      <div className="grid gap-6 xl:grid-cols-[18rem_minmax(25rem,1fr)_22rem]">
+        <aside className="card-surface h-fit xl:sticky xl:top-24">
+          {Array.from(new Set(MENU.map((item) => item.group))).map((group) => (
+            <div key={group} className="mb-5 last:mb-0">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
+                {group}
+              </p>
+              <div className="grid gap-1">
+                {MENU.filter((item) => item.group === group).map((item) => {
+                  const Icon = item.icon;
+                  const active = selected === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => select(item.id)}
+                      className={`rounded-xl px-3 py-2.5 text-left transition-colors ${active ? "bg-surface-elevated text-foreground" : "hover:bg-surface-elevated/70"}`}
+                    >
+                      <span className="flex items-center gap-2 text-sm font-medium">
+                        <Icon className="h-4 w-4 text-[color:var(--primary)]" />
+                        {item.label}
+                      </span>
+                      <span className="mt-0.5 block pl-6 text-xs text-muted-foreground">
+                        {item.description}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </aside>
+
+        <main ref={previewRef} className="min-w-0 xl:order-none">
+          <p className="mb-3 text-center text-sm font-medium text-muted-foreground">
+            Preview da sua página
+          </p>
+          <div
+            className={`bio-theme ${previewBio.theme || "aurora"} mx-auto max-w-[25rem] overflow-hidden rounded-[2rem] border border-border bg-background shadow-xl`}
+          >
+            <Banner
+              name={previewBio.display_name}
+              coverUrl={previewBio.cover_url}
+              coverPosition={previewBio.cover_position}
+              coverFit={previewBio.cover_fit}
+              overlay={previewBio.cover_overlay}
+              overlayOpacity={previewBio.cover_overlay_opacity}
+              onShare={() => undefined}
+            />
+            <div className="public-profile-content">
+              <ProfileHeader bio={previewBio} onTrack={() => undefined} />
+              {previewBio.pix_key && (
+                <PixCard pixKey={previewBio.pix_key} onTrack={() => undefined} />
+              )}
+              <ActionButtons
+                bio={previewBio}
+                links={previewLinks.filter((link) => link.active)}
+                onTrack={() => undefined}
+              />
+              <Footer />
+            </div>
+          </div>
+        </main>
+
+        <aside className="card-surface h-fit xl:sticky xl:top-24">
+          {!selected ? (
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+                  Personalize sua página
+                </p>
+                <h2 className="mt-1 text-xl font-semibold">Por onde quer começar?</h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Escolha uma opção simples para atualizar sua presença.
+                </p>
+              </div>
+              {[
+                ["appearance", "Alterar fundo e capa"],
+                ["photo", "Adicionar foto"],
+                ["profile", "Editar nome e descrição"],
+                ["contact", "Configurar WhatsApp"],
+                ["links", "Adicionar links"],
+              ].map(([id, label]) => (
+                <button
+                  key={id}
+                  type="button"
+                  onClick={() => select(id as EditorSection)}
+                  className="btn-secondary w-full justify-start"
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          ) : (
+            <SectionForm
+              section={selected}
+              bio={bio}
+              links={links}
+              defaults={defaults}
+              updateBio={updateBio}
+              updateLink={updateLink}
+              removeLink={(id) => setLinks((current) => current.filter((link) => link.id !== id))}
+              addLink={addLink}
+            />
+          )}
+          {saveState === "error" && (
+            <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
+              Não foi possível salvar. Confira sua conexão e tente novamente.
+            </p>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function SectionForm({
+  section,
+  bio,
+  links,
+  defaults,
+  updateBio,
+  updateLink,
+  removeLink,
+  addLink,
+}: {
+  section: EditorSection;
+  bio: BioForm;
+  links: EditableLink[];
+  defaults: { displayName: string; whatsapp: string; instagram: string };
+  updateBio(patch: Partial<BioForm>): void;
+  updateLink(id: string, patch: Partial<EditableLink>): void;
+  removeLink(id: string): void;
+  addLink(): void;
+}) {
+  const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+          Personalização
+        </p>
+        <h2 className="mt-1 text-xl font-semibold">{title}</h2>
+      </div>
+      {section === "appearance" && (
+        <>
+          <MediaUploader
+            label="Imagem de capa"
+            value={bio.cover_url}
+            onChange={(cover_url) => updateBio({ cover_url })}
+          />
+          <Field label="Posição da imagem">
+            <select
+              className="input-base"
+              value={bio.cover_position}
+              onChange={(event) => updateBio({ cover_position: event.target.value })}
+            >
+              <option value="top">Topo</option>
+              <option value="center">Centro</option>
+              <option value="bottom">Base</option>
+            </select>
+          </Field>
+          <Field label="Ajuste">
+            <select
+              className="input-base"
+              value={bio.cover_fit}
+              onChange={(event) => updateBio({ cover_fit: event.target.value })}
+            >
+              <option value="cover">Preencher a capa</option>
+              <option value="contain">Mostrar a imagem inteira</option>
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={bio.cover_overlay}
+              onChange={(event) => updateBio({ cover_overlay: event.target.checked })}
+            />
+            Melhorar leitura com sobreposição
+          </label>
+          {bio.cover_overlay && (
+            <Field label={`Opacidade (${bio.cover_overlay_opacity}%)`}>
+              <input
+                className="w-full"
+                type="range"
+                min="0"
+                max="100"
+                value={bio.cover_overlay_opacity}
+                onChange={(event) =>
+                  updateBio({ cover_overlay_opacity: Number(event.target.value) })
+                }
+              />
+            </Field>
+          )}
+          <Field label="Tema">
+            <div className="grid grid-cols-2 gap-2">
+              {THEMES.map((theme) => (
+                <button
+                  key={theme.id}
+                  type="button"
+                  onClick={() => updateBio({ theme: theme.id })}
+                  className={`rounded-lg border px-3 py-2 text-sm ${bio.theme === theme.id ? "border-[color:var(--primary)] bg-surface-elevated" : "border-border"}`}
+                >
+                  {theme.label}
+                </button>
+              ))}
+            </div>
+          </Field>
+        </>
+      )}
+      {section === "photo" && (
+        <>
+          <MediaUploader
+            label="Foto de perfil"
+            value={bio.avatar_url}
+            onChange={(avatar_url) => updateBio({ avatar_url })}
+          />
+          <p className="text-xs text-muted-foreground">
+            PNG, JPG ou WEBP até 5 MB. Uma imagem quadrada funciona melhor.
+          </p>
+        </>
+      )}
+      {section === "profile" && (
+        <>
+          <Field label="Nome exibido">
+            <input
+              className="input-base"
+              value={bio.display_name}
+              placeholder={defaults.displayName}
+              onChange={(event) => updateBio({ display_name: event.target.value })}
+            />
+          </Field>
+          <Field label="Descrição">
+            <textarea
+              className="input-base"
+              rows={4}
+              value={bio.description ?? ""}
+              placeholder="Conte brevemente o que você faz"
+              onChange={(event) => updateBio({ description: event.target.value })}
+            />
+          </Field>
+          <Field label="Endereço da página">
+            <input
+              className="input-base"
+              value={bio.slug}
+              onChange={(event) => updateBio({ slug: event.target.value })}
+            />
+          </Field>
+        </>
+      )}
+      {section === "social" && (
+        <Field label="Instagram">
+          <input
+            className="input-base"
+            value={bio.instagram ?? ""}
+            placeholder={defaults.instagram || "@seuperfil"}
+            onChange={(event) => updateBio({ instagram: event.target.value })}
+          />
+        </Field>
+      )}
+      {section === "contact" && (
+        <Field label="WhatsApp">
+          <input
+            className="input-base"
+            value={bio.whatsapp ?? ""}
+            placeholder={defaults.whatsapp || "5511999999999"}
+            onChange={(event) => updateBio({ whatsapp: event.target.value })}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Use apenas números, incluindo DDD e código do país.
+          </p>
+        </Field>
+      )}
+      {section === "pix" && (
+        <Field label="Chave Pix">
+          <input
+            className="input-base"
+            value={bio.pix_key ?? ""}
+            placeholder="CPF, e-mail, celular ou chave aleatória"
+            onChange={(event) => updateBio({ pix_key: event.target.value })}
+          />
+        </Field>
+      )}
+      {section === "links" && (
+        <div className="space-y-3">
+          {links.map((link) => (
+            <div key={link.id} className="rounded-xl border border-border p-3">
+              <input
+                className="input-base mb-2"
+                value={link.title}
+                aria-label="Título do link"
+                onChange={(event) => updateLink(link.id, { title: event.target.value })}
+              />
+              <input
+                className="input-base"
+                value={link.url}
+                aria-label="Endereço do link"
+                onChange={(event) => updateLink(link.id, { url: event.target.value })}
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <label className="text-xs">
+                  <input
+                    type="checkbox"
+                    checked={link.active}
+                    onChange={(event) => updateLink(link.id, { active: event.target.checked })}
+                  />{" "}
+                  Exibir
+                </label>
+                <button
+                  type="button"
+                  className="text-xs text-[color:var(--destructive)]"
+                  onClick={() => removeLink(link.id)}
+                >
+                  Remover
+                </button>
+              </div>
+            </div>
+          ))}
+          <button type="button" className="btn-secondary w-full" onClick={addLink}>
+            Adicionar link
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block text-sm font-medium">
+      <span>{label}</span>
+      <div className="mt-1">{children}</div>
+    </label>
+  );
+}

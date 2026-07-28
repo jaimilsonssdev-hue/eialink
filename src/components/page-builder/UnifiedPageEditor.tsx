@@ -1,10 +1,7 @@
 import { ExternalLink, Image, Link2, Palette, Save, UserRound, WalletCards } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ActionButtons } from "@/components/public-profile/ActionButtons";
-import { Banner } from "@/components/public-profile/Banner";
-import { Footer } from "@/components/public-profile/Footer";
-import { PixCard } from "@/components/public-profile/PixCard";
-import { ProfileHeader } from "@/components/public-profile/ProfileHeader";
+import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
+import { TemplateService } from "@/modules/templates/services/TemplateService";
 import type { PublicBio, PublicLink } from "@/components/public-profile/types";
 import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
@@ -25,6 +22,7 @@ type BioForm = Pick<
   | "cover_fit"
   | "cover_overlay"
   | "cover_overlay_opacity"
+  | "template_id"
 >;
 
 type EditorSection = "appearance" | "photo" | "profile" | "social" | "contact" | "pix" | "links";
@@ -124,6 +122,7 @@ export function UnifiedPageEditor({
   const [bio, setBio] = useState<BioForm>(initialBio);
   const [links, setLinks] = useState<EditableLink[]>(initialLinks);
   const [selected, setSelected] = useState<EditorSection>();
+  const [draftTemplate, setDraftTemplate] = useState(initialBio.template_id ?? "default");
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
@@ -296,27 +295,12 @@ export function UnifiedPageEditor({
           <div
             className={`bio-theme ${previewBio.theme || "aurora"} mx-auto max-w-[25rem] overflow-hidden rounded-[2rem] border border-border bg-background shadow-xl`}
           >
-            <Banner
-              name={previewBio.display_name}
-              coverUrl={previewBio.cover_url}
-              coverPosition={previewBio.cover_position}
-              coverFit={previewBio.cover_fit}
-              overlay={previewBio.cover_overlay}
-              overlayOpacity={previewBio.cover_overlay_opacity}
+            <TemplateRenderer
+              bio={previewBio}
+              links={previewLinks.filter((link) => link.active)}
+              onTrack={() => undefined}
               onShare={() => undefined}
             />
-            <div className="public-profile-content">
-              <ProfileHeader bio={previewBio} onTrack={() => undefined} />
-              {previewBio.pix_key && (
-                <PixCard pixKey={previewBio.pix_key} onTrack={() => undefined} />
-              )}
-              <ActionButtons
-                bio={previewBio}
-                links={previewLinks.filter((link) => link.active)}
-                onTrack={() => undefined}
-              />
-              <Footer />
-            </div>
           </div>
         </main>
 
@@ -359,6 +343,8 @@ export function UnifiedPageEditor({
               updateLink={updateLink}
               removeLink={(id) => setLinks((current) => current.filter((link) => link.id !== id))}
               addLink={addLink}
+              draftTemplate={draftTemplate}
+              setDraftTemplate={setDraftTemplate}
             />
           )}
           {saveState === "error" && (
@@ -381,6 +367,8 @@ function SectionForm({
   updateLink,
   removeLink,
   addLink,
+  draftTemplate,
+  setDraftTemplate,
 }: {
   section: EditorSection;
   bio: BioForm;
@@ -390,6 +378,8 @@ function SectionForm({
   updateLink(id: string, patch: Partial<EditableLink>): void;
   removeLink(id: string): void;
   addLink(): void;
+  draftTemplate: string;
+  setDraftTemplate(id: string): void;
 }) {
   const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
   return (
@@ -402,6 +392,39 @@ function SectionForm({
       </div>
       {section === "appearance" && (
         <>
+          <Field label="Template">
+            <div className="grid grid-cols-2 gap-2">
+              {TemplateService.list().map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => setDraftTemplate(template.id)}
+                  className={`rounded-lg border px-3 py-2 text-sm ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-surface-elevated" : "border-border"}`}
+                >
+                  {template.name}
+                </button>
+              ))}
+            </div>
+            <div className="mt-2 flex gap-2">
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                onClick={() => setDraftTemplate(bio.template_id ?? "default")}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn-secondary text-xs"
+                onClick={() => {
+                  if (TemplateService.get(draftTemplate).status === "active")
+                    updateBio({ template_id: draftTemplate });
+                }}
+              >
+                Aplicar
+              </button>
+            </div>
+          </Field>
           <MediaUploader
             label="Imagem de capa"
             value={bio.cover_url}

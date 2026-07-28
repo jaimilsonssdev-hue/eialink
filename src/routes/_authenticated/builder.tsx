@@ -58,6 +58,7 @@ function BuilderPage() {
         cover_fit: bio.cover_fit,
         cover_overlay: bio.cover_overlay,
         cover_overlay_opacity: bio.cover_overlay_opacity,
+        template_id: bio.template_id,
       }
     : {
         slug: "",
@@ -74,6 +75,7 @@ function BuilderPage() {
         cover_fit: "cover",
         cover_overlay: true,
         cover_overlay_opacity: 45,
+        template_id: null,
       };
 
   return (

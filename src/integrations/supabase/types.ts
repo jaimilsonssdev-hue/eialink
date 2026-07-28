@@ -116,6 +116,7 @@ export type Database = {
           published: boolean;
           slug: string;
           theme: string;
+          template_id: string | null;
           updated_at: string;
           user_id: string;
           whatsapp: string | null;
@@ -136,6 +137,7 @@ export type Database = {
           published?: boolean;
           slug: string;
           theme?: string;
+          template_id?: string | null;
           updated_at?: string;
           user_id: string;
           whatsapp?: string | null;
@@ -156,6 +158,7 @@ export type Database = {
           published?: boolean;
           slug?: string;
           theme?: string;
+          template_id?: string | null;
           updated_at?: string;
           user_id?: string;
           whatsapp?: string | null;

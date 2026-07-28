@@ -56,23 +56,35 @@ function BuilderPage() {
       <PageBuilder
         initial={q.data.blocks}
         onSave={async (blocks) => {
-          const { error: deleteError } = await db
-            .from("page_blocks")
-            .delete()
-            .eq("bio_page_id", q.data!.bio.id);
-          if (deleteError) throw new Error(deleteError.message);
-          if (blocks.length) {
-            const { error: insertError } = await db.from("page_blocks").insert(
-              blocks.map((b, i) => ({
-                id: b.id,
-                bio_page_id: q.data!.bio.id,
-                type: b.type,
-                enabled: b.enabled,
-                position: i,
-                data: b.data,
-              })),
-            );
-            if (insertError) throw new Error(insertError.message);
+          const savedBlocks = blocks.map((block, position) => ({
+            id: block.id,
+            bio_page_id: q.data!.bio.id,
+            type: block.type,
+            enabled: block.enabled,
+            position,
+            data: block.data,
+          }));
+
+          // Persist new and changed rows before removing stale ones. The old
+          // delete-then-insert flow could erase a page when an insert failed.
+          if (savedBlocks.length) {
+            const { error: upsertError } = await db
+              .from("page_blocks")
+              .upsert(savedBlocks, { onConflict: "id" });
+            if (upsertError) throw new Error(upsertError.message);
+
+            const { error: cleanupError } = await db
+              .from("page_blocks")
+              .delete()
+              .eq("bio_page_id", q.data!.bio.id)
+              .not("id", "in", `(${savedBlocks.map((block) => block.id).join(",")})`);
+            if (cleanupError) throw new Error(cleanupError.message);
+          } else {
+            const { error: deleteError } = await db
+              .from("page_blocks")
+              .delete()
+              .eq("bio_page_id", q.data!.bio.id);
+            if (deleteError) throw new Error(deleteError.message);
           }
           await q.refetch();
         }}

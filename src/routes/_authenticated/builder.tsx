@@ -4,6 +4,8 @@ import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageBuilder } from "@/components/page-builder/PageBuilder";
 import type { PageBlock } from "@/components/page-builder/types";
+// The generated Supabase types predate page_blocks; keep the compatibility adapter local.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as never as { from: (table: "page_blocks") => any };
 export const Route = createFileRoute("/_authenticated/builder")({
   component: BuilderPage,
@@ -43,7 +45,7 @@ function BuilderPage() {
           </p>
         </div>
         <a
-          href={`/p/${data.bio.slug}`}
+          href={`/p/${q.data.bio.slug}`}
           target="_blank"
           rel="noopener noreferrer"
           className="btn-secondary"

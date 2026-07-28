@@ -56,9 +56,13 @@ function BuilderPage() {
       <PageBuilder
         initial={q.data.blocks}
         onSave={async (blocks) => {
-          await db.from("page_blocks").delete().eq("bio_page_id", q.data!.bio.id);
-          if (blocks.length)
-            await db.from("page_blocks").insert(
+          const { error: deleteError } = await db
+            .from("page_blocks")
+            .delete()
+            .eq("bio_page_id", q.data!.bio.id);
+          if (deleteError) throw new Error(deleteError.message);
+          if (blocks.length) {
+            const { error: insertError } = await db.from("page_blocks").insert(
               blocks.map((b, i) => ({
                 id: b.id,
                 bio_page_id: q.data!.bio.id,
@@ -68,6 +72,9 @@ function BuilderPage() {
                 data: b.data,
               })),
             );
+            if (insertError) throw new Error(insertError.message);
+          }
+          await q.refetch();
         }}
       />
     </div>

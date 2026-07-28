@@ -22,6 +22,7 @@ export function PageBuilder({
   const [blocks, setBlocks] = useState(initial);
   const [selected, setSelected] = useState<string>();
   const [saving, setSaving] = useState(false);
+  const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
   const active = blocks.find((b) => b.id === selected);
   const update = (data: Record<string, unknown>) =>
@@ -139,14 +140,32 @@ export function PageBuilder({
           disabled={saving}
           onClick={async () => {
             setSaving(true);
-            await onSave(blocks);
-            setSaving(false);
+            setSaveState("idle");
+            try {
+              await onSave(blocks);
+              setSaveState("success");
+            } catch {
+              setSaveState("error");
+            } finally {
+              setSaving(false);
+            }
           }}
           className="btn-primary mt-5 w-full"
         >
           <Save className="h-4 w-4" />
-          Salvar alterações
+          {saving
+            ? "Salvando..."
+            : saveState === "success"
+              ? "Salvo com sucesso"
+              : saveState === "error"
+                ? "Tentar novamente"
+                : "Salvar alterações"}
         </button>
+        {saveState === "error" && (
+          <p role="alert" className="mt-2 text-sm text-[color:var(--destructive)]">
+            Não foi possível salvar. Tente novamente.
+          </p>
+        )}
       </aside>
     </div>
   );

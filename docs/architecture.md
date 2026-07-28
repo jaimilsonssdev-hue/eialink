@@ -32,3 +32,5 @@ Os Types explícitos ficam em cada `types/index.ts`. Não foram criados diretór
 ## Template Engine
 
 O módulo Templates possui Engine, Registry, Theme Tokens, Service e hooks isolados. Não há integração com editor, preview, página pública ou persistência nesta Sprint. Essas etapas ocorrerão na Sprint 03.
+
+Na Sprint 03, `bio_pages.template_id` passa a persistir apenas a escolha visual. Preview e página pública usam o mesmo `TemplateRenderer`, com fallback para o template padrão.

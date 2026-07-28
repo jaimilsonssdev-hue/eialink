@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { componentRegistry, type TemplateComponentContext } from "../components/ComponentRegistry";
+import { componentVariantRegistry } from "../components/ComponentVariantRegistry";
 import type { TemplateComponentType, TemplateRenderModel } from "../types";
 export interface TemplateLayoutRenderer {
   layoutId(): TemplateRenderModel["template"]["layout"];
@@ -17,11 +18,19 @@ class OrderedLayout implements TemplateLayoutRenderer {
   supports(model: TemplateRenderModel) {
     return model.template.layout === this.id;
   }
-  render(_model: TemplateRenderModel, context: TemplateComponentContext) {
+  render(model: TemplateRenderModel, context: TemplateComponentContext) {
     return (
       <div className={`template-layout template-layout-${this.id}`}>
         {this.order.map((id) => (
-          <>{componentRegistry.resolve(id)?.(context)}</>
+          <div
+            key={id}
+            className={componentVariantRegistry.resolve(id, model.template.componentVariants[id])}
+          >
+            {componentRegistry.resolve(id)?.({
+              ...context,
+              componentVariants: model.template.componentVariants,
+            })}
+          </div>
         ))}
       </div>
     );

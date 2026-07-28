@@ -16,7 +16,7 @@ function BuilderPage() {
       const { data: u } = await supabase.auth.getUser();
       const { data: bio } = await supabase
         .from("bio_pages")
-        .select("id")
+        .select("id, slug")
         .eq("user_id", u.user!.id)
         .maybeSingle();
       if (!bio) return null;
@@ -32,27 +32,40 @@ function BuilderPage() {
   if (!q.data) return <p>Crie sua Bio antes de editar a página.</p>;
   return (
     <div className="space-y-5">
-      <div>
-        <h1 className="text-3xl font-bold">Editar Página</h1>
-        <p className="text-muted-foreground">Organize sua presença digital com blocos.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+            Minha Página
+          </p>
+          <h1 className="mt-1 text-3xl font-bold">Sua página, do seu jeito.</h1>
+          <p className="mt-2 text-muted-foreground">
+            Personalize como sua página aparece para seus clientes.
+          </p>
+        </div>
+        <a
+          href={`/p/${data.bio.slug}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn-secondary"
+        >
+          Ver página
+        </a>
       </div>
       <PageBuilder
         initial={q.data.blocks}
         onSave={async (blocks) => {
           await db.from("page_blocks").delete().eq("bio_page_id", q.data!.bio.id);
           if (blocks.length)
-            await db
-              .from("page_blocks")
-              .insert(
-                blocks.map((b, i) => ({
-                  id: b.id,
-                  bio_page_id: q.data!.bio.id,
-                  type: b.type,
-                  enabled: b.enabled,
-                  position: i,
-                  data: b.data,
-                })),
-              );
+            await db.from("page_blocks").insert(
+              blocks.map((b, i) => ({
+                id: b.id,
+                bio_page_id: q.data!.bio.id,
+                type: b.type,
+                enabled: b.enabled,
+                position: i,
+                data: b.data,
+              })),
+            );
         }}
       />
     </div>

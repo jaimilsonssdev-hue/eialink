@@ -20,11 +20,13 @@ export function PageBuilder({
   onSave(blocks: PageBlock[]): Promise<void>;
 }) {
   const [blocks, setBlocks] = useState(initial);
+  const [savedSnapshot, setSavedSnapshot] = useState(() => JSON.stringify(initial));
   const [selected, setSelected] = useState<string>();
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const sensors = useSensors(useSensor(PointerSensor), useSensor(KeyboardSensor));
   const active = blocks.find((b) => b.id === selected);
+  const hasPendingChanges = JSON.stringify(blocks) !== savedSnapshot;
   const update = (data: Record<string, unknown>) =>
     setBlocks((v) => v.map((b) => (b.id === selected ? { ...b, data } : b)));
   return (
@@ -137,12 +139,13 @@ export function PageBuilder({
           </div>
         )}
         <button
-          disabled={saving}
+          disabled={saving || !hasPendingChanges}
           onClick={async () => {
             setSaving(true);
             setSaveState("idle");
             try {
               await onSave(blocks);
+              setSavedSnapshot(JSON.stringify(blocks));
               setSaveState("success");
             } catch {
               setSaveState("error");
@@ -155,12 +158,15 @@ export function PageBuilder({
           <Save className="h-4 w-4" />
           {saving
             ? "Salvando..."
-            : saveState === "success"
-              ? "Salvo com sucesso"
-              : saveState === "error"
-                ? "Tentar novamente"
-                : "Salvar alterações"}
+            : saveState === "error"
+              ? "Tentar novamente"
+              : hasPendingChanges
+                ? "Salvar alterações"
+                : "Salvo com sucesso"}
         </button>
+        {hasPendingChanges && !saving && saveState !== "error" && (
+          <p className="mt-2 text-sm text-muted-foreground">Alterações pendentes.</p>
+        )}
         {saveState === "error" && (
           <p role="alert" className="mt-2 text-sm text-[color:var(--destructive)]">
             Não foi possível salvar. Tente novamente.

@@ -15,22 +15,33 @@ function BuilderPage() {
   const q = useQuery({
     queryKey: ["page-builder"],
     queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      const { data: bio } = await supabase
+      const { data: u, error: userError } = await supabase.auth.getUser();
+      if (userError || !u.user) throw new Error(userError?.message ?? "Sessão inválida.");
+
+      const { data: bio, error: bioError } = await supabase
         .from("bio_pages")
         .select("id, slug")
-        .eq("user_id", u.user!.id)
+        .eq("user_id", u.user.id)
         .maybeSingle();
+      if (bioError) throw new Error(bioError.message);
       if (!bio) return null;
-      const { data } = await db
+      const { data, error: blocksError } = await db
         .from("page_blocks")
         .select("*")
         .eq("bio_page_id", bio.id)
         .order("position");
+      if (blocksError) throw new Error(blocksError.message);
       return { bio, blocks: (data ?? []) as PageBlock[] };
     },
   });
   if (q.isLoading) return <Loader2 className="animate-spin" />;
+  if (q.isError) {
+    return (
+      <p role="alert" className="text-sm text-[color:var(--destructive)]">
+        Não foi possível carregar o editor. {q.error.message}
+      </p>
+    );
+  }
   if (!q.data) return <p>Crie sua Bio antes de editar a página.</p>;
   return (
     <div className="space-y-5">
@@ -77,7 +88,7 @@ function BuilderPage() {
               .from("page_blocks")
               .delete()
               .eq("bio_page_id", q.data!.bio.id)
-              .not("id", "in", `(${savedBlocks.map((block) => block.id).join(",")})`);
+              .not("id", "in", `(${savedBlocks.map((block) => `"${block.id}"`).join(",")})`);
             if (cleanupError) throw new Error(cleanupError.message);
           } else {
             const { error: deleteError } = await db

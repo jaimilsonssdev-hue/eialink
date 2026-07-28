@@ -133,7 +133,7 @@ function PublicBio() {
       onShare={share}
       supplemental={
         <>
-          {supplementalBlocks.map((block) => (
+          {supplementalBlocks.map((block: PageBlock) => (
             <BlockRenderer key={block.id} block={block} />
           ))}
           <CatalogSection items={products} />

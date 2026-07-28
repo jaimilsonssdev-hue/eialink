@@ -29,6 +29,10 @@ export const ProductService = {
     return data as CatalogItem[];
   },
   async sync(bioPageId: string, items: CatalogItem[]): Promise<CatalogItem[]> {
+    const invalid = items.find(
+      (item) => !item.name.trim() || !["product", "service"].includes(item.type),
+    );
+    if (invalid) throw new Error("Existem itens do catÃ¡logo sem nome ou tipo vÃ¡lido.");
     const existing = await ProductService.list(bioPageId);
     const savedItems = items.filter((item) => !item.id.startsWith("draft-"));
     const retained = new Set(savedItems.map((item) => item.id));

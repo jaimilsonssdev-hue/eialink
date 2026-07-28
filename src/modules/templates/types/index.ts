@@ -26,6 +26,7 @@ export type PageData = {
   pix?: string | null;
   products?: never[];
 };
+export type TemplateComponentType = "banner" | "profile" | "links" | "pix" | "footer";
 export type TemplateDefinition = {
   id: string;
   slug: string;
@@ -36,7 +37,7 @@ export type TemplateDefinition = {
   previewImage?: string;
   theme: ThemeTokens;
   layout: "vertical" | "cards" | "business" | "minimal" | "store" | "creator";
-  components: string[];
+  components: TemplateComponentType[];
   supportedFeatures: string[];
   status: "active" | "disabled" | "draft";
 };

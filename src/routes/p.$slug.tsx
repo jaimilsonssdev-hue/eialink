@@ -71,6 +71,12 @@ const VALID_THEMES = new Set(["aurora", "sunset", "ocean", "midnight", "mono", "
 function PublicBio() {
   const { bio, links, blocks } = Route.useLoaderData();
   const theme = VALID_THEMES.has(bio.theme) ? bio.theme : "aurora";
+  // The established bio page remains the canonical source for the public
+  // profile. Only additive layout blocks are rendered here, preventing an
+  // existing draft block from hiding saved profile, link, and contact data.
+  const supplementalBlocks = blocks.filter((block) =>
+    ["contact", "divider", "spacer"].includes(block.type),
+  );
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -110,33 +116,25 @@ function PublicBio() {
 
   return (
     <main className={`bio-theme ${theme} public-profile-shell`}>
-      {blocks.length ? (
-        <div className="mx-auto max-w-xl space-y-4 px-4 py-8">
-          {blocks.map((block) => (
-            <BlockRenderer key={block.id} block={block} />
-          ))}
-          <Footer />
-        </div>
-      ) : (
-        <>
-          <Banner
-            name={bio.display_name}
-            coverUrl={bio.cover_url}
-            coverPosition={bio.cover_position}
-            coverFit={bio.cover_fit}
-            overlay={bio.cover_overlay}
-            overlayOpacity={bio.cover_overlay_opacity}
-            onShare={share}
-          />
-          <div className="public-profile-content">
-            <ProfileHeader bio={bio} onTrack={track} />
-            {bio.pix_key && <PixCard pixKey={bio.pix_key} onTrack={track} />}
-            <ActionButtons bio={bio} links={links} onTrack={track} />
-            <FutureSections />
-            <Footer />
-          </div>
-        </>
-      )}
+      <Banner
+        name={bio.display_name}
+        coverUrl={bio.cover_url}
+        coverPosition={bio.cover_position}
+        coverFit={bio.cover_fit}
+        overlay={bio.cover_overlay}
+        overlayOpacity={bio.cover_overlay_opacity}
+        onShare={share}
+      />
+      <div className="public-profile-content">
+        <ProfileHeader bio={bio} onTrack={track} />
+        {bio.pix_key && <PixCard pixKey={bio.pix_key} onTrack={track} />}
+        <ActionButtons bio={bio} links={links} onTrack={track} />
+        {supplementalBlocks.map((block) => (
+          <BlockRenderer key={block.id} block={block} />
+        ))}
+        <FutureSections />
+        <Footer />
+      </div>
     </main>
   );
 }

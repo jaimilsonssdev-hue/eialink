@@ -239,6 +239,51 @@ function BioEditor() {
             onChange={(cover_url) => setForm({ ...form, cover_url })}
           />
           <div className="grid sm:grid-cols-2 gap-4">
+            <F label="Posição da capa">
+              <select
+                className="input-base"
+                value={form.cover_position}
+                onChange={(e) => setForm({ ...form, cover_position: e.target.value })}
+              >
+                <option value="top">Topo</option>
+                <option value="center">Centro</option>
+                <option value="bottom">Base</option>
+              </select>
+            </F>
+            <F label="Ajuste da imagem">
+              <select
+                className="input-base"
+                value={form.cover_fit}
+                onChange={(e) => setForm({ ...form, cover_fit: e.target.value })}
+              >
+                <option value="cover">Preencher a capa</option>
+                <option value="contain">Mostrar a imagem inteira</option>
+              </select>
+            </F>
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.cover_overlay}
+              onChange={(e) => setForm({ ...form, cover_overlay: e.target.checked })}
+            />
+            Aplicar sobreposição para melhorar a leitura
+          </label>
+          {form.cover_overlay && (
+            <F label={`Opacidade da sobreposição (${form.cover_overlay_opacity}%)`}>
+              <input
+                className="w-full"
+                type="range"
+                min="0"
+                max="100"
+                value={form.cover_overlay_opacity}
+                onChange={(e) =>
+                  setForm({ ...form, cover_overlay_opacity: Number(e.target.value) })
+                }
+              />
+            </F>
+          )}
+          <div className="grid sm:grid-cols-2 gap-4">
             <F label="WhatsApp (só números com DDD)">
               <input
                 className="input-base"

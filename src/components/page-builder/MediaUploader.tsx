@@ -15,7 +15,7 @@ export function MediaUploader({
   onChange(url: string): void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<"idle" | "uploading" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [error, setError] = useState<string>();
   async function upload(file?: File) {
     if (!file) return;
@@ -44,7 +44,7 @@ export function MediaUploader({
     }
     const { data } = supabase.storage.from("bio-media").getPublicUrl(path);
     onChange(data.publicUrl);
-    setStatus("idle");
+    setStatus("success");
   }
   return (
     <div>
@@ -85,6 +85,11 @@ export function MediaUploader({
       {error && (
         <p role="alert" className="mt-2 text-xs text-[color:var(--destructive)]">
           {error}
+        </p>
+      )}
+      {status === "success" && (
+        <p className="mt-2 text-xs text-[color:var(--success)]">
+          Imagem enviada. Salve a página para concluir.
         </p>
       )}
     </div>

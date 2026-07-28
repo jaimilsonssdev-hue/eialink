@@ -39,7 +39,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) navigate({ to: "/builder" });
     });
   }, [navigate]);
 
@@ -75,7 +75,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return setError(error.message);
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/builder" });
   }
   return (
     <form onSubmit={onSubmit} className="card-surface space-y-4">
@@ -114,7 +114,7 @@ function SignupForm() {
     setLoading(true);
     const { data, error: signErr } = await supabase.auth.signUp({
       email: form.email, password: form.password,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      options: { emailRedirectTo: `${window.location.origin}/builder` },
     });
     if (signErr || !data.user) { setLoading(false); return setError(signErr?.message ?? "Falha no cadastro"); }
     const { error: profErr } = await supabase.from("profiles").insert({
@@ -126,7 +126,7 @@ function SignupForm() {
     });
     setLoading(false);
     if (profErr) return setError(profErr.message);
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/builder" });
   }
 
   return (

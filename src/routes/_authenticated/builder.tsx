@@ -1,108 +1,130 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import { UnifiedPageEditor } from "@/components/page-builder/UnifiedPageEditor";
 import { supabase } from "@/integrations/supabase/client";
-import { PageBuilder } from "@/components/page-builder/PageBuilder";
-import type { PageBlock } from "@/components/page-builder/types";
-// The generated Supabase types predate page_blocks; keep the compatibility adapter local.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const db = supabase as never as { from: (table: "page_blocks") => any };
+
 export const Route = createFileRoute("/_authenticated/builder")({
   component: BuilderPage,
-  head: () => ({ meta: [{ title: "Editor visual — EIA Digital" }] }),
+  head: () => ({ meta: [{ title: "Minha Página — EIA Digital" }] }),
 });
-function BuilderPage() {
-  const q = useQuery({
-    queryKey: ["page-builder"],
-    queryFn: async () => {
-      const { data: u, error: userError } = await supabase.auth.getUser();
-      if (userError || !u.user) throw new Error(userError?.message ?? "Sessão inválida.");
 
-      const { data: bio, error: bioError } = await supabase
-        .from("bio_pages")
-        .select("id, slug")
-        .eq("user_id", u.user.id)
-        .maybeSingle();
+function BuilderPage() {
+  const page = useQuery({
+    queryKey: ["unified-page-editor"],
+    queryFn: async () => {
+      const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (authError || !auth.user) throw new Error(authError?.message ?? "Sessão inválida.");
+
+      const [{ data: bio, error: bioError }, { data: profile, error: profileError }] =
+        await Promise.all([
+          supabase.from("bio_pages").select("*").eq("user_id", auth.user.id).maybeSingle(),
+          supabase.from("profiles").select("*").eq("id", auth.user.id).maybeSingle(),
+        ]);
       if (bioError) throw new Error(bioError.message);
-      if (!bio) return null;
-      const { data, error: blocksError } = await db
-        .from("page_blocks")
-        .select("*")
-        .eq("bio_page_id", bio.id)
-        .order("position");
-      // Keep the existing Bio editor available while a connected environment
-      // has not yet applied the optional page_blocks migration.
-      const blocksTableMissing = blocksError?.code === "PGRST205" || blocksError?.code === "42P01";
-      if (blocksError && !blocksTableMissing) throw new Error(blocksError.message);
-      return { bio, blocks: (data ?? []) as PageBlock[] };
+      if (profileError) throw new Error(profileError.message);
+
+      const { data: links, error: linksError } = bio
+        ? await supabase.from("bio_links").select("*").eq("bio_page_id", bio.id).order("position")
+        : { data: [], error: null };
+      if (linksError) throw new Error(linksError.message);
+      return { userId: auth.user.id, bio, profile, links: links ?? [] };
     },
   });
-  if (q.isLoading) return <Loader2 className="animate-spin" />;
-  if (q.isError) {
+
+  if (page.isLoading) return <Loader2 className="h-6 w-6 animate-spin" />;
+  if (page.isError || !page.data) {
     return (
       <p role="alert" className="text-sm text-[color:var(--destructive)]">
-        Não foi possível carregar o editor. {q.error.message}
+        Não foi possível carregar sua página. {page.error?.message}
       </p>
     );
   }
-  if (!q.data) return <p>Crie sua Bio antes de editar a página.</p>;
+
+  const { bio, profile, links, userId } = page.data;
+  const initialBio = bio
+    ? {
+        slug: bio.slug,
+        display_name: bio.display_name,
+        description: bio.description,
+        avatar_url: bio.avatar_url,
+        whatsapp: bio.whatsapp,
+        pix_key: bio.pix_key,
+        instagram: bio.instagram,
+        published: bio.published,
+        theme: bio.theme,
+        cover_url: bio.cover_url,
+        cover_position: bio.cover_position,
+        cover_fit: bio.cover_fit,
+        cover_overlay: bio.cover_overlay,
+        cover_overlay_opacity: bio.cover_overlay_opacity,
+      }
+    : {
+        slug: "",
+        display_name: profile?.company_name ?? "",
+        description: "",
+        avatar_url: null,
+        whatsapp: profile?.whatsapp ?? "",
+        pix_key: "",
+        instagram: profile?.instagram ?? "",
+        published: true,
+        theme: "aurora",
+        cover_url: null,
+        cover_position: "center",
+        cover_fit: "cover",
+        cover_overlay: true,
+        cover_overlay_opacity: 45,
+      };
+
   return (
-    <div className="space-y-5">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
-            Minha Página
-          </p>
-          <h1 className="mt-1 text-3xl font-bold">Sua página, do seu jeito.</h1>
-          <p className="mt-2 text-muted-foreground">
-            Personalize como sua página aparece para seus clientes.
-          </p>
-        </div>
-        <a
-          href={`/p/${q.data.bio.slug}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn-secondary"
-        >
-          Ver página
-        </a>
-      </div>
-      <PageBuilder
-        initial={q.data.blocks}
-        onSave={async (blocks) => {
-          const savedBlocks = blocks.map((block, position) => ({
-            id: block.id,
-            bio_page_id: q.data!.bio.id,
-            type: block.type,
-            enabled: block.enabled,
-            position,
-            data: block.data,
-          }));
+    <UnifiedPageEditor
+      initialBio={initialBio}
+      initialLinks={links}
+      defaults={{
+        displayName: profile?.company_name ?? "",
+        whatsapp: profile?.whatsapp ?? "",
+        instagram: profile?.instagram ?? "",
+      }}
+      onSave={async ({ bio: form, links: editedLinks }) => {
+        const payload = { ...form, user_id: userId };
+        let bioPageId = bio?.id;
+        if (bioPageId) {
+          const { error } = await supabase.from("bio_pages").update(payload).eq("id", bioPageId);
+          if (error) throw new Error(error.message);
+        } else {
+          const { data, error } = await supabase
+            .from("bio_pages")
+            .insert(payload)
+            .select("id")
+            .single();
+          if (error || !data)
+            throw new Error(error?.message ?? "Não foi possível criar sua página.");
+          bioPageId = data.id;
+        }
 
-          // Persist new and changed rows before removing stale ones. The old
-          // delete-then-insert flow could erase a page when an insert failed.
-          if (savedBlocks.length) {
-            const { error: upsertError } = await db
-              .from("page_blocks")
-              .upsert(savedBlocks, { onConflict: "id" });
-            if (upsertError) throw new Error(upsertError.message);
-
-            const { error: cleanupError } = await db
-              .from("page_blocks")
-              .delete()
-              .eq("bio_page_id", q.data!.bio.id)
-              .not("id", "in", `(${savedBlocks.map((block) => `"${block.id}"`).join(",")})`);
-            if (cleanupError) throw new Error(cleanupError.message);
-          } else {
-            const { error: deleteError } = await db
-              .from("page_blocks")
-              .delete()
-              .eq("bio_page_id", q.data!.bio.id);
-            if (deleteError) throw new Error(deleteError.message);
-          }
-          await q.refetch();
-        }}
-      />
-    </div>
+        const savedLinks = editedLinks.map((link, position) => ({
+          ...link,
+          bio_page_id: bioPageId!,
+          position,
+        }));
+        if (savedLinks.length) {
+          const { error: upsertError } = await supabase
+            .from("bio_links")
+            .upsert(savedLinks, { onConflict: "id" });
+          if (upsertError) throw new Error(upsertError.message);
+          const ids = savedLinks.map((link) => `"${link.id}"`).join(",");
+          const { error: cleanupError } = await supabase
+            .from("bio_links")
+            .delete()
+            .eq("bio_page_id", bioPageId)
+            .not("id", "in", `(${ids})`);
+          if (cleanupError) throw new Error(cleanupError.message);
+        } else {
+          const { error } = await supabase.from("bio_links").delete().eq("bio_page_id", bioPageId);
+          if (error) throw new Error(error.message);
+        }
+        await page.refetch();
+      }}
+    />
   );
 }

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import { UnifiedPageEditor } from "@/components/page-builder/UnifiedPageEditor";
 import { supabase } from "@/integrations/supabase/client";
+import { ProductService } from "@/modules/products/services/ProductService";
 
 export const Route = createFileRoute("/_authenticated/builder")({
   component: BuilderPage,
@@ -28,7 +29,8 @@ function BuilderPage() {
         ? await supabase.from("bio_links").select("*").eq("bio_page_id", bio.id).order("position")
         : { data: [], error: null };
       if (linksError) throw new Error(linksError.message);
-      return { userId: auth.user.id, bio, profile, links: links ?? [] };
+      const products = bio ? await ProductService.list(bio.id) : [];
+      return { userId: auth.user.id, bio, profile, links: links ?? [], products };
     },
   });
 
@@ -41,7 +43,7 @@ function BuilderPage() {
     );
   }
 
-  const { bio, profile, links, userId } = page.data;
+  const { bio, profile, links, products, userId } = page.data;
   const initialBio = bio
     ? {
         slug: bio.slug,
@@ -82,12 +84,13 @@ function BuilderPage() {
     <UnifiedPageEditor
       initialBio={initialBio}
       initialLinks={links}
+      initialProducts={products}
       defaults={{
         displayName: profile?.company_name ?? "",
         whatsapp: profile?.whatsapp ?? "",
         instagram: profile?.instagram ?? "",
       }}
-      onSave={async ({ bio: form, links: editedLinks }) => {
+      onSave={async ({ bio: form, links: editedLinks, products: editedProducts }) => {
         const payload = { ...form, user_id: userId };
         let bioPageId = bio?.id;
         if (bioPageId) {
@@ -103,6 +106,8 @@ function BuilderPage() {
             throw new Error(error?.message ?? "Não foi possível criar sua página.");
           bioPageId = data.id;
         }
+
+        await ProductService.replace(bioPageId!, editedProducts);
 
         const savedLinks = editedLinks.map((link, position) => ({
           ...link,

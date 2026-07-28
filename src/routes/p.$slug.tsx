@@ -4,10 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import type { PageBlock } from "@/components/page-builder/types";
+import { CatalogSection } from "@/modules/products/components/CatalogSection";
+import type { CatalogItem } from "@/modules/products/types";
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const blockStore = supabase as never as { from: (table: "page_blocks") => any };
+// catalog_items is introduced by the catalog migration.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const catalogStore = supabase as never as { from: (table: "catalog_items") => any };
 
 export const Route = createFileRoute("/p/$slug")({
   ssr: true,
@@ -31,7 +36,18 @@ export const Route = createFileRoute("/p/$slug")({
       .eq("bio_page_id", bio.id)
       .eq("enabled", true)
       .order("position");
-    return { bio, links: links ?? [], blocks: (blocks ?? []) as PageBlock[] };
+    const { data: products } = await catalogStore
+      .from("catalog_items")
+      .select("*")
+      .eq("bio_page_id", bio.id)
+      .eq("active", true)
+      .order("position");
+    return {
+      bio,
+      links: links ?? [],
+      blocks: (blocks ?? []) as PageBlock[],
+      products: (products ?? []) as CatalogItem[],
+    };
   },
   head: ({ loaderData }) => ({
     meta: loaderData
@@ -64,7 +80,7 @@ export const Route = createFileRoute("/p/$slug")({
 const VALID_THEMES = new Set(["aurora", "sunset", "ocean", "midnight", "mono", "forest"]);
 
 function PublicBio() {
-  const { bio, links, blocks } = Route.useLoaderData();
+  const { bio, links, blocks, products } = Route.useLoaderData();
   const theme = VALID_THEMES.has(bio.theme) ? bio.theme : "aurora";
   // The established bio page remains the canonical source for the public
   // profile. Only additive layout blocks are rendered here, preventing an
@@ -115,9 +131,14 @@ function PublicBio() {
       links={links}
       onTrack={track}
       onShare={share}
-      supplemental={supplementalBlocks.map((block) => (
-        <BlockRenderer key={block.id} block={block} />
-      ))}
+      supplemental={
+        <>
+          {supplementalBlocks.map((block) => (
+            <BlockRenderer key={block.id} block={block} />
+          ))}
+          <CatalogSection items={products} />
+        </>
+      }
     />
   );
 }

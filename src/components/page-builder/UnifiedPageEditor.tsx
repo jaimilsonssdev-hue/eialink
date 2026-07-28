@@ -5,6 +5,9 @@ import { TemplateService } from "@/modules/templates/services/TemplateService";
 import type { PublicBio, PublicLink } from "@/components/public-profile/types";
 import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
+import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
+import { CatalogSection } from "@/modules/products/components/CatalogSection";
+import type { CatalogItem } from "@/modules/products/types";
 
 type BioForm = Pick<
   Tables<"bio_pages">,
@@ -25,7 +28,8 @@ type BioForm = Pick<
   | "template_id"
 >;
 
-type EditorSection = "appearance" | "photo" | "profile" | "social" | "contact" | "pix" | "links";
+type EditorSection =
+  "appearance" | "photo" | "profile" | "social" | "contact" | "pix" | "links" | "catalog";
 
 type EditableLink = Pick<PublicLink, "id" | "title" | "url" | "active" | "position">;
 
@@ -85,6 +89,13 @@ const MENU: {
     description: "Links da sua página",
     icon: Link2,
   },
+  {
+    id: "catalog",
+    group: "ConteÃºdo",
+    label: "Produtos e serviÃ§os",
+    description: "O que vocÃª oferece",
+    icon: WalletCards,
+  },
 ];
 
 const THEMES = [
@@ -111,25 +122,28 @@ function slugify(value: string) {
 export function UnifiedPageEditor({
   initialBio,
   initialLinks,
+  initialProducts = [],
   defaults,
   onSave,
 }: {
   initialBio: BioForm;
   initialLinks: EditableLink[];
+  initialProducts?: CatalogItem[];
   defaults: { displayName: string; whatsapp: string; instagram: string };
-  onSave(data: { bio: BioForm; links: EditableLink[] }): Promise<void>;
+  onSave(data: { bio: BioForm; links: EditableLink[]; products: CatalogItem[] }): Promise<void>;
 }) {
   const [bio, setBio] = useState<BioForm>(initialBio);
   const [links, setLinks] = useState<EditableLink[]>(initialLinks);
+  const [products, setProducts] = useState<CatalogItem[]>(initialProducts);
   const [selected, setSelected] = useState<EditorSection>();
   const [draftTemplate, setDraftTemplate] = useState(initialBio.template_id ?? "default");
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
-    JSON.stringify({ initialBio, initialLinks }),
+    JSON.stringify({ initialBio, initialLinks, initialProducts }),
   );
   const previewRef = useRef<HTMLDivElement>(null);
-  const snapshot = JSON.stringify({ bio, links });
+  const snapshot = JSON.stringify({ bio, links, products });
   const hasPendingChanges = snapshot !== savedSnapshot;
   const previewBio = useMemo(
     () =>
@@ -192,10 +206,18 @@ export function UnifiedPageEditor({
     setSaving(true);
     setSaveState("idle");
     try {
-      await onSave({ bio: { ...bio, slug: slugify(bio.slug || bio.display_name) }, links });
+      await onSave({
+        bio: { ...bio, slug: slugify(bio.slug || bio.display_name) },
+        links,
+        products,
+      });
       setBio((current) => ({ ...current, slug: slugify(current.slug || current.display_name) }));
       setSavedSnapshot(
-        JSON.stringify({ bio: { ...bio, slug: slugify(bio.slug || bio.display_name) }, links }),
+        JSON.stringify({
+          bio: { ...bio, slug: slugify(bio.slug || bio.display_name) },
+          links,
+          products,
+        }),
       );
       setSaveState("success");
     } catch {
@@ -300,6 +322,7 @@ export function UnifiedPageEditor({
               links={previewLinks.filter((link) => link.active)}
               onTrack={() => undefined}
               onShare={() => undefined}
+              supplemental={<CatalogSection items={products} />}
             />
           </div>
         </main>
@@ -343,6 +366,8 @@ export function UnifiedPageEditor({
               updateLink={updateLink}
               removeLink={(id) => setLinks((current) => current.filter((link) => link.id !== id))}
               addLink={addLink}
+              products={products}
+              setProducts={setProducts}
               draftTemplate={draftTemplate}
               setDraftTemplate={setDraftTemplate}
             />
@@ -367,6 +392,8 @@ function SectionForm({
   updateLink,
   removeLink,
   addLink,
+  products,
+  setProducts,
   draftTemplate,
   setDraftTemplate,
 }: {
@@ -378,6 +405,8 @@ function SectionForm({
   updateLink(id: string, patch: Partial<EditableLink>): void;
   removeLink(id: string): void;
   addLink(): void;
+  products: CatalogItem[];
+  setProducts(items: CatalogItem[]): void;
   draftTemplate: string;
   setDraftTemplate(id: string): void;
 }) {
@@ -602,6 +631,7 @@ function SectionForm({
           </button>
         </div>
       )}
+      {section === "catalog" && <CatalogEditor items={products} onChange={setProducts} />}
     </div>
   );
 }

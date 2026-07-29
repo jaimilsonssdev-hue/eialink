@@ -1,4 +1,5 @@
 import type { PublicBio, PublicLink, TrackEvent } from "@/components/public-profile/types";
+import type { CatalogItem } from "@/modules/products/types";
 import { TemplateService } from "../services/TemplateService";
 import type { PageData } from "../types";
 import type { CSSProperties, ReactNode } from "react";
@@ -9,12 +10,14 @@ export function TemplateRenderer({
   links,
   onTrack,
   onShare,
+  products,
   supplemental,
 }: {
   bio: PublicBio;
   links: PublicLink[];
   onTrack: TrackEvent;
   onShare: () => void;
+  products?: CatalogItem[];
   supplemental?: ReactNode;
 }) {
   const data: PageData = {
@@ -30,6 +33,8 @@ export function TemplateRenderer({
   return (
     <main
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}
+      data-template={bio.template_id ?? "default"}
+      data-layout={model.template.layout}
       style={
         {
           fontFamily: model.theme.typography.fontFamily,
@@ -41,8 +46,7 @@ export function TemplateRenderer({
         } as CSSProperties
       }
     >
-      {layout?.render(model, { bio, links, onTrack, onShare })}
-      {supplemental}
+      {layout?.render(model, { bio, links, onTrack, onShare, products, supplemental })}
     </main>
   );
 }

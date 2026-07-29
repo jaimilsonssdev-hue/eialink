@@ -44,7 +44,7 @@ const define = (template: TemplateInput): TemplateDefinition => ({
   theme: theme(template.theme.colors, template.theme.typography?.fontFamily),
 });
 
-const displayFont = '"DM Sans", "Inter", ui-sans-serif, system-ui, sans-serif';
+const displayFont = '"Poppins", "Inter", ui-sans-serif, system-ui, sans-serif';
 
 const restaurantSmart: SmartTemplateDefinition = {
   niche: "restaurant",

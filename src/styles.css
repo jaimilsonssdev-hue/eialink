@@ -781,8 +781,8 @@
 
 /* Visual Product Redesign: the same tokens are used by public pages and preview. */
 :root {
-  --font-sans: "Manrope", "Inter", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "DM Sans", "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 .public-profile-shell {
   --bio-fg: var(--template-text, #fff);
@@ -1530,7 +1530,7 @@
   color: var(--template-text, #111);
   background: var(--template-bg, #fff);
   min-height: 100vh;
-  font-family: "DM Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 .niche-restaurant *,
 .niche-clinic *,
@@ -1585,7 +1585,7 @@
 .niche-restaurant-hero-content .niche-eyebrow { color: var(--template-primary, #e0b060); }
 .niche-restaurant-name {
   margin-top: .5rem;
-  font-family: "DM Sans", serif;
+  font-family: "Poppins", "Inter", sans-serif;
   font-size: clamp(2rem, 6vw, 3rem);
   font-weight: 700; line-height: 1.05;
   letter-spacing: -0.02em;
@@ -1623,7 +1623,7 @@
   margin-bottom: 1.25rem;
 }
 .niche-section-title h2 {
-  font-family: "DM Sans", serif; font-weight: 600; font-size: 1.15rem;
+  font-family: "Poppins", "Inter", sans-serif; font-weight: 600; font-size: 1.15rem;
   letter-spacing: .3em; text-transform: uppercase; white-space: nowrap;
 }
 .niche-section-rule { flex: 1; height: 1px; background: currentColor; opacity: .35; }
@@ -1639,7 +1639,7 @@
   display: grid; place-items: center; width: 100%; height: 100%; color: var(--template-primary);
 }
 .niche-restaurant-dish-name {
-  font-family: "DM Sans", serif;
+  font-family: "Poppins", "Inter", sans-serif;
   font-size: 1.05rem; font-weight: 600; color: var(--template-text);
 }
 .niche-restaurant-dots {
@@ -1692,7 +1692,7 @@
 }
 .niche-clinic-name {
   margin-top: .8rem;
-  font-family: "DM Sans", "Inter", sans-serif;
+  font-family: "Poppins", "Inter", sans-serif;
   font-size: clamp(2rem, 5.2vw, 2.85rem);
   font-weight: 700; line-height: 1.08; letter-spacing: -0.02em;
   color: var(--template-text);
@@ -1756,7 +1756,7 @@
 .niche-clinic-section-head { margin-bottom: 1.15rem; }
 .niche-clinic-section-head h2 {
   margin-top: .35rem;
-  font-family: "DM Sans", "Inter", sans-serif;
+  font-family: "Poppins", "Inter", sans-serif;
   font-size: 1.55rem; font-weight: 600; color: var(--template-text);
   letter-spacing: -0.01em;
 }
@@ -1874,7 +1874,7 @@
   border-bottom: 2px solid var(--template-text);
 }
 .niche-store-section-head h2 {
-  font-family: "DM Sans", "Inter", sans-serif;
+  font-family: "Poppins", "Inter", sans-serif;
   font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em;
   text-transform: uppercase;
 }
@@ -1950,7 +1950,7 @@
 }
 .template-thumbnail-restaurant-hero {
   height: 55%; display: flex; align-items: flex-end; padding: .6rem;
-  font-family: "DM Sans", serif; font-size: .65rem;
+  font-family: "Poppins", "Inter", sans-serif; font-size: .65rem;
   letter-spacing: .2em; text-transform: uppercase; font-weight: 700;
 }
 .template-thumbnail-menu-row {

@@ -1977,3 +1977,77 @@
 .template-thumbnail-store-grid > div > div:first-child { flex: 1; border-radius: 3px; min-height: 18px; }
 .template-thumbnail-store-grid > div span:nth-child(2) { height: 3px; border-radius: 2px; opacity: .5; }
 .template-thumbnail-store-grid > div span:last-child { height: 4px; border-radius: 2px; width: 40%; }
+
+/* Premium restaurant preview used by the template gallery. */
+.template-thumbnail-restaurant-premium {
+  display: grid;
+  grid-template-rows: 1.42fr auto 0.9fr;
+  padding: 0;
+  color: #fff;
+  background: #09070f;
+}
+.template-thumbnail-restaurant-premium-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 0.55rem;
+  background:
+    radial-gradient(circle at 68% 30%, rgb(255 167 61 / 0.75), transparent 16%),
+    radial-gradient(circle at 38% 36%, rgb(119 52 17 / 0.94), transparent 25%),
+    linear-gradient(145deg, #2d1109, #08060c 74%);
+}
+.template-thumbnail-restaurant-premium-hero::after {
+  content: "";
+  position: absolute;
+  right: 0.5rem;
+  bottom: -0.8rem;
+  width: 5.2rem;
+  height: 2.2rem;
+  border-radius: 50%;
+  background: linear-gradient(165deg, #f2ae43 0 18%, #55200d 20% 35%, #d66c24 36% 53%, #7f3d12 54% 70%, #5a1e0c 72%);
+  box-shadow: 0 -0.25rem 0 #5ec742, 0 -0.48rem 0 #4a1c0d;
+  transform: rotate(-8deg);
+}
+.template-thumbnail-restaurant-status {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  padding: 0.18rem 0.34rem;
+  border: 1px solid rgb(255 255 255 / 0.4);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 0.43rem;
+  background: rgb(10 8 15 / 0.55);
+}
+.template-thumbnail-restaurant-premium-brand {
+  position: absolute;
+  z-index: 2;
+  right: 1.5rem;
+  bottom: 0.25rem;
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-content: center;
+  border: 2px solid #a855f7;
+  border-radius: 50%;
+  color: #fff;
+  text-align: center;
+  background: #0b0812;
+  box-shadow: 0 0 0 2px rgb(0 0 0 / 0.6);
+}
+.template-thumbnail-restaurant-premium-brand span { font-size: 0.28rem; letter-spacing: 0.06em; }
+.template-thumbnail-restaurant-premium-brand strong { font-size: 0.44rem; line-height: 1; }
+.template-thumbnail-restaurant-premium-copy { position: absolute; z-index: 2; bottom: 0.25rem; left: 0.55rem; display: grid; max-width: 45%; }
+.template-thumbnail-restaurant-premium-copy strong { font-size: 0.52rem; }
+.template-thumbnail-restaurant-premium-copy span { margin-top: 0.08rem; color: #e4c9ff; font-size: 0.32rem; line-height: 1.2; }
+.template-thumbnail-restaurant-premium-cta { display: flex; justify-content: space-between; align-items: center; margin: 0.38rem 0.5rem; padding: 0.33rem 0.48rem; border-radius: 0.5rem; color: #04160a; font-size: 0.43rem; font-weight: 800; background: #25d366; }
+.template-thumbnail-restaurant-premium-products { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.28rem; padding: 0 0.5rem 0.5rem; }
+.template-thumbnail-restaurant-premium-products > div { display: grid; gap: 0.1rem; min-width: 0; padding: 0.2rem; border: 1px solid rgb(255 255 255 / 0.13); border-radius: 0.36rem; background: #17111f; }
+.template-thumbnail-food { display: block; height: 1.8rem; border-radius: 0.25rem; background: radial-gradient(circle at 54% 27%, #f6c45d 0 11%, transparent 12%), linear-gradient(160deg, #d76e27, #52200d 65%); }
+.template-thumbnail-restaurant-premium-products b { overflow: hidden; font-size: 0.34rem; text-overflow: ellipsis; white-space: nowrap; }
+.template-thumbnail-restaurant-premium-products small { color: #d7b0ff; font-size: 0.3rem; }
+.template-use-button { display: inline-flex; align-items: center; justify-content: center; min-height: 2.45rem; width: 100%; border: 0; border-radius: 0.75rem; color: #fff; font-size: 0.85rem; font-weight: 800; background: linear-gradient(100deg, #7c3aed, #d946ef); box-shadow: 0 9px 18px rgb(124 58 237 / 0.24); transition: transform 180ms ease, box-shadow 180ms ease; }
+.template-use-button:hover { transform: translateY(-2px); box-shadow: 0 13px 24px rgb(124 58 237 / 0.36); }
+.template-use-button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+.premium-dashboard .card-glow, .premium-dashboard .card-surface { border-radius: 1.1rem; }
+.premium-dashboard .template-marketplace { padding: 1.5rem; border: 1px solid rgb(168 85 247 / .18); border-radius: 1.5rem; background: linear-gradient(145deg, rgb(124 58 237 / .09), transparent 38%), rgb(255 255 255 / .018); }

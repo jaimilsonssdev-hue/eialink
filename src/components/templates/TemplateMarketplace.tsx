@@ -4,7 +4,11 @@ import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { createTemplateInstance } from "@/modules/templates/smart/TemplateInstanceFactory";
 
 export function TemplateMarketplace() {
-  const templates = TemplateService.list();
+  const templates = [...TemplateService.list()].sort((a, b) => {
+    if (a.id === "restaurant-menu") return -1;
+    if (b.id === "restaurant-menu") return 1;
+    return Number(Boolean(b.smart)) - Number(Boolean(a.smart));
+  });
   const activateTemplate = (id: string) => {
     const template = TemplateService.get(id);
     if (template.smart)
@@ -48,10 +52,10 @@ export function TemplateMarketplace() {
               {template.smart && (
                 <button
                   type="button"
-                  className="ml-4 text-sm font-semibold"
+                  className="template-use-button mt-4"
                   onClick={() => activateTemplate(template.id)}
                 >
-                  Usar este template
+                  Usar este visual
                 </button>
               )}
             </div>

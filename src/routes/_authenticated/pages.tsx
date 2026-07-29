@@ -62,6 +62,14 @@ function PagesWorkspace() {
       {creationError && <p className="pages-workspace-error" role="alert">{creationError}</p>}
 
       <section className="pages-grid" aria-label="Suas páginas">
+        <div className="page-library-panel-heading">
+          <div>
+            <p className="eyebrow">Biblioteca de páginas</p>
+            <h2>Gerencie seus Biolinks</h2>
+          </div>
+          <span>{pages.data?.length ?? 0} itens ativos</span>
+        </div>
+        <div className="page-library-list">
         {pages.data?.map((page) => (
           <article className="page-library-card" key={page.id}>
             <div
@@ -83,20 +91,20 @@ function PagesWorkspace() {
               <p className="line-clamp-2">
                 {page.description || "Personalize esta página para apresentar seu negócio."}
               </p>
-              <div className="page-library-actions">
-                <Link to="/builder" search={{ page: page.id }} className="btn-primary">
-                  <Pencil className="h-4 w-4" /> Editar
-                </Link>
-                <a
-                  href={`/p/${page.slug}`}
-                  target="_blank"
-                  rel="noopener"
-                  className="btn-secondary"
-                  aria-label={`Abrir ${page.display_name}`}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                </a>
-              </div>
+            </div>
+            <div className="page-library-actions">
+              <Link to="/builder" search={{ page: page.id }} className="btn-primary">
+                <Pencil className="h-4 w-4" /> Editar
+              </Link>
+              <a
+                href={`/p/${page.slug}`}
+                target="_blank"
+                rel="noopener"
+                className="btn-secondary"
+                aria-label={`Abrir ${page.display_name}`}
+              >
+                <ExternalLink className="h-4 w-4" />
+              </a>
             </div>
           </article>
         ))}
@@ -110,6 +118,7 @@ function PagesWorkspace() {
           <b>Criar uma nova página</b>
           <small>Comece por um modelo profissional e personalize do seu jeito.</small>
         </button>
+        </div>
       </section>
 
       <section className="pages-template-picker" aria-labelledby="choose-template-title">

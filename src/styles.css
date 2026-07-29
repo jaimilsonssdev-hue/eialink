@@ -2330,6 +2330,43 @@
 @media (max-width: 980px) { .pages-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .pages-workspace-header { align-items: start; flex-direction: column; }.pages-grid, .pages-template-grid { grid-template-columns: 1fr; }.pages-workspace-header .premium-cta { width: 100%; } }
 
+/* Biolink portfolio: a compact, comparable control area instead of a wall of cards. */
+.pages-workspace > .pages-grid {
+  display: block;
+  margin-top: .5rem;
+  padding: 1.25rem;
+  border: 1px solid rgb(192 132 252 / .23);
+  border-radius: 1.45rem;
+  background: linear-gradient(145deg, rgb(39 17 67 / .52), rgb(13 10 20 / .84));
+}
+.page-library-panel-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding: .1rem .15rem 1.05rem; }
+.page-library-panel-heading h2 { margin-top: .2rem; color: #fff; font-size: 1.3rem; font-weight: 720; letter-spacing: -.03em; }
+.page-library-panel-heading > span { padding: .35rem .6rem; border: 1px solid rgb(218 181 255 / .22); border-radius: 999px; color: #dcc5ff; background: rgb(255 255 255 / .045); font-size: .72rem; font-weight: 700; }
+.page-library-list { display: grid; gap: .7rem; }
+.pages-workspace .page-library-card, .pages-workspace .page-library-create { min-height: 7.25rem; overflow: hidden; border-radius: 1.1rem; }
+.pages-workspace .page-library-card { display: grid; grid-template-columns: 8.25rem 3.5rem minmax(0, 1fr) auto; align-items: center; gap: .75rem; padding: .65rem; }
+.pages-workspace .page-library-cover { align-self: stretch; height: auto; min-height: 5.85rem; padding: .55rem; border-radius: .75rem; }
+.pages-workspace .page-library-profile { width: 3.35rem; height: 3.35rem; margin: 0; border-width: 2px; }
+.pages-workspace .page-library-body { min-width: 0; padding: .15rem .2rem; text-align: left; }
+.pages-workspace .page-library-body h2 { margin-top: .12rem; overflow: hidden; color: #fff; font-size: 1rem; font-weight: 720; text-overflow: ellipsis; white-space: nowrap; }
+.pages-workspace .page-library-body > p:not(.eyebrow) { min-height: 0; margin-top: .28rem; color: var(--muted-foreground); font-size: .77rem; line-height: 1.45; }
+.pages-workspace .page-library-actions { display: flex; gap: .45rem; align-items: center; margin: 0; padding-right: .2rem; }
+.pages-workspace .page-library-actions .btn-primary { flex: initial; padding: .58rem .85rem; }
+.pages-workspace .page-library-actions .btn-secondary { padding: .58rem .68rem; }
+.pages-workspace .page-library-create { display: flex; flex-direction: row; align-items: center; gap: .75rem; min-height: 5.5rem; padding: 1rem 1.2rem; }
+.pages-workspace .page-library-create small { max-width: 28rem; text-align: left; }
+@media (max-width: 640px) {
+  .pages-workspace > .pages-grid { padding: .85rem; }
+  .page-library-panel-heading { align-items: start; }
+  .pages-workspace .page-library-card { grid-template-columns: 4.6rem minmax(0, 1fr) auto; gap: .6rem; }
+  .pages-workspace .page-library-cover { min-height: 4.7rem; }
+  .pages-workspace .page-library-profile { display: none; }
+  .pages-workspace .page-library-actions .btn-primary { font-size: 0; }
+  .pages-workspace .page-library-actions .btn-primary svg { margin: 0; }
+  .pages-workspace .page-library-create { align-items: flex-start; flex-wrap: wrap; }
+  .pages-workspace .page-library-create small { padding-left: 3.85rem; margin-top: -.55rem; }
+}
+
 /* Product shell shared by SaaS screens: restrained panels, generous rhythm, strong headings. */
 .premium-page { max-width: 75rem; margin-inline: auto; padding-block: .5rem 2rem; }
 .premium-page-heading { margin-bottom: 1.8rem; }.premium-page-heading h1 { font-size: clamp(1.75rem, 3vw, 2.55rem); font-weight: 750; letter-spacing: -.05em; }.premium-page-heading p { margin-top: .38rem; color: var(--muted-foreground); font-size: .95rem; }

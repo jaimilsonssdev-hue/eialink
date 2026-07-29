@@ -18,6 +18,7 @@ import {
   Menu,
   X,
   PanelsTopLeft,
+  ShoppingBag,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_authenticated")({
 const NAV = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/pages", label: "Meus Biolinks", icon: PanelsTopLeft },
+  { to: "/catalog", label: "Catálogo", icon: ShoppingBag },
   { to: "/analytics", label: "Resultados", icon: BarChart3 },
   { to: "/growth", label: "Crescimento", icon: Sparkles },
   { to: "/settings", label: "Configurações", icon: Settings },

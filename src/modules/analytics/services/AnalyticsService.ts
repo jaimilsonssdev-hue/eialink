@@ -3,12 +3,14 @@ export const AnalyticsService = {
   async getCurrentPageEvents() {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) throw new Error("Sessão inválida.");
-    const { data: bio, error: bioError } = await supabase
+    const { data: pages, error: bioError } = await supabase
       .from("bio_pages")
       .select("*")
       .eq("user_id", auth.user.id)
-      .maybeSingle();
+      .order("updated_at", { ascending: false })
+      .limit(1);
     if (bioError) throw bioError;
+    const bio = pages?.[0] ?? null;
     if (!bio) return null;
     const { data: events, error } = await supabase
       .from("analytics_events")

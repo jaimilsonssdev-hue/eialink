@@ -16,14 +16,15 @@ const OPPS = [
 
 function GrowthPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Centro de Crescimento</h1>
-        <p className="mt-2 text-muted-foreground">Oportunidades para levar seu negócio para o próximo nível.</p>
+    <div className="premium-page space-y-5">
+      <div className="premium-page-heading">
+        <p className="eyebrow">Próximos passos</p>
+        <h1>Centro de Crescimento</h1>
+        <p>Oportunidades para levar seu negócio para o próximo nível.</p>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         {OPPS.map(({ icon: Icon, title, desc, cta, msg }) => (
-          <div key={title} className="card-surface flex flex-col">
+          <div key={title} className="premium-growth-card flex flex-col">
             <div className="flex items-center gap-3">
               <div className="grid h-10 w-10 place-items-center rounded-lg" style={{ background: "var(--gradient-primary)" }}>
                 <Icon className="h-5 w-5 text-[color:var(--primary-foreground)]" />

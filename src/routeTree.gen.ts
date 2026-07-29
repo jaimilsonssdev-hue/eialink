@@ -16,6 +16,7 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedBioRouteImport } from './routes/_authenticated/bio'
 import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
+import { Route as AuthenticatedCatalogRouteImport } from './routes/_authenticated/catalog'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDiagnosticRouteImport } from './routes/_authenticated/diagnostic'
 import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated/growth'
@@ -57,6 +58,11 @@ const AuthenticatedBioRoute = AuthenticatedBioRouteImport.update({
 const AuthenticatedBuilderRoute = AuthenticatedBuilderRouteImport.update({
   id: '/builder',
   path: '/builder',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedCatalogRoute = AuthenticatedCatalogRouteImport.update({
+  id: '/catalog',
+  path: '/catalog',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/bio': typeof AuthenticatedBioRoute
   '/builder': typeof AuthenticatedBuilderRoute
+  '/catalog': typeof AuthenticatedCatalogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/growth': typeof AuthenticatedGrowthRoute
@@ -123,6 +130,7 @@ export interface FileRoutesByTo {
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/bio': typeof AuthenticatedBioRoute
   '/builder': typeof AuthenticatedBuilderRoute
+  '/catalog': typeof AuthenticatedCatalogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/growth': typeof AuthenticatedGrowthRoute
@@ -141,6 +149,7 @@ export interface FileRoutesById {
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/bio': typeof AuthenticatedBioRoute
   '/_authenticated/builder': typeof AuthenticatedBuilderRoute
+  '/_authenticated/catalog': typeof AuthenticatedCatalogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/_authenticated/growth': typeof AuthenticatedGrowthRoute
@@ -159,6 +168,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/bio'
     | '/builder'
+    | '/catalog'
     | '/dashboard'
     | '/diagnostic'
     | '/growth'
@@ -175,6 +185,7 @@ export interface FileRouteTypes {
     | '/analytics'
     | '/bio'
     | '/builder'
+    | '/catalog'
     | '/dashboard'
     | '/diagnostic'
     | '/growth'
@@ -192,6 +203,7 @@ export interface FileRouteTypes {
     | '/_authenticated/analytics'
     | '/_authenticated/bio'
     | '/_authenticated/builder'
+    | '/_authenticated/catalog'
     | '/_authenticated/dashboard'
     | '/_authenticated/diagnostic'
     | '/_authenticated/growth'
@@ -260,6 +272,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuilderRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/catalog': {
+      id: '/_authenticated/catalog'
+      path: '/catalog'
+      fullPath: '/catalog'
+      preLoaderRoute: typeof AuthenticatedCatalogRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -324,6 +343,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedBioRoute: typeof AuthenticatedBioRoute
   AuthenticatedBuilderRoute: typeof AuthenticatedBuilderRoute
+  AuthenticatedCatalogRoute: typeof AuthenticatedCatalogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiagnosticRoute: typeof AuthenticatedDiagnosticRoute
   AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
@@ -338,6 +358,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedBioRoute: AuthenticatedBioRoute,
   AuthenticatedBuilderRoute: AuthenticatedBuilderRoute,
+  AuthenticatedCatalogRoute: AuthenticatedCatalogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiagnosticRoute: AuthenticatedDiagnosticRoute,
   AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,

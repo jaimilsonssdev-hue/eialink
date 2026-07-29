@@ -37,12 +37,13 @@ function SettingsPage() {
   if (loading) return <Loader2 className="h-6 w-6 animate-spin" />;
 
   return (
-    <div className="max-w-2xl space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Configurações</h1>
-        <p className="mt-2 text-muted-foreground">Seus dados de perfil.</p>
+    <div className="premium-page space-y-5">
+      <div className="premium-page-heading">
+        <p className="eyebrow">Conta e preferências</p>
+        <h1>Configurações</h1>
+        <p>Seus dados de perfil.</p>
       </div>
-      <form onSubmit={save} className="card-surface space-y-4">
+      <form onSubmit={save} className="premium-settings-card space-y-4">
         <F label="Nome"><input className="input-base" value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} /></F>
         <F label="WhatsApp"><input className="input-base" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} /></F>
         <F label="Empresa"><input className="input-base" value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} /></F>

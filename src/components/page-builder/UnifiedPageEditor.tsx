@@ -91,9 +91,9 @@ const MENU: {
   },
   {
     id: "catalog",
-    group: "ConteÃºdo",
-    label: "Produtos e serviÃ§os",
-    description: "O que vocÃª oferece",
+    group: "Conteúdo",
+    label: "Produtos e serviços",
+    description: "O que você oferece",
     icon: WalletCards,
   },
 ];

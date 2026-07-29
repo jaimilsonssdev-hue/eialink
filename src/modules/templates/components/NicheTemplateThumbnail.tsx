@@ -1,8 +1,8 @@
 import type { TemplateCategory } from "../types";
 
-const content: Partial<Record<TemplateCategory, { label: string; title: string; tone: string }>> = {
-  clinic: { label: "CLINICA", title: "Cuidado que acolhe", tone: "clinic" },
-  store: { label: "LOJA", title: "Novidades da vitrine", tone: "store" },
+const content: Partial<Record<TemplateCategory, { label: string; title: string; tone: string; image?: string }>> = {
+  clinic: { label: "CLÍNICA", title: "Cuidado que acolhe", tone: "clinic", image: "/template-assets/clinic-demo-cover.png" },
+  store: { label: "LOJA", title: "Novidades da vitrine", tone: "store", image: "/template-assets/store-demo-cover.png" },
   beauty: { label: "BELEZA", title: "Sua melhor versao", tone: "beauty" },
   creator: { label: "CRIADOR", title: "Ideias que conectam", tone: "creator" },
   business: { label: "PROFISSIONAL", title: "Atendimento de confiança", tone: "business" },
@@ -15,7 +15,10 @@ export function NicheTemplateThumbnail({ category }: { category: TemplateCategor
 
   return (
     <div aria-hidden="true" className={`niche-template-thumb niche-template-thumb-${item.tone}`}>
-      <div className="niche-template-thumb-cover">
+      <div
+        className="niche-template-thumb-cover"
+        style={item.image ? { backgroundImage: `linear-gradient(90deg, rgb(8 6 12 / .55), rgb(8 6 12 / .05)), url(${item.image})` } : undefined}
+      >
         <span>{item.label}</span>
         <i />
       </div>

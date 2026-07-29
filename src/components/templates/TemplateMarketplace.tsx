@@ -1,62 +1,101 @@
-import { Sparkles } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Building2,
+  Dumbbell,
+  HeartPulse,
+  PawPrint,
+  Scissors,
+  ShoppingBag,
+  Sparkles,
+  UtensilsCrossed,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { createTemplateInstance } from "@/modules/templates/smart/TemplateInstanceFactory";
+import type { TemplateDefinition } from "@/modules/templates/types";
+
+const FILTERS = [
+  { id: "all", label: "Todos", icon: Sparkles },
+  { id: "restaurant", label: "Restaurantes", icon: UtensilsCrossed },
+  { id: "clinic", label: "Clínicas", icon: HeartPulse },
+  { id: "store", label: "Lojas", icon: ShoppingBag },
+  { id: "beauty", label: "Salões", icon: Scissors },
+  { id: "business", label: "Profissionais", icon: BriefcaseBusiness },
+  { id: "portfolio", label: "Imobiliárias", icon: Building2 },
+  { id: "creator", label: "Criadores", icon: Dumbbell },
+  { id: "premium", label: "Pet Shop", icon: PawPrint },
+] as const;
 
 export function TemplateMarketplace() {
-  const templates = [...TemplateService.list()].sort((a, b) => {
-    if (a.id === "restaurant-menu") return -1;
-    if (b.id === "restaurant-menu") return 1;
-    return Number(Boolean(b.smart)) - Number(Boolean(a.smart));
-  });
-  const activateTemplate = (id: string) => {
-    const template = TemplateService.get(id);
-    if (template.smart)
+  const [activeFilter, setActiveFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
+  const templates = useMemo(
+    () =>
+      [...TemplateService.list()]
+        .sort((a, b) => Number(Boolean(b.smart)) - Number(Boolean(a.smart)))
+        .filter((template) => activeFilter === "all" || template.category === activeFilter),
+    [activeFilter],
+  );
+
+  const activateTemplate = (template: TemplateDefinition) => {
+    if (template.smart) {
       sessionStorage.setItem(
         "eia-template-instance",
         JSON.stringify(createTemplateInstance(template.id, template.smart)),
       );
+    }
     window.location.assign(`/builder?template=${encodeURIComponent(template.id)}`);
   };
+
   return (
-    <section className="template-marketplace mt-10">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className="template-marketplace" aria-labelledby="templates-heading">
+      <div className="template-marketplace-heading">
         <div>
-          <p className="eyebrow">Biblioteca de templates</p>
-          <h2 className="premium-heading mt-2">Uma identidade para o seu negócio</h2>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Explore aparências pensadas para diferentes momentos e segmentos.
-          </p>
+          <p className="eyebrow">Modelos por nicho</p>
+          <h2 id="templates-heading" className="premium-heading">Escolha uma página que já nasceu para vender</h2>
+          <p>Todos os visuais mantêm a identidade EIA Link e mudam apenas a estrutura que seu negócio precisa.</p>
         </div>
-        <Sparkles className="text-[color:var(--primary)]" aria-hidden="true" />
+        <Sparkles className="template-marketplace-sparkle" aria-hidden="true" />
       </div>
-      <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+
+      <div className="template-niche-filters" role="tablist" aria-label="Filtrar modelos por nicho">
+        {FILTERS.map(({ id, label, icon: Icon }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={activeFilter === id}
+            className={activeFilter === id ? "is-active" : ""}
+            onClick={() => setActiveFilter(id)}
+          >
+            <Icon aria-hidden="true" />
+            <span>{label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="template-marketplace-grid">
         {templates.map((template) => (
           <article key={template.id} className="template-gallery-card">
             <TemplateThumbnail template={template} />
-            <div className="p-5">
+            <div className="template-gallery-card-body">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold">{template.name}</p>
                 {template.badge && <span className="template-badge">{template.badge}</span>}
               </div>
-              <p className="mt-2 text-sm text-muted-foreground">{template.description}</p>
-              <p className="mt-4 text-xs font-medium text-muted-foreground">
-                Melhor para: {template.bestFor ?? "uma página clara e profissional"}
-              </p>
-              <span className="template-preview-label mt-5">Prévia do visual</span>
-              {template.smart && (
-                <button
-                  type="button"
-                  className="template-use-button mt-4"
-                  onClick={() => activateTemplate(template.id)}
-                >
-                  Usar este visual
-                </button>
-              )}
+              <p className="template-gallery-description">{template.description}</p>
+              <p className="template-gallery-best-for">Ideal para: {template.bestFor ?? "uma presença profissional"}</p>
+              <button type="button" className="template-use-button" onClick={() => activateTemplate(template)}>
+                Usar este visual
+              </button>
             </div>
           </article>
         ))}
       </div>
+
+      {templates.length === 0 && (
+        <p className="template-marketplace-empty">Ainda não há um modelo para este nicho. Escolha outro segmento.</p>
+      )}
     </section>
   );
 }

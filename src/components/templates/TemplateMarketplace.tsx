@@ -9,9 +9,9 @@ export function TemplateMarketplace() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="eyebrow">Biblioteca de templates</p>
-          <h2 className="premium-heading mt-2">Uma identidade para o seu negocio</h2>
+          <h2 className="premium-heading mt-2">Uma identidade para o seu negócio</h2>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground">
-            Explore aparencias pensadas para diferentes momentos e segmentos.
+            Explore aparências pensadas para diferentes momentos e segmentos.
           </p>
         </div>
         <Sparkles className="text-[color:var(--primary)]" aria-hidden="true" />
@@ -27,7 +27,7 @@ export function TemplateMarketplace() {
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{template.description}</p>
               <p className="mt-4 text-xs font-medium text-muted-foreground">
-                Melhor para: {template.bestFor ?? "uma pagina clara e profissional"}
+                Melhor para: {template.bestFor ?? "uma página clara e profissional"}
               </p>
               <button
                 type="button"

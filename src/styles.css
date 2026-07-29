@@ -1734,6 +1734,12 @@
   box-shadow: 0 24px 60px rgb(11 37 69 / .12);
 }
 .niche-clinic-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.niche-clinic-hero-media { order: -1; aspect-ratio: 16 / 9; }
+.niche-clinic-name { font-size: clamp(1.8rem, 8.4vw, 2.85rem); line-height: 1.01; overflow-wrap: anywhere; }
+@media (min-width: 720px) {
+  .niche-clinic-hero-media { order: initial; aspect-ratio: 4 / 5; }
+  .niche-clinic-name { font-size: clamp(2rem, 5.2vw, 2.85rem); line-height: 1.08; }
+}
 .niche-clinic-hero-fallback {
   display: grid; place-items: center; width: 100%; height: 100%; color: var(--template-primary);
 }
@@ -2201,6 +2207,25 @@
 .premium-growth-card:hover { transform: translateY(-3px); border-color: rgb(192 132 252 / .55); }.premium-growth-card .btn-primary { margin-top: 1.3rem; border-radius: .75rem; padding: .62rem .9rem; font-size: .82rem; }
 .premium-settings-card { max-width: 47rem; border: 1px solid rgb(255 255 255 / .12); border-radius: 1.2rem; padding: clamp(1.25rem, 3vw, 2rem); background: linear-gradient(145deg, #17131f, #100d16); }.premium-settings-card label { color: #d8d1e1; font-size: .82rem; font-weight: 600; }.premium-settings-card .input-base { min-height: 2.85rem; border-color: rgb(255 255 255 / .11); background: rgb(255 255 255 / .055); }
 .catalog-workspace-header { display: flex; align-items: end; justify-content: space-between; gap: 1.25rem; }.catalog-workspace-actions { display: flex; align-items: end; gap: .75rem; }.catalog-workspace-actions label { min-width: 12rem; color: var(--muted-foreground); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }.catalog-workspace-actions select { margin-top: .35rem; }.catalog-workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.25rem; }.catalog-workspace-tip { height: fit-content; border: 1px solid rgb(192 132 252 / .25); border-radius: 1rem; padding: 1.15rem; color: #d8b4fe; background: linear-gradient(145deg, rgb(124 58 237 / .16), rgb(15 12 20 / .7)); }.catalog-workspace-tip b { display: block; margin-top: .7rem; color: #fff; }.catalog-workspace-tip p { margin-top: .35rem; color: var(--muted-foreground); font-size: .82rem; line-height: 1.5; }.catalog-workspace-tip .btn-secondary { width: 100%; margin-top: 1rem; padding: .65rem; font-size: .8rem; }.catalog-workspace-message { margin-top: 1rem; color: #a7f3d0; font-size: .86rem; }@media (max-width: 850px) { .catalog-workspace-header, .catalog-workspace-actions { align-items: stretch; flex-direction: column; }.catalog-workspace-grid { grid-template-columns: 1fr; }.catalog-workspace-actions label { min-width: 0; } }
+.media-library {
+  margin-top: 1rem;
+  padding-top: .9rem;
+  border-top: 1px solid rgb(255 255 255 / .1);
+}
+.media-library > p { color: #fff; font-size: .82rem; font-weight: 650; }
+.media-library .media-library-help { margin-bottom: .55rem; color: var(--muted-foreground); font-weight: 500; line-height: 1.45; }
+.media-library-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; margin-top: .6rem; }
+.media-library-grid button {
+  position: relative; overflow: hidden; min-height: 5.2rem;
+  border: 1px solid rgb(255 255 255 / .13); border-radius: .65rem;
+  color: #fff; text-align: left; background: #17131e;
+}
+.media-library-grid button:hover { border-color: rgb(192 132 252 / .8); transform: translateY(-1px); }
+.media-library-grid button.is-selected { border-color: #c084fc; box-shadow: 0 0 0 2px rgb(192 132 252 / .18); }
+.media-library-grid img { width: 100%; height: 4rem; object-fit: cover; }
+.media-library-grid span { display: block; padding: .3rem .4rem; font-size: .68rem; font-weight: 650; }
+.media-library small { display: block; margin-top: .55rem; color: var(--muted-foreground); font-size: .7rem; line-height: 1.4; }
+@media (max-width: 420px) { .media-library-grid { grid-template-columns: 1fr; } .media-library-grid img { height: 6rem; } }
 
 /* Distinct visual previews for the template library. */
 .niche-template-thumb { min-height: 12.5rem; padding: .5rem; color: #fff; background: #111; }

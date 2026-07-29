@@ -6,7 +6,7 @@ import type { PublicBio, PublicLink } from "@/components/public-profile/types";
 import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
-import { CatalogSection } from "@/modules/products/components/CatalogSection";
+
 import type { CatalogItem } from "@/modules/products/types";
 
 type BioForm = Pick<

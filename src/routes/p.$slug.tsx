@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import type { PageBlock } from "@/components/page-builder/types";
-import { CatalogSection } from "@/modules/products/components/CatalogSection";
+import type { CatalogItem } from "@/modules/products/types";
 import type { CatalogItem } from "@/modules/products/types";
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.

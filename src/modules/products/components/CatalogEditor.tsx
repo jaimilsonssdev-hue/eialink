@@ -56,7 +56,7 @@ export function CatalogEditor({
         <div key={item.id} className="catalog-editor-item">
           <div className="flex items-center justify-between gap-2">
             <p className="text-sm font-semibold">
-              {item.type === "product" ? "Produto" : "ServiÃ§o"}
+              {item.type === "product" ? "Produto" : "Serviço"}
             </p>
             <label className="text-xs">
               <input
@@ -98,14 +98,14 @@ export function CatalogEditor({
       ))}
       {!items.length && (
         <p className="text-sm text-muted-foreground">
-          Nenhum produto ou serviÃ§o cadastrado ainda.
+          Nenhum produto ou serviço cadastrado ainda.
         </p>
       )}
       {draft ? (
         <div className="catalog-editor-item">
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">
-              Novo {draft.type === "product" ? "produto" : "serviÃ§o"}
+              Novo {draft.type === "product" ? "produto" : "serviço"}
             </p>
             <button
               type="button"
@@ -159,7 +159,7 @@ export function CatalogEditor({
             className="btn-secondary"
             onClick={() => setDraft(blankDraft("service"))}
           >
-            <Plus size={16} /> ServiÃ§o
+            <Plus size={16} /> Serviço
           </button>
         </div>
       )}
@@ -187,8 +187,8 @@ function CatalogFields({
         className="input-base mt-2"
         value={item.description ?? ""}
         onChange={(event) => onChange({ description: event.target.value || null })}
-        placeholder="DescriÃ§Ã£o"
-        aria-label="DescriÃ§Ã£o"
+        placeholder="Descrição"
+        aria-label="Descrição"
       />
       <div className="mt-2">
         <MediaUploader
@@ -207,22 +207,22 @@ function CatalogFields({
         onChange={(event) =>
           onChange({ price: event.target.value === "" ? null : Number(event.target.value) })
         }
-        placeholder="PreÃ§o opcional"
-        aria-label="PreÃ§o"
+        placeholder="Preço opcional"
+        aria-label="Preço"
       />
       <input
         className="input-base mt-2"
         value={item.button_label}
         onChange={(event) => onChange({ button_label: event.target.value })}
-        placeholder="Texto do botÃ£o"
-        aria-label="Texto do botÃ£o"
+        placeholder="Texto do botão"
+        aria-label="Texto do botão"
       />
       <input
         className="input-base mt-2"
         value={item.button_url ?? ""}
         onChange={(event) => onChange({ button_url: event.target.value || null })}
-        placeholder="Link do botÃ£o (opcional)"
-        aria-label="Link do botÃ£o"
+        placeholder="Link do botão (opcional)"
+        aria-label="Link do botão"
       />
     </>
   );

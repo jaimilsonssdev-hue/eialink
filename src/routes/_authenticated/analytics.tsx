@@ -76,10 +76,11 @@ function AnalyticsPage() {
     : 0;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Analytics</h1>
-        <p className="mt-2 text-muted-foreground">
+    <div className="premium-page space-y-5">
+      <div className="premium-page-heading">
+        <p className="eyebrow">Resultados da sua página</p>
+        <h1>Analytics</h1>
+        <p>
           Acompanhe o desempenho da sua página em tempo real.
         </p>
       </div>
@@ -112,7 +113,7 @@ function AnalyticsPage() {
         />
       </div>
 
-      <div className="card-surface">
+      <div className="premium-panel premium-chart">
         <div className="flex items-baseline justify-between">
           <h3 className="font-semibold">Últimos 7 dias</h3>
           <span className="text-xs text-muted-foreground">{total} eventos totais</span>
@@ -138,8 +139,8 @@ function AnalyticsPage() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="card-surface">
-          <h3 className="font-semibold mb-4">Tipos de evento</h3>
+        <div className="premium-panel">
+          <h3 className="premium-panel-title mb-4">Tipos de evento</h3>
           <div className="space-y-3">
             {Object.entries(byType)
               .sort((a, b) => b[1] - a[1])
@@ -176,8 +177,8 @@ function AnalyticsPage() {
           </div>
         </div>
 
-        <div className="card-surface">
-          <h3 className="font-semibold mb-4">Dispositivos</h3>
+        <div className="premium-panel">
+          <h3 className="premium-panel-title mb-4">Dispositivos</h3>
           <div className="space-y-3">
             {Object.entries(byDevice)
               .sort((a, b) => b[1] - a[1])
@@ -208,8 +209,8 @@ function AnalyticsPage() {
         </div>
       </div>
 
-      <div className="card-surface">
-        <h3 className="font-semibold mb-3">Origem do tráfego (UTM Source)</h3>
+      <div className="premium-panel">
+        <h3 className="premium-panel-title mb-3">Origem do tráfego (UTM Source)</h3>
         {Object.entries(bySource)
           .sort((a, b) => b[1] - a[1])
           .map(([k, v]) => (
@@ -241,7 +242,7 @@ function StatCard({
   sub?: string;
 }) {
   return (
-    <div className="card-glow">
+    <div className="premium-metric">
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">{label}</span>
         <span
@@ -251,7 +252,7 @@ function StatCard({
           <Icon className="h-4 w-4" />
         </span>
       </div>
-      <div className="mt-3 text-3xl font-bold">{value}</div>
+      <div className="premium-metric-value">{value}</div>
       {sub && <div className="text-xs text-muted-foreground mt-1">{sub}</div>}
     </div>
   );

@@ -5,8 +5,8 @@ export function CatalogSection({ items }: { items: CatalogItem[] }) {
   const activeItems = items.filter((item) => item.active);
   if (!activeItems.length) return null;
   return (
-    <section className="public-catalog" aria-label="Produtos e serviÃ§os">
-      <p className="public-catalog-title">Produtos e serviÃ§os</p>
+    <section className="public-catalog" aria-label="Produtos e serviços">
+      <p className="public-catalog-title">Produtos e serviços</p>
       <div className="public-catalog-grid">
         {activeItems.map((item) => (
           <article key={item.id} className={`public-catalog-card public-catalog-card-${item.type}`}>
@@ -17,7 +17,7 @@ export function CatalogSection({ items }: { items: CatalogItem[] }) {
             )}
             <div>
               <span className="public-catalog-type">
-                {item.type === "product" ? "Produto" : "ServiÃ§o"}
+                {item.type === "product" ? "Produto" : "Serviço"}
               </span>
               <p className="font-semibold">{item.name}</p>
               {item.description && <p className="mt-1 text-sm opacity-75">{item.description}</p>}

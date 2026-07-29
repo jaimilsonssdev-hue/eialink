@@ -59,7 +59,7 @@ export function TemplateRenderer({
         } as CSSProperties
       }
     >
-      {model.template.smart ? (
+      {model.template.smart?.niche === "restaurant" ? (
         smartTemplateRegistry.render(model.template.smart, {
           bio,
           links,

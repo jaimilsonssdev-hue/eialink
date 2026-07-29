@@ -1,11 +1,14 @@
 import type { TemplateDefinition } from "../types";
 import { RestaurantTemplateThumbnail } from "./RestaurantTemplateThumbnail";
+import { NicheTemplateThumbnail } from "./NicheTemplateThumbnail";
 
 export function TemplateThumbnail({ template }: { template: TemplateDefinition }) {
   const { colors } = template.theme;
   const layout = template.layout;
 
   if (template.id === "restaurant-menu") return <RestaurantTemplateThumbnail />;
+  if (["clinic", "store", "beauty", "creator", "business", "portfolio"].includes(template.category))
+    return <NicheTemplateThumbnail category={template.category} />;
 
   if (layout === "restaurant") {
     return (

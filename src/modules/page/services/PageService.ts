@@ -1,4 +1,18 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
+export type OwnedPage = Tables<"bio_pages">;
+
+function slugify(value: string) {
+  const normalized = value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 42);
+  return normalized || "minha-pagina";
+}
 export const PageService = {
   async getCurrentUserId() {
     const { data, error } = await supabase.auth.getUser();
@@ -10,7 +24,13 @@ export const PageService = {
     if (error || !auth.user) throw new Error(error?.message ?? "Sessão inválida.");
     const [{ data: bio, error: bioError }, { data: profile, error: profileError }] =
       await Promise.all([
-        supabase.from("bio_pages").select("*").eq("user_id", auth.user.id).maybeSingle(),
+        supabase
+          .from("bio_pages")
+          .select("*")
+          .eq("user_id", auth.user.id)
+          .order("updated_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
         supabase.from("profiles").select("*").eq("id", auth.user.id).maybeSingle(),
       ]);
     if (bioError || profileError) throw new Error(bioError?.message ?? profileError?.message);
@@ -19,6 +39,35 @@ export const PageService = {
       : { data: [], error: null };
     if (linksError) throw new Error(linksError.message);
     return { userId: auth.user.id, bio, profile, links: links ?? [] };
+  },
+  async listOwnedPages(): Promise<OwnedPage[]> {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("bio_pages")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return data ?? [];
+  },
+  async createPage({ displayName, templateId }: { displayName: string; templateId?: string }) {
+    const userId = await this.getCurrentUserId();
+    const suffix = crypto.randomUUID().slice(0, 6);
+    const { data, error } = await supabase
+      .from("bio_pages")
+      .insert({
+        user_id: userId,
+        display_name: displayName.trim() || "Minha nova página",
+        slug: `${slugify(displayName)}-${suffix}`,
+        template_id: templateId ?? null,
+        description: "Conte em poucas palavras o que torna seu negócio especial.",
+        theme: "aurora",
+        published: true,
+      })
+      .select("*")
+      .single();
+    if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a página.");
+    return data;
   },
   async uploadMedia(file: File, path: string) {
     const { error } = await supabase.storage

@@ -50,8 +50,9 @@ function Dashboard() {
         .from("bio_pages")
         .select("*")
         .eq("user_id", u.user.id)
-        .maybeSingle();
-      return data;
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      return data?.[0] ?? null;
     },
   });
   const { data: linksCount } = useQuery({

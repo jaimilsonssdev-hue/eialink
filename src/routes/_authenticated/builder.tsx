@@ -6,32 +6,43 @@ import { UnifiedPageEditor } from "@/components/page-builder/UnifiedPageEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductService } from "@/modules/products/services/ProductService";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
+import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/builder")({
   component: BuilderPage,
-  validateSearch: (search: Record<string, unknown>) => ({
-    template: typeof search.template === "string" ? search.template : undefined,
+  validateSearch: z.object({
+    template: z.string().optional(),
+    page: z.string().optional(),
   }),
   head: () => ({ meta: [{ title: "Minha Página — EIA Digital" }] }),
 });
 
 function BuilderPage() {
-  const { template: requestedTemplateId } = Route.useSearch();
-  const appliedTemplateRef = useRef<string>();
+  const { template: requestedTemplateId, page: requestedPageId } = Route.useSearch();
+  const appliedTemplateRef = useRef<string | undefined>(undefined);
   const page = useQuery({
-    queryKey: ["unified-page-editor"],
+    queryKey: ["unified-page-editor", requestedPageId],
     queryFn: async () => {
       const { data: auth, error: authError } = await supabase.auth.getUser();
       if (authError || !auth.user) throw new Error(authError?.message ?? "Sessão inválida.");
 
-      const [{ data: bio, error: bioError }, { data: profile, error: profileError }] =
+      let bioRequest = supabase
+        .from("bio_pages")
+        .select("*")
+        .eq("user_id", auth.user.id)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      if (requestedPageId) bioRequest = bioRequest.eq("id", requestedPageId);
+
+      const [{ data: bios, error: bioError }, { data: profile, error: profileError }] =
         await Promise.all([
-          supabase.from("bio_pages").select("*").eq("user_id", auth.user.id).maybeSingle(),
+          bioRequest,
           supabase.from("profiles").select("*").eq("id", auth.user.id).maybeSingle(),
         ]);
       if (bioError) throw new Error(bioError.message);
       if (profileError) throw new Error(profileError.message);
 
+      const bio = bios?.[0] ?? null;
       const { data: links, error: linksError } = bio
         ? await supabase.from("bio_links").select("*").eq("bio_page_id", bio.id).order("position")
         : { data: [], error: null };

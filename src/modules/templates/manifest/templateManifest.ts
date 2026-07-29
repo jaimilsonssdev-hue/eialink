@@ -15,13 +15,16 @@ const define = (template: TemplateInput): TemplateDefinition => ({
   ...template,
   badge:
     template.badge ??
-    ({
-      creator: "Popular",
-      business: "Mais usado",
-      restaurant: "Novo",
-      beauty: "Novo",
-      store: "Popular",
-    }[template.category] as TemplateDefinition["badge"]),
+    (
+      {
+        creator: "Popular",
+        business: "Mais usado",
+        restaurant: "Novo",
+        clinic: "Novo",
+        beauty: "Novo",
+        store: "Popular",
+      } as Partial<Record<TemplateDefinition["category"], TemplateDefinition["badge"]>>
+    )[template.category],
   bestFor:
     template.bestFor ??
     {
@@ -30,6 +33,7 @@ const define = (template: TemplateInput): TemplateDefinition => ({
       business: "serviÃ§os profissionais",
       store: "lojas e catÃ¡logos",
       restaurant: "restaurantes e pedidos",
+      clinic: "clÃ­nicas e consultÃ³rios",
       beauty: "beleza e bem-estar",
       portfolio: "portfÃ³lios criativos",
       premium: "marcas que buscam sofisticaÃ§Ã£o",
@@ -224,8 +228,8 @@ export const templateManifest: TemplateDefinition[] = [
         primary: "#059669",
       },
     },
-    layout: "store",
-    components: ["banner", "profile", "links", "pix", "footer"],
+    layout: "storefront",
+    components: ["banner", "profile", "links", "pix"],
     componentVariants: {
       banner: "compact",
       profile: "business",
@@ -250,14 +254,41 @@ export const templateManifest: TemplateDefinition[] = [
         primary: "#dc2626",
       },
     },
-    layout: "cards",
-    components: ["banner", "profile", "links", "pix", "footer"],
+    layout: "restaurant",
+    components: ["banner", "profile", "links", "pix"],
     componentVariants: {
       banner: "compact",
       profile: "overlapping-banner",
       links: "elevated",
       pix: "highlighted",
       footer: "discreet",
+    },
+    supportedFeatures: ["profile", "links", "whatsapp", "pix"],
+  }),
+  define({
+    id: "clinic-care",
+    slug: "clinic-care",
+    name: "Cuidado",
+    description: "ApresentaÃ§Ã£o clara e confiÃ¡vel para clÃ­nicas e dentistas.",
+    category: "clinic",
+    badge: "Novo",
+    bestFor: "clÃ­nicas, dentistas e consultÃ³rios",
+    theme: {
+      colors: {
+        background: "#eef7f7",
+        surface: "#ffffff",
+        text: "#183b42",
+        muted: "#55767b",
+        primary: "#177e89",
+      },
+    },
+    layout: "clinic",
+    components: ["banner", "profile", "links", "pix"],
+    componentVariants: {
+      banner: "default",
+      profile: "business",
+      links: "minimal",
+      pix: "highlighted",
     },
     supportedFeatures: ["profile", "links", "whatsapp", "pix"],
   }),

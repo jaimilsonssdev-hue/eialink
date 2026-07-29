@@ -28,7 +28,15 @@ export type PageData = {
 };
 export type TemplateComponentType = "banner" | "profile" | "links" | "pix" | "footer";
 export type TemplateCategory =
-  "minimal" | "creator" | "business" | "store" | "restaurant" | "beauty" | "portfolio" | "premium";
+  | "minimal"
+  | "creator"
+  | "business"
+  | "store"
+  | "restaurant"
+  | "clinic"
+  | "beauty"
+  | "portfolio"
+  | "premium";
 export type ComponentVariants = Partial<Record<TemplateComponentType, string>>;
 export type TemplateDefinition = {
   id: string;
@@ -42,7 +50,16 @@ export type TemplateDefinition = {
   bestFor?: string;
   benefits?: string[];
   theme: ThemeTokens;
-  layout: "vertical" | "cards" | "business" | "minimal" | "store" | "creator";
+  layout:
+    | "vertical"
+    | "cards"
+    | "business"
+    | "minimal"
+    | "store"
+    | "creator"
+    | "restaurant"
+    | "clinic"
+    | "storefront";
   components: TemplateComponentType[];
   componentVariants: ComponentVariants;
   supportedFeatures: string[];

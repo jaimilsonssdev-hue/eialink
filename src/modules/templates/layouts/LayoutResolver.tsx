@@ -52,4 +52,7 @@ export const layoutResolver = new LayoutResolver()
   .register(new OrderedLayout("cards", ["banner", "profile", "links", "pix", "footer"]))
   .register(new OrderedLayout("business", ["banner", "profile", "links", "pix", "footer"]))
   .register(new OrderedLayout("store", ["banner", "links", "profile", "pix", "footer"]))
-  .register(new OrderedLayout("creator", ["profile", "banner", "links", "footer"]));
+  .register(new OrderedLayout("creator", ["profile", "banner", "links", "footer"]))
+  .register(new OrderedLayout("restaurant", ["banner", "profile", "links", "pix"]))
+  .register(new OrderedLayout("clinic", ["banner", "profile", "links", "pix"]))
+  .register(new OrderedLayout("storefront", ["banner", "profile", "links", "pix"]));

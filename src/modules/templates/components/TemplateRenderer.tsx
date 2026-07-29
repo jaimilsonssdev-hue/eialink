@@ -3,6 +3,7 @@ import { TemplateService } from "../services/TemplateService";
 import type { PageData } from "../types";
 import type { CSSProperties, ReactNode } from "react";
 import { layoutResolver } from "../layouts/LayoutResolver";
+import { Footer } from "@/components/public-profile/Footer";
 
 export function TemplateRenderer({
   bio,
@@ -25,11 +26,12 @@ export function TemplateRenderer({
     whatsapp: bio.whatsapp,
     pix: bio.pix_key,
   };
-  const model = TemplateService.render(data, bio.template_id);
+  const model = TemplateService.render(data, bio.template_id ?? undefined);
   const layout = layoutResolver.resolve(model);
   return (
     <main
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}
+      data-template-layout={model.template.layout}
       style={
         {
           fontFamily: model.theme.typography.fontFamily,
@@ -43,6 +45,7 @@ export function TemplateRenderer({
     >
       {layout?.render(model, { bio, links, onTrack, onShare })}
       {supplemental}
+      {!model.template.components.includes("footer") && <Footer />}
     </main>
   );
 }

@@ -2238,6 +2238,23 @@
 @media (max-width: 420px) { .media-library-grid { grid-template-columns: 1fr; } .media-library-grid img { height: 6rem; } }
 
 /* Distinct visual previews for the template library. */
+.template-marketplace { position: relative; overflow: hidden; }
+.template-marketplace-heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.template-marketplace-heading > div > p:last-child { max-width: 42rem; margin-top: .55rem; color: var(--muted-foreground); font-size: .9rem; line-height: 1.55; }
+.template-marketplace-sparkle { flex: 0 0 auto; color: #bd71ff; }
+.template-niche-filters { display: flex; gap: .55rem; margin: 1.4rem -0.2rem 1.45rem; padding: .15rem .2rem .45rem; overflow-x: auto; scrollbar-width: thin; }
+.template-niche-filters button { display: inline-flex; flex: 0 0 auto; flex-direction: column; align-items: center; justify-content: center; gap: .35rem; min-width: 5.65rem; min-height: 4.45rem; padding: .55rem .65rem; border: 1px solid rgb(255 255 255 / .11); border-radius: .85rem; color: #c7bfce; background: rgb(255 255 255 / .025); font-size: .65rem; font-weight: 650; transition: transform .18s ease, border-color .18s ease, background .18s ease; }
+.template-niche-filters button svg { width: 1.1rem; height: 1.1rem; color: #b989ff; }
+.template-niche-filters button:hover, .template-niche-filters button.is-active { border-color: rgb(190 113 255 / .75); color: #fff; background: linear-gradient(145deg, rgb(124 58 237 / .38), rgb(80 25 135 / .2)); transform: translateY(-2px); }
+.template-niche-filters button.is-active { box-shadow: 0 12px 24px -18px #bd71ff; }
+.template-marketplace-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+.template-gallery-card { overflow: hidden; border: 1px solid rgb(255 255 255 / .11); border-radius: 1rem; background: linear-gradient(155deg, #18131f, #0d0a12); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
+.template-gallery-card:hover { transform: translateY(-4px); border-color: rgb(190 113 255 / .72); box-shadow: 0 20px 36px -28px #c084fc; }
+.template-gallery-card-body { padding: .95rem; }.template-gallery-description { min-height: 2.6rem; margin-top: .45rem; color: #c6bdcf; font-size: .77rem; line-height: 1.45; }.template-gallery-best-for { margin-top: .6rem; color: #9b8cab; font-size: .68rem; line-height: 1.4; }
+.template-use-button { display: inline-flex; width: 100%; align-items: center; justify-content: center; min-height: 2.5rem; margin-top: .85rem; border-radius: .65rem; color: #fff; background: linear-gradient(100deg, #7131e8, #ce35e8); font-size: .76rem; font-weight: 750; box-shadow: 0 10px 22px -16px #ca38ec; }
+.template-use-button:hover { filter: brightness(1.08); }.template-marketplace-empty { padding: 2rem 0 .75rem; color: var(--muted-foreground); text-align: center; }
+@media (max-width: 840px) { .template-marketplace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .template-marketplace-grid { grid-template-columns: 1fr; }.template-niche-filters button { min-width: 5.25rem; }.template-marketplace-heading { align-items: flex-start; }.template-marketplace-sparkle { display: none; } }
 .niche-template-thumb { min-height: 12.5rem; padding: .5rem; color: #fff; background: #111; }
 .niche-template-thumb-cover { position: relative; height: 5.5rem; overflow: hidden; padding: .55rem; border-radius: .7rem; background: linear-gradient(135deg, #23203a, #0e0b15); background-size: cover; background-position: center; }
 .niche-template-thumb-cover::after { content: ""; position: absolute; right: -.7rem; bottom: -1.2rem; width: 6.3rem; height: 6.3rem; border-radius: 50%; background: rgb(255 255 255 / .18); }

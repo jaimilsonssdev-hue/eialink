@@ -234,8 +234,8 @@ export function UnifiedPageEditor({
   }
 
   return (
-    <div className="space-y-5">
-      <header className="sticky top-0 z-20 -mx-6 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/95 px-6 py-4 backdrop-blur md:-mx-10 md:px-10">
+    <div className="premium-builder space-y-5">
+      <header className="builder-topbar sticky top-0 z-20 -mx-6 flex flex-wrap items-center justify-between gap-3 px-6 py-4 backdrop-blur md:-mx-10 md:px-10">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
             Minha Página
@@ -283,8 +283,8 @@ export function UnifiedPageEditor({
         </div>
       </header>
 
-      <div className="grid gap-6 xl:grid-cols-[18rem_minmax(25rem,1fr)_22rem]">
-        <aside className="card-surface h-fit xl:sticky xl:top-24">
+      <div className="builder-layout grid gap-6 xl:grid-cols-[18rem_minmax(25rem,1fr)_22rem]">
+        <aside className="builder-menu card-surface h-fit xl:sticky xl:top-24">
           {Array.from(new Set(MENU.map((item) => item.group))).map((group) => (
             <div key={group} className="mb-5 last:mb-0">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
@@ -299,7 +299,7 @@ export function UnifiedPageEditor({
                       key={item.id}
                       type="button"
                       onClick={() => select(item.id)}
-                      className={`rounded-xl px-3 py-2.5 text-left transition-colors ${active ? "bg-surface-elevated text-foreground" : "hover:bg-surface-elevated/70"}`}
+                      className={`builder-menu-item rounded-xl px-3 py-2.5 text-left transition-colors ${active ? "is-active" : ""}`}
                     >
                       <span className="flex items-center gap-2 text-sm font-medium">
                         <Icon className="h-4 w-4 text-[color:var(--primary)]" />
@@ -316,8 +316,8 @@ export function UnifiedPageEditor({
           ))}
         </aside>
 
-        <main ref={previewRef} className="min-w-0 xl:order-none">
-          <p className="mb-3 text-center text-sm font-medium text-muted-foreground">
+        <main ref={previewRef} className="builder-preview-stage min-w-0 xl:order-none">
+          <p className="builder-preview-label mb-3 text-center text-sm font-medium text-muted-foreground">
             Preview da sua página
           </p>
           <div
@@ -333,7 +333,7 @@ export function UnifiedPageEditor({
           </div>
         </main>
 
-        <aside className="card-surface h-fit xl:sticky xl:top-24">
+        <aside className="builder-inspector card-surface h-fit xl:sticky xl:top-24">
           {!selected ? (
             <div className="space-y-4">
               <div>

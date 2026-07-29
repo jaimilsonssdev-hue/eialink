@@ -42,7 +42,16 @@ export type TemplateDefinition = {
   bestFor?: string;
   benefits?: string[];
   theme: ThemeTokens;
-  layout: "vertical" | "cards" | "business" | "minimal" | "store" | "creator";
+  layout:
+    | "vertical"
+    | "cards"
+    | "business"
+    | "minimal"
+    | "store"
+    | "creator"
+    | "restaurant"
+    | "clinic"
+    | "storefront";
   components: TemplateComponentType[];
   componentVariants: ComponentVariants;
   supportedFeatures: string[];

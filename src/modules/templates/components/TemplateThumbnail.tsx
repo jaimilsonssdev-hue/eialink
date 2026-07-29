@@ -6,6 +6,7 @@ export function TemplateThumbnail({ template }: { template: TemplateDefinition }
     <div
       aria-hidden="true"
       className="template-thumbnail"
+      data-layout={template.layout}
       style={{
         background: `linear-gradient(145deg, ${colors.background}, ${colors.surface})`,
         color: colors.text,

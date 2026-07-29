@@ -1,5 +1,7 @@
 # Arquitetura modular
 
+> DireÃ§Ã£o visual atual: o renderer pÃºblico recebe tokens do template por propriedades CSS, mantendo Preview e pÃ¡gina pÃºblica na mesma composiÃ§Ã£o. Consulte `docs/rfc/RFC-009-Visual-Product-Redesign.md`.
+
 ## Visão geral
 
 Os módulos vivem em `src/modules`. A interface mantém as rotas atuais; Services concentram acesso por domínio sem mudar contratos, banco ou experiência.
@@ -38,6 +40,7 @@ Na Sprint 03, `bio_pages.template_id` passa a persistir apenas a escolha visual.
 ## Layout System
 
 O `TemplateRenderer` delega a composição ao `LayoutResolver`. Layouts ordenam apenas `TemplateComponentType`; `ComponentRegistry` resolve os componentes. Isso permite novos layouts sem alterar o renderer.
+
 # Biblioteca de templates
 
 A biblioteca de templates Ã© registrada em `src/modules/templates/manifest/templateManifest.ts`. A definiÃ§Ã£o de cada template fornece somente tokens de tema, layout e variantes visuais; os dados da pÃ¡gina continuam sendo compostos exclusivamente pelo `TemplateRenderer`. O `ComponentVariantRegistry` traduz uma variante para uma classe visual, mantendo componentes pÃºblicos e dados desacoplados. Consulte `docs/rfc/RFC-005-Template-Library.md`.

@@ -31,23 +31,30 @@ class OrderedLayout implements TemplateLayoutRenderer {
     return model.template.layout === this.id;
   }
   render(model: TemplateRenderModel, context: LayoutRenderContext) {
+    const renderComponent = (id: TemplateComponentType) => (
+      <div
+        key={id}
+        className={componentVariantRegistry.resolve(id, model.template.componentVariants[id])}
+      >
+        {componentRegistry.resolve(id)?.({
+          ...context,
+          componentVariants: model.template.componentVariants,
+        })}
+      </div>
+    );
+    const banner = this.order.includes("banner") ? renderComponent("banner") : null;
+    const content = this.order.filter((id) => id !== "banner");
+
     return (
       <div className={`template-layout template-layout-${this.id}`}>
-        {this.order.map((id) => (
-          <div
-            key={id}
-            className={componentVariantRegistry.resolve(id, model.template.componentVariants[id])}
-          >
-            {componentRegistry.resolve(id)?.({
-              ...context,
-              componentVariants: model.template.componentVariants,
-            })}
-          </div>
-        ))}
-        {context.products && context.products.length > 0 && (
-          <CatalogSection items={context.products} />
-        )}
-        {context.supplemental}
+        {banner}
+        <div className="public-profile-content template-layout-content">
+          {content.map(renderComponent)}
+          {context.products && context.products.length > 0 && (
+            <CatalogSection items={context.products} />
+          )}
+          {context.supplemental}
+        </div>
       </div>
     );
   }

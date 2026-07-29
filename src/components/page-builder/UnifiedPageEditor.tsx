@@ -464,6 +464,7 @@ function SectionForm({
             label="Imagem de capa"
             value={bio.cover_url}
             variant="cover"
+            templateId={draftTemplate}
             onChange={(cover_url) => updateBio({ cover_url })}
           />
           <Field label="Posição da imagem">

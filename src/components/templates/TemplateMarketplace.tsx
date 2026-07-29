@@ -43,12 +43,7 @@ export function TemplateMarketplace() {
               <p className="mt-4 text-xs font-medium text-muted-foreground">
                 Melhor para: {template.bestFor ?? "uma página clara e profissional"}
               </p>
-              <button
-                type="button"
-                className="mt-5 text-sm font-semibold text-[color:var(--primary)]"
-              >
-                Visualizar
-              </button>
+              <span className="template-preview-label mt-5">Prévia do visual</span>
               {template.smart && (
                 <button
                   type="button"

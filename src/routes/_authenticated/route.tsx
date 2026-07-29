@@ -59,20 +59,20 @@ function AuthedLayout() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="app-shell min-h-screen flex">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-surface border-r border-border transform transition-transform md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`app-sidebar fixed inset-y-0 left-0 z-40 w-64 transform transition-transform md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="p-5 flex items-center justify-between">
-          <Link to="/dashboard" className="flex items-center gap-2 font-display font-bold">
+          <Link to="/dashboard" className="app-brand flex items-center gap-2 font-display font-bold">
             <span
               className="grid h-8 w-8 place-items-center rounded-lg"
               style={{ background: "var(--gradient-primary)" }}
             >
               <Sparkles className="h-4 w-4 text-[color:var(--primary-foreground)]" />
             </span>
-            EIA Digital
+            <span>EIA <b>LINK</b></span>
           </Link>
           <button className="md:hidden" onClick={() => setOpen(false)}>
             <X className="h-5 w-5" />
@@ -86,7 +86,7 @@ function AuthedLayout() {
                 key={to}
                 to={to}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm ${active ? "bg-surface-elevated text-foreground" : "text-muted-foreground hover:bg-surface-elevated/60"}`}
+                className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${active ? "is-active" : ""}`}
               >
                 <Icon className="h-4 w-4" /> {label}
               </Link>
@@ -105,7 +105,7 @@ function AuthedLayout() {
         <div className="absolute bottom-4 left-3 right-3">
           <button
             onClick={signOut}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm text-muted-foreground hover:bg-surface-elevated"
+            className="app-nav-link flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm"
           >
             <LogOut className="h-4 w-4" /> Sair
           </button>
@@ -117,10 +117,10 @@ function AuthedLayout() {
           <button onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />
           </button>
-          <span className="font-display font-bold">EIA Digital</span>
+          <span className="font-display font-bold">EIA <b>LINK</b></span>
           <span className="w-5" />
         </header>
-        <main className="p-6 md:p-10 max-w-6xl mx-auto">
+        <main className="app-content p-5 md:p-10 max-w-7xl mx-auto">
           <Outlet />
         </main>
       </div>

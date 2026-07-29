@@ -5,7 +5,7 @@ import { createTemplateInstance } from "@/modules/templates/smart/TemplateInstan
 
 export function TemplateMarketplace() {
   const templates = TemplateService.list();
-  const useTemplate = (id: string) => {
+  const activateTemplate = (id: string) => {
     const template = TemplateService.get(id);
     if (template.smart)
       sessionStorage.setItem(
@@ -49,7 +49,7 @@ export function TemplateMarketplace() {
                 <button
                   type="button"
                   className="ml-4 text-sm font-semibold"
-                  onClick={() => useTemplate(template.id)}
+                  onClick={() => activateTemplate(template.id)}
                 >
                   Usar este template
                 </button>

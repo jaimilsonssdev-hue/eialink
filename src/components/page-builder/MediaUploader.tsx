@@ -8,6 +8,7 @@ const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
 const COVER_LIBRARY = {
   restaurant: [
     { id: "restaurant-burger", src: "/template-assets/restaurant-demo-cover.png", label: "Hambúrguer" },
+    { id: "restaurant-burger-evening", src: "/template-assets/restaurant-burger-evening-cover.png", label: "Hambúrguer gourmet" },
     { id: "restaurant-pizza", src: "/template-assets/restaurant-cover-pizza.png", label: "Pizza artesanal" },
     { id: "restaurant-brunch", src: "/template-assets/restaurant-cover-brunch.png", label: "Café e brunch" },
   ],

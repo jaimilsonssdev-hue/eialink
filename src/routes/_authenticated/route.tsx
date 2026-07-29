@@ -17,6 +17,7 @@ import {
   Shield,
   Menu,
   X,
+  PanelsTopLeft,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -30,7 +31,8 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV = [
-  { to: "/builder", label: "Minha Página", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/pages", label: "Meus Biolinks", icon: PanelsTopLeft },
   { to: "/analytics", label: "Resultados", icon: BarChart3 },
   { to: "/growth", label: "Crescimento", icon: Sparkles },
   { to: "/settings", label: "Configurações", icon: Settings },

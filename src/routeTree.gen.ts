@@ -20,6 +20,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedDiagnosticRouteImport } from './routes/_authenticated/diagnostic'
 import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated/growth'
 import { Route as AuthenticatedLinksRouteImport } from './routes/_authenticated/links'
+import { Route as AuthenticatedPagesRouteImport } from './routes/_authenticated/pages'
 import { Route as AuthenticatedRequestsRouteImport } from './routes/_authenticated/requests'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
@@ -78,6 +79,11 @@ const AuthenticatedLinksRoute = AuthenticatedLinksRouteImport.update({
   path: '/links',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPagesRoute = AuthenticatedPagesRouteImport.update({
+  id: '/pages',
+  path: '/pages',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedRequestsRoute = AuthenticatedRequestsRouteImport.update({
   id: '/requests',
   path: '/requests',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/growth': typeof AuthenticatedGrowthRoute
   '/links': typeof AuthenticatedLinksRoute
+  '/pages': typeof AuthenticatedPagesRoute
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/p/$slug': typeof PSlugRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/growth': typeof AuthenticatedGrowthRoute
   '/links': typeof AuthenticatedLinksRoute
+  '/pages': typeof AuthenticatedPagesRoute
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/p/$slug': typeof PSlugRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/_authenticated/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/_authenticated/growth': typeof AuthenticatedGrowthRoute
   '/_authenticated/links': typeof AuthenticatedLinksRoute
+  '/_authenticated/pages': typeof AuthenticatedPagesRoute
   '/_authenticated/requests': typeof AuthenticatedRequestsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/p/$slug': typeof PSlugRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/diagnostic'
     | '/growth'
     | '/links'
+    | '/pages'
     | '/requests'
     | '/settings'
     | '/p/$slug'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/diagnostic'
     | '/growth'
     | '/links'
+    | '/pages'
     | '/requests'
     | '/settings'
     | '/p/$slug'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/_authenticated/diagnostic'
     | '/_authenticated/growth'
     | '/_authenticated/links'
+    | '/_authenticated/pages'
     | '/_authenticated/requests'
     | '/_authenticated/settings'
     | '/p/$slug'
@@ -276,6 +288,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLinksRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/pages': {
+      id: '/_authenticated/pages'
+      path: '/pages'
+      fullPath: '/pages'
+      preLoaderRoute: typeof AuthenticatedPagesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/requests': {
       id: '/_authenticated/requests'
       path: '/requests'
@@ -309,6 +328,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedDiagnosticRoute: typeof AuthenticatedDiagnosticRoute
   AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
   AuthenticatedLinksRoute: typeof AuthenticatedLinksRoute
+  AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
   AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
 }
@@ -322,6 +342,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDiagnosticRoute: AuthenticatedDiagnosticRoute,
   AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,
   AuthenticatedLinksRoute: AuthenticatedLinksRoute,
+  AuthenticatedPagesRoute: AuthenticatedPagesRoute,
   AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
 }

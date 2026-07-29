@@ -59,6 +59,9 @@ export function RestaurantBioLink({
             aria-hidden="true"
           />
         )}
+        <span className="restaurant-open-status">
+          <i aria-hidden="true" /> Atendimento online
+        </span>
         <button
           type="button"
           className="restaurant-share"
@@ -78,6 +81,11 @@ export function RestaurantBioLink({
           <p className="restaurant-kicker">Restaurante</p>
           <h1>{bio.display_name}</h1>
           {bio.bio && <p className="restaurant-description">{bio.bio}</p>}
+          <div className="restaurant-trust-row" aria-label="Informações do restaurante">
+            <span>Pedidos rápidos</span>
+            <span>•</span>
+            <span>Atendimento pelo WhatsApp</span>
+          </div>
         </div>
       </section>
 

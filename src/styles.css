@@ -1677,7 +1677,7 @@
 .niche-restaurant-pix .public-profile-pix { --bio-fg: #fff; --bio-muted: rgb(255 255 255 / .7); --bio-card: rgb(255 255 255 / .08); --bio-border: rgb(255 255 255 / .18); }
 
 /* ============ CLINIC ============ */
-.niche-clinic { padding: 0 0 3rem; }
+.niche-clinic { padding: 0 0 3rem; container-type: inline-size; }
 .niche-clinic-hero {
   max-width: 64rem; margin: 0 auto; padding: 2.25rem 1.25rem 1.5rem;
   display: grid; gap: 1.5rem; grid-template-columns: 1fr;
@@ -1739,6 +1739,15 @@
 @media (min-width: 720px) {
   .niche-clinic-hero-media { order: initial; aspect-ratio: 4 / 5; }
   .niche-clinic-name { font-size: clamp(2rem, 5.2vw, 2.85rem); line-height: 1.08; }
+}
+@container (max-width: 480px) {
+  .niche-clinic-hero { padding: 1.25rem .9rem 1.5rem; gap: 1rem; }
+  .niche-clinic-name { font-size: 1.65rem; line-height: 1.05; letter-spacing: -.035em; }
+  .niche-clinic-lead { font-size: .88rem; }
+  .niche-clinic-trust { gap: .45rem; }
+  .niche-clinic-trust span { padding: .3rem .55rem; font-size: .64rem; }
+  .niche-clinic-cta-row { margin-top: 1rem; }
+  .niche-clinic-cta-primary, .niche-clinic-cta-ghost { padding: .7rem .85rem; font-size: .78rem; }
 }
 .niche-clinic-hero-fallback {
   display: grid; place-items: center; width: 100%; height: 100%; color: var(--template-primary);
@@ -2214,6 +2223,7 @@
 }
 .media-library > p { color: #fff; font-size: .82rem; font-weight: 650; }
 .media-library .media-library-help { margin-bottom: .55rem; color: var(--muted-foreground); font-weight: 500; line-height: 1.45; }
+.media-library-steps { display: grid; gap: .2rem; margin: 0 0 .8rem; padding: .65rem .75rem; border-radius: .65rem; background: rgb(192 132 252 / .08); color: #e9d5ff; font-size: .72rem; line-height: 1.35; }
 .media-library-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: .55rem; margin-top: .6rem; }
 .media-library-grid button {
   position: relative; overflow: hidden; min-height: 5.2rem;

@@ -5,23 +5,43 @@ import { PageService } from "@/modules/page/services/PageService";
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
 
-const COVER_LIBRARY = [
-  { id: "restaurant", src: "/template-assets/restaurant-demo-cover.png", label: "Restaurante" },
-  { id: "clinic", src: "/template-assets/clinic-demo-cover.png", label: "Clínica" },
-  { id: "store", src: "/template-assets/store-demo-cover.png", label: "Loja" },
-];
+const COVER_LIBRARY = {
+  restaurant: [
+    { id: "restaurant-burger", src: "/template-assets/restaurant-demo-cover.png", label: "Hambúrguer" },
+    { id: "restaurant-pizza", src: "/template-assets/restaurant-cover-pizza.png", label: "Pizza artesanal" },
+    { id: "restaurant-brunch", src: "/template-assets/restaurant-cover-brunch.png", label: "Café e brunch" },
+  ],
+  clinic: [
+    { id: "clinic-reception", src: "/template-assets/clinic-demo-cover.png", label: "Recepção" },
+    { id: "clinic-wellness", src: "/template-assets/clinic-cover-wellness.png", label: "Bem-estar" },
+    { id: "clinic-consultation", src: "/template-assets/clinic-cover-consultation.png", label: "Consultório" },
+  ],
+  store: [
+    { id: "store-shoes", src: "/template-assets/store-demo-cover.png", label: "Vitrine" },
+    { id: "store-boutique", src: "/template-assets/store-cover-boutique.png", label: "Boutique" },
+    { id: "store-sneakers", src: "/template-assets/store-cover-sneakers.png", label: "Tênis e acessórios" },
+  ],
+} as const;
+
+function coverCategory(templateId?: string | null) {
+  if (templateId?.includes("clinic")) return "clinic";
+  if (templateId?.includes("store")) return "store";
+  return "restaurant";
+}
 
 export function MediaUploader({
   label,
   value,
   maxSizeBytes = DEFAULT_MAX_SIZE,
   variant = "square",
+  templateId,
   onChange,
 }: {
   label: string;
   value?: string | null;
   maxSizeBytes?: number;
   variant?: "square" | "cover";
+  templateId?: string | null;
   onChange(url: string | null): void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -78,6 +98,9 @@ export function MediaUploader({
   }
 
   const isCover = variant === "cover";
+  const category = coverCategory(templateId);
+  const coverLibrary = COVER_LIBRARY[category];
+  const categoryLabel = category === "clinic" ? "clínica" : category === "store" ? "loja" : "restaurante";
 
   return (
     <div>
@@ -131,9 +154,14 @@ export function MediaUploader({
       {isCover && (
         <div className="media-library" aria-label="Biblioteca de capas">
           <p className="media-library-help">Para a capa, use JPG, PNG ou WEBP de até {limitMb} MB. Recomendado: 1600 × 900 px.</p>
-          <p>Ou escolha uma capa da biblioteca</p>
+          <ol className="media-library-steps" aria-label="Como trocar a capa">
+            <li>1. Clique em uma imagem.</li>
+            <li>2. Confira a prévia ao centro.</li>
+            <li>3. Clique em Salvar no topo.</li>
+          </ol>
+          <p>Ou escolha uma capa da biblioteca de {categoryLabel}</p>
           <div className="media-library-grid">
-            {COVER_LIBRARY.map((asset) => (
+            {coverLibrary.map((asset) => (
               <button
                 key={asset.id}
                 type="button"
@@ -145,7 +173,7 @@ export function MediaUploader({
               </button>
             ))}
           </div>
-          <small>Você pode trocar a imagem a qualquer momento. Clique em Salvar para publicar.</small>
+          <small>Escolha uma imagem e clique em Salvar, no topo da página, para publicar sua mudança.</small>
         </div>
       )}
     </div>

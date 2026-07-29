@@ -11,44 +11,47 @@ const theme = (colors: ThemeTokens["colors"], fontFamily = "inherit"): ThemeToke
   typography: { ...defaultTheme.typography, fontFamily },
 });
 
+const badgeByCategory: Record<TemplateDefinition["category"], TemplateDefinition["badge"]> = {
+  minimal: "Novo",
+  creator: "Popular",
+  business: "Mais usado",
+  restaurant: "Novo",
+  clinic: "Novo",
+  beauty: "Novo",
+  store: "Popular",
+  portfolio: "Novo",
+  premium: "Premium",
+};
+
+const bestForByCategory: Record<TemplateDefinition["category"], string> = {
+  minimal: "perfis objetivos",
+  creator: "criadores e influenciadores",
+  business: "serviços profissionais",
+  store: "lojas e catálogos",
+  restaurant: "restaurantes e pedidos",
+  clinic: "clínicas e consultórios",
+  beauty: "beleza e bem-estar",
+  portfolio: "portfólios criativos",
+  premium: "marcas que buscam sofisticação",
+};
+
 const define = (template: TemplateInput): TemplateDefinition => ({
   ...template,
-  badge:
-    template.badge ??
-    (
-      {
-        creator: "Popular",
-        business: "Mais usado",
-        restaurant: "Novo",
-        clinic: "Novo",
-        beauty: "Novo",
-        store: "Popular",
-      } as Partial<Record<TemplateDefinition["category"], TemplateDefinition["badge"]>>
-    )[template.category],
-  bestFor:
-    template.bestFor ??
-    {
-      minimal: "perfis objetivos",
-      creator: "criadores e influenciadores",
-      business: "serviÃ§os profissionais",
-      store: "lojas e catÃ¡logos",
-      restaurant: "restaurantes e pedidos",
-      clinic: "clÃ­nicas e consultÃ³rios",
-      beauty: "beleza e bem-estar",
-      portfolio: "portfÃ³lios criativos",
-      premium: "marcas que buscam sofisticaÃ§Ã£o",
-    }[template.category],
+  badge: template.badge ?? badgeByCategory[template.category],
+  bestFor: template.bestFor ?? bestForByCategory[template.category],
   version: "1.0.0",
   status: "active",
   theme: theme(template.theme.colors, template.theme.typography?.fontFamily),
 });
+
+const displayFont = '"DM Sans", "Inter", ui-sans-serif, system-ui, sans-serif';
 
 const restaurantSmart: SmartTemplateDefinition = {
   niche: "restaurant",
   demo: {
     name: "Casa Brasa",
     description: "Cozinha afetiva e fogo lento.",
-    heroLabel: "PeÃ§a hoje",
+    heroLabel: "Peça hoje",
   },
   blocks: [
     {
@@ -66,7 +69,7 @@ const restaurantSmart: SmartTemplateDefinition = {
       id: "profile",
       type: "profile",
       name: "Restaurante",
-      description: "Marca e descriÃ§Ã£o",
+      description: "Marca e descrição",
       required: true,
       defaultOrder: 1,
       canHide: false,
@@ -76,7 +79,7 @@ const restaurantSmart: SmartTemplateDefinition = {
     {
       id: "menu",
       type: "menu",
-      name: "CardÃ¡pio",
+      name: "Cardápio",
       description: "Pratos em destaque",
       required: true,
       defaultOrder: 2,
@@ -100,7 +103,7 @@ const restaurantSmart: SmartTemplateDefinition = {
     {
       id: "footer",
       type: "footer",
-      name: "RodapÃ©",
+      name: "Rodapé",
       description: "Assinatura",
       required: true,
       defaultOrder: 4,
@@ -113,7 +116,7 @@ const restaurantSmart: SmartTemplateDefinition = {
 const clinicSmart: SmartTemplateDefinition = {
   niche: "clinic",
   demo: {
-    name: "ClÃ­nica Horizonte",
+    name: "Clínica Horizonte",
     description: "Cuidado humano em cada consulta.",
     heroLabel: "Agende sua consulta",
   },
@@ -122,7 +125,7 @@ const clinicSmart: SmartTemplateDefinition = {
       id: "hero",
       type: "hero",
       name: "Capa institucional",
-      description: "ApresentaÃ§Ã£o",
+      description: "Apresentação",
       required: true,
       defaultOrder: 0,
       canHide: false,
@@ -133,7 +136,7 @@ const clinicSmart: SmartTemplateDefinition = {
       id: "profile",
       type: "profile",
       name: "Profissional",
-      description: "Perfil e confianÃ§a",
+      description: "Perfil e confiança",
       required: true,
       defaultOrder: 1,
       canHide: false,
@@ -144,7 +147,7 @@ const clinicSmart: SmartTemplateDefinition = {
       id: "specialties",
       type: "specialties",
       name: "Especialidades",
-      description: "ServiÃ§os e tratamentos",
+      description: "Serviços e tratamentos",
       required: false,
       defaultOrder: 2,
       canHide: true,
@@ -166,7 +169,7 @@ const clinicSmart: SmartTemplateDefinition = {
     {
       id: "footer",
       type: "footer",
-      name: "RodapÃ©",
+      name: "Rodapé",
       description: "Institucional",
       required: true,
       defaultOrder: 4,
@@ -179,8 +182,8 @@ const clinicSmart: SmartTemplateDefinition = {
 const storeSmart: SmartTemplateDefinition = {
   niche: "store",
   demo: {
-    name: "AteliÃª Rua 12",
-    description: "PeÃ§as para transformar o dia a dia.",
+    name: "Ateliê Rua 12",
+    description: "Peças para transformar o dia a dia.",
     heroLabel: "Ver novidades",
   },
   blocks: [
@@ -233,7 +236,7 @@ const storeSmart: SmartTemplateDefinition = {
     {
       id: "footer",
       type: "footer",
-      name: "RodapÃ©",
+      name: "Rodapé",
       description: "Loja",
       required: true,
       defaultOrder: 4,
@@ -248,8 +251,8 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "default",
     slug: "default",
-    name: "ClÃ¡ssico",
-    description: "O visual atual da sua pÃ¡gina.",
+    name: "Clássico",
+    description: "O visual atual da sua página.",
     category: "minimal",
     theme: {
       colors: {
@@ -365,34 +368,31 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "business-modern",
     slug: "business-modern",
-    name: "Negócio moderno",
-    description: "Profissional e acessível para serviços.",
+    name: "Clínica moderna",
+    description: "Visual claro e humano para clínicas, consultórios e dentistas.",
     category: "business",
+    badge: "Novo",
+    bestFor: "clínicas, consultórios e profissionais de saúde",
     theme: {
       colors: {
-        background: "#f8fafc",
+        background: "#f5f9ff",
         surface: "#ffffff",
-        text: "#0f172a",
-        muted: "#475569",
-        primary: "#2563eb",
+        text: "#0b2545",
+        muted: "#4b6584",
+        primary: "#0e7c86",
       },
+      typography: { fontFamily: displayFont } as ThemeTokens["typography"],
     },
-    layout: "business",
-    components: ["banner", "profile", "links", "pix", "footer"],
-    componentVariants: {
-      banner: "compact",
-      profile: "business",
-      links: "elevated",
-      pix: "highlighted",
-      footer: "discreet",
-    },
-    supportedFeatures: ["profile", "links", "whatsapp", "pix"],
+    layout: "clinic",
+    components: ["profile", "links", "pix", "footer"],
+    componentVariants: {},
+    supportedFeatures: ["profile", "links", "whatsapp", "pix", "services"],
   }),
   define({
     id: "business-classic",
     slug: "business-classic",
     name: "Executivo",
-    description: "SÃ³brio e confiÃ¡vel para atendimento profissional.",
+    description: "Sóbrio e confiável para atendimento profissional.",
     category: "business",
     theme: {
       colors: {
@@ -418,36 +418,35 @@ export const templateManifest: TemplateDefinition[] = [
     id: "store-showcase",
     slug: "store-showcase",
     name: "Vitrine",
-    description: "Destaque seus links e canais de venda.",
+    description: "Pequena loja online com produtos em destaque.",
     category: "store",
     smart: storeSmart,
+    badge: "Novo",
+    bestFor: "lojas, revendedoras e catálogos de produtos",
     theme: {
       colors: {
-        background: "#ecfdf5",
+        background: "#fafaf7",
         surface: "#ffffff",
-        text: "#064e3b",
-        muted: "#047857",
-        primary: "#059669",
+        text: "#111827",
+        muted: "#6b7280",
+        primary: "#111827",
       },
+      typography: { fontFamily: displayFont } as ThemeTokens["typography"],
     },
     layout: "storefront",
-    components: ["banner", "profile", "links", "pix"],
-    componentVariants: {
-      banner: "compact",
-      profile: "business",
-      links: "elevated",
-      pix: "highlighted",
-      footer: "discreet",
-    },
-    supportedFeatures: ["profile", "links", "whatsapp", "pix"],
+    components: ["profile", "links", "pix", "footer"],
+    componentVariants: {},
+    supportedFeatures: ["profile", "links", "whatsapp", "pix", "products"],
   }),
   define({
     id: "restaurant-menu",
     slug: "restaurant-menu",
     name: "Sabor",
-    description: "Quente e convidativo para reservas e cardÃ¡pio.",
+    description: "Cardápio editorial e quente para restaurantes e cafés.",
     category: "restaurant",
     smart: restaurantSmart,
+    badge: "Novo",
+    bestFor: "restaurantes, cafés e delivery",
     theme: {
       colors: {
         background: "#09070f",
@@ -456,27 +455,22 @@ export const templateManifest: TemplateDefinition[] = [
         muted: "#b9afc9",
         primary: "#8b3ff2",
       },
+      typography: { fontFamily: displayFont } as ThemeTokens["typography"],
     },
     layout: "restaurant",
-    components: ["banner", "profile", "links", "pix"],
-    componentVariants: {
-      banner: "compact",
-      profile: "overlapping-banner",
-      links: "elevated",
-      pix: "highlighted",
-      footer: "discreet",
-    },
-    supportedFeatures: ["profile", "links", "whatsapp", "pix"],
+    components: ["profile", "links", "pix", "footer"],
+    componentVariants: {},
+    supportedFeatures: ["profile", "links", "whatsapp", "pix", "menu"],
   }),
   define({
     id: "clinic-care",
     slug: "clinic-care",
     name: "Cuidado",
-    description: "ApresentaÃ§Ã£o clara e confiÃ¡vel para clÃ­nicas e dentistas.",
+    description: "Apresentação clara e confiável para clínicas e dentistas.",
     category: "clinic",
     smart: clinicSmart,
     badge: "Novo",
-    bestFor: "clÃ­nicas, dentistas e consultÃ³rios",
+    bestFor: "clínicas, dentistas e consultórios",
     theme: {
       colors: {
         background: "#eef7f7",
@@ -485,16 +479,12 @@ export const templateManifest: TemplateDefinition[] = [
         muted: "#55767b",
         primary: "#177e89",
       },
+      typography: { fontFamily: displayFont } as ThemeTokens["typography"],
     },
     layout: "clinic",
-    components: ["banner", "profile", "links", "pix"],
-    componentVariants: {
-      banner: "default",
-      profile: "business",
-      links: "minimal",
-      pix: "highlighted",
-    },
-    supportedFeatures: ["profile", "links", "whatsapp", "pix"],
+    components: ["profile", "links", "pix", "footer"],
+    componentVariants: {},
+    supportedFeatures: ["profile", "links", "whatsapp", "pix", "services"],
   }),
   define({
     id: "beauty-glow",
@@ -525,8 +515,8 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "portfolio-studio",
     slug: "portfolio-studio",
-    name: "EstÃºdio",
-    description: "Uma vitrine autoral para portfÃ³lios e projetos.",
+    name: "Estúdio",
+    description: "Uma vitrine autoral para portfólios e projetos.",
     category: "portfolio",
     theme: {
       colors: {

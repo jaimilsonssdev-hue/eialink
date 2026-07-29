@@ -1,12 +1,24 @@
 import type { ReactNode } from "react";
 import { componentRegistry, type TemplateComponentContext } from "../components/ComponentRegistry";
 import { componentVariantRegistry } from "../components/ComponentVariantRegistry";
+import { CatalogSection } from "@/modules/products/components/CatalogSection";
+import type { CatalogItem } from "@/modules/products/types";
 import type { TemplateComponentType, TemplateRenderModel } from "../types";
+import { RestaurantLayout } from "./RestaurantLayout";
+import { ClinicLayout } from "./ClinicLayout";
+import { StorefrontLayout } from "./StorefrontLayout";
+
+export type LayoutRenderContext = TemplateComponentContext & {
+  products?: CatalogItem[];
+  supplemental?: ReactNode;
+};
+
 export interface TemplateLayoutRenderer {
   layoutId(): TemplateRenderModel["template"]["layout"];
   supports(model: TemplateRenderModel): boolean;
-  render(model: TemplateRenderModel, context: TemplateComponentContext): ReactNode;
+  render(model: TemplateRenderModel, context: LayoutRenderContext): ReactNode;
 }
+
 class OrderedLayout implements TemplateLayoutRenderer {
   constructor(
     private readonly id: TemplateRenderModel["template"]["layout"],
@@ -18,7 +30,7 @@ class OrderedLayout implements TemplateLayoutRenderer {
   supports(model: TemplateRenderModel) {
     return model.template.layout === this.id;
   }
-  render(model: TemplateRenderModel, context: TemplateComponentContext) {
+  render(model: TemplateRenderModel, context: LayoutRenderContext) {
     return (
       <div className={`template-layout template-layout-${this.id}`}>
         {this.order.map((id) => (
@@ -32,10 +44,15 @@ class OrderedLayout implements TemplateLayoutRenderer {
             })}
           </div>
         ))}
+        {context.products && context.products.length > 0 && (
+          <CatalogSection items={context.products} />
+        )}
+        {context.supplemental}
       </div>
     );
   }
 }
+
 export class LayoutResolver {
   private readonly values = new Map<string, TemplateLayoutRenderer>();
   register(layout: TemplateLayoutRenderer) {
@@ -46,6 +63,7 @@ export class LayoutResolver {
     return this.values.get(model.template.layout) ?? this.values.get("vertical");
   }
 }
+
 export const layoutResolver = new LayoutResolver()
   .register(new OrderedLayout("vertical", ["banner", "profile", "pix", "links", "footer"]))
   .register(new OrderedLayout("minimal", ["profile", "links", "footer"]))
@@ -53,6 +71,6 @@ export const layoutResolver = new LayoutResolver()
   .register(new OrderedLayout("business", ["banner", "profile", "links", "pix", "footer"]))
   .register(new OrderedLayout("store", ["banner", "links", "profile", "pix", "footer"]))
   .register(new OrderedLayout("creator", ["profile", "banner", "links", "footer"]))
-  .register(new OrderedLayout("restaurant", ["banner", "profile", "links", "pix"]))
-  .register(new OrderedLayout("clinic", ["banner", "profile", "links", "pix"]))
-  .register(new OrderedLayout("storefront", ["banner", "profile", "links", "pix"]));
+  .register(new RestaurantLayout())
+  .register(new ClinicLayout())
+  .register(new StorefrontLayout());

@@ -1522,3 +1522,458 @@
     min-height: 3.6rem;
   }
 }
+
+/* ============ NICHE LAYOUTS: shared reset ============ */
+.niche-restaurant,
+.niche-clinic,
+.niche-store {
+  color: var(--template-text, #111);
+  background: var(--template-bg, #fff);
+  min-height: 100vh;
+  font-family: "DM Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+.niche-restaurant *,
+.niche-clinic *,
+.niche-store * { box-sizing: border-box; }
+.niche-eyebrow {
+  display: inline-flex; align-items: center; gap: .35rem;
+  font-size: .72rem; font-weight: 600; letter-spacing: .18em;
+  text-transform: uppercase; opacity: .8;
+}
+@media (prefers-reduced-motion: reduce) {
+  .niche-restaurant *,
+  .niche-clinic *,
+  .niche-store * { transition: none !important; animation: none !important; }
+}
+
+/* ============ RESTAURANT ============ */
+.niche-restaurant { padding-bottom: 3rem; }
+.niche-restaurant-hero {
+  position: relative;
+  height: min(78vh, 560px);
+  min-height: 380px;
+  overflow: hidden;
+  isolation: isolate;
+}
+.niche-restaurant-hero-img,
+.niche-restaurant-hero-fallback {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: -2;
+}
+.niche-restaurant-hero-fallback {
+  background:
+    radial-gradient(60% 60% at 30% 30%, color-mix(in oklab, var(--template-primary) 55%, transparent), transparent),
+    linear-gradient(160deg, #3a1a08, #1a0f0a);
+}
+.niche-restaurant-hero-overlay {
+  position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(180deg, rgb(0 0 0 / .1) 0%, rgb(0 0 0 / .35) 45%, rgb(0 0 0 / .85) 100%);
+}
+.niche-restaurant-share {
+  position: absolute; top: 1rem; right: 1rem;
+  padding: .5rem .95rem; border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / .3);
+  background: rgb(0 0 0 / .3);
+  color: #fff; font-size: .72rem; font-weight: 600;
+  backdrop-filter: blur(10px);
+}
+.niche-restaurant-hero-content {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 1.5rem 1.25rem 1.75rem;
+  color: #fff;
+  max-width: 42rem; margin: 0 auto;
+}
+.niche-restaurant-hero-content .niche-eyebrow { color: var(--template-primary, #e0b060); }
+.niche-restaurant-name {
+  margin-top: .5rem;
+  font-family: "DM Sans", serif;
+  font-size: clamp(2rem, 6vw, 3rem);
+  font-weight: 700; line-height: 1.05;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.niche-restaurant-lead {
+  margin-top: .75rem;
+  font-size: .95rem; line-height: 1.55;
+  max-width: 34rem; opacity: .92;
+}
+.niche-restaurant-meta {
+  display: flex; align-items: center; gap: .55rem; flex-wrap: wrap;
+  margin-top: 1rem; font-size: .78rem;
+}
+.niche-restaurant-meta a { display: inline-flex; align-items: center; gap: .3rem; }
+.niche-restaurant-meta-dot {
+  width: 3px; height: 3px; border-radius: 999px; background: currentColor; opacity: .5;
+}
+.niche-restaurant-cta {
+  display: flex; align-items: center; gap: .85rem;
+  margin: 1.25rem auto 0; max-width: 34rem;
+  padding: 1rem 1.1rem;
+  border-radius: 1rem;
+  background: linear-gradient(120deg, #16a34a, #15803d);
+  color: #fff; box-shadow: 0 18px 40px rgb(22 163 74 / .35);
+  transition: transform .18s ease;
+}
+.niche-restaurant-cta:hover { transform: translateY(-2px); }
+.niche-restaurant-menu {
+  max-width: 40rem; margin: 2.25rem auto 0; padding: 0 1.15rem;
+}
+.niche-section-title {
+  display: flex; align-items: center; gap: 1rem;
+  color: var(--template-primary);
+  margin-bottom: 1.25rem;
+}
+.niche-section-title h2 {
+  font-family: "DM Sans", serif; font-weight: 600; font-size: 1.15rem;
+  letter-spacing: .3em; text-transform: uppercase; white-space: nowrap;
+}
+.niche-section-rule { flex: 1; height: 1px; background: currentColor; opacity: .35; }
+.niche-restaurant-menu-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 1.5rem; }
+.niche-restaurant-dish { display: flex; gap: 1rem; align-items: flex-start; }
+.niche-restaurant-dish-img {
+  flex: 0 0 88px; width: 88px; height: 88px;
+  border-radius: .85rem; overflow: hidden;
+  background: color-mix(in oklab, var(--template-primary) 20%, transparent);
+}
+.niche-restaurant-dish-img img { width: 100%; height: 100%; object-fit: cover; }
+.niche-restaurant-dish-fallback {
+  display: grid; place-items: center; width: 100%; height: 100%; color: var(--template-primary);
+}
+.niche-restaurant-dish-name {
+  font-family: "DM Sans", serif;
+  font-size: 1.05rem; font-weight: 600; color: var(--template-text);
+}
+.niche-restaurant-dots {
+  flex: 1; border-bottom: 1px dotted color-mix(in oklab, var(--template-muted) 55%, transparent);
+  transform: translateY(-3px);
+}
+.niche-restaurant-dish-price {
+  font-weight: 700; color: var(--template-primary); white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.niche-restaurant-dish-desc {
+  margin-top: .35rem; font-size: .84rem; line-height: 1.5; color: var(--template-muted);
+}
+.niche-restaurant-dish-cta {
+  display: inline-flex; align-items: center; gap: .3rem;
+  margin-top: .55rem; font-size: .76rem; font-weight: 600;
+  color: var(--template-primary); text-transform: uppercase; letter-spacing: .1em;
+}
+.niche-restaurant-links {
+  max-width: 40rem; margin: 2rem auto 0; padding: 0 1.15rem;
+}
+.niche-restaurant-links .niche-eyebrow { color: var(--template-primary); }
+.niche-restaurant-links ul { list-style: none; padding: 0; margin: .75rem 0 0; display: grid; gap: .5rem; }
+.niche-restaurant-links a {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .9rem 1rem; border-radius: .75rem;
+  border: 1px solid color-mix(in oklab, var(--template-primary) 25%, transparent);
+  font-weight: 500;
+  transition: background .2s ease;
+}
+.niche-restaurant-links a:hover {
+  background: color-mix(in oklab, var(--template-primary) 10%, transparent);
+}
+.niche-restaurant-pix { max-width: 40rem; margin: 2rem auto 0; padding: 0 1.15rem; color: #fff; }
+.niche-restaurant-pix .public-profile-pix { --bio-fg: #fff; --bio-muted: rgb(255 255 255 / .7); --bio-card: rgb(255 255 255 / .08); --bio-border: rgb(255 255 255 / .18); }
+
+/* ============ CLINIC ============ */
+.niche-clinic { padding: 0 0 3rem; }
+.niche-clinic-hero {
+  max-width: 64rem; margin: 0 auto; padding: 2.25rem 1.25rem 1.5rem;
+  display: grid; gap: 1.5rem; grid-template-columns: 1fr;
+}
+@media (min-width: 720px) {
+  .niche-clinic-hero { grid-template-columns: 1.15fr .85fr; align-items: center; padding: 3rem 1.5rem 2.25rem; }
+}
+.niche-clinic-eyebrow {
+  display: inline-flex; align-items: center; gap: .4rem;
+  color: var(--template-primary);
+  font-size: .72rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+}
+.niche-clinic-name {
+  margin-top: .8rem;
+  font-family: "DM Sans", "Inter", sans-serif;
+  font-size: clamp(2rem, 5.2vw, 2.85rem);
+  font-weight: 700; line-height: 1.08; letter-spacing: -0.02em;
+  color: var(--template-text);
+  text-wrap: balance;
+}
+.niche-clinic-lead {
+  margin-top: .9rem; max-width: 32rem;
+  color: var(--template-muted); font-size: 1rem; line-height: 1.6;
+}
+.niche-clinic-trust {
+  display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.1rem;
+}
+.niche-clinic-trust span {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .35rem .75rem;
+  border: 1px solid color-mix(in oklab, var(--template-primary) 20%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--template-primary) 6%, transparent);
+  font-size: .72rem; font-weight: 500; color: var(--template-text);
+}
+.niche-clinic-cta-row { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.4rem; }
+.niche-clinic-cta-primary {
+  display: inline-flex; align-items: center; gap: .55rem;
+  padding: .85rem 1.35rem; border-radius: .75rem;
+  background: var(--template-primary); color: #fff;
+  font-weight: 600; font-size: .92rem;
+  box-shadow: 0 12px 28px color-mix(in oklab, var(--template-primary) 30%, transparent);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.niche-clinic-cta-primary:hover { transform: translateY(-2px); }
+.niche-clinic-cta-ghost {
+  display: inline-flex; align-items: center; padding: .85rem 1.15rem; border-radius: .75rem;
+  border: 1px solid color-mix(in oklab, var(--template-text) 15%, transparent);
+  font-weight: 600; font-size: .88rem; color: var(--template-text);
+}
+.niche-clinic-hero-media {
+  border-radius: 1.25rem; overflow: hidden; aspect-ratio: 4 / 5;
+  background: var(--template-surface);
+  box-shadow: 0 24px 60px rgb(11 37 69 / .12);
+}
+.niche-clinic-hero-media img { width: 100%; height: 100%; object-fit: cover; }
+.niche-clinic-hero-fallback {
+  display: grid; place-items: center; width: 100%; height: 100%; color: var(--template-primary);
+}
+.niche-clinic-section { max-width: 64rem; margin: 2rem auto 0; padding: 0 1.25rem; }
+.niche-clinic-section-head { margin-bottom: 1.15rem; }
+.niche-clinic-section-head h2 {
+  margin-top: .35rem;
+  font-family: "DM Sans", "Inter", sans-serif;
+  font-size: 1.55rem; font-weight: 600; color: var(--template-text);
+  letter-spacing: -0.01em;
+}
+.niche-clinic-services {
+  list-style: none; padding: 0; margin: 0;
+  display: grid; gap: .85rem; grid-template-columns: 1fr;
+}
+@media (min-width: 640px) { .niche-clinic-services { grid-template-columns: repeat(2, 1fr); } }
+.niche-clinic-service {
+  display: flex; gap: .9rem; padding: 1.15rem;
+  background: var(--template-surface);
+  border: 1px solid color-mix(in oklab, var(--template-primary) 12%, transparent);
+  border-radius: 1rem;
+  transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+}
+.niche-clinic-service:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in oklab, var(--template-primary) 30%, transparent);
+  box-shadow: 0 16px 36px rgb(11 37 69 / .1);
+}
+.niche-clinic-service-icon {
+  flex: 0 0 40px; width: 40px; height: 40px; border-radius: .7rem;
+  display: grid; place-items: center;
+  color: var(--template-primary);
+  background: color-mix(in oklab, var(--template-primary) 12%, transparent);
+}
+.niche-clinic-service h3 {
+  font-weight: 600; font-size: 1rem; color: var(--template-text);
+}
+.niche-clinic-service p {
+  margin-top: .3rem; font-size: .84rem; line-height: 1.5; color: var(--template-muted);
+}
+.niche-clinic-service-meta {
+  display: flex; justify-content: space-between; align-items: center; gap: .8rem;
+  margin-top: .75rem; font-size: .78rem;
+}
+.niche-clinic-service-meta span { color: var(--template-primary); font-weight: 600; }
+.niche-clinic-service-meta a {
+  display: inline-flex; align-items: center; gap: .3rem;
+  color: var(--template-text); font-weight: 600;
+}
+.niche-clinic-links {
+  list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem;
+}
+.niche-clinic-links a {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: .85rem 1rem; border-radius: .75rem;
+  background: var(--template-surface);
+  color: var(--template-text); font-weight: 500;
+  border: 1px solid color-mix(in oklab, var(--template-text) 8%, transparent);
+}
+.niche-clinic-links a:hover { border-color: color-mix(in oklab, var(--template-primary) 30%, transparent); }
+.niche-clinic-footer {
+  max-width: 64rem; margin: 2rem auto 0; padding: 0 1.25rem;
+  display: flex; gap: .75rem; flex-wrap: wrap;
+}
+.niche-clinic-insta, .niche-clinic-whats {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .55rem 1rem; border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--template-text) 12%, transparent);
+  font-size: .8rem; font-weight: 500; color: var(--template-text);
+}
+.niche-clinic-whats { background: var(--template-primary); color: #fff; border-color: transparent; }
+.niche-clinic-pix { max-width: 40rem; margin: 2rem auto 0; padding: 0 1.25rem; }
+.niche-clinic-pix .public-profile-pix { --bio-fg: var(--template-text); --bio-muted: var(--template-muted); --bio-card: var(--template-surface); --bio-border: color-mix(in oklab, var(--template-text) 12%, transparent); }
+
+/* ============ STOREFRONT ============ */
+.niche-store { padding-bottom: 3rem; }
+.niche-store-hero {
+  position: relative; overflow: hidden;
+  padding-bottom: 1.4rem;
+}
+.niche-store-hero-img,
+.niche-store-hero-fallback {
+  width: 100%; height: 220px; object-fit: cover; display: block;
+}
+.niche-store-hero-fallback {
+  background: linear-gradient(120deg, var(--template-primary), color-mix(in oklab, var(--template-primary) 30%, black));
+}
+.niche-store-hero-bar {
+  position: absolute; top: .85rem; left: 0; right: 0;
+  padding: 0 1rem;
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+}
+.niche-store-avatar {
+  width: 40px; height: 40px; border-radius: .7rem; object-fit: cover;
+  border: 2px solid #fff; box-shadow: 0 4px 12px rgb(0 0 0 / .25);
+}
+.niche-store-avatar-fallback {
+  display: grid; place-items: center;
+  background: var(--template-primary); color: #fff; font-weight: 700;
+}
+.niche-store-hero-bar .min-w-0 { color: #fff; text-shadow: 0 1px 4px rgb(0 0 0 / .5); }
+.niche-store-tag {
+  display: inline-flex; align-items: center; gap: .25rem;
+  font-size: .68rem; opacity: .9; font-weight: 500;
+}
+.niche-store-share {
+  padding: .45rem .85rem; border-radius: 999px;
+  background: rgb(0 0 0 / .35); color: #fff; font-size: .72rem; font-weight: 600;
+  border: 1px solid rgb(255 255 255 / .3); backdrop-filter: blur(10px);
+}
+.niche-store-hero-copy { padding: 1rem 1rem 0; max-width: 44rem; margin: 0 auto; }
+.niche-store-promo {
+  display: inline-block; padding: .3rem .7rem;
+  background: var(--template-primary); color: #fff;
+  border-radius: .4rem; font-size: .7rem; font-weight: 700;
+  letter-spacing: .1em; text-transform: uppercase;
+}
+.niche-store-desc { margin-top: .6rem; color: var(--template-muted); font-size: .9rem; line-height: 1.55; }
+.niche-store-section { max-width: 44rem; margin: 1.75rem auto 0; padding: 0 1rem; }
+.niche-store-section-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  padding-bottom: .65rem; margin-bottom: 1rem;
+  border-bottom: 2px solid var(--template-text);
+}
+.niche-store-section-head h2 {
+  font-family: "DM Sans", "Inter", sans-serif;
+  font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em;
+  text-transform: uppercase;
+}
+.niche-store-count {
+  font-size: .72rem; font-weight: 600; color: var(--template-muted);
+}
+.niche-store-grid {
+  display: grid; gap: .85rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+@media (max-width: 359px) { .niche-store-grid { grid-template-columns: 1fr; } }
+@media (min-width: 720px) { .niche-store-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.niche-store-card {
+  display: flex; flex-direction: column;
+  background: var(--template-surface);
+  border-radius: .85rem; overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--template-text) 8%, transparent);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.niche-store-card:hover { transform: translateY(-3px); box-shadow: 0 16px 30px rgb(0 0 0 / .08); }
+.niche-store-card-media {
+  aspect-ratio: 1 / 1; background: color-mix(in oklab, var(--template-primary) 10%, transparent);
+}
+.niche-store-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.niche-store-card-fallback {
+  display: grid; place-items: center; width: 100%; height: 100%; color: var(--template-primary);
+}
+.niche-store-card-body { padding: .7rem .75rem .85rem; display: flex; flex-direction: column; gap: .3rem; }
+.niche-store-card-name {
+  font-weight: 600; font-size: .85rem; line-height: 1.25;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.niche-store-card-price {
+  font-weight: 700; color: var(--template-text); font-size: .95rem;
+  font-variant-numeric: tabular-nums;
+}
+.niche-store-card-cta {
+  display: inline-flex; align-items: center; justify-content: center; gap: .25rem;
+  margin-top: .35rem; padding: .5rem .6rem;
+  background: var(--template-text); color: var(--template-bg, #fff);
+  border-radius: .45rem; font-size: .75rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .05em;
+  transition: opacity .18s ease;
+}
+.niche-store-card-cta:hover { opacity: .85; }
+.niche-store-services { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+.niche-store-services li {
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+  padding: .8rem 1rem; background: var(--template-surface);
+  border: 1px solid color-mix(in oklab, var(--template-text) 8%, transparent);
+  border-radius: .7rem;
+}
+.niche-store-services-price { font-weight: 700; color: var(--template-text); white-space: nowrap; }
+.niche-store-contact { display: flex; flex-wrap: wrap; gap: .5rem; }
+.niche-store-contact-primary {
+  flex: 1; min-width: 12rem;
+  display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
+  padding: .85rem 1rem; border-radius: .65rem;
+  background: #16a34a; color: #fff; font-weight: 700;
+}
+.niche-store-contact-ghost {
+  display: inline-flex; align-items: center; gap: .35rem;
+  padding: .8rem 1rem; border-radius: .65rem;
+  border: 1px solid color-mix(in oklab, var(--template-text) 12%, transparent);
+  font-weight: 600; color: var(--template-text); font-size: .85rem;
+}
+.niche-store-pix { max-width: 44rem; margin: 1.75rem auto 0; padding: 0 1rem; }
+.niche-store-pix .public-profile-pix { --bio-fg: var(--template-text); --bio-muted: var(--template-muted); --bio-card: var(--template-surface); --bio-border: color-mix(in oklab, var(--template-text) 12%, transparent); }
+
+/* ============ THUMBNAILS: niche variants ============ */
+.template-thumbnail[data-layout="restaurant"] {
+  padding: 0; overflow: hidden;
+}
+.template-thumbnail-restaurant-hero {
+  height: 55%; display: flex; align-items: flex-end; padding: .6rem;
+  font-family: "DM Sans", serif; font-size: .65rem;
+  letter-spacing: .2em; text-transform: uppercase; font-weight: 700;
+}
+.template-thumbnail-menu-row {
+  display: grid; grid-template-columns: 14px 1fr auto;
+  align-items: center; gap: .35rem;
+  padding: .3rem .55rem; font-size: .55rem; font-weight: 700;
+}
+.template-thumbnail-menu-row > div:first-child { width: 14px; height: 14px; border-radius: 4px; }
+.template-thumbnail-menu-line { height: 4px; border-radius: 999px; opacity: .55; }
+
+.template-thumbnail[data-layout="clinic"] {
+  padding: .55rem; display: flex; flex-direction: column; gap: .55rem;
+}
+.template-thumbnail-clinic-hero {
+  display: grid; grid-template-columns: 1fr 40px; gap: .55rem; align-items: center;
+}
+.template-thumbnail-clinic-title { height: 8px; border-radius: 4px; width: 80%; }
+.template-thumbnail-clinic-sub { margin-top: .3rem; height: 4px; border-radius: 4px; width: 60%; opacity: .6; }
+.template-thumbnail-clinic-cta { margin-top: .45rem; height: 10px; width: 55%; border-radius: 4px; }
+.template-thumbnail-clinic-media { width: 40px; height: 50px; border-radius: 6px; }
+.template-thumbnail-clinic-services { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
+.template-thumbnail-clinic-services > div {
+  padding: .35rem; border-radius: 6px; border: 1px solid; display: flex; gap: .3rem; align-items: center;
+}
+.template-thumbnail-clinic-services span:first-child { width: 8px; height: 8px; border-radius: 3px; }
+.template-thumbnail-clinic-services span:last-child { flex: 1; height: 4px; border-radius: 4px; opacity: .55; }
+
+.template-thumbnail[data-layout="storefront"] {
+  padding: 0; overflow: hidden; display: flex; flex-direction: column;
+}
+.template-thumbnail-store-hero { height: 35%; }
+.template-thumbnail-store-grid {
+  padding: .4rem; display: grid; grid-template-columns: 1fr 1fr; gap: .3rem; flex: 1;
+}
+.template-thumbnail-store-grid > div {
+  display: flex; flex-direction: column; gap: .2rem; padding: .25rem;
+  border-radius: 4px;
+}
+.template-thumbnail-store-grid > div > div:first-child { flex: 1; border-radius: 3px; min-height: 18px; }
+.template-thumbnail-store-grid > div span:nth-child(2) { height: 3px; border-radius: 2px; opacity: .5; }
+.template-thumbnail-store-grid > div span:last-child { height: 4px; border-radius: 2px; width: 40%; }

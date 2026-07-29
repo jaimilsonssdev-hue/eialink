@@ -6,7 +6,7 @@ import type { PublicBio, PublicLink } from "@/components/public-profile/types";
 import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
-import { CatalogSection } from "@/modules/products/components/CatalogSection";
+
 import type { CatalogItem } from "@/modules/products/types";
 
 type BioForm = Pick<
@@ -328,7 +328,7 @@ export function UnifiedPageEditor({
               links={previewLinks.filter((link) => link.active)}
               onTrack={() => undefined}
               onShare={() => undefined}
-              supplemental={<CatalogSection items={products} />}
+              products={products}
             />
           </div>
         </main>

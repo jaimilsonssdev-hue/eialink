@@ -1,7 +1,7 @@
 import type { PublicBio, PublicLink, TrackEvent } from "@/components/public-profile/types";
 import { TemplateService } from "../services/TemplateService";
 import type { PageData } from "../types";
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { layoutResolver } from "../layouts/LayoutResolver";
 
 export function TemplateRenderer({
@@ -30,7 +30,16 @@ export function TemplateRenderer({
   return (
     <main
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}
-      style={{ fontFamily: model.theme.typography.fontFamily }}
+      style={
+        {
+          fontFamily: model.theme.typography.fontFamily,
+          "--template-bg": model.theme.colors.background,
+          "--template-surface": model.theme.colors.surface,
+          "--template-text": model.theme.colors.text,
+          "--template-muted": model.theme.colors.muted,
+          "--template-primary": model.theme.colors.primary,
+        } as CSSProperties
+      }
     >
       {layout?.render(model, { bio, links, onTrack, onShare })}
       {supplemental}

@@ -450,11 +450,11 @@ export const templateManifest: TemplateDefinition[] = [
     smart: restaurantSmart,
     theme: {
       colors: {
-        background: "#fff7ed",
-        surface: "#fffbeb",
-        text: "#7c2d12",
-        muted: "#9a3412",
-        primary: "#dc2626",
+        background: "#09070f",
+        surface: "#15101f",
+        text: "#f7f4ff",
+        muted: "#b9afc9",
+        primary: "#8b3ff2",
       },
     },
     layout: "restaurant",

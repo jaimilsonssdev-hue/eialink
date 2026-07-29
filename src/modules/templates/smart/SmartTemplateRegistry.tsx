@@ -5,6 +5,7 @@ import { ProfileHeader } from "@/components/public-profile/ProfileHeader";
 import type { ReactNode } from "react";
 import type { TemplateComponentContext } from "../components/ComponentRegistry";
 import type { SmartTemplateDefinition } from "../types";
+import { RestaurantBioLink } from "./RestaurantBioLink";
 
 type SmartContext = TemplateComponentContext & { supplemental?: ReactNode };
 type Composition = (context: SmartContext, definition: SmartTemplateDefinition) => ReactNode;
@@ -21,17 +22,7 @@ const Hero = ({ context }: { context: SmartContext }) => (
   />
 );
 
-const restaurant: Composition = (context) => (
-  <div className="smart-site smart-site-restaurant">
-    <Hero context={context} />
-    <section className="smart-restaurant-intro">
-      <ProfileHeader bio={context.bio} onTrack={context.onTrack} />
-      <ActionButtons bio={context.bio} links={context.links} onTrack={context.onTrack} />
-    </section>
-    <section className="smart-site-content smart-menu-content">{context.supplemental}</section>
-    <Footer />
-  </div>
-);
+const restaurant: Composition = (context) => <RestaurantBioLink {...context} />;
 const clinic: Composition = (context) => (
   <div className="smart-site smart-site-clinic">
     <div className="smart-clinic-hero">

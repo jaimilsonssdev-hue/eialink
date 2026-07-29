@@ -5,9 +5,13 @@ import { ProfileHeader } from "@/components/public-profile/ProfileHeader";
 import type { ReactNode } from "react";
 import type { TemplateComponentContext } from "../components/ComponentRegistry";
 import type { SmartTemplateDefinition } from "../types";
+import type { CatalogItem } from "@/modules/products/types";
 import { RestaurantBioLink } from "./RestaurantBioLink";
 
-type SmartContext = TemplateComponentContext & { supplemental?: ReactNode };
+type SmartContext = TemplateComponentContext & {
+  supplemental?: ReactNode;
+  products?: CatalogItem[];
+};
 type Composition = (context: SmartContext, definition: SmartTemplateDefinition) => ReactNode;
 
 const Hero = ({ context }: { context: SmartContext }) => (

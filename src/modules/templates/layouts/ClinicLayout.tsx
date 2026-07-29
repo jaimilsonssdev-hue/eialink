@@ -70,12 +70,8 @@ export class ClinicLayout implements TemplateLayoutRenderer {
           <div className="niche-clinic-hero-media">
             {bio.cover_url ? (
               <img src={bio.cover_url} alt="" loading="eager" />
-            ) : bio.avatar_url ? (
-              <img src={bio.avatar_url} alt="" loading="eager" />
             ) : (
-              <div className="niche-clinic-hero-fallback" aria-hidden>
-                <Stethoscope size={48} />
-              </div>
+              <img src="/template-assets/clinic-demo-cover.png" alt="" loading="eager" />
             )}
           </div>
         </header>

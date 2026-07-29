@@ -27,7 +27,7 @@ export class StorefrontLayout implements TemplateLayoutRenderer {
           {bio.cover_url ? (
             <img src={bio.cover_url} alt="" className="niche-store-hero-img" loading="eager" />
           ) : (
-            <div className="niche-store-hero-fallback" aria-hidden />
+            <img src="/template-assets/store-demo-cover.png" alt="" className="niche-store-hero-img" loading="eager" />
           )}
           <div className="niche-store-hero-bar">
             <div className="flex items-center gap-2.5">

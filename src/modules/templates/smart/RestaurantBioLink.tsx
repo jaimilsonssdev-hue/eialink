@@ -7,7 +7,7 @@ type RestaurantBioLinkProps = TemplateComponentContext & {
   supplemental?: ReactNode;
 };
 
-function whatsappHref(phone?: string) {
+function whatsappHref(phone?: string | null) {
   const number = phone?.replace(/\D/g, "");
   return number ? `https://wa.me/${number}` : undefined;
 }
@@ -86,7 +86,7 @@ export function RestaurantBioLink({
           </div>
           <p className="restaurant-kicker">Restaurante</p>
           <h1>{bio.display_name}</h1>
-          {bio.bio && <p className="restaurant-description">{bio.bio}</p>}
+          {bio.description && <p className="restaurant-description">{bio.description}</p>}
           <div className="restaurant-trust-row" aria-label="Informações do restaurante">
             <span>Pedidos rápidos</span>
             <span>•</span>

@@ -125,12 +125,30 @@ function Dashboard() {
 
   return (
     <div className="space-y-8 premium-dashboard">
-      <div>
-        <h1 className="text-3xl font-bold">
-          Olá, {profile?.full_name?.split(" ")[0] ?? "empresário"} 👋
-        </h1>
-        <p className="mt-2 text-muted-foreground">Aqui está o resumo da sua presença digital.</p>
-      </div>
+      <section className="premium-welcome">
+        <div>
+          <p className="eyebrow">Seu espaço digital</p>
+          <h1>
+            Olá, {profile?.full_name?.split(" ")[0] ?? "empreendedor"}.<br />
+            Sua presença merece <span>mais destaque.</span>
+          </h1>
+          <p>Personalize sua página, apresente o que você faz e transforme visitas em conversas.</p>
+          <div className="premium-welcome-actions">
+            <Link to="/builder" className="premium-cta"><PanelsTopLeft className="h-4 w-4" /> Personalizar minha página</Link>
+            {bio && <a href={`/p/${bio.slug}`} target="_blank" rel="noopener" className="premium-text-action">Ver página <ExternalLink className="h-4 w-4" /></a>}
+          </div>
+        </div>
+        <div className="premium-phone-teaser" aria-hidden="true">
+          <div className="premium-phone-island" />
+          <div className="premium-phone-cover" />
+          <div className="premium-phone-avatar">{(bio?.display_name ?? "E").slice(0, 1)}</div>
+          <span className="premium-phone-line is-title" />
+          <span className="premium-phone-line" />
+          <span className="premium-phone-cta">Falar no WhatsApp</span>
+          <span className="premium-phone-link" />
+          <span className="premium-phone-link" />
+        </div>
+      </section>
 
       {!bio && (
         <div
@@ -147,7 +165,11 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="premium-section-heading">
+        <div><p className="eyebrow">Panorama</p><h2>O que acontece na sua página</h2></div>
+        <Link to="/analytics" className="premium-text-action">Ver resultados <ExternalLink className="h-4 w-4" /></Link>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 premium-stats">
         <Stat
           icon={Eye}
           label="Visualizações"
@@ -199,7 +221,7 @@ function Dashboard() {
       </div>
 
       {bio && (
-        <div className="card-glow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="premium-public-link flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="text-xs uppercase tracking-widest text-muted-foreground">
               Sua página pública
@@ -224,7 +246,10 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="premium-section-heading">
+        <div><p className="eyebrow">Comece por aqui</p><h2>Deixe sua página pronta para vender</h2></div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-3 premium-quick-actions">
         <QuickCard
           icon={PanelsTopLeft}
           title="Minha Página"

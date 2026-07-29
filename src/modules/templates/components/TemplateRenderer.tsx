@@ -8,6 +8,25 @@ import { Footer } from "@/components/public-profile/Footer";
 import { smartTemplateRegistry } from "../smart/SmartTemplateRegistry";
 import { CatalogSection } from "@/modules/products/components/CatalogSection";
 
+const NICHE_FALLBACK_COVERS: Record<string, string> = {
+  restaurant: "/template-assets/restaurant-demo-cover.png",
+  clinic: "/template-assets/clinic-demo-cover.png",
+  store: "/template-assets/store-demo-cover.png",
+  beauty: "/template-assets/beauty-demo-cover.png",
+  creator: "/template-assets/creator-demo-cover.png",
+  business: "/template-assets/business-demo-cover.png",
+};
+
+function getFallbackCover(templateId: string) {
+  if (templateId.includes("restaurant")) return NICHE_FALLBACK_COVERS.restaurant;
+  if (templateId.includes("clinic")) return NICHE_FALLBACK_COVERS.clinic;
+  if (templateId.includes("store")) return NICHE_FALLBACK_COVERS.store;
+  if (templateId.includes("beauty")) return NICHE_FALLBACK_COVERS.beauty;
+  if (templateId.includes("creator")) return NICHE_FALLBACK_COVERS.creator;
+  if (templateId.includes("business")) return NICHE_FALLBACK_COVERS.business;
+  return null;
+}
+
 export function TemplateRenderer({
   bio,
   links,
@@ -33,6 +52,8 @@ export function TemplateRenderer({
   };
   const model = TemplateService.render(data, bio.template_id ?? undefined);
   const layout = layoutResolver.resolve(model);
+  const fallbackCover = getFallbackCover(model.template.id);
+  const renderedBio = bio.cover_url || !fallbackCover ? bio : { ...bio, cover_url: fallbackCover };
   const smartSupplemental =
     products && products.length > 0 ? (
       <>
@@ -61,7 +82,7 @@ export function TemplateRenderer({
     >
       {model.template.smart?.niche === "restaurant" ? (
         smartTemplateRegistry.render(model.template.smart, {
-          bio,
+          bio: renderedBio,
           links,
           onTrack,
           onShare,
@@ -70,7 +91,7 @@ export function TemplateRenderer({
         })
       ) : (
         <>
-          {layout?.render(model, { bio, links, onTrack, onShare, products, supplemental })}
+          {layout?.render(model, { bio: renderedBio, links, onTrack, onShare, products, supplemental })}
           {!model.template.components.includes("footer") && <Footer />}
         </>
       )}

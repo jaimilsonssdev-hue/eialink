@@ -21,11 +21,23 @@ const COVER_LIBRARY = {
     { id: "store-boutique", src: "/template-assets/store-cover-boutique.png", label: "Boutique" },
     { id: "store-sneakers", src: "/template-assets/store-cover-sneakers.png", label: "Tênis e acessórios" },
   ],
+  beauty: [
+    { id: "beauty-studio", src: "/template-assets/beauty-demo-cover.png", label: "Estudio beauty" },
+  ],
+  creator: [
+    { id: "creator-studio", src: "/template-assets/creator-demo-cover.png", label: "Estudio criativo" },
+  ],
+  business: [
+    { id: "business-office", src: "/template-assets/business-demo-cover.png", label: "Atendimento profissional" },
+  ],
 } as const;
 
 function coverCategory(templateId?: string | null) {
   if (templateId?.includes("clinic")) return "clinic";
   if (templateId?.includes("store")) return "store";
+  if (templateId?.includes("beauty")) return "beauty";
+  if (templateId?.includes("creator")) return "creator";
+  if (templateId?.includes("business")) return "business";
   return "restaurant";
 }
 

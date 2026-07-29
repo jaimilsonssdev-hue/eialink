@@ -50,7 +50,13 @@ export function RestaurantBioLink({
             }}
           />
         ) : (
-          <div className="restaurant-hero-fallback" aria-hidden="true" />
+          <img
+            src="/template-assets/restaurant-demo-cover.png"
+            alt=""
+            className="restaurant-hero-image"
+            loading="eager"
+            fetchPriority="high"
+          />
         )}
         {bio.cover_overlay && (
           <div

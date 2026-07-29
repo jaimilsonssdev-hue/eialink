@@ -124,7 +124,7 @@ function Dashboard() {
     bio && typeof window !== "undefined" ? `${window.location.origin}/p/${bio.slug}` : "";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 premium-dashboard">
       <div>
         <h1 className="text-3xl font-bold">
           Olá, {profile?.full_name?.split(" ")[0] ?? "empresário"} 👋

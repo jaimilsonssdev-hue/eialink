@@ -1,16 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import { UnifiedPageEditor } from "@/components/page-builder/UnifiedPageEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductService } from "@/modules/products/services/ProductService";
+import { TemplateService } from "@/modules/templates/services/TemplateService";
 
 export const Route = createFileRoute("/_authenticated/builder")({
   component: BuilderPage,
+  validateSearch: (search: Record<string, unknown>) => ({
+    template: typeof search.template === "string" ? search.template : undefined,
+  }),
   head: () => ({ meta: [{ title: "Minha Página — EIA Digital" }] }),
 });
 
 function BuilderPage() {
+  const { template: requestedTemplateId } = Route.useSearch();
+  const appliedTemplateRef = useRef<string>();
   const page = useQuery({
     queryKey: ["unified-page-editor"],
     queryFn: async () => {
@@ -33,6 +40,27 @@ function BuilderPage() {
       return { userId: auth.user.id, bio, profile, links: links ?? [], products };
     },
   });
+  const requestedTemplate = requestedTemplateId
+    ? TemplateService.list().find(
+        (template) => template.id === requestedTemplateId && template.status === "active",
+      )
+    : undefined;
+  const currentBio = page.data?.bio;
+  const { refetch } = page;
+
+  useEffect(() => {
+    if (!currentBio || !requestedTemplate || currentBio.template_id === requestedTemplate.id)
+      return;
+    if (appliedTemplateRef.current === requestedTemplate.id) return;
+    appliedTemplateRef.current = requestedTemplate.id;
+    void supabase
+      .from("bio_pages")
+      .update({ template_id: requestedTemplate.id })
+      .eq("id", currentBio.id)
+      .then(({ error }) => {
+        if (!error) void refetch();
+      });
+  }, [currentBio, refetch, requestedTemplate]);
 
   if (page.isLoading) return <Loader2 className="h-6 w-6 animate-spin" />;
   if (page.isError || !page.data) {
@@ -60,7 +88,7 @@ function BuilderPage() {
         cover_fit: bio.cover_fit,
         cover_overlay: bio.cover_overlay,
         cover_overlay_opacity: bio.cover_overlay_opacity,
-        template_id: bio.template_id,
+        template_id: requestedTemplate?.id ?? bio.template_id,
       }
     : {
         slug: "",

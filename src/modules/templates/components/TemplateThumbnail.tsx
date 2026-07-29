@@ -1,8 +1,11 @@
 import type { TemplateDefinition } from "../types";
+import { RestaurantTemplateThumbnail } from "./RestaurantTemplateThumbnail";
 
 export function TemplateThumbnail({ template }: { template: TemplateDefinition }) {
   const { colors } = template.theme;
   const layout = template.layout;
+
+  if (template.id === "restaurant-menu") return <RestaurantTemplateThumbnail />;
 
   if (layout === "restaurant") {
     return (

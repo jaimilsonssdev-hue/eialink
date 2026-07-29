@@ -1991,9 +1991,8 @@
   overflow: hidden;
   padding: 0.55rem;
   background:
-    radial-gradient(circle at 68% 30%, rgb(255 167 61 / 0.75), transparent 16%),
-    radial-gradient(circle at 38% 36%, rgb(119 52 17 / 0.94), transparent 25%),
-    linear-gradient(145deg, #2d1109, #08060c 74%);
+    linear-gradient(90deg, rgb(8 6 12 / .74), rgb(8 6 12 / .04)),
+    url("/template-assets/restaurant-demo-cover.png") center / cover;
 }
 .template-thumbnail-restaurant-premium-hero::after {
   content: "";
@@ -2205,7 +2204,7 @@
 
 /* Distinct visual previews for the template library. */
 .niche-template-thumb { min-height: 12.5rem; padding: .5rem; color: #fff; background: #111; }
-.niche-template-thumb-cover { position: relative; height: 5.5rem; overflow: hidden; padding: .55rem; border-radius: .7rem; background: linear-gradient(135deg, #23203a, #0e0b15); }
+.niche-template-thumb-cover { position: relative; height: 5.5rem; overflow: hidden; padding: .55rem; border-radius: .7rem; background: linear-gradient(135deg, #23203a, #0e0b15); background-size: cover; background-position: center; }
 .niche-template-thumb-cover::after { content: ""; position: absolute; right: -.7rem; bottom: -1.2rem; width: 6.3rem; height: 6.3rem; border-radius: 50%; background: rgb(255 255 255 / .18); }
 .niche-template-thumb-cover span { position: relative; z-index: 1; font-size: .42rem; font-weight: 850; letter-spacing: .12em; }
 .niche-template-thumb-cover i { position: absolute; z-index: 1; right: .55rem; top: .55rem; width: 1.45rem; height: 1.45rem; border: 1px solid rgb(255 255 255 / .45); border-radius: 50%; }

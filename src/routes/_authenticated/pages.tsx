@@ -4,6 +4,7 @@ import { ExternalLink, FilePlus2, Loader2, Pencil, Plus, Sparkles } from "lucide
 import { useState } from "react";
 import { PageService } from "@/modules/page/services/PageService";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
+import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
 
 export const Route = createFileRoute("/_authenticated/pages")({
   component: PagesWorkspace,
@@ -18,16 +19,17 @@ function PagesWorkspace() {
     queryKey: ["owned-bio-pages"],
     queryFn: () => PageService.listOwnedPages(),
   });
-  const template =
-    TemplateService.list().find((item) => item.id === "restaurant-menu") ?? TemplateService.get();
+  const featuredTemplates = TemplateService.list()
+    .filter((item) => item.status === "active" && item.smart)
+    .slice(0, 3);
 
-  async function createPage() {
+  async function createPage(templateId = featuredTemplates[0]?.id ?? TemplateService.get().id) {
     setIsCreating(true);
     setCreationError(null);
     try {
       const page = await PageService.createPage({
         displayName: "Minha nova página",
-        templateId: template.id,
+        templateId,
       });
       await pages.refetch();
       navigate({ to: "/builder", search: { page: page.id } });
@@ -108,6 +110,18 @@ function PagesWorkspace() {
           <b>Criar uma nova página</b>
           <small>Comece por um modelo profissional e personalize do seu jeito.</small>
         </button>
+      </section>
+
+      <section className="pages-template-picker" aria-labelledby="choose-template-title">
+        <div><p className="eyebrow">Comece com uma estrutura pronta</p><h2 id="choose-template-title">Escolha um visual para o próximo Biolink</h2></div>
+        <div className="pages-template-grid">
+          {featuredTemplates.map((template) => (
+            <article key={template.id} className="pages-template-card">
+              <TemplateThumbnail template={template} />
+              <div><p>{template.name}</p><small>{template.description}</small><button className="btn-secondary" disabled={isCreating} onClick={() => void createPage(template.id)}>Usar este visual</button></div>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="pages-template-note">

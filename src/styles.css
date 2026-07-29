@@ -2185,8 +2185,9 @@
 .page-library-create small { max-width: 15rem; text-align: center; line-height: 1.45; }
 .pages-template-note { display: flex; gap: .8rem; align-items: start; margin-top: 2rem; padding: 1.1rem 1.2rem; border: 1px solid rgb(190 113 255 / .25); border-radius: 1rem; color: #d9b8ff; background: linear-gradient(90deg, rgb(124 58 237 / .12), transparent); }
 .pages-template-note b { color: #fff; }.pages-template-note p { margin-top: .22rem; color: var(--muted-foreground); font-size: .85rem; }
+.pages-template-picker { margin-top: 2.5rem; padding: 1.5rem; border: 1px solid rgb(192 132 252 / .25); border-radius: 1.3rem; background: radial-gradient(circle at 90% 0%, rgb(192 132 252 / .17), transparent 27%), #100d16; }.pages-template-picker h2 { margin-top: .25rem; color: #fff; font-size: 1.35rem; font-weight: 700; }.pages-template-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.25rem; }.pages-template-card { overflow: hidden; border: 1px solid rgb(255 255 255 / .1); border-radius: .9rem; background: #17121e; }.pages-template-card > div:last-child { padding: .8rem; }.pages-template-card p { color: #fff; font-size: .88rem; font-weight: 700; }.pages-template-card small { display: block; min-height: 2.4rem; margin-top: .25rem; color: var(--muted-foreground); font-size: .7rem; line-height: 1.4; }.pages-template-card .btn-secondary { width: 100%; margin-top: .75rem; padding: .52rem; font-size: .72rem; }
 @media (max-width: 980px) { .pages-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 640px) { .pages-workspace-header { align-items: start; flex-direction: column; }.pages-grid { grid-template-columns: 1fr; }.pages-workspace-header .premium-cta { width: 100%; } }
+@media (max-width: 640px) { .pages-workspace-header { align-items: start; flex-direction: column; }.pages-grid, .pages-template-grid { grid-template-columns: 1fr; }.pages-workspace-header .premium-cta { width: 100%; } }
 
 /* Product shell shared by SaaS screens: restrained panels, generous rhythm, strong headings. */
 .premium-page { max-width: 75rem; margin-inline: auto; padding-block: .5rem 2rem; }

@@ -1,5 +1,5 @@
 import { defaultTheme } from "../themes/defaultTheme";
-import type { TemplateDefinition, ThemeTokens } from "../types";
+import type { SmartTemplateDefinition, TemplateDefinition, ThemeTokens } from "../types";
 
 type TemplateInput = Omit<TemplateDefinition, "version" | "status" | "theme"> & {
   theme: Partial<ThemeTokens> & Pick<ThemeTokens, "colors">;
@@ -42,6 +42,207 @@ const define = (template: TemplateInput): TemplateDefinition => ({
   status: "active",
   theme: theme(template.theme.colors, template.theme.typography?.fontFamily),
 });
+
+const restaurantSmart: SmartTemplateDefinition = {
+  niche: "restaurant",
+  demo: {
+    name: "Casa Brasa",
+    description: "Cozinha afetiva e fogo lento.",
+    heroLabel: "PeÃ§a hoje",
+  },
+  blocks: [
+    {
+      id: "hero",
+      type: "hero",
+      name: "Capa",
+      description: "Imagem principal",
+      required: true,
+      defaultOrder: 0,
+      canHide: false,
+      canReorder: false,
+      variants: ["photographic"],
+    },
+    {
+      id: "profile",
+      type: "profile",
+      name: "Restaurante",
+      description: "Marca e descriÃ§Ã£o",
+      required: true,
+      defaultOrder: 1,
+      canHide: false,
+      canReorder: false,
+      variants: ["editorial"],
+    },
+    {
+      id: "menu",
+      type: "menu",
+      name: "CardÃ¡pio",
+      description: "Pratos em destaque",
+      required: true,
+      defaultOrder: 2,
+      canHide: false,
+      canReorder: true,
+      variants: ["editorial"],
+      restrictedTo: ["restaurant"],
+    },
+    {
+      id: "delivery",
+      type: "delivery",
+      name: "Delivery",
+      description: "Pedido e entrega",
+      required: false,
+      defaultOrder: 3,
+      canHide: true,
+      canReorder: true,
+      variants: ["primary"],
+      restrictedTo: ["restaurant"],
+    },
+    {
+      id: "footer",
+      type: "footer",
+      name: "RodapÃ©",
+      description: "Assinatura",
+      required: true,
+      defaultOrder: 4,
+      canHide: false,
+      canReorder: false,
+      variants: ["refined"],
+    },
+  ],
+};
+const clinicSmart: SmartTemplateDefinition = {
+  niche: "clinic",
+  demo: {
+    name: "ClÃ­nica Horizonte",
+    description: "Cuidado humano em cada consulta.",
+    heroLabel: "Agende sua consulta",
+  },
+  blocks: [
+    {
+      id: "hero",
+      type: "hero",
+      name: "Capa institucional",
+      description: "ApresentaÃ§Ã£o",
+      required: true,
+      defaultOrder: 0,
+      canHide: false,
+      canReorder: false,
+      variants: ["institutional"],
+    },
+    {
+      id: "profile",
+      type: "profile",
+      name: "Profissional",
+      description: "Perfil e confianÃ§a",
+      required: true,
+      defaultOrder: 1,
+      canHide: false,
+      canReorder: false,
+      variants: ["clinical"],
+    },
+    {
+      id: "specialties",
+      type: "specialties",
+      name: "Especialidades",
+      description: "ServiÃ§os e tratamentos",
+      required: false,
+      defaultOrder: 2,
+      canHide: true,
+      canReorder: true,
+      variants: ["specialty-cards"],
+      restrictedTo: ["clinic"],
+    },
+    {
+      id: "contact",
+      type: "contact",
+      name: "Agendamento",
+      description: "Contato principal",
+      required: true,
+      defaultOrder: 3,
+      canHide: false,
+      canReorder: true,
+      variants: ["quiet-cta"],
+    },
+    {
+      id: "footer",
+      type: "footer",
+      name: "RodapÃ©",
+      description: "Institucional",
+      required: true,
+      defaultOrder: 4,
+      canHide: false,
+      canReorder: false,
+      variants: ["institutional"],
+    },
+  ],
+};
+const storeSmart: SmartTemplateDefinition = {
+  niche: "store",
+  demo: {
+    name: "AteliÃª Rua 12",
+    description: "PeÃ§as para transformar o dia a dia.",
+    heroLabel: "Ver novidades",
+  },
+  blocks: [
+    {
+      id: "hero",
+      type: "hero",
+      name: "Banner",
+      description: "Oferta principal",
+      required: true,
+      defaultOrder: 0,
+      canHide: false,
+      canReorder: false,
+      variants: ["promotional"],
+    },
+    {
+      id: "profile",
+      type: "profile",
+      name: "Marca",
+      description: "Posicionamento",
+      required: true,
+      defaultOrder: 1,
+      canHide: false,
+      canReorder: false,
+      variants: ["store"],
+    },
+    {
+      id: "catalog",
+      type: "catalog",
+      name: "Vitrine",
+      description: "Produtos em destaque",
+      required: true,
+      defaultOrder: 2,
+      canHide: false,
+      canReorder: true,
+      variants: ["product-grid"],
+      restrictedTo: ["store"],
+    },
+    {
+      id: "offers",
+      type: "offers",
+      name: "Ofertas",
+      description: "Destaques",
+      required: false,
+      defaultOrder: 3,
+      canHide: true,
+      canReorder: true,
+      variants: ["banner"],
+      restrictedTo: ["store"],
+    },
+    {
+      id: "footer",
+      type: "footer",
+      name: "RodapÃ©",
+      description: "Loja",
+      required: true,
+      defaultOrder: 4,
+      canHide: false,
+      canReorder: false,
+      variants: ["store"],
+    },
+  ],
+};
 
 export const templateManifest: TemplateDefinition[] = [
   define({
@@ -219,6 +420,7 @@ export const templateManifest: TemplateDefinition[] = [
     name: "Vitrine",
     description: "Destaque seus links e canais de venda.",
     category: "store",
+    smart: storeSmart,
     theme: {
       colors: {
         background: "#ecfdf5",
@@ -245,6 +447,7 @@ export const templateManifest: TemplateDefinition[] = [
     name: "Sabor",
     description: "Quente e convidativo para reservas e cardÃ¡pio.",
     category: "restaurant",
+    smart: restaurantSmart,
     theme: {
       colors: {
         background: "#fff7ed",
@@ -271,6 +474,7 @@ export const templateManifest: TemplateDefinition[] = [
     name: "Cuidado",
     description: "ApresentaÃ§Ã£o clara e confiÃ¡vel para clÃ­nicas e dentistas.",
     category: "clinic",
+    smart: clinicSmart,
     badge: "Novo",
     bestFor: "clÃ­nicas, dentistas e consultÃ³rios",
     theme: {

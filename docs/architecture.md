@@ -2,6 +2,8 @@
 
 > DireÃ§Ã£o visual atual: o renderer pÃºblico recebe tokens do template por propriedades CSS, mantendo Preview e pÃ¡gina pÃºblica na mesma composiÃ§Ã£o. Consulte `docs/rfc/RFC-009-Visual-Product-Redesign.md`.
 
+> Smart templates: modelos de nicho usam definiÃ§Ãµes imutÃ¡veis, blocos permitidos e instÃ¢ncias locais sem alterar o banco. Consulte `docs/rfcs/RFC-010-smart-template-architecture.md`.
+
 ## Visão geral
 
 Os módulos vivem em `src/modules`. A interface mantém as rotas atuais; Services concentram acesso por domínio sem mudar contratos, banco ou experiência.

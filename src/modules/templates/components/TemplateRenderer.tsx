@@ -4,6 +4,7 @@ import type { PageData } from "../types";
 import type { CSSProperties, ReactNode } from "react";
 import { layoutResolver } from "../layouts/LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
+import { smartTemplateRegistry } from "../smart/SmartTemplateRegistry";
 
 export function TemplateRenderer({
   bio,
@@ -43,9 +44,21 @@ export function TemplateRenderer({
         } as CSSProperties
       }
     >
-      {layout?.render(model, { bio, links, onTrack, onShare })}
-      {supplemental}
-      {!model.template.components.includes("footer") && <Footer />}
+      {model.template.smart ? (
+        smartTemplateRegistry.render(model.template.smart, {
+          bio,
+          links,
+          onTrack,
+          onShare,
+          supplemental,
+        })
+      ) : (
+        <>
+          {layout?.render(model, { bio, links, onTrack, onShare })}
+          {supplemental}
+          {!model.template.components.includes("footer") && <Footer />}
+        </>
+      )}
     </main>
   );
 }

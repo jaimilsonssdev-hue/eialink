@@ -9,6 +9,7 @@ export class TemplateEngine {
         layout: template.layout,
         components: [...template.components],
         componentVariants: { ...template.componentVariants },
+        smart: template.smart,
       },
       theme: template.theme,
       data: Object.freeze({ ...data, links: [...data.links], socials: { ...data.socials } }),

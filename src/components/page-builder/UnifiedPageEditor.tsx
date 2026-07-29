@@ -328,7 +328,7 @@ export function UnifiedPageEditor({
               links={previewLinks.filter((link) => link.active)}
               onTrack={() => undefined}
               onShare={() => undefined}
-              supplemental={<CatalogSection items={products} />}
+              products={products}
             />
           </div>
         </main>

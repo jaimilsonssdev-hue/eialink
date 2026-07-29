@@ -131,12 +131,12 @@ function PublicBio() {
       links={links}
       onTrack={track}
       onShare={share}
+      products={products}
       supplemental={
         <>
           {supplementalBlocks.map((block: PageBlock) => (
             <BlockRenderer key={block.id} block={block} />
           ))}
-          <CatalogSection items={products} />
         </>
       }
     />

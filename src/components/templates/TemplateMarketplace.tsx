@@ -1,9 +1,19 @@
 import { Sparkles } from "lucide-react";
 import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
+import { createTemplateInstance } from "@/modules/templates/smart/TemplateInstanceFactory";
 
 export function TemplateMarketplace() {
   const templates = TemplateService.list();
+  const activateTemplate = (id: string) => {
+    const template = TemplateService.get(id);
+    if (template.smart)
+      sessionStorage.setItem(
+        "eia-template-instance",
+        JSON.stringify(createTemplateInstance(template.id, template.smart)),
+      );
+    window.location.assign(`/builder?template=${encodeURIComponent(template.id)}`);
+  };
   return (
     <section className="template-marketplace mt-10">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -35,6 +45,15 @@ export function TemplateMarketplace() {
               >
                 Visualizar
               </button>
+              {template.smart && (
+                <button
+                  type="button"
+                  className="ml-4 text-sm font-semibold"
+                  onClick={() => activateTemplate(template.id)}
+                >
+                  Usar este template
+                </button>
+              )}
             </div>
           </article>
         ))}

@@ -4,6 +4,9 @@ import { TemplateService } from "../services/TemplateService";
 import type { PageData } from "../types";
 import type { CSSProperties, ReactNode } from "react";
 import { layoutResolver } from "../layouts/LayoutResolver";
+import { Footer } from "@/components/public-profile/Footer";
+import { smartTemplateRegistry } from "../smart/SmartTemplateRegistry";
+import { CatalogSection } from "@/modules/products/components/CatalogSection";
 
 export function TemplateRenderer({
   bio,
@@ -30,11 +33,21 @@ export function TemplateRenderer({
   };
   const model = TemplateService.render(data, bio.template_id ?? undefined);
   const layout = layoutResolver.resolve(model);
+  const smartSupplemental =
+    products && products.length > 0 ? (
+      <>
+        <CatalogSection items={products} />
+        {supplemental}
+      </>
+    ) : (
+      supplemental
+    );
   return (
     <main
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}
       data-template={bio.template_id ?? "default"}
       data-layout={model.template.layout}
+      data-template-layout={model.template.layout}
       style={
         {
           fontFamily: model.theme.typography.fontFamily,
@@ -46,7 +59,21 @@ export function TemplateRenderer({
         } as CSSProperties
       }
     >
-      {layout?.render(model, { bio, links, onTrack, onShare, products, supplemental })}
+      {model.template.smart ? (
+        smartTemplateRegistry.render(model.template.smart, {
+          bio,
+          links,
+          onTrack,
+          onShare,
+          products,
+          supplemental: smartSupplemental,
+        })
+      ) : (
+        <>
+          {layout?.render(model, { bio, links, onTrack, onShare, products, supplemental })}
+          {!model.template.components.includes("footer") && <Footer />}
+        </>
+      )}
     </main>
   );
 }

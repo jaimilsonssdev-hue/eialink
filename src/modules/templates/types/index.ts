@@ -28,8 +28,55 @@ export type PageData = {
 };
 export type TemplateComponentType = "banner" | "profile" | "links" | "pix" | "footer";
 export type TemplateCategory =
-  "minimal" | "creator" | "business" | "store" | "restaurant" | "beauty" | "portfolio" | "premium";
+  | "minimal"
+  | "creator"
+  | "business"
+  | "store"
+  | "restaurant"
+  | "clinic"
+  | "beauty"
+  | "portfolio"
+  | "premium";
 export type ComponentVariants = Partial<Record<TemplateComponentType, string>>;
+export type SmartBlockType =
+  | "hero"
+  | "profile"
+  | "menu"
+  | "catalog"
+  | "delivery"
+  | "specialties"
+  | "treatments"
+  | "team"
+  | "convenios"
+  | "offers"
+  | "categories"
+  | "contact"
+  | "social"
+  | "footer";
+export type BlockDefinition = {
+  id: string;
+  type: SmartBlockType;
+  name: string;
+  description: string;
+  required: boolean;
+  defaultOrder: number;
+  canHide: boolean;
+  canReorder: boolean;
+  variants: string[];
+  restrictedTo?: TemplateCategory[];
+};
+export type SmartTemplateDefinition = {
+  niche: "restaurant" | "clinic" | "store";
+  blocks: BlockDefinition[];
+  demo: { name: string; description: string; heroLabel: string };
+};
+export type TemplateInstance = {
+  templateId: string;
+  activeBlockIds: string[];
+  blockOrder: string[];
+  hiddenBlockIds: string[];
+  preferences: Record<string, string | boolean>;
+};
 export type TemplateDefinition = {
   id: string;
   slug: string;
@@ -54,11 +101,15 @@ export type TemplateDefinition = {
     | "storefront";
   components: TemplateComponentType[];
   componentVariants: ComponentVariants;
+  smart?: SmartTemplateDefinition;
   supportedFeatures: string[];
   status: "active" | "disabled" | "draft";
 };
 export type TemplateRenderModel = {
-  template: Pick<TemplateDefinition, "id" | "layout" | "components" | "componentVariants">;
+  template: Pick<
+    TemplateDefinition,
+    "id" | "layout" | "components" | "componentVariants" | "smart"
+  >;
   theme: ThemeTokens;
   data: Readonly<PageData>;
 };

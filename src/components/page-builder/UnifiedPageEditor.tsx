@@ -463,6 +463,7 @@ function SectionForm({
           <MediaUploader
             label="Imagem de capa"
             value={bio.cover_url}
+            variant="cover"
             onChange={(cover_url) => updateBio({ cover_url })}
           />
           <Field label="Posição da imagem">

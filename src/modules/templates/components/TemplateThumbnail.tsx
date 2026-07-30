@@ -7,7 +7,7 @@ export function TemplateThumbnail({ template }: { template: TemplateDefinition }
   const layout = template.layout;
 
   if (template.id === "restaurant-menu") return <RestaurantTemplateThumbnail />;
-  if (["clinic", "store", "beauty", "creator", "business", "portfolio"].includes(template.category))
+  if (["clinic", "academy", "law", "store", "beauty", "creator", "business", "portfolio"].includes(template.category))
     return <NicheTemplateThumbnail category={template.category} />;
 
   if (layout === "restaurant") {

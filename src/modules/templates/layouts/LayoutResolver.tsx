@@ -7,6 +7,8 @@ import type { TemplateComponentType, TemplateRenderModel } from "../types";
 import { RestaurantLayout } from "./RestaurantLayout";
 import { ClinicLayout } from "./ClinicLayout";
 import { StorefrontLayout } from "./StorefrontLayout";
+import { AcademyLayout } from "./AcademyLayout";
+import { LawLayout } from "./LawLayout";
 
 export type LayoutRenderContext = TemplateComponentContext & {
   products?: CatalogItem[];
@@ -80,4 +82,6 @@ export const layoutResolver = new LayoutResolver()
   .register(new OrderedLayout("creator", ["profile", "banner", "links", "footer"]))
   .register(new RestaurantLayout())
   .register(new ClinicLayout())
-  .register(new StorefrontLayout());
+  .register(new StorefrontLayout())
+  .register(new AcademyLayout())
+  .register(new LawLayout());

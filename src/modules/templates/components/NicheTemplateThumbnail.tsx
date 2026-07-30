@@ -2,6 +2,8 @@ import type { TemplateCategory } from "../types";
 
 const content: Partial<Record<TemplateCategory, { label: string; title: string; tone: string; image?: string }>> = {
   clinic: { label: "CLÍNICA", title: "Cuidado que acolhe", tone: "clinic", image: "/template-assets/clinic-demo-cover.png" },
+  academy: { label: "ACADEMIA", title: "Força que transforma", tone: "academy", image: "/template-assets/academy-gym-cover.png" },
+  law: { label: "ADVOCACIA", title: "Estratégia que protege", tone: "law", image: "/template-assets/law-office-cover.png" },
   store: { label: "LOJA", title: "Novidades da vitrine", tone: "store", image: "/template-assets/store-demo-cover.png" },
   beauty: { label: "BELEZA", title: "Sua melhor versao", tone: "beauty", image: "/template-assets/beauty-demo-cover.png" },
   creator: { label: "CRIADOR", title: "Ideias que conectam", tone: "creator", image: "/template-assets/creator-demo-cover.png" },

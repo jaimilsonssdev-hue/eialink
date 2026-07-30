@@ -1,7 +1,9 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, TrendingUp, Send, Download } from "lucide-react";
+import { Users, TrendingUp, Send, Download, CreditCard, ShieldCheck } from "lucide-react";
+import { BillingService } from "@/modules/billing/services/BillingService";
+import { toPlanLimits } from "@/modules/billing/types";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Super Admin — EIA Digital" }, { name: "robots", content: "noindex" }] }),
@@ -15,13 +17,25 @@ export const Route = createFileRoute("/_authenticated/admin")({
 });
 
 function AdminPage() {
+  const queryClient = useQueryClient();
   const { data } = useQuery({
-    queryKey: ["admin-leads"],
+    queryKey: ["super-admin"],
     queryFn: async () => {
       const { data: profiles } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       const { data: reqs } = await supabase.from("service_requests").select("id");
-      return { profiles: profiles ?? [], requests: reqs?.length ?? 0 };
+      const [plans, subscriptions, services] = await Promise.all([
+        BillingService.listPlans(),
+        BillingService.listSubscriptions(),
+        BillingService.listServices(),
+      ]);
+      return { profiles: profiles ?? [], requests: reqs?.length ?? 0, plans, subscriptions, services };
     },
+  });
+
+  const updateSubscription = useMutation({
+    mutationFn: ({ userId, planId, status }: { userId: string; planId: string; status: string }) =>
+      BillingService.updateSubscription(userId, { plan_id: planId, status, billing_interval: "monthly", current_period_end: null, notes: null }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
   });
 
   const total = data?.profiles.length ?? 0;
@@ -50,7 +64,44 @@ function AdminPage() {
         <Card icon={Users} label="Usuários" v={total} />
         <Card icon={TrendingUp} label="Leads Quentes" v={hot} />
         <Card icon={Send} label="Solicitações" v={data?.requests ?? 0} />
+        <Card icon={CreditCard} label="Assinaturas ativas" v={data?.subscriptions.filter((item) => item.status === "active").length ?? 0} />
       </div>
+      <section className="card-surface">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">Planos da plataforma</p>
+            <h2 className="mt-1 text-xl font-bold">Limites centralizados</h2>
+          </div>
+          <span className="text-sm text-muted-foreground">{data?.services.length ?? 0} serviços profissionais ativos</span>
+        </div>
+        <div className="grid gap-3 md:grid-cols-3">
+          {data?.plans.map((plan) => {
+            const limits = toPlanLimits(plan.limits);
+            return <article key={plan.id} className="rounded-xl border border-border bg-surface-elevated/30 p-4">
+              <div className="flex items-center justify-between"><h3 className="font-bold">{plan.name}</h3><span className={plan.active ? "text-xs text-emerald-400" : "text-xs text-muted-foreground"}>{plan.active ? "Ativo" : "Inativo"}</span></div>
+              <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+              <p className="mt-3 text-lg font-semibold">{plan.price_cents === 0 ? "Grátis" : `R$ ${(plan.price_cents / 100).toFixed(2).replace(".", ",")}/mês`}</p>
+              <p className="mt-2 text-xs text-muted-foreground">{limits.bio_pages === -1 ? "BioLinks ilimitados" : `${limits.bio_pages} BioLink(s)`} · {limits.catalog_items === -1 ? "catálogo ilimitado" : `${limits.catalog_items} itens`}</p>
+            </article>;
+          })}
+        </div>
+      </section>
+      <section className="card-surface overflow-x-auto">
+        <div className="mb-4 flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-[color:var(--accent)]" /><div><h2 className="font-bold">Assinaturas</h2><p className="text-sm text-muted-foreground">Altere o plano ou status de cada conta. A validação é feita pelo banco.</p></div></div>
+        <table className="w-full min-w-[720px] text-sm">
+          <thead className="text-left text-xs uppercase text-muted-foreground"><tr><Th>Cliente</Th><Th>Plano</Th><Th>Status</Th><Th>Ação</Th></tr></thead>
+          <tbody>{data?.profiles.map((profile) => {
+            const subscription = data.subscriptions.find((item) => item.user_id === profile.id);
+            return <tr key={profile.id} className="border-t border-border">
+              <Td><div className="font-medium">{profile.full_name}</div><div className="text-xs text-muted-foreground">{profile.email}</div></Td>
+              <Td><select className="input-base min-w-36 py-2" defaultValue={subscription?.plan_id} aria-label={`Plano de ${profile.full_name}`} onChange={(event) => updateSubscription.mutate({ userId: profile.id, planId: event.target.value, status: subscription?.status ?? "active" })}>{data.plans.map((plan) => <option key={plan.id} value={plan.id}>{plan.name}</option>)}</select></Td>
+              <Td><select className="input-base min-w-28 py-2" defaultValue={subscription?.status ?? "active"} aria-label={`Status de ${profile.full_name}`} onChange={(event) => subscription && updateSubscription.mutate({ userId: profile.id, planId: subscription.plan_id, status: event.target.value })}><option value="active">Ativa</option><option value="trialing">Teste</option><option value="past_due">Pendente</option><option value="cancelled">Cancelada</option><option value="expired">Expirada</option></select></Td>
+              <Td>{updateSubscription.isPending ? <span className="text-xs text-muted-foreground">Salvando…</span> : <span className="text-xs text-muted-foreground">Salva automaticamente</span>}</Td>
+            </tr>;
+          })}</tbody>
+        </table>
+        {updateSubscription.isError && <p className="mt-3 text-sm text-red-400">Não foi possível atualizar a assinatura. Confirme se a migration foi aplicada.</p>}
+      </section>
       <div className="card-surface overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-xs text-muted-foreground uppercase">

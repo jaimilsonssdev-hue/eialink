@@ -1,6 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft, ArrowRight, BarChart3, Building2, CalendarDays, Check, ChevronRight,
   CircleDollarSign, Dumbbell, Heart, Instagram, Link2, MapPin,
   MessageCircle, Palette, PawPrint, Rocket, Scissors, ShieldCheck,
@@ -22,8 +29,8 @@ const templates = [
   { name: "Casa do Sabor", niche: "Restaurante", icon: UtensilsCrossed, cover: "/template-assets/restaurant-demo-cover.png", color: "#8b3ff2" },
   { name: "Clínica Harmonia", niche: "Clínica", icon: Stethoscope, cover: "/template-assets/clinic-demo-cover.png", color: "#16a6b8" },
   { name: "Studio Beauty", niche: "Salão", icon: Scissors, cover: "/template-assets/beauty-demo-cover.png", color: "#e64d9b" },
-  { name: "Power Gym", niche: "Academia", icon: Dumbbell, cover: "/template-assets/business-demo-cover.png", color: "#42b966" },
-  { name: "Dr. Carlos", niche: "Advogado", icon: ShieldCheck, cover: "/template-assets/business-demo-cover.png", color: "#c99a40" },
+  { name: "Power Gym", niche: "Academia", icon: Dumbbell, cover: "/template-assets/academy-gym-cover.png", color: "#42b966" },
+  { name: "Dr. Carlos", niche: "Advogado", icon: ShieldCheck, cover: "/template-assets/law-office-cover.png", color: "#c99a40" },
   { name: "Lar & Sonhos", niche: "Imobiliária", icon: Building2, cover: "/template-assets/store-demo-cover.png", color: "#259ed5" },
   { name: "Amor de Patas", niche: "Pet Shop", icon: PawPrint, cover: "/template-assets/creator-demo-cover.png", color: "#45ba6c" },
 ] as const;
@@ -42,18 +49,32 @@ const testimonials = [
 ] as const;
 
 function Landing() {
+  const [previewTemplate, setPreviewTemplate] = useState<(typeof templates)[number] | null>(null);
   return (
     <main className="min-h-screen overflow-hidden bg-[#07060b] text-[#f8f5ff]">
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_55%_0,rgba(124,58,237,.16),transparent_24rem),radial-gradient(circle_at_95%_90%,rgba(217,70,239,.11),transparent_30rem)]" />
       <Nav />
       <Hero />
       <Difference />
-      <Templates />
+      <Templates onPreview={setPreviewTemplate} />
       <Benefits />
       <HowItWorks />
       <Testimonials />
       <FinalCta />
       <Footer />
+      <Dialog open={Boolean(previewTemplate)} onOpenChange={(open) => !open && setPreviewTemplate(null)}>
+        {previewTemplate && (
+          <DialogContent className="template-preview-dialog max-h-[90vh] max-w-sm overflow-y-auto">
+            <DialogHeader>
+              <p className="eyebrow">Prévia do modelo</p>
+              <DialogTitle>{previewTemplate.name}</DialogTitle>
+              <DialogDescription>Exemplo visual de uma página para {previewTemplate.niche.toLowerCase()}.</DialogDescription>
+            </DialogHeader>
+            <TemplatePhone template={previewTemplate} featured />
+            <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary justify-center">Criar com este estilo <ArrowRight className="h-4 w-4" /></Link>
+          </DialogContent>
+        )}
+      </Dialog>
     </main>
   );
 }
@@ -85,7 +106,7 @@ function Hero() {
   );
 }
 
-function TemplateRail({ featured = false }: { featured?: boolean }) {
+function TemplateRail({ featured = false, onPreview }: { featured?: boolean; onPreview?: (template: typeof templates[number]) => void }) {
   const items = featured ? templates.slice(0, 5) : templates;
   const [activeIndex, setActiveIndex] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -117,12 +138,13 @@ function TemplateRail({ featured = false }: { featured?: boolean }) {
       </div>
     );
   }
-  return <div className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 [scrollbar-width:none]">{items.map((template, index) => <TemplatePhone key={template.name} template={template} featured={featured && index === 0} />)}</div>;
+  return <div className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 [scrollbar-width:none]">{items.map((template, index) => <TemplatePhone key={template.name} template={template} featured={featured && index === 0} onPreview={onPreview} />)}</div>;
 }
 
-function TemplatePhone({ template, featured }: { template: typeof templates[number]; featured?: boolean }) {
+function TemplatePhone({ template, featured, onPreview }: { template: typeof templates[number]; featured?: boolean; onPreview?: (template: typeof templates[number]) => void }) {
   const Icon = template.icon;
-  return <article className={`${featured ? "w-full" : "w-[8.4rem]"} flex-none snap-center overflow-hidden rounded-2xl border bg-[#0d0a12] shadow-xl transition duration-200 hover:-translate-y-1 ${featured ? "border-violet-400/75" : "border-white/10"}`}><div className="relative"><img src={template.cover} alt={`Modelo ${template.niche}`} className={`${featured ? "h-52" : "h-28"} w-full object-cover`} loading={featured ? "eager" : "lazy"} /><div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0d0a12]" /><span className="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-1 text-[9px]">{template.niche}</span></div><div className={`${featured ? "-mt-7 p-4" : "-mt-4 p-2"} relative text-center`}><span className={`${featured ? "h-11 w-11" : "h-7 w-7"} mx-auto grid place-items-center rounded-full border border-white/30 bg-[#171021]`}><Icon className={featured ? "h-5 w-5" : "h-3.5 w-3.5"} style={{ color: template.color }} /></span><b className={`${featured ? "text-base" : "text-[10px]"} mt-2 block truncate`}>{template.name}</b><p className={`${featured ? "text-xs" : "text-[7px]"} mt-1 text-[#bcb2c8]`}>Página pronta para vender</p><span className={`${featured ? "py-2 text-xs" : "py-1 text-[8px]"} mt-3 block rounded-md font-bold`} style={{ background: template.color }}>Ver modelo</span></div></article>;
+  const interactive = !featured && Boolean(onPreview);
+  return <article role={interactive ? "button" : undefined} tabIndex={interactive ? 0 : undefined} onClick={interactive ? () => onPreview?.(template) : undefined} onKeyDown={interactive ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onPreview?.(template); } } : undefined} aria-label={interactive ? `Ver prévia de ${template.name}` : undefined} className={`${featured ? "w-full" : "w-[8.4rem]"} flex-none snap-center overflow-hidden rounded-2xl border bg-[#0d0a12] shadow-xl transition duration-200 hover:-translate-y-1 ${interactive ? "cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400" : ""} ${featured ? "border-violet-400/75" : "border-white/10"}`}><div className="relative"><img src={template.cover} alt={`Modelo ${template.niche}`} className={`${featured ? "h-52" : "h-28"} w-full object-cover`} loading={featured ? "eager" : "lazy"} /><div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0d0a12]" /><span className="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-1 text-[9px]">{template.niche}</span></div><div className={`${featured ? "-mt-7 p-4" : "-mt-4 p-2"} relative text-center`}><span className={`${featured ? "h-11 w-11" : "h-7 w-7"} mx-auto grid place-items-center rounded-full border border-white/30 bg-[#171021]`}><Icon className={featured ? "h-5 w-5" : "h-3.5 w-3.5"} style={{ color: template.color }} /></span><b className={`${featured ? "text-base" : "text-[10px]"} mt-2 block truncate`}>{template.name}</b><p className={`${featured ? "text-xs" : "text-[7px]"} mt-1 text-[#bcb2c8]`}>Página pronta para vender</p><span className={`${featured ? "py-2 text-xs" : "py-1 text-[8px]"} mt-3 block rounded-md font-bold`} style={{ background: template.color }}>{interactive ? "Ver prévia" : "Ver modelo"}</span></div></article>;
 }
 
 function Difference() {
@@ -131,8 +153,8 @@ function Difference() {
   return <section id="exemplos" className="relative z-10 mx-auto max-w-7xl px-5 pb-14"><div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-[#0d0a12] p-6 lg:grid-cols-[.8fr_1fr_.8fr]"><div className="text-center"><p className="eyebrow">Veja a diferença</p><div className="mt-5 rounded-2xl border border-white/10 bg-white/[.025] p-5"><div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white/10 text-[#bdb3c8]"><Store className="h-6 w-6" /></div><b className="mt-3 block text-sm">Seu negócio</b><p className="text-[10px] text-[#a99fb5]">Bio comum</p><div className="mt-4 space-y-2">{old.map((item) => <div key={item} className="rounded-lg bg-white/[.06] px-3 py-2 text-xs text-[#bdb3c8]">{item}</div>)}</div></div></div><div className="relative"><div className="absolute left-1/2 top-1/2 z-10 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500 font-display font-bold shadow-[0_0_35px_rgba(168,85,247,.65)]">VS</div><div className="mx-auto max-w-[17rem] overflow-hidden rounded-[1.7rem] border-4 border-[#2c2633] bg-[#09070f]"><img src="/template-assets/restaurant-demo-cover.png" alt="Exemplo EIA Link Casa do Sabor" className="h-28 w-full object-cover" /><div className="p-4 text-center"><b className="font-display text-xl">Casa do Sabor</b><p className="text-[9px] text-fuchsia-300">Hamburgueria artesanal</p><button className="mt-3 w-full rounded-lg bg-green-500 py-2 text-xs font-bold text-black">Pedir pelo WhatsApp</button><button className="mt-2 w-full rounded-lg border border-fuchsia-400 py-2 text-[10px] text-fuchsia-200">Ver cardápio</button><div className="mt-3 grid grid-cols-3 gap-1">{["Burger", "Pizza", "Brownie"].map((item) => <span key={item} className="rounded bg-white/10 p-1 text-[8px]">{item}</span>)}</div></div></div></div><ul className="grid gap-3 text-sm">{gains.map((gain) => <li key={gain} className="flex items-center gap-2 text-[#d5cbe1]"><Check className="h-4 w-4 text-violet-400" />{gain}</li>)}</ul></div></section>;
 }
 
-function Templates() {
-  return <section id="templates" className="relative z-10 mx-auto max-w-7xl px-5 pb-14"><div className="rounded-3xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(27,14,45,.86),rgba(11,8,16,.95))] p-6 md:p-8"><div className="flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="eyebrow">Templates por nicho</p><h2 className="mt-2 font-display text-3xl font-bold">Templates feitos para cada tipo de negócio</h2></div><p className="max-w-md text-sm text-[#c4bacf]">Escolha uma estrutura profissional e personalize somente o que faz sentido para sua marca.</p></div><div className="mt-7"><TemplateRail /></div></div></section>;
+function Templates({ onPreview }: { onPreview: (template: typeof templates[number]) => void }) {
+  return <section id="templates" className="relative z-10 mx-auto max-w-7xl px-5 pb-14"><div className="rounded-3xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(27,14,45,.86),rgba(11,8,16,.95))] p-6 md:p-8"><div className="flex flex-col justify-between gap-3 md:flex-row md:items-end"><div><p className="eyebrow">Templates por nicho</p><h2 className="mt-2 font-display text-3xl font-bold">Templates feitos para cada tipo de negócio</h2></div><p className="max-w-md text-sm text-[#c4bacf]">Clique em um modelo para abrir sua prévia e personalize somente o que faz sentido para sua marca.</p></div><div className="mt-7"><TemplateRail onPreview={onPreview} /></div></div></section>;
 }
 
 function Benefits() {

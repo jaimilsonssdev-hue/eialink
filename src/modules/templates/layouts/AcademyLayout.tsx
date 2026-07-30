@@ -4,6 +4,7 @@ import type { PublicLink } from "@/components/public-profile/types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import type { TemplateRenderModel } from "../types";
 import { Footer } from "@/components/public-profile/Footer";
+import { whatsappUrl } from "@/lib/whatsapp";
 
 const starterPlans = [
   { name: "Aula experimental", description: "Conheça a estrutura e encontre o treino ideal.", price: "Primeira aula" },
@@ -35,7 +36,7 @@ export class AcademyLayout implements TemplateLayoutRenderer {
           <p>{bio.description || "Treinos que respeitam o seu ritmo e levam você mais longe."}</p>
           <div className="niche-academy-proof"><span><Check size={14} aria-hidden /> Treino para todos os níveis</span><span><Check size={14} aria-hidden /> Atendimento próximo</span></div>
           <div className="niche-academy-actions">
-            {whatsapp && <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent("Olá! Quero agendar uma aula experimental.")}`} target="_blank" rel="noreferrer" onClick={() => onTrack("whatsapp_click")}><MessageCircle size={18} aria-hidden /> Agendar aula experimental <ArrowUpRight size={16} aria-hidden /></a>}
+            {whatsapp && <a href={whatsappUrl(whatsapp, bio.whatsapp_message || "Olá! Quero agendar uma aula experimental.")} target="_blank" rel="noreferrer" onClick={() => onTrack("whatsapp_click")}><MessageCircle size={18} aria-hidden /> Agendar aula experimental <ArrowUpRight size={16} aria-hidden /></a>}
             <a href="#planos">Conhecer planos</a>
           </div>
         </div>
@@ -49,7 +50,7 @@ export class AcademyLayout implements TemplateLayoutRenderer {
           {item.url ? <a href={item.url} target="_blank" rel="noreferrer">{item.label || "Quero saber mais"}<ArrowUpRight size={14} aria-hidden /></a> : whatsapp && <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(`Olá! Quero saber mais sobre ${item.name}.`)}`} target="_blank" rel="noreferrer" onClick={() => onTrack("whatsapp_click")}>Quero saber mais<ArrowUpRight size={14} aria-hidden /></a>}
         </article>)}</div>
       </section>
-      <section className="niche-academy-section niche-academy-visit" aria-label="Visite a academia"><div><span>PRONTO PARA COMEÇAR?</span><h2>Seu próximo treino começa agora.</h2><p>Fale com a equipe, tire suas dúvidas e marque sua primeira experiência.</p></div>{whatsapp && <a href={`https://wa.me/${whatsapp}?text=${encodeURIComponent("Olá! Quero começar a treinar.")}`} target="_blank" rel="noreferrer" onClick={() => onTrack("whatsapp_click")}><MessageCircle size={18} aria-hidden /> Falar com a academia</a>}</section>
+      <section className="niche-academy-section niche-academy-visit" aria-label="Visite a academia"><div><span>PRONTO PARA COMEÇAR?</span><h2>Seu próximo treino começa agora.</h2><p>Fale com a equipe, tire suas dúvidas e marque sua primeira experiência.</p></div>{whatsapp && <a href={whatsappUrl(whatsapp, bio.whatsapp_message || "Olá! Quero começar a treinar.")} target="_blank" rel="noreferrer" onClick={() => onTrack("whatsapp_click")}><MessageCircle size={18} aria-hidden /> Falar com a academia</a>}</section>
       {(instagram || links.length > 0) && <section className="niche-academy-section niche-academy-links" aria-label="Conecte-se"><div className="niche-academy-heading"><span>ACOMPANHE DE PERTO</span><h2>Mais energia todos os dias</h2></div><div>{instagram && <a href={`https://instagram.com/${instagram}`} target="_blank" rel="noreferrer" onClick={() => onTrack("instagram_click")}><Instagram size={17} aria-hidden /> @{instagram}</a>}{links.filter((link) => link.active).map((link: PublicLink) => <a key={link.id} href={link.url} target="_blank" rel="noreferrer" onClick={() => onTrack("link_click", link.id)}>{link.title}<ArrowUpRight size={15} aria-hidden /></a>)}</div></section>}
       {supplemental}<Footer />
     </div>;

@@ -5,6 +5,7 @@ import type { TemplateRenderModel } from "../types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
+import { whatsappUrl } from "@/lib/whatsapp";
 
 export class StorefrontLayout implements TemplateLayoutRenderer {
   layoutId() {
@@ -147,7 +148,7 @@ export class StorefrontLayout implements TemplateLayoutRenderer {
             <div className="niche-store-contact">
               {whats && (
                 <a
-                  href={`https://wa.me/${whats}`}
+                  href={whatsappUrl(bio.whatsapp, bio.whatsapp_message)}
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => onTrack("whatsapp_click")}

@@ -1,6 +1,7 @@
 import { ArrowUpRight, ExternalLink, MessageCircle } from "lucide-react";
 import type { PublicBio, PublicLink, TrackEvent } from "./types";
 import { safeExternalUrl } from "@/lib/safe-url";
+import { whatsappUrl } from "@/lib/whatsapp";
 
 interface ActionButtonsProps {
   bio: PublicBio;
@@ -13,7 +14,7 @@ export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
     <section className="public-profile-actions" aria-label="Links e formas de contato">
       {bio.whatsapp && (
         <a
-          href={`https://wa.me/${bio.whatsapp.replace(/\D/g, "")}`}
+          href={whatsappUrl(bio.whatsapp, bio.whatsapp_message)}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onTrack("whatsapp_click")}

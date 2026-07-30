@@ -6,6 +6,7 @@ import type { TemplateRenderModel } from "../types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
+import { whatsappUrl } from "@/lib/whatsapp";
 
 export class RestaurantLayout implements TemplateLayoutRenderer {
   layoutId() {
@@ -66,7 +67,7 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
 
         {whats && (
           <a
-            href={`https://wa.me/${whats}?text=${encodeURIComponent("Olá, gostaria de fazer um pedido")}`}
+            href={whatsappUrl(whats, bio.whatsapp_message || "Olá, gostaria de fazer um pedido")}
             target="_blank"
             rel="noreferrer"
             onClick={() => onTrack("whatsapp_click")}

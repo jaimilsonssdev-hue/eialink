@@ -6,7 +6,9 @@ import type { TemplateRenderModel } from "../types";
 import { Footer } from "@/components/public-profile/Footer";
 import { whatsappUrl } from "@/lib/whatsapp";
 
-const starterPlans = [
+type AcademyPlan = { name: string; description: string; price: string; url?: string | null; label?: string | null };
+
+const starterPlans: AcademyPlan[] = [
   { name: "Aula experimental", description: "Conheça a estrutura e encontre o treino ideal.", price: "Primeira aula" },
   { name: "Plano evolução", description: "Treino acompanhado para sua melhor versão.", price: "A partir de R$ 99" },
   { name: "Personal training", description: "Acompanhamento individual para acelerar resultados.", price: "Sob consulta" },

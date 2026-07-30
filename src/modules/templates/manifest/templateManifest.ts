@@ -493,7 +493,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "academy-performance",
     slug: "academy-performance",
-    name: "Performance",
+    name: "Academia",
     description: "Uma presença forte para academias, studios e personal trainers.",
     category: "academy",
     bestFor: "academias, studios e personal trainers",
@@ -515,7 +515,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "law-authority",
     slug: "law-authority",
-    name: "Autoridade",
+    name: "Advocacia",
     description: "Apresentação sóbria e confiável para advocacia e consultoria jurídica.",
     category: "law",
     bestFor: "advogados, escritórios e consultores jurídicos",

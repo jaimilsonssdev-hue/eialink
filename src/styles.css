@@ -2217,6 +2217,32 @@
 .app-mobile-nav { position: fixed; z-index: 35; right: .75rem; bottom: calc(.6rem + env(safe-area-inset-bottom)); left: .75rem; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); padding: .38rem; border: 1px solid rgb(255 255 255 / .12); border-radius: 1.15rem; background: rgb(16 13 24 / .9); box-shadow: 0 18px 45px rgb(0 0 0 / .42); backdrop-filter: blur(18px); }.app-mobile-nav a { display: grid; min-height: 3.25rem; place-items: center; gap: .18rem; border-radius: .85rem; color: #a9a0b7; font-size: .59rem; font-weight: 700; text-decoration: none; }.app-mobile-nav svg { width: 1.05rem; height: 1.05rem; }.app-mobile-nav a.is-active { color: #fff; background: linear-gradient(145deg, rgb(124 58 237 / .55), rgb(217 70 239 / .24)); box-shadow: 0 5px 14px rgb(80 28 149 / .28); }
 @media (min-width: 768px) { .app-mobile-nav { display: none !important; } }
 
+/* The sidebar consumes part of the desktop viewport. Do not keep the three-column
+   builder at its full-width breakpoint when the available canvas is already narrow. */
+@media (min-width: 768px) and (max-width: 1439px) {
+  .builder-layout { grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem) !important; }
+  .builder-menu { grid-column: 1 / -1; }
+}
+
+/* The editor preview is a 390px device even on a wide monitor. These overrides
+   deliberately mirror the public page's mobile composition inside that device. */
+.editor-phone-preview .niche-academy-hero, .editor-phone-preview .niche-law-hero { min-height: 34rem; }
+.editor-phone-preview .niche-academy-hero-content, .editor-phone-preview .niche-law-copy { padding: 2rem 1rem 2.25rem; }
+.editor-phone-preview .niche-academy h1, .editor-phone-preview .niche-law-copy h1 { max-width: 100%; font-size: 2.45rem; line-height: .98; overflow-wrap: anywhere; }
+.editor-phone-preview .niche-academy-hero-content > p, .editor-phone-preview .niche-law-copy > p { font-size: .93rem; }
+.editor-phone-preview .niche-academy-topline, .editor-phone-preview .niche-law-nav { width: calc(100% - 2rem); top: 1rem; }
+.editor-phone-preview .niche-academy-topline span, .editor-phone-preview .niche-law-nav > span { max-width: 12rem; font-size: .61rem; }
+.editor-phone-preview .niche-academy-proof { gap: .42rem; }.editor-phone-preview .niche-academy-proof span { font-size: .68rem; }
+.editor-phone-preview .niche-academy-actions { flex-direction: column; }.editor-phone-preview .niche-academy-actions a { justify-content: center; }
+.editor-phone-preview .niche-academy-numbers { grid-template-columns: 1fr; width: calc(100% - 2rem); margin-top: -1rem; }
+.editor-phone-preview .niche-academy-numbers div { grid-template-columns: 5rem 1fr; align-items: center; border-right: 0; border-bottom: 1px solid rgb(126 240 155 / .15); }
+.editor-phone-preview .niche-academy-numbers div:last-child { border-bottom: 0; }
+.editor-phone-preview .niche-academy-grid, .editor-phone-preview .niche-law-grid, .editor-phone-preview .niche-law-links > div { grid-template-columns: 1fr; }
+.editor-phone-preview .niche-academy-section, .editor-phone-preview .niche-law-section, .editor-phone-preview .niche-law-intro, .editor-phone-preview .niche-law-cta { width: calc(100% - 2rem); }
+.editor-phone-preview .niche-academy-visit, .editor-phone-preview .niche-law-cta { align-items: flex-start; flex-direction: column; }
+.editor-phone-preview .niche-academy-visit > a, .editor-phone-preview .niche-law-cta > a { width: 100%; justify-content: center; }
+.editor-phone-preview .niche-law-intro { grid-template-columns: 1fr; gap: .75rem; }
+
 .premium-dashboard { --premium-line: rgb(255 255 255 / .1); }
 .premium-welcome {
   position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 13.5rem; gap: 2rem;

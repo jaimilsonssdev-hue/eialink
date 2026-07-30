@@ -37,4 +37,10 @@ export const BillingService = {
     if (error) throw error;
     return data;
   },
+
+  async updateService(id: string, input: Partial<Pick<ProfessionalService, "title" | "description" | "whatsapp_message" | "active" | "position">>) {
+    const { data, error } = await supabase.from("professional_services").update(input).eq("id", id).select().single();
+    if (error) throw error;
+    return data;
+  },
 };

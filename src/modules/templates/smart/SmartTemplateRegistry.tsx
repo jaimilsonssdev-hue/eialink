@@ -33,7 +33,7 @@ const clinic: Composition = (context) => (
       <Hero context={context} />
       <ProfileHeader bio={context.bio} onTrack={context.onTrack} />
     </div>
-    <section className="smart-site-content smart-clinic-services">{context.supplemental}</section>
+    {context.supplemental ? <section className="smart-site-content smart-clinic-services">{context.supplemental}</section> : null}
     <ActionButtons bio={context.bio} links={context.links} onTrack={context.onTrack} />
     <Footer />
   </div>
@@ -45,7 +45,7 @@ const store: Composition = (context) => (
       <ProfileHeader bio={context.bio} onTrack={context.onTrack} />
       <ActionButtons bio={context.bio} links={context.links} onTrack={context.onTrack} />
     </section>
-    <section className="smart-site-content smart-store-grid">{context.supplemental}</section>
+    {context.supplemental ? <section className="smart-site-content smart-store-grid">{context.supplemental}</section> : null}
     <Footer />
   </div>
 );

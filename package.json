@@ -6,9 +6,12 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "prebuild": "pnpm run types:verify",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
+    "types:sync": "node scripts/sync-supabase-types.mjs",
+    "types:verify": "node scripts/verify-supabase-types.mjs",
     "format": "prettier --write ."
   },
   "dependencies": {

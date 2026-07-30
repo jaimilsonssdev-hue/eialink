@@ -1,5 +1,6 @@
 import { ArrowUpRight, PackageOpen } from "lucide-react";
 import type { CatalogItem } from "../types";
+import { safeExternalUrl } from "@/lib/safe-url";
 
 export function CatalogSection({ items }: { items: CatalogItem[] }) {
   const activeItems = items.filter((item) => item.active);
@@ -8,7 +9,9 @@ export function CatalogSection({ items }: { items: CatalogItem[] }) {
     <section className="public-catalog" aria-label="Produtos e serviços">
       <p className="public-catalog-title">Produtos e serviços</p>
       <div className="public-catalog-grid">
-        {activeItems.map((item) => (
+        {activeItems.map((item) => {
+          const href = safeExternalUrl(item.button_url);
+          return (
           <article key={item.id} className={`public-catalog-card public-catalog-card-${item.type}`}>
             {item.image_url ? (
               <img src={item.image_url} alt={`Imagem de ${item.name}`} loading="lazy" />
@@ -27,9 +30,9 @@ export function CatalogSection({ items }: { items: CatalogItem[] }) {
                 </p>
               )}
             </div>
-            {item.button_url && (
+            {href && (
               <a
-                href={item.button_url}
+                href={href}
                 target="_blank"
                 rel="noreferrer"
                 aria-label={`${item.button_label}: ${item.name}`}
@@ -39,7 +42,8 @@ export function CatalogSection({ items }: { items: CatalogItem[] }) {
               </a>
             )}
           </article>
-        ))}
+        );
+        })}
       </div>
     </section>
   );

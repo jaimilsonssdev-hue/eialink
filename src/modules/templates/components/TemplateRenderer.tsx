@@ -7,6 +7,7 @@ import { layoutResolver } from "../layouts/LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { smartTemplateRegistry } from "../smart/SmartTemplateRegistry";
 import { CatalogSection } from "@/modules/products/components/CatalogSection";
+import { safeExternalUrl } from "@/lib/safe-url";
 
 const NICHE_FALLBACK_COVERS: Record<string, string> = {
   restaurant: "/template-assets/restaurant-demo-cover.png",
@@ -42,10 +43,17 @@ export function TemplateRenderer({
   products?: CatalogItem[];
   supplemental?: ReactNode;
 }) {
+  const safeLinks = links
+    .map((link) => ({ ...link, url: safeExternalUrl(link.url) }))
+    .filter((link): link is typeof link & { url: string } => Boolean(link.url));
+  const safeProducts = products?.map((product) => ({
+    ...product,
+    button_url: safeExternalUrl(product.button_url) ?? null,
+  }));
   const data: PageData = {
     profile: { name: bio.display_name, description: bio.description, avatarUrl: bio.avatar_url },
     appearance: { coverUrl: bio.cover_url },
-    links: links.map((link) => ({ id: link.id, title: link.title, url: link.url })),
+    links: safeLinks.map((link) => ({ id: link.id, title: link.title, url: link.url })),
     socials: { instagram: bio.instagram ?? undefined },
     whatsapp: bio.whatsapp,
     pix: bio.pix_key,
@@ -55,9 +63,9 @@ export function TemplateRenderer({
   const fallbackCover = getFallbackCover(model.template.id);
   const renderedBio = bio.cover_url || !fallbackCover ? bio : { ...bio, cover_url: fallbackCover };
   const smartSupplemental =
-    products && products.length > 0 ? (
+    safeProducts && safeProducts.length > 0 ? (
       <>
-        <CatalogSection items={products} />
+        <CatalogSection items={safeProducts} />
         {supplemental}
       </>
     ) : (
@@ -83,15 +91,15 @@ export function TemplateRenderer({
       {model.template.smart?.niche === "restaurant" ? (
         smartTemplateRegistry.render(model.template.smart, {
           bio: renderedBio,
-          links,
+          links: safeLinks,
           onTrack,
           onShare,
-          products,
+          products: safeProducts,
           supplemental: smartSupplemental,
         })
       ) : (
         <>
-          {layout?.render(model, { bio: renderedBio, links, onTrack, onShare, products, supplemental })}
+          {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, supplemental })}
           {!model.template.components.includes("footer") && <Footer />}
         </>
       )}

@@ -10,6 +10,14 @@ import {
   UtensilsCrossed,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { createTemplateInstance } from "@/modules/templates/smart/TemplateInstanceFactory";
@@ -29,6 +37,7 @@ const FILTERS = [
 
 export function TemplateMarketplace() {
   const [activeFilter, setActiveFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
+  const [previewTemplate, setPreviewTemplate] = useState<TemplateDefinition | null>(null);
   const templates = useMemo(
     () =>
       [...TemplateService.list()]
@@ -77,7 +86,15 @@ export function TemplateMarketplace() {
       <div className="template-marketplace-grid">
         {templates.map((template) => (
           <article key={template.id} className="template-gallery-card">
-            <TemplateThumbnail template={template} />
+            <button
+              type="button"
+              className="template-preview-trigger"
+              onClick={() => setPreviewTemplate(template)}
+              aria-label={`Visualizar prévia do template ${template.name}`}
+            >
+              <TemplateThumbnail template={template} />
+              <span>Visualizar prévia</span>
+            </button>
             <div className="template-gallery-card-body">
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm font-semibold">{template.name}</p>
@@ -96,6 +113,27 @@ export function TemplateMarketplace() {
       {templates.length === 0 && (
         <p className="template-marketplace-empty">Ainda não há um modelo para este nicho. Escolha outro segmento.</p>
       )}
+
+      <Dialog open={Boolean(previewTemplate)} onOpenChange={(open) => !open && setPreviewTemplate(null)}>
+        {previewTemplate && (
+          <DialogContent className="template-preview-dialog max-h-[90vh] max-w-3xl overflow-y-auto">
+            <DialogHeader>
+              <p className="eyebrow">Prévia do template</p>
+              <DialogTitle>{previewTemplate.name}</DialogTitle>
+              <DialogDescription>{previewTemplate.description}</DialogDescription>
+            </DialogHeader>
+            <div className="template-preview-large">
+              <TemplateThumbnail template={previewTemplate} />
+            </div>
+            <p className="template-gallery-best-for">Ideal para: {previewTemplate.bestFor ?? "uma presença profissional"}</p>
+            <DialogFooter>
+              <button type="button" className="btn-primary" onClick={() => activateTemplate(previewTemplate)}>
+                Usar este visual
+              </button>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </section>
   );
 }

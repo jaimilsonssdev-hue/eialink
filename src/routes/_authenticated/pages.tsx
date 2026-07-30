@@ -34,7 +34,12 @@ function PagesWorkspace() {
       await pages.refetch();
       navigate({ to: "/builder", search: { page: page.id } });
     } catch (error) {
-      setCreationError(error instanceof Error ? error.message : "Não foi possível criar a página.");
+      const message = error instanceof Error ? error.message : "Não foi possível criar a página.";
+      setCreationError(
+        message.includes("bio_pages_user_id_key")
+          ? "A base de dados ainda precisa receber a atualização que permite criar mais de um Biolink. A página atual continua segura; aplique a migração pendente no Lovable Cloud antes de tentar novamente."
+          : message,
+      );
     } finally {
       setIsCreating(false);
     }
@@ -42,7 +47,7 @@ function PagesWorkspace() {
 
   if (pages.isLoading) return <Loader2 className="h-6 w-6 animate-spin" />;
   if (pages.isError) {
-    return <p role="alert">Não foi possível carregar suas páginas. {pages.error.message}</p>;
+    return <p role="alert">Não foi possível carregar seus Biolinks. {pages.error.message}</p>;
   }
 
   return (
@@ -55,7 +60,7 @@ function PagesWorkspace() {
         </div>
         <button className="premium-cta" onClick={() => void createPage()} disabled={isCreating}>
           {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-          Criar novo biolink
+          Criar novo Biolink
         </button>
       </header>
 
@@ -65,69 +70,66 @@ function PagesWorkspace() {
         <div className="page-library-panel-heading">
           <div>
             <p className="eyebrow">Biblioteca de páginas</p>
-            <h2>Gerencie seus Biolinks</h2>
+            <h2>Suas experiências publicadas</h2>
           </div>
-          <span>{pages.data?.length ?? 0} itens ativos</span>
+          <span>{pages.data?.length ?? 0} {pages.data?.length === 1 ? "página" : "páginas"}</span>
         </div>
         <div className="page-library-list">
-        {pages.data?.map((page) => (
-          <article className="page-library-card" key={page.id}>
-            <div
-              className="page-library-cover"
-              style={page.cover_url ? { backgroundImage: `url(${page.cover_url})` } : undefined}
-            >
-              <span>{page.published ? "Publicado" : "Rascunho"}</span>
-            </div>
-            <div className="page-library-profile">
-              {page.avatar_url ? (
-                <img src={page.avatar_url} alt="" />
-              ) : (
-                <b>{page.display_name.slice(0, 1).toUpperCase()}</b>
-              )}
-            </div>
-            <div className="page-library-body">
-              <p className="eyebrow">{TemplateService.get(page.template_id ?? undefined).name}</p>
-              <h2>{page.display_name}</h2>
-              <p className="line-clamp-2">
-                {page.description || "Personalize esta página para apresentar seu negócio."}
-              </p>
-            </div>
-            <div className="page-library-actions">
-              <Link to="/builder" search={{ page: page.id }} className="btn-primary">
-                <Pencil className="h-4 w-4" /> Editar
-              </Link>
-              <a
-                href={`/p/${page.slug}`}
-                target="_blank"
-                rel="noopener"
-                className="btn-secondary"
-                aria-label={`Abrir ${page.display_name}`}
+          {pages.data?.map((page) => (
+            <article className="page-library-card" key={page.id}>
+              <div
+                className="page-library-cover"
+                style={page.cover_url ? { backgroundImage: `url(${page.cover_url})` } : undefined}
               >
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </div>
-          </article>
-        ))}
-        <button
-          type="button"
-          className="page-library-create"
-          onClick={() => void createPage()}
-          disabled={isCreating}
-        >
-          <span><FilePlus2 className="h-6 w-6" /></span>
-          <b>Criar uma nova página</b>
-          <small>Comece por um modelo profissional e personalize do seu jeito.</small>
-        </button>
+                <span>{page.published ? "Publicado" : "Rascunho"}</span>
+              </div>
+              <div className="page-library-profile">
+                {page.avatar_url ? (
+                  <img src={page.avatar_url} alt="" />
+                ) : (
+                  <b>{page.display_name.slice(0, 1).toUpperCase()}</b>
+                )}
+              </div>
+              <div className="page-library-body">
+                <p className="eyebrow">{TemplateService.get(page.template_id ?? undefined).name}</p>
+                <h2>{page.display_name}</h2>
+                <p className="line-clamp-2">{page.description || "Personalize esta página para apresentar seu negócio."}</p>
+              </div>
+              <div className="page-library-actions">
+                <Link to="/builder" search={{ page: page.id }} className="btn-primary">
+                  <Pencil className="h-4 w-4" /> Editar
+                </Link>
+                <a href={`/p/${page.slug}`} target="_blank" rel="noopener" className="btn-secondary" aria-label={`Abrir ${page.display_name}`}>
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+            </article>
+          ))}
+          <button type="button" className="page-library-create" onClick={() => void createPage()} disabled={isCreating}>
+            <span><FilePlus2 className="h-6 w-6" /></span>
+            <b>Criar uma nova página</b>
+            <small>Escolha um nicho, personalize e publique quando estiver pronto.</small>
+          </button>
         </div>
       </section>
 
       <section className="pages-template-picker" aria-labelledby="choose-template-title">
-        <div><p className="eyebrow">Comece com uma estrutura pronta</p><h2 id="choose-template-title">Escolha um visual para o próximo Biolink</h2></div>
+        <div className="pages-template-picker-header">
+          <div>
+            <p className="eyebrow">Comece com uma estrutura pronta</p>
+            <h2 id="choose-template-title">Escolha um visual para o próximo Biolink</h2>
+          </div>
+          <p>Você poderá trocar textos, imagens e cores depois.</p>
+        </div>
         <div className="pages-template-grid">
           {featuredTemplates.map((template) => (
             <article key={template.id} className="pages-template-card">
               <TemplateThumbnail template={template} />
-              <div><p>{template.name}</p><small>{template.description}</small><button className="btn-secondary" disabled={isCreating} onClick={() => void createPage(template.id)}>Usar este visual</button></div>
+              <div>
+                <p>{template.name}</p>
+                <small>{template.description}</small>
+                <button className="btn-secondary" disabled={isCreating} onClick={() => void createPage(template.id)}>Usar este visual</button>
+              </div>
             </article>
           ))}
         </div>
@@ -137,7 +139,7 @@ function PagesWorkspace() {
         <Sparkles className="h-5 w-5" />
         <div>
           <b>Modelos feitos para cada negócio</b>
-          <p>Restaurante, clínica, loja e outros nichos ganham uma estrutura própria. Você continua no controle de todo o conteúdo.</p>
+          <p>Restaurante, clínica, loja, academia e advocacia ganham estrutura própria. Você continua no controle de todo o conteúdo.</p>
         </div>
       </section>
     </div>

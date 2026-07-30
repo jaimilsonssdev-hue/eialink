@@ -31,10 +31,22 @@ const COVER_LIBRARY = {
   business: [
     { id: "business-office", src: "/template-assets/business-demo-cover.png", label: "Atendimento profissional" },
   ],
+  academy: [
+    { id: "academy-strength", src: "/template-assets/academy-gym-cover.png", label: "Musculação" },
+    { id: "academy-studio", src: "/template-assets/academy-studio-cover.jpg", label: "Studio premium" },
+    { id: "academy-rooftop", src: "/template-assets/academy-rooftop-cover.jpg", label: "Treino ao amanhecer" },
+  ],
+  law: [
+    { id: "law-office", src: "/template-assets/law-office-cover.png", label: "Escritório" },
+    { id: "law-library", src: "/template-assets/law-library-cover.jpg", label: "Biblioteca jurídica" },
+    { id: "law-courthouse", src: "/template-assets/law-courthouse-cover.jpg", label: "Arquitetura institucional" },
+  ],
 } as const;
 
 function coverCategory(templateId?: string | null) {
   if (templateId?.includes("clinic")) return "clinic";
+  if (templateId?.includes("academy")) return "academy";
+  if (templateId?.includes("law")) return "law";
   if (templateId?.includes("store")) return "store";
   if (templateId?.includes("beauty")) return "beauty";
   if (templateId?.includes("creator")) return "creator";
@@ -113,7 +125,10 @@ export function MediaUploader({
   const isCover = variant === "cover";
   const category = coverCategory(templateId);
   const coverLibrary = COVER_LIBRARY[category];
-  const categoryLabel = category === "clinic" ? "clínica" : category === "store" ? "loja" : "restaurante";
+  const categoryLabel = {
+    restaurant: "restaurante", clinic: "clínica", academy: "academia", law: "advocacia",
+    store: "loja", beauty: "beleza", creator: "criador", business: "profissional",
+  }[category];
 
   return (
     <div>

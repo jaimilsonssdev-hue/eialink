@@ -40,6 +40,8 @@ const NAV = [
   { to: "/settings", label: "Configurações", icon: Settings },
 ] as const;
 
+const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[5]] as const;
+
 function AuthedLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -124,9 +126,18 @@ function AuthedLayout() {
           <span className="font-display font-bold">EIA <b>LINK</b></span>
           <span className="w-5" />
         </header>
-        <main className="app-content p-5 md:p-10 max-w-7xl mx-auto">
+        <main className="app-content p-4 pb-24 sm:p-5 md:p-10 md:pb-10 max-w-7xl mx-auto">
           <Outlet />
         </main>
+        <nav className="app-mobile-nav md:hidden" aria-label="Navegação principal">
+          {MOBILE_NAV.map(({ to, label, icon: Icon }) => {
+            const active = pathname === to;
+            return <Link key={to} to={to} className={active ? "is-active" : ""}>
+              <Icon aria-hidden="true" />
+              <span>{label === "Meus Biolinks" ? "Páginas" : label}</span>
+            </Link>;
+          })}
+        </nav>
       </div>
     </div>
   );

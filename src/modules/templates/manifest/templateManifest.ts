@@ -255,7 +255,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "default",
     slug: "default",
-    name: "Clássico",
+    name: "Bio essencial",
     description: "O visual atual da sua página.",
     category: "minimal",
     theme: {
@@ -281,7 +281,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "minimal-light",
     slug: "minimal-light",
-    name: "Essencial",
+    name: "Bio minimalista",
     description: "Leve, claro e direto ao ponto.",
     category: "minimal",
     theme: {
@@ -301,7 +301,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "minimal-ink",
     slug: "minimal-ink",
-    name: "Noite",
+    name: "Bio noturna",
     description: "Minimalismo escuro com presença marcante.",
     category: "minimal",
     theme: {
@@ -321,7 +321,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "creator-bold",
     slug: "creator-bold",
-    name: "Criador em foco",
+    name: "Influenciador",
     description: "Visual expressivo para conteúdo e comunidade.",
     category: "creator",
     theme: {
@@ -346,7 +346,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "creator-soft",
     slug: "creator-soft",
-    name: "Criador leve",
+    name: "Comunidade",
     description: "Uma apresentação acolhedora para sua audiência.",
     category: "creator",
     theme: {
@@ -372,7 +372,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "business-modern",
     slug: "business-modern",
-    name: "Clínica moderna",
+    name: "Saúde profissional",
     description: "Visual claro e humano para clínicas, consultórios e dentistas.",
     category: "business",
     badge: "Novo",
@@ -395,7 +395,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "business-classic",
     slug: "business-classic",
-    name: "Executivo",
+    name: "Profissional",
     description: "Sóbrio e confiável para atendimento profissional.",
     category: "business",
     theme: {
@@ -421,7 +421,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "store-showcase",
     slug: "store-showcase",
-    name: "Vitrine",
+    name: "Loja online",
     description: "Pequena loja online com produtos em destaque.",
     category: "store",
     smart: storeSmart,
@@ -445,7 +445,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "restaurant-menu",
     slug: "restaurant-menu",
-    name: "Sabor",
+    name: "Restaurante",
     description: "Cardápio editorial e quente para restaurantes e cafés.",
     category: "restaurant",
     smart: restaurantSmart,
@@ -469,7 +469,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "clinic-care",
     slug: "clinic-care",
-    name: "Cuidado",
+    name: "Clínica",
     description: "Apresentação clara e confiável para clínicas e dentistas.",
     category: "clinic",
     smart: clinicSmart,
@@ -537,7 +537,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "beauty-glow",
     slug: "beauty-glow",
-    name: "Aura",
+    name: "Salão de beleza",
     description: "Delicado e sofisticado para beleza e bem-estar.",
     category: "beauty",
     theme: {
@@ -563,7 +563,7 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "portfolio-studio",
     slug: "portfolio-studio",
-    name: "Estúdio",
+    name: "Portfólio",
     description: "Uma vitrine autoral para portfólios e projetos.",
     category: "portfolio",
     theme: {

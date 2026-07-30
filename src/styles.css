@@ -2452,6 +2452,32 @@
 .premium-growth-card:hover { transform: translateY(-3px); border-color: rgb(192 132 252 / .55); }.premium-growth-card .btn-primary { margin-top: 1.3rem; border-radius: .75rem; padding: .62rem .9rem; font-size: .82rem; }
 .premium-settings-card { max-width: 47rem; border: 1px solid rgb(255 255 255 / .12); border-radius: 1.2rem; padding: clamp(1.25rem, 3vw, 2rem); background: linear-gradient(145deg, #17131f, #100d16); }.premium-settings-card label { color: #d8d1e1; font-size: .82rem; font-weight: 600; }.premium-settings-card .input-base { min-height: 2.85rem; border-color: rgb(255 255 255 / .11); background: rgb(255 255 255 / .055); }
 .catalog-workspace-header { display: flex; align-items: end; justify-content: space-between; gap: 1.25rem; }.catalog-workspace-actions { display: flex; align-items: end; gap: .75rem; }.catalog-workspace-actions label { min-width: 12rem; color: var(--muted-foreground); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }.catalog-workspace-actions select { margin-top: .35rem; }.catalog-workspace-grid { display: grid; grid-template-columns: minmax(0, 1fr) 18rem; gap: 1.25rem; }.catalog-workspace-tip { height: fit-content; border: 1px solid rgb(192 132 252 / .25); border-radius: 1rem; padding: 1.15rem; color: #d8b4fe; background: linear-gradient(145deg, rgb(124 58 237 / .16), rgb(15 12 20 / .7)); }.catalog-workspace-tip b { display: block; margin-top: .7rem; color: #fff; }.catalog-workspace-tip p { margin-top: .35rem; color: var(--muted-foreground); font-size: .82rem; line-height: 1.5; }.catalog-workspace-tip .btn-secondary { width: 100%; margin-top: 1rem; padding: .65rem; font-size: .8rem; }.catalog-workspace-message { margin-top: 1rem; color: #a7f3d0; font-size: .86rem; }@media (max-width: 850px) { .catalog-workspace-header, .catalog-workspace-actions { align-items: stretch; flex-direction: column; }.catalog-workspace-grid { grid-template-columns: 1fr; }.catalog-workspace-actions label { min-width: 0; } }
+
+/* Administração: uma superfície espaçosa no desktop e controles confortáveis no celular. */
+.pages-workspace-header { padding-top: clamp(.5rem, 2vw, 1.5rem); }
+.pages-workspace-header .premium-heading, .catalog-premium-page .premium-page-heading h1 { max-width: 16ch; }
+.pages-template-picker-header { display: flex; align-items: end; justify-content: space-between; gap: 1rem; }
+.pages-template-picker-header > p { max-width: 17rem; color: var(--muted-foreground); font-size: .82rem; line-height: 1.5; }
+.catalog-workspace-intro { display: flex; align-items: flex-start; gap: .65rem; max-width: 53rem; margin: -0.75rem 0 1.25rem; padding: .8rem 1rem; border: 1px solid rgb(34 211 238 / .2); border-radius: .9rem; color: #b9f7ff; background: linear-gradient(90deg, rgb(8 145 178 / .14), transparent); font-size: .83rem; line-height: 1.5; }
+.catalog-workspace-intro svg { flex: 0 0 auto; margin-top: .1rem; }
+.catalog-workspace-grid > .premium-panel { min-width: 0; padding: clamp(.85rem, 2vw, 1.35rem); border-radius: 1.15rem; }
+@media (max-width: 700px) {
+  .premium-page, .pages-workspace { width: 100%; padding-bottom: 1.25rem; }
+  .pages-workspace-header { gap: 1rem; padding-bottom: 1.35rem; }
+  .pages-workspace-header .premium-heading, .catalog-premium-page .premium-page-heading h1 { font-size: clamp(1.7rem, 8vw, 2.25rem); }
+  .pages-workspace-header p:not(.eyebrow), .premium-page-heading p { font-size: .9rem; line-height: 1.55; }
+  .pages-template-picker { margin-top: 1.35rem; padding: 1rem; border-radius: 1rem; }
+  .pages-template-picker-header { align-items: start; flex-direction: column; }
+  .pages-template-picker-header > p { max-width: none; }
+  .pages-template-grid { grid-template-columns: repeat(3, minmax(11rem, 1fr)); overflow-x: auto; padding-bottom: .35rem; scroll-snap-type: x mandatory; }
+  .pages-template-card { scroll-snap-align: start; }
+  .page-library-panel-heading > span { display: none; }
+  .catalog-workspace-header { gap: 1rem; }
+  .catalog-workspace-actions { gap: .6rem; }
+  .catalog-workspace-actions .btn-primary { width: 100%; min-height: 2.9rem; }
+  .catalog-workspace-intro { margin-top: -1rem; font-size: .8rem; }
+  .catalog-workspace-tip { padding: 1rem; }
+}
 .media-library {
   margin-top: 1rem;
   padding-top: .9rem;

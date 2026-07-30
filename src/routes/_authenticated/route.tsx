@@ -118,7 +118,7 @@ function AuthedLayout() {
         </div>
       </aside>
       {/* Content */}
-      <div className="flex-1 md:ml-64">
+      <div className="min-w-0 flex-1 md:ml-64">
         <header className="md:hidden sticky top-0 z-30 glass flex items-center justify-between px-4 h-14">
           <button onClick={() => setOpen(true)}>
             <Menu className="h-5 w-5" />

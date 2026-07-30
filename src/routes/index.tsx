@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight, MessageCircle, QrCode, BarChart3, Sparkles, Globe,
   Zap, Check, Instagram, Smartphone, TrendingUp, Star, Rocket,
-  ShieldCheck, LineChart, MousePointerClick, Palette, Heart,
+  ShieldCheck, LineChart, MousePointerClick, Palette, Heart, UtensilsCrossed,
+  Stethoscope, Scissors, Dumbbell, Scale, Building2, PawPrint,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
@@ -24,6 +25,7 @@ function Landing() {
     <div className="min-h-screen">
       <Nav />
       <Hero />
+      <NicheShowcase />
       <Marquee />
       <Problem />
       <Solution />
@@ -45,7 +47,7 @@ function Nav() {
           <span className="grid h-9 w-9 place-items-center rounded-xl shadow-lg" style={{ background: "var(--gradient-primary)" }}>
             <Sparkles className="h-4 w-4 text-[color:var(--primary-foreground)]" />
           </span>
-          EIA <span className="rainbow-text">Digital</span>
+          EIA <span className="rainbow-text">LINK</span>
         </Link>
         <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
           <a href="#solucao" className="hover:text-foreground transition-colors">Solução</a>
@@ -124,23 +126,25 @@ function Hero() {
 
 function HeroPreview() {
   return (
-    <div className="relative mx-auto w-full max-w-sm">
+    <div className="relative mx-auto w-full max-w-[23rem]">
       <div className="absolute -inset-6 rounded-3xl opacity-40 blur-2xl" style={{ background: "var(--gradient-rainbow)" }} aria-hidden />
-      <div className="relative rounded-[2rem] border border-border p-2 shadow-2xl" style={{ background: "linear-gradient(180deg, #1a1a2e, #0d0d1a)" }}>
-        <div className="rounded-[1.65rem] p-6 text-center relative overflow-hidden"
-             style={{ background: "radial-gradient(circle at 30% 0%, #6b3fff 0%, transparent 55%), radial-gradient(circle at 80% 100%, #00d4ff 0%, transparent 55%), #0a0a1f" }}>
-          <div className="mx-auto h-20 w-20 rounded-full ring-4 ring-white/20" style={{ background: "linear-gradient(135deg,#fbbf24,#f472b6)" }} />
+      <div className="relative rounded-[2.3rem] border-[6px] border-[#26212d] p-2 shadow-2xl" style={{ background: "linear-gradient(180deg, #1a1a2e, #09070f)" }}>
+        <div className="rounded-[1.85rem] p-6 pt-36 text-center relative overflow-hidden"
+             style={{ background: "linear-gradient(180deg, transparent 0 27%, #09070f 49%), radial-gradient(circle at 30% 0%, #6b3fff 0%, transparent 55%), #0a0a1f" }}>
+          <img src="/template-assets/restaurant-burger-evening-cover.png" alt="Página de restaurante EIA Link" className="absolute inset-x-0 top-0 h-40 w-full object-cover" />
+          <span className="absolute left-4 top-8 inline-flex items-center gap-1 rounded-full border border-white/30 bg-black/40 px-2 py-1 text-[10px] text-white"><i className="h-1.5 w-1.5 rounded-full bg-[#25d366]" /> Aberto agora</span>
+          <div className="mx-auto h-20 w-20 rounded-full ring-4 ring-white/20" style={{ background: "linear-gradient(135deg,#7432ec,#c52ce8)" }} />
           <h3 className="mt-4 font-display font-bold text-xl text-white">Doceria da Ana</h3>
           <p className="text-xs text-white/70 mt-1">São Paulo · Confeitaria artesanal</p>
           <div className="mt-6 space-y-2.5 text-left">
             {[
-              { t: "Falar no WhatsApp", c: "#25D366", i: MessageCircle },
+              { t: "Falar no WhatsApp", c: "#8b3ff2", i: MessageCircle },
               { t: "Pagar com Pix", c: "#ffffff20", i: QrCode },
               { t: "Instagram", c: "#ffffff20", i: Instagram },
               { t: "Cardápio completo", c: "#ffffff20", i: Globe },
             ].map(({ t, c, i: Icon }) => (
               <div key={t} className="flex items-center gap-3 rounded-xl border border-white/15 py-3 px-4 text-sm font-medium text-white backdrop-blur"
-                   style={{ background: c === "#25D366" ? c : "rgba(255,255,255,0.08)" }}>
+                   style={{ background: c === "#8b3ff2" ? "linear-gradient(100deg,#7432ec,#c52ce8)" : "rgba(255,255,255,0.08)" }}>
                 <Icon className="h-4 w-4" /> {t}
               </div>
             ))}
@@ -158,6 +162,36 @@ function HeroPreview() {
         <span className="text-xs font-medium">Lead score subiu</span>
       </div>
     </div>
+  );
+}
+
+function NicheShowcase() {
+  const niches = [
+    { label: "Restaurantes", icon: UtensilsCrossed, cover: "/template-assets/restaurant-demo-cover.png", tone: "#8b3ff2" },
+    { label: "Clínicas", icon: Stethoscope, cover: "/template-assets/clinic-demo-cover.png", tone: "#28a9b5" },
+    { label: "Salões", icon: Scissors, cover: "/template-assets/beauty-demo-cover.png", tone: "#e652a7" },
+    { label: "Academias", icon: Dumbbell, cover: "/template-assets/business-demo-cover.png", tone: "#45b760" },
+    { label: "Advogados", icon: Scale, cover: "/template-assets/business-demo-cover.png", tone: "#bb8c32" },
+    { label: "Imobiliárias", icon: Building2, cover: "/template-assets/store-demo-cover.png", tone: "#2a9ed5" },
+    { label: "Pet Shop", icon: PawPrint, cover: "/template-assets/creator-demo-cover.png", tone: "#50b86a" },
+  ];
+  return (
+    <section className="border-b border-border bg-[#09070f] py-12">
+      <div className="container-narrow">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+          <div><p className="eyebrow">Templates por nicho</p><h2 className="mt-2 text-2xl font-bold md:text-3xl">Uma página feita para cada negócio.</h2></div>
+          <p className="max-w-md text-sm text-muted-foreground">Você escolhe uma estrutura profissional e personaliza apenas o que é seu.</p>
+        </div>
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+          {niches.map(({ label, icon: Icon, cover, tone }) => (
+            <article key={label} className="group overflow-hidden rounded-2xl border border-white/10 bg-[#120e18] transition duration-200 hover:-translate-y-1 hover:border-white/30">
+              <img src={cover} alt="" loading="lazy" className="h-24 w-full object-cover opacity-90 transition duration-200 group-hover:scale-105" />
+              <div className="p-3"><Icon className="h-4 w-4" style={{ color: tone }} /><p className="mt-2 text-xs font-semibold text-white">{label}</p><span className="mt-2 block h-1 rounded-full" style={{ background: tone }} /></div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
   );
 }
 

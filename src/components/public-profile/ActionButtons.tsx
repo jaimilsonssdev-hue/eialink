@@ -1,5 +1,6 @@
 import { ArrowUpRight, ExternalLink, MessageCircle } from "lucide-react";
 import type { PublicBio, PublicLink, TrackEvent } from "./types";
+import { safeExternalUrl } from "@/lib/safe-url";
 
 interface ActionButtonsProps {
   bio: PublicBio;
@@ -29,10 +30,13 @@ export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
         </a>
       )}
 
-      {links.map((link) => (
+      {links.map((link) => {
+        const href = safeExternalUrl(link.url);
+        if (!href) return null;
+        return (
         <a
           key={link.id}
-          href={link.url}
+          href={href}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onTrack("link_click", link.id)}
@@ -44,7 +48,8 @@ export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
           <span className="min-w-0 flex-1 truncate text-left font-semibold">{link.title}</span>
           <ArrowUpRight className="h-5 w-5 public-profile-action-arrow" aria-hidden />
         </a>
-      ))}
+      );
+      })}
     </section>
   );
 }

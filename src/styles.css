@@ -2486,6 +2486,13 @@
 .template-gallery-card { overflow: hidden; border: 1px solid rgb(255 255 255 / .11); border-radius: 1rem; background: linear-gradient(155deg, #18131f, #0d0a12); transition: transform .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .template-gallery-card:hover { transform: translateY(-4px); border-color: rgb(190 113 255 / .72); box-shadow: 0 20px 36px -28px #c084fc; }
 .template-gallery-card-body { padding: .95rem; }.template-gallery-description { min-height: 2.6rem; margin-top: .45rem; color: #c6bdcf; font-size: .77rem; line-height: 1.45; }.template-gallery-best-for { margin-top: .6rem; color: #9b8cab; font-size: .68rem; line-height: 1.4; }
+.template-preview-trigger { position: relative; display: block; width: 100%; overflow: hidden; text-align: left; background: #0d0a12; cursor: zoom-in; }
+.template-preview-trigger > span { position: absolute; right: .7rem; bottom: .7rem; padding: .35rem .55rem; border: 1px solid rgb(255 255 255 / .32); border-radius: 999px; color: #fff; background: rgb(8 6 12 / .7); font-size: .68rem; font-weight: 700; opacity: 0; transform: translateY(.35rem); transition: opacity .18s ease, transform .18s ease; backdrop-filter: blur(8px); }
+.template-preview-trigger:hover > span, .template-preview-trigger:focus-visible > span { opacity: 1; transform: none; }
+.template-preview-trigger:focus-visible { outline: 2px solid #c084fc; outline-offset: -2px; }
+.template-preview-dialog { border-color: rgb(192 132 252 / .35); color: #fff; background: linear-gradient(145deg, #17121f, #0a0810); }
+.template-preview-large { width: min(100%, 30rem); margin: 0 auto; overflow: hidden; border: 1px solid rgb(255 255 255 / .13); border-radius: 1.15rem; box-shadow: 0 24px 50px -30px #000; }
+.template-preview-large .template-thumbnail, .template-preview-large .niche-template-thumb { min-height: 24rem; transform: scale(1.35); transform-origin: top center; margin-bottom: 6rem; }
 .template-use-button { display: inline-flex; width: 100%; align-items: center; justify-content: center; min-height: 2.5rem; margin-top: .85rem; border-radius: .65rem; color: #fff; background: linear-gradient(100deg, #7131e8, #ce35e8); font-size: .76rem; font-weight: 750; box-shadow: 0 10px 22px -16px #ca38ec; }
 .template-use-button:hover { filter: brightness(1.08); }.template-marketplace-empty { padding: 2rem 0 .75rem; color: var(--muted-foreground); text-align: center; }
 @media (max-width: 840px) { .template-marketplace-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -2521,3 +2528,16 @@
 .niche-template-thumb-portfolio { background: #1a1712; }
 .niche-template-thumb-portfolio .niche-template-thumb-cover { background: linear-gradient(135deg, #312d20, #b78b32); }
 .niche-template-thumb-portfolio .niche-template-thumb-cta { background: #d5a62c; color: #211806; }
+
+/* Mobile editor: the controls come before the rendered phone so an owner can
+   edit fields comfortably at native mobile scale, then open the preview. */
+@media (max-width: 767px) {
+  .builder-topbar { position: sticky; top: 0; margin-inline: -1rem; padding: .8rem 1rem; }
+  .builder-topbar h1 { font-size: 1.05rem; }
+  .builder-topbar .btn-primary, .builder-topbar .btn-secondary { min-height: 2.75rem; padding-inline: .8rem; font-size: .82rem; }
+  .builder-menu { order: 0; }
+  .builder-menu-item { min-height: 3rem; }
+  .builder-inspector { order: 1; scroll-margin-top: 5.5rem; }
+  .builder-preview-stage { order: 2; scroll-margin-top: 5.5rem; }
+  .builder-inspector .input-base, .builder-inspector select, .builder-inspector textarea { min-height: 2.9rem; font-size: 16px; }
+}

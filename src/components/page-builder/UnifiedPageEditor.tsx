@@ -147,6 +147,7 @@ export function UnifiedPageEditor({
     JSON.stringify({ initialBio, initialLinks, initialProducts }),
   );
   const previewRef = useRef<HTMLDivElement>(null);
+  const inspectorRef = useRef<HTMLElement>(null);
   const snapshot = JSON.stringify({ bio, links, products });
   const hasPendingChanges = snapshot !== savedSnapshot;
   const previewBio = useMemo(
@@ -191,6 +192,9 @@ export function UnifiedPageEditor({
   const select = (section: EditorSection) => {
     setSelected(section);
     setSaveState("idle");
+    if (window.matchMedia("(max-width: 767px)").matches) {
+      window.setTimeout(() => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+    }
   };
   const addLink = () =>
     setLinks((current) => [
@@ -333,7 +337,7 @@ export function UnifiedPageEditor({
           </div>
         </main>
 
-        <aside className="builder-inspector card-surface h-fit xl:sticky xl:top-24">
+        <aside ref={inspectorRef} className="builder-inspector card-surface h-fit xl:sticky xl:top-24">
           {!selected ? (
             <div className="space-y-4">
               <div>

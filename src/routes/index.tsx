@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import {
-  ArrowRight, BarChart3, Building2, CalendarDays, Check, ChevronRight,
+  ArrowLeft, ArrowRight, BarChart3, Building2, CalendarDays, Check, ChevronRight,
   CircleDollarSign, Dumbbell, Heart, Instagram, Link2, MapPin,
   MessageCircle, Palette, PawPrint, Rocket, Scissors, ShieldCheck,
   ShoppingBag, Sparkles, Stethoscope, Store, TrendingUp, UtensilsCrossed,
@@ -86,12 +87,42 @@ function Hero() {
 
 function TemplateRail({ featured = false }: { featured?: boolean }) {
   const items = featured ? templates.slice(0, 5) : templates;
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  useEffect(() => {
+    if (!featured || paused) return;
+    const timer = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % items.length);
+    }, 4200);
+    return () => window.clearInterval(timer);
+  }, [featured, items.length, paused]);
+
+  if (featured) {
+    const current = items[activeIndex];
+    return (
+      <div
+        className="relative mx-auto max-w-[18rem]"
+        aria-roledescription="carrossel"
+        aria-label="Exemplos de BioLinks por nicho"
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => setPaused(false)}
+        onFocus={() => setPaused(true)}
+        onBlur={() => setPaused(false)}
+      >
+        <TemplatePhone template={current} featured />
+        <button type="button" aria-label="Exemplo anterior" className="absolute left-[-1rem] top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#0b0812]/90 text-white" onClick={() => setActiveIndex((activeIndex - 1 + items.length) % items.length)}><ArrowLeft className="h-4 w-4" /></button>
+        <button type="button" aria-label="Próximo exemplo" className="absolute right-[-1rem] top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#0b0812]/90 text-white" onClick={() => setActiveIndex((activeIndex + 1) % items.length)}><ArrowRight className="h-4 w-4" /></button>
+        <div className="mt-3 flex justify-center gap-1.5" aria-label="Indicadores do carrossel">{items.map((template, index) => <button key={template.name} type="button" aria-label={`Ver ${template.niche}`} aria-current={index === activeIndex} className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-5 bg-fuchsia-400" : "w-1.5 bg-white/30"}`} onClick={() => setActiveIndex(index)} />)}</div>
+      </div>
+    );
+  }
   return <div className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 [scrollbar-width:none]">{items.map((template, index) => <TemplatePhone key={template.name} template={template} featured={featured && index === 0} />)}</div>;
 }
 
 function TemplatePhone({ template, featured }: { template: typeof templates[number]; featured?: boolean }) {
   const Icon = template.icon;
-  return <article className={`w-[8.4rem] flex-none snap-center overflow-hidden rounded-2xl border bg-[#0d0a12] shadow-xl transition duration-200 hover:-translate-y-1 ${featured ? "border-violet-400/75" : "border-white/10"}`}><div className="relative"><img src={template.cover} alt={`Modelo ${template.niche}`} className="h-28 w-full object-cover" loading={featured ? "eager" : "lazy"} /><div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-[#0d0a12]" /><span className="absolute left-2 top-2 rounded-full bg-black/45 px-1.5 py-0.5 text-[7px]">{template.niche}</span></div><div className="-mt-4 relative p-2 text-center"><span className="mx-auto grid h-7 w-7 place-items-center rounded-full border border-white/30 bg-[#171021]"><Icon className="h-3.5 w-3.5" style={{ color: template.color }} /></span><b className="mt-2 block truncate text-[10px]">{template.name}</b><p className="mt-1 text-[7px] text-[#bcb2c8]">Página pronta para vender</p><span className="mt-2 block rounded-md py-1 text-[8px] font-bold" style={{ background: template.color }}>Ver modelo</span></div></article>;
+  return <article className={`${featured ? "w-full" : "w-[8.4rem]"} flex-none snap-center overflow-hidden rounded-2xl border bg-[#0d0a12] shadow-xl transition duration-200 hover:-translate-y-1 ${featured ? "border-violet-400/75" : "border-white/10"}`}><div className="relative"><img src={template.cover} alt={`Modelo ${template.niche}`} className={`${featured ? "h-52" : "h-28"} w-full object-cover`} loading={featured ? "eager" : "lazy"} /><div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0d0a12]" /><span className="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-1 text-[9px]">{template.niche}</span></div><div className={`${featured ? "-mt-7 p-4" : "-mt-4 p-2"} relative text-center`}><span className={`${featured ? "h-11 w-11" : "h-7 w-7"} mx-auto grid place-items-center rounded-full border border-white/30 bg-[#171021]`}><Icon className={featured ? "h-5 w-5" : "h-3.5 w-3.5"} style={{ color: template.color }} /></span><b className={`${featured ? "text-base" : "text-[10px]"} mt-2 block truncate`}>{template.name}</b><p className={`${featured ? "text-xs" : "text-[7px]"} mt-1 text-[#bcb2c8]`}>Página pronta para vender</p><span className={`${featured ? "py-2 text-xs" : "py-1 text-[8px]"} mt-3 block rounded-md font-bold`} style={{ background: template.color }}>Ver modelo</span></div></article>;
 }
 
 function Difference() {

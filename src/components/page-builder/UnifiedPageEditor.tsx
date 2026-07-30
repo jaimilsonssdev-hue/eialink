@@ -16,6 +16,7 @@ type BioForm = Pick<
   | "description"
   | "avatar_url"
   | "whatsapp"
+  | "whatsapp_message"
   | "pix_key"
   | "instagram"
   | "published"
@@ -591,17 +592,31 @@ function SectionForm({
         </Field>
       )}
       {section === "contact" && (
-        <Field label="WhatsApp">
-          <input
-            className="input-base"
-            value={bio.whatsapp ?? ""}
-            placeholder={defaults.whatsapp || "5511999999999"}
-            onChange={(event) => updateBio({ whatsapp: event.target.value })}
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Use apenas números, incluindo DDD e código do país.
-          </p>
-        </Field>
+        <>
+          <Field label="WhatsApp">
+            <input
+              className="input-base"
+              value={bio.whatsapp ?? ""}
+              placeholder={defaults.whatsapp || "5511999999999"}
+              onChange={(event) => updateBio({ whatsapp: event.target.value })}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use apenas números, incluindo DDD e código do país.
+            </p>
+          </Field>
+          <Field label="Mensagem inicial do WhatsApp">
+            <textarea
+              className="input-base min-h-24 resize-y"
+              value={bio.whatsapp_message ?? ""}
+              maxLength={1000}
+              placeholder="Olá! Gostaria de saber mais sobre seus serviços."
+              onChange={(event) => updateBio({ whatsapp_message: event.target.value })}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Esta mensagem será preenchida para o visitante antes de abrir o WhatsApp.
+            </p>
+          </Field>
+        </>
       )}
       {section === "pix" && (
         <Field label="Chave Pix">

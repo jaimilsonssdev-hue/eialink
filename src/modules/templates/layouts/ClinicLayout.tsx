@@ -13,6 +13,7 @@ import type { TemplateRenderModel } from "../types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
+import { whatsappUrl } from "@/lib/whatsapp";
 
 export class ClinicLayout implements TemplateLayoutRenderer {
   layoutId() {
@@ -47,7 +48,7 @@ export class ClinicLayout implements TemplateLayoutRenderer {
             <div className="niche-clinic-cta-row">
               {whats && (
                 <a
-                  href={`https://wa.me/${whats}?text=${encodeURIComponent("Olá, gostaria de agendar uma consulta")}`}
+                  href={whatsappUrl(whats, bio.whatsapp_message || "Olá, gostaria de agendar uma consulta")}
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => onTrack("whatsapp_click")}
@@ -143,7 +144,7 @@ export class ClinicLayout implements TemplateLayoutRenderer {
           )}
           {whats && (
             <a
-              href={`https://wa.me/${whats}`}
+              href={whatsappUrl(whats, bio.whatsapp_message)}
               target="_blank"
               rel="noreferrer"
               onClick={() => onTrack("whatsapp_click")}

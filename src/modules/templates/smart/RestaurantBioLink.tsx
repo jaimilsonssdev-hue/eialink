@@ -1,16 +1,12 @@
 import { Instagram, MapPin, MessageCircle, Share2, ShoppingBag, WalletCards } from "lucide-react";
 import type { ReactNode } from "react";
 import { Footer } from "@/components/public-profile/Footer";
+import { whatsappUrl } from "@/lib/whatsapp";
 import type { TemplateComponentContext } from "../components/ComponentRegistry";
 
 type RestaurantBioLinkProps = TemplateComponentContext & {
   supplemental?: ReactNode;
 };
-
-function whatsappHref(phone?: string | null) {
-  const number = phone?.replace(/\D/g, "");
-  return number ? `https://wa.me/${number}` : undefined;
-}
 
 /**
  * Restaurant's public composition. It deliberately consumes the same bio,
@@ -24,7 +20,10 @@ export function RestaurantBioLink({
   onTrack,
   supplemental,
 }: RestaurantBioLinkProps) {
-  const whatsapp = whatsappHref(bio.whatsapp);
+  const whatsapp = whatsappUrl(
+    bio.whatsapp,
+    bio.whatsapp_message || "Olá! Gostaria de fazer um pedido.",
+  );
   const instagram = bio.instagram?.replace("@", "");
   const menuLink = links.find((link) => /card[aá]pio|menu/i.test(link.title));
   const locationLink = links.find((link) => /local|endere[cç]o|mapa/i.test(link.title));

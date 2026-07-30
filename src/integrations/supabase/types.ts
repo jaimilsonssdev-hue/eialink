@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           bio_page_id: string
@@ -126,6 +156,7 @@ export type Database = {
           updated_at: string
           user_id: string
           whatsapp: string | null
+          whatsapp_message: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -147,6 +178,7 @@ export type Database = {
           updated_at?: string
           user_id: string
           whatsapp?: string | null
+          whatsapp_message?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -168,6 +200,7 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp?: string | null
+          whatsapp_message?: string | null
         }
         Relationships: []
       }
@@ -268,6 +301,87 @@ export type Database = {
           },
         ]
       }
+      plans: {
+        Row: {
+          active: boolean
+          billing_interval: string
+          created_at: string
+          description: string | null
+          features: Json
+          id: string
+          limits: Json
+          name: string
+          position: number
+          price_cents: number
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          billing_interval?: string
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          limits?: Json
+          name: string
+          position?: number
+          price_cents?: number
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          billing_interval?: string
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          limits?: Json
+          name?: string
+          position?: number
+          price_cents?: number
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      professional_services: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string
+          id: string
+          position: number
+          slug: string
+          title: string
+          updated_at: string
+          whatsapp_message: string | null
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description: string
+          id?: string
+          position?: number
+          slug: string
+          title: string
+          updated_at?: string
+          whatsapp_message?: string | null
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string
+          id?: string
+          position?: number
+          slug?: string
+          title?: string
+          updated_at?: string
+          whatsapp_message?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           city: string | null
@@ -324,30 +438,107 @@ export type Database = {
       }
       service_requests: {
         Row: {
+          bio_page_id: string | null
           created_at: string
           id: string
           message: string | null
+          notes: string | null
+          professional_service_id: string | null
           service_type: string
+          source: string
           status: string
           user_id: string
         }
         Insert: {
+          bio_page_id?: string | null
           created_at?: string
           id?: string
           message?: string | null
+          notes?: string | null
+          professional_service_id?: string | null
           service_type: string
+          source?: string
           status?: string
           user_id: string
         }
         Update: {
+          bio_page_id?: string | null
           created_at?: string
           id?: string
           message?: string | null
+          notes?: string | null
+          professional_service_id?: string | null
           service_type?: string
+          source?: string
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_professional_service_id_fkey"
+            columns: ["professional_service_id"]
+            isOneToOne: false
+            referencedRelation: "professional_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          billing_interval: string
+          cancelled_at: string | null
+          created_at: string
+          current_period_end: string | null
+          id: string
+          notes: string | null
+          plan_id: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_interval?: string
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          notes?: string | null
+          plan_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_interval?: string
+          cancelled_at?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          notes?: string | null
+          plan_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

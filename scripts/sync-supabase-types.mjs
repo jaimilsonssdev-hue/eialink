@@ -1,4 +1,6 @@
 import { execFileSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 const projectId = process.env.SUPABASE_PROJECT_ID;
 if (!projectId) {
@@ -12,4 +14,10 @@ const output = execFileSync(
   ["exec", "supabase", "gen", "types", "typescript", "--project-id", projectId, "--schema", "public"],
   { stdio: ["ignore", "pipe", "inherit"], encoding: "utf8" },
 );
-process.stdout.write(output);
+
+const destination = fileURLToPath(
+  new URL("../src/integrations/supabase/types.ts", import.meta.url),
+);
+
+writeFileSync(destination, output, "utf8");
+console.log(`Tipos do Supabase atualizados em ${destination}`);

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#10081d" />
+    <title>Sem conexão — EIA Link</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, system-ui, sans-serif;
+        background: #090611;
+        color: #faf7ff;
+      }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        box-sizing: border-box;
+      }
+      main {
+        max-width: 420px;
+        text-align: center;
+        padding: 40px 28px;
+        border: 1px solid #392352;
+        border-radius: 24px;
+        background: linear-gradient(145deg, #171021, #0f0a17);
+      }
+      .mark {
+        width: 54px;
+        height: 54px;
+        margin: 0 auto 20px;
+        border-radius: 18px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, #7c3aed, #d946ef);
+        font-size: 28px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 24px;
+      }
+      p {
+        color: #c9bfd4;
+        line-height: 1.55;
+      }
+      button {
+        border: 0;
+        border-radius: 12px;
+        padding: 12px 18px;
+        color: white;
+        background: linear-gradient(90deg, #7c3aed, #c026d3);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="mark" aria-hidden="true">↗</div>
+      <h1>Você está sem conexão</h1>
+      <p>
+        Verifique sua internet e tente novamente. Seus dados não serão alterados enquanto estiver
+        offline.
+      </p>
+      <button type="button" onclick="window.location.reload()">Tentar novamente</button>
+    </main>
+  </body>
+</html>

@@ -421,6 +421,7 @@ function SectionForm({
   setDraftTemplate(id: string): void;
 }) {
   const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
+  const [templateNotice, setTemplateNotice] = useState<string>();
   return (
     <div className="space-y-4">
       <div>
@@ -438,7 +439,7 @@ function SectionForm({
                   key={template.id}
                   type="button"
                   onClick={() => setDraftTemplate(template.id)}
-                  className={`rounded-lg border px-3 py-2 text-sm ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-surface-elevated" : "border-border"}`}
+                  className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
                 >
                   {template.name}
                 </button>
@@ -448,21 +449,30 @@ function SectionForm({
               <button
                 type="button"
                 className="btn-secondary text-xs"
-                onClick={() => setDraftTemplate(bio.template_id ?? "default")}
+                onClick={() => {
+                  if (draftTemplate === (bio.template_id ?? "default")) return;
+                  if (window.confirm("Descartar a prévia deste visual e manter o template atual?")) {
+                    setDraftTemplate(bio.template_id ?? "default");
+                    setTemplateNotice("Prévia cancelada. O template atual foi mantido.");
+                  }
+                }}
               >
                 Cancelar
               </button>
               <button
                 type="button"
-                className="btn-secondary text-xs"
+                className="btn-primary text-xs"
                 onClick={() => {
-                  if (TemplateService.get(draftTemplate).status === "active")
+                  if (TemplateService.get(draftTemplate).status === "active") {
                     updateBio({ template_id: draftTemplate });
+                    setTemplateNotice("Visual aplicado à página. Clique em Salvar para publicar.");
+                  }
                 }}
               >
                 Aplicar
               </button>
             </div>
+            {templateNotice && <p className="mt-2 text-xs text-[color:var(--primary)]" role="status">{templateNotice}</p>}
           </Field>
           <MediaUploader
             label="Imagem de capa"

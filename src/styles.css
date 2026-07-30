@@ -2219,9 +2219,14 @@
 
 /* The sidebar consumes part of the desktop viewport. Do not keep the three-column
    builder at its full-width breakpoint when the available canvas is already narrow. */
-@media (min-width: 768px) and (max-width: 1439px) {
+@media (min-width: 768px) and (max-width: 1279px) {
   .builder-layout { grid-template-columns: minmax(0, 1fr) minmax(18rem, 22rem) !important; }
   .builder-menu { grid-column: 1 / -1; }
+}
+@media (min-width: 1280px) {
+  .builder-layout { grid-template-columns: 15rem minmax(0, 1fr) 18rem !important; gap: 1.25rem; }
+  .builder-menu { grid-column: auto; }
+  .builder-preview-stage { min-width: 0; }
 }
 
 /* The editor preview is a 390px device even on a wide monitor. These overrides

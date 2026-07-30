@@ -1,444 +1,128 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
-  ArrowRight, MessageCircle, QrCode, BarChart3, Sparkles, Globe,
-  Zap, Check, Instagram, Smartphone, TrendingUp, Star, Rocket,
-  ShieldCheck, LineChart, MousePointerClick, Palette, Heart, UtensilsCrossed,
-  Stethoscope, Scissors, Dumbbell, Scale, Building2, PawPrint,
+  ArrowRight, BarChart3, Building2, Check, CircleDollarSign, Dumbbell,
+  Heart, Instagram, Link2, MapPin, MessageCircle, Palette, PawPrint,
+  QrCode, Scissors, ShieldCheck, ShoppingBag, Sparkles, Stethoscope,
+  Store, TrendingUp, UtensilsCrossed, WandSparkles,
 } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "EIA Digital — Crie sua presença digital gratuitamente" },
-      { name: "description", content: "Tenha uma página profissional com WhatsApp, Pix, redes sociais e analytics. Ferramenta gratuita da EIA Digital para pequenos negócios." },
-      { property: "og:title", content: "EIA Digital — Crie sua presença digital gratuitamente" },
-      { property: "og:description", content: "Tenha uma página profissional com WhatsApp, Pix, redes sociais e analytics. Ferramenta gratuita da EIA Digital para pequenos negócios." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { title: "EIA Link — Biolinks premium para negócios" },
+      { name: "description", content: "Crie uma presença digital profissional para vender mais pelo WhatsApp." },
     ],
   }),
   component: Landing,
 });
 
+const templates = [
+  { name: "Restaurantes", icon: UtensilsCrossed, cover: "/template-assets/restaurant-demo-cover.png", color: "#8b3ff2" },
+  { name: "Clínicas", icon: Stethoscope, cover: "/template-assets/clinic-demo-cover.png", color: "#27b0b8" },
+  { name: "Salões", icon: Scissors, cover: "/template-assets/beauty-demo-cover.png", color: "#e44f9e" },
+  { name: "Academias", icon: Dumbbell, cover: "/template-assets/business-demo-cover.png", color: "#4dc46b" },
+  { name: "Advogados", icon: ShieldCheck, cover: "/template-assets/business-demo-cover.png", color: "#c9983e" },
+  { name: "Imobiliárias", icon: Building2, cover: "/template-assets/store-demo-cover.png", color: "#2b9bd2" },
+  { name: "Pet Shop", icon: PawPrint, cover: "/template-assets/creator-demo-cover.png", color: "#4cbf72" },
+] as const;
+
+const benefits = [
+  [MessageCircle, "Mais contatos e pedidos via WhatsApp"],
+  [WandSparkles, "Mais credibilidade para o negócio"],
+  [TrendingUp, "Mais conversões e vendas"],
+  [BarChart3, "Crescimento com escala"],
+] as const;
+
+const features = [
+  [WandSparkles, "Editor visual intuitivo", "Edite textos, cores, imagens e links com prévia em tempo real."],
+  [MessageCircle, "Integração com WhatsApp", "Botão nativo para conversar e receber pedidos."],
+  [ShoppingBag, "Produtos em destaque", "Mostre produtos e serviços sem necessidade de e-commerce."],
+  [Instagram, "Redes sociais integradas", "Conecte Instagram, TikTok, Facebook e outros canais."],
+  [MapPin, "Localização e contato", "Facilite abrir mapa, ligar ou mandar uma mensagem."],
+  [BarChart3, "Estatísticas", "Acompanhe visitas, cliques e conversões em tempo real."],
+] as const;
+
 function Landing() {
   return (
-    <div className="min-h-screen">
+    <main className="min-h-screen overflow-hidden bg-[#07060b] text-[#f8f5ff]">
+      <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_55%_12%,rgba(124,58,237,.13),transparent_22rem),radial-gradient(circle_at_80%_54%,rgba(168,85,247,.06),transparent_26rem)]" />
       <Nav />
-      <Hero />
-      <NicheShowcase />
-      <Marquee />
-      <Problem />
-      <Solution />
-      <Demo />
-      <HowItWorks />
-      <Testimonials />
-      <Growth />
-      <FinalCTA />
+      <section className="relative z-10 mx-auto grid max-w-[96rem] gap-9 px-5 pb-12 pt-8 lg:grid-cols-[.82fr_1.05fr_1.45fr] lg:px-8 lg:pt-14">
+        <BrandPitch />
+        <BusinessIdea />
+        <TemplateGallery />
+      </section>
+      <section className="relative z-10 mx-auto max-w-[96rem] px-5 pb-4 lg:px-8"><DesignSystem /></section>
+      <section className="relative z-10 mx-auto grid max-w-[96rem] gap-4 px-5 pb-4 lg:grid-cols-[1.08fr_.9fr_1.1fr] lg:px-8"><RestaurantGuide /><FeatureGuide /><ProductGuide /></section>
+      <Guidelines />
       <Footer />
-    </div>
+    </main>
   );
 }
 
 function Nav() {
   return (
-    <header className="sticky top-0 z-40 glass">
-      <div className="container-narrow flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold">
-          <span className="grid h-9 w-9 place-items-center rounded-xl shadow-lg" style={{ background: "var(--gradient-primary)" }}>
-            <Sparkles className="h-4 w-4 text-[color:var(--primary-foreground)]" />
-          </span>
-          EIA <span className="rainbow-text">LINK</span>
-        </Link>
-        <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-          <a href="#solucao" className="hover:text-foreground transition-colors">Solução</a>
-          <a href="#como" className="hover:text-foreground transition-colors">Como funciona</a>
-          <a href="#depoimentos" className="hover:text-foreground transition-colors">Clientes</a>
-          <a href="#crescimento" className="hover:text-foreground transition-colors">Crescimento</a>
-        </nav>
-        <div className="flex items-center gap-2">
-          <Link to="/auth" className="hidden sm:inline-flex btn-secondary">Entrar</Link>
-          <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary">
-            Criar grátis <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
+    <header className="relative z-20 border-b border-white/5 bg-[#08070c]/80 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-[96rem] items-center justify-between px-5 lg:px-8">
+        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold"><Link2 className="h-6 w-6 text-violet-400" /> EIA <span className="text-fuchsia-400">LINK</span></Link>
+        <div className="flex gap-2"><Link to="/auth" className="btn-secondary hidden sm:inline-flex">Entrar</Link><Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary">Começar grátis <ArrowRight className="h-4 w-4" /></Link></div>
       </div>
     </header>
   );
 }
 
-function Hero() {
+function BrandPitch() {
   return (
-    <section className="relative overflow-hidden" style={{ background: "var(--gradient-hero)" }}>
-      <div className="absolute inset-0 grid-bg opacity-40" aria-hidden />
-      {/* floating orbs */}
-      <div className="pointer-events-none absolute -top-20 -left-20 h-72 w-72 rounded-full blur-3xl opacity-40" style={{ background: "var(--brand-violet)" }} />
-      <div className="pointer-events-none absolute top-40 -right-16 h-80 w-80 rounded-full blur-3xl opacity-30" style={{ background: "var(--brand-cyan)" }} />
-
-      <div className="container-narrow relative py-24 md:py-32 grid lg:grid-cols-[1.15fr_1fr] gap-14 items-center">
-        <div>
-          <div className="chip">
-            <Zap className="h-3.5 w-3.5 text-[color:var(--brand-amber)]" />
-            Plataforma 100% gratuita · Sem cartão
-          </div>
-          <h1 className="mt-6 text-5xl md:text-6xl font-bold leading-[1.05]">
-            Sua <span className="rainbow-text">presença digital</span>,<br className="hidden sm:block" />
-            pronta em <span className="gradient-text">3 minutos</span>.
-          </h1>
-          <p className="mt-6 text-lg text-muted-foreground max-w-xl">
-            Crie uma página profissional com WhatsApp, Pix, redes sociais e analytics. Feita para pequenos negócios que querem crescer online — sem site, sem código, sem custo.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-3">
-            <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary text-base">
-              Criar minha página grátis <ArrowRight className="h-4 w-4" />
-            </Link>
-            <a href="#demo" className="btn-secondary text-base">Ver demonstração</a>
-          </div>
-          <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-muted-foreground">
-            {[
-              { i: Check, t: "Sem cartão de crédito" },
-              { i: ShieldCheck, t: "Dados protegidos (LGPD)" },
-              { i: Rocket, t: "Pronto para compartilhar" },
-            ].map(({ i: Icon, t }) => (
-              <span key={t} className="flex items-center gap-2"><Icon className="h-4 w-4 text-[color:var(--success)]" /> {t}</span>
-            ))}
-          </div>
-          <div className="mt-10 flex items-center gap-4">
-            <div className="flex -space-x-2">
-              {["#22d3ee", "#a78bfa", "#f472b6", "#facc15"].map((c) => (
-                <span key={c} className="h-8 w-8 rounded-full border-2 border-background" style={{ background: c }} />
-              ))}
-            </div>
-            <div className="text-sm">
-              <div className="flex items-center gap-1 text-[color:var(--brand-amber)]">
-                {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-3.5 w-3.5 fill-current" />)}
-                <span className="text-foreground font-medium ml-1">4.9/5</span>
-              </div>
-              <div className="text-xs text-muted-foreground">+800 negócios já criaram sua bio</div>
-            </div>
-          </div>
-        </div>
-
-        <HeroPreview />
+    <aside className="border-b border-white/10 pb-7 lg:border-b-0 lg:border-r lg:pr-8">
+      <div className="flex items-center gap-3"><span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br from-violet-500 to-fuchsia-500"><Link2 className="h-7 w-7" /></span><div><b className="font-display text-3xl tracking-tight">EIA <span className="text-fuchsia-400">LINK</span></b><p className="text-xs font-semibold tracking-[.28em] text-violet-300">BIOLINKS PREMIUM</p></div></div>
+      <h1 className="mt-8 font-display text-3xl font-bold leading-tight">Biolinks que <span className="text-fuchsia-400">vendem</span><br />por você.</h1>
+      <p className="mt-4 max-w-xs text-sm leading-6 text-[#c8c0d4]">Páginas lindas, profissionais e estratégicas para transformar visitas em clientes e abrir portas para o próximo nível do seu negócio.</p>
+      <div className="mt-6 grid grid-cols-3 gap-2">
+        {[[WandSparkles, "Rápido de criar", "Publique em minutos"], [Palette, "Design Premium", "Modelos por nicho"], [TrendingUp, "Focado em resultados", "Mais contatos e vendas"]].map(([Icon, title, text]) => {
+          const ItemIcon = Icon as typeof WandSparkles;
+          return <div key={title as string} className="rounded-xl border border-white/10 bg-white/[.025] p-3"><ItemIcon className="h-5 w-5 text-violet-400" /><b className="mt-3 block text-[10px]">{title as string}</b><span className="mt-1 block text-[9px] leading-3 text-[#a99fb6]">{text as string}</span></div>;
+        })}
       </div>
+    </aside>
+  );
+}
+
+function BusinessIdea() {
+  const points = ["Plataforma intuitiva e rápida para criação de biolinks", "Modelos exclusivos por nicho, prontos para vender", "Integração nativa com WhatsApp, Instagram e localização", "Catálogo de produtos e serviços simples e eficiente", "Estatísticas para acompanhar resultados", "Porta de entrada para outros serviços premium"];
+  return (
+    <section className="border-b border-white/10 pb-7 lg:border-b-0 lg:border-r lg:pr-8">
+      <p className="eyebrow">Ideia de negócio</p>
+      <p className="mt-3 text-sm leading-6 text-[#d5cfdf]">A EIA Link é uma plataforma de biolinks premium criada para negócios e profissionais que desejam se apresentar de forma moderna, confiável e estratégica.</p>
+      <p className="mt-3 text-sm leading-6 text-[#c8c0d4]">Mais do que um simples link na bio, criamos experiências completas em uma página única que despertam o interesse, geram confiança e levam o cliente a agir.</p>
+      <h2 className="mt-6 text-sm font-bold uppercase tracking-wide text-violet-400">O que esperamos construir</h2>
+      <ul className="mt-3 space-y-2">{points.map((point) => <li key={point} className="flex gap-2 text-xs leading-4 text-[#d5cfdf]"><Check className="h-4 w-4 flex-none text-violet-400" />{point}</li>)}</ul>
+      <h2 className="mt-6 text-sm font-bold uppercase tracking-wide text-violet-400">Resultado esperado</h2>
+      <div className="mt-3 grid grid-cols-2 gap-3">{benefits.map(([Icon, text]) => <div key={text} className="text-center"><Icon className="mx-auto h-5 w-5 text-violet-400" /><p className="mt-2 text-[10px] leading-3 text-[#d5cfdf]">{text}</p></div>)}</div>
     </section>
   );
 }
 
-function HeroPreview() {
+function TemplateGallery() {
   return (
-    <div className="relative mx-auto w-full max-w-[23rem]">
-      <div className="absolute -inset-6 rounded-3xl opacity-40 blur-2xl" style={{ background: "var(--gradient-rainbow)" }} aria-hidden />
-      <div className="relative rounded-[2.3rem] border-[6px] border-[#26212d] p-2 shadow-2xl" style={{ background: "linear-gradient(180deg, #1a1a2e, #09070f)" }}>
-        <div className="rounded-[1.85rem] p-6 pt-36 text-center relative overflow-hidden"
-             style={{ background: "linear-gradient(180deg, transparent 0 27%, #09070f 49%), radial-gradient(circle at 30% 0%, #6b3fff 0%, transparent 55%), #0a0a1f" }}>
-          <img src="/template-assets/restaurant-burger-evening-cover.png" alt="Página de restaurante EIA Link" className="absolute inset-x-0 top-0 h-40 w-full object-cover" />
-          <span className="absolute left-4 top-8 inline-flex items-center gap-1 rounded-full border border-white/30 bg-black/40 px-2 py-1 text-[10px] text-white"><i className="h-1.5 w-1.5 rounded-full bg-[#25d366]" /> Aberto agora</span>
-          <div className="mx-auto h-20 w-20 rounded-full ring-4 ring-white/20" style={{ background: "linear-gradient(135deg,#7432ec,#c52ce8)" }} />
-          <h3 className="mt-4 font-display font-bold text-xl text-white">Doceria da Ana</h3>
-          <p className="text-xs text-white/70 mt-1">São Paulo · Confeitaria artesanal</p>
-          <div className="mt-6 space-y-2.5 text-left">
-            {[
-              { t: "Falar no WhatsApp", c: "#8b3ff2", i: MessageCircle },
-              { t: "Pagar com Pix", c: "#ffffff20", i: QrCode },
-              { t: "Instagram", c: "#ffffff20", i: Instagram },
-              { t: "Cardápio completo", c: "#ffffff20", i: Globe },
-            ].map(({ t, c, i: Icon }) => (
-              <div key={t} className="flex items-center gap-3 rounded-xl border border-white/15 py-3 px-4 text-sm font-medium text-white backdrop-blur"
-                   style={{ background: c === "#8b3ff2" ? "linear-gradient(100deg,#7432ec,#c52ce8)" : "rgba(255,255,255,0.08)" }}>
-                <Icon className="h-4 w-4" /> {t}
-              </div>
-            ))}
-          </div>
-          <p className="mt-6 text-[10px] uppercase tracking-widest text-white/50">eiadigital · /p/ana</p>
-        </div>
-      </div>
-      {/* floating badges */}
-      <div className="absolute -left-6 top-24 hidden sm:flex items-center gap-2 rounded-xl border border-border bg-surface-elevated/90 backdrop-blur px-3 py-2 shadow-lg">
-        <MousePointerClick className="h-4 w-4 text-[color:var(--brand-cyan)]" />
-        <span className="text-xs font-medium">+27 cliques hoje</span>
-      </div>
-      <div className="absolute -right-4 bottom-16 hidden sm:flex items-center gap-2 rounded-xl border border-border bg-surface-elevated/90 backdrop-blur px-3 py-2 shadow-lg">
-        <TrendingUp className="h-4 w-4 text-[color:var(--brand-lime)]" />
-        <span className="text-xs font-medium">Lead score subiu</span>
-      </div>
-    </div>
+    <section><p className="eyebrow">Templates por nicho (exemplos)</p><div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">{templates.map(({ name, icon: Icon, cover, color }) => <article key={name} className="group overflow-hidden rounded-xl border border-white/10 bg-[#100d16] shadow-xl transition hover:-translate-y-1 hover:border-white/30"><div className="flex items-center gap-1 p-2"><Icon className="h-3.5 w-3.5" style={{ color }} /><span className="text-[9px] font-semibold">{name}</span></div><img src={cover} alt={`Template para ${name}`} loading="lazy" className="h-32 w-full object-cover" /><div className="p-2"><p className="text-[9px] text-[#b7adc5]">Página pronta para vender</p><span className="mt-2 block rounded-md py-1 text-center text-[9px] font-bold text-white" style={{ background: color }}>Usar modelo</span></div></article>)}</div><p className="mt-5 text-center text-xs text-[#c8c0d4]">Todos os templates seguem a mesma identidade visual da EIA Link, com personalidades únicas para uma ação principal.</p></section>
   );
 }
 
-function NicheShowcase() {
-  const niches = [
-    { label: "Restaurantes", icon: UtensilsCrossed, cover: "/template-assets/restaurant-demo-cover.png", tone: "#8b3ff2" },
-    { label: "Clínicas", icon: Stethoscope, cover: "/template-assets/clinic-demo-cover.png", tone: "#28a9b5" },
-    { label: "Salões", icon: Scissors, cover: "/template-assets/beauty-demo-cover.png", tone: "#e652a7" },
-    { label: "Academias", icon: Dumbbell, cover: "/template-assets/business-demo-cover.png", tone: "#45b760" },
-    { label: "Advogados", icon: Scale, cover: "/template-assets/business-demo-cover.png", tone: "#bb8c32" },
-    { label: "Imobiliárias", icon: Building2, cover: "/template-assets/store-demo-cover.png", tone: "#2a9ed5" },
-    { label: "Pet Shop", icon: PawPrint, cover: "/template-assets/creator-demo-cover.png", tone: "#50b86a" },
-  ];
-  return (
-    <section className="border-b border-border bg-[#09070f] py-12">
-      <div className="container-narrow">
-        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-          <div><p className="eyebrow">Templates por nicho</p><h2 className="mt-2 text-2xl font-bold md:text-3xl">Uma página feita para cada negócio.</h2></div>
-          <p className="max-w-md text-sm text-muted-foreground">Você escolhe uma estrutura profissional e personaliza apenas o que é seu.</p>
-        </div>
-        <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-          {niches.map(({ label, icon: Icon, cover, tone }) => (
-            <article key={label} className="group overflow-hidden rounded-2xl border border-white/10 bg-[#120e18] transition duration-200 hover:-translate-y-1 hover:border-white/30">
-              <img src={cover} alt="" loading="lazy" className="h-24 w-full object-cover opacity-90 transition duration-200 group-hover:scale-105" />
-              <div className="p-3"><Icon className="h-4 w-4" style={{ color: tone }} /><p className="mt-2 text-xs font-semibold text-white">{label}</p><span className="mt-2 block h-1 rounded-full" style={{ background: tone }} /></div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+function DesignSystem() {
+  const swatches = ["#7c3aed", "#a855f7", "#d946ef", "#25d366", "#09070f", "#1a1625", "#241e33", "#f8f5ff"];
+  return <section className="rounded-2xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(23,13,38,.92),rgba(8,7,13,.94))] p-5 lg:p-7"><h2 className="text-sm font-bold uppercase tracking-wide text-violet-400">Design system EIA Link</h2><div className="mt-5 grid gap-7 md:grid-cols-4"><div><b className="text-xs text-violet-300">Cores</b><div className="mt-3 grid grid-cols-4 gap-2">{swatches.map((color) => <span key={color} className="aspect-square rounded-lg border border-white/10" style={{ background: color }} title={color} />)}</div><p className="mt-3 text-[10px] text-[#aaa0b7]">Roxo, magenta e verde WhatsApp com neutros profundos.</p></div><div><b className="text-xs text-violet-300">Tipografia</b><p className="mt-3 font-display text-4xl font-bold">Aa</p><p className="text-sm font-semibold">Poppins — títulos</p><p className="mt-3 text-3xl">Aa</p><p className="text-sm text-[#d2cbdc]">Inter — textos</p></div><div><b className="text-xs text-violet-300">Botões</b><button className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-500 px-4 py-3 text-sm font-bold"><MessageCircle className="h-4 w-4" /> Pedir pelo WhatsApp <ArrowRight className="h-4 w-4" /></button><button className="mt-3 w-full rounded-lg border border-violet-400 px-4 py-3 text-sm font-semibold text-violet-300">Ver Cardápio Completo</button><div className="mt-3 flex gap-2">{[Instagram, MessageCircle, MapPin, Link2].map((Icon) => <span key={Icon.displayName} className="grid h-9 w-9 place-items-center rounded-lg border border-violet-400/50"><Icon className="h-4 w-4 text-fuchsia-400" /></span>)}</div></div><ProductCard /></div></section>;
 }
 
-function Marquee() {
-  const items = ["Confeitarias", "Salões de beleza", "Barbearias", "Clínicas", "Personal trainers", "Restaurantes", "Lojas", "Freelancers", "Consultórios"];
-  return (
-    <section className="border-y border-border py-6 overflow-hidden">
-      <div className="container-narrow flex items-center gap-3 justify-center text-xs uppercase tracking-widest text-muted-foreground flex-wrap">
-        <span className="text-[color:var(--brand-cyan)]">●</span> Usado por
-        {items.map((t) => (
-          <span key={t} className="chip">{t}</span>
-        ))}
-      </div>
-    </section>
-  );
-}
+function ProductCard() { return <div><b className="text-xs text-violet-300">Cards</b><article className="mt-3 overflow-hidden rounded-xl border border-white/10 bg-[#120f18]"><img src="/template-assets/restaurant-demo-cover.png" alt="Hambúrguer artesanal" className="h-28 w-full object-cover" /><div className="p-3"><h3 className="font-semibold">Smash Bacon</h3><p className="mt-1 text-[10px] leading-4 text-[#bdb3ca]">Pão brioche, blend 160g, cheddar e molho especial.</p><b className="mt-2 block text-sm">R$ 34,90</b><button className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-violet-600 to-fuchsia-500 py-2 text-xs font-bold"><MessageCircle className="h-3.5 w-3.5" /> Pedir</button></div></article></div>; }
 
-function Problem() {
-  const dores = [
-    { i: Instagram, t: "Instagram limita você", d: "Você depende de uma rede que muda regras o tempo todo.", c: "var(--brand-pink)" },
-    { i: Smartphone, t: "Clientes não te encontram", d: "Informações espalhadas fazem você perder vendas.", c: "var(--brand-cyan)" },
-    { i: TrendingUp, t: "Oportunidades escapam", d: "Sem analytics, você não sabe o que funciona.", c: "var(--brand-amber)" },
-  ];
-  return (
-    <section className="py-24">
-      <div className="container-narrow">
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="chip mx-auto"><Heart className="h-3 w-3 text-[color:var(--brand-pink)]" /> Feito por quem entende sua rotina</div>
-          <h2 className="mt-6 text-3xl md:text-5xl font-bold">Seu negócio merece <span className="gradient-text">mais</span> do que uma bio no Instagram.</h2>
-          <p className="mt-4 text-muted-foreground">Você trabalha demais para depender de uma única rede social.</p>
-        </div>
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {dores.map(({ i: Icon, t, d, c }) => (
-            <div key={t} className="card-glow">
-              <div className="grid h-11 w-11 place-items-center rounded-xl" style={{ background: `color-mix(in oklab, ${c} 20%, transparent)`, color: c }}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold">{t}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{d}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+function RestaurantPhone() { return <div className="mx-auto w-full max-w-[19rem] overflow-hidden rounded-[2rem] border-[5px] border-[#322b39] bg-[#09070f] shadow-2xl"><div className="relative"><img src="/template-assets/restaurant-burger-evening-cover.png" alt="Exemplo de Biolink para restaurante" className="h-40 w-full object-cover" /><div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#09070f]" /><span className="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-1 text-[9px]"><i className="mr-1 inline-block h-1.5 w-1.5 rounded-full bg-green-400" />Aberto agora</span></div><div className="relative -mt-8 px-4 pb-5 text-center"><div className="mx-auto grid h-14 w-14 place-items-center rounded-full border-2 border-violet-400 bg-black text-xs font-bold">CS</div><h3 className="mt-2 font-display text-2xl font-bold">Casa do Sabor</h3><p className="text-xs text-fuchsia-300">Hamburgueria Artesanal</p><p className="mt-2 text-[10px] text-[#bfb4c9]">Sabor que conquista, momentos que ficam.</p><button className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-fuchsia-500 py-3 text-sm font-bold"><MessageCircle className="h-4 w-4" /> Pedir pelo WhatsApp</button><button className="mt-2 w-full rounded-xl border border-violet-400/70 py-2.5 text-xs text-violet-200">Ver Cardápio Completo</button><div className="mt-4 grid grid-cols-3 gap-2 text-left">{["Smash", "Pizza", "Brownie"].map((item) => <span key={item} className="rounded-lg border border-white/10 bg-white/5 p-2 text-[9px]">{item}</span>)}</div><div className="mt-4 rounded-xl bg-gradient-to-r from-violet-800 to-fuchsia-700 p-3 text-left"><b className="text-xs">Está com fome? 🍟</b><p className="mt-1 text-[9px] text-white/80">Peça agora e receba o conforto da sua casa.</p></div></div></div>; }
 
-function Solution() {
-  const feats = [
-    { i: Globe, t: "Bio profissional", d: "Página bonita, rápida e no seu domínio de link.", c: "var(--brand-cyan)" },
-    { i: MessageCircle, t: "WhatsApp integrado", d: "Botão direto pra receber pedidos e conversas.", c: "var(--brand-lime)" },
-    { i: QrCode, t: "Pix com um clique", d: "Copia a chave, gera pagamento — sem fricção.", c: "var(--brand-violet)" },
-    { i: BarChart3, t: "Analytics em tempo real", d: "Visitas, cliques e origem do tráfego.", c: "var(--brand-pink)" },
-    { i: Palette, t: "Temas visuais", d: "Personalize sua bio com paletas exclusivas.", c: "var(--brand-amber)" },
-    { i: Sparkles, t: "Diagnóstico digital", d: "Descubra seu score e o que melhorar.", c: "var(--brand-cyan)" },
-  ];
-  return (
-    <section id="solucao" className="py-24 border-y border-border relative">
-      <div className="absolute inset-0 grid-bg opacity-20" aria-hidden />
-      <div className="container-narrow relative">
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="chip mx-auto"><Sparkles className="h-3 w-3 text-[color:var(--brand-cyan)]" /> A plataforma completa</div>
-          <h2 className="mt-6 text-3xl md:text-5xl font-bold">Tudo que você precisa <span className="rainbow-text">num único link</span>.</h2>
-          <p className="mt-4 text-muted-foreground">Bio, contato, pagamento, redes e insights — organizados de forma profissional.</p>
-        </div>
-        <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {feats.map(({ i: Icon, t, d, c }) => (
-            <div key={t} className="card-surface group hover:-translate-y-1 transition-transform">
-              <div className="grid h-11 w-11 place-items-center rounded-xl" style={{ background: `color-mix(in oklab, ${c} 20%, transparent)`, color: c }}>
-                <Icon className="h-5 w-5" />
-              </div>
-              <h3 className="mt-4 font-semibold text-lg">{t}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{d}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+function RestaurantGuide() { const steps = [["1", "Hero", "Primeira impressão forte com imagem, identidade e CTA principal."], ["2", "Informações rápidas", "Dados essenciais em ícones e textos curtos."], ["3", "Produtos em destaque", "Apenas três itens para gerar desejo."], ["4", "Links importantes", "Redes sociais, localização e telefone."], ["5", "CTA final", "Reforço da ação principal."], ["6", "Footer", "Informações básicas e segurança."]]; return <section className="rounded-2xl border border-violet-300/20 bg-[#100d16] p-5"><h2 className="text-sm font-bold uppercase text-violet-400">Template restaurante — estrutura da página pública</h2><div className="mt-4 grid grid-cols-[.72fr_1.28fr] items-start gap-3"><ol className="space-y-3">{steps.map(([n,t,d]) => <li key={n} className="flex gap-2"><span className="grid h-5 w-5 flex-none place-items-center rounded-full bg-violet-600 text-[10px] font-bold">{n}</span><div><b className="text-[10px] uppercase text-violet-200">{t}</b><p className="mt-1 text-[9px] leading-3 text-[#b9afc4]">{d}</p></div></li>)}</ol><RestaurantPhone /></div></section>; }
 
-function Demo() {
-  return (
-    <section id="demo" className="py-24">
-      <div className="container-narrow grid lg:grid-cols-2 gap-14 items-center">
-        <div>
-          <div className="chip"><LineChart className="h-3 w-3 text-[color:var(--brand-lime)]" /> Feito pra converter</div>
-          <h2 className="mt-6 text-3xl md:text-5xl font-bold">Sua página <span className="gradient-text">pronta em minutos</span>.</h2>
-          <p className="mt-4 text-muted-foreground">Cadastre-se, personalize sua bio, adicione seus links e compartilhe em qualquer lugar. Simples assim.</p>
-          <ul className="mt-6 space-y-3">
-            {[
-              "Compartilhe pelo WhatsApp, Instagram, cartão de visita",
-              "Cliente clica e vai direto pro seu contato",
-              "Você acompanha resultados em tempo real",
-              "Recebe recomendações para crescer mais rápido",
-            ].map((x) => (
-              <li key={x} className="flex gap-3 text-sm">
-                <span className="grid place-items-center h-5 w-5 rounded-full mt-0.5" style={{ background: "var(--gradient-primary)" }}>
-                  <Check className="h-3 w-3 text-[color:var(--primary-foreground)]" />
-                </span>
-                {x}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-8">
-            <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary">
-              Começar agora <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-        <HeroPreview />
-      </div>
-    </section>
-  );
-}
+function FeatureGuide() { return <section className="rounded-2xl border border-violet-300/20 bg-[#100d16] p-5"><h2 className="text-sm font-bold uppercase text-violet-400">Funcionalidades principais</h2><div className="mt-4 space-y-4">{features.map(([Icon,title,text]) => <div key={title} className="flex gap-3"><Icon className="h-5 w-5 flex-none text-fuchsia-400" /><div><h3 className="text-sm font-semibold">{title}</h3><p className="mt-1 text-[11px] leading-4 text-[#bdb3ca]">{text}</p></div></div>)}</div><div className="mt-7 rounded-xl border border-violet-400/25 bg-violet-500/10 p-4"><p className="text-xs font-bold uppercase text-violet-300">Foco principal</p><p className="mt-2 text-sm text-[#d8d0e3]">Levar o visitante a realizar uma ação principal: <b className="text-fuchsia-300">pedir no WhatsApp.</b></p></div></section>; }
 
-function HowItWorks() {
-  const steps = [
-    { n: "01", t: "Crie sua conta", d: "Cadastro rápido em 30 segundos.", c: "var(--brand-cyan)" },
-    { n: "02", t: "Personalize sua bio", d: "Escolha um tema, adicione seus links, WhatsApp e Pix.", c: "var(--brand-violet)" },
-    { n: "03", t: "Compartilhe e cresça", d: "Divulgue seu link único e acompanhe os resultados.", c: "var(--brand-pink)" },
-  ];
-  return (
-    <section id="como" className="py-24 border-y border-border">
-      <div className="container-narrow">
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="chip mx-auto"><Rocket className="h-3 w-3 text-[color:var(--brand-pink)]" /> Simples de verdade</div>
-          <h2 className="mt-6 text-3xl md:text-5xl font-bold">Do zero ao ar em <span className="gradient-text">3 passos</span>.</h2>
-        </div>
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {steps.map((s) => (
-            <div key={s.n} className="card-surface relative overflow-hidden">
-              <div className="text-6xl font-display font-bold" style={{ color: s.c, opacity: 0.35 }}>{s.n}</div>
-              <h3 className="mt-2 font-semibold text-lg">{s.t}</h3>
-              <p className="mt-2 text-sm text-muted-foreground">{s.d}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+function ProductGuide() { const rows = ["Smash Bacon", "Pizza Calabresa", "Brownie com Sorvete", "Batata Rústica"]; return <section className="rounded-2xl border border-violet-300/20 bg-[#100d16] p-5"><h2 className="text-sm font-bold uppercase text-violet-400">Telas do sistema</h2><div className="mt-4 rounded-xl border border-white/10 bg-[#0c0a11] p-3"><div className="flex items-center justify-between"><b className="text-sm">Dashboard</b><span className="text-[10px] text-violet-300">Visão geral</span></div><div className="mt-3 grid grid-cols-4 gap-2">{["8.763", "1.256", "342", "24,6%"].map((metric) => <div key={metric} className="rounded-lg bg-white/5 p-2"><span className="text-[8px] text-[#aaa0b7]">Métrica</span><b className="mt-1 block text-sm">{metric}</b></div>)}</div><div className="mt-3 h-20 rounded-lg bg-[linear-gradient(180deg,rgba(124,58,237,.22),transparent),repeating-linear-gradient(0deg,transparent,transparent_18px,rgba(255,255,255,.05)_19px)]" /></div><div className="mt-3 grid grid-cols-2 gap-3"><div className="rounded-xl border border-white/10 p-3"><b className="text-xs">Meus Biolinks</b>{["Casa do Sabor", "Clínica Harmonia", "Studio Beauty"].map((item) => <p key={item} className="mt-2 rounded bg-white/5 p-2 text-[9px]">{item}</p>)}</div><div className="rounded-xl border border-white/10 p-3"><b className="text-xs">Editor da Bio</b><div className="mt-3 flex gap-1">{["#7c3aed", "#d946ef", "#25d366"].map((color) => <i key={color} className="h-5 flex-1 rounded" style={{ background: color }} />)}</div><img src="/template-assets/restaurant-demo-cover.png" alt="" className="mt-3 h-20 w-full rounded object-cover" /></div></div><div className="mt-3 rounded-xl border border-white/10 p-3"><div className="flex items-center justify-between"><b className="text-xs">Catálogo de Produtos</b><span className="rounded bg-violet-600 px-2 py-1 text-[9px]">+ Adicionar</span></div>{rows.map((row, index) => <div key={row} className="mt-2 flex items-center justify-between rounded bg-white/5 p-2 text-[9px]"><span>{row}</span><span>R$ {index === 0 ? "34,90" : "18,90"}</span><i className="h-3 w-6 rounded-full bg-green-500" /></div>)}</div></section>; }
 
-function Testimonials() {
-  const t = [
-    { n: "Ana Beatriz", r: "Confeitaria", q: "Em 1 semana já tinha triplicado os pedidos pelo WhatsApp. O link ficou lindo!", c: "linear-gradient(135deg,#fbbf24,#f472b6)" },
-    { n: "Carlos Menezes", r: "Barbearia", q: "Finalmente consigo ver quantas pessoas clicam. Isso mudou como divulgo meu negócio.", c: "linear-gradient(135deg,#22d3ee,#6366f1)" },
-    { n: "Juliana Reis", r: "Personal Trainer", q: "Grátis, bonito e fácil. Não precisa mais de site pra parecer profissional.", c: "linear-gradient(135deg,#84cc16,#22d3ee)" },
-  ];
-  return (
-    <section id="depoimentos" className="py-24">
-      <div className="container-narrow">
-        <div className="text-center max-w-2xl mx-auto">
-          <div className="chip mx-auto"><Heart className="h-3 w-3 text-[color:var(--brand-pink)]" /> +800 negócios ativos</div>
-          <h2 className="mt-6 text-3xl md:text-5xl font-bold">Quem usa, <span className="rainbow-text">recomenda</span>.</h2>
-        </div>
-        <div className="mt-14 grid gap-6 md:grid-cols-3">
-          {t.map((x) => (
-            <div key={x.n} className="card-glow">
-              <div className="flex items-center gap-1 text-[color:var(--brand-amber)]">
-                {Array.from({ length: 5 }).map((_, i) => <Star key={i} className="h-4 w-4 fill-current" />)}
-              </div>
-              <p className="mt-4 text-sm leading-relaxed">"{x.q}"</p>
-              <div className="mt-6 flex items-center gap-3">
-                <span className="h-10 w-10 rounded-full" style={{ background: x.c }} />
-                <div>
-                  <div className="text-sm font-semibold">{x.n}</div>
-                  <div className="text-xs text-muted-foreground">{x.r}</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
+function Guidelines() { const columns = [["Instruções técnicas", ["Mobile-first sempre", "Componentes reutilizáveis", "Performance otimizada", "Acessibilidade", "Código limpo e organizado"]], ["Boas práticas", ["Componentes pequenos e focados", "Nomes claros", "Evitar re-renderizações", "Lazy loading de imagens", "Estados de loading e erro"]], ["Regras importantes", ["A página pública não é um site completo", "Máximo de blocos principais", "Sempre ter uma ação principal", "Não exibir campos vazios"]], ["Metas de qualidade", ["Design premium e moderno", "Experiência rápida", "Fácil de usar e editar", "Alta conversão"]]]; return <section className="relative z-10 mx-auto max-w-[96rem] px-5 pb-4 lg:px-8"><div className="grid gap-5 rounded-2xl border border-violet-300/20 bg-[#0d0b12] p-5 md:grid-cols-4">{columns.map(([title,items]) => <div key={title as string}><h2 className="text-sm font-bold uppercase text-violet-400">{title as string}</h2><ul className="mt-4 space-y-2">{(items as string[]).map((item) => <li key={item} className="flex gap-2 text-[11px] text-[#c7bdd2]"><Check className="h-3.5 w-3.5 flex-none text-green-400" />{item}</li>)}</ul></div>)}</div></section>; }
 
-function Growth() {
-  return (
-    <section id="crescimento" className="py-24 border-t border-border">
-      <div className="container-narrow grid lg:grid-cols-[1fr_auto] gap-10 items-center">
-        <div>
-          <div className="chip"><Sparkles className="h-3 w-3 text-[color:var(--accent)]" /> Centro de Crescimento</div>
-          <h2 className="mt-6 text-3xl md:text-5xl font-bold">A plataforma <span className="gradient-text">cresce com você</span>.</h2>
-          <p className="mt-4 text-muted-foreground max-w-2xl">
-            Conforme seu negócio evolui, identificamos oportunidades — site próprio, aparecer no Google, automatizar atendimento — e conectamos você a especialistas da EIA Digital.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 gap-3 min-w-[280px]">
-          {[
-            { t: "Site próprio", c: "var(--brand-cyan)" },
-            { t: "Google Meu Negócio", c: "var(--brand-amber)" },
-            { t: "Automação WhatsApp", c: "var(--brand-lime)" },
-            { t: "Anúncios online", c: "var(--brand-pink)" },
-          ].map((x) => (
-            <div key={x.t} className="rounded-xl border border-border p-4 text-sm font-medium" style={{ background: `color-mix(in oklab, ${x.c} 12%, transparent)` }}>
-              <div className="h-2 w-8 rounded-full mb-3" style={{ background: x.c }} />
-              {x.t}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function FinalCTA() {
-  return (
-    <section className="py-24">
-      <div className="container-narrow">
-        <div className="relative overflow-hidden rounded-3xl border border-border py-16 px-6 text-center" style={{ background: "var(--gradient-hero)" }}>
-          <div className="absolute -top-20 left-1/2 -translate-x-1/2 h-60 w-[80%] rounded-full blur-3xl opacity-30" style={{ background: "var(--gradient-rainbow)" }} aria-hidden />
-          <div className="relative">
-            <h2 className="text-3xl md:text-5xl font-bold">Comece <span className="rainbow-text">gratuitamente</span> agora.</h2>
-            <p className="mt-4 text-muted-foreground max-w-xl mx-auto">Junte-se a centenas de pequenos negócios vendendo mais com uma presença digital de verdade.</p>
-            <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary mt-8 text-base">
-              Criar minha página grátis <ArrowRight className="h-4 w-4" />
-            </Link>
-            <div className="mt-6 flex flex-wrap justify-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><Check className="h-3 w-3 text-[color:var(--success)]" /> Sem cartão</span>
-              <span className="flex items-center gap-1"><Check className="h-3 w-3 text-[color:var(--success)]" /> Sem instalação</span>
-              <span className="flex items-center gap-1"><Check className="h-3 w-3 text-[color:var(--success)]" /> Suporte humano</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="border-t border-border py-10">
-      <div className="container-narrow flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <span className="grid h-6 w-6 place-items-center rounded" style={{ background: "var(--gradient-primary)" }}>
-            <Sparkles className="h-3 w-3 text-[color:var(--primary-foreground)]" />
-          </span>
-          © {new Date().getFullYear()} EIA Digital · Feito com <Heart className="h-3 w-3 inline text-[color:var(--brand-pink)]" /> para pequenos negócios.
-        </div>
-        <div className="flex gap-4">
-          <a href="#solucao" className="hover:text-foreground">Solução</a>
-          <a href="#como" className="hover:text-foreground">Como funciona</a>
-          <Link to="/auth" className="hover:text-foreground">Entrar</Link>
-        </div>
-      </div>
-    </footer>
-  );
-}
+function Footer() { return <footer className="relative z-10 border-t border-white/10 bg-[#08070c] py-6"><div className="mx-auto flex max-w-[96rem] flex-col items-center justify-between gap-4 px-5 text-sm md:flex-row lg:px-8"><div className="flex items-center gap-2 font-display text-lg font-bold"><Link2 className="h-6 w-6 text-violet-400" /> EIA LINK</div><p className="text-[#c2b8cd]">Mais que um link na bio. Uma experiência que <span className="text-fuchsia-400">vende.</span></p><div className="flex items-center gap-3"><Instagram className="h-5 w-5 text-fuchsia-400" /><MessageCircle className="h-5 w-5 text-green-400" /><Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary">Começar grátis</Link></div></div></footer>; }

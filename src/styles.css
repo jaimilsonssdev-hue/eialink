@@ -2513,6 +2513,14 @@
 .niche-template-thumb-clinic .niche-template-thumb-profile small { color: #638187; }
 .niche-template-thumb-clinic .niche-template-thumb-cta { background: #147b86; }
 .niche-template-thumb-clinic .niche-template-thumb-cards i { background: #c7e5e4; }
+.niche-template-thumb-academy { background: #07100d; color: #f2fff6; }
+.niche-template-thumb-academy .niche-template-thumb-cover { background: linear-gradient(135deg, #102e1d, #07100d); }
+.niche-template-thumb-academy .niche-template-thumb-cta { background: #48d66d; color: #07100d; }
+.niche-template-thumb-academy .niche-template-thumb-cards i { background: #1b5130; }
+.niche-template-thumb-law { background: #0b111d; color: #f7f1df; }
+.niche-template-thumb-law .niche-template-thumb-cover { background: linear-gradient(135deg, #172843, #0b111d); }
+.niche-template-thumb-law .niche-template-thumb-cta { background: #d4ad5a; color: #161006; }
+.niche-template-thumb-law .niche-template-thumb-cards i { background: #293650; }
 .niche-template-thumb-store { background: #fff9ef; color: #271408; }
 .niche-template-thumb-store .niche-template-thumb-cover { background: linear-gradient(135deg, #ef6f1c, #f7bd62); }
 .niche-template-thumb-store .niche-template-thumb-profile small { color: #8b6f54; }
@@ -2528,6 +2536,25 @@
 .niche-template-thumb-portfolio { background: #1a1712; }
 .niche-template-thumb-portfolio .niche-template-thumb-cover { background: linear-gradient(135deg, #312d20, #b78b32); }
 .niche-template-thumb-portfolio .niche-template-thumb-cta { background: #d5a62c; color: #211806; }
+
+/* Dedicated public compositions: academy and law must not inherit the generic business page. */
+.niche-academy, .niche-law { min-height: 100vh; padding-bottom: 3rem; overflow: hidden; }
+.niche-academy { color: #f2fff6; background: #07100d; }
+.niche-academy-hero { position: relative; min-height: clamp(28rem, 62vw, 42rem); display: flex; align-items: end; isolation: isolate; }
+.niche-academy-hero > img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.niche-academy-overlay { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgb(2 10 6 / .94), rgb(2 10 6 / .42) 62%, rgb(2 10 6 / .1)), linear-gradient(0deg, #07100d, transparent 58%); }
+.niche-academy-hero-content { width: min(100%, 76rem); margin: 0 auto; padding: 2rem clamp(1.25rem, 7vw, 6rem) 3.25rem; }
+.niche-academy-kicker, .niche-law-copy > span { display: inline-flex; align-items: center; gap: .4rem; color: #7ef09b; font-size: .72rem; font-weight: 800; letter-spacing: .14em; }
+.niche-academy h1 { max-width: 48rem; margin-top: .85rem; font-size: clamp(2.35rem, 6vw, 5rem); line-height: .95; letter-spacing: -.06em; }
+.niche-academy-hero-content > p { max-width: 35rem; margin-top: 1rem; color: #c3d8ca; font-size: clamp(.95rem, 2vw, 1.12rem); line-height: 1.65; }
+.niche-academy-actions { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.6rem; }
+.niche-academy-actions a, .niche-academy-actions button { display: inline-flex; align-items: center; gap: .55rem; min-height: 3.1rem; padding: .8rem 1.15rem; border: 1px solid rgb(255 255 255 / .22); border-radius: .8rem; font-weight: 750; transition: transform .2s ease, filter .2s ease; }
+.niche-academy-actions a { color: #06120a; background: #48d66d; }.niche-academy-actions button { color: #f2fff6; background: rgb(7 16 13 / .52); }.niche-academy-actions a:hover, .niche-academy-actions button:hover { transform: translateY(-2px); filter: brightness(1.05); }
+.niche-academy-section { width: min(100% - 2.5rem, 76rem); margin: 3.5rem auto 0; }.niche-academy-heading > span, .niche-law-section > p { color: #7ef09b; font-size: .7rem; font-weight: 850; letter-spacing: .16em; }.niche-academy-heading h2, .niche-law-section h2 { margin-top: .5rem; font-size: clamp(1.7rem, 3vw, 2.7rem); letter-spacing: -.04em; }
+.niche-academy-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.4rem; }.niche-academy-card { position: relative; min-height: 15rem; padding: 1.2rem; border: 1px solid rgb(126 240 155 / .22); border-radius: 1.25rem; background: linear-gradient(145deg, #153520, #0d1d14); }.niche-academy-card-number { position: absolute; right: 1rem; top: .9rem; color: rgb(126 240 155 / .52); font-size: .76rem; font-weight: 800; }.niche-academy-card svg { color: #7ef09b; }.niche-academy-card h3 { margin-top: 2rem; font-size: 1.2rem; }.niche-academy-card p { margin-top: .55rem; color: #b8cbbd; font-size: .88rem; line-height: 1.55; }.niche-academy-card b { display: block; margin-top: 1rem; color: #7ef09b; }.niche-academy-card a { display: inline-flex; align-items: center; gap: .35rem; margin-top: 1rem; color: #fff; font-size: .85rem; font-weight: 700; }
+.niche-academy-links > div { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1rem; }.niche-academy-links a { display: inline-flex; align-items: center; gap: .45rem; padding: .75rem 1rem; border: 1px solid rgb(255 255 255 / .16); border-radius: 999px; color: #e5f7e9; }
+.niche-law { color: #f7f1df; background: #0b111d; }.niche-law-hero { position: relative; min-height: clamp(32rem, 64vw, 46rem); display: flex; align-items: end; isolation: isolate; }.niche-law-hero > img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }.niche-law-overlay { position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgb(7 12 23 / .96), rgb(7 12 23 / .55) 58%, rgb(7 12 23 / .16)), linear-gradient(0deg, #0b111d, transparent 60%); }.niche-law-share { position: absolute; right: clamp(1rem, 6vw, 5rem); top: 1.5rem; padding: .65rem .9rem; border: 1px solid rgb(247 241 223 / .35); border-radius: 999px; color: #f7f1df; background: rgb(8 12 22 / .42); font-size: .8rem; }.niche-law-copy { width: min(100%, 76rem); margin: 0 auto; padding: 2rem clamp(1.25rem, 7vw, 6rem) 3.25rem; }.niche-law-copy > span, .niche-law-section > p { color: #e2c375; }.niche-law-copy h1 { max-width: 48rem; margin-top: .85rem; font-size: clamp(2.35rem, 6vw, 5rem); line-height: .96; letter-spacing: -.055em; }.niche-law-copy > p { max-width: 38rem; margin-top: 1rem; color: #d0c9bb; line-height: 1.65; }.niche-law-trust { display: flex; flex-wrap: wrap; gap: .6rem; margin-top: 1.3rem; }.niche-law-trust small { display: inline-flex; align-items: center; gap: .35rem; padding: .45rem .65rem; border: 1px solid rgb(226 195 117 / .35); border-radius: 999px; color: #eee3c7; }.niche-law-copy > a { display: inline-flex; align-items: center; gap: .55rem; margin-top: 1.5rem; padding: .85rem 1.15rem; border-radius: .75rem; color: #171108; background: #d4ad5a; font-weight: 800; }.niche-law-section { width: min(100% - 2.5rem, 76rem); margin: 3.5rem auto 0; }.niche-law-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; margin-top: 1.4rem; }.niche-law-grid article { padding: 1.3rem; border: 1px solid rgb(212 173 90 / .25); border-radius: .25rem 1.15rem 1.15rem 1.15rem; background: #121b2b; }.niche-law-grid article > svg { color: #d4ad5a; }.niche-law-grid h3 { margin-top: 1.5rem; font-size: 1.15rem; }.niche-law-grid p { margin-top: .55rem; color: #c7c1b6; font-size: .9rem; line-height: 1.55; }.niche-law-grid a, .niche-law-links a { display: inline-flex; align-items: center; gap: .4rem; margin-top: 1rem; color: #e6c675; font-size: .86rem; font-weight: 700; }.niche-law-links > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin-top: 1rem; }.niche-law-links a { justify-content: space-between; margin: 0; padding: 1rem; border: 1px solid rgb(247 241 223 / .18); color: #f7f1df; }
+@media (max-width: 720px) { .niche-academy-hero, .niche-law-hero { min-height: 34rem; }.niche-academy-grid, .niche-law-grid { grid-template-columns: 1fr; }.niche-academy-section, .niche-law-section { width: min(100% - 2rem, 76rem); }.niche-law-links > div { grid-template-columns: 1fr; } }
 
 /* Mobile editor: the controls come before the rendered phone so an owner can
    edit fields comfortably at native mobile scale, then open the preview. */

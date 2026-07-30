@@ -12,6 +12,8 @@ import { safeExternalUrl } from "@/lib/safe-url";
 const NICHE_FALLBACK_COVERS: Record<string, string> = {
   restaurant: "/template-assets/restaurant-demo-cover.png",
   clinic: "/template-assets/clinic-demo-cover.png",
+  academy: "/template-assets/academy-gym-cover.png",
+  law: "/template-assets/law-office-cover.png",
   store: "/template-assets/store-demo-cover.png",
   beauty: "/template-assets/beauty-demo-cover.png",
   creator: "/template-assets/creator-demo-cover.png",
@@ -21,6 +23,8 @@ const NICHE_FALLBACK_COVERS: Record<string, string> = {
 function getFallbackCover(templateId: string) {
   if (templateId.includes("restaurant")) return NICHE_FALLBACK_COVERS.restaurant;
   if (templateId.includes("clinic")) return NICHE_FALLBACK_COVERS.clinic;
+  if (templateId.includes("academy")) return NICHE_FALLBACK_COVERS.academy;
+  if (templateId.includes("law")) return NICHE_FALLBACK_COVERS.law;
   if (templateId.includes("store")) return NICHE_FALLBACK_COVERS.store;
   if (templateId.includes("beauty")) return NICHE_FALLBACK_COVERS.beauty;
   if (templateId.includes("creator")) return NICHE_FALLBACK_COVERS.creator;

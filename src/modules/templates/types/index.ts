@@ -34,6 +34,8 @@ export type TemplateCategory =
   | "store"
   | "restaurant"
   | "clinic"
+  | "academy"
+  | "law"
   | "beauty"
   | "portfolio"
   | "premium";
@@ -98,6 +100,8 @@ export type TemplateDefinition = {
     | "creator"
     | "restaurant"
     | "clinic"
+    | "academy"
+    | "law"
     | "storefront";
   components: TemplateComponentType[];
   componentVariants: ComponentVariants;

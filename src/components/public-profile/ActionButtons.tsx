@@ -10,11 +10,20 @@ interface ActionButtonsProps {
 }
 
 export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
+  const whatsappHref = whatsappUrl(bio.whatsapp, bio.whatsapp_message);
+  const validLinks = links
+    .map((link) => ({ ...link, href: safeExternalUrl(link.url) }))
+    .filter((link): link is typeof link & { href: string } => Boolean(link.href));
+
+  // A newly created page can legitimately have no contacts yet. Do not leave
+  // an empty action container in either the public page or its live preview.
+  if (!whatsappHref && validLinks.length === 0) return null;
+
   return (
     <section className="public-profile-actions" aria-label="Links e formas de contato">
-      {bio.whatsapp && (
+      {whatsappHref && (
         <a
-          href={whatsappUrl(bio.whatsapp, bio.whatsapp_message)}
+          href={whatsappHref}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onTrack("whatsapp_click")}
@@ -31,13 +40,11 @@ export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
         </a>
       )}
 
-      {links.map((link) => {
-        const href = safeExternalUrl(link.url);
-        if (!href) return null;
+      {validLinks.map((link) => {
         return (
         <a
           key={link.id}
-          href={href}
+          href={link.href}
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onTrack("link_click", link.id)}

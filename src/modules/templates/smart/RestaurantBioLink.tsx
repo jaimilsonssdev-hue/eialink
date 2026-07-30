@@ -32,7 +32,7 @@ export function RestaurantBioLink({
     .filter((link) => link.id !== menuLink?.id && link.id !== locationLink?.id)
     .slice(0, 2);
 
-  const openWhatsapp = () => onTrack("whatsapp");
+  const openWhatsapp = () => onTrack("whatsapp_click");
 
   return (
     <div className="restaurant-biolink">

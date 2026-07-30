@@ -2343,6 +2343,36 @@
 .restaurant-whatsapp { color: #fff; background: linear-gradient(100deg, #7432ec, #c52ce8); box-shadow: 0 12px 24px rgb(124 58 237 / .25); }
 @media (hover: hover) { .restaurant-whatsapp:hover { box-shadow: 0 16px 28px rgb(124 58 237 / .42); } }
 
+/* Restaurant composition refinement: a compact editorial mini-site rather
+   than a stack of unrelated cards. The same layout is used by preview and
+   the public URL, so no saved customer content is duplicated here. */
+.restaurant-biolink { min-height: 100vh; background: radial-gradient(circle at 50% 0, rgb(124 58 237 / .24), transparent 28rem), linear-gradient(180deg, #08070d 0%, #0a0810 62%, #07060a 100%); }
+.restaurant-hero { max-width: 52rem; min-height: clamp(21rem, 62vw, 29rem); margin: 0 auto; border-radius: 0 0 2.4rem 2.4rem; box-shadow: 0 1.5rem 3rem rgb(0 0 0 / .35); }
+.restaurant-hero::after { content: ""; position: absolute; z-index: 1; inset: auto 0 0; height: 48%; background: linear-gradient(180deg, transparent, #09070f 92%); pointer-events: none; }
+.restaurant-hero-content { padding: 6rem 1.5rem 1.9rem; }
+.restaurant-avatar { width: 5.8rem; height: 5.8rem; top: -2.25rem; border-color: #f8f5ff; box-shadow: 0 0 0 5px rgb(10 8 16 / .82), 0 0 2.1rem rgb(170 74 255 / .48); }
+.restaurant-kicker { color: #e1bcff; font-size: .66rem; letter-spacing: .19em; }
+.restaurant-hero h1 { max-width: 35rem; margin-inline: auto; font-size: clamp(2rem, 6vw, 3.15rem); text-shadow: 0 3px 1rem rgb(0 0 0 / .42); }
+.restaurant-description { max-width: 33rem; color: #f1ecfb; font-size: .98rem; }
+.restaurant-trust-row { margin-top: .75rem; padding: .52rem .85rem; border: 1px solid rgb(255 255 255 / .11); border-radius: 999px; background: rgb(5 4 9 / .3); backdrop-filter: blur(9px); }
+.restaurant-main { width: min(100%, 50rem); padding: 1.2rem 1.1rem 2.75rem; }
+.restaurant-primary-actions { gap: .75rem; }
+.restaurant-whatsapp, .restaurant-menu-link { min-height: 3.8rem; padding-inline: 1.2rem; border-radius: 1.15rem; }
+.restaurant-whatsapp { background: linear-gradient(100deg, #7432ec 0%, #a829ed 53%, #d52bdc 100%); box-shadow: 0 .9rem 2rem rgb(124 58 237 / .3); }
+.restaurant-menu-link { border-color: rgb(194 123 255 / .72); background: rgb(12 8 19 / .68); }
+.restaurant-quick-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr)); gap: .6rem; padding: 1.1rem 0 .8rem; }
+.restaurant-quick-info a, .restaurant-quick-info span { justify-content: center; min-height: 2.85rem; padding: .6rem .75rem; border: 1px solid rgb(255 255 255 / .1); border-radius: .9rem; color: #e2d8ee; background: rgb(255 255 255 / .045); }
+.restaurant-highlights .public-catalog-title { display: flex; align-items: center; justify-content: center; gap: .5rem; padding-top: 1rem; color: #f9f6ff; font-size: 1.28rem; }
+.restaurant-highlights .public-catalog-title::before, .restaurant-highlights .public-catalog-title::after { content: ""; width: 2rem; height: 1px; background: linear-gradient(90deg, transparent, #9951f7); }
+.restaurant-highlights .public-catalog-title::after { background: linear-gradient(90deg, #9951f7, transparent); }
+.restaurant-highlights .public-catalog-card { min-height: 16.5rem; border-color: rgb(224 181 255 / .18); border-radius: 1.05rem; background: linear-gradient(160deg, rgb(31 22 42 / .94), rgb(12 9 18 / .96)); }
+.restaurant-highlights .public-catalog-card .font-semibold { font-size: .88rem; }
+.restaurant-highlights .public-catalog-card a { min-height: 2.3rem; font-size: .76rem; font-weight: 800; }
+.restaurant-links { padding-top: .3rem; }.restaurant-links h2 { text-align: center; }.restaurant-link-list { grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr)); }
+.restaurant-final-cta { margin-top: 1.65rem; border-color: rgb(219 110 255 / .52); background: linear-gradient(110deg, #5922b2, #a11caa 64%, #421b79); box-shadow: 0 1rem 2.5rem rgb(125 35 170 / .2); }
+.restaurant-biolink .public-profile-footer { max-width: 50rem; margin-inline: auto; }
+@media (max-width: 520px) { .restaurant-hero { min-height: 24rem; border-radius: 0 0 1.65rem 1.65rem; }.restaurant-hero-content { padding-inline: 1rem; }.restaurant-hero h1 { font-size: 2.15rem; }.restaurant-description { font-size: .9rem; }.restaurant-highlights .public-catalog-grid { grid-auto-columns: minmax(10.3rem, 78%); }.restaurant-link-list { grid-template-columns: 1fr; } }
+
 /* Real multi-page workspace. Each card represents an owned bio_page. */
 .pages-workspace { max-width: 76rem; margin-inline: auto; }
 .pages-workspace-header { display: flex; align-items: end; justify-content: space-between; gap: 1.25rem; padding: 1.5rem 0 2rem; }

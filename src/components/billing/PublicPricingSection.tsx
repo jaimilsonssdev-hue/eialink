@@ -2,9 +2,53 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Sparkles } from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
-import { formatPlanPrice, toPlanFeatures, toPlanLimits } from "@/modules/billing/types";
+import {
+  formatPlanPrice,
+  toPlanFeatures,
+  toPlanLimits,
+  type PublicPlan,
+} from "@/modules/billing/types";
 
-function planBenefits(plan: Awaited<ReturnType<typeof BillingService.listPublicPlans>>[number]) {
+const fallbackPlans: PublicPlan[] = [
+  {
+    id: "fallback-free",
+    slug: "free",
+    name: "Grátis",
+    description: "Para publicar uma presença profissional essencial.",
+    price_cents: 0,
+    billing_interval: "monthly",
+    limits: { bio_pages: 1, links: 5, catalog_items: 3, templates: 1 },
+    features: { whatsapp: true, analytics: true, custom_domain: false },
+    active: true,
+    position: 0,
+  },
+  {
+    id: "fallback-pro",
+    slug: "pro",
+    name: "Pro",
+    description: "Para negócios que precisam vender e crescer.",
+    price_cents: 2900,
+    billing_interval: "monthly",
+    limits: { bio_pages: 3, links: 30, catalog_items: 100, templates: -1 },
+    features: { whatsapp: true, analytics: true, custom_domain: true },
+    active: true,
+    position: 1,
+  },
+  {
+    id: "fallback-catalog",
+    slug: "catalog",
+    name: "Catálogo",
+    description: "Plano focado em uma vitrine digital completa.",
+    price_cents: 4900,
+    billing_interval: "monthly",
+    limits: { bio_pages: 5, links: 50, catalog_items: 250, templates: -1 },
+    features: { whatsapp: true, analytics: true, custom_domain: true },
+    active: true,
+    position: 2,
+  },
+];
+
+function planBenefits(plan: PublicPlan) {
   const limits = toPlanLimits(plan.limits);
   const features = toPlanFeatures(plan.features);
   const pageLimit =
@@ -40,7 +84,7 @@ export function PublicPricingSection() {
     staleTime: 60_000,
   });
 
-  if (isError || (!isLoading && !plans?.length)) return null;
+  const visiblePlans = plans?.length ? plans : fallbackPlans;
 
   return (
     <section id="precos" className="relative z-10 mx-auto max-w-7xl px-5 pb-14">
@@ -62,7 +106,7 @@ export function PublicPricingSection() {
                   className="h-[310px] animate-pulse rounded-2xl border border-white/10 bg-white/[.04]"
                 />
               ))
-            : plans?.map((plan, index) => {
+            : visiblePlans.map((plan, index) => {
                 const featured = index === 1;
                 return (
                   <article

@@ -157,6 +157,9 @@ export type Database = {
           user_id: string
           whatsapp: string | null
           whatsapp_message: string | null
+          whatsapp_button_label: string | null
+          whatsapp_button_subtitle: string | null
+          social_links: Json
         }
         Insert: {
           avatar_url?: string | null
@@ -179,6 +182,9 @@ export type Database = {
           user_id: string
           whatsapp?: string | null
           whatsapp_message?: string | null
+          whatsapp_button_label?: string | null
+          whatsapp_button_subtitle?: string | null
+          social_links?: Json
         }
         Update: {
           avatar_url?: string | null
@@ -201,6 +207,9 @@ export type Database = {
           user_id?: string
           whatsapp?: string | null
           whatsapp_message?: string | null
+          whatsapp_button_label?: string | null
+          whatsapp_button_subtitle?: string | null
+          social_links?: Json
         }
         Relationships: []
       }

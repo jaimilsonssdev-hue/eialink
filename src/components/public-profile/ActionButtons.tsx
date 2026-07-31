@@ -33,7 +33,7 @@ export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
             <MessageCircle className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1 text-left">
-            <span className="block font-semibold">Falar no WhatsApp</span>
+            <span className="block font-semibold">{bio.whatsapp_button_label || "Falar no WhatsApp"}</span>
             <span className="block text-xs opacity-80">Resposta rápida</span>
           </span>
           <ArrowUpRight className="h-5 w-5 opacity-80" aria-hidden />

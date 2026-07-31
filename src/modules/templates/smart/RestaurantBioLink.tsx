@@ -105,7 +105,7 @@ export function RestaurantBioLink({
               className="restaurant-whatsapp"
             >
               <MessageCircle size={20} aria-hidden="true" />
-              <span>Fazer pedido no WhatsApp</span>
+              <span>{bio.whatsapp_button_label || "Fazer pedido no WhatsApp"}</span>
               <span aria-hidden="true">→</span>
             </a>
           ) : (

@@ -58,7 +58,15 @@ export function TemplateRenderer({
     profile: { name: bio.display_name, description: bio.description, avatarUrl: bio.avatar_url },
     appearance: { coverUrl: bio.cover_url },
     links: safeLinks.map((link) => ({ id: link.id, title: link.title, url: link.url })),
-    socials: { instagram: bio.instagram ?? undefined },
+    socials: {
+      ...(bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links)
+        ? bio.social_links
+        : {}),
+      instagram:
+        (bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links) && typeof bio.social_links.instagram === "string"
+          ? bio.social_links.instagram
+          : bio.instagram) ?? undefined,
+    },
     whatsapp: bio.whatsapp,
     pix: bio.pix_key,
   };

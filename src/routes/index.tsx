@@ -133,7 +133,7 @@ function TemplateRail({ featured = false, onPreview }: { featured?: boolean; onP
         onFocus={() => setPaused(true)}
         onBlur={() => setPaused(false)}
       >
-        <TemplatePhone template={current} featured />
+        <TemplatePhone key={current.name} template={current} featured />
         <button type="button" aria-label="Exemplo anterior" className="absolute left-[-1rem] top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#0b0812]/90 text-white" onClick={() => setActiveIndex((activeIndex - 1 + items.length) % items.length)}><ArrowLeft className="h-4 w-4" /></button>
         <button type="button" aria-label="Próximo exemplo" className="absolute right-[-1rem] top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#0b0812]/90 text-white" onClick={() => setActiveIndex((activeIndex + 1) % items.length)}><ArrowRight className="h-4 w-4" /></button>
         <div className="mt-3 flex justify-center gap-1.5" aria-label="Indicadores do carrossel">{items.map((template, index) => <button key={template.name} type="button" aria-label={`Ver ${template.niche}`} aria-current={index === activeIndex} className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-5 bg-fuchsia-400" : "w-1.5 bg-white/30"}`} onClick={() => setActiveIndex(index)} />)}</div>
@@ -143,10 +143,37 @@ function TemplateRail({ featured = false, onPreview }: { featured?: boolean; onP
   return <div className="relative flex snap-x snap-mandatory gap-3 overflow-x-auto pb-4 [scrollbar-width:none]">{items.map((template, index) => <TemplatePhone key={template.name} template={template} featured={featured && index === 0} onPreview={onPreview} />)}</div>;
 }
 
+function getTemplateDemo(template: (typeof templates)[number]) {
+  switch (template.name) {
+    case "Casa do Sabor": return { eyebrow: "ABERTO AGORA", subtitle: "Hamburgueria artesanal", action: "Pedir pelo WhatsApp", items: ["Smash", "Pizza", "Brownie"] };
+    case "Clínica Harmonia": return { eyebrow: "ATENDIMENTO HUMANO", subtitle: "Cuidado que acolhe", action: "Agendar consulta", items: ["Tratamentos", "Equipe", "Horários"] };
+    case "Studio Beauty": return { eyebrow: "BELEZA & BEM-ESTAR", subtitle: "Sua melhor versão", action: "Agendar horário", items: ["Cabelo", "Unhas", "Make"] };
+    case "Power Gym": return { eyebrow: "TREINO & PERFORMANCE", subtitle: "Seu próximo nível", action: "Agendar aula", items: ["Planos", "Aulas", "Equipe"] };
+    case "Dr. Carlos": return { eyebrow: "ATUAÇÃO JURÍDICA", subtitle: "Orientação com clareza", action: "Falar com advogado", items: ["Áreas", "Equipe", "Contato"] };
+    case "Lar & Sonhos": return { eyebrow: "IMÓVEIS SELECIONADOS", subtitle: "Encontre seu lugar", action: "Ver imóveis", items: ["Comprar", "Alugar", "Falar"] };
+    default: return { eyebrow: "CUIDADO ESPECIAL", subtitle: "Tudo para seu pet", action: "Agendar serviço", items: ["Banho", "Consulta", "Loja"] };
+  }
+}
+
 function TemplatePhone({ template, featured, onPreview }: { template: typeof templates[number]; featured?: boolean; onPreview?: (template: typeof templates[number]) => void }) {
   const Icon = template.icon;
   const interactive = !featured && Boolean(onPreview);
-  return <article role={interactive ? "button" : undefined} tabIndex={interactive ? 0 : undefined} onClick={interactive ? () => onPreview?.(template) : undefined} onKeyDown={interactive ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onPreview?.(template); } } : undefined} aria-label={interactive ? `Ver prévia de ${template.name}` : undefined} className={`${featured ? "w-full" : "w-[8.4rem]"} flex-none snap-center overflow-hidden rounded-2xl border bg-[#0d0a12] shadow-xl transition duration-200 hover:-translate-y-1 ${interactive ? "cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400" : ""} ${featured ? "border-violet-400/75" : "border-white/10"}`}><div className="relative"><img src={template.cover} alt={`Modelo ${template.niche}`} className={`${featured ? "h-52" : "h-28"} w-full object-cover`} loading={featured ? "eager" : "lazy"} /><div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#0d0a12]" /><span className="absolute left-3 top-3 rounded-full bg-black/45 px-2 py-1 text-[9px]">{template.niche}</span></div><div className={`${featured ? "-mt-7 p-4" : "-mt-4 p-2"} relative text-center`}><span className={`${featured ? "h-11 w-11" : "h-7 w-7"} mx-auto grid place-items-center rounded-full border border-white/30 bg-[#171021]`}><Icon className={featured ? "h-5 w-5" : "h-3.5 w-3.5"} style={{ color: template.color }} /></span><b className={`${featured ? "text-base" : "text-[10px]"} mt-2 block truncate`}>{template.name}</b><p className={`${featured ? "text-xs" : "text-[7px]"} mt-1 text-[#bcb2c8]`}>Página pronta para vender</p><span className={`${featured ? "py-2 text-xs" : "py-1 text-[8px]"} mt-3 block rounded-md font-bold`} style={{ background: template.color }}>{interactive ? "Ver prévia" : "Ver modelo"}</span></div></article>;
+  const demo = getTemplateDemo(template);
+  return <article role={interactive ? "button" : undefined} tabIndex={interactive ? 0 : undefined} onClick={interactive ? () => onPreview?.(template) : undefined} onKeyDown={interactive ? (event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onPreview?.(template); } } : undefined} aria-label={interactive ? `Ver prévia de ${template.name}` : undefined} className={`landing-template-phone ${featured ? "landing-template-phone-featured w-full" : "w-[10rem]"} flex-none snap-center overflow-hidden rounded-2xl border bg-[#0d0a12] shadow-xl transition duration-200 hover:-translate-y-1 ${interactive ? "cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-fuchsia-400" : ""} ${featured ? "border-violet-400/75" : "border-white/10"}`}>
+    <div className={`landing-template-demo ${featured ? "landing-template-demo-featured" : ""}`}>
+      <div className="landing-template-cover" style={{ backgroundImage: `linear-gradient(180deg, rgba(8,5,12,.08), rgba(8,5,12,.82)), url(${template.cover})` }}>
+        <span>{demo.eyebrow}</span><small>{template.niche}</small>
+      </div>
+      <div className="landing-template-content">
+        <span className="landing-template-avatar" style={{ background: template.color }}><Icon /></span>
+        <b>{template.name}</b><p>{demo.subtitle}</p>
+        <span className="landing-template-action" style={{ background: template.color }}><MessageCircle />{demo.action}<ArrowRight /></span>
+        <div className="landing-template-items">{demo.items.map((item, index) => <span key={item}><i style={{ background: index === 1 ? template.color : undefined }} />{item}</span>)}</div>
+        <small className="landing-template-footer">Instagram · Localização · Contato</small>
+      </div>
+    </div>
+    {interactive && <span className="landing-template-preview-hint">Clique para ver a prévia</span>}
+  </article>;
 }
 
 function Difference() {

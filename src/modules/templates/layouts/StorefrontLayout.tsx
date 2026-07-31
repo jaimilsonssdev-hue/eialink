@@ -155,7 +155,7 @@ export class StorefrontLayout implements TemplateLayoutRenderer {
                   className="niche-store-contact-primary"
                 >
                   <MessageCircle size={16} aria-hidden />
-                  Falar com a loja
+                  {bio.whatsapp_button_label || "Falar com a loja"}
                 </a>
               )}
               {insta && (

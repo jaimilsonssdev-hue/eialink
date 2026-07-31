@@ -1,4 +1,4 @@
-import { ExternalLink, Image, Link2, Palette, Save, UserRound, WalletCards } from "lucide-react";
+import { ExternalLink, Facebook, Globe2, Image, Instagram, Linkedin, Link2, Palette, Save, UserRound, WalletCards, Youtube } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
@@ -17,8 +17,11 @@ type BioForm = Pick<
   | "avatar_url"
   | "whatsapp"
   | "whatsapp_message"
+  | "whatsapp_button_label"
+  | "whatsapp_button_subtitle"
   | "pix_key"
   | "instagram"
+  | "social_links"
   | "published"
   | "theme"
   | "cover_url"
@@ -107,6 +110,20 @@ const THEMES = [
   { id: "midnight", label: "Noite" },
   { id: "mono", label: "Claro" },
 ];
+
+const SOCIAL_NETWORKS = [
+  { id: "instagram", label: "Instagram", placeholder: "@seuperfil", icon: Instagram },
+  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/suapagina", icon: Facebook },
+  { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/@seuperfil", icon: Palette },
+  { id: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/seuperfil", icon: Linkedin },
+  { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/@seucanal", icon: Youtube },
+  { id: "website", label: "Seu site", placeholder: "https://seusite.com.br", icon: Globe2 },
+] as const;
+
+function socialValues(value: BioForm["social_links"]) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {} as Record<string, string>;
+  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+}
 
 function slugify(value: string) {
   return (
@@ -582,14 +599,34 @@ function SectionForm({
         </>
       )}
       {section === "social" && (
-        <Field label="Instagram">
-          <input
-            className="input-base"
-            value={bio.instagram ?? ""}
-            placeholder={defaults.instagram || "@seuperfil"}
-            onChange={(event) => updateBio({ instagram: event.target.value })}
-          />
-        </Field>
+        <div className="space-y-4">
+          <p className="rounded-xl border border-border bg-surface-elevated/40 p-3 text-xs text-muted-foreground">
+            Adicione somente os perfis que você usa. Eles aparecerão junto aos seus links quando o visual escolhido oferecer esse espaço.
+          </p>
+          {SOCIAL_NETWORKS.map(({ id, label, placeholder, icon: Icon }) => {
+            const values = socialValues(bio.social_links);
+            const value = id === "instagram" ? values.instagram ?? bio.instagram ?? "" : values[id] ?? "";
+            return (
+              <Field key={id} label={label}>
+                <div className="relative">
+                  <Icon className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-[color:var(--primary)]" />
+                  <input
+                    className="input-base pl-9"
+                    value={value}
+                    placeholder={id === "instagram" ? defaults.instagram || placeholder : placeholder}
+                    onChange={(event) => {
+                      const next = { ...values, [id]: event.target.value.trim() };
+                      updateBio({
+                        social_links: next,
+                        ...(id === "instagram" ? { instagram: event.target.value.trim() } : {}),
+                      });
+                    }}
+                  />
+                </div>
+              </Field>
+            );
+          })}
+        </div>
       )}
       {section === "contact" && (
         <>
@@ -615,6 +652,25 @@ function SectionForm({
             <p className="mt-1 text-xs text-muted-foreground">
               Esta mensagem será preenchida para o visitante antes de abrir o WhatsApp.
             </p>
+          </Field>
+          <Field label="Texto do botão">
+            <input
+              className="input-base"
+              value={bio.whatsapp_button_label ?? ""}
+              maxLength={60}
+              placeholder="Falar no WhatsApp"
+              onChange={(event) => updateBio({ whatsapp_button_label: event.target.value })}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">Use uma chamada curta e clara, por exemplo: “Pedir orçamento”.</p>
+          </Field>
+          <Field label="Texto de apoio do botão">
+            <input
+              className="input-base"
+              value={bio.whatsapp_button_subtitle ?? ""}
+              maxLength={80}
+              placeholder="Resposta rápida"
+              onChange={(event) => updateBio({ whatsapp_button_subtitle: event.target.value })}
+            />
           </Field>
         </>
       )}

@@ -91,6 +91,9 @@ function BuilderPage() {
         avatar_url: bio.avatar_url,
         whatsapp: bio.whatsapp,
         whatsapp_message: bio.whatsapp_message,
+        whatsapp_button_label: bio.whatsapp_button_label,
+        whatsapp_button_subtitle: bio.whatsapp_button_subtitle,
+        social_links: bio.social_links,
         pix_key: bio.pix_key,
         instagram: bio.instagram,
         published: bio.published,
@@ -119,6 +122,9 @@ function BuilderPage() {
         cover_overlay: true,
         cover_overlay_opacity: 45,
         template_id: null,
+        whatsapp_button_label: null,
+        whatsapp_button_subtitle: null,
+        social_links: {},
       };
 
   return (

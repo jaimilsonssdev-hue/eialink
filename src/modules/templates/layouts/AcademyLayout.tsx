@@ -36,7 +36,7 @@ export class AcademyLayout implements TemplateLayoutRenderer {
           <p>{bio.description || "Treinos que respeitam o seu ritmo e levam você mais longe."}</p>
           <div className="niche-academy-proof"><span><Check size={14} aria-hidden /> Treino para todos os níveis</span><span><Check size={14} aria-hidden /> Atendimento próximo</span></div>
           <div className="niche-academy-actions">
-            {whatsapp && <a href={whatsappUrl(whatsapp, bio.whatsapp_message || "Olá! Quero agendar uma aula experimental.")} target="_blank" rel="noreferrer" onClick={() => onTrack("whatsapp_click")}><MessageCircle size={18} aria-hidden /> Agendar aula experimental <ArrowUpRight size={16} aria-hidden /></a>}
+            {whatsapp && <a href={whatsappUrl(whatsapp, bio.whatsapp_message || "Olá! Quero agendar uma aula experimental.")} target="_blank" rel="noreferrer" onClick={() => onTrack("whatsapp_click")}><MessageCircle size={18} aria-hidden /> {bio.whatsapp_button_label || "Agendar aula experimental"} <ArrowUpRight size={16} aria-hidden /></a>}
             <a href="#planos">Conhecer planos</a>
           </div>
         </div>

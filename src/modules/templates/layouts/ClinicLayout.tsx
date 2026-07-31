@@ -55,7 +55,7 @@ export class ClinicLayout implements TemplateLayoutRenderer {
                   className="niche-clinic-cta-primary"
                 >
                   <CalendarCheck size={18} aria-hidden />
-                  Agendar consulta
+                  {bio.whatsapp_button_label || "Agendar consulta"}
                 </a>
               )}
               <button

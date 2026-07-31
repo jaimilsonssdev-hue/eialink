@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { PublicPricingSection } from "@/components/billing/PublicPricingSection";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,7 @@ function Landing() {
       <Nav />
       <Hero />
       <Difference />
+      <PublicPricingSection />
       <Templates onPreview={setPreviewTemplate} />
       <Benefits />
       <HowItWorks />

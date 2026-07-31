@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Plan, ProfessionalService, Subscription } from "../types";
+import type { Plan, ProfessionalService, PublicPlan, Subscription } from "../types";
 
 /** Single access point for subscription and monetisation data. */
 export const BillingService = {
@@ -10,10 +10,12 @@ export const BillingService = {
   },
 
   /** Public landing pages may only read plans that are currently available. */
-  async listPublicPlans(): Promise<Plan[]> {
+  async listPublicPlans(): Promise<PublicPlan[]> {
     const { data, error } = await supabase
       .from("plans")
-      .select("*")
+      .select(
+        "id, slug, name, description, price_cents, billing_interval, limits, features, active, position",
+      )
       .eq("active", true)
       .order("position");
     if (error) throw error;

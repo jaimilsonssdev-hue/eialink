@@ -1,6 +1,19 @@
 import type { Json, Tables } from "@/integrations/supabase/types";
 
 export type Plan = Tables<"plans">;
+export type PublicPlan = Pick<
+  Plan,
+  | "id"
+  | "slug"
+  | "name"
+  | "description"
+  | "price_cents"
+  | "billing_interval"
+  | "limits"
+  | "features"
+  | "active"
+  | "position"
+>;
 export type Subscription = Tables<"subscriptions">;
 export type ProfessionalService = Tables<"professional_services">;
 

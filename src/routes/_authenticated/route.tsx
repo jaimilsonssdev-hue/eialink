@@ -19,6 +19,8 @@ import {
   X,
   PanelsTopLeft,
   ShoppingBag,
+  CreditCard,
+
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -37,8 +39,10 @@ const NAV = [
   { to: "/catalog", label: "Catálogo", icon: ShoppingBag },
   { to: "/analytics", label: "Resultados", icon: BarChart3 },
   { to: "/growth", label: "Crescimento", icon: Sparkles },
+  { to: "/billing", label: "Planos", icon: CreditCard },
   { to: "/settings", label: "Configurações", icon: Settings },
 ] as const;
+
 
 const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[5]] as const;
 

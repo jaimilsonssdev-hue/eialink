@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_logs: {
+        Row: {
+          action: string
+          admin_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          target_id: string | null
+          target_type: string
+        }
+        Insert: {
+          action: string
+          admin_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type: string
+        }
+        Update: {
+          action?: string
+          admin_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          target_id?: string | null
+          target_type?: string
+        }
+        Relationships: []
+      }
       analytics_events: {
         Row: {
           bio_page_id: string
@@ -121,15 +151,15 @@ export type Database = {
           pix_key: string | null
           published: boolean
           slug: string
+          social_links: Json
           template_id: string | null
           theme: string
           updated_at: string
           user_id: string
           whatsapp: string | null
-          whatsapp_message: string | null
           whatsapp_button_label: string | null
           whatsapp_button_subtitle: string | null
-          social_links: Json
+          whatsapp_message: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -146,15 +176,15 @@ export type Database = {
           pix_key?: string | null
           published?: boolean
           slug: string
+          social_links?: Json
           template_id?: string | null
           theme?: string
           updated_at?: string
           user_id: string
           whatsapp?: string | null
-          whatsapp_message?: string | null
           whatsapp_button_label?: string | null
           whatsapp_button_subtitle?: string | null
-          social_links?: Json
+          whatsapp_message?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -171,15 +201,15 @@ export type Database = {
           pix_key?: string | null
           published?: boolean
           slug?: string
+          social_links?: Json
           template_id?: string | null
           theme?: string
           updated_at?: string
           user_id?: string
           whatsapp?: string | null
-          whatsapp_message?: string | null
           whatsapp_button_label?: string | null
           whatsapp_button_subtitle?: string | null
-          social_links?: Json
+          whatsapp_message?: string | null
         }
         Relationships: []
       }
@@ -280,57 +310,51 @@ export type Database = {
           },
         ]
       }
-      profiles: {
+      payment_subscriptions: {
         Row: {
-          city: string | null
-          company_name: string
+          cancel_at_period_end: boolean
           created_at: string
-          email: string
-          full_name: string
-          has_website: boolean | null
+          current_period_end: string | null
+          current_period_start: string | null
+          environment: string
           id: string
-          instagram: string | null
-          lead_score: number
-          lgpd_accepted_at: string | null
-          main_goal: string | null
-          niche: string | null
-          state: string | null
+          price_id: string | null
+          product_id: string | null
+          status: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
           updated_at: string
-          whatsapp: string
+          user_id: string
         }
         Insert: {
-          city?: string | null
-          company_name: string
+          cancel_at_period_end?: boolean
           created_at?: string
-          email: string
-          full_name: string
-          has_website?: boolean | null
-          id: string
-          instagram?: string | null
-          lead_score?: number
-          lgpd_accepted_at?: string | null
-          main_goal?: string | null
-          niche?: string | null
-          state?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
+          id?: string
+          price_id?: string | null
+          product_id?: string | null
+          status?: string
+          stripe_customer_id: string
+          stripe_subscription_id: string
           updated_at?: string
-          whatsapp: string
+          user_id: string
         }
         Update: {
-          city?: string | null
-          company_name?: string
+          cancel_at_period_end?: boolean
           created_at?: string
-          email?: string
-          full_name?: string
-          has_website?: boolean | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          environment?: string
           id?: string
-          instagram?: string | null
-          lead_score?: number
-          lgpd_accepted_at?: string | null
-          main_goal?: string | null
-          niche?: string | null
-          state?: string | null
+          price_id?: string | null
+          product_id?: string | null
+          status?: string
+          stripe_customer_id?: string
+          stripe_subscription_id?: string
           updated_at?: string
-          whatsapp?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -415,10 +439,64 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          city: string | null
+          company_name: string
+          created_at: string
+          email: string
+          full_name: string
+          has_website: boolean | null
+          id: string
+          instagram: string | null
+          lead_score: number
+          lgpd_accepted_at: string | null
+          main_goal: string | null
+          niche: string | null
+          state: string | null
+          updated_at: string
+          whatsapp: string
+        }
+        Insert: {
+          city?: string | null
+          company_name: string
+          created_at?: string
+          email: string
+          full_name: string
+          has_website?: boolean | null
+          id: string
+          instagram?: string | null
+          lead_score?: number
+          lgpd_accepted_at?: string | null
+          main_goal?: string | null
+          niche?: string | null
+          state?: string | null
+          updated_at?: string
+          whatsapp: string
+        }
+        Update: {
+          city?: string | null
+          company_name?: string
+          created_at?: string
+          email?: string
+          full_name?: string
+          has_website?: boolean | null
+          id?: string
+          instagram?: string | null
+          lead_score?: number
+          lgpd_accepted_at?: string | null
+          main_goal?: string | null
+          niche?: string | null
+          state?: string | null
+          updated_at?: string
+          whatsapp?: string
+        }
+        Relationships: []
+      }
       service_requests: {
         Row: {
-          created_at: string
           bio_page_id: string | null
+          created_at: string
           id: string
           message: string | null
           notes: string | null
@@ -429,8 +507,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          created_at?: string
           bio_page_id?: string | null
+          created_at?: string
           id?: string
           message?: string | null
           notes?: string | null
@@ -441,8 +519,8 @@ export type Database = {
           user_id: string
         }
         Update: {
-          created_at?: string
           bio_page_id?: string | null
+          created_at?: string
           id?: string
           message?: string | null
           notes?: string | null
@@ -452,7 +530,22 @@ export type Database = {
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "service_requests_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_requests_professional_service_id_fkey"
+            columns: ["professional_service_id"]
+            isOneToOne: false
+            referencedRelation: "professional_services"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -530,6 +623,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_active_payment_subscription: {
+        Args: { check_env?: string; user_uuid: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

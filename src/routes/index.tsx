@@ -57,11 +57,11 @@ function Landing() {
       <Nav />
       <Hero />
       <Difference />
-      <PublicPricingSection />
       <Templates onPreview={setPreviewTemplate} />
       <Benefits />
       <HowItWorks />
       <Testimonials />
+      <PublicPricingSection />
       <FinalCta />
       <Footer />
       <Dialog open={Boolean(previewTemplate)} onOpenChange={(open) => !open && setPreviewTemplate(null)}>

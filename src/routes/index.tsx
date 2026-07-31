@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PublicPricingSection } from "@/components/billing/PublicPricingSection";
 import {
   Dialog,
@@ -111,15 +111,38 @@ function Hero() {
 function TemplateRail({ featured = false, onPreview }: { featured?: boolean; onPreview?: (template: typeof templates[number]) => void }) {
   const items = featured ? templates.slice(0, 5) : templates;
   const [activeIndex, setActiveIndex] = useState(0);
+  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
+  const [direction, setDirection] = useState<"next" | "previous">("next");
   const [paused, setPaused] = useState(false);
+  const activeIndexRef = useRef(0);
+  const touchStartX = useRef<number | null>(null);
+  const exitTimer = useRef<number | undefined>(undefined);
+
+  const changeSlide = useCallback((nextIndex: number, nextDirection: "next" | "previous") => {
+    const currentIndex = activeIndexRef.current;
+    if (currentIndex === nextIndex) return;
+    activeIndexRef.current = nextIndex;
+    setPreviousIndex(currentIndex);
+    setDirection(nextDirection);
+    setActiveIndex(nextIndex);
+    if (exitTimer.current) window.clearTimeout(exitTimer.current);
+    exitTimer.current = window.setTimeout(() => setPreviousIndex(null), 460);
+  }, []);
+
+  const nextSlide = () => changeSlide((activeIndex + 1) % items.length, "next");
+  const previousSlide = () => changeSlide((activeIndex - 1 + items.length) % items.length, "previous");
 
   useEffect(() => {
     if (!featured || paused) return;
     const timer = window.setInterval(() => {
-      setActiveIndex((current) => (current + 1) % items.length);
+      changeSlide((activeIndexRef.current + 1) % items.length, "next");
     }, 4200);
     return () => window.clearInterval(timer);
-  }, [featured, items.length, paused]);
+  }, [changeSlide, featured, items.length, paused]);
+
+  useEffect(() => () => {
+    if (exitTimer.current) window.clearTimeout(exitTimer.current);
+  }, []);
 
   if (featured) {
     const current = items[activeIndex];
@@ -133,10 +156,23 @@ function TemplateRail({ featured = false, onPreview }: { featured?: boolean; onP
         onFocus={() => setPaused(true)}
         onBlur={() => setPaused(false)}
       >
-        <TemplatePhone key={current.name} template={current} featured />
-        <button type="button" aria-label="Exemplo anterior" className="absolute left-[-1rem] top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#0b0812]/90 text-white" onClick={() => setActiveIndex((activeIndex - 1 + items.length) % items.length)}><ArrowLeft className="h-4 w-4" /></button>
-        <button type="button" aria-label="Próximo exemplo" className="absolute right-[-1rem] top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#0b0812]/90 text-white" onClick={() => setActiveIndex((activeIndex + 1) % items.length)}><ArrowRight className="h-4 w-4" /></button>
-        <div className="mt-3 flex justify-center gap-1.5" aria-label="Indicadores do carrossel">{items.map((template, index) => <button key={template.name} type="button" aria-label={`Ver ${template.niche}`} aria-current={index === activeIndex} className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-5 bg-fuchsia-400" : "w-1.5 bg-white/30"}`} onClick={() => setActiveIndex(index)} />)}</div>
+        <div
+          className="landing-template-carousel"
+          onTouchStart={(event) => { touchStartX.current = event.touches[0]?.clientX ?? null; }}
+          onTouchEnd={(event) => {
+            const startX = touchStartX.current;
+            const endX = event.changedTouches[0]?.clientX;
+            touchStartX.current = null;
+            if (startX === null || endX === undefined || Math.abs(startX - endX) < 42) return;
+            if (startX > endX) nextSlide(); else previousSlide();
+          }}
+        >
+          {previousIndex !== null && <div aria-hidden="true" className={`landing-template-carousel-slide landing-template-carousel-exit-${direction}`}><TemplatePhone template={items[previousIndex]} featured /></div>}
+          <div key={current.name} className={`landing-template-carousel-slide landing-template-carousel-enter-${direction}`}><TemplatePhone template={current} featured /></div>
+        </div>
+        <button type="button" aria-label="Exemplo anterior" className="absolute left-[-1rem] top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#0b0812]/90 text-white" onClick={previousSlide}><ArrowLeft className="h-4 w-4" /></button>
+        <button type="button" aria-label="Próximo exemplo" className="absolute right-[-1rem] top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/20 bg-[#0b0812]/90 text-white" onClick={nextSlide}><ArrowRight className="h-4 w-4" /></button>
+        <div className="mt-3 flex justify-center gap-1.5" aria-label="Indicadores do carrossel">{items.map((template, index) => <button key={template.name} type="button" aria-label={`Ver ${template.niche}`} aria-current={index === activeIndex} className={`h-1.5 rounded-full transition-all ${index === activeIndex ? "w-5 bg-fuchsia-400" : "w-1.5 bg-white/30"}`} onClick={() => changeSlide(index, index > activeIndex ? "next" : "previous")} />)}</div>
       </div>
     );
   }

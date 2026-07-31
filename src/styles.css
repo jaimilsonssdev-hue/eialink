@@ -2635,7 +2635,13 @@
 
 /* Landing page: interactive miniature versions of the real BioLink structure. */
 .landing-template-phone { position: relative; isolation: isolate; }
-.landing-template-phone-featured { animation: landing-template-in .52s cubic-bezier(.2, .8, .2, 1); }
+.landing-template-phone-featured { animation: none; }
+.landing-template-carousel { position: relative; min-height: 27rem; overflow: hidden; touch-action: pan-y; }
+.landing-template-carousel-slide { position: absolute; inset: 0; width: 100%; will-change: transform, opacity; }
+.landing-template-carousel-enter-next { animation: landing-carousel-enter-next .46s cubic-bezier(.22, .7, .25, 1) both; }
+.landing-template-carousel-exit-next { animation: landing-carousel-exit-next .46s cubic-bezier(.22, .7, .25, 1) both; }
+.landing-template-carousel-enter-previous { animation: landing-carousel-enter-previous .46s cubic-bezier(.22, .7, .25, 1) both; }
+.landing-template-carousel-exit-previous { animation: landing-carousel-exit-previous .46s cubic-bezier(.22, .7, .25, 1) both; }
 .landing-template-demo { min-height: 15.4rem; color: #fff; background: #0d0a12; }
 .landing-template-demo-featured { min-height: 27rem; }
 .landing-template-cover { position: relative; display: flex; min-height: 4.5rem; align-items: flex-start; justify-content: space-between; padding: .58rem; overflow: hidden; background-position: center; background-size: cover; }
@@ -2654,6 +2660,9 @@
 .landing-template-footer { color: rgb(255 255 255 / .48); font-size: .28rem; }.landing-template-demo-featured .landing-template-footer { margin-top: .15rem; font-size: .47rem; }
 .landing-template-preview-hint { position: absolute; z-index: 2; right: .5rem; bottom: .45rem; padding: .23rem .38rem; border: 1px solid rgb(255 255 255 / .26); border-radius: 999px; color: #fff; background: rgb(10 7 16 / .78); font-size: .36rem; font-weight: 800; opacity: 0; transform: translateY(.25rem); transition: opacity .2s ease, transform .2s ease; }.landing-template-phone:hover .landing-template-preview-hint, .landing-template-phone:focus-visible .landing-template-preview-hint { opacity: 1; transform: none; }
 .landing-template-phone:not(.landing-template-phone-featured) { animation: landing-template-float 6s ease-in-out infinite; }.landing-template-phone:not(.landing-template-phone-featured):nth-child(2n) { animation-delay: -2s; }.landing-template-phone:not(.landing-template-phone-featured):nth-child(3n) { animation-delay: -4s; }
-@keyframes landing-template-in { from { opacity: 0; transform: translateY(.8rem) scale(.975); } to { opacity: 1; transform: none; } }
+@keyframes landing-carousel-enter-next { from { opacity: .65; transform: translateX(105%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes landing-carousel-exit-next { from { opacity: 1; transform: translateX(0); } to { opacity: .65; transform: translateX(-35%); } }
+@keyframes landing-carousel-enter-previous { from { opacity: .65; transform: translateX(-105%); } to { opacity: 1; transform: translateX(0); } }
+@keyframes landing-carousel-exit-previous { from { opacity: 1; transform: translateX(0); } to { opacity: .65; transform: translateX(35%); } }
 @keyframes landing-template-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-.28rem); } }
-@media (prefers-reduced-motion: reduce) { .landing-template-phone, .landing-template-phone-featured { animation: none !important; }.landing-template-preview-hint { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .landing-template-phone, .landing-template-phone-featured, .landing-template-carousel-slide { animation: none !important; }.landing-template-preview-hint { transition: none; } }

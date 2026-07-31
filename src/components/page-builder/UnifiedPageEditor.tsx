@@ -411,7 +411,7 @@ export function UnifiedPageEditor({
           )}
           {saveState === "error" && (
             <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
-              Não foi possível salvar. Confira sua conexão e tente novamente.
+              {validationMessage || "Não foi possível salvar. Confira sua conexão e tente novamente."}
             </p>
           )}
         </aside>

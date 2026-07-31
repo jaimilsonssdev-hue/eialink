@@ -5,6 +5,7 @@ import type { PageData } from "../types";
 import type { CSSProperties, ReactNode } from "react";
 import { layoutResolver } from "../layouts/LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
+import { PublicSocialLinks } from "@/components/public-profile/PublicSocialLinks";
 import { smartTemplateRegistry } from "../smart/SmartTemplateRegistry";
 import { CatalogSection } from "@/modules/products/components/CatalogSection";
 import { safeExternalUrl } from "@/lib/safe-url";
@@ -112,6 +113,7 @@ export function TemplateRenderer({
       ) : (
         <>
           {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, supplemental })}
+          <PublicSocialLinks bio={renderedBio} onTrack={onTrack} />
           {!model.template.components.includes("footer") && <Footer />}
         </>
       )}

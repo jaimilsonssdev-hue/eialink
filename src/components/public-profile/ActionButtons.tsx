@@ -11,17 +11,20 @@ interface ActionButtonsProps {
 
 export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
   const whatsappHref = whatsappUrl(bio.whatsapp, bio.whatsapp_message);
+  const hasWhatsAppCopy = Boolean(
+    bio.whatsapp_button_label?.trim() && bio.whatsapp_button_subtitle?.trim(),
+  );
   const validLinks = links
     .map((link) => ({ ...link, href: safeExternalUrl(link.url) }))
     .filter((link): link is typeof link & { href: string } => Boolean(link.href));
 
   // A newly created page can legitimately have no contacts yet. Do not leave
   // an empty action container in either the public page or its live preview.
-  if (!whatsappHref && validLinks.length === 0) return null;
+  if ((!whatsappHref || !hasWhatsAppCopy) && validLinks.length === 0) return null;
 
   return (
     <section className="public-profile-actions" aria-label="Links e formas de contato">
-      {whatsappHref && (
+      {whatsappHref && hasWhatsAppCopy && (
         <a
           href={whatsappHref}
           target="_blank"
@@ -33,8 +36,8 @@ export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
             <MessageCircle className="h-5 w-5" />
           </span>
           <span className="min-w-0 flex-1 text-left">
-            <span className="block font-semibold">{bio.whatsapp_button_label || "Falar no WhatsApp"}</span>
-            <span className="block text-xs opacity-80">Resposta rápida</span>
+            <span className="block font-semibold">{bio.whatsapp_button_label}</span>
+            <span className="block text-xs opacity-80">{bio.whatsapp_button_subtitle}</span>
           </span>
           <ArrowUpRight className="h-5 w-5 opacity-80" aria-hidden />
         </a>

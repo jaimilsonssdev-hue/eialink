@@ -19,6 +19,8 @@ import {
   X,
   PanelsTopLeft,
   ShoppingBag,
+  CreditCard,
+
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({

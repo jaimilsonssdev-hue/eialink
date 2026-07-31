@@ -2632,3 +2632,28 @@
   .builder-preview-stage { order: 2; scroll-margin-top: 5.5rem; }
   .builder-inspector .input-base, .builder-inspector select, .builder-inspector textarea { min-height: 2.9rem; font-size: 16px; }
 }
+
+/* Landing page: interactive miniature versions of the real BioLink structure. */
+.landing-template-phone { position: relative; isolation: isolate; }
+.landing-template-phone-featured { animation: landing-template-in .52s cubic-bezier(.2, .8, .2, 1); }
+.landing-template-demo { min-height: 15.4rem; color: #fff; background: #0d0a12; }
+.landing-template-demo-featured { min-height: 27rem; }
+.landing-template-cover { position: relative; display: flex; min-height: 4.5rem; align-items: flex-start; justify-content: space-between; padding: .58rem; overflow: hidden; background-position: center; background-size: cover; }
+.landing-template-demo-featured .landing-template-cover { min-height: 10.2rem; padding: .9rem; }
+.landing-template-cover span { max-width: 65%; color: #fff; font-size: .37rem; font-weight: 900; letter-spacing: .1em; line-height: 1.2; }
+.landing-template-cover small { padding: .22rem .36rem; border: 1px solid rgb(255 255 255 / .45); border-radius: 999px; background: rgb(0 0 0 / .28); color: #fff; font-size: .33rem; font-weight: 800; }
+.landing-template-demo-featured .landing-template-cover span { font-size: .62rem; }.landing-template-demo-featured .landing-template-cover small { font-size: .52rem; }
+.landing-template-content { position: relative; display: grid; gap: .3rem; padding: 0 .58rem .65rem; text-align: center; }
+.landing-template-demo-featured .landing-template-content { gap: .48rem; padding: 0 .95rem 1.1rem; }
+.landing-template-avatar { display: grid; width: 1.7rem; height: 1.7rem; margin: -1rem auto 0; place-items: center; border: 2px solid #0d0a12; border-radius: 50%; color: #fff; box-shadow: 0 4px 12px rgb(0 0 0 / .35); }
+.landing-template-avatar svg { width: .8rem; height: .8rem; }.landing-template-demo-featured .landing-template-avatar { width: 3.1rem; height: 3.1rem; margin-top: -1.65rem; border-width: 3px; }.landing-template-demo-featured .landing-template-avatar svg { width: 1.35rem; height: 1.35rem; }
+.landing-template-content > b { overflow: hidden; font-size: .67rem; font-weight: 850; letter-spacing: -.03em; text-overflow: ellipsis; white-space: nowrap; }.landing-template-demo-featured .landing-template-content > b { font-family: var(--font-display, inherit); font-size: 1.23rem; }
+.landing-template-content > p { margin: 0; overflow: hidden; color: rgb(255 255 255 / .72); font-size: .42rem; text-overflow: ellipsis; white-space: nowrap; }.landing-template-demo-featured .landing-template-content > p { font-size: .68rem; }
+.landing-template-action { display: flex; min-height: 1.45rem; align-items: center; justify-content: center; gap: .25rem; margin-top: .2rem; padding: .25rem; border-radius: .38rem; color: #fff; font-size: .38rem; font-weight: 850; box-shadow: 0 9px 15px -13px rgb(0 0 0 / .9); }.landing-template-action svg { width: .55rem; height: .55rem; }.landing-template-demo-featured .landing-template-action { min-height: 2.45rem; border-radius: .64rem; font-size: .68rem; }.landing-template-demo-featured .landing-template-action svg { width: .95rem; height: .95rem; }
+.landing-template-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: .22rem; }.landing-template-items span { display: grid; gap: .15rem; overflow: hidden; padding: .3rem .12rem; border: 1px solid rgb(255 255 255 / .12); border-radius: .28rem; color: rgb(255 255 255 / .8); font-size: .32rem; text-overflow: ellipsis; white-space: nowrap; }.landing-template-items i { display: block; height: .7rem; border-radius: .15rem; background: rgb(255 255 255 / .16); }.landing-template-demo-featured .landing-template-items { gap: .4rem; }.landing-template-demo-featured .landing-template-items span { gap: .26rem; padding: .48rem .22rem; border-radius: .48rem; font-size: .52rem; }.landing-template-demo-featured .landing-template-items i { height: 1.18rem; border-radius: .25rem; }
+.landing-template-footer { color: rgb(255 255 255 / .48); font-size: .28rem; }.landing-template-demo-featured .landing-template-footer { margin-top: .15rem; font-size: .47rem; }
+.landing-template-preview-hint { position: absolute; z-index: 2; right: .5rem; bottom: .45rem; padding: .23rem .38rem; border: 1px solid rgb(255 255 255 / .26); border-radius: 999px; color: #fff; background: rgb(10 7 16 / .78); font-size: .36rem; font-weight: 800; opacity: 0; transform: translateY(.25rem); transition: opacity .2s ease, transform .2s ease; }.landing-template-phone:hover .landing-template-preview-hint, .landing-template-phone:focus-visible .landing-template-preview-hint { opacity: 1; transform: none; }
+.landing-template-phone:not(.landing-template-phone-featured) { animation: landing-template-float 6s ease-in-out infinite; }.landing-template-phone:not(.landing-template-phone-featured):nth-child(2n) { animation-delay: -2s; }.landing-template-phone:not(.landing-template-phone-featured):nth-child(3n) { animation-delay: -4s; }
+@keyframes landing-template-in { from { opacity: 0; transform: translateY(.8rem) scale(.975); } to { opacity: 1; transform: none; } }
+@keyframes landing-template-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-.28rem); } }
+@media (prefers-reduced-motion: reduce) { .landing-template-phone, .landing-template-phone-featured { animation: none !important; }.landing-template-preview-hint { transition: none; } }

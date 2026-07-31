@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { AnalyticsService } from "@/modules/analytics/services/AnalyticsService";
 import {
   Eye,
@@ -27,13 +28,22 @@ const EVENT_LABELS: Record<string, { label: string; icon: React.ElementType; col
 };
 
 function AnalyticsPage() {
-  const { data } = useQuery({
-    queryKey: ["analytics"],
-    queryFn: AnalyticsService.getCurrentPageEvents,
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: ["analytics", selectedPageId],
+    queryFn: () => AnalyticsService.getCurrentPageEvents(selectedPageId),
   });
 
-  if (!data)
-    return <p className="text-muted-foreground">Crie sua bio para começar a coletar analytics.</p>;
+  if (isLoading) {
+    return <div className="premium-page"><div className="h-44 animate-pulse rounded-3xl bg-surface-elevated" /></div>;
+  }
+
+  if (isError) {
+    return <div className="premium-page"><div className="premium-panel"><h1>Não foi possível carregar os resultados</h1><p className="mt-2 text-muted-foreground">{error instanceof Error ? error.message : "Verifique sua conexão e tente novamente."}</p></div></div>;
+  }
+
+  if (!data?.bio)
+    return <div className="premium-page"><div className="premium-panel"><h1>Crie uma BioLink para começar</h1><p className="mt-2 text-muted-foreground">As visualizações e os cliques aparecerão aqui quando sua página pública receber visitas.</p></div></div>;
 
   const total = data.events.length;
   const byType = data.events.reduce<Record<string, number>>((acc, e) => {
@@ -83,6 +93,22 @@ function AnalyticsPage() {
         <p>
           Acompanhe o desempenho da sua página em tempo real.
         </p>
+        {data.pages.length > 1 && (
+          <label className="mt-4 block max-w-sm text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
+            BioLink analisada
+            <select
+              className="input-base mt-2 normal-case tracking-normal"
+              value={data.bio.id}
+              onChange={(event) => setSelectedPageId(event.target.value)}
+            >
+              {data.pages.map((page) => (
+                <option key={page.id} value={page.id}>
+                  {page.display_name} {page.published ? "" : "(rascunho)"}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

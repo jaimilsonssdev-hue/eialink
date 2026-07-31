@@ -31,6 +31,20 @@ export function LegalPage({
         <div className="legal-content mt-9 space-y-7 text-sm leading-7 text-[#d8d0e1]">
           {children}
         </div>
+        <section className="mt-9 rounded-2xl border border-violet-300/20 bg-violet-500/[.06] p-5 text-sm leading-6 text-[#d8d0e1]">
+          <h2 className="font-display text-lg font-semibold text-white">
+            Responsável pela plataforma
+          </h2>
+          <p className="mt-2">
+            <strong>Jaimilson Santos Silva</strong>, representante da Talento Marketing Digital
+            <br />
+            CPF: 048.299.655-25
+            <br />
+            Rua Dr. José André da Cruz, 437, Vila Vargas
+            <br />
+            Teixeira de Freitas — Bahia, Brasil — CEP 45993-042
+          </p>
+        </section>
         <p className="mt-10 border-t border-white/10 pt-5 text-xs leading-5 text-[#a99fb5]">
           Este texto é uma base operacional para a plataforma. Antes de iniciar cobrança ou operação
           comercial, revise-o com assessoria jurídica e complete os dados da empresa e do canal de

@@ -370,6 +370,7 @@ export type Database = {
           name: string
           position: number
           price_cents: number
+          stripe_product_id: string | null
           slug: string
           updated_at: string
         }
@@ -384,6 +385,7 @@ export type Database = {
           name: string
           position?: number
           price_cents?: number
+          stripe_product_id?: string | null
           slug: string
           updated_at?: string
         }
@@ -398,6 +400,7 @@ export type Database = {
           name?: string
           position?: number
           price_cents?: number
+          stripe_product_id?: string | null
           slug?: string
           updated_at?: string
         }

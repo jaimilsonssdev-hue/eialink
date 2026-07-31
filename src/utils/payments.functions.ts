@@ -1,13 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import {
-  type StripeEnv,
-  createStripeClient,
-  getStripeErrorMessage,
-} from "@/lib/stripe.server";
+import type { Json } from "@/integrations/supabase/types";
+import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
 
 type CheckoutSessionResult = { clientSecret: string } | { error: string };
 type PortalSessionResult = { url: string } | { error: string };
+type PlanPriceUpdateResult = { priceId: string | null } | { error: string };
 
 async function resolveOrCreateCustomer(
   stripe: ReturnType<typeof createStripeClient>,
@@ -128,6 +126,121 @@ export const createPortalSession = createServerFn({ method: "POST" })
         ...(data.returnUrl && { return_url: data.returnUrl }),
       });
       return { url: portal.url };
+    } catch (error) {
+      return { error: getStripeErrorMessage(error) };
+    }
+  });
+
+/**
+ * Stripe prices cannot have their amount changed. An admin price update creates
+ * a new price and transfers the stable lookup key used by checkout.
+ */
+export const updatePlanPrice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: {
+      planId: string;
+      name: string;
+      description: string | null;
+      priceCents: number;
+      active: boolean;
+      limits: Record<string, unknown>;
+      environment: StripeEnv;
+    }) => {
+      if (!/^[0-9a-f-]{36}$/i.test(data.planId)) throw new Error("Invalid planId");
+      if (!Number.isInteger(data.priceCents) || data.priceCents < 0) {
+        throw new Error("Invalid priceCents");
+      }
+      if (!data.name.trim() || data.name.length > 100) throw new Error("Invalid plan name");
+      if (data.description && data.description.length > 500) throw new Error("Invalid description");
+      return data;
+    },
+  )
+  .handler(async ({ data, context }): Promise<PlanPriceUpdateResult> => {
+    const { data: roles } = await context.supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", context.userId);
+
+    if (!roles?.some((role) => role.role === "admin")) {
+      return { error: "Apenas Super Admin pode alterar valores." };
+    }
+
+    const { data: plan, error: planError } = await context.supabase
+      .from("plans")
+      .select("id, slug, billing_interval, stripe_product_id")
+      .eq("id", data.planId)
+      .single();
+
+    if (planError || !plan) return { error: "Plano não encontrado." };
+
+    try {
+      let stripeProductId = plan.stripe_product_id;
+      let stripePriceId: string | null = null;
+
+      if (data.priceCents > 0) {
+        const stripe = createStripeClient(data.environment);
+        const lookupKey = `${plan.slug}_${plan.billing_interval}`;
+        if (stripeProductId) {
+          await stripe.products.update(stripeProductId, {
+            name: data.name.trim(),
+            description: data.description ?? undefined,
+            metadata: { planId: plan.id, planSlug: plan.slug },
+          });
+        } else {
+          const existingPrices = await stripe.prices.list({
+            lookup_keys: [lookupKey],
+            active: true,
+            limit: 1,
+          });
+          const existingProduct = existingPrices.data[0]?.product;
+          stripeProductId =
+            typeof existingProduct === "string" ? existingProduct : existingProduct?.id;
+
+          if (stripeProductId) {
+            await stripe.products.update(stripeProductId, {
+              name: data.name.trim(),
+              description: data.description ?? undefined,
+              metadata: { planId: plan.id, planSlug: plan.slug },
+            });
+          } else {
+            const product = await stripe.products.create({
+              name: data.name.trim(),
+              description: data.description ?? undefined,
+              metadata: { planId: plan.id, planSlug: plan.slug },
+            });
+            stripeProductId = product.id;
+          }
+        }
+
+        const price = await stripe.prices.create({
+          product: stripeProductId,
+          currency: "brl",
+          unit_amount: data.priceCents,
+          lookup_key: lookupKey,
+          transfer_lookup_key: true,
+          ...(plan.billing_interval !== "one_time" && {
+            recurring: { interval: plan.billing_interval === "yearly" ? "year" : "month" },
+          }),
+          metadata: { planId: plan.id, planSlug: plan.slug },
+        });
+        stripePriceId = price.id;
+      }
+
+      const { error: updateError } = await context.supabase
+        .from("plans")
+        .update({
+          name: data.name.trim(),
+          description: data.description,
+          price_cents: data.priceCents,
+          active: data.active,
+          limits: data.limits as Json,
+          stripe_product_id: stripeProductId,
+        })
+        .eq("id", plan.id);
+
+      if (updateError) throw updateError;
+      return { priceId: stripePriceId };
     } catch (error) {
       return { error: getStripeErrorMessage(error) };
     }

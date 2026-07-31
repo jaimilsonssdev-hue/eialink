@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Users, TrendingUp, Send, Download, CreditCard, ShieldCheck } from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import { toPlanLimits, type Plan, type ProfessionalService } from "@/modules/billing/types";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { updatePlanPrice } from "@/utils/payments.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Super Admin — EIA Digital" }, { name: "robots", content: "noindex" }] }),
@@ -39,8 +41,22 @@ function AdminPage() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
   });
   const updatePlan = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: Parameters<typeof BillingService.updatePlan>[1] }) =>
-      BillingService.updatePlan(id, input),
+    mutationFn: async ({ id, input, syncPrice }: { id: string; input: Parameters<typeof BillingService.updatePlan>[1]; syncPrice: boolean }) => {
+      if (!syncPrice) return BillingService.updatePlan(id, input);
+      const result = await updatePlanPrice({
+        data: {
+          planId: id,
+          name: input.name ?? "",
+          description: input.description ?? null,
+          priceCents: input.price_cents ?? 0,
+          active: input.active ?? true,
+          limits: (input.limits ?? {}) as Record<string, unknown>,
+          environment: getStripeEnvironment(),
+        },
+      });
+      if ("error" in result) throw new Error(result.error);
+      return result;
+    },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
   });
   const updateService = useMutation({
@@ -86,9 +102,9 @@ function AdminPage() {
           <span className="text-sm text-muted-foreground">{data?.services.length ?? 0} serviços profissionais ativos</span>
         </div>
         <div className="grid gap-4 xl:grid-cols-3">
-          {data?.plans.map((plan) => <PlanEditor key={plan.id} plan={plan} saving={updatePlan.isPending} onSave={(id, input) => updatePlan.mutate({ id, input })} />)}
+          {data?.plans.map((plan) => <PlanEditor key={plan.id} plan={plan} saving={updatePlan.isPending} onSave={(id, input, syncPrice) => updatePlan.mutate({ id, input, syncPrice })} />)}
         </div>
-        {updatePlan.isError && <p className="mt-3 text-sm text-red-400">Não foi possível salvar o plano. Verifique a conexão e tente novamente.</p>}
+        {updatePlan.isError && <p className="mt-3 text-sm text-red-400">{updatePlan.error instanceof Error ? updatePlan.error.message : "Não foi possível salvar o plano. Verifique a conexão e tente novamente."}</p>}
       </section>
       <section className="card-surface overflow-x-auto">
         <div className="mb-4 flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-[color:var(--accent)]" /><div><h2 className="font-bold">Assinaturas</h2><p className="text-sm text-muted-foreground">Altere o plano ou status de cada conta. A validação é feita pelo banco.</p></div></div>
@@ -141,18 +157,20 @@ function Card({ icon: Icon, label, v }: { icon: React.ElementType; label: string
 const Th = ({ children }: { children: React.ReactNode }) => <th className="text-left px-3 py-2">{children}</th>;
 const Td = ({ children }: { children: React.ReactNode }) => <td className="px-3 py-3">{children}</td>;
 
-function PlanEditor({ plan, saving, onSave }: { plan: Plan; saving: boolean; onSave: (id: string, input: Parameters<typeof BillingService.updatePlan>[1]) => void }) {
+function PlanEditor({ plan, saving, onSave }: { plan: Plan; saving: boolean; onSave: (id: string, input: Parameters<typeof BillingService.updatePlan>[1], syncPrice: boolean) => void }) {
   const baseLimits = toPlanLimits(plan.limits);
   const [name, setName] = useState(plan.name);
   const [description, setDescription] = useState(plan.description ?? "");
   const [price, setPrice] = useState(String(plan.price_cents / 100));
   const [active, setActive] = useState(plan.active);
   const [limits, setLimits] = useState(baseLimits);
-  const save = () => onSave(plan.id, { name: name.trim() || plan.name, description: description.trim() || null, price_cents: Math.max(0, Math.round(Number(price.replace(",", ".")) * 100) || 0), active, limits });
+  const priceCents = Math.max(0, Math.round(Number(price.replace(",", ".")) * 100) || 0);
+  const save = () => onSave(plan.id, { name: name.trim() || plan.name, description: description.trim() || null, price_cents: priceCents, active, limits }, priceCents !== plan.price_cents);
   return <article className="rounded-2xl border border-border bg-surface-elevated/30 p-4">
     <div className="mb-3 flex items-center justify-between gap-2"><input className="input-base font-semibold" value={name} aria-label="Nome do plano" onChange={(event) => setName(event.target.value)} /><label className="flex shrink-0 items-center gap-2 text-xs"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} /> Ativo</label></div>
     <label className="block text-xs text-muted-foreground">Descrição exibida na landing page<textarea className="input-base mt-1 min-h-20" value={description} onChange={(event) => setDescription(event.target.value)} /></label>
     <label className="block text-xs text-muted-foreground">Valor mensal (R$)<input className="input-base mt-1" inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} /></label>
+    <p className="mt-2 text-xs text-muted-foreground">Ao alterar o valor de um plano pago, um novo preço será criado no Stripe e usado no próximo checkout.</p>
     <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
       <LimitField label="BioLinks" value={limits.bio_pages} onChange={(value) => setLimits({ ...limits, bio_pages: value })} />
       <LimitField label="Links" value={limits.links} onChange={(value) => setLimits({ ...limits, links: value })} />

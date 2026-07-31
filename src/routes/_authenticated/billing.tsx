@@ -7,6 +7,8 @@ import { getStripeEnvironment } from "@/lib/stripe";
 import { createPortalSession } from "@/utils/payments.functions";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { BillingService } from "@/modules/billing/services/BillingService";
+import { formatPlanPrice } from "@/modules/billing/types";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
@@ -75,6 +77,10 @@ function BillingPage() {
   });
 
   const activePriceId = account?.subscription?.price_id ?? null;
+  const { data: platformPlans = [] } = useQuery({
+    queryKey: ["billing-plans"],
+    queryFn: BillingService.listPublicPlans,
+  });
 
   async function openPortal() {
     setPortalError(null);
@@ -130,6 +136,12 @@ function BillingPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         {PAID_PLANS.map((plan) => {
+          const configuredPlan = platformPlans.find((item) => item.slug === plan.slug);
+          const displayedName = configuredPlan?.name ?? plan.name;
+          const displayedDescription = configuredPlan?.description ?? plan.description;
+          const displayedPrice = configuredPlan
+            ? formatPlanPrice(configuredPlan.price_cents, configuredPlan.billing_interval)
+            : `${plan.price}/mês`;
           const current = activePriceId === plan.priceId;
           return (
             <article
@@ -137,17 +149,16 @@ function BillingPage() {
               className={`card-surface flex flex-col ${plan.highlight ? "ring-1 ring-[color:var(--primary)]/40" : ""}`}
             >
               <div className="flex items-center justify-between gap-2">
-                <h2 className="text-xl font-bold">{plan.name}</h2>
+                <h2 className="text-xl font-bold">{displayedName}</h2>
                 {plan.highlight && (
                   <span className="inline-flex items-center gap-1 rounded-full bg-[color:var(--primary)]/15 px-3 py-1 text-xs font-semibold text-[color:var(--primary)]">
                     <Sparkles className="h-3 w-3" /> Mais escolhido
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-sm text-muted-foreground">{plan.description}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{displayedDescription}</p>
               <p className="mt-4 text-3xl font-bold">
-                {plan.price}
-                <span className="text-base font-medium text-muted-foreground">/mês</span>
+                {displayedPrice}
               </p>
               <ul className="mt-4 space-y-2 text-sm">
                 {plan.features.map((feature) => (
@@ -170,7 +181,7 @@ function BillingPage() {
                   })
                 }
               >
-                {current ? "Plano atual" : `Assinar ${plan.name}`}
+                {current ? "Plano atual" : `Assinar ${displayedName}`}
               </button>
             </article>
           );

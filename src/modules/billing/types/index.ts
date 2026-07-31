@@ -35,3 +35,17 @@ export function toPlanFeatures(value: Json): PlanFeatures {
     custom_domain: Boolean(input.custom_domain),
   };
 }
+
+export function formatPlanPrice(priceCents: number, interval: string): string {
+  if (priceCents === 0) return "Grátis";
+
+  const value = new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+    minimumFractionDigits: 2,
+  }).format(priceCents / 100);
+
+  if (interval === "yearly") return `${value}/ano`;
+  if (interval === "one_time") return value;
+  return `${value}/mês`;
+}

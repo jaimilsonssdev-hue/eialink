@@ -144,12 +144,14 @@ const Td = ({ children }: { children: React.ReactNode }) => <td className="px-3 
 function PlanEditor({ plan, saving, onSave }: { plan: Plan; saving: boolean; onSave: (id: string, input: Parameters<typeof BillingService.updatePlan>[1]) => void }) {
   const baseLimits = toPlanLimits(plan.limits);
   const [name, setName] = useState(plan.name);
+  const [description, setDescription] = useState(plan.description ?? "");
   const [price, setPrice] = useState(String(plan.price_cents / 100));
   const [active, setActive] = useState(plan.active);
   const [limits, setLimits] = useState(baseLimits);
-  const save = () => onSave(plan.id, { name: name.trim() || plan.name, price_cents: Math.max(0, Math.round(Number(price.replace(",", ".")) * 100) || 0), active, limits });
+  const save = () => onSave(plan.id, { name: name.trim() || plan.name, description: description.trim() || null, price_cents: Math.max(0, Math.round(Number(price.replace(",", ".")) * 100) || 0), active, limits });
   return <article className="rounded-2xl border border-border bg-surface-elevated/30 p-4">
     <div className="mb-3 flex items-center justify-between gap-2"><input className="input-base font-semibold" value={name} aria-label="Nome do plano" onChange={(event) => setName(event.target.value)} /><label className="flex shrink-0 items-center gap-2 text-xs"><input type="checkbox" checked={active} onChange={(event) => setActive(event.target.checked)} /> Ativo</label></div>
+    <label className="block text-xs text-muted-foreground">Descrição exibida na landing page<textarea className="input-base mt-1 min-h-20" value={description} onChange={(event) => setDescription(event.target.value)} /></label>
     <label className="block text-xs text-muted-foreground">Valor mensal (R$)<input className="input-base mt-1" inputMode="decimal" value={price} onChange={(event) => setPrice(event.target.value)} /></label>
     <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
       <LimitField label="BioLinks" value={limits.bio_pages} onChange={(value) => setLimits({ ...limits, bio_pages: value })} />

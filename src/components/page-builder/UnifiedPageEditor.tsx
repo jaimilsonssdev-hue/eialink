@@ -6,6 +6,7 @@ import type { PublicBio, PublicLink } from "@/components/public-profile/types";
 import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
+import { parseSocialLinks } from "@/lib/social-links";
 
 import type { CatalogItem } from "@/modules/products/types";
 
@@ -161,6 +162,7 @@ export function UnifiedPageEditor({
   const [draftTemplate, setDraftTemplate] = useState(initialBio.template_id ?? "default");
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
+  const [validationMessage, setValidationMessage] = useState<string>();
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
     JSON.stringify({ initialBio, initialLinks, initialProducts }),
   );
@@ -229,6 +231,13 @@ export function UnifiedPageEditor({
     setLinks((current) => current.map((link) => (link.id === id ? { ...link, ...patch } : link)));
 
   async function save() {
+    const socialValidation = parseSocialLinks(bio.social_links);
+    if (!socialValidation.success) {
+      setValidationMessage(socialValidation.error.issues[0]?.message ?? "Revise os links das redes sociais.");
+      setSaveState("error");
+      return;
+    }
+    setValidationMessage(undefined);
     setSaving(true);
     setSaveState("idle");
     try {
@@ -402,7 +411,7 @@ export function UnifiedPageEditor({
           )}
           {saveState === "error" && (
             <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
-              Não foi possível salvar. Confira sua conexão e tente novamente.
+              {validationMessage || "Não foi possível salvar. Confira sua conexão e tente novamente."}
             </p>
           )}
         </aside>
@@ -615,7 +624,10 @@ function SectionForm({
                     value={value}
                     placeholder={id === "instagram" ? defaults.instagram || placeholder : placeholder}
                     onChange={(event) => {
-                      const next = { ...values, [id]: event.target.value.trim() };
+                      const next = { ...values };
+                      const nextValue = event.target.value.trim();
+                      if (nextValue) next[id] = nextValue;
+                      else delete next[id];
                       updateBio({
                         social_links: next,
                         ...(id === "instagram" ? { instagram: event.target.value.trim() } : {}),

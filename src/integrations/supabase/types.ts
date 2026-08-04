@@ -371,6 +371,7 @@ export type Database = {
           position: number
           price_cents: number
           slug: string
+          stripe_product_id: string | null
           updated_at: string
         }
         Insert: {
@@ -385,6 +386,7 @@ export type Database = {
           position?: number
           price_cents?: number
           slug: string
+          stripe_product_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -399,6 +401,7 @@ export type Database = {
           position?: number
           price_cents?: number
           slug?: string
+          stripe_product_id?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -2,7 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const Route = createFileRoute("/privacy")({
-  head: () => ({ meta: [{ title: "Política de Privacidade — EIA Link" }] }),
+  head: () => ({ meta: [
+    { title: "Política de Privacidade — EIA Link" },
+    { name: "description", content: "Saiba como a EIA Link coleta, usa e protege seus dados pessoais conforme a LGPD." },
+    { property: "og:title", content: "Política de Privacidade — EIA Link" },
+    { property: "og:description", content: "Saiba como a EIA Link coleta, usa e protege seus dados pessoais conforme a LGPD." },
+    { property: "og:type", content: "article" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: PrivacyPage,
 });
 

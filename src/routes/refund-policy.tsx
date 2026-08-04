@@ -2,7 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const Route = createFileRoute("/refund-policy")({
-  head: () => ({ meta: [{ title: "Política de Reembolso — EIA Link" }] }),
+  head: () => ({ meta: [
+    { title: "Política de Reembolso — EIA Link" },
+    { name: "description", content: "Regras de reembolso e cancelamento das assinaturas da EIA Link, com prazos e como solicitar." },
+    { property: "og:title", content: "Política de Reembolso — EIA Link" },
+    { property: "og:description", content: "Regras de reembolso e cancelamento das assinaturas da EIA Link, com prazos e como solicitar." },
+    { property: "og:type", content: "article" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: RefundPolicyPage,
 });
 

@@ -65,6 +65,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "EIA Digital — Crie sua presença digital gratuitamente" },
       { name: "description", content: "Tenha uma página profissional com WhatsApp, Pix, redes sociais e analytics. Ferramenta gratuita da EIA Digital para pequenos negócios." },
       { name: "author", content: "EIA Digital" },
+      { name: "robots", content: "index, follow, max-image-preview:large" },
+      { name: "googlebot", content: "index, follow, max-image-preview:large" },
       { property: "og:title", content: "EIA Digital — Crie sua presença digital gratuitamente" },
       { property: "og:description", content: "Tenha uma página profissional com WhatsApp, Pix, redes sociais e analytics. Ferramenta gratuita da EIA Digital para pequenos negócios." },
       { property: "og:type", content: "website" },

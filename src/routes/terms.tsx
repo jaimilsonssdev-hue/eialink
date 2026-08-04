@@ -2,7 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { LegalPage, LegalSection } from "@/components/legal/LegalPage";
 
 export const Route = createFileRoute("/terms")({
-  head: () => ({ meta: [{ title: "Termos de Serviço — EIA Link" }] }),
+  head: () => ({ meta: [
+    { title: "Termos de Serviço — EIA Link" },
+    { name: "description", content: "Condições de uso da plataforma EIA Link: planos, responsabilidades, conteúdo e cancelamento." },
+    { property: "og:title", content: "Termos de Serviço — EIA Link" },
+    { property: "og:description", content: "Condições de uso da plataforma EIA Link: planos, responsabilidades, conteúdo e cancelamento." },
+    { property: "og:type", content: "article" },
+    { name: "twitter:card", content: "summary_large_image" },
+  ] }),
   component: TermsPage,
 });
 

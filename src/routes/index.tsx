@@ -20,7 +20,26 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "EIA Link — Vitrines digitais que vendem" },
-      { name: "description", content: "Crie seu Biolink premium em minutos e transforme visitantes em clientes." },
+      { name: "description", content: "Crie seu Biolink premium em minutos: WhatsApp, Pix, catálogo, redes sociais e analytics. Transforme visitantes em clientes." },
+      { property: "og:title", content: "EIA Link — Vitrines digitais que vendem" },
+      { property: "og:description", content: "Crie seu Biolink premium em minutos: WhatsApp, Pix, catálogo, redes sociais e analytics. Transforme visitantes em clientes." },
+      { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://eialink.com.br/" },
+      { name: "twitter:title", content: "EIA Link — Vitrines digitais que vendem" },
+      { name: "twitter:description", content: "Crie seu Biolink premium em minutos: WhatsApp, Pix, catálogo, redes sociais e analytics." },
+    ],
+    links: [{ rel: "canonical", href: "https://eialink.com.br/" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "EIA Link",
+          url: "https://eialink.com.br/",
+          inLanguage: "pt-BR",
+        }),
+      },
     ],
   }),
   component: Landing,

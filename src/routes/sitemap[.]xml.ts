@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
+import { supabase } from "@/integrations/supabase/client";
 
 const BASE_URL = "https://eialink.com.br";
 
@@ -15,11 +16,20 @@ export const Route = createFileRoute("/sitemap.xml")({
       GET: async () => {
         const entries: SitemapEntry[] = [
           { path: "/", changefreq: "weekly", priority: "1.0" },
-          { path: "/auth", changefreq: "monthly", priority: "0.5" },
           { path: "/privacy", changefreq: "yearly", priority: "0.3" },
           { path: "/terms", changefreq: "yearly", priority: "0.3" },
           { path: "/refund-policy", changefreq: "yearly", priority: "0.3" },
         ];
+
+        const { data: pages } = await supabase
+          .from("bio_pages")
+          .select("slug")
+          .eq("published", true);
+
+        for (const page of pages ?? []) {
+          entries.push({ path: `/p/${page.slug}`, changefreq: "weekly", priority: "0.7" });
+        }
+
 
         const urls = entries.map((e) =>
           [

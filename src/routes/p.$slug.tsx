@@ -48,23 +48,49 @@ export const Route = createFileRoute("/p/$slug")({
       products: (products ?? []) as CatalogItem[],
     };
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData
-      ? [
-          { title: `${loaderData.bio.display_name} — EIA Digital` },
-          {
-            name: "description",
-            content:
-              loaderData.bio.description ??
-              `Página profissional de ${loaderData.bio.display_name}.`,
-          },
-          { property: "og:title", content: loaderData.bio.display_name },
-          { property: "og:description", content: loaderData.bio.description ?? "" },
-          { property: "og:type", content: "profile" },
-          { name: "twitter:card", content: "summary_large_image" },
-        ]
-      : [{ title: "Página não encontrada" }, { name: "robots", content: "noindex" }],
-  }),
+  head: ({ params, loaderData }) => {
+    const url = `https://eialink.com.br/p/${params.slug}`;
+    if (!loaderData) {
+      return {
+        meta: [{ title: "Página não encontrada" }, { name: "robots", content: "noindex" }],
+      };
+    }
+    const { bio } = loaderData;
+    const description = bio.description ?? `Página profissional de ${bio.display_name}.`;
+    const image = bio.cover_url ?? bio.avatar_url ?? null;
+    return {
+      meta: [
+        { title: `${bio.display_name} — EIA Link` },
+        { name: "description", content: description },
+        { property: "og:title", content: bio.display_name },
+        { property: "og:description", content: description },
+        { property: "og:type", content: "profile" },
+        { property: "og:url", content: url },
+        { name: "twitter:title", content: bio.display_name },
+        { name: "twitter:description", content: description },
+        ...(image && image.startsWith("https://")
+          ? [
+              { property: "og:image", content: image },
+              { name: "twitter:image", content: image },
+            ]
+          : []),
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "ProfilePage",
+            name: bio.display_name,
+            description,
+            url,
+            ...(image ? { image } : {}),
+          }),
+        },
+      ],
+    };
+  },
   component: PublicBio,
   notFoundComponent: () => (
     <div className="min-h-screen grid place-items-center px-4 text-center">

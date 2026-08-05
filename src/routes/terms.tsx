@@ -8,8 +8,8 @@ export const Route = createFileRoute("/terms")({
     { property: "og:title", content: "Termos de Serviço — EIA Link" },
     { property: "og:description", content: "Condições de uso da plataforma EIA Link: planos, responsabilidades, conteúdo e cancelamento." },
     { property: "og:type", content: "article" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+    { property: "og:url", content: "https://eialink.com.br/terms" },
+  ], links: [{ rel: "canonical", href: "https://eialink.com.br/terms" }] }),
   component: TermsPage,
 });
 

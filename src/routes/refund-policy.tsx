@@ -8,8 +8,8 @@ export const Route = createFileRoute("/refund-policy")({
     { property: "og:title", content: "Política de Reembolso — EIA Link" },
     { property: "og:description", content: "Regras de reembolso e cancelamento das assinaturas da EIA Link, com prazos e como solicitar." },
     { property: "og:type", content: "article" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+    { property: "og:url", content: "https://eialink.com.br/refund-policy" },
+  ], links: [{ rel: "canonical", href: "https://eialink.com.br/refund-policy" }] }),
   component: RefundPolicyPage,
 });
 

@@ -8,8 +8,8 @@ export const Route = createFileRoute("/privacy")({
     { property: "og:title", content: "Política de Privacidade — EIA Link" },
     { property: "og:description", content: "Saiba como a EIA Link coleta, usa e protege seus dados pessoais conforme a LGPD." },
     { property: "og:type", content: "article" },
-    { name: "twitter:card", content: "summary_large_image" },
-  ] }),
+    { property: "og:url", content: "https://eialink.com.br/privacy" },
+  ], links: [{ rel: "canonical", href: "https://eialink.com.br/privacy" }] }),
   component: PrivacyPage,
 });
 

@@ -118,7 +118,7 @@ export function RestaurantBioLink({
               href={menuLink.url}
               target="_blank"
               rel="noreferrer"
-              onClick={() => onTrack("link", menuLink.id)}
+              onClick={() => onTrack("link_click", menuLink.id)}
               className="restaurant-menu-link"
             >
               <ShoppingBag size={18} aria-hidden="true" />
@@ -135,7 +135,7 @@ export function RestaurantBioLink({
                 href={locationLink.url}
                 target="_blank"
                 rel="noreferrer"
-                onClick={() => onTrack("link", locationLink.id)}
+                onClick={() => onTrack("link_click", locationLink.id)}
               >
                 <MapPin size={18} aria-hidden="true" />
                 <span>{locationLink.title}</span>
@@ -157,7 +157,7 @@ export function RestaurantBioLink({
                 href={menuLink.url}
                 target="_blank"
                 rel="noreferrer"
-                onClick={() => onTrack("link", menuLink.id)}
+                onClick={() => onTrack("link_click", menuLink.id)}
                 className="restaurant-full-menu"
               >
                 Ver cardápio completo <span aria-hidden="true">→</span>
@@ -175,7 +175,7 @@ export function RestaurantBioLink({
                   href={`https://instagram.com/${instagram}`}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => onTrack("instagram")}
+                  onClick={() => onTrack("instagram_click")}
                 >
                   <Instagram size={19} aria-hidden="true" /> Instagram{" "}
                   <span aria-hidden="true">↗</span>
@@ -187,7 +187,7 @@ export function RestaurantBioLink({
                   href={link.url}
                   target="_blank"
                   rel="noreferrer"
-                  onClick={() => onTrack("link", link.id)}
+                  onClick={() => onTrack("link_click", link.id)}
                 >
                   <ShoppingBag size={19} aria-hidden="true" /> {link.title}{" "}
                   <span aria-hidden="true">↗</span>

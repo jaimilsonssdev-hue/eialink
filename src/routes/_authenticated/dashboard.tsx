@@ -112,7 +112,8 @@ function Dashboard() {
     if ((requestsCount ?? 0) > 0) s += 10;
     s = Math.min(100, s);
     if (s !== profile.lead_score) {
-      supabase.from("profiles").update({ lead_score: s }).eq("id", profile.id);
+      // The builder is lazy: consuming the promise is what performs the update.
+      void supabase.from("profiles").update({ lead_score: s }).eq("id", profile.id).then(() => {});
     }
   }, [profile, bio, linksCount, stats, requestsCount]);
 

@@ -116,21 +116,38 @@ function PublicBio() {
 
   useEffect(() => {
     const url = new URL(window.location.href);
-    void supabase.from("analytics_events").insert({
-      bio_page_id: bio.id,
-      event_type: "view",
-      utm_source: url.searchParams.get("utm_source"),
-      utm_medium: url.searchParams.get("utm_medium"),
-      utm_campaign: url.searchParams.get("utm_campaign"),
-      referrer: document.referrer || null,
-      device: /Mobi/i.test(navigator.userAgent) ? "mobile" : "desktop",
-    });
+    // The Supabase query builder only issues the request once it is awaited,
+    // so the promise must be consumed for the page view to be recorded.
+    void supabase
+      .from("analytics_events")
+      .insert({
+        bio_page_id: bio.id,
+        event_type: "view",
+        utm_source: url.searchParams.get("utm_source"),
+        utm_medium: url.searchParams.get("utm_medium"),
+        utm_campaign: url.searchParams.get("utm_campaign"),
+        referrer: document.referrer || null,
+        device: /Mobi/i.test(navigator.userAgent) ? "mobile" : "desktop",
+      })
+      .then(({ error }) => {
+        if (error) console.error("analytics view", error.message);
+      });
   }, [bio.id]);
 
   function track(eventType: string, targetId?: string) {
+    const device = /Mobi/i.test(navigator.userAgent) ? "mobile" : "desktop";
     void supabase
       .from("analytics_events")
-      .insert({ bio_page_id: bio.id, event_type: eventType, target_id: targetId ?? null });
+      .insert({
+        bio_page_id: bio.id,
+        event_type: eventType,
+        target_id: targetId ?? null,
+        device,
+        referrer: document.referrer || null,
+      })
+      .then(({ error }) => {
+        if (error) console.error("analytics event", error.message);
+      });
   }
 
   async function share() {

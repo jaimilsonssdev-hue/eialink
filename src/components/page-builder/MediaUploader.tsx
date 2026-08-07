@@ -17,6 +17,11 @@ const COVER_LIBRARY = {
     { id: "clinic-wellness", src: "/template-assets/clinic-cover-wellness.png", label: "Bem-estar" },
     { id: "clinic-consultation", src: "/template-assets/clinic-cover-consultation.png", label: "Consultório" },
   ],
+  therapy: [
+    { id: "therapy-serenity", src: "/template-assets/therapy-cover-serenity.png", label: "Espaço sereno" },
+    { id: "therapy-conversation", src: "/template-assets/therapy-cover-conversation.png", label: "Sala de conversa" },
+    { id: "therapy-nature", src: "/template-assets/therapy-cover-nature.png", label: "Natureza e calma" },
+  ],
   store: [
     { id: "store-shoes", src: "/template-assets/store-demo-cover.png", label: "Vitrine" },
     { id: "store-boutique", src: "/template-assets/store-cover-boutique.png", label: "Boutique" },
@@ -45,6 +50,7 @@ const COVER_LIBRARY = {
 
 function coverCategory(templateId?: string | null) {
   if (templateId?.includes("clinic")) return "clinic";
+  if (templateId?.includes("therapy")) return "therapy";
   if (templateId?.includes("academy")) return "academy";
   if (templateId?.includes("law")) return "law";
   if (templateId?.includes("store")) return "store";
@@ -126,7 +132,7 @@ export function MediaUploader({
   const category = coverCategory(templateId);
   const coverLibrary = COVER_LIBRARY[category];
   const categoryLabel = {
-    restaurant: "restaurante", clinic: "clínica", academy: "academia", law: "advocacia",
+    restaurant: "restaurante", clinic: "clínica", therapy: "terapia", academy: "academia", law: "advocacia",
     store: "loja", beauty: "beleza", creator: "criador", business: "profissional",
   }[category];
 

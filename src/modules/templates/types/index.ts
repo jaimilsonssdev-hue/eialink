@@ -34,6 +34,7 @@ export type TemplateCategory =
   | "store"
   | "restaurant"
   | "clinic"
+  | "therapy"
   | "academy"
   | "law"
   | "beauty"
@@ -100,6 +101,7 @@ export type TemplateDefinition = {
     | "creator"
     | "restaurant"
     | "clinic"
+    | "therapy"
     | "academy"
     | "law"
     | "storefront";

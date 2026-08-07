@@ -1,5 +1,6 @@
 import {
   BriefcaseBusiness,
+  Brain,
   Building2,
   Dumbbell,
   HeartPulse,
@@ -27,6 +28,7 @@ const FILTERS = [
   { id: "all", label: "Todos", icon: Sparkles },
   { id: "restaurant", label: "Restaurantes", icon: UtensilsCrossed },
   { id: "clinic", label: "Clínicas", icon: HeartPulse },
+  { id: "therapy", label: "Terapia", icon: Brain },
   { id: "academy", label: "Academias", icon: Dumbbell },
   { id: "law", label: "Advocacia", icon: BriefcaseBusiness },
   { id: "store", label: "Lojas", icon: ShoppingBag },

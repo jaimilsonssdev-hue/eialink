@@ -5,6 +5,8 @@ import { useState } from "react";
 import { PageService } from "@/modules/page/services/PageService";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
+import { UpgradePrompt } from "@/modules/billing/components/UpgradePrompt";
+import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 
 export const Route = createFileRoute("/_authenticated/pages")({
   component: PagesWorkspace,
@@ -15,15 +17,28 @@ function PagesWorkspace() {
   const navigate = useNavigate();
   const [isCreating, setIsCreating] = useState(false);
   const [creationError, setCreationError] = useState<string | null>(null);
+  const access = usePlanAccess();
   const pages = useQuery({
     queryKey: ["owned-bio-pages"],
     queryFn: () => PageService.listOwnedPages(),
   });
   const featuredTemplates = TemplateService.list()
-    .filter((item) => item.status === "active" && item.smart)
+    .filter((item) => item.status === "active" && (item.smart || item.id === "default"))
+    .filter((item) => access.data?.features.premium_templates || item.id === "default")
     .slice(0, 3);
 
   async function createPage(templateId = featuredTemplates[0]?.id ?? TemplateService.get().id) {
+    const pageLimit = access.data?.limits.bio_pages ?? 1;
+    if (pageLimit !== -1 && (pages.data?.length ?? 0) >= pageLimit) {
+      setCreationError(
+        "O Eialink Essencial permite uma página. Faça upgrade para criar outros Biolinks.",
+      );
+      return;
+    }
+    if (!access.data?.features.premium_templates && templateId !== "default") {
+      setCreationError("Este visual é exclusivo do Eialink Pro.");
+      return;
+    }
     setIsCreating(true);
     setCreationError(null);
     try {
@@ -58,13 +73,22 @@ function PagesWorkspace() {
           <h1 className="premium-heading">Meus Biolinks</h1>
           <p>Crie uma página para cada negócio, campanha ou presença que você quer divulgar.</p>
         </div>
-        <button className="premium-cta" onClick={() => void createPage()} disabled={isCreating}>
+        <button
+          className="premium-cta"
+          onClick={() => void createPage()}
+          disabled={isCreating || access.isLoading}
+        >
           {isCreating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           Criar novo Biolink
         </button>
       </header>
 
-      {creationError && <p className="pages-workspace-error" role="alert">{creationError}</p>}
+      {creationError && (
+        <p className="pages-workspace-error" role="alert">
+          {creationError}
+        </p>
+      )}
+      {creationError?.includes("upgrade") && <UpgradePrompt compact />}
 
       <section className="pages-grid" aria-label="Suas páginas">
         <div className="page-library-panel-heading">
@@ -72,7 +96,9 @@ function PagesWorkspace() {
             <p className="eyebrow">Biblioteca de páginas</p>
             <h2>Suas experiências publicadas</h2>
           </div>
-          <span>{pages.data?.length ?? 0} {pages.data?.length === 1 ? "página" : "páginas"}</span>
+          <span>
+            {pages.data?.length ?? 0} {pages.data?.length === 1 ? "página" : "páginas"}
+          </span>
         </div>
         <div className="page-library-list">
           {pages.data?.map((page) => (
@@ -93,20 +119,35 @@ function PagesWorkspace() {
               <div className="page-library-body">
                 <p className="eyebrow">{TemplateService.get(page.template_id ?? undefined).name}</p>
                 <h2>{page.display_name}</h2>
-                <p className="line-clamp-2">{page.description || "Personalize esta página para apresentar seu negócio."}</p>
+                <p className="line-clamp-2">
+                  {page.description || "Personalize esta página para apresentar seu negócio."}
+                </p>
               </div>
               <div className="page-library-actions">
                 <Link to="/builder" search={{ page: page.id }} className="btn-primary">
                   <Pencil className="h-4 w-4" /> Editar
                 </Link>
-                <a href={`/p/${page.slug}`} target="_blank" rel="noopener" className="btn-secondary" aria-label={`Abrir ${page.display_name}`}>
+                <a
+                  href={`/p/${page.slug}`}
+                  target="_blank"
+                  rel="noopener"
+                  className="btn-secondary"
+                  aria-label={`Abrir ${page.display_name}`}
+                >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
             </article>
           ))}
-          <button type="button" className="page-library-create" onClick={() => void createPage()} disabled={isCreating}>
-            <span><FilePlus2 className="h-6 w-6" /></span>
+          <button
+            type="button"
+            className="page-library-create"
+            onClick={() => void createPage()}
+            disabled={isCreating || access.isLoading}
+          >
+            <span>
+              <FilePlus2 className="h-6 w-6" />
+            </span>
             <b>Criar uma nova página</b>
             <small>Escolha um nicho, personalize e publique quando estiver pronto.</small>
           </button>
@@ -128,7 +169,13 @@ function PagesWorkspace() {
               <div>
                 <p>{template.name}</p>
                 <small>{template.description}</small>
-                <button className="btn-secondary" disabled={isCreating} onClick={() => void createPage(template.id)}>Usar este visual</button>
+                <button
+                  className="btn-secondary"
+                  disabled={isCreating || access.isLoading}
+                  onClick={() => void createPage(template.id)}
+                >
+                  Usar este visual
+                </button>
               </div>
             </article>
           ))}
@@ -139,7 +186,10 @@ function PagesWorkspace() {
         <Sparkles className="h-5 w-5" />
         <div>
           <b>Modelos feitos para cada negócio</b>
-          <p>Restaurante, clínica, loja, academia e advocacia ganham estrutura própria. Você continua no controle de todo o conteúdo.</p>
+          <p>
+            Restaurante, clínica, loja, academia e advocacia ganham estrutura própria. Você continua
+            no controle de todo o conteúdo.
+          </p>
         </div>
       </section>
     </div>

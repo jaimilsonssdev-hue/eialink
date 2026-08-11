@@ -5,6 +5,7 @@ import { TemplateRenderer } from "@/modules/templates/components/TemplateRendere
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import type { PageBlock } from "@/components/page-builder/types";
 import type { CatalogItem } from "@/modules/products/types";
+import { BrandingProvider } from "@/components/public-profile/BrandingContext";
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -41,11 +42,18 @@ export const Route = createFileRoute("/p/$slug")({
       .eq("bio_page_id", bio.id)
       .eq("active", true)
       .order("position");
+    const publicStore = supabase as never as {
+      rpc: (name: string, args: Record<string, unknown>) => Promise<{ data: boolean | null }>;
+    };
+    const { data: hasProPlan } = await publicStore.rpc("page_has_pro_plan", {
+      _bio_page_id: bio.id,
+    });
     return {
       bio,
       links: links ?? [],
       blocks: (blocks ?? []) as PageBlock[],
       products: (products ?? []) as CatalogItem[],
+      hasProPlan: Boolean(hasProPlan),
     };
   },
   head: ({ params, loaderData }) => {
@@ -105,7 +113,7 @@ export const Route = createFileRoute("/p/$slug")({
 const VALID_THEMES = new Set(["aurora", "sunset", "ocean", "midnight", "mono", "forest"]);
 
 function PublicBio() {
-  const { bio, links, blocks, products } = Route.useLoaderData();
+  const { bio, links, blocks, products, hasProPlan } = Route.useLoaderData();
   const theme = VALID_THEMES.has(bio.theme) ? bio.theme : "aurora";
   // The established bio page remains the canonical source for the public
   // profile. Only additive layout blocks are rendered here, preventing an
@@ -168,19 +176,21 @@ function PublicBio() {
   }
 
   return (
-    <TemplateRenderer
-      bio={{ ...bio, theme }}
-      links={links}
-      onTrack={track}
-      onShare={share}
-      products={products}
-      supplemental={
-        <>
-          {supplementalBlocks.map((block: PageBlock) => (
-            <BlockRenderer key={block.id} block={block} />
-          ))}
-        </>
-      }
-    />
+    <BrandingProvider show={!hasProPlan}>
+      <TemplateRenderer
+        bio={{ ...bio, theme }}
+        links={links}
+        onTrack={track}
+        onShare={share}
+        products={products}
+        supplemental={
+          <>
+            {supplementalBlocks.map((block: PageBlock) => (
+              <BlockRenderer key={block.id} block={block} />
+            ))}
+          </>
+        }
+      />
+    </BrandingProvider>
   );
 }

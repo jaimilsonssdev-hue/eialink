@@ -2,6 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { AnalyticsService } from "@/modules/analytics/services/AnalyticsService";
+import { UpgradePrompt } from "@/modules/billing/components/UpgradePrompt";
+import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import {
   Eye,
   MousePointerClick,
@@ -29,21 +31,62 @@ const EVENT_LABELS: Record<string, { label: string; icon: React.ElementType; col
 
 function AnalyticsPage() {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const access = usePlanAccess();
   const { data, isLoading, isError, error } = useQuery({
     queryKey: ["analytics", selectedPageId],
     queryFn: () => AnalyticsService.getCurrentPageEvents(selectedPageId),
   });
 
-  if (isLoading) {
-    return <div className="premium-page"><div className="h-44 animate-pulse rounded-3xl bg-surface-elevated" /></div>;
+  if (isLoading || access.isLoading) {
+    return (
+      <div className="premium-page">
+        <div className="h-44 animate-pulse rounded-3xl bg-surface-elevated" />
+      </div>
+    );
+  }
+
+  if (!access.data?.features.analytics) {
+    return (
+      <div className="premium-page">
+        <div className="premium-page-heading">
+          <p className="eyebrow">Resultados</p>
+          <h1>Entenda o que gera contatos</h1>
+          <p>Visualizações, cliques e origem dos contatos ficam reunidos no Eialink Pro.</p>
+        </div>
+        <div className="mt-6 max-w-2xl">
+          <UpgradePrompt
+            title="Resultados são um recurso Pro"
+            description="Acompanhe como suas visitas encontram sua página e quais ações geram mais conversas."
+          />
+        </div>
+      </div>
+    );
   }
 
   if (isError) {
-    return <div className="premium-page"><div className="premium-panel"><h1>Não foi possível carregar os resultados</h1><p className="mt-2 text-muted-foreground">{error instanceof Error ? error.message : "Verifique sua conexão e tente novamente."}</p></div></div>;
+    return (
+      <div className="premium-page">
+        <div className="premium-panel">
+          <h1>Não foi possível carregar os resultados</h1>
+          <p className="mt-2 text-muted-foreground">
+            {error instanceof Error ? error.message : "Verifique sua conexão e tente novamente."}
+          </p>
+        </div>
+      </div>
+    );
   }
 
   if (!data?.bio)
-    return <div className="premium-page"><div className="premium-panel"><h1>Crie uma BioLink para começar</h1><p className="mt-2 text-muted-foreground">As visualizações e os cliques aparecerão aqui quando sua página pública receber visitas.</p></div></div>;
+    return (
+      <div className="premium-page">
+        <div className="premium-panel">
+          <h1>Crie uma BioLink para começar</h1>
+          <p className="mt-2 text-muted-foreground">
+            As visualizações e os cliques aparecerão aqui quando sua página pública receber visitas.
+          </p>
+        </div>
+      </div>
+    );
 
   const total = data.events.length;
   const byType = data.events.reduce<Record<string, number>>((acc, e) => {
@@ -90,9 +133,7 @@ function AnalyticsPage() {
       <div className="premium-page-heading">
         <p className="eyebrow">Resultados da sua página</p>
         <h1>Analytics</h1>
-        <p>
-          Acompanhe o desempenho da sua página em tempo real.
-        </p>
+        <p>Acompanhe o desempenho da sua página em tempo real.</p>
         {data.pages.length > 1 && (
           <label className="mt-4 block max-w-sm text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
             BioLink analisada

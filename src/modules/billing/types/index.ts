@@ -28,6 +28,10 @@ export type PlanFeatures = {
   whatsapp: boolean;
   analytics: boolean;
   custom_domain: boolean;
+  catalog: boolean;
+  premium_templates: boolean;
+  advanced_appearance: boolean;
+  remove_branding: boolean;
 };
 
 export function toPlanLimits(value: Json): PlanLimits {
@@ -46,8 +50,37 @@ export function toPlanFeatures(value: Json): PlanFeatures {
     whatsapp: Boolean(input.whatsapp),
     analytics: Boolean(input.analytics),
     custom_domain: Boolean(input.custom_domain),
+    catalog: Boolean(input.catalog),
+    premium_templates: Boolean(input.premium_templates),
+    advanced_appearance: Boolean(input.advanced_appearance),
+    remove_branding: Boolean(input.remove_branding),
   };
 }
+
+export type PlanAccess = {
+  plan: Plan | null;
+  subscription: Subscription | null;
+  limits: PlanLimits;
+  features: PlanFeatures;
+  isPro: boolean;
+};
+
+export const ESSENTIAL_LIMITS: PlanLimits = {
+  bio_pages: 1,
+  links: 4,
+  catalog_items: 0,
+  templates: 1,
+};
+
+export const ESSENTIAL_FEATURES: PlanFeatures = {
+  whatsapp: true,
+  analytics: false,
+  custom_domain: false,
+  catalog: false,
+  premium_templates: false,
+  advanced_appearance: false,
+  remove_branding: false,
+};
 
 export function formatPlanPrice(priceCents: number, interval: string): string {
   if (priceCents === 0) return "Grátis";

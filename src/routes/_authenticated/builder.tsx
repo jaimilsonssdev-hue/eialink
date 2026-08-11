@@ -6,6 +6,7 @@ import { UnifiedPageEditor } from "@/components/page-builder/UnifiedPageEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductService } from "@/modules/products/services/ProductService";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
+import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { z } from "zod";
 
 export const Route = createFileRoute("/_authenticated/builder")({
@@ -51,6 +52,7 @@ function BuilderPage() {
       return { userId: auth.user.id, bio, profile, links: links ?? [], products };
     },
   });
+  const planAccess = usePlanAccess();
   const requestedTemplate = requestedTemplateId
     ? TemplateService.list().find(
         (template) => template.id === requestedTemplateId && template.status === "active",
@@ -132,6 +134,7 @@ function BuilderPage() {
       initialBio={initialBio}
       initialLinks={links}
       initialProducts={products}
+      planAccess={planAccess.data}
       defaults={{
         displayName: profile?.company_name ?? "",
         whatsapp: profile?.whatsapp ?? "",
@@ -154,7 +157,10 @@ function BuilderPage() {
           bioPageId = data.id;
         }
 
-        const savedProducts = await ProductService.sync(bioPageId!, editedProducts);
+        // A downgrade keeps catalog data intact, but only Pro can change it.
+        const savedProducts = planAccess.data?.features.catalog
+          ? await ProductService.sync(bioPageId!, editedProducts)
+          : products;
 
         const savedLinks = editedLinks.map((link, position) => ({
           ...link,

@@ -1,8 +1,42 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Plan, ProfessionalService, PublicPlan, Subscription } from "../types";
+import {
+  ESSENTIAL_FEATURES,
+  ESSENTIAL_LIMITS,
+  toPlanFeatures,
+  toPlanLimits,
+  type Plan,
+  type PlanAccess,
+  type ProfessionalService,
+  type PublicPlan,
+  type Subscription,
+} from "../types";
 
 /** Single access point for subscription and monetisation data. */
 export const BillingService = {
+  async getCurrentAccess(): Promise<PlanAccess> {
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError || !auth.user) throw new Error(authError?.message ?? "Sessão inválida.");
+
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select("*, plans(*)")
+      .eq("user_id", auth.user.id)
+      .maybeSingle();
+    if (error) throw error;
+
+    const subscription = data as (Subscription & { plans?: Plan | null }) | null;
+    const plan = subscription?.plans ?? null;
+    const active = subscription?.status === "active" || subscription?.status === "trialing";
+    const isPro = Boolean(active && plan && plan.slug !== "essential");
+
+    return {
+      plan,
+      subscription,
+      limits: plan ? toPlanLimits(plan.limits) : ESSENTIAL_LIMITS,
+      features: plan ? toPlanFeatures(plan.features) : ESSENTIAL_FEATURES,
+      isPro,
+    };
+  },
   async listPlans(): Promise<Plan[]> {
     const { data, error } = await supabase.from("plans").select("*").order("position");
     if (error) throw error;

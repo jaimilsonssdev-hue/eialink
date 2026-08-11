@@ -1,4 +1,17 @@
-import { ExternalLink, Facebook, Globe2, Image, Instagram, Linkedin, Link2, Palette, Save, UserRound, WalletCards, Youtube } from "lucide-react";
+import {
+  ExternalLink,
+  Facebook,
+  Globe2,
+  Image,
+  Instagram,
+  Linkedin,
+  Link2,
+  Palette,
+  Save,
+  UserRound,
+  WalletCards,
+  Youtube,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
@@ -7,6 +20,8 @@ import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
 import { parseSocialLinks } from "@/lib/social-links";
+import { UpgradePrompt, commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
+import type { PlanAccess } from "@/modules/billing/types";
 
 import type { CatalogItem } from "@/modules/products/types";
 
@@ -114,16 +129,31 @@ const THEMES = [
 
 const SOCIAL_NETWORKS = [
   { id: "instagram", label: "Instagram", placeholder: "@seuperfil", icon: Instagram },
-  { id: "facebook", label: "Facebook", placeholder: "https://facebook.com/suapagina", icon: Facebook },
+  {
+    id: "facebook",
+    label: "Facebook",
+    placeholder: "https://facebook.com/suapagina",
+    icon: Facebook,
+  },
   { id: "tiktok", label: "TikTok", placeholder: "https://tiktok.com/@seuperfil", icon: Palette },
-  { id: "linkedin", label: "LinkedIn", placeholder: "https://linkedin.com/in/seuperfil", icon: Linkedin },
+  {
+    id: "linkedin",
+    label: "LinkedIn",
+    placeholder: "https://linkedin.com/in/seuperfil",
+    icon: Linkedin,
+  },
   { id: "youtube", label: "YouTube", placeholder: "https://youtube.com/@seucanal", icon: Youtube },
   { id: "website", label: "Seu site", placeholder: "https://seusite.com.br", icon: Globe2 },
 ] as const;
 
 function socialValues(value: BioForm["social_links"]) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return {} as Record<string, string>;
-  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, string] => typeof entry[1] === "string"));
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    return {} as Record<string, string>;
+  return Object.fromEntries(
+    Object.entries(value).filter(
+      (entry): entry is [string, string] => typeof entry[1] === "string",
+    ),
+  );
 }
 
 function slugify(value: string) {
@@ -143,12 +173,14 @@ export function UnifiedPageEditor({
   initialLinks,
   initialProducts = [],
   defaults,
+  planAccess,
   onSave,
 }: {
   initialBio: BioForm;
   initialLinks: EditableLink[];
   initialProducts?: CatalogItem[];
   defaults: { displayName: string; whatsapp: string; instagram: string };
+  planAccess?: PlanAccess;
   onSave(data: {
     bio: BioForm;
     links: EditableLink[];
@@ -213,10 +245,20 @@ export function UnifiedPageEditor({
     setSelected(section);
     setSaveState("idle");
     if (window.matchMedia("(max-width: 767px)").matches) {
-      window.setTimeout(() => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 0);
+      window.setTimeout(
+        () => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+        0,
+      );
     }
   };
-  const addLink = () =>
+  const addLink = () => {
+    if ((planAccess?.limits.links ?? 4) !== -1 && links.length >= (planAccess?.limits.links ?? 4)) {
+      setValidationMessage(
+        "O Eialink Essencial permite até quatro links. Faça upgrade para adicionar mais.",
+      );
+      setSaveState("error");
+      return;
+    }
     setLinks((current) => [
       ...current,
       {
@@ -227,13 +269,16 @@ export function UnifiedPageEditor({
         position: current.length,
       },
     ]);
+  };
   const updateLink = (id: string, patch: Partial<EditableLink>) =>
     setLinks((current) => current.map((link) => (link.id === id ? { ...link, ...patch } : link)));
 
   async function save() {
     const socialValidation = parseSocialLinks(bio.social_links);
     if (!socialValidation.success) {
-      setValidationMessage(socialValidation.error.issues[0]?.message ?? "Revise os links das redes sociais.");
+      setValidationMessage(
+        socialValidation.error.issues[0]?.message ?? "Revise os links das redes sociais.",
+      );
       setSaveState("error");
       return;
     }
@@ -258,6 +303,9 @@ export function UnifiedPageEditor({
       setSaveState("success");
     } catch (error) {
       if (import.meta.env.DEV) console.error("Catalog save failed", error);
+      setValidationMessage(
+        error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente.",
+      );
       setSaveState("error");
     } finally {
       setSaving(false);
@@ -316,13 +364,22 @@ export function UnifiedPageEditor({
 
       <div className="builder-layout grid gap-6 xl:grid-cols-[18rem_minmax(25rem,1fr)_22rem]">
         <aside className="builder-menu card-surface h-fit xl:sticky xl:top-24">
-          {Array.from(new Set(MENU.map((item) => item.group))).map((group) => (
+          {Array.from(
+            new Set(
+              MENU.filter((item) => item.id !== "catalog" || planAccess?.features.catalog).map(
+                (item) => item.group,
+              ),
+            ),
+          ).map((group) => (
             <div key={group} className="mb-5 last:mb-0">
               <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
                 {group}
               </p>
               <div className="grid gap-1">
-                {MENU.filter((item) => item.group === group).map((item) => {
+                {MENU.filter(
+                  (item) =>
+                    item.group === group && (item.id !== "catalog" || planAccess?.features.catalog),
+                ).map((item) => {
                   const Icon = item.icon;
                   const active = selected === item.id;
                   return (
@@ -364,7 +421,10 @@ export function UnifiedPageEditor({
           </div>
         </main>
 
-        <aside ref={inspectorRef} className="builder-inspector card-surface h-fit xl:sticky xl:top-24">
+        <aside
+          ref={inspectorRef}
+          className="builder-inspector card-surface h-fit xl:sticky xl:top-24"
+        >
           {!selected ? (
             <div className="space-y-4">
               <div>
@@ -405,17 +465,48 @@ export function UnifiedPageEditor({
               addLink={addLink}
               products={products}
               setProducts={setProducts}
+              planAccess={planAccess}
               draftTemplate={draftTemplate}
               setDraftTemplate={setDraftTemplate}
             />
           )}
           {saveState === "error" && (
             <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
-              {validationMessage || "Não foi possível salvar. Confira sua conexão e tente novamente."}
+              {validationMessage ||
+                "Não foi possível salvar. Confira sua conexão e tente novamente."}
             </p>
           )}
         </aside>
       </div>
+      {saveState === "success" && bio.published && (
+        <section className="card-surface flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="font-semibold">Seu Eialink está publicado.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Quer que a Talento configure sua página profissionalmente ou avalie o próximo passo do
+              seu negócio?
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <a
+              className="btn-secondary"
+              href={commercialWhatsAppUrl("help")}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Quero ajuda
+            </a>
+            <a
+              className="btn-primary"
+              href={commercialWhatsAppUrl("pro")}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Conhecer o Pro
+            </a>
+          </div>
+        </section>
+      )}
     </div>
   );
 }
@@ -431,6 +522,7 @@ function SectionForm({
   addLink,
   products,
   setProducts,
+  planAccess,
   draftTemplate,
   setDraftTemplate,
 }: {
@@ -444,6 +536,7 @@ function SectionForm({
   addLink(): void;
   products: CatalogItem[];
   setProducts(items: CatalogItem[]): void;
+  planAccess?: PlanAccess;
   draftTemplate: string;
   setDraftTemplate(id: string): void;
 }) {
@@ -461,16 +554,20 @@ function SectionForm({
         <>
           <Field label="Template">
             <div className="grid grid-cols-2 gap-2">
-              {TemplateService.list().map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  onClick={() => setDraftTemplate(template.id)}
-                  className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
-                >
-                  {template.name}
-                </button>
-              ))}
+              {TemplateService.list()
+                .filter(
+                  (template) => planAccess?.features.premium_templates || template.id === "default",
+                )
+                .map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => setDraftTemplate(template.id)}
+                    className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
+                  >
+                    {template.name}
+                  </button>
+                ))}
             </div>
             <div className="mt-2 flex gap-2">
               <button
@@ -478,7 +575,9 @@ function SectionForm({
                 className="btn-secondary text-xs"
                 onClick={() => {
                   if (draftTemplate === (bio.template_id ?? "default")) return;
-                  if (window.confirm("Descartar a prévia deste visual e manter o template atual?")) {
+                  if (
+                    window.confirm("Descartar a prévia deste visual e manter o template atual?")
+                  ) {
                     setDraftTemplate(bio.template_id ?? "default");
                     setTemplateNotice("Prévia cancelada. O template atual foi mantido.");
                   }
@@ -499,7 +598,11 @@ function SectionForm({
                 Aplicar
               </button>
             </div>
-            {templateNotice && <p className="mt-2 text-xs text-[color:var(--primary)]" role="status">{templateNotice}</p>}
+            {templateNotice && (
+              <p className="mt-2 text-xs text-[color:var(--primary)]" role="status">
+                {templateNotice}
+              </p>
+            )}
           </Field>
           <MediaUploader
             label="Imagem de capa"
@@ -610,11 +713,13 @@ function SectionForm({
       {section === "social" && (
         <div className="space-y-4">
           <p className="rounded-xl border border-border bg-surface-elevated/40 p-3 text-xs text-muted-foreground">
-            Adicione somente os perfis que você usa. Eles aparecerão junto aos seus links quando o visual escolhido oferecer esse espaço.
+            Adicione somente os perfis que você usa. Eles aparecerão junto aos seus links quando o
+            visual escolhido oferecer esse espaço.
           </p>
           {SOCIAL_NETWORKS.map(({ id, label, placeholder, icon: Icon }) => {
             const values = socialValues(bio.social_links);
-            const value = id === "instagram" ? values.instagram ?? bio.instagram ?? "" : values[id] ?? "";
+            const value =
+              id === "instagram" ? (values.instagram ?? bio.instagram ?? "") : (values[id] ?? "");
             return (
               <Field key={id} label={label}>
                 <div className="relative">
@@ -622,7 +727,9 @@ function SectionForm({
                   <input
                     className="input-base pl-9"
                     value={value}
-                    placeholder={id === "instagram" ? defaults.instagram || placeholder : placeholder}
+                    placeholder={
+                      id === "instagram" ? defaults.instagram || placeholder : placeholder
+                    }
                     onChange={(event) => {
                       const next = { ...values };
                       const nextValue = event.target.value.trim();
@@ -673,7 +780,9 @@ function SectionForm({
               placeholder="Falar no WhatsApp"
               onChange={(event) => updateBio({ whatsapp_button_label: event.target.value })}
             />
-            <p className="mt-1 text-xs text-muted-foreground">Use uma chamada curta e clara, por exemplo: “Pedir orçamento”.</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use uma chamada curta e clara, por exemplo: “Pedir orçamento”.
+            </p>
           </Field>
           <Field label="Texto de apoio do botão">
             <input
@@ -736,7 +845,16 @@ function SectionForm({
           </button>
         </div>
       )}
-      {section === "catalog" && <CatalogEditor items={products} onChange={setProducts} />}
+      {section === "catalog" &&
+        (planAccess?.features.catalog ? (
+          <CatalogEditor items={products} onChange={setProducts} />
+        ) : (
+          <UpgradePrompt
+            compact
+            title="Produtos e serviços ficam no Pro"
+            description="Seu catálogo completo será liberado sem apagar nada que você já criou."
+          />
+        ))}
     </div>
   );
 }

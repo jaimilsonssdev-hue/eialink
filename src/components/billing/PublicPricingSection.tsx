@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Sparkles } from "lucide-react";
+import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import {
   formatPlanPrice,
@@ -11,38 +12,62 @@ import {
 
 const fallbackPlans: PublicPlan[] = [
   {
-    id: "fallback-free",
-    slug: "free",
-    name: "Grátis",
-    description: "Para publicar uma presença profissional essencial.",
+    id: "fallback-essential",
+    slug: "essential",
+    name: "Eialink Essencial",
+    description: "Para publicar sua presença profissional gratuitamente.",
     price_cents: 0,
     billing_interval: "monthly",
-    limits: { bio_pages: 1, links: 5, catalog_items: 3, templates: 1 },
-    features: { whatsapp: true, analytics: true, custom_domain: false },
+    limits: { bio_pages: 1, links: 4, catalog_items: 0, templates: 1 },
+    features: {
+      whatsapp: true,
+      analytics: false,
+      custom_domain: false,
+      catalog: false,
+      premium_templates: false,
+      advanced_appearance: false,
+      remove_branding: false,
+    },
     active: true,
     position: 0,
   },
   {
-    id: "fallback-pro",
-    slug: "pro",
-    name: "Pro",
-    description: "Para negócios que precisam vender e crescer.",
-    price_cents: 2900,
+    id: "fallback-pro-monthly",
+    slug: "pro-monthly",
+    name: "Eialink Pro",
+    description: "Para negócios que querem vender, medir resultados e crescer.",
+    price_cents: 1990,
     billing_interval: "monthly",
-    limits: { bio_pages: 3, links: 30, catalog_items: 100, templates: -1 },
-    features: { whatsapp: true, analytics: true, custom_domain: true },
+    limits: { bio_pages: -1, links: -1, catalog_items: -1, templates: -1 },
+    features: {
+      whatsapp: true,
+      analytics: true,
+      custom_domain: true,
+      catalog: true,
+      premium_templates: true,
+      advanced_appearance: true,
+      remove_branding: true,
+    },
     active: true,
     position: 1,
   },
   {
-    id: "fallback-catalog",
-    slug: "catalog",
-    name: "Catálogo",
-    description: "Plano focado em uma vitrine digital completa.",
-    price_cents: 4900,
-    billing_interval: "monthly",
-    limits: { bio_pages: 5, links: 50, catalog_items: 250, templates: -1 },
-    features: { whatsapp: true, analytics: true, custom_domain: true },
+    id: "fallback-pro-yearly",
+    slug: "pro-yearly",
+    name: "Eialink Pro anual",
+    description: "Todos os recursos Pro com economia no plano anual.",
+    price_cents: 19700,
+    billing_interval: "yearly",
+    limits: { bio_pages: -1, links: -1, catalog_items: -1, templates: -1 },
+    features: {
+      whatsapp: true,
+      analytics: true,
+      custom_domain: true,
+      catalog: true,
+      premium_templates: true,
+      advanced_appearance: true,
+      remove_branding: true,
+    },
     active: true,
     position: 2,
   },
@@ -51,40 +76,25 @@ const fallbackPlans: PublicPlan[] = [
 function planBenefits(plan: PublicPlan) {
   const limits = toPlanLimits(plan.limits);
   const features = toPlanFeatures(plan.features);
-  const pageLimit =
-    limits.bio_pages === -1
-      ? "BioLinks ilimitados"
-      : `${limits.bio_pages} BioLink${limits.bio_pages === 1 ? "" : "s"}`;
-  const catalogLimit =
-    limits.catalog_items === -1
-      ? "Catálogo ilimitado"
-      : `${limits.catalog_items} itens no catálogo`;
-  const templateLimit =
-    limits.templates === -1
-      ? "Todos os templates"
-      : `${limits.templates} template${limits.templates === 1 ? "" : "s"}`;
-
   return [
-    pageLimit,
-    catalogLimit,
-    templateLimit,
-    features.whatsapp ? "WhatsApp integrado" : null,
+    limits.bio_pages === -1 ? "BioLinks ilimitados" : `${limits.bio_pages} BioLink`,
+    limits.templates === -1 ? "Todos os templates" : "1 template gratuito",
+    features.catalog ? "Catálogo de produtos e serviços" : null,
     features.analytics ? "Resultados da página" : null,
+    features.remove_branding ? "Sem a marca Eialink" : "Marca Eialink na página",
+    features.whatsapp ? "WhatsApp integrado" : null,
   ].filter(Boolean) as string[];
 }
 
 export function PublicPricingSection() {
-  const {
-    data: plans,
-    isLoading,
-    isError,
-  } = useQuery({
+  const { data: plans, isLoading } = useQuery({
     queryKey: ["public-plans"],
     queryFn: BillingService.listPublicPlans,
     staleTime: 60_000,
   });
-
-  const visiblePlans = plans?.length ? plans : fallbackPlans;
+  const visiblePlans = (plans?.length ? plans : fallbackPlans).filter((plan) =>
+    ["essential", "free", "pro-monthly", "pro-yearly"].includes(plan.slug),
+  );
 
   return (
     <section id="precos" className="relative z-10 mx-auto max-w-7xl px-5 pb-14">
@@ -95,7 +105,7 @@ export function PublicPricingSection() {
             Comece grátis. Evolua quando seu negócio pedir.
           </h2>
           <p className="mt-3 text-sm text-[#c4bacf]">
-            Valores e limites definidos diretamente pela equipe EIA Link.
+            Uma página bonita desde o início, com recursos Pro para quando fizer sentido crescer.
           </p>
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
@@ -106,8 +116,8 @@ export function PublicPricingSection() {
                   className="h-[310px] animate-pulse rounded-2xl border border-white/10 bg-white/[.04]"
                 />
               ))
-            : visiblePlans.map((plan, index) => {
-                const featured = index === 1;
+            : visiblePlans.map((plan) => {
+                const featured = plan.slug === "pro-monthly" || plan.slug === "pro";
                 return (
                   <article
                     key={plan.id}
@@ -133,16 +143,38 @@ export function PublicPricingSection() {
                         </li>
                       ))}
                     </ul>
-                    <Link
-                      to="/auth"
-                      search={{ mode: "signup" } as never}
-                      className={`${featured ? "btn-primary" : "btn-secondary"} mt-7 justify-center`}
-                    >
-                      {plan.price_cents === 0 ? "Começar grátis" : `Escolher ${plan.name}`}
-                    </Link>
+                    {plan.price_cents === 0 ? (
+                      <Link
+                        to="/auth"
+                        search={{ mode: "signup" } as never}
+                        className="btn-secondary mt-7 justify-center"
+                      >
+                        Criar meu Eialink grátis
+                      </Link>
+                    ) : (
+                      <a
+                        href={commercialWhatsAppUrl("pro")}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`${featured ? "btn-primary" : "btn-secondary"} mt-7 justify-center`}
+                      >
+                        Assinar Eialink Pro
+                      </a>
+                    )}
                   </article>
                 );
               })}
+        </div>
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-sm text-[#c4bacf]">
+          <span>Precisa de algo além do Eialink?</span>
+          <a
+            className="font-semibold text-violet-300 hover:text-violet-200"
+            href={commercialWhatsAppUrl("site")}
+            target="_blank"
+            rel="noreferrer"
+          >
+            Quero um site profissional
+          </a>
         </div>
       </div>
     </section>

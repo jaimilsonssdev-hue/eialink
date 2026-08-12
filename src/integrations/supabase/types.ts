@@ -148,10 +148,6 @@ export type Database = {
           display_name: string
           id: string
           instagram: string | null
-          motion_ambient: string
-          motion_cta: string
-          motion_enabled: boolean
-          motion_entrance: string
           pix_key: string | null
           published: boolean
           slug: string
@@ -177,10 +173,6 @@ export type Database = {
           display_name: string
           id?: string
           instagram?: string | null
-          motion_ambient?: string
-          motion_cta?: string
-          motion_enabled?: boolean
-          motion_entrance?: string
           pix_key?: string | null
           published?: boolean
           slug: string
@@ -206,10 +198,6 @@ export type Database = {
           display_name?: string
           id?: string
           instagram?: string | null
-          motion_ambient?: string
-          motion_cta?: string
-          motion_enabled?: boolean
-          motion_entrance?: string
           pix_key?: string | null
           published?: boolean
           slug?: string

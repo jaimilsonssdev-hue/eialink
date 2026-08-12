@@ -106,6 +106,10 @@ function BuilderPage() {
         cover_overlay: bio.cover_overlay,
         cover_overlay_opacity: bio.cover_overlay_opacity,
         template_id: requestedTemplate?.id ?? bio.template_id,
+        motion_enabled: bio.motion_enabled ?? true,
+        motion_entrance: bio.motion_entrance ?? "gentle",
+        motion_cta: bio.motion_cta ?? "none",
+        motion_ambient: bio.motion_ambient ?? "soft",
       }
     : {
         slug: "",
@@ -127,6 +131,10 @@ function BuilderPage() {
         whatsapp_button_label: null,
         whatsapp_button_subtitle: null,
         social_links: {},
+        motion_enabled: true,
+        motion_entrance: "gentle",
+        motion_cta: "none",
+        motion_ambient: "soft",
       };
 
   return (

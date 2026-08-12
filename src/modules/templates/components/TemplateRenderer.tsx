@@ -49,7 +49,7 @@ export function TemplateRenderer({
   products?: CatalogItem[];
   supplemental?: ReactNode;
   /** Public pages keep essential feedback for everyone; Pro unlocks ambient presentation motion. */
-  motionLevel?: "standard" | "pro";
+  motionLevel?: "off" | "standard" | "pro";
 }) {
   const safeLinks = links
     .map((link) => ({ ...link, url: safeExternalUrl(link.url) }))
@@ -94,6 +94,9 @@ export function TemplateRenderer({
       data-layout={model.template.layout}
       data-template-layout={model.template.layout}
       data-motion={motionLevel}
+      data-motion-entrance={bio.motion_enabled === false ? "none" : bio.motion_entrance ?? "gentle"}
+      data-motion-cta={bio.motion_enabled === false ? "none" : bio.motion_cta ?? "none"}
+      data-motion-ambient={bio.motion_enabled === false ? "none" : bio.motion_ambient ?? "soft"}
       style={
         {
           fontFamily: model.theme.typography.fontFamily,

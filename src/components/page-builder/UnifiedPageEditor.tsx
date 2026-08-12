@@ -8,6 +8,7 @@ import {
   Link2,
   Palette,
   Save,
+  Sparkles,
   UserRound,
   WalletCards,
   Youtube,
@@ -46,10 +47,22 @@ type BioForm = Pick<
   | "cover_overlay"
   | "cover_overlay_opacity"
   | "template_id"
+  | "motion_enabled"
+  | "motion_entrance"
+  | "motion_cta"
+  | "motion_ambient"
 >;
 
 type EditorSection =
-  "appearance" | "photo" | "profile" | "social" | "contact" | "pix" | "links" | "catalog";
+  | "appearance"
+  | "motion"
+  | "photo"
+  | "profile"
+  | "social"
+  | "contact"
+  | "pix"
+  | "links"
+  | "catalog";
 
 type EditableLink = Pick<PublicLink, "id" | "title" | "url" | "active" | "position">;
 
@@ -66,6 +79,13 @@ const MENU: {
     label: "Fundo e capa",
     description: "Imagem, posição e tema",
     icon: Image,
+  },
+  {
+    id: "motion",
+    group: "AparÃªncia",
+    label: "AnimaÃ§Ãµes",
+    description: "Movimento e destaque",
+    icon: Sparkles,
   },
   {
     id: "photo",
@@ -417,6 +437,13 @@ export function UnifiedPageEditor({
               onTrack={() => undefined}
               onShare={() => undefined}
               products={products}
+              motionLevel={
+                previewBio.motion_enabled === false
+                  ? "off"
+                  : planAccess?.features.advanced_appearance
+                    ? "pro"
+                    : "standard"
+              }
             />
           </div>
         </main>
@@ -670,6 +697,84 @@ function SectionForm({
           </Field>
         </>
       )}
+      {section === "motion" && (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Escolha movimentos discretos para a sua pÃ¡gina. A prÃ©via Ã© atualizada na hora e
+            as opÃ§Ãµes ficam publicadas quando vocÃª clicar em Salvar.
+          </p>
+          <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface-elevated p-4 text-sm">
+            <span>
+              <b className="block">Ativar animaÃ§Ãµes</b>
+              <span className="mt-1 block text-xs text-muted-foreground">
+                VocÃª pode desligar todos os efeitos da sua pÃ¡gina a qualquer momento.
+              </span>
+            </span>
+            <input
+              type="checkbox"
+              checked={bio.motion_enabled ?? true}
+              onChange={(event) => updateBio({ motion_enabled: event.target.checked })}
+              aria-label="Ativar animaÃ§Ãµes na pÃ¡gina"
+            />
+          </label>
+          {bio.motion_enabled !== false && (
+            <>
+              <Field label="Entrada da pÃ¡gina">
+                <MotionChoices
+                  value={bio.motion_entrance ?? "gentle"}
+                  choices={[
+                    ["gentle", "Suave"],
+                    ["rise", "Surgir de baixo"],
+                    ["none", "Sem entrada"],
+                  ]}
+                  onChange={(motion_entrance) => updateBio({ motion_entrance })}
+                />
+              </Field>
+              <Field label="BotÃ£o principal">
+                {planAccess?.features.advanced_appearance ? (
+                  <MotionChoices
+                    value={bio.motion_cta ?? "none"}
+                    choices={[
+                      ["none", "Sem efeito"],
+                      ["pulse", "Pulso suave"],
+                      ["glow", "Brilho"],
+                    ]}
+                    onChange={(motion_cta) => updateBio({ motion_cta })}
+                  />
+                ) : (
+                  <UpgradePrompt
+                    compact
+                    title="Destaque do botÃ£o Ã© um recurso Pro"
+                    description="DÃª mais vida Ã  sua aÃ§Ã£o principal com pulso ou brilho discreto."
+                  />
+                )}
+              </Field>
+              <Field label="Capa e fundo">
+                {planAccess?.features.advanced_appearance ? (
+                  <MotionChoices
+                    value={bio.motion_ambient ?? "soft"}
+                    choices={[
+                      ["none", "Sem efeito"],
+                      ["soft", "Brilho suave"],
+                      ["spotlight", "Destaque ambiente"],
+                    ]}
+                    onChange={(motion_ambient) => updateBio({ motion_ambient })}
+                  />
+                ) : (
+                  <UpgradePrompt
+                    compact
+                    title="Efeito na capa Ã© um recurso Pro"
+                    description="Use movimento ambiente para valorizar a sua imagem de capa."
+                  />
+                )}
+              </Field>
+            </>
+          )}
+          <p className="text-xs text-muted-foreground">
+            Respeitamos a preferÃªncia do visitante por reduzir movimento no dispositivo.
+          </p>
+        </>
+      )}
       {section === "photo" && (
         <>
           <MediaUploader
@@ -855,6 +960,36 @@ function SectionForm({
             description="Seu catálogo completo será liberado sem apagar nada que você já criou."
           />
         ))}
+    </div>
+  );
+}
+
+function MotionChoices({
+  value,
+  choices,
+  onChange,
+}: {
+  value: string;
+  choices: readonly (readonly [string, string])[];
+  onChange(value: string): void;
+}) {
+  return (
+    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+      {choices.map(([id, label]) => (
+        <button
+          key={id}
+          type="button"
+          aria-pressed={value === id}
+          onClick={() => onChange(id)}
+          className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
+            value === id
+              ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]"
+              : "border-border hover:border-[color:var(--primary)]/50"
+          }`}
+        >
+          {label}
+        </button>
+      ))}
     </div>
   );
 }

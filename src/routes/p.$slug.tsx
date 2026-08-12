@@ -140,6 +140,7 @@ function PublicBio() {
         onTrack={track}
         onShare={share}
         products={products}
+        motionLevel={hasProPlan ? "pro" : "standard"}
         supplemental={
           <>
             {supplementalBlocks.map((block: PageBlock) => (

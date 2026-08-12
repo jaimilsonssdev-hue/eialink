@@ -2642,7 +2642,7 @@
 .landing-template-carousel-exit-next { animation: landing-carousel-exit-next .46s cubic-bezier(.22, .7, .25, 1) both; }
 .landing-template-carousel-enter-previous { animation: landing-carousel-enter-previous .46s cubic-bezier(.22, .7, .25, 1) both; }
 .landing-template-carousel-exit-previous { animation: landing-carousel-exit-previous .46s cubic-bezier(.22, .7, .25, 1) both; }
-.landing-template-demo { min-height: 15.4rem; color: #fff; background: #0d0a12; }
+.landing-template-demo { position: relative; min-height: 15.4rem; overflow: hidden; color: #fff; background: #0d0a12; }
 .landing-template-demo-featured { min-height: 27rem; }
 .landing-template-cover { position: relative; display: flex; min-height: 4.5rem; align-items: flex-start; justify-content: space-between; padding: .58rem; overflow: hidden; background-position: center; background-size: cover; }
 .landing-template-demo-featured .landing-template-cover { min-height: 10.2rem; padding: .9rem; }
@@ -2666,6 +2666,101 @@
 @keyframes landing-carousel-exit-previous { from { opacity: 1; transform: translateX(0); } to { opacity: .65; transform: translateX(35%); } }
 @keyframes landing-template-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-.28rem); } }
 @media (prefers-reduced-motion: reduce) { .landing-template-phone, .landing-template-phone-featured, .landing-template-carousel-slide { animation: none !important; }.landing-template-preview-hint { transition: none; } }
+
+/* ============ EIA motion system ============
+   Motion is intentionally transform/opacity-only: it feels polished without
+   increasing the rendering cost of a public BioLink. Advanced ambient motion
+   is enabled only on pages whose owner has a Pro subscription. */
+@keyframes eia-motion-reveal {
+  from { opacity: 0; transform: translate3d(0, 1.15rem, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes eia-motion-glow {
+  0%, 100% { opacity: .38; transform: scale(.96); }
+  50% { opacity: .78; transform: scale(1.045); }
+}
+@keyframes eia-motion-shine {
+  0%, 18% { transform: translateX(-120%) skewX(-16deg); opacity: 0; }
+  28% { opacity: .45; }
+  48%, 100% { transform: translateX(170%) skewX(-16deg); opacity: 0; }
+}
+@keyframes eia-motion-cta {
+  0%, 100% { box-shadow: 0 10px 24px rgb(22 163 74 / .22); }
+  50% { box-shadow: 0 14px 34px rgb(22 163 74 / .42); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .landing-motion-section,
+  .landing-motion-root #exemplos,
+  .landing-motion-root #templates,
+  .landing-motion-root #beneficios,
+  .landing-motion-root #como-funciona {
+    animation: eia-motion-reveal .62s cubic-bezier(.22, .8, .24, 1) both;
+  }
+  .landing-motion-root #exemplos { animation-delay: .07s; }
+  .landing-motion-root #templates { animation-delay: .12s; }
+  .landing-motion-root #beneficios { animation-delay: .17s; }
+  .landing-motion-root #como-funciona { animation-delay: .22s; }
+  .landing-motion-root .btn-primary,
+  .landing-motion-root .btn-secondary,
+  .landing-motion-root .landing-template-phone,
+  .landing-motion-root .landing-template-carousel button {
+    transition: transform .24s cubic-bezier(.22, .8, .24, 1), box-shadow .24s ease, border-color .24s ease, background-color .24s ease;
+  }
+  .landing-motion-root .btn-primary:hover,
+  .landing-motion-root .landing-template-carousel button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgb(168 85 247 / .28);
+  }
+  .landing-motion-root .btn-secondary:hover {
+    transform: translateY(-2px);
+    border-color: rgb(216 180 254 / .58);
+  }
+  .landing-motion-root .landing-template-phone:hover {
+    box-shadow: 0 22px 44px rgb(0 0 0 / .38), 0 0 0 1px rgb(216 180 254 / .25);
+  }
+  .landing-motion-root .landing-template-demo-featured::after {
+    position: absolute;
+    inset: 0 auto 0 -40%;
+    width: 22%;
+    content: "";
+    pointer-events: none;
+    background: linear-gradient(90deg, transparent, rgb(255 255 255 / .2), transparent);
+    animation: eia-motion-shine 8s ease-in-out 1.6s infinite;
+  }
+  .public-profile-shell .public-profile-action,
+  .public-profile-shell .public-profile-share,
+  .public-profile-shell .public-profile-avatar-wrap {
+    transition: transform .2s cubic-bezier(.22, .8, .24, 1), box-shadow .2s ease, filter .2s ease;
+  }
+  .public-profile-shell .public-profile-action:hover,
+  .public-profile-shell .public-profile-share:hover {
+    transform: translateY(-2px);
+  }
+  .public-profile-shell .public-profile-action:active,
+  .public-profile-shell .public-profile-share:active {
+    transform: translateY(0) scale(.985);
+  }
+  .public-profile-shell[data-motion="pro"] .public-profile-banner-shine {
+    animation: eia-motion-glow 6s ease-in-out infinite;
+  }
+  .public-profile-shell[data-motion="pro"] .public-profile-action-whatsapp {
+    animation: eia-motion-cta 2.8s ease-in-out infinite;
+  }
+  .public-profile-shell[data-motion="pro"] .public-profile-avatar-wrap {
+    animation: eia-motion-reveal .58s cubic-bezier(.22, .8, .24, 1) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-motion-root *,
+  .public-profile-shell[data-motion] * {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
 
 /* Therapy and psychology: intentionally quiet, warm, and non-clinical. */
 .niche-therapy { min-height: 100vh; overflow: hidden; color: #29433d; background: #f4f1eb; font-family: "Poppins", "Inter", ui-sans-serif, system-ui, sans-serif; }

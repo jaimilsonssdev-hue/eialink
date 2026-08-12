@@ -71,7 +71,7 @@ const testimonials = [
 function Landing() {
   const [previewTemplate, setPreviewTemplate] = useState<(typeof templates)[number] | null>(null);
   return (
-    <main className="min-h-screen overflow-hidden bg-[#07060b] text-[#f8f5ff]">
+    <main className="landing-motion-root min-h-screen overflow-hidden bg-[#07060b] text-[#f8f5ff]">
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_55%_0,rgba(124,58,237,.16),transparent_24rem),radial-gradient(circle_at_95%_90%,rgba(217,70,239,.11),transparent_30rem)]" />
       <Nav />
       <Hero />
@@ -110,7 +110,7 @@ function Brand({ compact = false }: { compact?: boolean }) {
 
 function Hero() {
   return (
-    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-14 pt-12 lg:pb-20 lg:pt-16">
+    <section className="landing-motion-section landing-motion-section-1 relative z-10 mx-auto max-w-7xl px-5 pb-14 pt-12 lg:pb-20 lg:pt-16">
       <div className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(29,15,50,.94),rgba(9,7,15,.97))] p-6 shadow-[0_20px_80px_rgba(0,0,0,.3)] md:p-10">
         <div className="grid items-center gap-8 lg:grid-cols-[.9fr_1.1fr]">
           <div>

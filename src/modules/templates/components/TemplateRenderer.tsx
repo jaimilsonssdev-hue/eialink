@@ -40,6 +40,7 @@ export function TemplateRenderer({
   onShare,
   products,
   supplemental,
+  motionLevel = "standard",
 }: {
   bio: PublicBio;
   links: PublicLink[];
@@ -47,6 +48,8 @@ export function TemplateRenderer({
   onShare: () => void;
   products?: CatalogItem[];
   supplemental?: ReactNode;
+  /** Public pages keep essential feedback for everyone; Pro unlocks ambient presentation motion. */
+  motionLevel?: "standard" | "pro";
 }) {
   const safeLinks = links
     .map((link) => ({ ...link, url: safeExternalUrl(link.url) }))
@@ -90,6 +93,7 @@ export function TemplateRenderer({
       data-template={bio.template_id ?? "default"}
       data-layout={model.template.layout}
       data-template-layout={model.template.layout}
+      data-motion={motionLevel}
       style={
         {
           fontFamily: model.theme.typography.fontFamily,

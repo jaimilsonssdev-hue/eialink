@@ -183,7 +183,7 @@ function PublicBio() {
         onTrack={track}
         onShare={share}
         products={products}
-        motionLevel={hasProPlan ? "pro" : "standard"}
+        motionLevel={bio.motion_enabled === false ? "off" : hasProPlan ? "pro" : "standard"}
         supplemental={
           <>
             {supplementalBlocks.map((block: PageBlock) => (

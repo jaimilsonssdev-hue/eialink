@@ -2688,6 +2688,10 @@
   0%, 100% { box-shadow: 0 10px 24px rgb(22 163 74 / .22); }
   50% { box-shadow: 0 14px 34px rgb(22 163 74 / .42); }
 }
+@keyframes eia-motion-cta-glow {
+  0%, 100% { filter: brightness(1); box-shadow: 0 8px 20px rgb(168 85 247 / .18); }
+  50% { filter: brightness(1.08); box-shadow: 0 14px 38px rgb(216 70 239 / .48); }
+}
 
 @media (prefers-reduced-motion: no-preference) {
   .landing-motion-section,
@@ -2741,14 +2745,45 @@
   .public-profile-shell .public-profile-share:active {
     transform: translateY(0) scale(.985);
   }
-  .public-profile-shell[data-motion="pro"] .public-profile-banner-shine {
+  .public-profile-shell[data-motion="pro"][data-motion-ambient="soft"] .public-profile-banner-shine {
     animation: eia-motion-glow 6s ease-in-out infinite;
   }
-  .public-profile-shell[data-motion="pro"] .public-profile-action-whatsapp {
+  .public-profile-shell[data-motion="pro"][data-motion-ambient="spotlight"] .public-profile-banner-shine {
+    animation: eia-motion-glow 4.6s ease-in-out infinite;
+  }
+  .public-profile-shell[data-motion="pro"][data-motion-cta="pulse"] .public-profile-action-whatsapp,
+  .public-profile-shell[data-motion="pro"][data-motion-cta="pulse"] .niche-restaurant-cta,
+  .public-profile-shell[data-motion="pro"][data-motion-cta="pulse"] .niche-clinic-cta-primary,
+  .public-profile-shell[data-motion="pro"][data-motion-cta="pulse"] .niche-therapy-primary-action,
+  .public-profile-shell[data-motion="pro"][data-motion-cta="pulse"] .niche-law-copy > a {
     animation: eia-motion-cta 2.8s ease-in-out infinite;
   }
-  .public-profile-shell[data-motion="pro"] .public-profile-avatar-wrap {
+  .public-profile-shell[data-motion="pro"][data-motion-cta="glow"] .public-profile-action-whatsapp,
+  .public-profile-shell[data-motion="pro"][data-motion-cta="glow"] .niche-restaurant-cta,
+  .public-profile-shell[data-motion="pro"][data-motion-cta="glow"] .niche-clinic-cta-primary,
+  .public-profile-shell[data-motion="pro"][data-motion-cta="glow"] .niche-therapy-primary-action,
+  .public-profile-shell[data-motion="pro"][data-motion-cta="glow"] .niche-law-copy > a {
+    animation: eia-motion-cta-glow 2.8s ease-in-out infinite;
+  }
+  .public-profile-shell[data-motion]:not([data-motion="off"])[data-motion-entrance="gentle"] .public-profile-avatar-wrap {
     animation: eia-motion-reveal .58s cubic-bezier(.22, .8, .24, 1) both;
+  }
+  .public-profile-shell[data-motion]:not([data-motion="off"])[data-motion-entrance="rise"] .public-profile-header,
+  .public-profile-shell[data-motion]:not([data-motion="off"])[data-motion-entrance="rise"] .niche-restaurant-hero-content,
+  .public-profile-shell[data-motion]:not([data-motion="off"])[data-motion-entrance="rise"] .niche-academy-hero-content,
+  .public-profile-shell[data-motion]:not([data-motion="off"])[data-motion-entrance="rise"] .niche-law-copy,
+  .public-profile-shell[data-motion]:not([data-motion="off"])[data-motion-entrance="rise"] .niche-therapy-hero-copy {
+    animation: eia-motion-reveal .62s cubic-bezier(.22, .8, .24, 1) both;
+  }
+  .public-profile-shell[data-motion="off"] .public-profile-banner-shine,
+  .public-profile-shell[data-motion="off"] .public-profile-avatar-wrap,
+  .public-profile-shell[data-motion="off"] .public-profile-action-whatsapp,
+  .public-profile-shell[data-motion="off"] .niche-restaurant-cta,
+  .public-profile-shell[data-motion="off"] .niche-clinic-cta-primary,
+  .public-profile-shell[data-motion="off"] .niche-therapy-primary-action,
+  .public-profile-shell[data-motion="off"] .niche-law-copy > a {
+    animation: none !important;
+    transition: none !important;
   }
 }
 

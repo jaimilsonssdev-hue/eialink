@@ -2694,17 +2694,13 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .landing-motion-section,
-  .landing-motion-root #exemplos,
-  .landing-motion-root #templates,
-  .landing-motion-root #beneficios,
-  .landing-motion-root #como-funciona {
+  .landing-motion-root [data-reveal] {
+    opacity: 0;
+    transform: translate3d(0, 1.2rem, 0);
+  }
+  .landing-motion-root [data-reveal].is-revealed {
     animation: eia-motion-reveal .62s cubic-bezier(.22, .8, .24, 1) both;
   }
-  .landing-motion-root #exemplos { animation-delay: .07s; }
-  .landing-motion-root #templates { animation-delay: .12s; }
-  .landing-motion-root #beneficios { animation-delay: .17s; }
-  .landing-motion-root #como-funciona { animation-delay: .22s; }
   .landing-motion-root .btn-primary,
   .landing-motion-root .btn-secondary,
   .landing-motion-root .landing-template-phone,
@@ -2788,6 +2784,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .landing-motion-root [data-reveal] { opacity: 1; transform: none; }
   .landing-motion-root *,
   .public-profile-shell[data-motion] * {
     scroll-behavior: auto !important;

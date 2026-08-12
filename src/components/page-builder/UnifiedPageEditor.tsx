@@ -82,8 +82,8 @@ const MENU: {
   },
   {
     id: "motion",
-    group: "AparÃªncia",
-    label: "AnimaÃ§Ãµes",
+    group: "Aparência",
+    label: "Animações",
     description: "Movimento e destaque",
     icon: Sparkles,
   },
@@ -700,26 +700,26 @@ function SectionForm({
       {section === "motion" && (
         <>
           <p className="text-sm text-muted-foreground">
-            Escolha movimentos discretos para a sua pÃ¡gina. A prÃ©via Ã© atualizada na hora e
-            as opÃ§Ãµes ficam publicadas quando vocÃª clicar em Salvar.
+            Escolha movimentos discretos para a sua página. A prévia é atualizada na hora e
+            as opções ficam publicadas quando você clicar em Salvar.
           </p>
           <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface-elevated p-4 text-sm">
             <span>
-              <b className="block">Ativar animaÃ§Ãµes</b>
+              <b className="block">Ativar animações</b>
               <span className="mt-1 block text-xs text-muted-foreground">
-                VocÃª pode desligar todos os efeitos da sua pÃ¡gina a qualquer momento.
+                Você pode desligar todos os efeitos da sua página a qualquer momento.
               </span>
             </span>
             <input
               type="checkbox"
               checked={bio.motion_enabled ?? true}
               onChange={(event) => updateBio({ motion_enabled: event.target.checked })}
-              aria-label="Ativar animaÃ§Ãµes na pÃ¡gina"
+              aria-label="Ativar animações na página"
             />
           </label>
           {bio.motion_enabled !== false && (
             <>
-              <Field label="Entrada da pÃ¡gina">
+              <Field label="Entrada da página">
                 <MotionChoices
                   value={bio.motion_entrance ?? "gentle"}
                   choices={[
@@ -730,7 +730,7 @@ function SectionForm({
                   onChange={(motion_entrance) => updateBio({ motion_entrance })}
                 />
               </Field>
-              <Field label="BotÃ£o principal">
+              <Field label="Botão principal">
                 {planAccess?.features.advanced_appearance ? (
                   <MotionChoices
                     value={bio.motion_cta ?? "none"}
@@ -744,8 +744,8 @@ function SectionForm({
                 ) : (
                   <UpgradePrompt
                     compact
-                    title="Destaque do botÃ£o Ã© um recurso Pro"
-                    description="DÃª mais vida Ã  sua aÃ§Ã£o principal com pulso ou brilho discreto."
+                    title="Destaque do botão é um recurso Pro"
+                    description="Dê mais vida à sua ação principal com pulso ou brilho discreto."
                   />
                 )}
               </Field>
@@ -763,7 +763,7 @@ function SectionForm({
                 ) : (
                   <UpgradePrompt
                     compact
-                    title="Efeito na capa Ã© um recurso Pro"
+                    title="Efeito na capa é um recurso Pro"
                     description="Use movimento ambiente para valorizar a sua imagem de capa."
                   />
                 )}
@@ -771,7 +771,7 @@ function SectionForm({
             </>
           )}
           <p className="text-xs text-muted-foreground">
-            Respeitamos a preferÃªncia do visitante por reduzir movimento no dispositivo.
+            Respeitamos a preferência do visitante por reduzir movimento no dispositivo.
           </p>
         </>
       )}

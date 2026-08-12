@@ -112,16 +112,21 @@ function Brand({ compact = false }: { compact?: boolean }) {
 function Hero() {
   return (
     <section data-reveal className="landing-motion-section landing-motion-section-1 relative z-10 mx-auto max-w-7xl px-5 pb-14 pt-12 lg:pb-20 lg:pt-16">
-      <div className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(29,15,50,.94),rgba(9,7,15,.97))] p-6 shadow-[0_20px_80px_rgba(0,0,0,.3)] md:p-10">
+      <div className="landing-hero-surface rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(29,15,50,.94),rgba(9,7,15,.97))] p-6 shadow-[0_20px_80px_rgba(0,0,0,.3)] md:p-10">
         <div className="grid items-center gap-8 lg:grid-cols-[.9fr_1.1fr]">
-          <div>
+          <div className="landing-hero-copy">
             <p className="eyebrow">Biolinks premium para negócios</p>
             <h1 className="mt-4 max-w-xl font-display text-4xl font-bold leading-[1.06] tracking-tight md:text-6xl">Seu negócio merece mais do que um <span className="text-fuchsia-400">link na bio.</span></h1>
             <p className="mt-5 max-w-lg text-sm leading-6 text-[#cbc2d7] md:text-base">Crie um BioLink Premium em poucos minutos e transforme visitantes em clientes todos os dias.</p>
             <div className="mt-7 flex flex-wrap gap-3"><Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary">Criar meu BioLink grátis <ArrowRight className="h-4 w-4" /></Link><a href="#exemplos" className="btn-secondary">Ver exemplos</a></div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-[#c6bdd0]"><span><Check className="mr-1 inline h-3.5 w-3.5 text-green-400" />Grátis para começar</span><span><Check className="mr-1 inline h-3.5 w-3.5 text-violet-300" />Sem cartão de crédito</span><span><Check className="mr-1 inline h-3.5 w-3.5 text-fuchsia-300" />Publique em 1 minuto</span></div>
           </div>
-          <div className="relative"><div className="absolute inset-x-12 bottom-0 h-20 rounded-full bg-violet-600/35 blur-3xl" /><TemplateRail featured /></div>
+          <div className="landing-hero-visual relative">
+            <div className="landing-hero-orbit landing-hero-orbit-one" aria-hidden />
+            <div className="landing-hero-orbit landing-hero-orbit-two" aria-hidden />
+            <div className="absolute inset-x-12 bottom-0 h-20 rounded-full bg-violet-600/35 blur-3xl" />
+            <TemplateRail featured />
+          </div>
         </div>
       </div>
     </section>

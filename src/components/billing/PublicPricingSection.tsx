@@ -19,12 +19,12 @@ const fallbackPlans: PublicPlan[] = [
     description: "Para publicar sua presença profissional gratuitamente.",
     price_cents: 0,
     billing_interval: "monthly",
-    limits: { bio_pages: 1, links: 4, catalog_items: 0, templates: 1 },
+    limits: { bio_pages: 1, links: 4, catalog_items: 3, templates: 1 },
     features: {
       whatsapp: true,
       analytics: false,
       custom_domain: false,
-      catalog: false,
+      catalog: true,
       premium_templates: false,
       advanced_appearance: false,
       remove_branding: false,
@@ -80,7 +80,11 @@ function planBenefits(plan: PublicPlan) {
   return [
     limits.bio_pages === -1 ? "BioLinks ilimitados" : `${limits.bio_pages} BioLink`,
     limits.templates === -1 ? "Todos os templates" : "1 template gratuito",
-    features.catalog ? "Catálogo de produtos e serviços" : null,
+    features.catalog
+      ? limits.catalog_items === -1
+        ? "Catálogo de produtos e serviços"
+        : `Até ${limits.catalog_items} produtos ou serviços`
+      : null,
     features.analytics ? "Resultados da página" : null,
     features.remove_branding ? "Sem a marca Eialink" : "Marca Eialink na página",
     features.whatsapp ? "WhatsApp integrado" : null,

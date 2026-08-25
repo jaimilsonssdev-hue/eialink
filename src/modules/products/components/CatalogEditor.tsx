@@ -21,13 +21,16 @@ function priceLabel(price: number | null) {
 export function CatalogEditor({
   items,
   onChange,
+  maxItems = -1,
 }: {
   items: CatalogItem[];
   onChange(items: CatalogItem[]): void;
+  maxItems?: number;
 }) {
   const [draft, setDraft] = useState<Omit<CatalogItem, "id" | "position">>();
   const [openId, setOpenId] = useState<string>();
   const [error, setError] = useState<string>();
+  const atLimit = maxItems !== -1 && items.length >= maxItems;
   const update = (id: string, patch: Partial<CatalogItem>) =>
     onChange(items.map((item) => (item.id === id ? { ...item, ...patch } : item)));
   const move = (index: number, direction: -1 | 1) => {
@@ -128,6 +131,10 @@ export function CatalogEditor({
           {error && <p role="alert" className="mt-3 text-sm text-[color:var(--destructive)]">{error}</p>}
           <div className="mt-4 flex gap-2"><button type="button" className="btn-primary" onClick={confirm}>Adicionar à vitrine</button><button type="button" className="btn-secondary" onClick={() => { setDraft(undefined); setError(undefined); }}>Cancelar</button></div>
         </section>
+      ) : atLimit ? (
+        <p className="rounded-xl border border-violet-400/20 bg-violet-500/10 px-4 py-3 text-sm text-muted-foreground">
+          Seu plano permite até {maxItems} produtos ou serviços. No Pro, sua vitrine é ilimitada.
+        </p>
       ) : (
         <div className="catalog-add-actions">
           <button type="button" className="btn-primary" onClick={() => setDraft(blankDraft("product"))}><Plus size={17} /> Adicionar produto</button>

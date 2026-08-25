@@ -25,7 +25,9 @@ function NotFoundComponent() {
           O endereço acessado não existe ou foi movido.
         </p>
         <div className="mt-6">
-          <Link to="/" className="btn-primary">Voltar ao início</Link>
+          <Link to="/" className="btn-primary">
+            Voltar ao início
+          </Link>
         </div>
       </div>
     </div>
@@ -44,10 +46,18 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         <h1 className="text-xl font-semibold">Algo deu errado</h1>
         <p className="mt-2 text-sm text-muted-foreground">Tente recarregar a página.</p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button onClick={() => { router.invalidate(); reset(); }} className="btn-primary">
+          <button
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
+            className="btn-primary"
+          >
             Tentar novamente
           </button>
-          <a href="/" className="btn-secondary">Início</a>
+          <a href="/" className="btn-secondary">
+            Início
+          </a>
         </div>
       </div>
     </div>
@@ -64,7 +74,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       { title: "EIA Link — Vitrines digitais para pequenos negócios" },
-      { name: "description", content: "Tenha uma página profissional com WhatsApp, Pix, redes sociais e analytics. Ferramenta da EIA Digital para pequenos negócios." },
+      {
+        name: "description",
+        content:
+          "Tenha uma página profissional com WhatsApp, Pix, redes sociais e analytics. Ferramenta da EIA Digital para pequenos negócios.",
+      },
       { name: "author", content: "EIA Digital" },
       { name: "robots", content: "index, follow, max-image-preview:large" },
       { name: "googlebot", content: "index, follow, max-image-preview:large" },
@@ -82,7 +96,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/icons/eia-link-icon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap",
+      },
     ],
     scripts: [
       {
@@ -105,9 +122,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="pt-BR">
-      <head><HeadContent /></head>
-      <body>{children}<Scripts /></body>
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <HeadContent />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('eialink-interface-theme');if(t!=='light'&&t!=='dark'){t=matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}var r=document.documentElement;r.classList.toggle('dark',t==='dark');r.dataset.interfaceTheme=t;r.style.colorScheme=t}catch(e){}})()`,
+          }}
+        />
+      </head>
+      <body>
+        {children}
+        <Scripts />
+      </body>
     </html>
   );
 }

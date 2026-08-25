@@ -2993,3 +2993,322 @@
 .niche-therapy-footer-links { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem; padding-bottom: 1rem; }.niche-therapy-footer-links > a { display: inline-flex; align-items: center; gap: .35rem; padding: .5rem .8rem; border: 1px solid #cbdaca; border-radius: 999px; color: #45634f; font-size: .82rem; }.niche-therapy-footer-links .pix-card { max-width: 22rem; margin: 0; }
 .niche-template-thumb-therapy .niche-template-thumb-cover { min-height: 5rem; }.niche-template-thumb-therapy .niche-template-thumb-cta { color: #fff; background: #728f7a; }.niche-template-thumb-therapy .niche-template-thumb-cards i { background: #dce9dc; }
 @media (max-width: 720px) { .niche-therapy-hero { min-height: 38rem; }.niche-therapy-overlay { background: linear-gradient(0deg, rgba(28, 48, 42, .94), rgba(31, 46, 40, .22)); }.niche-therapy-topline, .niche-therapy-hero-copy, .niche-therapy-intro, .niche-therapy-section, .niche-therapy-cta, .niche-therapy-footer-links { width: calc(100% - 2rem); }.niche-therapy-topline { margin-top: 1rem; }.niche-therapy-topline span { max-width: 12rem; font-size: .58rem; }.niche-therapy-hero-copy { padding-bottom: 2.5rem; }.niche-therapy-hero-copy h1 { font-size: clamp(2.6rem, 14vw, 4rem); }.niche-therapy-hero-copy > span { font-size: .95rem; }.niche-therapy-primary-action { width: 100%; justify-content: center; }.niche-therapy-intro { grid-template-columns: 1fr; gap: 1rem; padding: 3.4rem 0 1.5rem; }.niche-therapy-intro > span { grid-column: auto; }.niche-therapy-grid, .niche-therapy-links > div:last-child { grid-template-columns: 1fr; }.niche-therapy-grid article { min-height: auto; }.niche-therapy-cta { align-items: flex-start; flex-direction: column; margin-top: 1rem; }.niche-therapy-cta > a { width: 100%; justify-content: center; } }
+
++
++:root[data-interface-theme="light"] {
++  --background: #f6f7fb;
++  --foreground: #17141f;
++  --surface: #ffffff;
++  --surface-elevated: #f0eef6;
++  --card: #ffffff;
++  --card-foreground: #17141f;
++  --popover: #ffffff;
++  --popover-foreground: #17141f;
++  --primary: #7137d6;
++  --primary-foreground: #ffffff;
++  --primary-glow: #a43fe4;
++  --secondary: #ebe7f2;
++  --secondary-foreground: #211b2b;
++  --muted: #eeecf3;
++  --muted-foreground: #686172;
++  --accent: #8b3fd0;
++  --accent-foreground: #ffffff;
++  --border: rgb(29 20 44 / 0.11);
++  --input: #ffffff;
++  --ring: #7c3aed;
++  --shadow-elegant: 0 12px 28px -15px rgb(113 55 214 / 0.38);
++  --shadow-glow: 0 14px 34px -18px rgb(113 55 214 / 0.46);
++  --shadow-card: 0 16px 40px -28px rgb(33 24 50 / 0.26);
++}
++
++:root[data-interface-theme="light"] body {
++  background-image:
++    radial-gradient(900px 420px at 0% -10%, rgb(124 58 237 / 0.08), transparent),
++    radial-gradient(700px 360px at 100% 0%, rgb(14 165 233 / 0.06), transparent);
++}
++/* 2026 workspace refresh: calm surfaces, clearer hierarchy and accessible themes. */
+.interface-theme-toggle {
+  display: flex;
+  width: 100%;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--surface-elevated) 72%, transparent);
+  font-size: 0.8rem;
+  font-weight: 650;
+  transition:
+    border-color 0.16s ease,
+    background 0.16s ease,
+    transform 0.16s ease;
+}
+.interface-theme-toggle:hover {
+  border-color: color-mix(in oklab, var(--primary) 45%, var(--border));
+  background: var(--surface-elevated);
+}
+.interface-theme-toggle:focus-visible {
+  outline: 3px solid color-mix(in oklab, var(--ring) 28%, transparent);
+  outline-offset: 2px;
+}
+.interface-theme-toggle-icon {
+  display: grid;
+  width: 1.9rem;
+  height: 1.9rem;
+  place-items: center;
+  border-radius: 0.62rem;
+  color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 12%, var(--surface));
+}
+.interface-theme-toggle-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+.interface-theme-toggle.is-compact {
+  width: 2.35rem;
+  min-height: 2.35rem;
+  padding: 0;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+}
+.interface-theme-toggle.is-compact .interface-theme-toggle-icon {
+  background: var(--surface-elevated);
+}
+
+.app-shell {
+  background: var(--background);
+}
+.app-sidebar {
+  border-right: 1px solid var(--border);
+  background: color-mix(in oklab, var(--surface) 96%, transparent);
+  box-shadow: 16px 0 40px -35px rgb(0 0 0 / 0.35);
+}
+.app-sidebar-header {
+  min-height: 4.75rem;
+}
+.app-brand {
+  color: var(--foreground);
+  letter-spacing: -0.025em;
+}
+.app-nav-link {
+  color: var(--muted-foreground);
+}
+.app-nav-link:hover {
+  color: var(--foreground);
+  background: var(--surface-elevated);
+}
+.app-nav-link.is-active {
+  color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 10%, var(--surface));
+  box-shadow: inset 3px 0 var(--primary);
+}
+.app-content {
+  min-height: 100vh;
+}
+.app-mobile-header {
+  color: var(--foreground);
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+}
+.app-mobile-nav {
+  border-color: var(--border);
+  background: color-mix(in oklab, var(--surface) 94%, transparent);
+}
+
+.premium-builder {
+  --builder-line: var(--border);
+}
+.builder-topbar {
+  margin-bottom: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 1.15rem;
+  background: color-mix(in oklab, var(--surface) 90%, transparent);
+  box-shadow: 0 16px 42px -34px rgb(0 0 0 / 0.45);
+}
+.free-setup-guide {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+.free-setup-steps button {
+  border-color: var(--border);
+  background: var(--background);
+}
+.free-setup-steps button:hover {
+  border-color: color-mix(in oklab, var(--primary) 38%, var(--border));
+  background: color-mix(in oklab, var(--primary) 4%, var(--surface));
+}
+.free-setup-steps button.is-active {
+  border-color: color-mix(in oklab, var(--primary) 58%, var(--border));
+  background: color-mix(in oklab, var(--primary) 9%, var(--surface));
+}
+
+.builder-layout {
+  display: grid;
+  grid-template-columns: minmax(19rem, 26rem) minmax(25rem, 1fr);
+  grid-template-areas: "menu preview" "inspector preview";
+  align-items: start;
+  gap: 1rem 1.5rem;
+}
+.builder-menu {
+  grid-area: menu;
+  position: static !important;
+  padding: 0.85rem;
+}
+.builder-menu > div {
+  margin-bottom: 0.7rem;
+}
+.builder-menu > div > p {
+  margin: 0 0.45rem 0.38rem;
+}
+.builder-menu > div > div {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+.builder-menu-item {
+  min-height: 4.25rem;
+  border: 1px solid transparent;
+  background: transparent;
+}
+.builder-menu-item:hover {
+  border-color: var(--border);
+  background: var(--surface-elevated);
+}
+.builder-menu-item.is-active {
+  border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+  color: var(--primary);
+  background: color-mix(in oklab, var(--primary) 9%, var(--surface));
+}
+.builder-inspector {
+  grid-area: inspector;
+  position: static !important;
+  padding: 1.2rem;
+}
+.builder-preview-stage {
+  grid-area: preview;
+  position: sticky;
+  top: 1.5rem;
+  min-height: calc(100vh - 3rem);
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1.35rem;
+  background: color-mix(in oklab, var(--surface-elevated) 45%, var(--background));
+}
+.builder-preview-label {
+  color: var(--foreground);
+}
+.editor-phone-preview {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.16),
+    0 26px 55px rgb(0 0 0 / 0.25);
+}
+
+:root[data-interface-theme="light"] .premium-welcome {
+  border-color: var(--border);
+  background: linear-gradient(130deg, #ffffff 0%, #f7f3ff 58%, #edf7ff 100%);
+  box-shadow: var(--shadow-card);
+}
+:root[data-interface-theme="light"] .premium-welcome h1,
+:root[data-interface-theme="light"] .premium-section-heading h2,
+:root[data-interface-theme="light"] .catalog-editor-heading h2,
+:root[data-interface-theme="light"] .premium-metric-value,
+:root[data-interface-theme="light"] .premium-panel-title {
+  color: var(--foreground);
+}
+:root[data-interface-theme="light"] .premium-welcome h1 span {
+  color: var(--primary);
+}
+:root[data-interface-theme="light"] .premium-welcome p:not(.eyebrow) {
+  color: var(--muted-foreground);
+}
+:root[data-interface-theme="light"] .premium-text-action {
+  color: var(--primary);
+}
+:root[data-interface-theme="light"] .premium-stats .card-glow,
+:root[data-interface-theme="light"] .premium-quick-actions .card-surface,
+:root[data-interface-theme="light"] .premium-dashboard .template-marketplace,
+:root[data-interface-theme="light"] .premium-panel,
+:root[data-interface-theme="light"] .premium-metric,
+:root[data-interface-theme="light"] .premium-growth-card,
+:root[data-interface-theme="light"] .premium-settings-card {
+  border-color: var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow-card);
+}
+:root[data-interface-theme="light"] .premium-public-link {
+  border-color: color-mix(in oklab, var(--primary) 24%, var(--border));
+  background: color-mix(in oklab, var(--primary) 5%, var(--surface));
+}
+:root[data-interface-theme="light"] .premium-dashboard .template-gallery-card {
+  border-color: var(--border);
+  background: var(--surface);
+}
+:root[data-interface-theme="light"] .catalog-editor .catalog-editor-item {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+@media (max-width: 1100px) {
+  .builder-layout {
+    grid-template-columns: minmax(17rem, 22rem) minmax(22rem, 1fr);
+  }
+  .builder-menu > div > div {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 900px) {
+  .builder-layout {
+    display: flex;
+    flex-direction: column;
+  }
+  .builder-menu,
+  .builder-inspector,
+  .builder-preview-stage {
+    width: 100%;
+  }
+  .builder-menu > div > div {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .builder-preview-stage {
+    position: static;
+    min-height: 0;
+  }
+}
+@media (max-width: 640px) {
+  .builder-topbar {
+    position: static;
+    margin-inline: 0;
+    padding: 1rem;
+  }
+  .builder-topbar > div:last-child {
+    width: 100%;
+  }
+  .builder-topbar .btn-primary {
+    flex: 1;
+  }
+  .free-setup-steps {
+    grid-template-columns: 1fr;
+  }
+  .builder-menu > div > div {
+    grid-template-columns: 1fr;
+  }
+  .builder-menu-item {
+    min-height: auto;
+  }
+  .builder-preview-stage {
+    margin-inline: -0.25rem;
+    padding: 0.75rem 0.25rem 1rem;
+    border-inline: 0;
+    border-radius: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .interface-theme-toggle {
+    transition: none;
+  }
+}
+

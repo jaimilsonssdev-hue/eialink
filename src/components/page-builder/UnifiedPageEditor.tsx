@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
+import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
 import type { PublicBio, PublicLink } from "@/components/public-profile/types";
 import type { Tables } from "@/integrations/supabase/types";
@@ -431,20 +432,24 @@ export function UnifiedPageEditor({
           <div
             className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} mx-auto max-w-[25rem] overflow-hidden bg-background`}
           >
-            <TemplateRenderer
-              bio={previewBio}
-              links={previewLinks.filter((link) => link.active)}
-              onTrack={() => undefined}
-              onShare={() => undefined}
-              products={products}
-              motionLevel={
-                previewBio.motion_enabled === false
-                  ? "off"
-                  : planAccess?.features.advanced_appearance
-                    ? "pro"
-                    : "standard"
-              }
-            />
+            {planAccess?.isPro ? (
+              <TemplateRenderer
+                bio={previewBio}
+                links={previewLinks.filter((link) => link.active)}
+                onTrack={() => undefined}
+                onShare={() => undefined}
+                products={products}
+                motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
+              />
+            ) : (
+              <FreeLinkRenderer
+                bio={previewBio}
+                links={previewLinks.filter((link) => link.active)}
+                onTrack={() => undefined}
+                onShare={() => undefined}
+                products={products}
+              />
+            )}
           </div>
         </main>
 
@@ -962,7 +967,11 @@ function SectionForm({
       )}
       {section === "catalog" &&
         (planAccess?.features.catalog ? (
-          <CatalogEditor items={products} onChange={setProducts} />
+          <CatalogEditor
+            items={products}
+            onChange={setProducts}
+            maxItems={planAccess.limits.catalog_items}
+          />
         ) : (
           <UpgradePrompt
             compact

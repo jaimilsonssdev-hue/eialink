@@ -6,6 +6,7 @@ import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import type { PageBlock } from "@/components/page-builder/types";
 import type { CatalogItem } from "@/modules/products/types";
 import { BrandingProvider } from "@/components/public-profile/BrandingContext";
+import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -177,21 +178,38 @@ function PublicBio() {
 
   return (
     <BrandingProvider show={!hasProPlan}>
-      <TemplateRenderer
-        bio={{ ...bio, theme }}
-        links={links}
-        onTrack={track}
-        onShare={share}
-        products={products}
-        motionLevel={bio.motion_enabled === false ? "off" : hasProPlan ? "pro" : "standard"}
-        supplemental={
-          <>
-            {supplementalBlocks.map((block: PageBlock) => (
-              <BlockRenderer key={block.id} block={block} />
-            ))}
-          </>
-        }
-      />
+      {hasProPlan ? (
+        <TemplateRenderer
+          bio={{ ...bio, theme }}
+          links={links}
+          onTrack={track}
+          onShare={share}
+          products={products}
+          motionLevel={bio.motion_enabled === false ? "off" : "pro"}
+          supplemental={
+            <>
+              {supplementalBlocks.map((block: PageBlock) => (
+                <BlockRenderer key={block.id} block={block} />
+              ))}
+            </>
+          }
+        />
+      ) : (
+        <FreeLinkRenderer
+          bio={{ ...bio, theme }}
+          links={links}
+          onTrack={track}
+          onShare={share}
+          products={products}
+          supplemental={
+            <>
+              {supplementalBlocks.map((block: PageBlock) => (
+                <BlockRenderer key={block.id} block={block} />
+              ))}
+            </>
+          }
+        />
+      )}
     </BrandingProvider>
   );
 }

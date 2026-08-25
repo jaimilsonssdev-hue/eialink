@@ -68,7 +68,7 @@ export type PlanAccess = {
 export const ESSENTIAL_LIMITS: PlanLimits = {
   bio_pages: 1,
   links: 4,
-  catalog_items: 0,
+  catalog_items: 3,
   templates: 1,
 };
 
@@ -76,7 +76,7 @@ export const ESSENTIAL_FEATURES: PlanFeatures = {
   whatsapp: true,
   analytics: false,
   custom_domain: false,
-  catalog: false,
+  catalog: true,
   premium_templates: false,
   advanced_appearance: false,
   remove_branding: false,

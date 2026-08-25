@@ -13,23 +13,25 @@ export const Route = createFileRoute("/checkout/return")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  validateSearch: (search: Record<string, unknown>): { session_id?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { session_id?: string; completed?: boolean } => ({
     session_id: typeof search.session_id === "string" ? search.session_id : undefined,
+    completed: search.completed === true || search.completed === "true",
   }),
   component: CheckoutReturn,
 });
 
 function CheckoutReturn() {
-  const { session_id: sessionId } = Route.useSearch();
+  const { session_id: sessionId, completed } = Route.useSearch();
+  const paymentCompleted = Boolean(sessionId || completed);
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 p-6 text-center">
       <CheckCircle2 className="h-12 w-12 text-[color:var(--success)]" />
       <h1 className="text-3xl font-bold">
-        {sessionId ? "Pagamento concluído!" : "Sessão não encontrada"}
+        {paymentCompleted ? "Pagamento concluído!" : "Sessão não encontrada"}
       </h1>
       <p className="text-muted-foreground">
-        {sessionId
+        {paymentCompleted
           ? "Sua assinatura foi registrada. Pode levar alguns segundos até o plano aparecer atualizado no painel."
           : "Não encontramos informações do pagamento nesta página."}
       </p>

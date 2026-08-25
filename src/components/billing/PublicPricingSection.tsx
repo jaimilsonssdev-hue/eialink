@@ -37,7 +37,7 @@ const fallbackPlans: PublicPlan[] = [
     slug: "pro-monthly",
     name: "Eialink Pro",
     description: "Para negócios que querem vender, medir resultados e crescer.",
-    price_cents: 1990,
+    price_cents: 2900,
     billing_interval: "monthly",
     limits: { bio_pages: -1, links: -1, catalog_items: -1, templates: -1 },
     features: {
@@ -57,7 +57,7 @@ const fallbackPlans: PublicPlan[] = [
     slug: "pro-yearly",
     name: "Eialink Pro anual",
     description: "Todos os recursos Pro com economia no plano anual.",
-    price_cents: 19700,
+    price_cents: 29000,
     billing_interval: "yearly",
     limits: { bio_pages: -1, links: -1, catalog_items: -1, templates: -1 },
     features: {
@@ -159,10 +159,9 @@ export function PublicPricingSection() {
                         Criar meu Eialink grátis
                       </Link>
                     ) : (
-                      <a
-                        href={commercialWhatsAppUrl("pro")}
-                        target="_blank"
-                        rel="noreferrer"
+                      <Link
+                        to="/auth"
+                        search={{ mode: "signup", next: "billing" } as never}
                         className={`${featured ? "btn-primary" : "btn-secondary"} mt-7 justify-center`}
                         onClick={() =>
                           void FunnelService.track("upgrade_click", {
@@ -171,8 +170,8 @@ export function PublicPricingSection() {
                           })
                         }
                       >
-                        Assinar Eialink Pro
-                      </a>
+                        Criar conta e assinar
+                      </Link>
                     )}
                   </article>
                 );

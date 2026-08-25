@@ -1,5 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { CheckCircle2, Loader2, RefreshCw } from "lucide-react";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { syncLatestCheckoutCompletion } from "@/utils/payments.functions";
 
 export const Route = createFileRoute("/checkout/return")({
   head: () => ({
@@ -23,21 +26,56 @@ export const Route = createFileRoute("/checkout/return")({
 function CheckoutReturn() {
   const { session_id: sessionId, completed } = Route.useSearch();
   const paymentCompleted = Boolean(sessionId || completed);
+  const sync = useQuery({
+    queryKey: ["sync-checkout-completion", sessionId],
+    enabled: paymentCompleted,
+    retry: 3,
+    retryDelay: 1500,
+    queryFn: async () => {
+      const result = await syncLatestCheckoutCompletion({
+        data: { environment: getStripeEnvironment() },
+      });
+      if ("error" in result) throw new Error(result.error);
+      return result;
+    },
+  });
+
+  const activated = sync.isSuccess;
 
   return (
     <main className="mx-auto flex min-h-screen max-w-lg flex-col items-center justify-center gap-4 p-6 text-center">
-      <CheckCircle2 className="h-12 w-12 text-[color:var(--success)]" />
+      {sync.isPending && paymentCompleted ? (
+        <Loader2 className="h-12 w-12 animate-spin text-[color:var(--primary)]" />
+      ) : (
+        <CheckCircle2 className="h-12 w-12 text-[color:var(--success)]" />
+      )}
       <h1 className="text-3xl font-bold">
-        {paymentCompleted ? "Pagamento concluído!" : "Sessão não encontrada"}
+        {activated
+          ? "Plano Pro liberado!"
+          : paymentCompleted
+            ? sync.isError
+              ? "Pagamento recebido"
+              : "Confirmando seu plano..."
+            : "Sessão não encontrada"}
       </h1>
       <p className="text-muted-foreground">
-        {paymentCompleted
-          ? "Sua assinatura foi registrada. Pode levar alguns segundos até o plano aparecer atualizado no painel."
+        {activated
+          ? "Tudo certo. Os recursos Pro já estão disponíveis na sua conta."
+          : paymentCompleted && sync.isError
+            ? "O pagamento foi concluído, mas a liberação automática ainda não foi confirmada. Tente verificar novamente."
+            : paymentCompleted
+              ? "Estamos confirmando o pagamento diretamente com a Stripe."
           : "Não encontramos informações do pagamento nesta página."}
       </p>
-      <Link to="/dashboard" className="btn-primary">
-        Voltar ao painel
-      </Link>
+      {sync.isError ? (
+        <button type="button" className="btn-primary" onClick={() => void sync.refetch()}>
+          <RefreshCw className="h-4 w-4" /> Verificar novamente
+        </button>
+      ) : (
+        <Link to="/dashboard" className="btn-primary" disabled={!activated}>
+          Ir para o painel
+        </Link>
+      )}
     </main>
   );
 }

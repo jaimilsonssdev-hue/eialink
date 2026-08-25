@@ -11,6 +11,14 @@ import { ProfileHeader } from "./ProfileHeader";
 import { PublicSocialLinks } from "./PublicSocialLinks";
 import type { PublicBio, PublicLink, TrackEvent } from "./types";
 
+type FreeLayout = "essential" | "showcase" | "social";
+
+function freeLayoutFromTemplate(templateId?: string | null): FreeLayout {
+  if (templateId === "free-showcase") return "showcase";
+  if (templateId === "free-social") return "social";
+  return "essential";
+}
+
 /** Compact, mobile-first public presence used by the free Eialink plan. */
 export function FreeLinkRenderer({
   bio,
@@ -27,6 +35,7 @@ export function FreeLinkRenderer({
   onShare: () => void;
   supplemental?: ReactNode;
 }) {
+  const layout = freeLayoutFromTemplate(bio.template_id);
   const safeLinks = links
     .map((link) => ({ ...link, url: safeExternalUrl(link.url) }))
     .filter((link): link is typeof link & { url: string } => Boolean(link.url));
@@ -36,7 +45,9 @@ export function FreeLinkRenderer({
   }));
 
   return (
-    <main className={`bio-theme ${bio.theme || "aurora"} free-link-shell`}>
+    <main
+      className={`bio-theme ${bio.theme || "aurora"} free-link-shell free-link-layout-${layout}`}
+    >
       <div className="free-link-frame">
         <Banner
           coverUrl={bio.cover_url}
@@ -50,9 +61,15 @@ export function FreeLinkRenderer({
 
         <div className="free-link-card">
           <ProfileHeader bio={bio} onTrack={onTrack} />
+          {layout === "showcase" && safeProducts.length > 0 && (
+            <CatalogSection items={safeProducts} />
+          )}
+          {layout === "social" && <PublicSocialLinks bio={bio} onTrack={onTrack} />}
           <ActionButtons bio={bio} links={safeLinks} onTrack={onTrack} />
-          <PublicSocialLinks bio={bio} onTrack={onTrack} />
-          {safeProducts.length > 0 && <CatalogSection items={safeProducts} />}
+          {layout !== "social" && <PublicSocialLinks bio={bio} onTrack={onTrack} />}
+          {layout !== "showcase" && safeProducts.length > 0 && (
+            <CatalogSection items={safeProducts} />
+          )}
           {bio.pix_key && <PixCard pixKey={bio.pix_key} onTrack={onTrack} />}
           {supplemental}
 

@@ -1,13 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Sparkles } from "lucide-react";
+import { Check, CreditCard, Loader2, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import { formatPlanPrice } from "@/modules/billing/types";
 import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
-import { supabase } from "@/integrations/supabase/client";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { createPortalSession } from "@/utils/payments.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
@@ -40,20 +50,8 @@ const FALLBACK_FEATURES = {
 function BillingPage() {
   const access = usePlanAccess();
   const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
-  const { data: account } = useQuery({
-    queryKey: ["billing-account"],
-    queryFn: async () => {
-      const { data } = await supabase.auth.getUser();
-      return { id: data.user?.id, email: data.user?.email };
-    },
-  });
-  const startCheckout = (priceId: string) =>
-    openCheckout({
-      priceId,
-      customerEmail: account?.email,
-      userId: account?.id,
-      returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
-    });
+  const [portalLoading, setPortalLoading] = useState(false);
+  const startCheckout = (priceId: string) => openCheckout({ priceId });
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ["billing-plans"],
     queryFn: BillingService.listPublicPlans,
@@ -62,20 +60,23 @@ function BillingPage() {
     ["essential", "free", "pro-monthly", "pro-yearly", "pro"].includes(plan.slug),
   );
 
+  async function openPortal() {
+    setPortalLoading(true);
+    try {
+      const result = await createPortalSession({
+        data: { environment: getStripeEnvironment() },
+      });
+      if ("error" in result) throw new Error(result.error);
+      window.location.assign(result.url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível abrir sua assinatura.");
+      setPortalLoading(false);
+    }
+  }
+
   return (
     <div className="space-y-8">
       <PaymentTestModeBanner />
-      {isOpen && (
-        <section className="card-surface space-y-3">
-          <div className="flex items-center justify-between gap-4">
-            <h2 className="font-bold">Finalize seu pagamento</h2>
-            <button type="button" className="btn-secondary" onClick={closeCheckout}>
-              Cancelar
-            </button>
-          </div>
-          {checkoutElement}
-        </section>
-      )}
       <header className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
           Assinatura
@@ -147,31 +148,48 @@ function BillingPage() {
                   </Link>
                 ) : (
                   <div className="mt-8 space-y-2">
-                    <button
-                      type="button"
-                      className="btn-primary w-full"
-                      onClick={() => startCheckout("pro_monthly")}
-                    >
-                      Assinar mensal — R$ 29/mês
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary w-full"
-                      onClick={() => startCheckout("pro_yearly")}
-                    >
-                      Assinar anual no cartão — R$ 290/ano
-                    </button>
-                    <button
-                      type="button"
-                      className="btn-secondary w-full"
-                      onClick={() => startCheckout("pro_yearly_pix")}
-                    >
-                      Pagar 12 meses no Pix — R$ 290
-                    </button>
-                    <p className="text-xs text-muted-foreground">
-                      No Pix o pagamento é único e libera 12 meses de Pro, sem renovação
-                      automática.
-                    </p>
+                    {access.data?.isPro ? (
+                      <button
+                        type="button"
+                        className="btn-primary w-full"
+                        disabled={portalLoading}
+                        onClick={() => void openPortal()}
+                      >
+                        {portalLoading ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          "Gerenciar assinatura"
+                        )}
+                      </button>
+                    ) : annual ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn-primary w-full"
+                          onClick={() => startCheckout("pro_yearly")}
+                        >
+                          <CreditCard className="h-4 w-4" /> Assinar no cartão
+                        </button>
+                        <button
+                          type="button"
+                          className="btn-secondary w-full"
+                          onClick={() => startCheckout("pro_yearly_pix")}
+                        >
+                          Pagar 12 meses no Pix
+                        </button>
+                        <p className="text-xs text-muted-foreground">
+                          Pix é pagamento único, sem renovação automática.
+                        </p>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn-primary w-full"
+                        onClick={() => startCheckout("pro_monthly")}
+                      >
+                        <CreditCard className="h-4 w-4" /> Assinar mensal
+                      </button>
+                    )}
                   </div>
                 )}
               </article>
@@ -196,6 +214,18 @@ function BillingPage() {
           Quero um site profissional
         </a>
       </section>
+
+      <Dialog open={isOpen} onOpenChange={(open) => !open && closeCheckout()}>
+        <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle>Finalize seu pagamento</DialogTitle>
+            <DialogDescription>
+              Ambiente seguro da Stripe. O Pro é liberado após a confirmação do pagamento.
+            </DialogDescription>
+          </DialogHeader>
+          {checkoutElement}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

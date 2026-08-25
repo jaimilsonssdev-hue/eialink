@@ -27,7 +27,9 @@ export const BillingService = {
     const subscription = data as (Subscription & { plans?: Plan | null }) | null;
     const plan = subscription?.plans ?? null;
     const active = subscription?.status === "active" || subscription?.status === "trialing";
-    const isPro = Boolean(active && plan && plan.slug !== "essential");
+    const isPro = Boolean(
+      active && plan && ["pro", "pro-monthly", "pro-yearly"].includes(plan.slug),
+    );
 
     return {
       plan,

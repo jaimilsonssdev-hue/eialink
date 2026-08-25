@@ -908,6 +908,10 @@ function SectionForm({
             placeholder="CPF, e-mail, celular ou chave aleatória"
             onChange={(event) => updateBio({ pix_key: event.target.value })}
           />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Chaves comuns exibem o botão de copiar. Para mostrar também um QR Code, cole um código
+            Pix Copia e Cola completo.
+          </p>
         </Field>
       )}
       {section === "links" && (

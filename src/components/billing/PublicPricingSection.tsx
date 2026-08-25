@@ -159,10 +159,9 @@ export function PublicPricingSection() {
                         Criar meu Eialink grátis
                       </Link>
                     ) : (
-                      <a
-                        href={commercialWhatsAppUrl("pro")}
-                        target="_blank"
-                        rel="noreferrer"
+                      <Link
+                        to="/auth"
+                        search={{ mode: "signup", next: "billing" } as never}
                         className={`${featured ? "btn-primary" : "btn-secondary"} mt-7 justify-center`}
                         onClick={() =>
                           void FunnelService.track("upgrade_click", {
@@ -171,13 +170,17 @@ export function PublicPricingSection() {
                           })
                         }
                       >
-                        Assinar Eialink Pro
-                      </a>
+                        Criar conta e assinar
+                      </Link>
                     )}
                   </article>
                 );
               })}
         </div>
+        <p className="mt-5 text-center text-xs text-[#a99db5]">
+          Assinaturas são processadas com segurança pela Stripe. Para pagamento avulso via Pix,
+          fale com nosso atendimento.
+        </p>
         <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-sm text-[#c4bacf]">
           <span>Precisa de algo além do Eialink?</span>
           <a

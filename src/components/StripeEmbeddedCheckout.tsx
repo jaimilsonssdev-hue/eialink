@@ -5,9 +5,10 @@ import { createCheckoutSession } from "@/utils/payments.functions";
 
 interface StripeEmbeddedCheckoutProps {
   priceId: string;
+  onComplete?: () => void;
 }
 
-export function StripeEmbeddedCheckout({ priceId }: StripeEmbeddedCheckoutProps) {
+export function StripeEmbeddedCheckout({ priceId, onComplete }: StripeEmbeddedCheckoutProps) {
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
 
@@ -61,7 +62,11 @@ export function StripeEmbeddedCheckout({ priceId }: StripeEmbeddedCheckoutProps)
 
   return (
     <div id="checkout">
-      <EmbeddedCheckoutProvider key={attempt} stripe={getStripe()} options={{ fetchClientSecret }}>
+      <EmbeddedCheckoutProvider
+        key={attempt}
+        stripe={getStripe()}
+        options={{ fetchClientSecret, onComplete }}
+      >
         <EmbeddedCheckout />
       </EmbeddedCheckoutProvider>
     </div>

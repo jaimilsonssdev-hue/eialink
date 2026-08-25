@@ -15,14 +15,14 @@ function getSupabase() {
 }
 
 const PRICE_TO_PLAN_SLUG: Record<string, string> = {
-  pro_monthly: "pro",
-  pro_yearly: "pro",
-  pro_yearly_pix: "pro",
+  pro_monthly: "pro-monthly",
+  pro_yearly: "pro-yearly",
+  pro_yearly_pix: "pro-yearly",
   catalog_monthly: "catalog",
 };
 
 /** One-off annual payments (card or Pix) grant twelve months of Pro. */
-async function grantAnnualFromOneOffPayment(session: any) {
+async function grantAnnualFromOneOffPayment(session: any, env: StripeEnv) {
   const userId = session?.metadata?.userId;
   const priceKey = session?.metadata?.priceLookupKey;
   if (!userId || session?.mode !== "payment" || session?.payment_status !== "paid") return;
@@ -33,9 +33,10 @@ async function grantAnnualFromOneOffPayment(session: any) {
   const { data: plan } = await supabase.from("plans").select("id").eq("slug", slug).maybeSingle();
   if (!plan) return;
 
-  const periodEnd = new Date();
+  const periodStart = new Date((session.created ?? Date.now() / 1000) * 1000);
+  const periodEnd = new Date(periodStart);
   periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-  await supabase
+  const { error: grantError } = await supabase
     .from("subscriptions")
     .update({
       plan_id: plan.id,
@@ -45,6 +46,26 @@ async function grantAnnualFromOneOffPayment(session: any) {
       notes: "Pagamento anual avulso (cartão ou Pix) via Stripe.",
     })
     .eq("user_id", userId);
+  if (grantError) throw grantError;
+
+  // Keep an auditable, idempotent record for the one-off annual payment.
+  const { error: paymentError } = await supabase.from("payment_subscriptions").upsert(
+    {
+      user_id: userId,
+      stripe_subscription_id: `checkout:${session.id}`,
+      stripe_customer_id: session.customer,
+      product_id: null,
+      price_id: priceKey,
+      status: "active",
+      current_period_start: periodStart.toISOString(),
+      current_period_end: periodEnd.toISOString(),
+      cancel_at_period_end: true,
+      environment: env,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "stripe_subscription_id" },
+  );
+  if (paymentError) throw paymentError;
 }
 
 function resolvePriceId(item: any): string | undefined {
@@ -61,13 +82,13 @@ async function syncAppPlan(userId: string, priceId: string | undefined, status: 
   const slug =
     status === "active" || status === "trialing" || status === "past_due"
       ? PRICE_TO_PLAN_SLUG[priceId ?? ""]
-      : "free";
+      : "essential";
   if (!slug) return;
   const { data: plan } = await supabase.from("plans").select("id").eq("slug", slug).maybeSingle();
   if (!plan) return;
   await supabase
     .from("subscriptions")
-    .update({ plan_id: plan.id, status: slug === "free" ? "active" : status })
+    .update({ plan_id: plan.id, status: slug === "essential" ? "active" : status })
     .eq("user_id", userId);
 }
 
@@ -129,7 +150,7 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded":
-      await grantAnnualFromOneOffPayment(event.data.object);
+      await grantAnnualFromOneOffPayment(event.data.object, env);
       break;
     case "invoice.paid":
       break;

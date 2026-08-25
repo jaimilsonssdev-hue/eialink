@@ -7,44 +7,153 @@ const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
 
 const COVER_LIBRARY = {
   restaurant: [
-    { id: "restaurant-burger", src: "/template-assets/restaurant-demo-cover.png", label: "Hambúrguer" },
-    { id: "restaurant-burger-evening", src: "/template-assets/restaurant-burger-evening-cover.png", label: "Hambúrguer gourmet" },
-    { id: "restaurant-pizza", src: "/template-assets/restaurant-cover-pizza.png", label: "Pizza artesanal" },
-    { id: "restaurant-brunch", src: "/template-assets/restaurant-cover-brunch.png", label: "Café e brunch" },
+    {
+      id: "restaurant-eialink",
+      src: "/template-assets/niche-covers/restaurant-eialink-cover.webp",
+      label: "Restaurante moderno",
+    },
+    {
+      id: "restaurant-burger",
+      src: "/template-assets/restaurant-demo-cover.png",
+      label: "Hambúrguer",
+    },
+    {
+      id: "restaurant-burger-evening",
+      src: "/template-assets/restaurant-burger-evening-cover.png",
+      label: "Hambúrguer gourmet",
+    },
+    {
+      id: "restaurant-pizza",
+      src: "/template-assets/restaurant-cover-pizza.png",
+      label: "Pizza artesanal",
+    },
+    {
+      id: "restaurant-brunch",
+      src: "/template-assets/restaurant-cover-brunch.png",
+      label: "Café e brunch",
+    },
   ],
   clinic: [
+    {
+      id: "clinic-eialink",
+      src: "/template-assets/niche-covers/clinic-eialink-cover.webp",
+      label: "Clínica acolhedora",
+    },
     { id: "clinic-reception", src: "/template-assets/clinic-demo-cover.png", label: "Recepção" },
-    { id: "clinic-wellness", src: "/template-assets/clinic-cover-wellness.png", label: "Bem-estar" },
-    { id: "clinic-consultation", src: "/template-assets/clinic-cover-consultation.png", label: "Consultório" },
+    {
+      id: "clinic-wellness",
+      src: "/template-assets/clinic-cover-wellness.png",
+      label: "Bem-estar",
+    },
+    {
+      id: "clinic-consultation",
+      src: "/template-assets/clinic-cover-consultation.png",
+      label: "Consultório",
+    },
   ],
   therapy: [
-    { id: "therapy-serenity", src: "/template-assets/therapy-cover-serenity.png", label: "Espaço sereno" },
-    { id: "therapy-conversation", src: "/template-assets/therapy-cover-conversation.png", label: "Sala de conversa" },
-    { id: "therapy-nature", src: "/template-assets/therapy-cover-nature.png", label: "Natureza e calma" },
+    {
+      id: "therapy-eialink",
+      src: "/template-assets/niche-covers/therapy-eialink-cover.webp",
+      label: "Consultório terapêutico",
+    },
+    {
+      id: "therapy-serenity",
+      src: "/template-assets/therapy-cover-serenity.png",
+      label: "Espaço sereno",
+    },
+    {
+      id: "therapy-conversation",
+      src: "/template-assets/therapy-cover-conversation.png",
+      label: "Sala de conversa",
+    },
+    {
+      id: "therapy-nature",
+      src: "/template-assets/therapy-cover-nature.png",
+      label: "Natureza e calma",
+    },
   ],
   store: [
+    {
+      id: "store-eialink",
+      src: "/template-assets/niche-covers/store-eialink-cover.webp",
+      label: "Loja e boutique",
+    },
     { id: "store-shoes", src: "/template-assets/store-demo-cover.png", label: "Vitrine" },
     { id: "store-boutique", src: "/template-assets/store-cover-boutique.png", label: "Boutique" },
-    { id: "store-sneakers", src: "/template-assets/store-cover-sneakers.png", label: "Tênis e acessórios" },
+    {
+      id: "store-sneakers",
+      src: "/template-assets/store-cover-sneakers.png",
+      label: "Tênis e acessórios",
+    },
   ],
   beauty: [
+    {
+      id: "beauty-eialink",
+      src: "/template-assets/niche-covers/beauty-eialink-cover.webp",
+      label: "Estúdio de beleza",
+    },
     { id: "beauty-studio", src: "/template-assets/beauty-demo-cover.png", label: "Estudio beauty" },
   ],
   creator: [
-    { id: "creator-studio", src: "/template-assets/creator-demo-cover.png", label: "Estudio criativo" },
+    {
+      id: "creator-eialink",
+      src: "/template-assets/niche-covers/creator-eialink-cover.webp",
+      label: "Estúdio de conteúdo",
+    },
+    {
+      id: "creator-studio",
+      src: "/template-assets/creator-demo-cover.png",
+      label: "Estudio criativo",
+    },
   ],
   business: [
-    { id: "business-office", src: "/template-assets/business-demo-cover.png", label: "Atendimento profissional" },
+    {
+      id: "business-eialink",
+      src: "/template-assets/niche-covers/business-eialink-cover.webp",
+      label: "Escritório moderno",
+    },
+    {
+      id: "business-office",
+      src: "/template-assets/business-demo-cover.png",
+      label: "Atendimento profissional",
+    },
   ],
   academy: [
+    {
+      id: "academy-eialink",
+      src: "/template-assets/niche-covers/academy-eialink-cover.webp",
+      label: "Academia premium",
+    },
     { id: "academy-strength", src: "/template-assets/academy-gym-cover.png", label: "Musculação" },
-    { id: "academy-studio", src: "/template-assets/academy-studio-cover.jpg", label: "Studio premium" },
-    { id: "academy-rooftop", src: "/template-assets/academy-rooftop-cover.jpg", label: "Treino ao amanhecer" },
+    {
+      id: "academy-studio",
+      src: "/template-assets/academy-studio-cover.jpg",
+      label: "Studio premium",
+    },
+    {
+      id: "academy-rooftop",
+      src: "/template-assets/academy-rooftop-cover.jpg",
+      label: "Treino ao amanhecer",
+    },
   ],
   law: [
+    {
+      id: "law-eialink",
+      src: "/template-assets/niche-covers/law-eialink-cover.webp",
+      label: "Escritório jurídico",
+    },
     { id: "law-office", src: "/template-assets/law-office-cover.png", label: "Escritório" },
-    { id: "law-library", src: "/template-assets/law-library-cover.jpg", label: "Biblioteca jurídica" },
-    { id: "law-courthouse", src: "/template-assets/law-courthouse-cover.jpg", label: "Arquitetura institucional" },
+    {
+      id: "law-library",
+      src: "/template-assets/law-library-cover.jpg",
+      label: "Biblioteca jurídica",
+    },
+    {
+      id: "law-courthouse",
+      src: "/template-assets/law-courthouse-cover.jpg",
+      label: "Arquitetura institucional",
+    },
   ],
 } as const;
 
@@ -132,8 +241,15 @@ export function MediaUploader({
   const category = coverCategory(templateId);
   const coverLibrary = COVER_LIBRARY[category];
   const categoryLabel = {
-    restaurant: "restaurante", clinic: "clínica", therapy: "terapia", academy: "academia", law: "advocacia",
-    store: "loja", beauty: "beleza", creator: "criador", business: "profissional",
+    restaurant: "restaurante",
+    clinic: "clínica",
+    therapy: "terapia",
+    academy: "academia",
+    law: "advocacia",
+    store: "loja",
+    beauty: "beleza",
+    creator: "criador",
+    business: "profissional",
   }[category];
 
   return (
@@ -144,13 +260,21 @@ export function MediaUploader({
           <img
             src={value}
             alt="Prévia da imagem selecionada"
-            className={isCover ? "h-20 w-32 rounded-xl object-cover" : "h-20 w-20 rounded-xl object-cover"}
+            className={
+              isCover ? "h-20 w-32 rounded-xl object-cover" : "h-20 w-20 rounded-xl object-cover"
+            }
             onError={(event) => {
               event.currentTarget.style.display = "none";
             }}
           />
         ) : (
-          <div className={isCover ? "grid h-20 w-32 place-items-center rounded-xl bg-muted" : "grid h-20 w-20 place-items-center rounded-xl bg-muted"}>
+          <div
+            className={
+              isCover
+                ? "grid h-20 w-32 place-items-center rounded-xl bg-muted"
+                : "grid h-20 w-20 place-items-center rounded-xl bg-muted"
+            }
+          >
             <ImagePlus className="h-5 w-5" />
           </div>
         )}
@@ -161,7 +285,11 @@ export function MediaUploader({
             disabled={status === "uploading"}
             className="btn-secondary text-sm"
           >
-            {status === "uploading" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+            {status === "uploading" ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ImagePlus className="h-4 w-4" />
+            )}
             {status === "uploading" ? "Enviando..." : "Selecionar imagem"}
           </button>
           {value && (
@@ -182,12 +310,26 @@ export function MediaUploader({
           onChange={(event) => void upload(event.target.files?.[0])}
         />
       </div>
-      {error && <p role="alert" className="mt-2 text-xs text-[color:var(--destructive)]">{error}</p>}
-      {status === "success" && <p className="mt-2 text-xs text-[color:var(--success)]">Imagem enviada. Salve a página para concluir.</p>}
-      {!isCover && <p className="mt-1 text-xs text-muted-foreground">JPG, PNG ou WEBP. Até {limitMb} MB; recomendado: 1200 × 1200 px.</p>}
+      {error && (
+        <p role="alert" className="mt-2 text-xs text-[color:var(--destructive)]">
+          {error}
+        </p>
+      )}
+      {status === "success" && (
+        <p className="mt-2 text-xs text-[color:var(--success)]">
+          Imagem enviada. Salve a página para concluir.
+        </p>
+      )}
+      {!isCover && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          JPG, PNG ou WEBP. Até {limitMb} MB; recomendado: 1200 × 1200 px.
+        </p>
+      )}
       {isCover && (
         <div className="media-library" aria-label="Biblioteca de capas">
-          <p className="media-library-help">Para a capa, use JPG, PNG ou WEBP de até {limitMb} MB. Recomendado: 1600 × 900 px.</p>
+          <p className="media-library-help">
+            Para a capa, use JPG, PNG ou WEBP de até {limitMb} MB. Recomendado: 1600 × 900 px.
+          </p>
           <ol className="media-library-steps" aria-label="Como trocar a capa">
             <li>1. Clique em uma imagem.</li>
             <li>2. Confira a prévia ao centro.</li>
@@ -207,7 +349,9 @@ export function MediaUploader({
               </button>
             ))}
           </div>
-          <small>Escolha uma imagem e clique em Salvar, no topo da página, para publicar sua mudança.</small>
+          <small>
+            Escolha uma imagem e clique em Salvar, no topo da página, para publicar sua mudança.
+          </small>
         </div>
       )}
     </div>

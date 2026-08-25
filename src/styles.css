@@ -2994,39 +2994,39 @@
 .niche-template-thumb-therapy .niche-template-thumb-cover { min-height: 5rem; }.niche-template-thumb-therapy .niche-template-thumb-cta { color: #fff; background: #728f7a; }.niche-template-thumb-therapy .niche-template-thumb-cards i { background: #dce9dc; }
 @media (max-width: 720px) { .niche-therapy-hero { min-height: 38rem; }.niche-therapy-overlay { background: linear-gradient(0deg, rgba(28, 48, 42, .94), rgba(31, 46, 40, .22)); }.niche-therapy-topline, .niche-therapy-hero-copy, .niche-therapy-intro, .niche-therapy-section, .niche-therapy-cta, .niche-therapy-footer-links { width: calc(100% - 2rem); }.niche-therapy-topline { margin-top: 1rem; }.niche-therapy-topline span { max-width: 12rem; font-size: .58rem; }.niche-therapy-hero-copy { padding-bottom: 2.5rem; }.niche-therapy-hero-copy h1 { font-size: clamp(2.6rem, 14vw, 4rem); }.niche-therapy-hero-copy > span { font-size: .95rem; }.niche-therapy-primary-action { width: 100%; justify-content: center; }.niche-therapy-intro { grid-template-columns: 1fr; gap: 1rem; padding: 3.4rem 0 1.5rem; }.niche-therapy-intro > span { grid-column: auto; }.niche-therapy-grid, .niche-therapy-links > div:last-child { grid-template-columns: 1fr; }.niche-therapy-grid article { min-height: auto; }.niche-therapy-cta { align-items: flex-start; flex-direction: column; margin-top: 1rem; }.niche-therapy-cta > a { width: 100%; justify-content: center; } }
 
-+
-+:root[data-interface-theme="light"] {
-+  --background: #f6f7fb;
-+  --foreground: #17141f;
-+  --surface: #ffffff;
-+  --surface-elevated: #f0eef6;
-+  --card: #ffffff;
-+  --card-foreground: #17141f;
-+  --popover: #ffffff;
-+  --popover-foreground: #17141f;
-+  --primary: #7137d6;
-+  --primary-foreground: #ffffff;
-+  --primary-glow: #a43fe4;
-+  --secondary: #ebe7f2;
-+  --secondary-foreground: #211b2b;
-+  --muted: #eeecf3;
-+  --muted-foreground: #686172;
-+  --accent: #8b3fd0;
-+  --accent-foreground: #ffffff;
-+  --border: rgb(29 20 44 / 0.11);
-+  --input: #ffffff;
-+  --ring: #7c3aed;
-+  --shadow-elegant: 0 12px 28px -15px rgb(113 55 214 / 0.38);
-+  --shadow-glow: 0 14px 34px -18px rgb(113 55 214 / 0.46);
-+  --shadow-card: 0 16px 40px -28px rgb(33 24 50 / 0.26);
-+}
-+
-+:root[data-interface-theme="light"] body {
-+  background-image:
-+    radial-gradient(900px 420px at 0% -10%, rgb(124 58 237 / 0.08), transparent),
-+    radial-gradient(700px 360px at 100% 0%, rgb(14 165 233 / 0.06), transparent);
-+}
-+/* 2026 workspace refresh: calm surfaces, clearer hierarchy and accessible themes. */
+
+:root[data-interface-theme="light"] {
+  --background: #f6f7fb;
+  --foreground: #17141f;
+  --surface: #ffffff;
+  --surface-elevated: #f0eef6;
+  --card: #ffffff;
+  --card-foreground: #17141f;
+  --popover: #ffffff;
+  --popover-foreground: #17141f;
+  --primary: #7137d6;
+  --primary-foreground: #ffffff;
+  --primary-glow: #a43fe4;
+  --secondary: #ebe7f2;
+  --secondary-foreground: #211b2b;
+  --muted: #eeecf3;
+  --muted-foreground: #686172;
+  --accent: #8b3fd0;
+  --accent-foreground: #ffffff;
+  --border: rgb(29 20 44 / 0.11);
+  --input: #ffffff;
+  --ring: #7c3aed;
+  --shadow-elegant: 0 12px 28px -15px rgb(113 55 214 / 0.38);
+  --shadow-glow: 0 14px 34px -18px rgb(113 55 214 / 0.46);
+  --shadow-card: 0 16px 40px -28px rgb(33 24 50 / 0.26);
+}
+
+:root[data-interface-theme="light"] body {
+  background-image:
+    radial-gradient(900px 420px at 0% -10%, rgb(124 58 237 / 0.08), transparent),
+    radial-gradient(700px 360px at 100% 0%, rgb(14 165 233 / 0.06), transparent);
+}
+/* 2026 workspace refresh: calm surfaces, clearer hierarchy and accessible themes. */
 .interface-theme-toggle {
   display: flex;
   width: 100%;

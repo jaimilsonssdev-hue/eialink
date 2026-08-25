@@ -69,7 +69,7 @@ export const ESSENTIAL_LIMITS: PlanLimits = {
   bio_pages: 1,
   links: 4,
   catalog_items: 3,
-  templates: 1,
+  templates: 3,
 };
 
 export const ESSENTIAL_FEATURES: PlanFeatures = {

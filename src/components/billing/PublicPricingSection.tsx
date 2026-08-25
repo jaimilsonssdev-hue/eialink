@@ -19,7 +19,7 @@ const fallbackPlans: PublicPlan[] = [
     description: "Para publicar sua presença profissional gratuitamente.",
     price_cents: 0,
     billing_interval: "monthly",
-    limits: { bio_pages: 1, links: 4, catalog_items: 3, templates: 1 },
+    limits: { bio_pages: 1, links: 4, catalog_items: 3, templates: 3 },
     features: {
       whatsapp: true,
       analytics: false,
@@ -79,7 +79,7 @@ function planBenefits(plan: PublicPlan) {
   const features = toPlanFeatures(plan.features);
   return [
     limits.bio_pages === -1 ? "BioLinks ilimitados" : `${limits.bio_pages} BioLink`,
-    limits.templates === -1 ? "Todos os templates" : "1 template gratuito",
+    limits.templates === -1 ? "Todos os templates" : `${limits.templates} estilos gratuitos`,
     features.catalog
       ? limits.catalog_items === -1
         ? "Catálogo de produtos e serviços"

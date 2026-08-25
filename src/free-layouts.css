@@ -1,0 +1,58 @@
+.free-link-shell .public-catalog-image-fallback {
+  display: grid;
+  aspect-ratio: 1 / 1;
+  width: 100%;
+  place-items: center;
+  border-radius: 0.7rem;
+  color: var(--bio-muted);
+  background: linear-gradient(145deg, rgb(124 58 237 / 0.22), rgb(255 255 255 / 0.04));
+}
+
+.free-link-shell .public-catalog-image-fallback svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.free-link-layout-showcase .free-link-card {
+  background: linear-gradient(180deg, rgb(12 24 45 / 0.97), rgb(7 13 27 / 0.99));
+}
+
+.free-link-layout-showcase .public-catalog {
+  margin-top: 1rem;
+  padding: 0.85rem;
+  border: 1px solid rgb(96 165 250 / 0.2);
+  border-radius: 1.15rem;
+  background: rgb(30 64 175 / 0.1);
+}
+
+.free-link-layout-showcase .public-catalog-title {
+  text-align: center;
+}
+
+.free-link-layout-showcase .public-profile-actions {
+  margin-top: 1.25rem;
+}
+
+.free-link-layout-social .public-profile-banner {
+  height: 8.5rem;
+  opacity: 0.82;
+}
+
+.free-link-layout-social .free-link-card {
+  width: min(calc(100% - 1.2rem), 34rem);
+  margin-top: -1.8rem;
+  border-radius: 2rem;
+  background: linear-gradient(160deg, rgb(27 18 48 / 0.97), rgb(10 8 18 / 0.99));
+}
+
+.free-link-layout-social nav[aria-label="Redes sociais"] {
+  padding-top: 0.65rem;
+}
+
+.free-link-layout-social .public-profile-actions {
+  margin-top: 0.75rem;
+}
+
+.free-link-layout-social .public-profile-action {
+  border-radius: 999px;
+}

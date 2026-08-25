@@ -90,7 +90,6 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         mode: isRecurring ? "subscription" : "payment",
         ui_mode: "embedded_page",
         return_url: `${new URL(getRequest().url).origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
-        automatic_tax: { enabled: true },
         ...(isPix && { payment_method_types: ["pix"] }),
         customer: customerId,
         ...(!isRecurring && { payment_intent_data: { description: productDescription } }),

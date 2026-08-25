@@ -36,6 +36,21 @@ const FALLBACK_FEATURES = {
 
 function BillingPage() {
   const access = usePlanAccess();
+  const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
+  const { data: account } = useQuery({
+    queryKey: ["billing-account"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return { id: data.user?.id, email: data.user?.email };
+    },
+  });
+  const startCheckout = (priceId: string) =>
+    openCheckout({
+      priceId,
+      customerEmail: account?.email,
+      userId: account?.id,
+      returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+    });
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ["billing-plans"],
     queryFn: BillingService.listPublicPlans,

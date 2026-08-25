@@ -443,7 +443,7 @@ export function UnifiedPageEditor({
         </div>
       </section>
 
-      <div className="builder-layout grid gap-6 xl:grid-cols-[18rem_minmax(25rem,1fr)_22rem]">
+      <div className="builder-layout">
         <aside className="builder-menu card-surface h-fit xl:sticky xl:top-24">
           {Array.from(
             new Set(

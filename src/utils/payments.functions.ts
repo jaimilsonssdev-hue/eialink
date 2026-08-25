@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import { type StripeEnv, createStripeClient, getStripeErrorMessage } from "@/lib/stripe.server";
@@ -41,20 +42,20 @@ async function resolveOrCreateCustomer(
 }
 
 export const createCheckoutSession = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (data: {
       priceId: string;
-      quantity?: number;
-      customerEmail?: string;
-      userId?: string;
-      returnUrl: string;
       environment: StripeEnv;
     }) => {
       if (!/^[a-zA-Z0-9_-]+$/.test(data.priceId)) throw new Error("Invalid priceId");
+      if (!["pro_monthly", "pro_yearly", "pro_yearly_pix"].includes(data.priceId)) {
+        throw new Error("Este plano não está disponível para assinatura.");
+      }
       return data;
     },
   )
-  .handler(async ({ data }): Promise<CheckoutSessionResult> => {
+  .handler(async ({ data, context }): Promise<CheckoutSessionResult> => {
     try {
       const stripe = createStripeClient(data.environment);
 
@@ -63,13 +64,10 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       const stripePrice = prices.data[0];
       const isRecurring = stripePrice.type === "recurring";
 
-      const customerId =
-        data.customerEmail || data.userId
-          ? await resolveOrCreateCustomer(stripe, {
-              email: data.customerEmail,
-              userId: data.userId,
-            })
-          : undefined;
+      const customerId = await resolveOrCreateCustomer(stripe, {
+        email: typeof context.claims.email === "string" ? context.claims.email : undefined,
+        userId: context.userId,
+      });
 
       let productDescription: string | undefined;
       if (!isRecurring) {
@@ -82,24 +80,27 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
       }
 
       // Pix only exists for one-off charges in BRL; subscriptions stay card-only.
-      const supportsPix = !isRecurring && stripePrice.currency === "brl";
+      const isPix = data.priceId === "pro_yearly_pix";
+      if (isPix && (isRecurring || stripePrice.currency !== "brl")) {
+        throw new Error("O preço anual via Pix precisa ser uma cobrança avulsa em reais.");
+      }
 
       const session = await stripe.checkout.sessions.create({
-        line_items: [{ price: stripePrice.id, quantity: data.quantity || 1 }],
+        line_items: [{ price: stripePrice.id, quantity: 1 }],
         mode: isRecurring ? "subscription" : "payment",
         ui_mode: "embedded_page",
-        return_url: data.returnUrl,
+        return_url: `${new URL(getRequest().url).origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
         automatic_tax: { enabled: true },
-        ...(supportsPix && { payment_method_types: ["card", "pix"] }),
-        ...(customerId && { customer: customerId }),
+        ...(isPix && { payment_method_types: ["pix"] }),
+        customer: customerId,
         ...(!isRecurring && { payment_intent_data: { description: productDescription } }),
-        ...(data.userId && {
-          metadata: {
-            userId: data.userId,
-            managed_payments: "false",
-            ...(!isRecurring && { priceLookupKey: data.priceId }),
-          },
-          ...(isRecurring && { subscription_data: { metadata: { userId: data.userId } } }),
+        metadata: {
+          userId: context.userId,
+          managed_payments: "false",
+          ...(!isRecurring && { priceLookupKey: data.priceId }),
+        },
+        ...(isRecurring && {
+          subscription_data: { metadata: { userId: context.userId } },
         }),
       });
 
@@ -111,7 +112,7 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
 
 export const createPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: { returnUrl?: string; environment: StripeEnv }) => data)
+  .inputValidator((data: { environment: StripeEnv }) => data)
   .handler(async ({ data, context }): Promise<PortalSessionResult> => {
     const { supabase, userId } = context;
 
@@ -131,7 +132,7 @@ export const createPortalSession = createServerFn({ method: "POST" })
       const stripe = createStripeClient(data.environment);
       const portal = await stripe.billingPortal.sessions.create({
         customer: sub.stripe_customer_id as string,
-        ...(data.returnUrl && { return_url: data.returnUrl }),
+        return_url: `${new URL(getRequest().url).origin}/billing`,
       });
       return { url: portal.url };
     } catch (error) {

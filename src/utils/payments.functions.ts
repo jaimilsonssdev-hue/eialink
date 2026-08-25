@@ -81,16 +81,24 @@ export const createCheckoutSession = createServerFn({ method: "POST" })
         productDescription = (product as { name?: string }).name;
       }
 
+      // Pix only exists for one-off charges in BRL; subscriptions stay card-only.
+      const supportsPix = !isRecurring && stripePrice.currency === "brl";
+
       const session = await stripe.checkout.sessions.create({
         line_items: [{ price: stripePrice.id, quantity: data.quantity || 1 }],
         mode: isRecurring ? "subscription" : "payment",
         ui_mode: "embedded_page",
         return_url: data.returnUrl,
         automatic_tax: { enabled: true },
+        ...(supportsPix && { payment_method_types: ["card", "pix"] }),
         ...(customerId && { customer: customerId }),
         ...(!isRecurring && { payment_intent_data: { description: productDescription } }),
         ...(data.userId && {
-          metadata: { userId: data.userId, managed_payments: "false" },
+          metadata: {
+            userId: data.userId,
+            managed_payments: "false",
+            ...(!isRecurring && { priceLookupKey: data.priceId }),
+          },
           ...(isRecurring && { subscription_data: { metadata: { userId: data.userId } } }),
         }),
       });

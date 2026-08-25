@@ -712,11 +712,17 @@ function SectionForm({
             </span>
             <input
               type="checkbox"
+              role="switch"
+              className="h-6 w-11 shrink-0 cursor-pointer appearance-none rounded-full border border-border bg-surface transition-colors checked:bg-[color:var(--primary)] relative before:absolute before:top-0.5 before:left-0.5 before:h-4 before:w-4 before:rounded-full before:bg-foreground before:transition-transform checked:before:translate-x-5 checked:before:bg-white"
               checked={bio.motion_enabled ?? true}
               onChange={(event) => updateBio({ motion_enabled: event.target.checked })}
               aria-label="Ativar animações na página"
             />
           </label>
+          <p className="text-xs text-muted-foreground">
+            Ao desligar, sua página publicada fica totalmente estática — útil para quem prefere
+            leitura sem movimento.
+          </p>
           {bio.motion_enabled !== false && (
             <>
               <Field label="Entrada da página">

@@ -24,7 +24,7 @@ Reversão comercial: um Super Admin pode alterar manualmente a assinatura de uma
 
 Em `/admin`, um administrador altera plano, status e limites. O preço e a descrição atualizam a landing. Nesta fase, o CTA do Pro abre o WhatsApp comercial. Um gateway pode substituir esse CTA depois, sem mudar as regras de acesso.
 
-O número comercial fica centralizado em `src/modules/billing/components/UpgradePrompt.tsx`. Antes de publicar, atualize `COMMERCIAL_WHATSAPP` para o número oficial da Talento no formato internacional, somente dígitos (ex.: `5573...`).
+O número comercial é lido de `VITE_COMMERCIAL_WHATSAPP`, no formato internacional e somente com dígitos (ex.: `5573...`). Se a variável não estiver definida, `src/modules/billing/components/UpgradePrompt.tsx` usa o número legado como fallback para não interromper os CTAs atuais. Confirme o valor do ambiente antes de publicar.
 
 ## Deliberadamente fora desta etapa
 

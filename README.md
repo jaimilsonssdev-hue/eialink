@@ -1,29 +1,53 @@
-# Welcome to your Lovable project
+# Eialink
 
-This project was built with [Lovable](https://lovable.dev).
+Plataforma brasileira de BioLinks e mini-catálogos para negócios locais e profissionais. O plano Essencial publica uma presença simples gratuitamente e o Pro libera catálogo, analytics, visuais premium e personalização avançada.
 
-## Build with Lovable
+## Stack
 
-Open your project in the [Lovable editor](https://lovable.dev) and keep building.
+- TanStack Start, React e TypeScript
+- Tailwind CSS
+- Supabase (autenticação, banco e analytics)
+- Stripe (infraestrutura disponível para cobrança)
+- Lovable (sincronização e publicação)
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: connect the project to GitHub and every change made in Lovable is committed straight to your repository.
-- **Full ownership**: this code is yours. Push to your repository and your changes sync back into Lovable, ready for your next prompt.
+## Desenvolvimento local
 
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+O repositório usa Bun e mantém `bun.lock` como lockfile.
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev
 ```
 
-## Built with
+Antes de abrir um PR:
 
-- TanStack Start
-- TypeScript
-- React
-- Tailwind CSS
+```sh
+bun run lint
+bun run build
+```
+
+## Configuração
+
+Credenciais devem permanecer fora do Git. O WhatsApp comercial pode ser configurado com:
+
+```sh
+VITE_COMMERCIAL_WHATSAPP=5573999999999
+```
+
+Use somente dígitos, incluindo código do país e DDD. Sem essa variável, a aplicação mantém o número legado para preservar o funcionamento atual.
+
+## Planos e operação
+
+A decisão comercial está em [`docs/rfc/RFC-012-Freemium-Essential-Pro.md`](docs/rfc/RFC-012-Freemium-Essential-Pro.md).
+
+Ao alterar planos ou regras de acesso:
+
+1. atualize a migration correspondente;
+2. sincronize os tipos do Supabase;
+3. valide cadastro, publicação, downgrade e upgrade;
+4. teste os CTAs de WhatsApp e Pix em celular;
+5. confirme o recebimento dos eventos do funil.
+
+## Publicação
+
+Commits enviados ao GitHub sincronizam com o projeto conectado no Lovable. Não reescreva o histórico publicado e não faça force push.

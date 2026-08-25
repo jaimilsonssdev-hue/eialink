@@ -1,7 +1,12 @@
 import { MessageCircle, Sparkles } from "lucide-react";
 import { FunnelService } from "@/modules/analytics/services/FunnelService";
 
-const COMMERCIAL_WHATSAPP = "5573997498497";
+const FALLBACK_COMMERCIAL_WHATSAPP = "5573997498497";
+
+function commercialWhatsAppNumber() {
+  const configured = import.meta.env.VITE_COMMERCIAL_WHATSAPP?.replace(/\D/g, "");
+  return configured || FALLBACK_COMMERCIAL_WHATSAPP;
+}
 
 const messages = {
   pro: "Olá! Quero assinar o Eialink Pro e liberar os recursos da minha página.",
@@ -11,7 +16,7 @@ const messages = {
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function commercialWhatsAppUrl(kind: keyof typeof messages = "pro") {
-  return `https://wa.me/${COMMERCIAL_WHATSAPP}?text=${encodeURIComponent(messages[kind])}`;
+  return `https://wa.me/${commercialWhatsAppNumber()}?text=${encodeURIComponent(messages[kind])}`;
 }
 
 export function UpgradePrompt({

@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Check, Sparkles } from "lucide-react";
 import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
+import { FunnelService } from "@/modules/analytics/services/FunnelService";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import {
   formatPlanPrice,
@@ -148,6 +149,12 @@ export function PublicPricingSection() {
                         to="/auth"
                         search={{ mode: "signup" } as never}
                         className="btn-secondary mt-7 justify-center"
+                        onClick={() =>
+                          void FunnelService.track("signup_click", {
+                            source: "public_pricing",
+                            plan_slug: plan.slug,
+                          })
+                        }
                       >
                         Criar meu Eialink grátis
                       </Link>
@@ -157,6 +164,12 @@ export function PublicPricingSection() {
                         target="_blank"
                         rel="noreferrer"
                         className={`${featured ? "btn-primary" : "btn-secondary"} mt-7 justify-center`}
+                        onClick={() =>
+                          void FunnelService.track("upgrade_click", {
+                            source: "public_pricing",
+                            plan_slug: plan.slug,
+                          })
+                        }
                       >
                         Assinar Eialink Pro
                       </a>
@@ -172,6 +185,12 @@ export function PublicPricingSection() {
             href={commercialWhatsAppUrl("site")}
             target="_blank"
             rel="noreferrer"
+            onClick={() =>
+              void FunnelService.track("service_click", {
+                source: "public_pricing",
+                service: "professional_site",
+              })
+            }
           >
             Quero um site profissional
           </a>

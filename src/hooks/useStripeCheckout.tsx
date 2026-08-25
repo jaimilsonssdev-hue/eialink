@@ -19,7 +19,12 @@ export function useStripeCheckout() {
     setOptions(null);
   }, []);
 
-  const checkoutElement = isOpen && options ? <StripeEmbeddedCheckout {...options} /> : null;
+  const checkoutElement = isOpen && options ? (
+    <StripeEmbeddedCheckout
+      {...options}
+      onComplete={() => window.location.assign("/checkout/return?completed=true")}
+    />
+  ) : null;
 
   return { openCheckout, closeCheckout, isOpen, checkoutElement };
 }

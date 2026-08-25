@@ -18,9 +18,7 @@ import {
   Menu,
   X,
   PanelsTopLeft,
-  ShoppingBag,
   CreditCard,
-
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -34,9 +32,8 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 const NAV = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/pages", label: "Meus Biolinks", icon: PanelsTopLeft },
-  { to: "/catalog", label: "Catálogo", icon: ShoppingBag },
+  { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+  { to: "/builder", label: "Minha Página", icon: PanelsTopLeft },
   { to: "/analytics", label: "Resultados", icon: BarChart3 },
   { to: "/growth", label: "Crescimento", icon: Sparkles },
   { to: "/billing", label: "Planos", icon: CreditCard },
@@ -44,7 +41,7 @@ const NAV = [
 ] as const;
 
 
-const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[5]] as const;
+const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[4]] as const;
 
 function AuthedLayout() {
   const navigate = useNavigate();
@@ -138,7 +135,7 @@ function AuthedLayout() {
             const active = pathname === to;
             return <Link key={to} to={to} className={active ? "is-active" : ""}>
               <Icon aria-hidden="true" />
-              <span>{label === "Meus Biolinks" ? "Páginas" : label}</span>
+              <span>{label}</span>
             </Link>;
           })}
         </nav>

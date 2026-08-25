@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import freeLayoutsCss from "../free-layouts.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { supabase } from "@/integrations/supabase/client";
 import { PwaRegistrar } from "@/components/pwa/PwaRegistrar";
@@ -74,6 +75,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "stylesheet", href: freeLayoutsCss },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "64x64" },
       { rel: "manifest", href: "/manifest.webmanifest" },

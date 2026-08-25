@@ -134,14 +134,33 @@ function BillingPage() {
                     {current ? "Plano atual" : "Usar Eialink Essencial"}
                   </Link>
                 ) : (
-                  <a
-                    className="btn-primary mt-8 w-full"
-                    href={commercialWhatsAppUrl("pro")}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {current ? "Plano atual" : "Assinar Eialink Pro"}
-                  </a>
+                  <div className="mt-8 space-y-2">
+                    <button
+                      type="button"
+                      className="btn-primary w-full"
+                      onClick={() => startCheckout("pro_monthly")}
+                    >
+                      Assinar mensal — R$ 29/mês
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary w-full"
+                      onClick={() => startCheckout("pro_yearly")}
+                    >
+                      Assinar anual no cartão — R$ 290/ano
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary w-full"
+                      onClick={() => startCheckout("pro_yearly_pix")}
+                    >
+                      Pagar 12 meses no Pix — R$ 290
+                    </button>
+                    <p className="text-xs text-muted-foreground">
+                      No Pix o pagamento é único e libera 12 meses de Pro, sem renovação
+                      automática.
+                    </p>
+                  </div>
                 )}
               </article>
             );

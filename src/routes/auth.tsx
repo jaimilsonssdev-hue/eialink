@@ -5,7 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { NICHES, BR_STATES, MAIN_GOALS } from "@/lib/constants";
 import { Sparkles, ArrowRight, Loader2 } from "lucide-react";
 
-const searchSchema = z.object({ mode: z.enum(["login", "signup"]).optional() });
+const searchSchema = z.object({
+  mode: z.enum(["login", "signup"]).optional(),
+  next: z.enum(["billing"]).optional(),
+});
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
@@ -33,15 +36,15 @@ const signupSchema = z.object({
 });
 
 function AuthPage() {
-  const { mode } = useSearch({ from: "/auth" });
+  const { mode, next } = useSearch({ from: "/auth" });
   const [tab, setTab] = useState<"login" | "signup">(mode ?? "login");
   const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/builder" });
+      if (data.session) navigate({ to: next === "billing" ? "/billing" : "/builder" });
     });
-  }, [navigate]);
+  }, [navigate, next]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -59,14 +62,14 @@ function AuthPage() {
             <button onClick={() => setTab("login")} className={`flex-1 py-2 rounded-md text-sm font-medium transition ${tab === "login" ? "bg-surface-elevated" : "text-muted-foreground"}`}>Entrar</button>
             <button onClick={() => setTab("signup")} className={`flex-1 py-2 rounded-md text-sm font-medium transition ${tab === "signup" ? "bg-surface-elevated" : "text-muted-foreground"}`}>Criar conta grátis</button>
           </div>
-          {tab === "login" ? <LoginForm /> : <SignupForm />}
+          {tab === "login" ? <LoginForm next={next} /> : <SignupForm next={next} />}
         </div>
       </div>
     </div>
   );
 }
 
-function LoginForm() {
+function LoginForm({ next }: { next?: "billing" }) {
   const [email, setEmail] = useState(""); const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
@@ -75,7 +78,7 @@ function LoginForm() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (error) return setError(error.message);
-    navigate({ to: "/builder" });
+    navigate({ to: next === "billing" ? "/billing" : "/builder" });
   }
   return (
     <form onSubmit={onSubmit} className="card-surface space-y-4">
@@ -96,7 +99,7 @@ function LoginForm() {
   );
 }
 
-function SignupForm() {
+function SignupForm({ next }: { next?: "billing" }) {
   const [form, setForm] = useState({
     full_name: "", email: "", password: "", whatsapp: "",
     company_name: "", niche: "", city: "", state: "",
@@ -114,7 +117,9 @@ function SignupForm() {
     setLoading(true);
     const { data, error: signErr } = await supabase.auth.signUp({
       email: form.email, password: form.password,
-      options: { emailRedirectTo: `${window.location.origin}/builder` },
+      options: {
+        emailRedirectTo: `${window.location.origin}${next === "billing" ? "/billing" : "/builder"}`,
+      },
     });
     if (signErr || !data.user) { setLoading(false); return setError(signErr?.message ?? "Falha no cadastro"); }
     const { error: profErr } = await supabase.from("profiles").insert({
@@ -126,7 +131,7 @@ function SignupForm() {
     });
     setLoading(false);
     if (profErr) return setError(profErr.message);
-    navigate({ to: "/builder" });
+    navigate({ to: next === "billing" ? "/billing" : "/builder" });
   }
 
   return (

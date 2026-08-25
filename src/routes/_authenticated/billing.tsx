@@ -5,6 +5,9 @@ import { BillingService } from "@/modules/billing/services/BillingService";
 import { formatPlanPrice } from "@/modules/billing/types";
 import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({

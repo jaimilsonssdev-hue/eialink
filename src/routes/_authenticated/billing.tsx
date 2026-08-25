@@ -5,6 +5,9 @@ import { BillingService } from "@/modules/billing/services/BillingService";
 import { formatPlanPrice } from "@/modules/billing/types";
 import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
@@ -36,6 +39,21 @@ const FALLBACK_FEATURES = {
 
 function BillingPage() {
   const access = usePlanAccess();
+  const { openCheckout, closeCheckout, isOpen, checkoutElement } = useStripeCheckout();
+  const { data: account } = useQuery({
+    queryKey: ["billing-account"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getUser();
+      return { id: data.user?.id, email: data.user?.email };
+    },
+  });
+  const startCheckout = (priceId: string) =>
+    openCheckout({
+      priceId,
+      customerEmail: account?.email,
+      userId: account?.id,
+      returnUrl: `${window.location.origin}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
+    });
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ["billing-plans"],
     queryFn: BillingService.listPublicPlans,
@@ -46,6 +64,18 @@ function BillingPage() {
 
   return (
     <div className="space-y-8">
+      <PaymentTestModeBanner />
+      {isOpen && (
+        <section className="card-surface space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-bold">Finalize seu pagamento</h2>
+            <button type="button" className="btn-secondary" onClick={closeCheckout}>
+              Cancelar
+            </button>
+          </div>
+          {checkoutElement}
+        </section>
+      )}
       <header className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
           Assinatura
@@ -116,14 +146,33 @@ function BillingPage() {
                     {current ? "Plano atual" : "Usar Eialink Essencial"}
                   </Link>
                 ) : (
-                  <a
-                    className="btn-primary mt-8 w-full"
-                    href={commercialWhatsAppUrl("pro")}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {current ? "Plano atual" : "Assinar Eialink Pro"}
-                  </a>
+                  <div className="mt-8 space-y-2">
+                    <button
+                      type="button"
+                      className="btn-primary w-full"
+                      onClick={() => startCheckout("pro_monthly")}
+                    >
+                      Assinar mensal — R$ 29/mês
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary w-full"
+                      onClick={() => startCheckout("pro_yearly")}
+                    >
+                      Assinar anual no cartão — R$ 290/ano
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-secondary w-full"
+                      onClick={() => startCheckout("pro_yearly_pix")}
+                    >
+                      Pagar 12 meses no Pix — R$ 290
+                    </button>
+                    <p className="text-xs text-muted-foreground">
+                      No Pix o pagamento é único e libera 12 meses de Pro, sem renovação
+                      automática.
+                    </p>
+                  </div>
                 )}
               </article>
             );

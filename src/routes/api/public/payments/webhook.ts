@@ -16,8 +16,36 @@ function getSupabase() {
 
 const PRICE_TO_PLAN_SLUG: Record<string, string> = {
   pro_monthly: "pro",
+  pro_yearly: "pro",
+  pro_yearly_pix: "pro",
   catalog_monthly: "catalog",
 };
+
+/** One-off annual payments (card or Pix) grant twelve months of Pro. */
+async function grantAnnualFromOneOffPayment(session: any) {
+  const userId = session?.metadata?.userId;
+  const priceKey = session?.metadata?.priceLookupKey;
+  if (!userId || session?.mode !== "payment" || session?.payment_status !== "paid") return;
+  const slug = PRICE_TO_PLAN_SLUG[priceKey ?? ""];
+  if (!slug) return;
+
+  const supabase = getSupabase();
+  const { data: plan } = await supabase.from("plans").select("id").eq("slug", slug).maybeSingle();
+  if (!plan) return;
+
+  const periodEnd = new Date();
+  periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+  await supabase
+    .from("subscriptions")
+    .update({
+      plan_id: plan.id,
+      status: "active",
+      billing_interval: "yearly",
+      current_period_end: periodEnd.toISOString(),
+      notes: "Pagamento anual avulso (cartão ou Pix) via Stripe.",
+    })
+    .eq("user_id", userId);
+}
 
 function resolvePriceId(item: any): string | undefined {
   return (
@@ -101,6 +129,8 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded":
+      await grantAnnualFromOneOffPayment(event.data.object);
+      break;
     case "invoice.paid":
       break;
     default:

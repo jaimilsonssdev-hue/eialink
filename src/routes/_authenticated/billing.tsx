@@ -11,6 +11,7 @@ import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { PaymentTestModeBanner } from "@/components/PaymentTestModeBanner";
 import { getStripeEnvironment } from "@/lib/stripe";
 import { createPortalSession } from "@/utils/payments.functions";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Dialog,
   DialogContent,
@@ -56,6 +57,23 @@ function BillingPage() {
     queryKey: ["billing-plans"],
     queryFn: BillingService.listPublicPlans,
   });
+  const { data: stripePayment, isLoading: stripePaymentLoading } = useQuery({
+    queryKey: ["current-stripe-payment", access.data?.subscription?.user_id],
+    enabled: Boolean(access.data?.isPro),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("payment_subscriptions")
+        .select("stripe_customer_id, status")
+        .eq("user_id", access.data!.subscription!.user_id)
+        .eq("environment", getStripeEnvironment())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+  const hasStripePayment = Boolean(stripePayment?.stripe_customer_id);
   const displayedPlans = plans.filter((plan) =>
     ["essential", "free", "pro-monthly", "pro-yearly", "pro"].includes(plan.slug),
   );
@@ -148,7 +166,11 @@ function BillingPage() {
                   </Link>
                 ) : (
                   <div className="mt-8 space-y-2">
-                    {access.data?.isPro ? (
+                    {access.data?.isPro && stripePaymentLoading ? (
+                      <button type="button" className="btn-primary w-full" disabled>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Verificando assinatura
+                      </button>
+                    ) : access.data?.isPro && hasStripePayment ? (
                       <button
                         type="button"
                         className="btn-primary w-full"
@@ -160,6 +182,10 @@ function BillingPage() {
                         ) : (
                           "Gerenciar assinatura"
                         )}
+                      </button>
+                    ) : access.data?.isPro ? (
+                      <button type="button" className="btn-secondary w-full" disabled>
+                        Plano Pro ativo
                       </button>
                     ) : annual ? (
                       <>

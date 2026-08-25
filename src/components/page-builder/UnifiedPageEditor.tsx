@@ -141,6 +141,38 @@ const MENU: {
   },
 ];
 
+const WORKFLOW: Array<{
+  id: string;
+  label: string;
+  description: string;
+  sections: EditorSection[];
+}> = [
+  {
+    id: "profile",
+    label: "Perfil",
+    description: "Sua marca",
+    sections: ["profile", "photo"],
+  },
+  {
+    id: "contact",
+    label: "Contato",
+    description: "Como falar com você",
+    sections: ["contact", "social", "pix"],
+  },
+  {
+    id: "content",
+    label: "Conteúdo",
+    description: "Links e ofertas",
+    sections: ["links", "catalog"],
+  },
+  {
+    id: "visual",
+    label: "Visual",
+    description: "Estilo da página",
+    sections: ["appearance", "motion"],
+  },
+];
+
 const THEMES = [
   { id: "aurora", label: "Aurora" },
   { id: "sunset", label: "Pôr do sol" },
@@ -219,7 +251,7 @@ export function UnifiedPageEditor({
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [validationMessage, setValidationMessage] = useState<string>();
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
-    JSON.stringify({ initialBio, initialLinks, initialProducts }),
+    JSON.stringify({ bio: initialBio, links: initialLinks, products: initialProducts }),
   );
   const previewRef = useRef<HTMLDivElement>(null);
   const inspectorRef = useRef<HTMLElement>(null);
@@ -251,6 +283,11 @@ export function UnifiedPageEditor({
     },
   ];
   const completedSetupSteps = setupSteps.filter((step) => step.complete).length;
+  const activeWorkflowIndex = Math.max(
+    0,
+    WORKFLOW.findIndex((item) => item.sections.includes(selected)),
+  );
+  const activeWorkflow = WORKFLOW[activeWorkflowIndex];
   const previewBio = useMemo(
     () =>
       ({
@@ -293,7 +330,7 @@ export function UnifiedPageEditor({
   const select = (section: EditorSection) => {
     setSelected(section);
     setSaveState("idle");
-    if (window.matchMedia("(max-width: 767px)").matches) {
+    if (window.matchMedia("(max-width: 900px)").matches) {
       window.setTimeout(
         () => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
         0,
@@ -409,81 +446,95 @@ export function UnifiedPageEditor({
         </div>
       </header>
 
-      <section className="free-setup-guide" aria-label="Passos para configurar a página">
-        <div className="free-setup-guide-heading">
+      <section className="editor-readiness" aria-label="Progresso da página">
+        <div className="editor-readiness-copy">
+          <span className={completedSetupSteps === 3 ? "is-ready" : ""}>
+            {completedSetupSteps === 3 ? <CheckCircle2 aria-hidden /> : <Circle aria-hidden />}
+          </span>
           <div>
-            <p className="eyebrow">Comece por aqui</p>
-            <h2>
+            <b>
               {completedSetupSteps === 3
                 ? "Sua página está pronta"
-                : "Complete os 3 passos essenciais"}
-            </h2>
+                : "Vamos deixar sua página pronta"}
+            </b>
+            <small>{completedSetupSteps}/3 itens essenciais concluídos</small>
           </div>
-          <span>{completedSetupSteps}/3 concluídos</span>
         </div>
-        <div className="free-setup-progress" aria-hidden="true">
+        <div className="editor-readiness-track" aria-hidden="true">
           <span style={{ width: `${(completedSetupSteps / 3) * 100}%` }} />
-        </div>
-        <div className="free-setup-steps">
-          {setupSteps.map((step, index) => (
-            <button
-              key={step.id}
-              type="button"
-              className={`${selected === step.id ? "is-active" : ""} ${step.complete ? "is-complete" : ""}`}
-              onClick={() => select(step.id)}
-            >
-              {step.complete ? <CheckCircle2 aria-hidden /> : <Circle aria-hidden />}
-              <span>
-                <small>Passo {index + 1}</small>
-                <b>{step.label}</b>
-                <em>{step.help}</em>
-              </span>
-            </button>
-          ))}
         </div>
       </section>
 
       <div className="builder-layout">
-        <aside className="builder-menu card-surface h-fit xl:sticky xl:top-24">
-          {Array.from(
-            new Set(
-              MENU.filter((item) => item.id !== "catalog" || planAccess?.features.catalog).map(
-                (item) => item.group,
-              ),
-            ),
-          ).map((group) => (
-            <div key={group} className="mb-5 last:mb-0">
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[.14em] text-muted-foreground">
-                {group}
+        <section className="builder-control-panel">
+          <nav className="editor-workflow" aria-label="Etapas de edição">
+            {WORKFLOW.map((workflow, index) => {
+              const active = index === activeWorkflowIndex;
+              return (
+                <button
+                  key={workflow.id}
+                  type="button"
+                  className={active ? "is-active" : ""}
+                  aria-current={active ? "step" : undefined}
+                  onClick={() => {
+                    const firstAvailable = workflow.sections.find(
+                      (section) => section !== "catalog" || planAccess?.features.catalog,
+                    );
+                    if (firstAvailable) select(firstAvailable);
+                  }}
+                >
+                  <span>{index + 1}</span>
+                  <b>{workflow.label}</b>
+                  <small>{workflow.description}</small>
+                </button>
+              );
+            })}
+          </nav>
+
+          <div className="editor-section-tabs" aria-label={`Opções de ${activeWorkflow.label}`}>
+            {activeWorkflow.sections
+              .filter((section) => section !== "catalog" || planAccess?.features.catalog)
+              .map((section) => {
+                const item = MENU.find((menuItem) => menuItem.id === section)!;
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={section}
+                    type="button"
+                    className={selected === section ? "is-active" : ""}
+                    onClick={() => select(section)}
+                  >
+                    <Icon aria-hidden />
+                    {item.label}
+                  </button>
+                );
+              })}
+          </div>
+
+          <aside ref={inspectorRef} className="builder-inspector card-surface">
+            <SectionForm
+              section={selected}
+              bio={bio}
+              links={links}
+              defaults={defaults}
+              updateBio={updateBio}
+              updateLink={updateLink}
+              removeLink={(id) => setLinks((current) => current.filter((link) => link.id !== id))}
+              addLink={addLink}
+              products={products}
+              setProducts={setProducts}
+              planAccess={planAccess}
+              draftTemplate={draftTemplate}
+              setDraftTemplate={setDraftTemplate}
+            />
+            {saveState === "error" && (
+              <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
+                {validationMessage ||
+                  "Não foi possível salvar. Confira sua conexão e tente novamente."}
               </p>
-              <div className="grid gap-1">
-                {MENU.filter(
-                  (item) =>
-                    item.group === group && (item.id !== "catalog" || planAccess?.features.catalog),
-                ).map((item) => {
-                  const Icon = item.icon;
-                  const active = selected === item.id;
-                  return (
-                    <button
-                      key={item.id}
-                      type="button"
-                      onClick={() => select(item.id)}
-                      className={`builder-menu-item rounded-xl px-3 py-2.5 text-left transition-colors ${active ? "is-active" : ""}`}
-                    >
-                      <span className="flex items-center gap-2 text-sm font-medium">
-                        <Icon className="h-4 w-4 text-[color:var(--primary)]" />
-                        {item.label}
-                      </span>
-                      <span className="mt-0.5 block pl-6 text-xs text-muted-foreground">
-                        {item.description}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </aside>
+            )}
+          </aside>
+        </section>
 
         <main ref={previewRef} className="builder-preview-stage min-w-0 xl:order-none">
           <p className="builder-preview-label mb-3 text-center text-sm font-medium text-muted-foreground">
@@ -512,63 +563,6 @@ export function UnifiedPageEditor({
             )}
           </div>
         </main>
-
-        <aside
-          ref={inspectorRef}
-          className="builder-inspector card-surface h-fit xl:sticky xl:top-24"
-        >
-          {!selected ? (
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
-                  Personalize sua página
-                </p>
-                <h2 className="mt-1 text-xl font-semibold">Por onde quer começar?</h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Escolha uma opção simples para atualizar sua presença.
-                </p>
-              </div>
-              {[
-                ["appearance", "Alterar fundo e capa"],
-                ["photo", "Adicionar foto"],
-                ["profile", "Editar nome e descrição"],
-                ["contact", "Configurar WhatsApp"],
-                ["links", "Adicionar links"],
-              ].map(([id, label]) => (
-                <button
-                  key={id}
-                  type="button"
-                  onClick={() => select(id as EditorSection)}
-                  className="btn-secondary w-full justify-start"
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-          ) : (
-            <SectionForm
-              section={selected}
-              bio={bio}
-              links={links}
-              defaults={defaults}
-              updateBio={updateBio}
-              updateLink={updateLink}
-              removeLink={(id) => setLinks((current) => current.filter((link) => link.id !== id))}
-              addLink={addLink}
-              products={products}
-              setProducts={setProducts}
-              planAccess={planAccess}
-              draftTemplate={draftTemplate}
-              setDraftTemplate={setDraftTemplate}
-            />
-          )}
-          {saveState === "error" && (
-            <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
-              {validationMessage ||
-                "Não foi possível salvar. Confira sua conexão e tente novamente."}
-            </p>
-          )}
-        </aside>
       </div>
       {saveState === "success" && bio.published && (
         <section className="card-surface flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">

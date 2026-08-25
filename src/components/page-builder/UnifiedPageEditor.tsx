@@ -1,4 +1,6 @@
 import {
+  CheckCircle2,
+  Circle,
   ExternalLink,
   Facebook,
   Globe2,
@@ -211,7 +213,7 @@ export function UnifiedPageEditor({
   const [bio, setBio] = useState<BioForm>(initialBio);
   const [links, setLinks] = useState<EditableLink[]>(initialLinks);
   const [products, setProducts] = useState<CatalogItem[]>(initialProducts);
-  const [selected, setSelected] = useState<EditorSection>();
+  const [selected, setSelected] = useState<EditorSection>("profile");
   const [draftTemplate, setDraftTemplate] = useState(initialBio.template_id ?? "default");
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
@@ -223,6 +225,32 @@ export function UnifiedPageEditor({
   const inspectorRef = useRef<HTMLElement>(null);
   const snapshot = JSON.stringify({ bio, links, products });
   const hasPendingChanges = snapshot !== savedSnapshot;
+  const setupSteps: Array<{
+    id: EditorSection;
+    label: string;
+    help: string;
+    complete: boolean;
+  }> = [
+    {
+      id: "profile",
+      label: "Apresente seu negócio",
+      help: "Nome e descrição",
+      complete: bio.display_name.trim().length >= 2 && Boolean(bio.description?.trim()),
+    },
+    {
+      id: "contact",
+      label: "Conecte o WhatsApp",
+      help: "Canal principal de contato",
+      complete: bio.whatsapp.replace(/\D/g, "").length >= 10,
+    },
+    {
+      id: "links",
+      label: "Adicione uma ação",
+      help: "Link, rede ou botão",
+      complete: links.some((link) => link.title.trim() && link.url.replace("https://", "").trim()),
+    },
+  ];
+  const completedSetupSteps = setupSteps.filter((step) => step.complete).length;
   const previewBio = useMemo(
     () =>
       ({
@@ -340,9 +368,7 @@ export function UnifiedPageEditor({
           <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
             Minha Página
           </p>
-          <h1 className="mt-1 text-2xl font-bold">
-            Personalize como seus clientes encontram você.
-          </h1>
+          <h1 className="mt-1 text-2xl font-bold">Monte sua página em poucos passos.</h1>
         </div>
         <div className="flex items-center gap-2">
           {hasPendingChanges && (
@@ -355,7 +381,7 @@ export function UnifiedPageEditor({
             onClick={() => previewRef.current?.scrollIntoView({ behavior: "smooth" })}
             className="btn-secondary xl:hidden"
           >
-            Ver preview
+            Ver prévia
           </button>
           <a
             href={`/p/${previewBio.slug}`}
@@ -377,11 +403,45 @@ export function UnifiedPageEditor({
               : saveState === "error"
                 ? "Tentar novamente"
                 : hasPendingChanges
-                  ? "Salvar"
-                  : "Salvo"}
+                  ? "Salvar e publicar"
+                  : "Tudo salvo"}
           </button>
         </div>
       </header>
+
+      <section className="free-setup-guide" aria-label="Passos para configurar a página">
+        <div className="free-setup-guide-heading">
+          <div>
+            <p className="eyebrow">Comece por aqui</p>
+            <h2>
+              {completedSetupSteps === 3
+                ? "Sua página está pronta"
+                : "Complete os 3 passos essenciais"}
+            </h2>
+          </div>
+          <span>{completedSetupSteps}/3 concluídos</span>
+        </div>
+        <div className="free-setup-progress" aria-hidden="true">
+          <span style={{ width: `${(completedSetupSteps / 3) * 100}%` }} />
+        </div>
+        <div className="free-setup-steps">
+          {setupSteps.map((step, index) => (
+            <button
+              key={step.id}
+              type="button"
+              className={`${selected === step.id ? "is-active" : ""} ${step.complete ? "is-complete" : ""}`}
+              onClick={() => select(step.id)}
+            >
+              {step.complete ? <CheckCircle2 aria-hidden /> : <Circle aria-hidden />}
+              <span>
+                <small>Passo {index + 1}</small>
+                <b>{step.label}</b>
+                <em>{step.help}</em>
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
 
       <div className="builder-layout grid gap-6 xl:grid-cols-[18rem_minmax(25rem,1fr)_22rem]">
         <aside className="builder-menu card-surface h-fit xl:sticky xl:top-24">
@@ -427,7 +487,7 @@ export function UnifiedPageEditor({
 
         <main ref={previewRef} className="builder-preview-stage min-w-0 xl:order-none">
           <p className="builder-preview-label mb-3 text-center text-sm font-medium text-muted-foreground">
-            Preview da sua página
+            Sua página enquanto você edita
           </p>
           <div
             className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} mx-auto max-w-[25rem] overflow-hidden bg-background`}

@@ -129,6 +129,8 @@ async function handleWebhook(req: Request, env: StripeEnv) {
       break;
     case "checkout.session.completed":
     case "checkout.session.async_payment_succeeded":
+      await grantAnnualFromOneOffPayment(event.data.object);
+      break;
     case "invoice.paid":
       break;
     default:

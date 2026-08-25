@@ -584,22 +584,25 @@ function SectionForm({
       </div>
       {section === "appearance" && (
         <>
-          <Field label="Template">
+          <Field label={planAccess?.isPro ? "Template" : "Estilo da página Free"}>
             <div className="grid grid-cols-2 gap-2">
-              {TemplateService.list()
-                .filter(
-                  (template) => planAccess?.features.premium_templates || template.id === "default",
-                )
-                .map((template) => (
-                  <button
-                    key={template.id}
-                    type="button"
-                    onClick={() => setDraftTemplate(template.id)}
-                    className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
-                  >
-                    {template.name}
-                  </button>
-                ))}
+              {(planAccess?.isPro
+                ? TemplateService.list()
+                : [
+                    { id: "default", name: "Essencial", status: "active" as const },
+                    { id: "free-showcase", name: "Vitrine", status: "active" as const },
+                    { id: "free-social", name: "Social", status: "active" as const },
+                  ]
+              ).map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => setDraftTemplate(template.id)}
+                  className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
+                >
+                  {template.name}
+                </button>
+              ))}
             </div>
             <div className="mt-2 flex gap-2">
               <button
@@ -621,7 +624,10 @@ function SectionForm({
                 type="button"
                 className="btn-primary text-xs"
                 onClick={() => {
-                  if (TemplateService.get(draftTemplate).status === "active") {
+                  const isFreeLayout = ["default", "free-showcase", "free-social"].includes(
+                    draftTemplate,
+                  );
+                  if (isFreeLayout || TemplateService.get(draftTemplate).status === "active") {
                     updateBio({ template_id: draftTemplate });
                     setTemplateNotice("Visual aplicado à página. Clique em Salvar para publicar.");
                   }
@@ -705,8 +711,8 @@ function SectionForm({
       {section === "motion" && (
         <>
           <p className="text-sm text-muted-foreground">
-            Escolha movimentos discretos para a sua página. A prévia é atualizada na hora e
-            as opções ficam publicadas quando você clicar em Salvar.
+            Escolha movimentos discretos para a sua página. A prévia é atualizada na hora e as
+            opções ficam publicadas quando você clicar em Salvar.
           </p>
           <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface-elevated p-4 text-sm">
             <span>

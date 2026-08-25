@@ -1,10 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Sparkles } from "lucide-react";
+import { Check, CreditCard, Loader2, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import { formatPlanPrice } from "@/modules/billing/types";
 import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { getStripeEnvironment } from "@/lib/stripe";
+import { createPortalSession } from "@/utils/payments.functions";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/billing")({
   head: () => ({
@@ -36,6 +48,8 @@ const FALLBACK_FEATURES = {
 
 function BillingPage() {
   const access = usePlanAccess();
+  const checkout = useStripeCheckout();
+  const [portalLoading, setPortalLoading] = useState(false);
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ["billing-plans"],
     queryFn: BillingService.listPublicPlans,
@@ -43,6 +57,22 @@ function BillingPage() {
   const displayedPlans = plans.filter((plan) =>
     ["essential", "free", "pro-monthly", "pro-yearly", "pro"].includes(plan.slug),
   );
+
+  async function openPortal() {
+    setPortalLoading(true);
+    try {
+      const result = await createPortalSession({
+        data: {
+          environment: getStripeEnvironment(),
+        },
+      });
+      if ("error" in result) throw new Error(result.error);
+      window.location.assign(result.url);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível abrir sua assinatura.");
+      setPortalLoading(false);
+    }
+  }
 
   return (
     <div className="space-y-8">
@@ -116,14 +146,26 @@ function BillingPage() {
                     {current ? "Plano atual" : "Usar Eialink Essencial"}
                   </Link>
                 ) : (
-                  <a
+                  <button
+                    type="button"
                     className="btn-primary mt-8 w-full"
-                    href={commercialWhatsAppUrl("pro")}
-                    target="_blank"
-                    rel="noreferrer"
+                    disabled={portalLoading}
+                    onClick={() =>
+                      access.data?.isPro
+                        ? void openPortal()
+                        : checkout.openCheckout({
+                            priceId: `${plan.slug}_${plan.billing_interval}`,
+                          })
+                    }
                   >
-                    {current ? "Plano atual" : "Assinar Eialink Pro"}
-                  </a>
+                    {portalLoading && access.data?.isPro ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : access.data?.isPro ? (
+                      "Gerenciar assinatura"
+                    ) : (
+                      <><CreditCard className="h-4 w-4" /> Assinar com Stripe</>
+                    )}
+                  </button>
                 )}
               </article>
             );
@@ -147,6 +189,18 @@ function BillingPage() {
           Quero um site profissional
         </a>
       </section>
+
+      <Dialog open={checkout.isOpen} onOpenChange={(open) => !open && checkout.closeCheckout()}>
+        <DialogContent className="max-h-[92vh] max-w-2xl overflow-y-auto p-4 sm:p-6">
+          <DialogHeader>
+            <DialogTitle>Assinar Eialink Pro</DialogTitle>
+            <DialogDescription>
+              Pagamento seguro pela Stripe. A liberação acontece após a confirmação da cobrança.
+            </DialogDescription>
+          </DialogHeader>
+          {checkout.checkoutElement}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

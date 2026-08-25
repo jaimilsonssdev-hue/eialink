@@ -15,8 +15,10 @@ function getSupabase() {
 }
 
 const PRICE_TO_PLAN_SLUG: Record<string, string> = {
-  pro_monthly: "pro",
-  catalog_monthly: "catalog",
+  "pro-monthly_monthly": "pro-monthly",
+  "pro-yearly_yearly": "pro-yearly",
+  pro_monthly: "pro-monthly",
+  pro_yearly: "pro-yearly",
 };
 
 function resolvePriceId(item: any): string | undefined {
@@ -27,19 +29,23 @@ function resolvePriceId(item: any): string | undefined {
   );
 }
 
+function resolvePlanSlug(item: any): string | undefined {
+  return item?.price?.metadata?.planSlug || PRICE_TO_PLAN_SLUG[resolvePriceId(item) ?? ""];
+}
+
 /** Keeps the in-app plan of the account aligned with the paid subscription. */
-async function syncAppPlan(userId: string, priceId: string | undefined, status: string) {
+async function syncAppPlan(userId: string, planSlug: string | undefined, status: string) {
   const supabase = getSupabase();
   const slug =
     status === "active" || status === "trialing" || status === "past_due"
-      ? PRICE_TO_PLAN_SLUG[priceId ?? ""]
-      : "free";
+      ? planSlug
+      : "essential";
   if (!slug) return;
   const { data: plan } = await supabase.from("plans").select("id").eq("slug", slug).maybeSingle();
   if (!plan) return;
   await supabase
     .from("subscriptions")
-    .update({ plan_id: plan.id, status: slug === "free" ? "active" : status })
+    .update({ plan_id: plan.id, status: slug === "essential" ? "active" : status })
     .eq("user_id", userId);
 }
 
@@ -51,6 +57,7 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
   }
   const item = subscription.items?.data?.[0];
   const priceId = resolvePriceId(item);
+  const planSlug = resolvePlanSlug(item);
   const productId = item?.price?.product;
   const periodStart = item?.current_period_start ?? subscription.current_period_start;
   const periodEnd = item?.current_period_end ?? subscription.current_period_end;
@@ -74,7 +81,7 @@ async function upsertSubscription(subscription: any, env: StripeEnv) {
       { onConflict: "stripe_subscription_id" },
     );
 
-  await syncAppPlan(userId, priceId, subscription.status);
+  await syncAppPlan(userId, planSlug, subscription.status);
 }
 
 async function handleSubscriptionDeleted(subscription: any, env: StripeEnv) {

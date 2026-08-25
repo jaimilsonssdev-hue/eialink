@@ -124,6 +124,12 @@ function Dashboard() {
 
   const publicUrl =
     bio && typeof window !== "undefined" ? `${window.location.origin}/p/${bio.slug}` : "";
+  const setupItems = [
+    { label: "Nome do negócio", complete: Boolean(bio?.display_name?.trim()) },
+    { label: "WhatsApp", complete: (bio?.whatsapp?.replace(/\D/g, "").length ?? 0) >= 10 },
+    { label: "Primeiro link", complete: (linksCount ?? 0) > 0 },
+  ];
+  const setupCompleted = setupItems.filter((item) => item.complete).length;
 
   return (
     <div className="space-y-8 premium-dashboard">
@@ -165,6 +171,25 @@ function Dashboard() {
             Criar minha página
           </Link>
         </div>
+      )}
+
+      {bio && setupCompleted < setupItems.length && (
+        <section className="dashboard-setup-card">
+          <div>
+            <p className="eyebrow">Configuração rápida</p>
+            <h2>Deixe seu EiaLink pronto em poucos minutos</h2>
+            <div className="dashboard-setup-list">
+              {setupItems.map((item) => (
+                <span className={item.complete ? "is-complete" : ""} key={item.label}>
+                  {item.complete ? "✓" : "○"} {item.label}
+                </span>
+              ))}
+            </div>
+          </div>
+          <Link to="/builder" className="btn-primary">
+            Continuar configuração
+          </Link>
+        </section>
       )}
 
       <div className="premium-section-heading">

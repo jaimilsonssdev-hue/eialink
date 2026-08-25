@@ -64,6 +64,18 @@ function BillingPage() {
 
   return (
     <div className="space-y-8">
+      <PaymentTestModeBanner />
+      {isOpen && (
+        <section className="card-surface space-y-3">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="font-bold">Finalize seu pagamento</h2>
+            <button type="button" className="btn-secondary" onClick={closeCheckout}>
+              Cancelar
+            </button>
+          </div>
+          {checkoutElement}
+        </section>
+      )}
       <header className="max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
           Assinatura

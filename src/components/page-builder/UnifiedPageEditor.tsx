@@ -1,6 +1,7 @@
 import {
   CheckCircle2,
   Circle,
+  Eye,
   ExternalLink,
   Facebook,
   Globe2,
@@ -14,6 +15,7 @@ import {
   UserRound,
   WalletCards,
   Youtube,
+  X,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
@@ -250,6 +252,7 @@ export function UnifiedPageEditor({
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [validationMessage, setValidationMessage] = useState<string>();
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
     JSON.stringify({ bio: initialBio, links: initialLinks, products: initialProducts }),
   );
@@ -401,11 +404,11 @@ export function UnifiedPageEditor({
   return (
     <div className="premium-builder space-y-5">
       <header className="builder-topbar sticky top-0 z-20 -mx-6 flex flex-wrap items-center justify-between gap-3 px-6 py-4 backdrop-blur md:-mx-10 md:px-10">
-        <div>
+        <div className="builder-heading">
           <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
             Minha Página
           </p>
-          <h1 className="mt-1 text-2xl font-bold">Monte sua página em poucos passos.</h1>
+          <h1 className="mt-1 text-2xl font-bold">Edite, confira e publique.</h1>
         </div>
         <div className="flex items-center gap-2">
           {hasPendingChanges && (
@@ -415,10 +418,10 @@ export function UnifiedPageEditor({
           )}
           <button
             type="button"
-            onClick={() => previewRef.current?.scrollIntoView({ behavior: "smooth" })}
+            onClick={() => setPreviewOpen(true)}
             className="btn-secondary xl:hidden"
           >
-            Ver prévia
+            <Eye className="h-4 w-4" /> Ver prévia
           </button>
           <a
             href={`/p/${previewBio.slug}`}
@@ -428,21 +431,25 @@ export function UnifiedPageEditor({
           >
             <ExternalLink className="h-4 w-4" /> Ver página
           </a>
-          <button
-            type="button"
-            onClick={() => void save()}
-            disabled={saving || !hasPendingChanges}
-            className="btn-primary"
-          >
-            <Save className="h-4 w-4" />
-            {saving
-              ? "Salvando..."
-              : saveState === "error"
-                ? "Tentar novamente"
-                : hasPendingChanges
-                  ? "Salvar e publicar"
-                  : "Tudo salvo"}
-          </button>
+          {hasPendingChanges || saveState === "error" ? (
+            <button
+              type="button"
+              onClick={() => void save()}
+              disabled={saving}
+              className="btn-primary"
+            >
+              <Save className="h-4 w-4" />
+              {saving
+                ? "Salvando..."
+                : saveState === "error"
+                  ? "Tentar novamente"
+                  : "Salvar e publicar"}
+            </button>
+          ) : (
+            <span className="builder-save-status">
+              <CheckCircle2 aria-hidden /> Salvo
+            </span>
+          )}
         </div>
       </header>
 
@@ -536,7 +543,19 @@ export function UnifiedPageEditor({
           </aside>
         </section>
 
-        <main ref={previewRef} className="builder-preview-stage min-w-0 xl:order-none">
+        <main
+          ref={previewRef}
+          className={`builder-preview-stage min-w-0 xl:order-none ${previewOpen ? "is-mobile-open" : ""}`}
+        >
+          <div className="builder-preview-mobile-header">
+            <div>
+              <b>Prévia da sua página</b>
+              <small>As mudanças aparecem aqui na hora</small>
+            </div>
+            <button type="button" onClick={() => setPreviewOpen(false)} aria-label="Fechar prévia">
+              <X aria-hidden />
+            </button>
+          </div>
           <p className="builder-preview-label mb-3 text-center text-sm font-medium text-muted-foreground">
             Sua página enquanto você edita
           </p>
@@ -627,7 +646,6 @@ function SectionForm({
   setDraftTemplate(id: string): void;
 }) {
   const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
-  const [templateNotice, setTemplateNotice] = useState<string>();
   return (
     <div className="space-y-4">
       <div>
@@ -651,50 +669,24 @@ function SectionForm({
                 <button
                   key={template.id}
                   type="button"
-                  onClick={() => setDraftTemplate(template.id)}
+                  onClick={() => {
+                    const isFreeLayout = ["default", "free-showcase", "free-social"].includes(
+                      template.id,
+                    );
+                    if (isFreeLayout || TemplateService.get(template.id).status === "active") {
+                      setDraftTemplate(template.id);
+                      updateBio({ template_id: template.id });
+                    }
+                  }}
                   className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
                 >
                   {template.name}
                 </button>
               ))}
             </div>
-            <div className="mt-2 flex gap-2">
-              <button
-                type="button"
-                className="btn-secondary text-xs"
-                onClick={() => {
-                  if (draftTemplate === (bio.template_id ?? "default")) return;
-                  if (
-                    window.confirm("Descartar a prévia deste visual e manter o template atual?")
-                  ) {
-                    setDraftTemplate(bio.template_id ?? "default");
-                    setTemplateNotice("Prévia cancelada. O template atual foi mantido.");
-                  }
-                }}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="btn-primary text-xs"
-                onClick={() => {
-                  const isFreeLayout = ["default", "free-showcase", "free-social"].includes(
-                    draftTemplate,
-                  );
-                  if (isFreeLayout || TemplateService.get(draftTemplate).status === "active") {
-                    updateBio({ template_id: draftTemplate });
-                    setTemplateNotice("Visual aplicado à página. Clique em Salvar para publicar.");
-                  }
-                }}
-              >
-                Aplicar
-              </button>
-            </div>
-            {templateNotice && (
-              <p className="mt-2 text-xs text-[color:var(--primary)]" role="status">
-                {templateNotice}
-              </p>
-            )}
+            <p className="mt-2 text-xs text-muted-foreground">
+              Toque em um estilo para visualizar imediatamente.
+            </p>
           </Field>
           <MediaUploader
             label="Imagem de capa"
@@ -703,49 +695,54 @@ function SectionForm({
             templateId={draftTemplate}
             onChange={(cover_url) => updateBio({ cover_url })}
           />
-          <Field label="Posição da imagem">
-            <select
-              className="input-base"
-              value={bio.cover_position}
-              onChange={(event) => updateBio({ cover_position: event.target.value })}
-            >
-              <option value="top">Topo</option>
-              <option value="center">Centro</option>
-              <option value="bottom">Base</option>
-            </select>
-          </Field>
-          <Field label="Ajuste">
-            <select
-              className="input-base"
-              value={bio.cover_fit}
-              onChange={(event) => updateBio({ cover_fit: event.target.value })}
-            >
-              <option value="cover">Preencher a capa</option>
-              <option value="contain">Mostrar a imagem inteira</option>
-            </select>
-          </Field>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="checkbox"
-              checked={bio.cover_overlay}
-              onChange={(event) => updateBio({ cover_overlay: event.target.checked })}
-            />
-            Melhorar leitura com sobreposição
-          </label>
-          {bio.cover_overlay && (
-            <Field label={`Opacidade (${bio.cover_overlay_opacity}%)`}>
-              <input
-                className="w-full"
-                type="range"
-                min="0"
-                max="100"
-                value={bio.cover_overlay_opacity}
-                onChange={(event) =>
-                  updateBio({ cover_overlay_opacity: Number(event.target.value) })
-                }
-              />
-            </Field>
-          )}
+          <details className="editor-advanced-settings">
+            <summary>Ajustes avançados da capa</summary>
+            <div className="space-y-4 pt-4">
+              <Field label="Posição da imagem">
+                <select
+                  className="input-base"
+                  value={bio.cover_position}
+                  onChange={(event) => updateBio({ cover_position: event.target.value })}
+                >
+                  <option value="top">Topo</option>
+                  <option value="center">Centro</option>
+                  <option value="bottom">Base</option>
+                </select>
+              </Field>
+              <Field label="Ajuste">
+                <select
+                  className="input-base"
+                  value={bio.cover_fit}
+                  onChange={(event) => updateBio({ cover_fit: event.target.value })}
+                >
+                  <option value="cover">Preencher a capa</option>
+                  <option value="contain">Mostrar a imagem inteira</option>
+                </select>
+              </Field>
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={bio.cover_overlay}
+                  onChange={(event) => updateBio({ cover_overlay: event.target.checked })}
+                />
+                Melhorar leitura com sobreposição
+              </label>
+              {bio.cover_overlay && (
+                <Field label={`Opacidade (${bio.cover_overlay_opacity}%)`}>
+                  <input
+                    className="w-full"
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={bio.cover_overlay_opacity}
+                    onChange={(event) =>
+                      updateBio({ cover_overlay_opacity: Number(event.target.value) })
+                    }
+                  />
+                </Field>
+              )}
+            </div>
+          </details>
           <Field label="Tema">
             <div className="grid grid-cols-2 gap-2">
               {THEMES.map((theme) => (

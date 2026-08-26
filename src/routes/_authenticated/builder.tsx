@@ -147,8 +147,15 @@ function BuilderPage() {
         displayName: profile?.company_name ?? "",
         whatsapp: profile?.whatsapp ?? "",
         instagram: profile?.instagram ?? "",
+        niche: profile?.niche ?? "Outro",
       }}
-      onSave={async ({ bio: form, links: editedLinks, products: editedProducts }) => {
+      onSave={async ({ bio: form, links: editedLinks, products: editedProducts, niche }) => {
+        const { error: profileError } = await supabase
+          .from("profiles")
+          .update({ niche })
+          .eq("id", userId);
+        if (profileError) throw new Error(profileError.message);
+
         const payload = { ...form, user_id: userId };
         let bioPageId = bio?.id;
         if (bioPageId) {

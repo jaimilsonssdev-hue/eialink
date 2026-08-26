@@ -157,7 +157,7 @@ const COVER_LIBRARY = {
   ],
 } as const;
 
-function coverCategory(templateId?: string | null) {
+function coverCategory(templateId?: string | null, niche?: string | null) {
   if (templateId?.includes("clinic")) return "clinic";
   if (templateId?.includes("therapy")) return "therapy";
   if (templateId?.includes("academy")) return "academy";
@@ -166,7 +166,20 @@ function coverCategory(templateId?: string | null) {
   if (templateId?.includes("beauty")) return "beauty";
   if (templateId?.includes("creator")) return "creator";
   if (templateId?.includes("business")) return "business";
-  return "restaurant";
+
+  const nicheCategories: Record<string, keyof typeof COVER_LIBRARY> = {
+    Alimentação: "restaurant",
+    "Beleza & Estética": "beauty",
+    Saúde: "clinic",
+    Educação: "academy",
+    Moda: "store",
+    Serviços: "business",
+    Comércio: "store",
+    Tecnologia: "business",
+    Imobiliário: "business",
+    Outro: "business",
+  };
+  return nicheCategories[niche ?? ""] ?? "business";
 }
 
 export function MediaUploader({
@@ -175,6 +188,7 @@ export function MediaUploader({
   maxSizeBytes = DEFAULT_MAX_SIZE,
   variant = "square",
   templateId,
+  niche,
   onChange,
 }: {
   label: string;
@@ -182,6 +196,7 @@ export function MediaUploader({
   maxSizeBytes?: number;
   variant?: "square" | "cover";
   templateId?: string | null;
+  niche?: string | null;
   onChange(url: string | null): void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -238,7 +253,7 @@ export function MediaUploader({
   }
 
   const isCover = variant === "cover";
-  const category = coverCategory(templateId);
+  const category = coverCategory(templateId, niche);
   const coverLibrary = COVER_LIBRARY[category];
   const categoryLabel = {
     restaurant: "restaurante",

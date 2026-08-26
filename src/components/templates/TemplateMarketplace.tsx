@@ -2,6 +2,8 @@ import {
   BriefcaseBusiness,
   Brain,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   Dumbbell,
   HeartPulse,
   PawPrint,
@@ -10,7 +12,7 @@ import {
   Sparkles,
   UtensilsCrossed,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +44,8 @@ const FILTERS = [
 export function TemplateMarketplace() {
   const [activeFilter, setActiveFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
   const [previewTemplate, setPreviewTemplate] = useState<TemplateDefinition | null>(null);
+  const [activeTemplateIndex, setActiveTemplateIndex] = useState(0);
+  const gridRef = useRef<HTMLDivElement>(null);
   const templates = useMemo(
     () =>
       [...TemplateService.list()]
@@ -49,6 +53,18 @@ export function TemplateMarketplace() {
         .filter((template) => activeFilter === "all" || template.category === activeFilter),
     [activeFilter],
   );
+
+  useEffect(() => {
+    setActiveTemplateIndex(0);
+    gridRef.current?.scrollTo({ left: 0, behavior: "smooth" });
+  }, [activeFilter]);
+
+  const showTemplate = (index: number) => {
+    const nextIndex = Math.max(0, Math.min(index, templates.length - 1));
+    const card = gridRef.current?.children.item(nextIndex) as HTMLElement | null;
+    card?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    setActiveTemplateIndex(nextIndex);
+  };
 
   const activateTemplate = (template: TemplateDefinition) => {
     if (template.smart) {
@@ -65,8 +81,13 @@ export function TemplateMarketplace() {
       <div className="template-marketplace-heading">
         <div>
           <p className="eyebrow">Modelos por nicho</p>
-          <h2 id="templates-heading" className="premium-heading">Escolha uma página que já nasceu para vender</h2>
-          <p>Todos os visuais mantêm a identidade EIA Link e mudam apenas a estrutura que seu negócio precisa.</p>
+          <h2 id="templates-heading" className="premium-heading">
+            Escolha uma página que já nasceu para vender
+          </h2>
+          <p>
+            Todos os visuais mantêm a identidade EIA Link e mudam apenas a estrutura que seu negócio
+            precisa.
+          </p>
         </div>
         <Sparkles className="template-marketplace-sparkle" aria-hidden="true" />
       </div>
@@ -87,7 +108,42 @@ export function TemplateMarketplace() {
         ))}
       </div>
 
-      <div className="template-marketplace-grid">
+      {templates.length > 0 && (
+        <div className="template-carousel-controls" aria-label="Navegação entre modelos">
+          <span>
+            <b>{activeTemplateIndex + 1}</b> de {templates.length}
+          </span>
+          <div>
+            <button
+              type="button"
+              onClick={() => showTemplate(activeTemplateIndex - 1)}
+              disabled={activeTemplateIndex === 0}
+              aria-label="Modelo anterior"
+            >
+              <ChevronLeft aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => showTemplate(activeTemplateIndex + 1)}
+              disabled={activeTemplateIndex === templates.length - 1}
+              aria-label="Próximo modelo"
+            >
+              <ChevronRight aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div
+        ref={gridRef}
+        className="template-marketplace-grid"
+        onScroll={(event) => {
+          const container = event.currentTarget;
+          if (container.clientWidth === 0) return;
+          const index = Math.round(container.scrollLeft / container.clientWidth);
+          setActiveTemplateIndex(Math.max(0, Math.min(index, templates.length - 1)));
+        }}
+      >
         {templates.map((template) => (
           <article key={template.id} className="template-gallery-card">
             <button
@@ -105,8 +161,14 @@ export function TemplateMarketplace() {
                 {template.badge && <span className="template-badge">{template.badge}</span>}
               </div>
               <p className="template-gallery-description">{template.description}</p>
-              <p className="template-gallery-best-for">Ideal para: {template.bestFor ?? "uma presença profissional"}</p>
-              <button type="button" className="template-use-button" onClick={() => activateTemplate(template)}>
+              <p className="template-gallery-best-for">
+                Ideal para: {template.bestFor ?? "uma presença profissional"}
+              </p>
+              <button
+                type="button"
+                className="template-use-button"
+                onClick={() => activateTemplate(template)}
+              >
                 Usar este visual
               </button>
             </div>
@@ -115,10 +177,15 @@ export function TemplateMarketplace() {
       </div>
 
       {templates.length === 0 && (
-        <p className="template-marketplace-empty">Ainda não há um modelo para este nicho. Escolha outro segmento.</p>
+        <p className="template-marketplace-empty">
+          Ainda não há um modelo para este nicho. Escolha outro segmento.
+        </p>
       )}
 
-      <Dialog open={Boolean(previewTemplate)} onOpenChange={(open) => !open && setPreviewTemplate(null)}>
+      <Dialog
+        open={Boolean(previewTemplate)}
+        onOpenChange={(open) => !open && setPreviewTemplate(null)}
+      >
         {previewTemplate && (
           <DialogContent className="template-preview-dialog max-h-[90vh] max-w-3xl overflow-y-auto">
             <DialogHeader>
@@ -129,9 +196,15 @@ export function TemplateMarketplace() {
             <div className="template-preview-large">
               <TemplateThumbnail template={previewTemplate} />
             </div>
-            <p className="template-gallery-best-for">Ideal para: {previewTemplate.bestFor ?? "uma presença profissional"}</p>
+            <p className="template-gallery-best-for">
+              Ideal para: {previewTemplate.bestFor ?? "uma presença profissional"}
+            </p>
             <DialogFooter>
-              <button type="button" className="btn-primary" onClick={() => activateTemplate(previewTemplate)}>
+              <button
+                type="button"
+                className="btn-primary"
+                onClick={() => activateTemplate(previewTemplate)}
+              >
                 Usar este visual
               </button>
             </DialogFooter>

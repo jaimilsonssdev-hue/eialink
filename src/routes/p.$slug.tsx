@@ -16,6 +16,12 @@ const blockStore = supabase as never as { from: (table: "page_blocks") => any };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const catalogStore = supabase as never as { from: (table: "catalog_items") => any };
 
+const FREE_TEMPLATE_IDS = new Set(["default", "free-showcase", "free-social"]);
+
+function usesPremiumTemplate(templateId?: string | null) {
+  return Boolean(templateId && !FREE_TEMPLATE_IDS.has(templateId));
+}
+
 export const Route = createFileRoute("/p/$slug")({
   ssr: true,
   loader: async ({ params }) => {
@@ -50,9 +56,14 @@ export const Route = createFileRoute("/p/$slug")({
     const { data: hasProPlan } = await publicStore.rpc("page_has_pro_plan", {
       _bio_page_id: bio.id,
     });
+    // A premium template can only be persisted by an account that had premium
+    // template access. Treat that saved choice as a fail-safe so a stale Cloud
+    // database function cannot make the public URL fall back to the Free
+    // renderer while the builder preview shows the full mini-site.
+    const renderFullPage = Boolean(hasProPlan) || usesPremiumTemplate(bio.template_id);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingStore = supabase as never as { from: (table: "booking_settings") => any };
-    const { data: booking } = hasProPlan
+    const { data: booking } = renderFullPage
       ? await bookingStore
           .from("booking_settings")
           .select("active")
@@ -65,7 +76,7 @@ export const Route = createFileRoute("/p/$slug")({
       links: links ?? [],
       blocks: (blocks ?? []) as PageBlock[],
       products: (products ?? []) as CatalogItem[],
-      hasProPlan: Boolean(hasProPlan),
+      hasProPlan: renderFullPage,
       bookingActive: Boolean(booking),
     };
   },

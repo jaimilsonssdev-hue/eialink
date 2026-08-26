@@ -3517,14 +3517,19 @@
 .booking-empty { display:grid; place-items:center; gap:.6rem; min-height:10rem; padding:1rem; text-align:center; color:var(--muted-foreground); }
 .booking-empty svg { width:2rem; color:var(--primary); }
 .booking-count { padding:.4rem .7rem; border-radius:999px; background:color-mix(in srgb,var(--success) 12%,transparent); color:var(--success); font-size:.75rem; font-weight:700; }
-.appointment-list { display:grid; gap:.65rem; }
-.appointment-row { display:grid; grid-template-columns:3.5rem 1fr auto auto; align-items:center; gap:.8rem; padding:.8rem; border:1px solid var(--border); border-radius:1rem; }
-.appointment-row.is-cancelled { opacity:.55; }
+.appointment-list { display:grid; gap:.8rem; }
+.appointment-row { display:grid; grid-template-columns:3.5rem 1fr auto; align-items:center; gap:.8rem; padding:1rem; border:1px solid var(--border); border-radius:1rem; background:color-mix(in srgb,var(--card) 92%,transparent); }
+.appointment-row.is-cancelled { opacity:.58; }
 .appointment-date { display:grid; place-items:center; min-height:3.3rem; border-radius:.8rem; color:var(--primary); background:color-mix(in srgb,var(--primary) 10%,transparent); }
 .appointment-date b { font-size:1.1rem; }.appointment-date span { font-size:.65rem; text-transform:uppercase; }
 .appointment-details { display:grid; gap:.3rem; }.appointment-details span { display:flex; align-items:center; gap:.3rem; color:var(--muted-foreground); font-size:.8rem; }.appointment-details svg { width:.85rem; }
-.appointment-actions { display:flex; gap:.35rem; }.appointment-actions button { display:grid; width:2.25rem; height:2.25rem; place-items:center; border-radius:.65rem; background:var(--surface-elevated); }.appointment-actions svg { width:.9rem; }
-.appointment-status { color:var(--muted-foreground); font-size:.72rem; font-weight:700; }
+.appointment-actions { grid-column:1/-1; display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.45rem; padding-top:.25rem; }
+.appointment-actions button { display:flex; min-height:2.65rem; align-items:center; justify-content:center; gap:.4rem; padding:.55rem .7rem; border:1px solid var(--border); border-radius:.75rem; background:var(--surface-elevated); color:var(--foreground); font-size:.75rem; font-weight:700; transition:transform .15s ease,border-color .15s ease,background .15s ease; }
+.appointment-actions button:hover { transform:translateY(-1px); border-color:color-mix(in srgb,var(--primary) 55%,var(--border)); background:color-mix(in srgb,var(--primary) 8%,var(--surface-elevated)); }
+.appointment-actions button.is-danger { color:var(--destructive); }
+.appointment-actions button.is-complete { color:var(--success); }
+.appointment-actions svg { width:1rem; height:1rem; flex:0 0 auto; }
+.appointment-status { padding:.3rem .55rem; border-radius:999px; background:color-mix(in srgb,var(--success) 10%,transparent); color:var(--success); font-size:.7rem; font-weight:800; }
 
 .public-booking-cta { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:.8rem; width:100%; margin:1rem 0; padding:.9rem; border:1px solid color-mix(in srgb,var(--primary) 35%,var(--border)); border-radius:1rem; color:inherit; background:linear-gradient(135deg,color-mix(in srgb,var(--primary) 14%,var(--surface)),color-mix(in srgb,var(--accent) 7%,var(--surface))); box-shadow:0 14px 32px rgb(0 0 0/.13); }
 .public-booking-cta>span { display:grid; width:2.7rem; height:2.7rem; place-items:center; border-radius:.8rem; color:white; background:var(--gradient-primary); }.public-booking-cta svg { width:1.15rem; }.public-booking-cta div { display:grid; gap:.15rem; }.public-booking-cta b { font-size:.93rem; }.public-booking-cta small { color:var(--muted-foreground); font-size:.73rem; }
@@ -3545,7 +3550,7 @@
 .public-booking-confirmation,.public-booking-empty { display:flex; min-height:72vh; flex-direction:column; align-items:center; justify-content:center; gap:.9rem; text-align:center; }.confirmation-check { display:grid; width:4rem; height:4rem; place-items:center; border-radius:50%; color:white; background:linear-gradient(135deg,#10b981,#22c55e); box-shadow:0 15px 35px rgb(16 185 129/.25); }.public-booking-confirmation h1,.public-booking-empty h1 { font-size:1.6rem; font-weight:800; }.public-booking-confirmation>p { color:#777181; }.confirmation-summary { display:flex; align-items:center; gap:.75rem; width:100%; max-width:26rem; padding:1rem; border-radius:1rem; text-align:left; background:#f6f2fb; }.confirmation-summary>svg { color:#7c3aed; }.confirmation-summary div { display:grid; gap:.2rem; }.confirmation-summary span { color:#777181; font-size:.78rem; text-transform:capitalize; }.public-booking-confirmation .btn-primary,.public-booking-confirmation .btn-secondary { width:100%; max-width:26rem; justify-content:center; }
 
 @media (max-width:760px) {
-  .booking-admin-header { align-items:stretch; flex-direction:column; }.booking-admin-actions { display:grid; grid-template-columns:1fr auto; }.booking-admin-grid { grid-template-columns:1fr; }.booking-service-editor { grid-template-columns:1fr 1fr auto; }.booking-service-main { grid-column:1/-1; }.appointment-row { grid-template-columns:3.2rem 1fr auto; }.appointment-status { display:none; }
+  .booking-admin-header { align-items:stretch; flex-direction:column; }.booking-admin-actions { display:grid; grid-template-columns:1fr auto; }.booking-admin-grid { grid-template-columns:1fr; }.booking-service-editor { grid-template-columns:1fr 1fr auto; }.booking-service-main { grid-column:1/-1; }.appointment-row { grid-template-columns:3.2rem 1fr auto; }.appointment-actions { grid-template-columns:repeat(2,minmax(0,1fr)); }.appointment-actions button.is-complete { grid-column:1/-1; }.appointment-status { display:none; }
 }
 @media (max-width:480px) {
   .public-booking-shell { padding:.7rem; }.public-booking-card { padding:.85rem; }.public-slot-grid { grid-template-columns:repeat(3,1fr); }.public-booking-contact { grid-template-columns:1fr; }.public-booking-contact label,.public-booking-contact label:nth-last-child(1) { grid-column:1; }.booking-day { grid-template-columns:3.3rem 1fr auto 1fr; }.booking-rules { grid-template-columns:1fr; }.booking-service-editor { grid-template-columns:1fr 1fr auto; }.booking-service-editor label { min-width:0; }.booking-tabs { display:grid; grid-template-columns:1fr 1fr; width:100%; }.booking-tabs button { justify-content:center; }

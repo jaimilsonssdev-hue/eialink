@@ -284,11 +284,16 @@
 .free-link-shell.free-link-layout-neon .public-catalog-card img,
 .free-link-shell.free-link-layout-neon .public-catalog-card > svg,
 .free-link-shell.free-link-layout-neon .public-catalog-image-fallback {
-  aspect-ratio: 3 / 2;
   width: 100%;
-  height: auto;
+  height: 7.75rem;
   border-radius: 0.8rem;
-  object-fit: cover;
+  background: linear-gradient(145deg, rgb(24 25 31 / 0.98), rgb(13 14 18 / 0.98));
+  object-fit: contain;
+  object-position: center;
+}
+
+.free-link-shell.free-link-layout-neon .public-catalog-card img {
+  padding: 0.3rem;
 }
 
 .free-link-shell.free-link-layout-neon .public-catalog-type {

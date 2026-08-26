@@ -680,15 +680,19 @@ function SectionForm({
                     { id: "default", name: "Essencial", status: "active" as const },
                     { id: "free-showcase", name: "Vitrine", status: "active" as const },
                     { id: "free-social", name: "Social", status: "active" as const },
+                    { id: "free-neon", name: "Neon", status: "active" as const },
                   ]
               ).map((template) => (
                 <button
                   key={template.id}
                   type="button"
                   onClick={() => {
-                    const isFreeLayout = ["default", "free-showcase", "free-social"].includes(
-                      template.id,
-                    );
+                    const isFreeLayout = [
+                      "default",
+                      "free-showcase",
+                      "free-social",
+                      "free-neon",
+                    ].includes(template.id);
                     if (isFreeLayout || TemplateService.get(template.id).status === "active") {
                       setDraftTemplate(template.id);
                       updateBio({ template_id: template.id });

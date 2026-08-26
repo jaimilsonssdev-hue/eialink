@@ -57,11 +57,190 @@
   border-radius: 999px;
 }
 
+/* Editorial neon: a fourth Free layout focused on high-impact links. */
+.free-link-layout-neon {
+  --neon-cyan: #22d3ee;
+  --neon-green: #34d399;
+  --neon-blue: #60a5fa;
+  --neon-violet: #a78bfa;
+  background:
+    radial-gradient(28rem 18rem at 50% 12%, rgb(37 99 235 / 0.14), transparent 70%),
+    radial-gradient(26rem 18rem at 15% 65%, rgb(16 185 129 / 0.08), transparent 72%), #05070d;
+}
+
+.free-link-layout-neon .public-profile-banner {
+  height: 2rem;
+  opacity: 0;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.free-link-layout-neon .free-link-card {
+  width: min(calc(100% - 1.5rem), 38rem);
+  margin-top: 0;
+  padding: 1.35rem 1.15rem 1.25rem;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.free-link-layout-neon .public-profile-header {
+  padding-top: 0.5rem;
+}
+
+.free-link-layout-neon .public-profile-avatar-wrap {
+  width: 8.5rem;
+  height: 8.5rem;
+  margin: 0 auto;
+  padding: 0.25rem;
+  transform: none;
+  border: 0;
+  background: linear-gradient(135deg, #f97316, #ec4899 45%, #8b5cf6 72%, #22d3ee);
+  box-shadow:
+    0 0 0 0.3rem #080a11,
+    0 0 2.4rem rgb(99 102 241 / 0.25);
+}
+
+.free-link-layout-neon .public-profile-avatar {
+  border: 0.22rem solid #080a11;
+}
+
+.free-link-layout-neon .public-profile-name {
+  margin-top: 1.25rem;
+  font-size: clamp(1.55rem, 6vw, 2rem);
+  letter-spacing: -0.035em;
+}
+
+.free-link-layout-neon nav[aria-label="Redes sociais"] {
+  padding-top: 0.75rem;
+}
+
+.free-link-layout-neon .public-profile-actions {
+  gap: 0.85rem;
+  margin-top: 1.65rem;
+}
+
+.free-link-layout-neon .public-profile-action {
+  position: relative;
+  min-height: 5.5rem;
+  padding: 1rem 1.1rem;
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 0.16);
+  border-radius: 1.15rem;
+  background: linear-gradient(110deg, rgb(14 22 35 / 0.96), rgb(18 14 20 / 0.96)) padding-box;
+  box-shadow: 0 16px 38px rgb(0 0 0 / 0.22);
+}
+
+.free-link-layout-neon .public-profile-action::before {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.22rem;
+  content: "";
+  background: linear-gradient(180deg, var(--neon-cyan), var(--neon-violet));
+  box-shadow: 0 0 1rem rgb(34 211 238 / 0.52);
+}
+
+.free-link-layout-neon .public-profile-action:nth-child(3n)::before {
+  background: linear-gradient(180deg, #f472b6, var(--neon-violet));
+}
+
+.free-link-layout-neon .public-profile-action:nth-child(3n + 2)::before {
+  background: linear-gradient(180deg, var(--neon-blue), var(--neon-cyan));
+}
+
+.free-link-layout-neon .public-profile-action-whatsapp {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(#070a10, #070a10) padding-box,
+    linear-gradient(110deg, var(--neon-green), var(--neon-cyan), var(--neon-violet)) border-box;
+  box-shadow:
+    0 1.2rem 2.8rem rgb(0 0 0 / 0.28),
+    0 1.1rem 2.2rem rgb(16 185 129 / 0.12);
+}
+
+.free-link-layout-neon .public-profile-action-whatsapp::before {
+  display: none;
+}
+
+.free-link-layout-neon .public-profile-action-whatsapp .public-profile-action-icon {
+  color: #6ee7b7;
+  background: rgb(16 185 129 / 0.14);
+}
+
+.free-link-layout-neon .public-catalog {
+  padding-top: 0.25rem;
+  border-top: 1px solid rgb(148 163 184 / 0.13);
+}
+
+.free-link-layout-neon .public-catalog-title {
+  color: #cbd5e1;
+  font-size: 0.72rem;
+  letter-spacing: 0.22em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.free-link-layout-neon .public-catalog-card,
+.free-link-layout-neon .public-profile-pix,
+.free-link-layout-neon .free-link-upgrade {
+  border-color: rgb(96 165 250 / 0.2);
+  background: linear-gradient(145deg, rgb(14 35 48 / 0.92), rgb(15 12 20 / 0.96));
+}
+
+.free-link-layout-neon.mono {
+  --bio-fg: #111827;
+  --bio-muted: rgb(17 24 39 / 0.64);
+  background:
+    radial-gradient(28rem 18rem at 50% 12%, rgb(96 165 250 / 0.14), transparent 70%), #f8fafc;
+}
+
+.free-link-layout-neon.mono .public-profile-avatar-wrap {
+  box-shadow:
+    0 0 0 0.3rem #f8fafc,
+    0 0 2rem rgb(99 102 241 / 0.2);
+}
+
+.free-link-layout-neon.mono .public-profile-avatar {
+  border-color: #f8fafc;
+}
+
+.free-link-layout-neon.mono .public-profile-action,
+.free-link-layout-neon.mono .public-profile-action-whatsapp {
+  color: #111827;
+  background:
+    linear-gradient(rgb(255 255 255 / 0.96), rgb(255 255 255 / 0.96)) padding-box,
+    linear-gradient(110deg, var(--neon-green), var(--neon-cyan), var(--neon-violet)) border-box;
+  box-shadow: 0 14px 34px rgb(15 23 42 / 0.1);
+}
+
+@media (max-width: 640px) {
+  .free-link-layout-neon .public-profile-banner {
+    height: 1rem;
+  }
+
+  .free-link-layout-neon .free-link-card {
+    width: 100%;
+    margin-top: 0;
+    padding: 1.1rem 1rem 1.25rem;
+  }
+
+  .free-link-layout-neon .public-profile-avatar-wrap {
+    width: 7.5rem;
+    height: 7.5rem;
+    transform: none;
+  }
+}
+
 .free-setup-guide,
 .dashboard-setup-card {
   border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
   border-radius: 1.25rem;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 8%, var(--surface)), var(--surface));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary) 8%, var(--surface)),
+    var(--surface)
+  );
   box-shadow: 0 18px 46px rgb(0 0 0 / 0.12);
 }
 

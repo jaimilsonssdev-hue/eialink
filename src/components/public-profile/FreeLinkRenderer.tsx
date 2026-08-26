@@ -11,11 +11,12 @@ import { ProfileHeader } from "./ProfileHeader";
 import { PublicSocialLinks } from "./PublicSocialLinks";
 import type { PublicBio, PublicLink, TrackEvent } from "./types";
 
-type FreeLayout = "essential" | "showcase" | "social";
+type FreeLayout = "essential" | "showcase" | "social" | "neon";
 
 function freeLayoutFromTemplate(templateId?: string | null): FreeLayout {
   if (templateId === "free-showcase") return "showcase";
   if (templateId === "free-social") return "social";
+  if (templateId === "free-neon") return "neon";
   return "essential";
 }
 
@@ -64,9 +65,13 @@ export function FreeLinkRenderer({
           {layout === "showcase" && safeProducts.length > 0 && (
             <CatalogSection items={safeProducts} />
           )}
-          {layout === "social" && <PublicSocialLinks bio={bio} onTrack={onTrack} />}
+          {(layout === "social" || layout === "neon") && (
+            <PublicSocialLinks bio={bio} onTrack={onTrack} />
+          )}
           <ActionButtons bio={bio} links={safeLinks} onTrack={onTrack} />
-          {layout !== "social" && <PublicSocialLinks bio={bio} onTrack={onTrack} />}
+          {layout !== "social" && layout !== "neon" && (
+            <PublicSocialLinks bio={bio} onTrack={onTrack} />
+          )}
           {layout !== "showcase" && safeProducts.length > 0 && (
             <CatalogSection items={safeProducts} />
           )}

@@ -147,6 +147,13 @@ const COVER_LIBRARY = {
       label: "Imóveis e arquitetura",
     },
   ],
+  petShop: [
+    {
+      id: "pet-shop-dog-cat",
+      src: "/template-assets/niche-covers-v2/pet-shop-cover.webp",
+      label: "Pet shop e cuidados",
+    },
+  ],
   academy: [
     {
       id: "academy-eialink",
@@ -190,6 +197,9 @@ function coverCategory(templateId?: string | null, niche?: string | null) {
     Alimentação: "restaurant",
     "Beleza & Estética": "beauty",
     Saúde: "clinic",
+    Terapia: "therapy",
+    Advocacia: "law",
+    "Pet Shop": "petShop",
     Educação: "education",
     Moda: "store",
     Serviços: "business",
@@ -300,6 +310,7 @@ export function MediaUploader({
     commerce: "comércio",
     technology: "tecnologia",
     realEstate: "imobiliário",
+    petShop: "pet shop",
   }[category];
 
   return (

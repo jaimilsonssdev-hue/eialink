@@ -117,7 +117,6 @@ export function TemplateRenderer({
           onTrack,
           onShare,
           products: safeProducts,
-          bookingUrl,
           supplemental: smartSupplemental,
         })
       ) : (

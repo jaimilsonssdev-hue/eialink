@@ -158,15 +158,6 @@ const COVER_LIBRARY = {
 } as const;
 
 function coverCategory(templateId?: string | null, niche?: string | null) {
-  if (templateId?.includes("clinic")) return "clinic";
-  if (templateId?.includes("therapy")) return "therapy";
-  if (templateId?.includes("academy")) return "academy";
-  if (templateId?.includes("law")) return "law";
-  if (templateId?.includes("store")) return "store";
-  if (templateId?.includes("beauty")) return "beauty";
-  if (templateId?.includes("creator")) return "creator";
-  if (templateId?.includes("business")) return "business";
-
   const nicheCategories: Record<string, keyof typeof COVER_LIBRARY> = {
     Alimentação: "restaurant",
     "Beleza & Estética": "beauty",
@@ -179,7 +170,19 @@ function coverCategory(templateId?: string | null, niche?: string | null) {
     Imobiliário: "business",
     Outro: "business",
   };
-  return nicheCategories[niche ?? ""] ?? "business";
+  const nicheCategory = nicheCategories[niche ?? ""];
+  if (nicheCategory) return nicheCategory;
+
+  if (templateId?.includes("clinic")) return "clinic";
+  if (templateId?.includes("therapy")) return "therapy";
+  if (templateId?.includes("academy")) return "academy";
+  if (templateId?.includes("law")) return "law";
+  if (templateId?.includes("store")) return "store";
+  if (templateId?.includes("beauty")) return "beauty";
+  if (templateId?.includes("creator")) return "creator";
+  if (templateId?.includes("business")) return "business";
+
+  return "business";
 }
 
 export function MediaUploader({

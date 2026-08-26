@@ -32,6 +32,7 @@ export type PlanFeatures = {
   premium_templates: boolean;
   advanced_appearance: boolean;
   remove_branding: boolean;
+  booking: boolean;
 };
 
 export function toPlanLimits(value: Json): PlanLimits {
@@ -54,6 +55,7 @@ export function toPlanFeatures(value: Json): PlanFeatures {
     premium_templates: Boolean(input.premium_templates),
     advanced_appearance: Boolean(input.advanced_appearance),
     remove_branding: Boolean(input.remove_branding),
+    booking: Boolean(input.booking),
   };
 }
 
@@ -80,6 +82,7 @@ export const ESSENTIAL_FEATURES: PlanFeatures = {
   premium_templates: false,
   advanced_appearance: false,
   remove_branding: false,
+  booking: false,
 };
 
 export function formatPlanPrice(priceCents: number, interval: string): string {

@@ -119,6 +119,34 @@ const COVER_LIBRARY = {
       label: "Atendimento profissional",
     },
   ],
+  education: [
+    {
+      id: "education-classroom",
+      src: "/template-assets/niche-covers-v2/education-cover.webp",
+      label: "Cursos e aprendizado",
+    },
+  ],
+  commerce: [
+    {
+      id: "commerce-local-store",
+      src: "/template-assets/niche-covers-v2/commerce-cover.webp",
+      label: "Comércio local",
+    },
+  ],
+  technology: [
+    {
+      id: "technology-studio",
+      src: "/template-assets/niche-covers-v2/technology-cover.webp",
+      label: "Tecnologia e inovação",
+    },
+  ],
+  realEstate: [
+    {
+      id: "real-estate-property",
+      src: "/template-assets/niche-covers-v2/real-estate-cover.webp",
+      label: "Imóveis e arquitetura",
+    },
+  ],
   academy: [
     {
       id: "academy-eialink",
@@ -162,13 +190,13 @@ function coverCategory(templateId?: string | null, niche?: string | null) {
     Alimentação: "restaurant",
     "Beleza & Estética": "beauty",
     Saúde: "clinic",
-    Educação: "academy",
+    Educação: "education",
     Moda: "store",
     Serviços: "business",
-    Comércio: "store",
-    Tecnologia: "business",
-    Imobiliário: "business",
-    Outro: "business",
+    Comércio: "commerce",
+    Tecnologia: "technology",
+    Imobiliário: "realEstate",
+    Outro: "creator",
   };
   const nicheCategory = nicheCategories[niche ?? ""];
   if (nicheCategory) return nicheCategory;
@@ -268,6 +296,10 @@ export function MediaUploader({
     beauty: "beleza",
     creator: "criador",
     business: "profissional",
+    education: "educação",
+    commerce: "comércio",
+    technology: "tecnologia",
+    realEstate: "imobiliário",
   }[category];
 
   return (

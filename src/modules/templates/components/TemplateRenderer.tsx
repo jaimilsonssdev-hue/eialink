@@ -39,6 +39,7 @@ export function TemplateRenderer({
   onTrack,
   onShare,
   products,
+  bookingUrl,
   supplemental,
   motionLevel = "standard",
 }: {
@@ -47,6 +48,7 @@ export function TemplateRenderer({
   onTrack: TrackEvent;
   onShare: () => void;
   products?: CatalogItem[];
+  bookingUrl?: string;
   supplemental?: ReactNode;
   /** Public pages keep essential feedback for everyone; Pro unlocks ambient presentation motion. */
   motionLevel?: "off" | "standard" | "pro";
@@ -115,11 +117,12 @@ export function TemplateRenderer({
           onTrack,
           onShare,
           products: safeProducts,
+          bookingUrl,
           supplemental: smartSupplemental,
         })
       ) : (
         <>
-          {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, supplemental })}
+          {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, bookingUrl, supplemental })}
           <PublicSocialLinks bio={renderedBio} onTrack={onTrack} />
           {!model.template.components.includes("footer") && <Footer />}
         </>

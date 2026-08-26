@@ -26,6 +26,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
 import { parseSocialLinks } from "@/lib/social-links";
+import { NICHES } from "@/lib/constants";
 import { UpgradePrompt, commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import type { PlanAccess } from "@/modules/billing/types";
 
@@ -236,17 +237,19 @@ export function UnifiedPageEditor({
   initialBio: BioForm;
   initialLinks: EditableLink[];
   initialProducts?: CatalogItem[];
-  defaults: { displayName: string; whatsapp: string; instagram: string };
+  defaults: { displayName: string; whatsapp: string; instagram: string; niche: string };
   planAccess?: PlanAccess;
   onSave(data: {
     bio: BioForm;
     links: EditableLink[];
     products: CatalogItem[];
+    niche: string;
   }): Promise<{ products: CatalogItem[] }>;
 }) {
   const [bio, setBio] = useState<BioForm>(initialBio);
   const [links, setLinks] = useState<EditableLink[]>(initialLinks);
   const [products, setProducts] = useState<CatalogItem[]>(initialProducts);
+  const [niche, setNiche] = useState(defaults.niche);
   const [selected, setSelected] = useState<EditorSection>("profile");
   const [draftTemplate, setDraftTemplate] = useState(initialBio.template_id ?? "default");
   const [saving, setSaving] = useState(false);
@@ -254,11 +257,16 @@ export function UnifiedPageEditor({
   const [validationMessage, setValidationMessage] = useState<string>();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
-    JSON.stringify({ bio: initialBio, links: initialLinks, products: initialProducts }),
+    JSON.stringify({
+      bio: initialBio,
+      links: initialLinks,
+      products: initialProducts,
+      niche: defaults.niche,
+    }),
   );
   const previewRef = useRef<HTMLDivElement>(null);
   const inspectorRef = useRef<HTMLElement>(null);
-  const snapshot = JSON.stringify({ bio, links, products });
+  const snapshot = JSON.stringify({ bio, links, products, niche });
   const hasPendingChanges = snapshot !== savedSnapshot;
   const setupSteps: Array<{
     id: EditorSection;
@@ -379,6 +387,7 @@ export function UnifiedPageEditor({
         bio: { ...bio, slug: slugify(bio.slug || bio.display_name) },
         links,
         products,
+        niche,
       });
       setProducts(result.products);
       setBio((current) => ({ ...current, slug: slugify(current.slug || current.display_name) }));
@@ -387,6 +396,7 @@ export function UnifiedPageEditor({
           bio: { ...bio, slug: slugify(bio.slug || bio.display_name) },
           links,
           products: result.products,
+          niche,
         }),
       );
       setSaveState("success");
@@ -524,6 +534,8 @@ export function UnifiedPageEditor({
               bio={bio}
               links={links}
               defaults={defaults}
+              niche={niche}
+              setNiche={setNiche}
               updateBio={updateBio}
               updateLink={updateLink}
               removeLink={(id) => setLinks((current) => current.filter((link) => link.id !== id))}
@@ -621,6 +633,8 @@ function SectionForm({
   bio,
   links,
   defaults,
+  niche,
+  setNiche,
   updateBio,
   updateLink,
   removeLink,
@@ -634,7 +648,9 @@ function SectionForm({
   section: EditorSection;
   bio: BioForm;
   links: EditableLink[];
-  defaults: { displayName: string; whatsapp: string; instagram: string };
+  defaults: { displayName: string; whatsapp: string; instagram: string; niche: string };
+  niche: string;
+  setNiche(niche: string): void;
   updateBio(patch: Partial<BioForm>): void;
   updateLink(id: string, patch: Partial<EditableLink>): void;
   removeLink(id: string): void;
@@ -693,6 +709,7 @@ function SectionForm({
             value={bio.cover_url}
             variant="cover"
             templateId={draftTemplate}
+            niche={niche}
             onChange={(cover_url) => updateBio({ cover_url })}
           />
           <details className="editor-advanced-settings">
@@ -857,6 +874,22 @@ function SectionForm({
       )}
       {section === "profile" && (
         <>
+          <Field label="Nicho do negócio">
+            <select
+              className="input-base"
+              value={niche}
+              onChange={(event) => setNiche(event.target.value)}
+            >
+              {NICHES.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Usamos o nicho para recomendar capas mais adequadas ao seu negócio.
+            </p>
+          </Field>
           <Field label="Nome exibido">
             <input
               className="input-base"

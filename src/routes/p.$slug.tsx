@@ -7,7 +7,6 @@ import type { PageBlock } from "@/components/page-builder/types";
 import type { CatalogItem } from "@/modules/products/types";
 import { BrandingProvider } from "@/components/public-profile/BrandingContext";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
-import { BookingCTA } from "@/modules/booking/BookingCTA";
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -208,12 +207,10 @@ function PublicBio() {
           onTrack={track}
           onShare={share}
           products={products}
+          bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
           motionLevel={bio.motion_enabled === false ? "off" : "pro"}
           supplemental={
             <>
-              {bookingActive && (
-                <BookingCTA slug={bio.slug} onTrack={() => track("booking_click")} />
-              )}
               {supplementalBlocks.map((block: PageBlock) => (
                 <BlockRenderer key={block.id} block={block} />
               ))}

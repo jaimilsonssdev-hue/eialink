@@ -13,6 +13,7 @@ import { TherapyLayout } from "./TherapyLayout";
 
 export type LayoutRenderContext = TemplateComponentContext & {
   products?: CatalogItem[];
+  bookingUrl?: string;
   supplemental?: ReactNode;
 };
 

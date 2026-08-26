@@ -3455,8 +3455,9 @@
 .template-carousel-controls { display: none; }
 
 @media (max-width: 767px) {
-  .app-mobile-nav { grid-template-columns: repeat(4, minmax(0, 1fr)); right: .9rem; left: .9rem; padding: .28rem; }
-  .app-mobile-nav a { min-height: 3.15rem; }
+  .app-mobile-nav { grid-template-columns: repeat(5, minmax(0, 1fr)); right: .5rem; left: .5rem; padding: .28rem; }
+  .app-mobile-nav a { min-width: 0; min-height: 3.15rem; font-size: .54rem; }
+  .app-mobile-nav a span { white-space: nowrap; }
   .app-mobile-nav a.is-active { background: color-mix(in oklab, var(--primary) 15%, var(--surface)); color: var(--primary); box-shadow: none; }
 
   .template-marketplace { margin-inline: -.25rem; padding: 1rem .75rem !important; }

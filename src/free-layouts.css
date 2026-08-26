@@ -271,7 +271,7 @@
 .free-link-shell.free-link-layout-neon .public-catalog-card {
   display: flex;
   min-width: 0;
-  flex: 0 0 min(72%, 15.5rem);
+  flex: 0 0 min(66%, 13.5rem);
   gap: 0.55rem;
   padding: 0.62rem;
   scroll-snap-align: start;
@@ -284,7 +284,7 @@
 .free-link-shell.free-link-layout-neon .public-catalog-card img,
 .free-link-shell.free-link-layout-neon .public-catalog-card > svg,
 .free-link-shell.free-link-layout-neon .public-catalog-image-fallback {
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 3 / 2;
   width: 100%;
   height: auto;
   border-radius: 0.8rem;
@@ -442,7 +442,7 @@
   }
 
   .free-link-shell.free-link-layout-neon .public-catalog-card {
-    flex-basis: min(74%, 15rem);
+    flex-basis: min(68%, 13.5rem);
   }
 }
 

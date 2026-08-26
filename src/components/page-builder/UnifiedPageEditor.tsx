@@ -27,6 +27,12 @@ import { MediaUploader } from "./MediaUploader";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
 import { parseSocialLinks } from "@/lib/social-links";
 import { NICHES } from "@/lib/constants";
+import {
+  freeTemplateBase,
+  freeTemplateWithTypography,
+  freeTypographyFromTemplate,
+  type FreeTypography,
+} from "@/lib/free-layout-options";
 import { UpgradePrompt, commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import type { PlanAccess } from "@/modules/billing/types";
 
@@ -251,7 +257,12 @@ export function UnifiedPageEditor({
   const [products, setProducts] = useState<CatalogItem[]>(initialProducts);
   const [niche, setNiche] = useState(defaults.niche);
   const [selected, setSelected] = useState<EditorSection>("profile");
-  const [draftTemplate, setDraftTemplate] = useState(initialBio.template_id ?? "default");
+  const [draftTemplate, setDraftTemplate] = useState(
+    freeTemplateBase(initialBio.template_id ?? "default"),
+  );
+  const [freeTypography, setFreeTypography] = useState<FreeTypography>(() =>
+    freeTypographyFromTemplate(initialBio.template_id),
+  );
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [validationMessage, setValidationMessage] = useState<string>();
@@ -545,6 +556,8 @@ export function UnifiedPageEditor({
               planAccess={planAccess}
               draftTemplate={draftTemplate}
               setDraftTemplate={setDraftTemplate}
+              freeTypography={freeTypography}
+              setFreeTypography={setFreeTypography}
             />
             {saveState === "error" && (
               <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
@@ -644,6 +657,8 @@ function SectionForm({
   planAccess,
   draftTemplate,
   setDraftTemplate,
+  freeTypography,
+  setFreeTypography,
 }: {
   section: EditorSection;
   bio: BioForm;
@@ -660,6 +675,8 @@ function SectionForm({
   planAccess?: PlanAccess;
   draftTemplate: string;
   setDraftTemplate(id: string): void;
+  freeTypography: FreeTypography;
+  setFreeTypography(typography: FreeTypography): void;
 }) {
   const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
   return (
@@ -695,7 +712,11 @@ function SectionForm({
                     ].includes(template.id);
                     if (isFreeLayout || TemplateService.get(template.id).status === "active") {
                       setDraftTemplate(template.id);
-                      updateBio({ template_id: template.id });
+                      updateBio({
+                        template_id: isFreeLayout
+                          ? freeTemplateWithTypography(template.id, freeTypography)
+                          : template.id,
+                      });
                     }
                   }}
                   className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
@@ -708,6 +729,36 @@ function SectionForm({
               Toque em um estilo para visualizar imediatamente.
             </p>
           </Field>
+          {!planAccess?.isPro && (
+            <Field label="Tipografia dos cards">
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    ["modern", "Moderna", "font-sans"],
+                    ["elegant", "Elegante", "font-serif"],
+                    ["strong", "Marcante", "font-display"],
+                  ] as const
+                ).map(([id, label, fontClass]) => (
+                  <button
+                    key={id}
+                    type="button"
+                    onClick={() => {
+                      setFreeTypography(id);
+                      updateBio({
+                        template_id: freeTemplateWithTypography(draftTemplate, id),
+                      });
+                    }}
+                    className={`${fontClass} rounded-lg border px-2 py-3 text-sm transition-all ${freeTypography === id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                A escolha vale para os títulos e chamadas de todos os cards.
+              </p>
+            </Field>
+          )}
           <MediaUploader
             label="Imagem de capa"
             value={bio.cover_url}

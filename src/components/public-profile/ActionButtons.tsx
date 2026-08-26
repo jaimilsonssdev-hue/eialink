@@ -7,9 +7,10 @@ interface ActionButtonsProps {
   bio: PublicBio;
   links: PublicLink[];
   onTrack: TrackEvent;
+  linkSectionLabel?: string;
 }
 
-export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
+export function ActionButtons({ bio, links, onTrack, linkSectionLabel }: ActionButtonsProps) {
   const whatsappHref = whatsappUrl(bio.whatsapp, bio.whatsapp_message);
   const whatsappLabel = bio.whatsapp_button_label?.trim() || "Falar no WhatsApp";
   const whatsappSubtitle = bio.whatsapp_button_subtitle?.trim() || "Resposta rápida";
@@ -42,23 +43,31 @@ export function ActionButtons({ bio, links, onTrack }: ActionButtonsProps) {
         </a>
       )}
 
+      {linkSectionLabel && validLinks.length > 0 && (
+        <div className="public-profile-link-divider" aria-hidden="true">
+          <span />
+          <b>{linkSectionLabel}</b>
+          <span />
+        </div>
+      )}
+
       {validLinks.map((link) => {
         return (
-        <a
-          key={link.id}
-          href={link.href}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => onTrack("link_click", link.id)}
-          className="public-profile-action"
-        >
-          <span className="public-profile-action-icon">
-            <ExternalLink className="h-5 w-5" />
-          </span>
-          <span className="min-w-0 flex-1 truncate text-left font-semibold">{link.title}</span>
-          <ArrowUpRight className="h-5 w-5 public-profile-action-arrow" aria-hidden />
-        </a>
-      );
+          <a
+            key={link.id}
+            href={link.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => onTrack("link_click", link.id)}
+            className="public-profile-action"
+          >
+            <span className="public-profile-action-icon">
+              <ExternalLink className="h-5 w-5" />
+            </span>
+            <span className="min-w-0 flex-1 truncate text-left font-semibold">{link.title}</span>
+            <ArrowUpRight className="h-5 w-5 public-profile-action-arrow" aria-hidden />
+          </a>
+        );
       })}
     </section>
   );

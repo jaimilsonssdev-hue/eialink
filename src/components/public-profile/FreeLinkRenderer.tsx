@@ -3,6 +3,7 @@ import { ArrowUpRight, Sparkles } from "lucide-react";
 import type { CatalogItem } from "@/modules/products/types";
 import { CatalogSection } from "@/modules/products/components/CatalogSection";
 import { safeExternalUrl } from "@/lib/safe-url";
+import { freeTemplateBase, freeTypographyFromTemplate } from "@/lib/free-layout-options";
 import { ActionButtons } from "./ActionButtons";
 import { Banner } from "./Banner";
 import { Footer } from "./Footer";
@@ -14,9 +15,10 @@ import type { PublicBio, PublicLink, TrackEvent } from "./types";
 type FreeLayout = "essential" | "showcase" | "social" | "neon";
 
 function freeLayoutFromTemplate(templateId?: string | null): FreeLayout {
-  if (templateId === "free-showcase") return "showcase";
-  if (templateId === "free-social") return "social";
-  if (templateId === "free-neon") return "neon";
+  const template = freeTemplateBase(templateId);
+  if (template === "free-showcase") return "showcase";
+  if (template === "free-social") return "social";
+  if (template === "free-neon") return "neon";
   return "essential";
 }
 
@@ -37,6 +39,7 @@ export function FreeLinkRenderer({
   supplemental?: ReactNode;
 }) {
   const layout = freeLayoutFromTemplate(bio.template_id);
+  const typography = freeTypographyFromTemplate(bio.template_id);
   const safeLinks = links
     .map((link) => ({ ...link, url: safeExternalUrl(link.url) }))
     .filter((link): link is typeof link & { url: string } => Boolean(link.url));
@@ -47,7 +50,7 @@ export function FreeLinkRenderer({
 
   return (
     <main
-      className={`bio-theme ${bio.theme || "aurora"} free-link-shell free-link-layout-${layout}`}
+      className={`bio-theme ${bio.theme || "aurora"} free-link-shell free-link-layout-${layout} free-link-typography-${typography}`}
     >
       <div className="free-link-frame">
         <Banner
@@ -68,7 +71,12 @@ export function FreeLinkRenderer({
           {(layout === "social" || layout === "neon") && (
             <PublicSocialLinks bio={bio} onTrack={onTrack} />
           )}
-          <ActionButtons bio={bio} links={safeLinks} onTrack={onTrack} />
+          <ActionButtons
+            bio={bio}
+            links={safeLinks}
+            onTrack={onTrack}
+            linkSectionLabel={layout === "neon" ? "Links e conteúdos" : undefined}
+          />
           {layout !== "social" && layout !== "neon" && (
             <PublicSocialLinks bio={bio} onTrack={onTrack} />
           )}

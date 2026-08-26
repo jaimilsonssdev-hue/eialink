@@ -348,19 +348,26 @@ function Confirmation({
 }) {
   const startDate = new Date(start);
   const endDate = new Date(end);
+  const calendarDate = (date: Date) =>
+    date
+      .toISOString()
+      .replace(/[-:]/g, "")
+      .replace(/\.\d{3}/, "");
+  const googleCalendarUrl = `https://calendar.google.com/calendar/render?${new URLSearchParams({
+    action: "TEMPLATE",
+    text: `${service.name} - ${bioName}`,
+    dates: `${calendarDate(startDate)}/${calendarDate(endDate)}`,
+    details: "Agendamento confirmado pelo EiaLink",
+  }).toString()}`;
+
   function downloadCalendar() {
-    const iso = (date: Date) =>
-      date
-        .toISOString()
-        .replace(/[-:]/g, "")
-        .replace(/\.\d{3}/, "");
     const content = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
       "PRODID:-//EiaLink//Agenda//PT-BR",
       "BEGIN:VEVENT",
-      `DTSTART:${iso(startDate)}`,
-      `DTEND:${iso(endDate)}`,
+      `DTSTART:${calendarDate(startDate)}`,
+      `DTEND:${calendarDate(endDate)}`,
       `SUMMARY:${service.name} - ${bioName}`,
       `DESCRIPTION:Agendamento confirmado pelo EiaLink`,
       "END:VEVENT",
@@ -399,8 +406,16 @@ function Confirmation({
             </span>
           </div>
         </div>
-        <button className="btn-primary" onClick={downloadCalendar}>
-          <Download /> Adicionar à minha agenda
+        <a
+          className="btn-primary"
+          href={googleCalendarUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <CalendarCheck /> Adicionar ao Google Agenda
+        </a>
+        <button className="btn-secondary" onClick={downloadCalendar}>
+          <Download /> Apple, Outlook ou outra agenda (.ics)
         </button>
         <Link to="/p/$slug" params={{ slug }} className="btn-secondary">
           Voltar para a página

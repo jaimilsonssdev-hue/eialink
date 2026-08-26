@@ -32,9 +32,12 @@ export class TherapyLayout implements TemplateLayoutRenderer {
   }
 
   render(_model: TemplateRenderModel, ctx: LayoutRenderContext): ReactNode {
-    const { bio, links, products = [], onShare, onTrack, supplemental } = ctx;
+    const { bio, links, products = [], bookingUrl, onShare, onTrack, supplemental } = ctx;
     const whatsapp = bio.whatsapp?.replace(/\D/g, "");
     const instagram = bio.instagram?.replace("@", "");
+    const bookingHref = bookingUrl || (whatsapp
+      ? whatsappUrl(whatsapp, bio.whatsapp_message || "Olá! Gostaria de agendar uma conversa.")
+      : undefined);
     const activeServices = products.filter((item) => item.active).slice(0, 6);
     const services = activeServices.length > 0
       ? activeServices.map((item) => [item.name, item.description || "Um atendimento cuidadoso, respeitoso e pensado para você.", item.button_url, item.button_label] as const)
@@ -57,16 +60,16 @@ export class TherapyLayout implements TemplateLayoutRenderer {
               <small><ShieldCheck size={14} aria-hidden /> Escuta qualificada</small>
               <small><Check size={14} aria-hidden /> Atendimento personalizado</small>
             </div>
-            {whatsapp && (
+            {bookingHref && (
               <a
-                href={whatsappUrl(whatsapp, bio.whatsapp_message || "Olá! Gostaria de agendar uma conversa.")}
-                target="_blank"
-                rel="noreferrer"
-                onClick={() => onTrack("whatsapp_click")}
+                href={bookingHref}
+                target={bookingUrl ? undefined : "_blank"}
+                rel={bookingUrl ? undefined : "noreferrer"}
+                onClick={() => onTrack(bookingUrl ? "booking_click" : "whatsapp_click")}
                 className="niche-therapy-primary-action"
               >
                 <CalendarCheck size={18} aria-hidden />
-                {bio.whatsapp_button_label || "Agendar uma conversa"}
+                {bookingUrl ? "Agendar uma conversa" : bio.whatsapp_button_label || "Falar pelo WhatsApp"}
                 <ArrowUpRight size={16} aria-hidden />
               </a>
             )}

@@ -113,12 +113,16 @@ function Dashboard() {
     s = Math.min(100, s);
     if (s !== profile.lead_score) {
       // The builder is lazy: consuming the promise is what performs the update.
-      void supabase.from("profiles").update({ lead_score: s }).eq("id", profile.id).then(() => {});
+      void supabase
+        .from("profiles")
+        .update({ lead_score: s })
+        .eq("id", profile.id)
+        .then(() => {});
     }
   }, [profile, bio, linksCount, stats, requestsCount]);
 
   const score = profile?.lead_score ?? 5;
-  const scoreLabel = score >= 70 ? "Lead Quente" : score >= 31 ? "Interessado" : "Novo Lead";
+  const scoreLabel = score >= 70 ? "Página forte" : score >= 31 ? "Bom progresso" : "Começando";
   const scoreColor =
     score >= 70 ? "var(--brand-lime)" : score >= 31 ? "var(--brand-amber)" : "var(--brand-cyan)";
 
@@ -130,6 +134,17 @@ function Dashboard() {
     { label: "Primeiro link", complete: (linksCount ?? 0) > 0 },
   ];
   const setupCompleted = setupItems.filter((item) => item.complete).length;
+  const scoreSuggestion = !bio?.published
+    ? "Publique sua página para avançar."
+    : !bio?.whatsapp
+      ? "Configure seu WhatsApp para facilitar contatos."
+      : (linksCount ?? 0) === 0
+        ? "Adicione seu primeiro link ou botão."
+        : (stats?.views ?? 0) === 0
+          ? "Compartilhe sua página para receber as primeiras visitas."
+          : (stats?.whatsapp ?? 0) === 0
+            ? "Destaque seu WhatsApp para gerar conversas."
+            : "Continue compartilhando para aumentar seus resultados.";
 
   return (
     <div className="space-y-8 premium-dashboard">
@@ -142,8 +157,19 @@ function Dashboard() {
           </h1>
           <p>Personalize sua página, apresente o que você faz e transforme visitas em conversas.</p>
           <div className="premium-welcome-actions">
-            <Link to="/builder" className="premium-cta"><PanelsTopLeft className="h-4 w-4" /> Personalizar minha página</Link>
-            {bio && <a href={`/p/${bio.slug}`} target="_blank" rel="noopener" className="premium-text-action">Ver página <ExternalLink className="h-4 w-4" /></a>}
+            <Link to="/builder" className="premium-cta">
+              <PanelsTopLeft className="h-4 w-4" /> Personalizar minha página
+            </Link>
+            {bio && (
+              <a
+                href={`/p/${bio.slug}`}
+                target="_blank"
+                rel="noopener"
+                className="premium-text-action"
+              >
+                Ver página <ExternalLink className="h-4 w-4" />
+              </a>
+            )}
           </div>
         </div>
         <div className="premium-phone-teaser" aria-hidden="true">
@@ -193,8 +219,13 @@ function Dashboard() {
       )}
 
       <div className="premium-section-heading">
-        <div><p className="eyebrow">Panorama</p><h2>O que acontece na sua página</h2></div>
-        <Link to="/analytics" className="premium-text-action">Ver resultados <ExternalLink className="h-4 w-4" /></Link>
+        <div>
+          <p className="eyebrow">Panorama</p>
+          <h2>O que acontece na sua página</h2>
+        </div>
+        <Link to="/analytics" className="premium-text-action">
+          Ver resultados <ExternalLink className="h-4 w-4" />
+        </Link>
       </div>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 premium-stats">
         <Stat
@@ -217,7 +248,7 @@ function Dashboard() {
         />
         <div className="card-glow">
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Lead Score</span>
+            <span className="text-xs text-muted-foreground">Força da sua página</span>
             <span
               className="grid h-8 w-8 place-items-center rounded-lg"
               style={{
@@ -244,6 +275,14 @@ function Dashboard() {
           <div className="text-xs mt-2" style={{ color: scoreColor }}>
             {scoreLabel}
           </div>
+          <p className="page-score-suggestion">{scoreSuggestion}</p>
+          <details className="page-score-details">
+            <summary>Como é calculado?</summary>
+            <p>
+              Considera configuração do perfil, publicação, contatos, links e os primeiros
+              resultados da página.
+            </p>
+          </details>
         </div>
       </div>
 
@@ -274,7 +313,10 @@ function Dashboard() {
       )}
 
       <div className="premium-section-heading">
-        <div><p className="eyebrow">Comece por aqui</p><h2>Deixe sua página pronta para vender</h2></div>
+        <div>
+          <p className="eyebrow">Comece por aqui</p>
+          <h2>Deixe sua página pronta para vender</h2>
+        </div>
       </div>
       <div className="grid gap-4 md:grid-cols-3 premium-quick-actions">
         <QuickCard

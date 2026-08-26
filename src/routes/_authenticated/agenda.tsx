@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  Bell,
+  CalendarClock,
   CalendarDays,
   Check,
   Clock3,
   ExternalLink,
   Loader2,
+  MessageCircle,
   Plus,
   Trash2,
   UserRound,
@@ -15,7 +18,11 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageService } from "@/modules/page/services/PageService";
 import { BookingService } from "@/modules/booking/BookingService";
-import type { BookingAvailability, BookingService as Service } from "@/modules/booking/types";
+import type {
+  Appointment,
+  BookingAvailability,
+  BookingService as Service,
+} from "@/modules/booking/types";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { UpgradePrompt } from "@/modules/billing/components/UpgradePrompt";
 
@@ -166,6 +173,55 @@ function AgendaPage() {
     await BookingService.updateAppointment(id, status);
     await client.invalidateQueries({ queryKey: ["appointments", pageId] });
     toast.success(status === "completed" ? "Atendimento concluído." : "Agendamento cancelado.");
+  }
+
+  function appointmentDate(item: Appointment) {
+    return new Intl.DateTimeFormat("pt-BR", {
+      weekday: "long",
+      day: "2-digit",
+      month: "long",
+      hour: "2-digit",
+      minute: "2-digit",
+    }).format(new Date(item.start_at));
+  }
+
+  function whatsappMessage(
+    item: Appointment,
+    kind: "confirmation" | "reminder" | "reschedule" | "cancellation",
+  ) {
+    const service = item.booking_services?.name || "seu atendimento";
+    const date = appointmentDate(item);
+    const professional = page?.display_name || "o profissional";
+    const messages = {
+      confirmation: `Olá, ${item.client_name}! Seu agendamento de ${service} com ${professional} está confirmado para ${date}. Se precisar alterar, responda esta mensagem.`,
+      reminder: `Olá, ${item.client_name}! Passando para lembrar do seu agendamento de ${service} com ${professional}, marcado para ${date}. Esperamos você!`,
+      reschedule: `Olá, ${item.client_name}! Precisamos ajustar o horário do seu agendamento de ${service}, atualmente marcado para ${date}. Pode nos responder para combinarmos um novo horário?`,
+      cancellation: `Olá, ${item.client_name}. Informamos que seu agendamento de ${service}, marcado para ${date}, foi cancelado. Responda esta mensagem caso queira escolher um novo horário.`,
+    };
+    return messages[kind];
+  }
+
+  function openWhatsApp(
+    item: Appointment,
+    kind: "confirmation" | "reminder" | "reschedule" | "cancellation",
+  ) {
+    let phone = item.client_phone.replace(/\D/g, "");
+    if (phone.length === 10 || phone.length === 11) phone = `55${phone}`;
+    if (phone.length < 12) {
+      toast.error("O WhatsApp deste cliente parece estar incompleto.");
+      return false;
+    }
+    window.open(
+      `https://wa.me/${phone}?text=${encodeURIComponent(whatsappMessage(item, kind))}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
+    return true;
+  }
+
+  async function cancelAndNotify(item: Appointment) {
+    if (!openWhatsApp(item, "cancellation")) return;
+    await changeStatus(item.id, "cancelled");
   }
 
   return (
@@ -420,22 +476,6 @@ function AgendaPage() {
                       <UserRound /> {item.client_name} · {item.client_phone}
                     </span>
                   </div>
-                  {item.status === "confirmed" && (
-                    <div className="appointment-actions">
-                      <button
-                        aria-label="Concluir"
-                        onClick={() => void changeStatus(item.id, "completed")}
-                      >
-                        <Check />
-                      </button>
-                      <button
-                        aria-label="Cancelar"
-                        onClick={() => void changeStatus(item.id, "cancelled")}
-                      >
-                        <X />
-                      </button>
-                    </div>
-                  )}
                   <span className="appointment-status">
                     {item.status === "confirmed"
                       ? "Confirmado"
@@ -443,6 +483,31 @@ function AgendaPage() {
                         ? "Concluído"
                         : "Cancelado"}
                   </span>
+                  {item.status === "confirmed" && (
+                    <div className="appointment-actions">
+                      <button onClick={() => openWhatsApp(item, "confirmation")}>
+                        <MessageCircle /> Confirmar
+                      </button>
+                      <button onClick={() => openWhatsApp(item, "reminder")}>
+                        <Bell /> Lembrete
+                      </button>
+                      <button onClick={() => openWhatsApp(item, "reschedule")}>
+                        <CalendarClock /> Alterar
+                      </button>
+                      <button
+                        className="is-danger"
+                        onClick={() => void cancelAndNotify(item)}
+                      >
+                        <X /> Cancelar
+                      </button>
+                      <button
+                        className="is-complete"
+                        onClick={() => void changeStatus(item.id, "completed")}
+                      >
+                        <Check /> Concluir
+                      </button>
+                    </div>
+                  )}
                 </article>
               ))}
             </div>

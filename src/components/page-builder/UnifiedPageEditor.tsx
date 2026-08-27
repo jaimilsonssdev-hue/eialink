@@ -295,7 +295,7 @@ export function UnifiedPageEditor({
       id: "contact",
       label: "Conecte o WhatsApp",
       help: "Canal principal de contato",
-      complete: bio.whatsapp.replace(/\D/g, "").length >= 10,
+      complete: (bio.whatsapp ?? "").replace(/\D/g, "").length >= 10,
     },
     {
       id: "links",

@@ -30,6 +30,14 @@ export function subdomainValidationMessage(value: string) {
   return null;
 }
 
+export function pageSlugFromHostname(hostname: string) {
+  const host = hostname.toLowerCase().replace(/:\d+$/, "");
+  if (!host.endsWith(`.${ROOT_DOMAIN}`)) return null;
+  const slug = host.slice(0, -(ROOT_DOMAIN.length + 1));
+  if (!slug || slug.includes(".") || RESERVED_SUBDOMAINS.has(slug)) return null;
+  return /^[a-z0-9][a-z0-9-]{0,62}$/.test(slug) ? slug : null;
+}
+
 export function publicPageUrl(slug: string, useProfessionalSubdomain: boolean) {
   const safeSlug = normalizePageSlug(slug);
   if (useProfessionalSubdomain) return `https://${safeSlug}.${ROOT_DOMAIN}`;

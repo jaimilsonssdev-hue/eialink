@@ -145,11 +145,13 @@ function PublicBookingPage() {
       });
       setConfirmed({ start: slot.slot_start, end: result.end_at, service });
     } catch (reason) {
-      setError(
-        reason instanceof Error
-          ? reason.message
-          : "O horário acabou de ser ocupado. Escolha outro.",
-      );
+      setSlot(undefined);
+      setError("Este horário acabou de ser reservado. Escolha outro horário.");
+      try {
+        setSlots(await BookingService.getSlots(bio.id, serviceId, selectedDate));
+      } catch {
+        // Keep the reservation error visible if refreshing availability fails.
+      }
     } finally {
       setSubmitting(false);
     }

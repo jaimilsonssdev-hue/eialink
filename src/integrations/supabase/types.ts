@@ -91,6 +91,69 @@ export type Database = {
           },
         ]
       }
+      appointments: {
+        Row: {
+          bio_page_id: string
+          client_email: string | null
+          client_name: string
+          client_phone: string
+          confirmation_token: string
+          created_at: string
+          end_at: string
+          id: string
+          notes: string | null
+          service_id: string
+          start_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          bio_page_id: string
+          client_email?: string | null
+          client_name: string
+          client_phone: string
+          confirmation_token?: string
+          created_at?: string
+          end_at: string
+          id?: string
+          notes?: string | null
+          service_id: string
+          start_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          bio_page_id?: string
+          client_email?: string | null
+          client_name?: string
+          client_phone?: string
+          confirmation_token?: string
+          created_at?: string
+          end_at?: string
+          id?: string
+          notes?: string | null
+          service_id?: string
+          start_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "booking_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bio_links: {
         Row: {
           active: boolean
@@ -224,6 +287,132 @@ export type Database = {
           whatsapp_message?: string | null
         }
         Relationships: []
+      }
+      booking_availability: {
+        Row: {
+          active: boolean
+          bio_page_id: string
+          created_at: string
+          end_time: string
+          id: string
+          start_time: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          bio_page_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          start_time: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          bio_page_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_availability_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_services: {
+        Row: {
+          active: boolean
+          bio_page_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          name: string
+          position: number
+          price: number | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bio_page_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name: string
+          position?: number
+          price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bio_page_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          name?: string
+          position?: number
+          price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_services_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      booking_settings: {
+        Row: {
+          active: boolean
+          bio_page_id: string
+          created_at: string
+          id: string
+          max_days_ahead: number
+          min_notice_hours: number
+          timezone: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          bio_page_id: string
+          created_at?: string
+          id?: string
+          max_days_ahead?: number
+          min_notice_hours?: number
+          timezone?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          bio_page_id?: string
+          created_at?: string
+          id?: string
+          max_days_ahead?: number
+          min_notice_hours?: number
+          timezone?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_settings_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: true
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       catalog_items: {
         Row: {
@@ -638,6 +827,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_public_appointment: {
+        Args: {
+          _bio_page_id: string
+          _client_email?: string
+          _client_name: string
+          _client_phone: string
+          _notes?: string
+          _service_id: string
+          _start_at: string
+        }
+        Returns: {
+          appointment_id: string
+          confirmation_token: string
+          end_at: string
+        }[]
+      }
+      get_booking_slots: {
+        Args: { _bio_page_id: string; _date: string; _service_id: string }
+        Returns: {
+          slot_end: string
+          slot_start: string
+        }[]
+      }
       has_active_payment_subscription: {
         Args: { check_env?: string; user_uuid: string }
         Returns: boolean
@@ -649,6 +861,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      owns_bio_page: { Args: { _page_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "user" | "admin"

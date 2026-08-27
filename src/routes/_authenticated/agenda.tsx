@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Loader2,
   MessageCircle,
+  Pencil,
   Plus,
   Trash2,
   UserRound,
@@ -48,6 +49,14 @@ function AgendaPage() {
   const [notice, setNotice] = useState(2);
   const [ahead, setAhead] = useState(60);
   const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState<Appointment | null>(null);
+  const [rescheduleDate, setRescheduleDate] = useState("");
+  const [rescheduleSlots, setRescheduleSlots] = useState<
+    { slot_start: string; slot_end: string }[]
+  >([]);
+  const [rescheduleStart, setRescheduleStart] = useState("");
+  const [loadingReschedule, setLoadingReschedule] = useState(false);
+  const [savingReschedule, setSavingReschedule] = useState(false);
 
   useEffect(() => {
     if (!pageId && pages.data?.[0]) setPageId(pages.data[0].id);
@@ -187,7 +196,7 @@ function AgendaPage() {
 
   function whatsappMessage(
     item: Appointment,
-    kind: "confirmation" | "reminder" | "reschedule" | "cancellation",
+    kind: "confirmation" | "reminder" | "reschedule" | "rescheduled" | "cancellation",
   ) {
     const service = item.booking_services?.name || "seu atendimento";
     const date = appointmentDate(item);
@@ -196,6 +205,7 @@ function AgendaPage() {
       confirmation: `Olá, ${item.client_name}! Seu agendamento de ${service} com ${professional} está confirmado para ${date}. Se precisar alterar, responda esta mensagem.`,
       reminder: `Olá, ${item.client_name}! Passando para lembrar do seu agendamento de ${service} com ${professional}, marcado para ${date}. Esperamos você!`,
       reschedule: `Olá, ${item.client_name}! Precisamos ajustar o horário do seu agendamento de ${service}, atualmente marcado para ${date}. Pode nos responder para combinarmos um novo horário?`,
+      rescheduled: `Olá, ${item.client_name}! Seu agendamento de ${service} com ${professional} foi remarcado para ${date}. Se precisar de mais alguma alteração, responda esta mensagem.`,
       cancellation: `Olá, ${item.client_name}. Informamos que seu agendamento de ${service}, marcado para ${date}, foi cancelado. Responda esta mensagem caso queira escolher um novo horário.`,
     };
     return messages[kind];
@@ -203,7 +213,7 @@ function AgendaPage() {
 
   function openWhatsApp(
     item: Appointment,
-    kind: "confirmation" | "reminder" | "reschedule" | "cancellation",
+    kind: "confirmation" | "reminder" | "reschedule" | "rescheduled" | "cancellation",
   ) {
     let phone = item.client_phone.replace(/\D/g, "");
     if (phone.length === 10 || phone.length === 11) phone = `55${phone}`;
@@ -220,8 +230,56 @@ function AgendaPage() {
   }
 
   async function cancelAndNotify(item: Appointment) {
-    if (!openWhatsApp(item, "cancellation")) return;
-    await changeStatus(item.id, "cancelled");
+    try {
+      await changeStatus(item.id, "cancelled");
+      openWhatsApp(item, "cancellation");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível cancelar.");
+    }
+  }
+
+  function openReschedule(item: Appointment) {
+    setEditing(item);
+    setRescheduleDate("");
+    setRescheduleSlots([]);
+    setRescheduleStart("");
+  }
+
+  async function loadRescheduleSlots(date: string) {
+    if (!editing) return;
+    setRescheduleDate(date);
+    setRescheduleStart("");
+    setLoadingReschedule(true);
+    try {
+      setRescheduleSlots(await BookingService.getSlots(pageId, editing.service_id, date));
+    } catch (error) {
+      setRescheduleSlots([]);
+      toast.error(error instanceof Error ? error.message : "Não foi possível buscar horários.");
+    } finally {
+      setLoadingReschedule(false);
+    }
+  }
+
+  async function confirmReschedule() {
+    if (!editing || !rescheduleStart) return;
+    setSavingReschedule(true);
+    try {
+      const updated = await BookingService.rescheduleAppointment({
+        id: editing.id,
+        bioPageId: pageId,
+        startAt: rescheduleStart,
+        durationMinutes: editing.booking_services?.duration_minutes ?? 60,
+      });
+      await client.invalidateQueries({ queryKey: ["appointments", pageId] });
+      setEditing(null);
+      toast.success("Agendamento remarcado e horário anterior liberado.");
+      openWhatsApp(updated, "rescheduled");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível remarcar.");
+      if (rescheduleDate) await loadRescheduleSlots(rescheduleDate);
+    } finally {
+      setSavingReschedule(false);
+    }
   }
 
   return (
@@ -492,7 +550,10 @@ function AgendaPage() {
                         <Bell /> Lembrete
                       </button>
                       <button onClick={() => openWhatsApp(item, "reschedule")}>
-                        <CalendarClock /> Alterar
+                        <MessageCircle /> Solicitar mudança
+                      </button>
+                      <button onClick={() => openReschedule(item)}>
+                        <Pencil /> Reagendar
                       </button>
                       <button
                         className="is-danger"
@@ -518,6 +579,86 @@ function AgendaPage() {
             </div>
           )}
         </section>
+      )}
+      {editing && (
+        <div className="booking-modal-backdrop" role="presentation">
+          <section
+            className="booking-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reschedule-title"
+          >
+            <header>
+              <div>
+                <p className="eyebrow">Editar agendamento</p>
+                <h2 id="reschedule-title">Reagendar {editing.client_name}</h2>
+                <span>{editing.booking_services?.name}</span>
+              </div>
+              <button
+                className="booking-icon-button"
+                aria-label="Fechar"
+                onClick={() => setEditing(null)}
+              >
+                <X />
+              </button>
+            </header>
+            <div className="booking-current-slot">
+              <CalendarClock />
+              <div>
+                <small>Horário atual</small>
+                <b>{appointmentDate(editing)}</b>
+              </div>
+            </div>
+            <label className="booking-modal-date">
+              Nova data
+              <input
+                className="input-base"
+                type="date"
+                min={new Date().toISOString().slice(0, 10)}
+                value={rescheduleDate}
+                onChange={(event) => void loadRescheduleSlots(event.target.value)}
+              />
+            </label>
+            {loadingReschedule ? (
+              <div className="booking-modal-loading">
+                <Loader2 className="animate-spin" /> Buscando horários livres...
+              </div>
+            ) : rescheduleDate && rescheduleSlots.length ? (
+              <div className="booking-modal-slots">
+                {rescheduleSlots.map((slot) => (
+                  <button
+                    key={slot.slot_start}
+                    className={rescheduleStart === slot.slot_start ? "is-selected" : ""}
+                    onClick={() => setRescheduleStart(slot.slot_start)}
+                  >
+                    {new Intl.DateTimeFormat("pt-BR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      timeZone: "America/Bahia",
+                    }).format(new Date(slot.slot_start))}
+                  </button>
+                ))}
+              </div>
+            ) : rescheduleDate ? (
+              <p className="booking-modal-empty">Não há horários livres nessa data.</p>
+            ) : (
+              <p className="booking-modal-hint">Escolha uma data para ver os horários disponíveis.</p>
+            )}
+            <footer>
+              <button className="btn-secondary" onClick={() => setEditing(null)}>
+                Manter horário atual
+              </button>
+              <button
+                className="btn-primary"
+                disabled={!rescheduleStart || savingReschedule}
+                onClick={() => void confirmReschedule()}
+              >
+                {savingReschedule ? <Loader2 className="animate-spin" /> : <CalendarClock />}
+                {savingReschedule ? "Remarcando..." : "Confirmar novo horário"}
+              </button>
+            </footer>
+          </section>
+        </div>
       )}
     </div>
   );

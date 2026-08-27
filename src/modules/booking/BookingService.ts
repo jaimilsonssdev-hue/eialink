@@ -155,6 +155,34 @@ export const BookingService = {
     if (error) throw new Error(error.message);
   },
 
+  async rescheduleAppointment(input: {
+    id: string;
+    bioPageId: string;
+    startAt: string;
+    durationMinutes: number;
+  }): Promise<Appointment> {
+    const start = new Date(input.startAt);
+    const end = new Date(start.getTime() + input.durationMinutes * 60_000);
+    const { data, error } = await store
+      .from("appointments")
+      .update({
+        start_at: start.toISOString(),
+        end_at: end.toISOString(),
+        status: "confirmed",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", input.id)
+      .eq("bio_page_id", input.bioPageId)
+      .select("*, booking_services(name,duration_minutes)")
+      .single();
+    if (error) {
+      if (error.code === "23P01")
+        throw new Error("Este horário acabou de ser reservado. Escolha outro.");
+      throw new Error(error.message);
+    }
+    return data as Appointment;
+  },
+
   async getPublicConfig(bioPageId: string) {
     const [{ data: settings }, { data: services }, { data: availability }] = await Promise.all([
       store

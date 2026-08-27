@@ -49,6 +49,7 @@ function AgendaPage() {
   const [notice, setNotice] = useState(2);
   const [ahead, setAhead] = useState(60);
   const [saving, setSaving] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [rescheduleDate, setRescheduleDate] = useState("");
   const [rescheduleSlots, setRescheduleSlots] = useState<
@@ -239,6 +240,7 @@ function AgendaPage() {
   }
 
   function openReschedule(item: Appointment) {
+    setSelectedAppointment(null);
     setEditing(item);
     setRescheduleDate("");
     setRescheduleSlots([]);
@@ -280,6 +282,12 @@ function AgendaPage() {
     } finally {
       setSavingReschedule(false);
     }
+  }
+
+  async function updateFromDetails(item: Appointment, status: "completed" | "cancelled") {
+    if (status === "cancelled") await cancelAndNotify(item);
+    else await changeStatus(item.id, status);
+    setSelectedAppointment(null);
   }
 
   return (
@@ -509,7 +517,16 @@ function AgendaPage() {
           ) : appointments.data?.length ? (
             <div className="appointment-list">
               {appointments.data.map((item) => (
-                <article className={`appointment-row is-${item.status}`} key={item.id}>
+                <article
+                  className={`appointment-row is-${item.status}`}
+                  key={item.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelectedAppointment(item)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") setSelectedAppointment(item);
+                  }}
+                >
                   <div className="appointment-date">
                     <b>
                       {new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(
@@ -541,34 +558,9 @@ function AgendaPage() {
                         ? "Concluído"
                         : "Cancelado"}
                   </span>
-                  {item.status === "confirmed" && (
-                    <div className="appointment-actions">
-                      <button onClick={() => openWhatsApp(item, "confirmation")}>
-                        <MessageCircle /> Confirmar
-                      </button>
-                      <button onClick={() => openWhatsApp(item, "reminder")}>
-                        <Bell /> Lembrete
-                      </button>
-                      <button onClick={() => openWhatsApp(item, "reschedule")}>
-                        <MessageCircle /> Solicitar mudança
-                      </button>
-                      <button onClick={() => openReschedule(item)}>
-                        <Pencil /> Reagendar
-                      </button>
-                      <button
-                        className="is-danger"
-                        onClick={() => void cancelAndNotify(item)}
-                      >
-                        <X /> Cancelar
-                      </button>
-                      <button
-                        className="is-complete"
-                        onClick={() => void changeStatus(item.id, "completed")}
-                      >
-                        <Check /> Concluir
-                      </button>
-                    </div>
-                  )}
+                  <span className="appointment-open-hint">
+                    <Pencil /> Ver e editar
+                  </span>
                 </article>
               ))}
             </div>
@@ -579,6 +571,85 @@ function AgendaPage() {
             </div>
           )}
         </section>
+      )}
+      {selectedAppointment && (
+        <div className="booking-modal-backdrop" role="presentation">
+          <section
+            className="booking-modal appointment-detail-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="appointment-detail-title"
+          >
+            <header>
+              <div>
+                <p className="eyebrow">Agendamento</p>
+                <h2 id="appointment-detail-title">{selectedAppointment.client_name}</h2>
+                <span>{selectedAppointment.client_phone}</span>
+              </div>
+              <button
+                className="booking-icon-button"
+                aria-label="Fechar"
+                onClick={() => setSelectedAppointment(null)}
+              >
+                <X />
+              </button>
+            </header>
+            <div className="appointment-detail-summary">
+              <div>
+                <small>Serviço</small>
+                <b>{selectedAppointment.booking_services?.name}</b>
+              </div>
+              <div>
+                <small>Data e horário</small>
+                <b>{appointmentDate(selectedAppointment)}</b>
+              </div>
+              {selectedAppointment.notes && (
+                <div>
+                  <small>Observação</small>
+                  <p>{selectedAppointment.notes}</p>
+                </div>
+              )}
+            </div>
+            {selectedAppointment.status === "confirmed" ? (
+              <div className="appointment-detail-actions">
+                <button onClick={() => openWhatsApp(selectedAppointment, "confirmation")}>
+                  <MessageCircle />
+                  <span><b>Confirmar pelo WhatsApp</b><small>Enviar confirmação pronta</small></span>
+                </button>
+                <button onClick={() => openWhatsApp(selectedAppointment, "reminder")}>
+                  <Bell />
+                  <span><b>Enviar lembrete</b><small>Relembrar data e horário</small></span>
+                </button>
+                <button onClick={() => openWhatsApp(selectedAppointment, "reschedule")}>
+                  <MessageCircle />
+                  <span><b>Solicitar mudança</b><small>Combinar pelo WhatsApp</small></span>
+                </button>
+                <button onClick={() => openReschedule(selectedAppointment)}>
+                  <CalendarClock />
+                  <span><b>Reagendar</b><small>Escolher outro horário livre</small></span>
+                </button>
+                <button
+                  className="is-danger"
+                  onClick={() => void updateFromDetails(selectedAppointment, "cancelled")}
+                >
+                  <X />
+                  <span><b>Cancelar agendamento</b><small>Desmarcar e liberar o horário</small></span>
+                </button>
+                <button
+                  className="is-complete"
+                  onClick={() => void updateFromDetails(selectedAppointment, "completed")}
+                >
+                  <Check />
+                  <span><b>Concluir atendimento</b><small>Marcar como realizado</small></span>
+                </button>
+              </div>
+            ) : (
+              <div className="appointment-detail-closed">
+                Este agendamento está {selectedAppointment.status === "completed" ? "concluído" : "cancelado"}.
+              </div>
+            )}
+          </section>
+        </div>
       )}
       {editing && (
         <div className="booking-modal-backdrop" role="presentation">

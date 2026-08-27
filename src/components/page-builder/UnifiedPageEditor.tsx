@@ -686,6 +686,11 @@ function SectionForm({
   setFreeTypography(typography: FreeTypography): void;
 }) {
   const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
+  const hasProfessionalSubdomain = Boolean(planAccess?.isPro && planAccess.features.custom_domain);
+  const normalizedSlug = normalizePageSlug(bio.slug || bio.display_name);
+  const addressError = hasProfessionalSubdomain
+    ? subdomainValidationMessage(bio.slug || bio.display_name)
+    : null;
   return (
     <div className="space-y-4">
       <div>

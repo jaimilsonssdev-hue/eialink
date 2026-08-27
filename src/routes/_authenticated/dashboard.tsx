@@ -15,6 +15,8 @@ import {
   PanelsTopLeft,
 } from "lucide-react";
 import { TemplateMarketplace } from "@/components/templates/TemplateMarketplace";
+import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
+import { publicPageUrl } from "@/lib/public-page-url";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -28,6 +30,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
 });
 
 function Dashboard() {
+  const access = usePlanAccess();
   const { data: profile } = useQuery({
     queryKey: ["profile-me"],
     queryFn: async () => {
@@ -126,8 +129,10 @@ function Dashboard() {
   const scoreColor =
     score >= 70 ? "var(--brand-lime)" : score >= 31 ? "var(--brand-amber)" : "var(--brand-cyan)";
 
-  const publicUrl =
-    bio && typeof window !== "undefined" ? `${window.location.origin}/p/${bio.slug}` : "";
+  const hasProfessionalSubdomain = Boolean(
+    access.data?.isPro && access.data.features.custom_domain,
+  );
+  const publicUrl = bio ? publicPageUrl(bio.slug, hasProfessionalSubdomain) : "";
   const setupItems = [
     { label: "Nome do negócio", complete: Boolean(bio?.display_name?.trim()) },
     { label: "WhatsApp", complete: (bio?.whatsapp?.replace(/\D/g, "").length ?? 0) >= 10 },
@@ -161,12 +166,7 @@ function Dashboard() {
               <PanelsTopLeft className="h-4 w-4" /> Personalizar minha página
             </Link>
             {bio && (
-              <a
-                href={`/p/${bio.slug}`}
-                target="_blank"
-                rel="noopener"
-                className="premium-text-action"
-              >
+              <a href={publicUrl} target="_blank" rel="noopener" className="premium-text-action">
                 Ver página <ExternalLink className="h-4 w-4" />
               </a>
             )}
@@ -290,7 +290,7 @@ function Dashboard() {
         <div className="premium-public-link flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
             <div className="text-xs uppercase tracking-widest text-muted-foreground">
-              Sua página pública
+              {hasProfessionalSubdomain ? "Seu subdomínio profissional" : "Sua página pública"}
             </div>
             <div className="mt-2 flex items-center gap-2 text-[color:var(--primary)] font-medium truncate">
               <span className="truncate">{publicUrl}</span>
@@ -305,7 +305,7 @@ function Dashboard() {
             >
               <Copy className="h-4 w-4" /> Copiar
             </button>
-            <a href={`/p/${bio.slug}`} target="_blank" rel="noopener" className="btn-primary">
+            <a href={publicUrl} target="_blank" rel="noopener" className="btn-primary">
               Abrir <ExternalLink className="h-4 w-4" />
             </a>
           </div>

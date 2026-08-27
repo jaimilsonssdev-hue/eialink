@@ -160,7 +160,12 @@ function BuilderPage() {
         let bioPageId = bio?.id;
         if (bioPageId) {
           const { error } = await supabase.from("bio_pages").update(payload).eq("id", bioPageId);
-          if (error) throw new Error(error.message);
+          if (error)
+            throw new Error(
+              error.code === "23505"
+                ? "Este endereço já está sendo usado. Escolha outro nome para sua página."
+                : error.message,
+            );
         } else {
           const { data, error } = await supabase
             .from("bio_pages")
@@ -168,7 +173,11 @@ function BuilderPage() {
             .select("id")
             .single();
           if (error || !data)
-            throw new Error(error?.message ?? "Não foi possível criar sua página.");
+            throw new Error(
+              error?.code === "23505"
+                ? "Este endereço já está sendo usado. Escolha outro nome para sua página."
+                : (error?.message ?? "Não foi possível criar sua página."),
+            );
           bioPageId = data.id;
         }
 

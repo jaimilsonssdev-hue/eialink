@@ -35,6 +35,11 @@ import {
 } from "@/lib/free-layout-options";
 import { UpgradePrompt, commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import type { PlanAccess } from "@/modules/billing/types";
+import {
+  normalizePageSlug,
+  publicPageUrl,
+  subdomainValidationMessage,
+} from "@/lib/public-page-url";
 
 import type { CatalogItem } from "@/modules/products/types";
 
@@ -220,18 +225,6 @@ function socialValues(value: BioForm["social_links"]) {
   );
 }
 
-function slugify(value: string) {
-  return (
-    value
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 40) || "minha-pagina"
-  );
-}
-
 export function UnifiedPageEditor({
   initialBio,
   initialLinks,
@@ -337,6 +330,12 @@ export function UnifiedPageEditor({
       ),
     [links],
   );
+  const hasProfessionalSubdomain = Boolean(planAccess?.isPro && planAccess.features.custom_domain);
+  const normalizedSlug = normalizePageSlug(bio.slug || bio.display_name);
+  const pageUrl = publicPageUrl(normalizedSlug, hasProfessionalSubdomain);
+  const addressError = hasProfessionalSubdomain
+    ? subdomainValidationMessage(bio.slug || bio.display_name)
+    : null;
 
   useEffect(() => {
     const warnBeforeLeaving = (event: BeforeUnloadEvent) => {
@@ -382,6 +381,11 @@ export function UnifiedPageEditor({
     setLinks((current) => current.map((link) => (link.id === id ? { ...link, ...patch } : link)));
 
   async function save() {
+    if (addressError) {
+      setValidationMessage(addressError);
+      setSaveState("error");
+      return;
+    }
     const socialValidation = parseSocialLinks(bio.social_links);
     if (!socialValidation.success) {
       setValidationMessage(
@@ -395,16 +399,19 @@ export function UnifiedPageEditor({
     setSaveState("idle");
     try {
       const result = await onSave({
-        bio: { ...bio, slug: slugify(bio.slug || bio.display_name) },
+        bio: { ...bio, slug: normalizedSlug },
         links,
         products,
         niche,
       });
       setProducts(result.products);
-      setBio((current) => ({ ...current, slug: slugify(current.slug || current.display_name) }));
+      setBio((current) => ({
+        ...current,
+        slug: normalizePageSlug(current.slug || current.display_name),
+      }));
       setSavedSnapshot(
         JSON.stringify({
-          bio: { ...bio, slug: slugify(bio.slug || bio.display_name) },
+          bio: { ...bio, slug: normalizedSlug },
           links,
           products: result.products,
           niche,
@@ -445,7 +452,7 @@ export function UnifiedPageEditor({
             <Eye className="h-4 w-4" /> Ver prévia
           </button>
           <a
-            href={`/p/${previewBio.slug}`}
+            href={pageUrl}
             target="_blank"
             rel="noreferrer"
             className="btn-secondary hidden sm:inline-flex"
@@ -962,12 +969,28 @@ function SectionForm({
               onChange={(event) => updateBio({ description: event.target.value })}
             />
           </Field>
-          <Field label="Endereço da página">
+          <Field
+            label={hasProfessionalSubdomain ? "Seu subdomínio profissional" : "Endereço da página"}
+          >
             <input
               className="input-base"
               value={bio.slug}
               onChange={(event) => updateBio({ slug: event.target.value })}
+              aria-invalid={Boolean(addressError)}
             />
+            <p
+              className={`mt-2 text-xs ${addressError ? "text-[color:var(--destructive)]" : "text-muted-foreground"}`}
+            >
+              {addressError ??
+                (hasProfessionalSubdomain
+                  ? `${normalizedSlug}.eialink.com.br`
+                  : `eialink.com.br/p/${normalizedSlug}`)}
+            </p>
+            {hasProfessionalSubdomain && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Exclusivo do Pro. O endereço antigo continuará funcionando normalmente.
+              </p>
+            )}
           </Field>
         </>
       )}

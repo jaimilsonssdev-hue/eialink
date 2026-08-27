@@ -7,6 +7,7 @@ import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
 import { UpgradePrompt } from "@/modules/billing/components/UpgradePrompt";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
+import { publicPageUrl } from "@/lib/public-page-url";
 
 export const Route = createFileRoute("/_authenticated/pages")({
   component: PagesWorkspace,
@@ -122,13 +123,21 @@ function PagesWorkspace() {
                 <p className="line-clamp-2">
                   {page.description || "Personalize esta página para apresentar seu negócio."}
                 </p>
+                <small className="text-muted-foreground">
+                  {access.data?.isPro && access.data.features.custom_domain
+                    ? `${page.slug}.eialink.com.br`
+                    : `eialink.com.br/p/${page.slug}`}
+                </small>
               </div>
               <div className="page-library-actions">
                 <Link to="/builder" search={{ page: page.id }} className="btn-primary">
                   <Pencil className="h-4 w-4" /> Editar
                 </Link>
                 <a
-                  href={`/p/${page.slug}`}
+                  href={publicPageUrl(
+                    page.slug,
+                    Boolean(access.data?.isPro && access.data.features.custom_domain),
+                  )}
                   target="_blank"
                   rel="noopener"
                   className="btn-secondary"

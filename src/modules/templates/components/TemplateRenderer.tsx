@@ -83,7 +83,7 @@ export function TemplateRenderer({
   const smartSupplemental =
     safeProducts && safeProducts.length > 0 ? (
       <>
-        <CatalogSection items={safeProducts} />
+        <CatalogSection items={safeProducts} whatsapp={bio.whatsapp} />
         {supplemental}
       </>
     ) : (
@@ -129,3 +129,4 @@ export function TemplateRenderer({
     </main>
   );
 }
+

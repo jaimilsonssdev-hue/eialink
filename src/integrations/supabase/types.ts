@@ -697,6 +697,128 @@ export type Database = {
         }
         Relationships: []
       }
+      prospected_companies: {
+        Row: {
+          city: string | null
+          created_at: string
+          created_by: string | null
+          dedupe_key: string
+          email: string | null
+          has_website: boolean
+          id: string
+          instagram: string | null
+          last_contacted_at: string | null
+          name: string
+          next_action_at: string | null
+          niche: string | null
+          notes: string | null
+          phone: string | null
+          priority: string
+          rating: number | null
+          reviews_count: number | null
+          score: number
+          source: string
+          state: string | null
+          status: string
+          updated_at: string
+          website: string | null
+          whatsapp: string | null
+        }
+        Insert: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          dedupe_key: string
+          email?: string | null
+          has_website?: boolean
+          id?: string
+          instagram?: string | null
+          last_contacted_at?: string | null
+          name: string
+          next_action_at?: string | null
+          niche?: string | null
+          notes?: string | null
+          phone?: string | null
+          priority?: string
+          rating?: number | null
+          reviews_count?: number | null
+          score?: number
+          source?: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Update: {
+          city?: string | null
+          created_at?: string
+          created_by?: string | null
+          dedupe_key?: string
+          email?: string | null
+          has_website?: boolean
+          id?: string
+          instagram?: string | null
+          last_contacted_at?: string | null
+          name?: string
+          next_action_at?: string | null
+          niche?: string | null
+          notes?: string | null
+          phone?: string | null
+          priority?: string
+          rating?: number | null
+          reviews_count?: number | null
+          score?: number
+          source?: string
+          state?: string | null
+          status?: string
+          updated_at?: string
+          website?: string | null
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      prospecting_activities: {
+        Row: {
+          admin_id: string
+          channel: string
+          company_id: string
+          created_at: string
+          id: string
+          message: string | null
+          notes: string | null
+          outcome: string
+        }
+        Insert: {
+          admin_id: string
+          channel?: string
+          company_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          notes?: string | null
+          outcome?: string
+        }
+        Update: {
+          admin_id?: string
+          channel?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          notes?: string | null
+          outcome?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prospecting_activities_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "prospected_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_requests: {
         Row: {
           bio_page_id: string | null

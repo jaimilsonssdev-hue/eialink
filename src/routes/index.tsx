@@ -45,13 +45,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Crie seu Biolink premium em minutos: WhatsApp, Pix, catálogo, redes sociais e analytics. Transforme visitantes em clientes.",
+          "Transforme o link da sua bio em uma vitrine digital profissional para apresentar seu negócio e facilitar o contato com clientes.",
       },
       { property: "og:title", content: "EIA Link — Vitrines digitais que vendem" },
       {
         property: "og:description",
         content:
-          "Crie seu Biolink premium em minutos: WhatsApp, Pix, catálogo, redes sociais e analytics. Transforme visitantes em clientes.",
+          "Transforme o link da sua bio em uma vitrine digital profissional para apresentar seu negócio e facilitar o contato com clientes.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://eialink.com.br/" },
@@ -59,7 +59,7 @@ export const Route = createFileRoute("/")({
       {
         name: "twitter:description",
         content:
-          "Crie seu Biolink premium em minutos: WhatsApp, Pix, catálogo, redes sociais e analytics.",
+          "Sua vitrine digital, seus produtos, seus serviços e seu WhatsApp em um só lugar.",
       },
     ],
     links: [{ rel: "canonical", href: "https://eialink.com.br/" }],
@@ -281,7 +281,7 @@ function Nav() {
             Entrar
           </Link>
           <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary text-xs">
-            Criar meu BioLink grátis
+            Criar meu EiaLink grátis
           </Link>
         </div>
       </div>
@@ -318,21 +318,20 @@ function Hero() {
       <div className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(29,15,50,.94),rgba(9,7,15,.97))] p-6 shadow-[0_20px_80px_rgba(0,0,0,.3)] md:p-10">
         <div className="grid items-center gap-8 lg:grid-cols-[.9fr_1.1fr]">
           <div>
-            <p className="eyebrow">Biolinks premium para negócios</p>
+            <p className="eyebrow">SUA PRESENÇA DIGITAL, EM UM SÓ LUGAR</p>
             <h1 className="mt-4 max-w-xl font-display text-4xl font-bold leading-[1.06] tracking-tight md:text-6xl">
-              Seu negócio merece mais do que um{" "}
-              <span className="text-fuchsia-400">link na bio.</span>
+              Seu Instagram atrai pessoas. O{" "}
+              <span className="text-fuchsia-400">EiaLink ajuda a transformá-las em clientes.</span>
             </h1>
             <p className="mt-5 max-w-lg text-sm leading-6 text-[#cbc2d7] md:text-base">
-              Crie um BioLink Premium em poucos minutos e transforme visitantes em clientes todos os
-              dias.
+              Transforme o link da sua bio em uma vitrine digital profissional, com produtos, serviços, redes sociais e WhatsApp em um só lugar.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary">
-                Criar meu BioLink grátis <ArrowRight className="h-4 w-4" />
+                Criar meu EiaLink grátis <ArrowRight className="h-4 w-4" />
               </Link>
               <a href="#exemplos" className="btn-secondary">
-                Ver exemplos
+                Ver como funciona
               </a>
             </div>
             <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-[#c6bdd0]">
@@ -412,7 +411,7 @@ function TemplateRail({
       <div
         className="relative mx-auto max-w-[18rem]"
         aria-roledescription="carrossel"
-        aria-label="Exemplos de BioLinks por nicho"
+        aria-label="Exemplos de vitrines digitais por nicho"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onFocus={() => setPaused(true)}
@@ -741,7 +740,7 @@ function HowItWorks() {
   const steps = [
     [Store, "1. Escolha um nicho", "Selecione o template ideal para o seu negócio."],
     [Palette, "2. Personalize", "Edite textos, cores, imagens e produtos."],
-    [Rocket, "3. Publique", "Seu BioLink fica pronto em menos de 1 minuto."],
+    [Rocket, "3. Publique", "Sua vitrine fica pronta em poucos minutos."],
     [TrendingUp, "4. Receba clientes", "Compartilhe seu link e comece a vender mais."],
   ];
   return (
@@ -750,7 +749,7 @@ function HowItWorks() {
         <div className="text-center">
           <p className="eyebrow">Como funciona</p>
           <h2 className="mt-2 font-display text-3xl font-bold">
-            Crie seu BioLink em 4 passos simples
+            Crie sua vitrine digital em 4 passos simples
           </h2>
         </div>
         <div className="mt-8 grid gap-6 md:grid-cols-4">
@@ -821,7 +820,7 @@ function FinalCta() {
               Seu próximo cliente pode estar a um clique de distância.
             </h2>
             <p className="mt-3 text-sm text-violet-100">
-              Crie agora seu BioLink Premium gratuitamente.
+              Comece agora sua vitrine digital gratuitamente.
             </p>
           </div>
           <div className="grid gap-3">
@@ -830,7 +829,7 @@ function FinalCta() {
               search={{ mode: "signup" } as never}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-violet-900"
             >
-              Criar meu BioLink grátis <ArrowRight className="h-4 w-4" />
+              Criar meu EiaLink grátis <ArrowRight className="h-4 w-4" />
             </Link>
             <a
               href="https://wa.me/"
@@ -885,3 +884,4 @@ function Footer() {
     </footer>
   );
 }
+

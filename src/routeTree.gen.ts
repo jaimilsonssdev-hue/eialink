@@ -33,6 +33,7 @@ import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
+import { Route as AuthenticatedAdminProspeccaoRouteImport } from './routes/_authenticated/admin_.prospeccao'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const TermsRoute = TermsRouteImport.update({
@@ -154,6 +155,12 @@ const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminProspeccaoRoute =
+  AuthenticatedAdminProspeccaoRouteImport.update({
+    id: '/admin_/prospeccao',
+    path: '/admin/prospeccao',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -185,6 +192,7 @@ export interface FileRoutesByFullPath {
   '/agendar/$slug': typeof AgendarSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/p/$slug': typeof PSlugRoute
+  '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -211,6 +219,7 @@ export interface FileRoutesByTo {
   '/agendar/$slug': typeof AgendarSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/p/$slug': typeof PSlugRoute
+  '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -239,6 +248,7 @@ export interface FileRoutesById {
   '/agendar/$slug': typeof AgendarSlugRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/p/$slug': typeof PSlugRoute
+  '/_authenticated/admin_/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/agendar/$slug'
     | '/checkout/return'
     | '/p/$slug'
+    | '/admin/prospeccao'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -293,6 +304,7 @@ export interface FileRouteTypes {
     | '/agendar/$slug'
     | '/checkout/return'
     | '/p/$slug'
+    | '/admin/prospeccao'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -320,6 +332,7 @@ export interface FileRouteTypes {
     | '/agendar/$slug'
     | '/checkout/return'
     | '/p/$slug'
+    | '/_authenticated/admin_/prospeccao'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -507,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin_/prospeccao': {
+      id: '/_authenticated/admin_/prospeccao'
+      path: '/admin/prospeccao'
+      fullPath: '/admin/prospeccao'
+      preLoaderRoute: typeof AuthenticatedAdminProspeccaoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -532,6 +552,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
   AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminProspeccaoRoute: typeof AuthenticatedAdminProspeccaoRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -549,6 +570,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPagesRoute: AuthenticatedPagesRoute,
   AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminProspeccaoRoute: AuthenticatedAdminProspeccaoRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

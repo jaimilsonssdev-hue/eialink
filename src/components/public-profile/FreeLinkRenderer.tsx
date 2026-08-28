@@ -66,7 +66,7 @@ export function FreeLinkRenderer({
         <div className="free-link-card">
           <ProfileHeader bio={bio} onTrack={onTrack} />
           {layout === "showcase" && safeProducts.length > 0 && (
-            <CatalogSection items={safeProducts} />
+            <CatalogSection items={safeProducts} whatsapp={bio.whatsapp} />
           )}
           {(layout === "social" || layout === "neon") && (
             <PublicSocialLinks bio={bio} onTrack={onTrack} />
@@ -81,7 +81,7 @@ export function FreeLinkRenderer({
             <PublicSocialLinks bio={bio} onTrack={onTrack} />
           )}
           {layout !== "showcase" && safeProducts.length > 0 && (
-            <CatalogSection items={safeProducts} />
+            <CatalogSection items={safeProducts} whatsapp={bio.whatsapp} />
           )}
           {bio.pix_key && <PixCard pixKey={bio.pix_key} onTrack={onTrack} />}
           {supplemental}
@@ -103,3 +103,4 @@ export function FreeLinkRenderer({
     </main>
   );
 }
+

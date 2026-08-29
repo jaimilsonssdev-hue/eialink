@@ -838,7 +838,7 @@ function FinalCta() {
         <div className="relative flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="max-w-xl font-display text-4xl font-bold leading-tight">
-              Seu próximo cliente pode estar a um clique de distância.
+              Talvez seu próximo cliente já esteja procurando por você.
             </h2>
             <p className="mt-3 text-sm text-violet-100">
               Comece agora sua vitrine digital gratuitamente.

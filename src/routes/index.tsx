@@ -206,7 +206,14 @@ function Landing() {
     >
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_55%_0,rgba(124,58,237,.16),transparent_24rem),radial-gradient(circle_at_95%_90%,rgba(217,70,239,.11),transparent_30rem)]" />
       <Nav />
-      <Hero />\n      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16">\n        <div className="rounded-3xl border border-violet-300/20 bg-violet-500/[.06] p-6 text-center md:p-10">\n          <p className="eyebrow">Do clique à conversa</p>\n          <h2 className="mt-3 font-display text-3xl font-bold md:text-4xl">Seu link deixa de ser um endereço. Ele passa a ser uma vitrine.</h2>\n          <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#cfc5d8]">Instagram → EiaLink → Produto ou serviço → WhatsApp → Cliente.</p>\n        </div>\n      </section>
+      <Hero />
+      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16">
+        <div className="rounded-3xl border border-violet-300/20 bg-violet-500/[.06] p-6 text-center md:p-10">
+          <p className="eyebrow">Do clique à conversa</p>
+          <h2 className="mt-3 font-display text-3xl font-bold md:text-4xl">Seu link deixa de ser um endereço. Ele passa a ser uma vitrine.</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#cfc5d8]">Instagram → EiaLink → Produto ou serviço → WhatsApp → Cliente.</p>
+        </div>
+      </section>
       <div data-reveal>
         <Difference />
       </div>

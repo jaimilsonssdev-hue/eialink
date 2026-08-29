@@ -3572,3 +3572,19 @@
 @media (max-width:480px) {
   .public-booking-shell { padding:.7rem; }.public-booking-card { padding:.85rem; }.public-slot-grid { grid-template-columns:repeat(3,1fr); }.public-booking-contact { grid-template-columns:1fr; }.public-booking-contact label,.public-booking-contact label:nth-last-child(1) { grid-column:1; }.booking-day { grid-template-columns:3.3rem 1fr auto 1fr; }.booking-rules { grid-template-columns:1fr; }.booking-service-editor { grid-template-columns:1fr 1fr auto; }.booking-service-editor label { min-width:0; }.booking-tabs { display:grid; grid-template-columns:1fr 1fr; width:100%; }.booking-tabs button { justify-content:center; }
 }
+
+
+/* Editor layout v2 — desktop notebook */
+@media (min-width: 1100px) {
+  .premium-builder { max-width: 1440px; margin-inline: auto; }
+  .builder-topbar { min-height: 5.4rem; padding-block: 1rem; border: 1px solid var(--builder-line); border-radius: 1rem; }
+  .builder-layout { grid-template-columns: minmax(34rem, .95fr) minmax(30rem, 1.05fr) !important; gap: 1.5rem !important; align-items: start; }
+  .builder-control-panel { display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .85rem; }
+  .editor-workflow { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .5rem; }
+  .editor-workflow button { min-height: 4.8rem; padding: .7rem .75rem; border-radius: .8rem; text-align: left; }
+  .editor-section-tabs { display: flex; flex-direction: column; gap: .45rem; }
+  .editor-section-tabs button { justify-content: flex-start; min-height: 2.7rem; padding-inline: .75rem; border-radius: .7rem; }
+  .builder-inspector { min-height: 32rem; padding: 1.35rem; }
+  .builder-preview-stage { min-height: 42rem; padding: 1.8rem 1.5rem 2rem; }
+  .editor-phone-preview { width: min(100%, 28rem); box-shadow: 0 24px 70px rgb(0 0 0 / .32); }
+}

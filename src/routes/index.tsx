@@ -207,6 +207,13 @@ function Landing() {
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_55%_0,rgba(124,58,237,.16),transparent_24rem),radial-gradient(circle_at_95%_90%,rgba(217,70,239,.11),transparent_30rem)]" />
       <Nav />
       <Hero />
+      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16">
+        <div className="rounded-3xl border border-violet-300/20 bg-violet-500/[.06] p-6 text-center md:p-10">
+          <p className="eyebrow">Do clique à conversa</p>
+          <h2 className="mt-3 font-display text-3xl font-bold md:text-4xl">Seu link deixa de ser um endereço. Ele passa a ser uma vitrine.</h2>
+          <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#cfc5d8]">Instagram → EiaLink → Produto ou serviço → WhatsApp → Cliente.</p>
+        </div>
+      </section>
       <div data-reveal>
         <Difference />
       </div>
@@ -831,7 +838,7 @@ function FinalCta() {
         <div className="relative flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="max-w-xl font-display text-4xl font-bold leading-tight">
-              Seu próximo cliente pode estar a um clique de distância.
+              Talvez seu próximo cliente já esteja procurando por você.
             </h2>
             <p className="mt-3 text-sm text-violet-100">
               Comece agora sua vitrine digital gratuitamente.

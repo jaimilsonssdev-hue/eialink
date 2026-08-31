@@ -162,17 +162,19 @@ export function TemplateMarketplace() {
               onClick={() => setPreviewTemplate(template)}
               aria-label={`Visualizar prévia do template ${template.name}`}
             >
-              <TemplateThumbnail template={template} />
-              <span>Visualizar prévia</span>
+              <span className="template-preview-phone">
+                <TemplateThumbnail template={template} />
+              </span>
+              {template.badge && (
+                <span className="template-preview-badge">{template.badge}</span>
+              )}
+              <span className="template-preview-hint">Visualizar prévia</span>
             </button>
             <div className="template-gallery-card-body">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold">{template.name}</p>
-                {template.badge && <span className="template-badge">{template.badge}</span>}
-              </div>
+              <p className="template-gallery-name">{template.name}</p>
               <p className="template-gallery-description">{template.description}</p>
               <p className="template-gallery-best-for">
-                Ideal para: {template.bestFor ?? "uma presença profissional"}
+                Ideal para {template.bestFor ?? "uma presença profissional"}
               </p>
               <button
                 type="button"
@@ -184,6 +186,7 @@ export function TemplateMarketplace() {
             </div>
           </article>
         ))}
+
       </div>
 
       {templates.length === 0 && (

@@ -45,7 +45,9 @@ export function TemplateMarketplace() {
   const [activeFilter, setActiveFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
   const [previewTemplate, setPreviewTemplate] = useState<TemplateDefinition | null>(null);
   const [activeTemplateIndex, setActiveTemplateIndex] = useState(0);
+  const parallaxRef = useParallax<HTMLElement>();
   const gridRef = useRef<HTMLDivElement>(null);
+
   const templates = useMemo(
     () =>
       [...TemplateService.list()]

@@ -21,7 +21,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useParallax } from "@/hooks/useParallax";
 import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
+
 import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { createTemplateInstance } from "@/modules/templates/smart/TemplateInstanceFactory";
 import type { TemplateDefinition } from "@/modules/templates/types";
@@ -45,7 +47,9 @@ export function TemplateMarketplace() {
   const [activeFilter, setActiveFilter] = useState<(typeof FILTERS)[number]["id"]>("all");
   const [previewTemplate, setPreviewTemplate] = useState<TemplateDefinition | null>(null);
   const [activeTemplateIndex, setActiveTemplateIndex] = useState(0);
+  const parallaxRef = useParallax<HTMLElement>();
   const gridRef = useRef<HTMLDivElement>(null);
+
   const templates = useMemo(
     () =>
       [...TemplateService.list()]
@@ -77,7 +81,9 @@ export function TemplateMarketplace() {
   };
 
   return (
-    <section className="template-marketplace" aria-labelledby="templates-heading">
+    <section className="template-marketplace" aria-labelledby="templates-heading" ref={parallaxRef}>
+      <span className="template-marketplace-glow" data-layer="1" aria-hidden="true" />
+      <span className="template-marketplace-glow" data-layer="2" aria-hidden="true" />
       <div className="template-marketplace-heading">
         <div>
           <p className="eyebrow">Modelos por nicho</p>
@@ -85,12 +91,16 @@ export function TemplateMarketplace() {
             Escolha uma página que já nasceu para vender
           </h2>
           <p>
-            Todos os visuais mantêm a identidade EIA Link e mudam apenas a estrutura que seu negócio
-            precisa.
+            As prévias abaixo são geradas pelo mesmo motor da sua página pública: o que você vê aqui
+            é exatamente o que o seu cliente recebe.
           </p>
         </div>
-        <Sparkles className="template-marketplace-sparkle" aria-hidden="true" />
+        <span className="template-marketplace-count">
+          <Sparkles aria-hidden="true" />
+          {templates.length} modelos
+        </span>
       </div>
+
 
       <div className="template-niche-filters" role="tablist" aria-label="Filtrar modelos por nicho">
         {FILTERS.map(({ id, label, icon: Icon }) => (
@@ -152,17 +162,19 @@ export function TemplateMarketplace() {
               onClick={() => setPreviewTemplate(template)}
               aria-label={`Visualizar prévia do template ${template.name}`}
             >
-              <TemplateThumbnail template={template} />
-              <span>Visualizar prévia</span>
+              <span className="template-preview-phone">
+                <TemplateThumbnail template={template} />
+              </span>
+              {template.badge && (
+                <span className="template-preview-badge">{template.badge}</span>
+              )}
+              <span className="template-preview-hint">Visualizar prévia</span>
             </button>
             <div className="template-gallery-card-body">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold">{template.name}</p>
-                {template.badge && <span className="template-badge">{template.badge}</span>}
-              </div>
+              <p className="template-gallery-name">{template.name}</p>
               <p className="template-gallery-description">{template.description}</p>
               <p className="template-gallery-best-for">
-                Ideal para: {template.bestFor ?? "uma presença profissional"}
+                Ideal para {template.bestFor ?? "uma presença profissional"}
               </p>
               <button
                 type="button"
@@ -174,6 +186,7 @@ export function TemplateMarketplace() {
             </div>
           </article>
         ))}
+
       </div>
 
       {templates.length === 0 && (

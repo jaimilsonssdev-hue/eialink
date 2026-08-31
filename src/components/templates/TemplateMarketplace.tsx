@@ -21,7 +21,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useParallax } from "@/hooks/useParallax";
 import { TemplateThumbnail } from "@/modules/templates/components/TemplateThumbnail";
+
 import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { createTemplateInstance } from "@/modules/templates/smart/TemplateInstanceFactory";
 import type { TemplateDefinition } from "@/modules/templates/types";

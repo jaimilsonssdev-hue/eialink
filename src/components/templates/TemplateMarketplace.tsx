@@ -77,7 +77,9 @@ export function TemplateMarketplace() {
   };
 
   return (
-    <section className="template-marketplace" aria-labelledby="templates-heading">
+    <section className="template-marketplace" aria-labelledby="templates-heading" ref={parallaxRef}>
+      <span className="template-marketplace-glow" data-layer="1" aria-hidden="true" />
+      <span className="template-marketplace-glow" data-layer="2" aria-hidden="true" />
       <div className="template-marketplace-heading">
         <div>
           <p className="eyebrow">Modelos por nicho</p>
@@ -85,12 +87,16 @@ export function TemplateMarketplace() {
             Escolha uma página que já nasceu para vender
           </h2>
           <p>
-            Todos os visuais mantêm a identidade EIA Link e mudam apenas a estrutura que seu negócio
-            precisa.
+            As prévias abaixo são geradas pelo mesmo motor da sua página pública: o que você vê aqui
+            é exatamente o que o seu cliente recebe.
           </p>
         </div>
-        <Sparkles className="template-marketplace-sparkle" aria-hidden="true" />
+        <span className="template-marketplace-count">
+          <Sparkles aria-hidden="true" />
+          {templates.length} modelos
+        </span>
       </div>
+
 
       <div className="template-niche-filters" role="tablist" aria-label="Filtrar modelos por nicho">
         {FILTERS.map(({ id, label, icon: Icon }) => (

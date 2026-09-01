@@ -207,11 +207,14 @@ export function TemplateMarketplace() {
               <DialogDescription>{previewTemplate.description}</DialogDescription>
             </DialogHeader>
             <div className="template-preview-large">
-              <TemplateThumbnail template={previewTemplate} />
+              <span className="template-preview-phone is-large">
+                <TemplateThumbnail template={previewTemplate} height={620} />
+              </span>
             </div>
             <p className="template-gallery-best-for">
-              Ideal para: {previewTemplate.bestFor ?? "uma presença profissional"}
+              Ideal para {previewTemplate.bestFor ?? "uma presença profissional"}
             </p>
+
             <DialogFooter>
               <button
                 type="button"

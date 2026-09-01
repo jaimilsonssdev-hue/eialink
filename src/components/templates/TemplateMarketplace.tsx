@@ -156,10 +156,17 @@ export function TemplateMarketplace() {
       >
         {templates.map((template) => (
           <article key={template.id} className="template-gallery-card">
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               className="template-preview-trigger"
               onClick={() => setPreviewTemplate(template)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  setPreviewTemplate(template);
+                }
+              }}
               aria-label={`Visualizar prévia do template ${template.name}`}
             >
               <span className="template-preview-phone">
@@ -169,7 +176,8 @@ export function TemplateMarketplace() {
                 <span className="template-preview-badge">{template.badge}</span>
               )}
               <span className="template-preview-hint">Visualizar prévia</span>
-            </button>
+            </div>
+
             <div className="template-gallery-card-body">
               <p className="template-gallery-name">{template.name}</p>
               <p className="template-gallery-description">{template.description}</p>

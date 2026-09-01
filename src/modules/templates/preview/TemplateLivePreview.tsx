@@ -42,7 +42,7 @@ export function TemplateLivePreview({
       className="template-live-preview"
       style={{ height }}
       aria-hidden="true"
-      inert={"" as unknown as boolean}
+      inert
     >
       <div
         className="template-live-preview-stage"

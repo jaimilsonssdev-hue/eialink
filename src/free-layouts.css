@@ -595,3 +595,66 @@
     justify-content: center;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Opções do plano Free: paleta de destaque e formato dos botões.
+   As variáveis já usadas pelos layouts (neon inclusive) passam a ser derivadas
+   do acento escolhido, mantendo o mesmo desenho editorial.
+--------------------------------------------------------------------------- */
+.free-link-shell {
+  --free-accent-1: #34d399;
+  --free-accent-2: #22d3ee;
+  --free-accent-3: #a78bfa;
+  --free-button-radius: 1rem;
+}
+
+.free-link-shell.free-link-accent-sunset {
+  --free-accent-1: #fb923c;
+  --free-accent-2: #f472b6;
+  --free-accent-3: #a855f7;
+}
+.free-link-shell.free-link-accent-ocean {
+  --free-accent-1: #38bdf8;
+  --free-accent-2: #3b82f6;
+  --free-accent-3: #6366f1;
+}
+.free-link-shell.free-link-accent-emerald {
+  --free-accent-1: #4ade80;
+  --free-accent-2: #10b981;
+  --free-accent-3: #14b8a6;
+}
+.free-link-shell.free-link-accent-gold {
+  --free-accent-1: #fcd34d;
+  --free-accent-2: #f59e0b;
+  --free-accent-3: #f97316;
+}
+
+.free-link-shell.free-link-layout-neon {
+  --neon-green: var(--free-accent-1);
+  --neon-cyan: var(--free-accent-2);
+  --neon-violet: var(--free-accent-3);
+}
+
+.free-link-shell.free-link-buttons-pill {
+  --free-button-radius: 999px;
+}
+.free-link-shell.free-link-buttons-square {
+  --free-button-radius: 0.35rem;
+}
+
+.free-link-shell .public-profile-action,
+.free-link-shell .public-profile-action-icon,
+.free-link-shell .free-link-upgrade {
+  border-radius: var(--free-button-radius);
+}
+
+.free-link-shell.free-link-buttons-pill .public-profile-action-icon {
+  border-radius: 999px;
+}
+
+.free-link-shell .public-profile-action-whatsapp {
+  background:
+    linear-gradient(#0c0d12, #0c0d12) padding-box,
+    linear-gradient(110deg, var(--free-accent-1), var(--free-accent-2), var(--free-accent-3))
+      border-box;
+}

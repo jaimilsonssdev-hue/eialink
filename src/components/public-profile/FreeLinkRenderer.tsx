@@ -45,6 +45,8 @@ export function FreeLinkRenderer({
 }) {
   const layout = freeLayoutFromTemplate(bio.template_id);
   const typography = freeTypographyFromTemplate(bio.template_id);
+  const accent = freeAccentFromTemplate(bio.template_id);
+  const buttonShape = freeButtonShapeFromTemplate(bio.template_id);
   const safeLinks = links
     .map((link) => ({ ...link, url: safeExternalUrl(link.url) }))
     .filter((link): link is typeof link & { url: string } => Boolean(link.url));
@@ -55,7 +57,7 @@ export function FreeLinkRenderer({
 
   return (
     <main
-      className={`bio-theme ${bio.theme || "aurora"} free-link-shell free-link-layout-${layout} free-link-typography-${typography}`}
+      className={`bio-theme ${bio.theme || "aurora"} free-link-shell free-link-layout-${layout} free-link-typography-${typography} free-link-accent-${accent} free-link-buttons-${buttonShape}`}
     >
       <div className="free-link-frame">
         <Banner

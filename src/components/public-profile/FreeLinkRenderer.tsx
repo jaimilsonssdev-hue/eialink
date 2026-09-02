@@ -3,7 +3,12 @@ import { ArrowUpRight, Sparkles } from "lucide-react";
 import type { CatalogItem } from "@/modules/products/types";
 import { CatalogSection } from "@/modules/products/components/CatalogSection";
 import { safeExternalUrl } from "@/lib/safe-url";
-import { freeTemplateBase, freeTypographyFromTemplate } from "@/lib/free-layout-options";
+import {
+  freeAccentFromTemplate,
+  freeButtonShapeFromTemplate,
+  freeTemplateBase,
+  freeTypographyFromTemplate,
+} from "@/lib/free-layout-options";
 import { ActionButtons } from "./ActionButtons";
 import { Banner } from "./Banner";
 import { Footer } from "./Footer";

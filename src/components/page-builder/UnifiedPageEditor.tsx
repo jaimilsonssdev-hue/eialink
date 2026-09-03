@@ -802,6 +802,65 @@ function SectionForm({
               </p>
             </Field>
           )}
+          {!planAccess?.isPro && (
+            <>
+              <Field label="Cor de destaque">
+                <div className="grid grid-cols-5 gap-2">
+                  {FREE_ACCENTS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-label={option.label}
+                      onClick={() => {
+                        setFreeAccent(option.id);
+                        updateBio({
+                          template_id: freeTemplateWithOptions(draftTemplate, {
+                            typography: freeTypography,
+                            accent: option.id,
+                            shape: freeShape,
+                          }),
+                        });
+                      }}
+                      className={`rounded-lg border p-1.5 transition-all ${freeAccent === option.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/10" : "border-border hover:border-[color:var(--primary)]/50"}`}
+                    >
+                      <span
+                        className="block h-6 w-full rounded-md"
+                        style={{
+                          background: `linear-gradient(110deg, ${option.colors[0]}, ${option.colors[1]}, ${option.colors[2]})`,
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Define os brilhos dos botões e das bordas.
+                </p>
+              </Field>
+              <Field label="Formato dos botões">
+                <div className="grid grid-cols-3 gap-2">
+                  {FREE_BUTTON_SHAPES.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => {
+                        setFreeShape(option.id);
+                        updateBio({
+                          template_id: freeTemplateWithOptions(draftTemplate, {
+                            typography: freeTypography,
+                            accent: freeAccent,
+                            shape: option.id,
+                          }),
+                        });
+                      }}
+                      className={`border px-2 py-3 text-sm transition-all ${option.id === "pill" ? "rounded-full" : option.id === "square" ? "rounded-none" : "rounded-lg"} ${freeShape === option.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            </>
+          )}
           <MediaUploader
             label="Imagem de capa"
             value={bio.cover_url}

@@ -35,14 +35,10 @@ async function scrapeGoogleMaps(niche: string, city: string): Promise<RawScraped
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
+    const timeout = setTimeout(() => controller.abort(), 35000);
 
     const res = await fetch(jinaUrl, {
       signal: controller.signal,
-      headers: {
-        "Accept-Language": "pt-BR,pt;q=0.9",
-        "X-No-Cache": "true",
-      },
     });
     clearTimeout(timeout);
 
@@ -60,8 +56,9 @@ async function scrapeGoogleMaps(niche: string, city: string): Promise<RawScraped
 }
 
 function parseGoogleMapsMarkdown(text: string, niche: string, city: string): RawScrapedLead[] {
-  const placePattern = /\[([^\]]+)\]\(https:\/\/www\.google\.com\/maps\/place\/[^)]+\)/g;
+  const placePattern = /\[([^\]]+)\]\(https?:\/\/(?:www\.)?(?:google\.[a-z.]+|maps\.google\.[a-z.]+)\/maps\/place\/[^)]+\)/gi;
   const parts = text.split(placePattern);
+
   const leads: RawScrapedLead[] = [];
   const seen = new Set<string>();
 
@@ -144,12 +141,9 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
 
     const res = await fetch(jinaUrl, {
       signal: controller.signal,
-      headers: {
-        "Accept-Language": "pt-BR,pt;q=0.9",
-        "X-No-Cache": "true",
-      },
     });
     clearTimeout(timeout);
+
 
     if (!res.ok) return [];
     const text = await res.text();

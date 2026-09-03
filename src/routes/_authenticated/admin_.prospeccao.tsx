@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 
 import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
+import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
 import { PageService } from "@/modules/page/services/PageService";
+
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
 import { buildPreview, type CsvRowPreview } from "@/modules/prospecting/csv";
@@ -220,15 +222,26 @@ function ProspectingPage() {
     setIsSearching(true);
     setFeedback(null);
     try {
-      const results = await runLiveProspecting({
-        data: { niche: searchNiche.trim(), city: searchCity.trim(), limit: 15 },
-      });
+      let results: ProspectDraft[] = [];
+      try {
+        // Tentativa 1: Execução direta no cliente (super rápida, sem intermediação de servidor)
+        results = await searchGoogleMapsAndInstagram(searchNiche.trim(), searchCity.trim(), 15);
+      } catch (clientErr) {
+        console.warn("[Prospecção] Execução direta no cliente falhou, tentando via servidor:", clientErr);
+        // Tentativa 2: Fallback para RPC do servidor caso o navegador bloqueie por adblocker
+        results = await runLiveProspecting({
+          data: { niche: searchNiche.trim(), city: searchCity.trim(), limit: 15 },
+        });
+      }
+
       setLiveResults(results);
       setSelectedLiveIndices(new Set(results.map((_, i) => i)));
       if (results.length === 0) {
-        setFeedback("Nenhuma empresa encontrada com esses termos. Tente variar o nicho ou cidade.");
+        setFeedback(
+          "Nenhuma empresa encontrada com esses termos. Verifique se digitou o nicho comum (ex: Dentista, Clínica, Barbearia) e o nome da cidade.",
+        );
       } else {
-        setFeedback(`Varredura concluída! ${results.length} empresa(s) localizada(s).`);
+        setFeedback(`Varredura concluída! ${results.length} empresa(s) localizada(s) em tempo real.`);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao realizar a varredura.";
@@ -237,6 +250,7 @@ function ProspectingPage() {
       setIsSearching(false);
     }
   }
+
 
   function handleImportLive() {
     if (!liveResults || !liveResults.length) return;

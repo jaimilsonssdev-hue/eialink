@@ -107,4 +107,13 @@ export const ProspectingService = {
     const { error } = await supabase.from("prospected_companies").delete().eq("id", id);
     if (error) throw new Error(error.message);
   },
+
+  async updateNotes(id: string, notes: string) {
+    const { error } = await supabase
+      .from("prospected_companies")
+      .update({ notes })
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+  },
 };
+

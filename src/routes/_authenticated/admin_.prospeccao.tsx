@@ -11,8 +11,16 @@ import {
   Trash2,
   Plus,
   CheckCircle2,
+  Search,
+  Sparkles,
+  Globe2,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
+import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
+import { PageService } from "@/modules/page/services/PageService";
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
+
 import { buildPreview, type CsvRowPreview } from "@/modules/prospecting/csv";
 import {
   buildDedupeKey,
@@ -79,7 +87,13 @@ function isToday(value: string | null) {
 function whatsappLink(company: ProspectedCompany) {
   const phone = company.whatsapp ?? company.phone;
   if (!phone) return null;
-  const text = `Olá, ${company.name}! Aqui é da EIA Digital. Vi que a empresa ainda não tem uma página profissional na internet e preparei uma sugestão gratuita de presença digital para vocês. Posso te mostrar?`;
+  const matchDemo = company.notes?.match(/https?:\/\/[^\s]+/);
+  const demoUrl = matchDemo ? matchDemo[0] : null;
+
+  const text = demoUrl
+    ? `Olá, ${company.name}! Aqui é da EIA Link. Montei uma sugestão exclusiva de presença digital para vocês no ar: ${demoUrl} . Posso te mostrar como funciona para receber agendamentos direto no WhatsApp?`
+    : `Olá, ${company.name}! Aqui é da EIA Link. Vi que a empresa ainda não tem uma página profissional na internet e preparei uma sugestão gratuita de presença digital para vocês. Posso te mostrar?`;
+
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
@@ -91,6 +105,15 @@ function ProspectingPage() {
   const [preview, setPreview] = useState<CsvRowPreview[] | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [activeCompany, setActiveCompany] = useState<ProspectedCompany | null>(null);
+
+  // Estados da Varredura Automática (Google Maps + Instagram)
+  const [searchNiche, setSearchNiche] = useState("Clínica");
+  const [searchCity, setSearchCity] = useState("Teixeira de Freitas, BA");
+  const [isSearching, setIsSearching] = useState(false);
+  const [liveResults, setLiveResults] = useState<ReturnType<typeof ProspectingService.importMany> extends Promise<infer _> ? any[] : any[]>([]);
+  const [selectedLiveIndices, setSelectedLiveIndices] = useState<Set<number>>(new Set());
+  const [creatingPageId, setCreatingPageId] = useState<string | null>(null);
+
 
   const companiesQuery = useQuery({
     queryKey: ["prospecting", "companies"],
@@ -181,6 +204,65 @@ function ProspectingPage() {
   }
 
   const importable = (preview ?? []).filter((row) => row.draft && !row.duplicateOf);
+
+  async function handleLiveSearch(event: React.FormEvent) {
+    event.preventDefault();
+    if (!searchNiche.trim() || !searchCity.trim()) return;
+    setIsSearching(true);
+    setFeedback(null);
+    try {
+      const results = await runLiveProspecting({
+        data: { niche: searchNiche.trim(), city: searchCity.trim(), limit: 15 },
+      });
+      setLiveResults(results);
+      setSelectedLiveIndices(new Set(results.map((_, i) => i)));
+      if (results.length === 0) {
+        setFeedback("Nenhuma empresa encontrada com esses termos. Tente variar o nicho ou cidade.");
+      } else {
+        setFeedback(`Varredura concluída! ${results.length} empresa(s) localizada(s).`);
+      }
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao realizar a varredura.";
+      setFeedback(message);
+    } finally {
+      setIsSearching(false);
+    }
+  }
+
+  function handleImportLive() {
+    if (!liveResults || !liveResults.length) return;
+    const selected = liveResults.filter((_, i) => selectedLiveIndices.has(i));
+    if (!selected.length) return;
+    importMutation.mutate(selected);
+    setLiveResults([]);
+  }
+
+  async function handleGenerateDemo(company: ProspectedCompany) {
+    setCreatingPageId(company.id);
+    setFeedback(null);
+    try {
+      const page = await PageService.createProspectDemoPage({
+        companyName: company.name,
+        whatsapp: company.whatsapp ?? company.phone,
+        niche: company.niche,
+        city: company.city,
+        instagram: company.instagram,
+      });
+      const url = `https://eialink.com.br/p/${page.slug}`;
+      const newNotes = company.notes
+        ? `${company.notes}\nDemo: ${url}`
+        : `Demo: ${url}`;
+      await ProspectingService.updateNotes(company.id, newNotes);
+      setFeedback(`Página gerada com sucesso para ${company.name}! O link ${url} já foi anexado à mensagem do WhatsApp.`);
+      invalidate();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao gerar página de demonstração.";
+      setFeedback(message);
+    } finally {
+      setCreatingPageId(null);
+    }
+  }
+
 
   function handleManualSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -292,6 +374,29 @@ function ProspectingPage() {
                 <span className={`rounded-full px-2 py-0.5 text-xs ${PRIORITY_STYLE[company.priority]}`}>
                   {company.score}
                 </span>
+                {company.notes?.match(/https?:\/\/[^\s]+/) ? (
+                  <a
+                    href={company.notes.match(/https?:\/\/[^\s]+/)![0]}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5" /> Ver Página
+                  </a>
+                ) : (
+                  <button
+                    className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-1 text-xs transition-all hover:bg-[color:var(--primary)]/25"
+                    onClick={() => void handleGenerateDemo(company)}
+                    disabled={creatingPageId === company.id}
+                  >
+                    {creatingPageId === company.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="h-3.5 w-3.5" />
+                    )}
+                    {creatingPageId === company.id ? "Gerando..." : "Gerar Página"}
+                  </button>
+                )}
                 {whatsappLink(company) && (
                   <a
                     href={whatsappLink(company)!}
@@ -309,6 +414,7 @@ function ProspectingPage() {
                   <CheckCircle2 className="h-3.5 w-3.5" /> Registrar
                 </button>
               </div>
+
             </li>
           ))}
           {!attackList.length && (
@@ -317,6 +423,184 @@ function ProspectingPage() {
             </li>
           )}
         </ul>
+      {/* Varredura Automática (Google Maps & Instagram) */}
+      <section className="rounded-2xl border border-[color:var(--primary)]/30 bg-card p-5 space-y-4 shadow-lg shadow-[color:var(--primary)]/5">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 className="font-display text-lg font-bold flex items-center gap-2 text-foreground">
+              <Globe2 className="h-5 w-5 text-[color:var(--primary)]" /> Varredura Automática (Google Maps & Instagram)
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Busque empresas reais e perfis comerciais sem site na cidade desejada em tempo real.
+            </p>
+          </div>
+          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
+            ⚡ Tempo Real & Sem Bloqueios
+          </span>
+        </div>
+
+        <form onSubmit={handleLiveSearch} className="grid gap-3 sm:grid-cols-5">
+          <input
+            value={searchNiche}
+            onChange={(e) => setSearchNiche(e.target.value)}
+            placeholder="Nicho (ex: Clínica, Dentista, Barbearia)"
+            className="input-field sm:col-span-2"
+            disabled={isSearching}
+            required
+          />
+          <input
+            value={searchCity}
+            onChange={(e) => setSearchCity(e.target.value)}
+            placeholder="Cidade (ex: Teixeira de Freitas, BA)"
+            className="input-field sm:col-span-2"
+            disabled={isSearching}
+            required
+          />
+          <button
+            type="submit"
+            disabled={isSearching}
+            className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
+          >
+            {isSearching ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4" /> Iniciar Varredura
+              </>
+            )}
+          </button>
+        </form>
+
+        {isSearching && (
+          <div className="flex items-center gap-3 rounded-xl border border-border/80 bg-surface-elevated/40 p-4 text-sm text-muted-foreground animate-pulse">
+            <Loader2 className="h-5 w-5 animate-spin text-[color:var(--primary)]" />
+            <div>
+              <p className="font-medium text-foreground">Varrendo o Google Maps e perfis públicos do Instagram...</p>
+              <p className="text-xs">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
+            </div>
+          </div>
+        )}
+
+        {liveResults && liveResults.length > 0 && (
+          <div className="space-y-3 pt-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm font-medium">
+                {liveResults.length} empresa(s) localizada(s) · {selectedLiveIndices.size} selecionada(s)
+              </p>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                  onClick={() => {
+                    if (selectedLiveIndices.size === liveResults.length) {
+                      setSelectedLiveIndices(new Set());
+                    } else {
+                      setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
+                    }
+                  }}
+                >
+                  {selectedLiveIndices.size === liveResults.length ? "Desmarcar todas" : "Selecionar todas"}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleImportLive}
+                  disabled={selectedLiveIndices.size === 0 || importMutation.isPending}
+                  className="rounded-xl px-4 py-2 text-sm font-medium text-[color:var(--primary-foreground)] transition-all"
+                  style={{ background: "var(--gradient-primary)" }}
+                >
+                  {importMutation.isPending
+                    ? "Salvando..."
+                    : `Importar ${selectedLiveIndices.size} para o Radar`}
+                </button>
+              </div>
+            </div>
+
+            <div className="max-h-96 overflow-auto rounded-xl border border-border">
+              <table className="w-full text-sm">
+                <thead className="bg-surface-elevated/60 text-left text-xs uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 w-8">
+                      <input
+                        type="checkbox"
+                        checked={selectedLiveIndices.size === liveResults.length}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
+                          } else {
+                            setSelectedLiveIndices(new Set());
+                          }
+                        }}
+                      />
+                    </th>
+                    <th className="px-3 py-2">Empresa</th>
+                    <th className="px-3 py-2">WhatsApp</th>
+                    <th className="px-3 py-2">Instagram</th>
+                    <th className="px-3 py-2">Status do Site</th>
+                    <th className="px-3 py-2">Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {liveResults.map((lead, index) => {
+                    const isSelected = selectedLiveIndices.has(index);
+                    return (
+                      <tr
+                        key={lead.dedupe_key || index}
+                        className={`border-t border-border/60 transition-colors ${isSelected ? "bg-[color:var(--primary)]/5" : "opacity-75"}`}
+                      >
+                        <td className="px-3 py-2">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {
+                              const next = new Set(selectedLiveIndices);
+                              if (next.has(index)) next.delete(index);
+                              else next.add(index);
+                              setSelectedLiveIndices(next);
+                            }}
+                          />
+                        </td>
+                        <td className="px-3 py-2">
+                          <p className="font-medium text-foreground">{lead.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
+                          </p>
+                        </td>
+                        <td className="px-3 py-2 text-xs font-mono">
+                          {lead.whatsapp || "—"}
+                        </td>
+                        <td className="px-3 py-2 text-xs">
+                          {lead.instagram ? (
+                            <span className="text-[color:var(--accent)] font-medium">
+                              {lead.instagram}
+                            </span>
+                          ) : (
+                            "—"
+                          )}
+                        </td>
+                        <td className="px-3 py-2">
+                          {lead.has_website ? (
+                            <span className="rounded-md border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
+                              Já tem site
+                            </span>
+                          ) : (
+                            <span className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-xs font-medium text-emerald-400">
+                              ⭐ Sem site (Oportunidade)
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 font-bold text-sm">
+                          {lead.score}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </section>
 
       {/* Importação CSV */}
@@ -511,6 +795,39 @@ function ProspectingPage() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
+                      {company.notes?.match(/https?:\/\/[^\s]+/) ? (
+                        <a
+                          href={company.notes.match(/https?:\/\/[^\s]+/)![0]}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" /> Ver Página
+                        </a>
+                      ) : (
+                        <button
+                          className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-1 text-xs transition-all hover:bg-[color:var(--primary)]/25"
+                          onClick={() => void handleGenerateDemo(company)}
+                          disabled={creatingPageId === company.id}
+                        >
+                          {creatingPageId === company.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Sparkles className="h-3.5 w-3.5" />
+                          )}
+                          {creatingPageId === company.id ? "Gerando..." : "Gerar Página"}
+                        </button>
+                      )}
+                      {whatsappLink(company) && (
+                        <a
+                          href={whatsappLink(company)!}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                        </a>
+                      )}
                       <button
                         className="rounded-lg border border-border px-2 py-1 text-xs"
                         onClick={() => setActiveCompany(company)}
@@ -526,6 +843,7 @@ function ProspectingPage() {
                       </button>
                     </div>
                   </td>
+
                 </tr>
               ))}
               {!filtered.length && (

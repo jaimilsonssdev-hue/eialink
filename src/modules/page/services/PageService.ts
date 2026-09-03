@@ -69,6 +69,46 @@ export const PageService = {
     if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a página.");
     return data;
   },
+  async createProspectDemoPage({
+    companyName,
+    whatsapp,
+    niche,
+    city,
+    instagram,
+  }: {
+    companyName: string;
+    whatsapp?: string | null;
+    niche?: string | null;
+    city?: string | null;
+    instagram?: string | null;
+  }) {
+    const userId = await this.getCurrentUserId();
+    const cleanSlug = slugify(companyName);
+    const suffix = crypto.randomUUID().slice(0, 4);
+    const slug = `${cleanSlug}-${suffix}`;
+    const description = `${companyName} em ${city || "sua região"}. Agendamentos e atendimento rápido pelo WhatsApp.`;
+
+    const { data, error } = await supabase
+      .from("bio_pages")
+      .insert({
+        user_id: userId,
+        display_name: companyName,
+        slug,
+        whatsapp: whatsapp ?? null,
+        whatsapp_button_label: "Falar no WhatsApp",
+        whatsapp_message: `Olá! Vi a página da ${companyName} e gostaria de mais informações.`,
+        instagram: instagram ?? null,
+        template_id: "spotlight-neon",
+        description,
+        theme: "aurora",
+        published: true,
+      })
+      .select("*")
+      .single();
+
+    if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a demonstração.");
+    return data;
+  },
   async uploadMedia(file: File, path: string) {
     const { error } = await supabase.storage
       .from("bio-media")
@@ -77,3 +117,4 @@ export const PageService = {
     return supabase.storage.from("bio-media").getPublicUrl(path).data.publicUrl;
   },
 };
+

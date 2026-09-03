@@ -74,12 +74,13 @@ export function ActionButtons({ bio, links, onTrack, linkSectionLabel }: ActionB
       {/* Botão de WhatsApp Principal com Atribuição Dinâmica ou Triagem */}
       {attributedWhatsAppHref && (
         <a
-          href={attributedWhatsAppHref}
+          href={isTriageActive ? "#triage" : attributedWhatsAppHref}
           target={isTriageActive ? undefined : "_blank"}
           rel={isTriageActive ? undefined : "noopener noreferrer"}
           onClick={handleWhatsAppClick}
           className="public-profile-action public-profile-action-whatsapp cursor-pointer"
         >
+
           <span className="public-profile-action-icon">
             <MessageCircle className="h-5 w-5" />
           </span>

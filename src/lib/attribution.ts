@@ -23,36 +23,36 @@ export function detectLeadAttribution(): LeadAttribution {
 
   // 1. Anúncios pagos
   if (utmMedium.includes("cpc") || utmMedium.includes("paid") || utmSource.includes("ads") || urlParams.has("gclid") || urlParams.has("fbclid")) {
-    return { source: "ads", label: "Anúncios Patrocinados", tag: "[Via Anúncio]" };
+    return { source: "ads", label: "Anúncios Patrocinados", tag: "[Anúncio]" };
   }
 
   // 2. QR Code / Balcão
   if (utmSource.includes("qr") || utmSource.includes("balcao") || utmSource.includes("mesa") || utmSource.includes("display")) {
-    return { source: "qr_code", label: "QR Code / Balcão Físico", tag: "[Via QR Code Balcão]" };
+    return { source: "qr_code", label: "QR Code / Balcão Físico", tag: "[QR Code Balcão]" };
   }
 
   // 3. Instagram
   if (utmSource.includes("insta") || utmSource.includes("ig") || referrer.includes("instagram.com")) {
-    return { source: "instagram", label: "Instagram", tag: "[Via Instagram]" };
+    return { source: "instagram", label: "Instagram", tag: "[Instagram]" };
   }
 
   // 4. Google (Maps / Orgânico)
   if (utmSource.includes("google") || utmSource.includes("maps") || referrer.includes("google.")) {
-    return { source: "google", label: "Google Maps / Busca", tag: "[Via Google]" };
+    return { source: "google", label: "Google Maps / Busca", tag: "[Google Maps]" };
   }
 
   // 5. TikTok
   if (utmSource.includes("tiktok") || referrer.includes("tiktok.com")) {
-    return { source: "tiktok", label: "TikTok", tag: "[Via TikTok]" };
+    return { source: "tiktok", label: "TikTok", tag: "[TikTok]" };
   }
 
   // 6. Facebook
   if (utmSource.includes("facebook") || referrer.includes("facebook.com")) {
-    return { source: "facebook", label: "Facebook", tag: "[Via Facebook]" };
+    return { source: "facebook", label: "Facebook", tag: "[Facebook]" };
   }
 
-  // 7. Padrão: Direto ou Link compartilhado
-  return { source: "direct", label: "Acesso Direto / Bio", tag: "[Via Bio]" };
+  // 7. Padrão: Direto ou Link compartilhado (SEM TAG ROBÓTICA)
+  return { source: "direct", label: "Acesso Direto / Bio", tag: "" };
 }
 
 /**
@@ -67,11 +67,13 @@ export function buildAttributedWhatsAppUrl(
   if (!digits) return "#";
 
   const attribution = detectLeadAttribution();
-  const tag = customPrefix || attribution.tag;
+  const tag = (customPrefix !== undefined ? customPrefix : attribution.tag).trim();
   const message = baseMessage?.trim() || "Olá! Gostaria de mais informações.";
 
-  // Evita duplicar a tag se já estiver presente
-  const fullMessage = message.startsWith("[") ? message : `${tag} ${message}`;
+  // Se não houver tag (ex: acesso direto normal), usa a mensagem 100% limpa
+  const fullMessage = tag ? (message.startsWith("[") ? message : `${tag} ${message}`) : message;
 
   return `https://wa.me/${digits}?text=${encodeURIComponent(fullMessage)}`;
 }
+
+

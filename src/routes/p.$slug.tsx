@@ -1,5 +1,5 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
@@ -8,6 +8,7 @@ import type { CatalogItem } from "@/modules/products/types";
 import { BrandingProvider } from "@/components/public-profile/BrandingContext";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 import { DemoConversionBanner } from "@/components/public/DemoConversionBanner";
+import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/WhatsAppTriageModal";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -200,14 +201,52 @@ function PublicBio() {
     await navigator.clipboard.writeText(window.location.href);
   }
 
+  const [isTriageOpen, setIsTriageOpen] = useState(false);
+
   const isDemo = Boolean(
     bio.description?.startsWith("[DEMO]") ||
       (bio.social_links as any)?.is_demo ||
       (typeof window !== "undefined" && new URLSearchParams(window.location.search).get("demo") === "1"),
   );
 
+  const socialConfig = (bio.social_links as Record<string, any>) || {};
+  const isTriageActive = Boolean(socialConfig.triage_enabled);
+
+  const triageConfig: TriageConfig = {
+    enabled: isTriageActive,
+    headerTitle: socialConfig.triage_title || "Atendimento Rápido",
+    questions: socialConfig.triage_questions || [
+      {
+        title: "Como podemos te ajudar hoje?",
+        options: ["Agendamento de Consulta / Atendimento", "Saber Preços e Valores", "Tirar Dúvidas Gerais"],
+      },
+      {
+        title: "Qual o melhor período para você?",
+        options: ["Manhã", "Tarde", "Horário Comercial"],
+      },
+    ],
+  };
+
+  const handleContainerClickCapture = (e: React.MouseEvent) => {
+    if (!isTriageActive || !bio.whatsapp) return;
+    const anchor = (e.target as HTMLElement).closest("a");
+    if (!anchor) return;
+    const href = anchor.getAttribute("href") || "";
+    // Intercepta qualquer botão que aponte para o WhatsApp
+    if (
+      href.includes("wa.me") ||
+      href.includes("whatsapp.com") ||
+      anchor.classList.contains("public-profile-action-whatsapp") ||
+      anchor.classList.contains("niche-clinic-cta-primary")
+    ) {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsTriageOpen(true);
+    }
+  };
+
   return (
-    <>
+    <div onClickCapture={handleContainerClickCapture}>
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
       <BrandingProvider show={!hasProPlan && !isDemo}>
         {hasProPlan ? (
@@ -244,7 +283,19 @@ function PublicBio() {
           />
         )}
       </BrandingProvider>
-    </>
+
+      {/* Modal de Triagem Inteligente para todos os layouts */}
+      {isTriageActive && bio.whatsapp && (
+        <WhatsAppTriageModal
+          isOpen={isTriageOpen}
+          onClose={() => setIsTriageOpen(false)}
+          phone={bio.whatsapp}
+          config={triageConfig}
+          baseMessage={bio.whatsapp_message}
+        />
+      )}
+    </div>
   );
 }
+
 

@@ -30,16 +30,21 @@ interface RawScrapedLead {
  */
 async function scrapeGoogleMaps(niche: string, city: string): Promise<RawScrapedLead[]> {
   const cleanQuery = `${niche} em ${city}`.replace(/[^\w\sÀ-ÿ]/g, " ").trim().replace(/\s+/g, "+");
-  const targetUrl = `https://www.google.com/maps/search/${cleanQuery}?hl=pt-BR`;
+  const targetUrl = `https://www.google.com/maps/search/${cleanQuery}`;
   const jinaUrl = `https://r.jina.ai/${targetUrl}`;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 12000);
+
     const res = await fetch(jinaUrl, {
+      signal: controller.signal,
       headers: {
         "Accept-Language": "pt-BR,pt;q=0.9",
         "X-No-Cache": "true",
       },
     });
+    clearTimeout(timeout);
 
     if (!res.ok) {
       console.warn(`[ProspectingEngine] Jina Maps retornou status ${res.status}`);
@@ -88,7 +93,6 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
     const reviewsMatch = block.match(/\((\d+)\)/) || block.match(/([\d.]+)\s*(?:avaliações|avaliação|reviews)/i);
     const reviewsCount = reviewsMatch ? parseInt(reviewsMatch[1].replace(/\D/g, ""), 10) : null;
 
-
     // Detecta se tem website indicado
     const hasWebsite = /\[?(?:Website|Site|Ver site)\]?/i.test(block) ||
       /(?:https?:\/\/(?!www\.google)[a-zA-Z0-9.-]+\.[a-z]{2,})/i.test(block);
@@ -126,7 +130,7 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
 }
 
 /**
- * Busca perfis do Instagram através da busca indexada pública.
+ * Busca perfis do Instagram através da busca indexada pública com timeout seguro.
  */
 async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedLead[]> {
   const cleanCity = city.replace(/[^\w\sÀ-ÿ]/g, " ").trim();
@@ -135,12 +139,17 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
   const jinaUrl = `https://r.jina.ai/${targetUrl}`;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000); // 4s timeout para não atrasar a busca principal
+
     const res = await fetch(jinaUrl, {
+      signal: controller.signal,
       headers: {
         "Accept-Language": "pt-BR,pt;q=0.9",
         "X-No-Cache": "true",
       },
     });
+    clearTimeout(timeout);
 
     if (!res.ok) return [];
     const text = await res.text();
@@ -182,8 +191,7 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
     }
 
     return leads;
-  } catch (err) {
-    console.error("[ProspectingEngine] Erro ao consultar Instagram:", err);
+  } catch {
     return [];
   }
 }
@@ -212,10 +220,11 @@ export async function searchGoogleMapsAndInstagram(
     const phone = normalizePhone(raw.phone);
     const whatsapp = normalizePhone(raw.whatsapp) ?? phone;
     const instagram = normalizeInstagram(raw.instagram);
-    const dedupe_key = buildDedupeKey(name, city, phone);
+    const dedupe_key = buildDedupeKey({ name, city, phone, whatsapp, instagram });
 
     if (seenKeys.has(dedupe_key)) continue;
     seenKeys.add(dedupe_key);
+
 
     const draftBase = {
       name,

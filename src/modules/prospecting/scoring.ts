@@ -87,22 +87,44 @@ export function normalizeNumber(value: string | number | null | undefined) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function buildDedupeKey(input: {
-  name: string;
-  city: string | null;
-  whatsapp: string | null;
-  phone: string | null;
-  instagram: string | null;
-}) {
-  const phone = input.whatsapp ?? input.phone;
+export function buildDedupeKey(
+  inputOrName:
+    | string
+    | {
+        name: string;
+        city?: string | null;
+        whatsapp?: string | null;
+        phone?: string | null;
+        instagram?: string | null;
+      },
+  cityArg?: string | null,
+  phoneArg?: string | null,
+) {
+  let name = "";
+  let city: string | null = null;
+  let phone: string | null = null;
+  let instagram: string | null = null;
+
+  if (typeof inputOrName === "object" && inputOrName !== null) {
+    name = inputOrName.name || "";
+    city = inputOrName.city ?? null;
+    phone = inputOrName.whatsapp ?? inputOrName.phone ?? null;
+    instagram = inputOrName.instagram ?? null;
+  } else {
+    name = String(inputOrName || "");
+    city = cityArg ?? null;
+    phone = phoneArg ?? null;
+  }
+
   if (phone) return `tel:${phone}`;
-  if (input.instagram) return `ig:${input.instagram.replace("@", "")}`;
-  const slug = stripAccents(`${input.name} ${input.city ?? ""}`)
+  if (instagram) return `ig:${instagram.replace("@", "")}`;
+  const slug = stripAccents(`${name} ${city ?? ""}`)
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "");
   return `nome:${slug}`;
 }
+
 
 /**
  * Score determinístico 0-100: quanto maior, maior a dor de presença digital

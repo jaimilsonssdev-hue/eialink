@@ -37,7 +37,8 @@ export const socialLinksSchema = z
     youtube: socialLinkValue.optional(),
     website: socialLinkValue.optional(),
   })
-  .strict();
+  .passthrough();
+
 
 export function parseSocialLinks(value: unknown) {
   return socialLinksSchema.safeParse(value);

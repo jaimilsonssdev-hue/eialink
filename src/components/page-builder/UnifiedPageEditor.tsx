@@ -16,6 +16,8 @@ import {
   WalletCards,
   Youtube,
   X,
+  Star,
+  MessageSquareHeart,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
@@ -1173,8 +1175,95 @@ function SectionForm({
               onChange={(event) => updateBio({ whatsapp_button_subtitle: event.target.value })}
             />
           </Field>
+
+          {/* Módulo de Reputação & Avaliações Google Maps */}
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                  <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                  <span>Filtro 5 Estrelas (Google Maps)</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Estimula avaliações 5 estrelas no Google e filtra insatisfações direto para seu WhatsApp.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={Boolean((bio.social_links as any)?.google_review_enabled)}
+                onChange={(e) => {
+                  const current = (bio.social_links as Record<string, any>) || {};
+                  updateBio({
+                    social_links: {
+                      ...current,
+                      google_review_enabled: e.target.checked,
+                    },
+                  });
+                }}
+                className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
+              />
+            </div>
+
+            {Boolean((bio.social_links as any)?.google_review_enabled) && (
+              <Field label="Link direto de avaliação do Google da sua empresa">
+                <input
+                  className="input-base"
+                  value={(bio.social_links as any)?.google_review_url || ""}
+                  placeholder="https://g.page/r/.../review ou link de pesquisa"
+                  onChange={(e) => {
+                    const current = (bio.social_links as Record<string, any>) || {};
+                    updateBio({
+                      social_links: {
+                        ...current,
+                        google_review_url: e.target.value,
+                      },
+                    });
+                  }}
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Deixe vazio para o sistema gerar automaticamente uma busca no Google pelo nome do negócio.
+                </p>
+              </Field>
+            )}
+          </div>
+
+          {/* Módulo de Triagem Inteligente de WhatsApp */}
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                  <MessageSquareHeart className="h-4 w-4 text-emerald-400" />
+                  <span>Triagem Inteligente de WhatsApp</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Apresenta 2 perguntas rápidas antes de abrir o WhatsApp para já qualificar o lead.
+                </p>
+              </div>
+              <input
+                type="checkbox"
+                checked={Boolean((bio.social_links as any)?.triage_enabled)}
+                onChange={(e) => {
+                  const current = (bio.social_links as Record<string, any>) || {};
+                  updateBio({
+                    social_links: {
+                      ...current,
+                      triage_enabled: e.target.checked,
+                    },
+                  });
+                }}
+                className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
+              />
+            </div>
+            {Boolean((bio.social_links as any)?.triage_enabled) && (
+              <div className="space-y-2 pt-1 text-xs text-muted-foreground">
+                <p>✅ O lead responderá sobre o tipo de serviço que busca e o período de preferência antes de abrir o WhatsApp.</p>
+                <p>✅ As respostas chegam formatadas e com tag de origem (ex: [Via Instagram]).</p>
+              </div>
+            )}
+          </div>
         </>
       )}
+
       {section === "pix" && (
         <Field label="Chave Pix">
           <input

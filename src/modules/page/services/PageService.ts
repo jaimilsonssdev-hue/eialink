@@ -95,11 +95,17 @@ export const PageService = {
         display_name: companyName,
         slug,
         whatsapp: whatsapp ?? null,
-        whatsapp_button_label: "Falar no WhatsApp",
+        whatsapp_button_label: "Agendar Atendimento",
         whatsapp_message: `Olá! Vi a página da ${companyName} e gostaria de mais informações.`,
         instagram: instagram ?? null,
         template_id: "spotlight-neon",
-        description,
+        description: `[DEMO] ${description}`,
+        social_links: {
+          instagram: instagram ?? undefined,
+          is_demo: true,
+          demo_company: companyName,
+          triage_enabled: true,
+        },
         theme: "aurora",
         published: true,
       })
@@ -107,8 +113,31 @@ export const PageService = {
       .single();
 
     if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a demonstração.");
+
+    // Cria links iniciais demonstrativos de alta conversão
+    const reviewSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(companyName + " " + (city || "") + " avaliar")}`;
+    const mapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(companyName + " " + (city || ""))}`;
+
+    await supabase.from("bio_links").insert([
+      {
+        bio_page_id: data.id,
+        title: "⭐ Avaliar Atendimento no Google",
+        url: reviewSearchUrl,
+        position: 0,
+        active: true,
+      },
+      {
+        bio_page_id: data.id,
+        title: "📍 Como Chegar (Google Maps)",
+        url: mapsSearchUrl,
+        position: 1,
+        active: true,
+      },
+    ]);
+
     return data;
   },
+
   async uploadMedia(file: File, path: string) {
     const { error } = await supabase.storage
       .from("bio-media")

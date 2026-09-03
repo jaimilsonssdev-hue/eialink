@@ -10,6 +10,7 @@ import { StorefrontLayout } from "./StorefrontLayout";
 import { AcademyLayout } from "./AcademyLayout";
 import { LawLayout } from "./LawLayout";
 import { TherapyLayout } from "./TherapyLayout";
+import { SpotlightLayout } from "./SpotlightLayout";
 
 export type LayoutRenderContext = TemplateComponentContext & {
   products?: CatalogItem[];
@@ -87,4 +88,5 @@ export const layoutResolver = new LayoutResolver()
   .register(new TherapyLayout())
   .register(new StorefrontLayout())
   .register(new AcademyLayout())
-  .register(new LawLayout());
+  .register(new LawLayout())
+  .register(new SpotlightLayout());

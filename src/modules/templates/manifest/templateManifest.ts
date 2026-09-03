@@ -610,4 +610,33 @@ export const templateManifest: TemplateDefinition[] = [
     },
     supportedFeatures: ["profile", "links", "socials"],
   }),
+  define({
+    id: "spotlight-neon",
+    slug: "spotlight-neon",
+    name: "Spotlight Neon",
+    description:
+      "Bio dark com brilhos neon, botão de WhatsApp em destaque, links organizados e vitrine de produtos e serviços.",
+    category: "premium",
+    badge: "Premium",
+    bestFor: "criadores, mentores e negócios que vendem pelo WhatsApp",
+    theme: {
+      colors: {
+        background: "#07080c",
+        surface: "#101219",
+        text: "#f8fafc",
+        muted: "#a1a1aa",
+        primary: "#22d3ee",
+      },
+      typography: { fontFamily: displayFont, headingSize: "1.5rem", bodySize: "0.95rem" },
+    },
+    layout: "spotlight",
+    components: ["profile", "links", "pix", "footer"],
+    componentVariants: {
+      profile: "business",
+      links: "glass",
+      pix: "highlighted",
+      footer: "discreet",
+    },
+    supportedFeatures: ["profile", "links", "socials", "pix", "catalog", "whatsapp"],
+  }),
 ];

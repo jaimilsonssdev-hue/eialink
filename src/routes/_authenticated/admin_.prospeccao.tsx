@@ -41,7 +41,9 @@ import {
   type ProspectPriority,
   type ProspectStatus,
   type ProspectedCompany,
+  type ProspectDraft,
 } from "@/modules/prospecting/types";
+
 
 export const Route = createFileRoute("/_authenticated/admin_/prospeccao")({
   head: () => ({
@@ -110,8 +112,9 @@ function ProspectingPage() {
   const [searchNiche, setSearchNiche] = useState("Clínica");
   const [searchCity, setSearchCity] = useState("Teixeira de Freitas, BA");
   const [isSearching, setIsSearching] = useState(false);
-  const [liveResults, setLiveResults] = useState<ReturnType<typeof ProspectingService.importMany> extends Promise<infer _> ? any[] : any[]>([]);
+  const [liveResults, setLiveResults] = useState<ProspectDraft[]>([]);
   const [selectedLiveIndices, setSelectedLiveIndices] = useState<Set<number>>(new Set());
+
   const [creatingPageId, setCreatingPageId] = useState<string | null>(null);
 
 
@@ -423,8 +426,11 @@ function ProspectingPage() {
             </li>
           )}
         </ul>
+      </section>
+
       {/* Varredura Automática (Google Maps & Instagram) */}
       <section className="rounded-2xl border border-[color:var(--primary)]/30 bg-card p-5 space-y-4 shadow-lg shadow-[color:var(--primary)]/5">
+
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="font-display text-lg font-bold flex items-center gap-2 text-foreground">

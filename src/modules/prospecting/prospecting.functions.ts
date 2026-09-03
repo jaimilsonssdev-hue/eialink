@@ -14,3 +14,4 @@ export const runLiveProspecting = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<ProspectDraft[]> => {
     return await searchGoogleMapsAndInstagram(data.niche, data.city, data.limit ?? 15);
   });
+

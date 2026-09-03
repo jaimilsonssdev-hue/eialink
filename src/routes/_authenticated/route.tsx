@@ -20,6 +20,7 @@ import {
   PanelsTopLeft,
   CreditCard,
   CalendarDays,
+  Target,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -35,6 +36,7 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+  { to: "/admin/prospeccao", label: "Prospecção", icon: Target },
   { to: "/pages", label: "Páginas", icon: PanelsTopLeft },
   { to: "/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/analytics", label: "Resultados", icon: BarChart3 },
@@ -43,7 +45,8 @@ const NAV = [
   { to: "/settings", label: "Configurações", icon: Settings },
 ] as const;
 
-const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[5]] as const;
+const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[4]] as const;
+
 
 function AuthedLayout() {
   const navigate = useNavigate();

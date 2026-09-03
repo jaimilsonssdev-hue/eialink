@@ -29,10 +29,15 @@ import { parseSocialLinks } from "@/lib/social-links";
 import { NICHES } from "@/lib/constants";
 import {
   freeTemplateBase,
-  freeTemplateWithTypography,
+  freeTemplateWithOptions,
   freeTypographyFromTemplate,
+  freeAccentFromTemplate,
+  freeButtonShapeFromTemplate,
+  FREE_ACCENTS,
+  FREE_BUTTON_SHAPES,
   type FreeTypography,
 } from "@/lib/free-layout-options";
+import type { FreeAccent, FreeButtonShape } from "@/lib/free-layout-options";
 import { UpgradePrompt, commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import type { PlanAccess } from "@/modules/billing/types";
 import {
@@ -255,6 +260,12 @@ export function UnifiedPageEditor({
   );
   const [freeTypography, setFreeTypography] = useState<FreeTypography>(() =>
     freeTypographyFromTemplate(initialBio.template_id),
+  );
+  const [freeAccent, setFreeAccent] = useState<FreeAccent>(() =>
+    freeAccentFromTemplate(initialBio.template_id),
+  );
+  const [freeShape, setFreeShape] = useState<FreeButtonShape>(() =>
+    freeButtonShapeFromTemplate(initialBio.template_id),
   );
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
@@ -565,6 +576,10 @@ export function UnifiedPageEditor({
               setDraftTemplate={setDraftTemplate}
               freeTypography={freeTypography}
               setFreeTypography={setFreeTypography}
+              freeAccent={freeAccent}
+              setFreeAccent={setFreeAccent}
+              freeShape={freeShape}
+              setFreeShape={setFreeShape}
             />
             {saveState === "error" && (
               <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
@@ -666,6 +681,10 @@ function SectionForm({
   setDraftTemplate,
   freeTypography,
   setFreeTypography,
+  freeAccent,
+  setFreeAccent,
+  freeShape,
+  setFreeShape,
 }: {
   section: EditorSection;
   bio: BioForm;
@@ -684,6 +703,10 @@ function SectionForm({
   setDraftTemplate(id: string): void;
   freeTypography: FreeTypography;
   setFreeTypography(typography: FreeTypography): void;
+  freeAccent: FreeAccent;
+  setFreeAccent(accent: FreeAccent): void;
+  freeShape: FreeButtonShape;
+  setFreeShape(shape: FreeButtonShape): void;
 }) {
   const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
   const hasProfessionalSubdomain = Boolean(planAccess?.isPro && planAccess.features.custom_domain);
@@ -726,7 +749,11 @@ function SectionForm({
                       setDraftTemplate(template.id);
                       updateBio({
                         template_id: isFreeLayout
-                          ? freeTemplateWithTypography(template.id, freeTypography)
+                          ? freeTemplateWithOptions(template.id, {
+                              typography: freeTypography,
+                              accent: freeAccent,
+                              shape: freeShape,
+                            })
                           : template.id,
                       });
                     }
@@ -757,7 +784,11 @@ function SectionForm({
                     onClick={() => {
                       setFreeTypography(id);
                       updateBio({
-                        template_id: freeTemplateWithTypography(draftTemplate, id),
+                        template_id: freeTemplateWithOptions(draftTemplate, {
+                          typography: id,
+                          accent: freeAccent,
+                          shape: freeShape,
+                        }),
                       });
                     }}
                     className={`${fontClass} rounded-lg border px-2 py-3 text-sm transition-all ${freeTypography === id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
@@ -770,6 +801,65 @@ function SectionForm({
                 A escolha vale para os títulos e chamadas de todos os cards.
               </p>
             </Field>
+          )}
+          {!planAccess?.isPro && (
+            <>
+              <Field label="Cor de destaque">
+                <div className="grid grid-cols-5 gap-2">
+                  {FREE_ACCENTS.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      aria-label={option.label}
+                      onClick={() => {
+                        setFreeAccent(option.id);
+                        updateBio({
+                          template_id: freeTemplateWithOptions(draftTemplate, {
+                            typography: freeTypography,
+                            accent: option.id,
+                            shape: freeShape,
+                          }),
+                        });
+                      }}
+                      className={`rounded-lg border p-1.5 transition-all ${freeAccent === option.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/10" : "border-border hover:border-[color:var(--primary)]/50"}`}
+                    >
+                      <span
+                        className="block h-6 w-full rounded-md"
+                        style={{
+                          background: `linear-gradient(110deg, ${option.colors[0]}, ${option.colors[1]}, ${option.colors[2]})`,
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Define os brilhos dos botões e das bordas.
+                </p>
+              </Field>
+              <Field label="Formato dos botões">
+                <div className="grid grid-cols-3 gap-2">
+                  {FREE_BUTTON_SHAPES.map((option) => (
+                    <button
+                      key={option.id}
+                      type="button"
+                      onClick={() => {
+                        setFreeShape(option.id);
+                        updateBio({
+                          template_id: freeTemplateWithOptions(draftTemplate, {
+                            typography: freeTypography,
+                            accent: freeAccent,
+                            shape: option.id,
+                          }),
+                        });
+                      }}
+                      className={`border px-2 py-3 text-sm transition-all ${option.id === "pill" ? "rounded-full" : option.id === "square" ? "rounded-none" : "rounded-lg"} ${freeShape === option.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            </>
           )}
           <MediaUploader
             label="Imagem de capa"

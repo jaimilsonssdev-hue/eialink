@@ -765,3 +765,75 @@
   background: rgb(16 18 25 / 0.96);
   box-shadow: 0 14px 32px rgb(0 0 0 / 0.3);
 }
+
+/* Variações de Acentos de Cor para o Spotlight */
+.spotlight-shell.spotlight-accent-sunset {
+  --spot-1: #fb923c;
+  --spot-2: #f472b6;
+  --spot-3: #a855f7;
+}
+.spotlight-shell.spotlight-accent-ocean {
+  --spot-1: #38bdf8;
+  --spot-2: #3b82f6;
+  --spot-3: #6366f1;
+}
+.spotlight-shell.spotlight-accent-emerald {
+  --spot-1: #4ade80;
+  --spot-2: #10b981;
+  --spot-3: #14b8a6;
+}
+.spotlight-shell.spotlight-accent-gold {
+  --spot-1: #fcd34d;
+  --spot-2: #f59e0b;
+  --spot-3: #f97316;
+}
+.spotlight-shell.spotlight-accent-aurora {
+  --spot-1: #34d399;
+  --spot-2: #22d3ee;
+  --spot-3: #a78bfa;
+}
+
+/* Variações de Formato de Botão para o Spotlight */
+.spotlight-shell.spotlight-buttons-pill .public-profile-action,
+.spotlight-shell.spotlight-buttons-pill .public-profile-action-whatsapp {
+  border-radius: 999px;
+}
+.spotlight-shell.spotlight-buttons-pill .public-profile-action-icon {
+  border-radius: 999px;
+}
+.spotlight-shell.spotlight-buttons-square .public-profile-action,
+.spotlight-shell.spotlight-buttons-square .public-profile-action-whatsapp {
+  border-radius: 0.35rem;
+}
+.spotlight-shell.spotlight-buttons-square .public-profile-action-icon {
+  border-radius: 0.25rem;
+}
+
+/* Redes Sociais no Spotlight */
+.spotlight-shell .public-social-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.4rem 0 0.8rem;
+}
+
+.spotlight-shell .public-social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 999px;
+  border: 1px solid rgb(255 255 255 / 0.12);
+  background: rgb(255 255 255 / 0.05);
+  color: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.spotlight-shell .public-social-link:hover {
+  border-color: var(--spot-2);
+  color: var(--spot-2);
+  transform: translateY(-2px);
+}
+

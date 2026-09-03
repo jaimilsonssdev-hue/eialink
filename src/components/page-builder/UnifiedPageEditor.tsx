@@ -748,7 +748,7 @@ function SectionForm({
                     if (isFreeLayout || TemplateService.get(template.id).status === "active") {
                       setDraftTemplate(template.id);
                       updateBio({
-                        template_id: isFreeLayout
+                        template_id: isFreeLayout || template.id === "spotlight-neon"
                           ? freeTemplateWithOptions(template.id, {
                               typography: freeTypography,
                               accent: freeAccent,
@@ -756,6 +756,7 @@ function SectionForm({
                             })
                           : template.id,
                       });
+
                     }
                   }}
                   className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
@@ -802,7 +803,7 @@ function SectionForm({
               </p>
             </Field>
           )}
-          {!planAccess?.isPro && (
+          {(!planAccess?.isPro || draftTemplate === "spotlight-neon") && (
             <>
               <Field label="Cor de destaque">
                 <div className="grid grid-cols-5 gap-2">

@@ -630,7 +630,7 @@ export const templateManifest: TemplateDefinition[] = [
       typography: { fontFamily: displayFont, headingSize: "1.5rem", bodySize: "0.95rem" },
     },
     layout: "spotlight",
-    components: ["profile", "links", "pix", "footer"],
+    components: ["profile", "links", "pix", "footer", "socials"],
     componentVariants: {
       profile: "business",
       links: "glass",
@@ -640,3 +640,4 @@ export const templateManifest: TemplateDefinition[] = [
     supportedFeatures: ["profile", "links", "socials", "pix", "catalog", "whatsapp"],
   }),
 ];
+

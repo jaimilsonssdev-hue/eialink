@@ -60,7 +60,15 @@ export const Route = createFileRoute("/_authenticated/admin_/prospeccao")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
+    const isOwner = u.user.email?.toLowerCase() === "jaimilsonvendas@gmail.com";
+    if (isOwner) return;
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", u.user.id);
+    if (!roles?.some((r) => r.role === "admin")) throw redirect({ to: "/dashboard" });
   },
+
 
   component: ProspectingPage,
 });

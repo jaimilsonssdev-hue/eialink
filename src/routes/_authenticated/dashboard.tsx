@@ -61,6 +61,20 @@ function Dashboard() {
       return data?.[0] ?? null;
     },
   });
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin-dashboard"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return false;
+      if (u.user.email?.toLowerCase() === "jaimilsonvendas@gmail.com") return true;
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", u.user.id);
+      return !!roles?.some((r) => r.role === "admin");
+    },
+  });
+
   const { data: linksCount } = useQuery({
     queryKey: ["links-count", bio?.id],
     enabled: !!bio?.id,
@@ -187,26 +201,29 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* Destaque do Radar de Prospecção */}
-      <section className="rounded-2xl border border-[color:var(--primary)]/30 bg-card p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
-            <Globe2 className="h-3.5 w-3.5" />
-            <span>Motor de Prospecção Ativo</span>
+      {/* Destaque do Radar de Prospecção (Exclusivo Admin / Super Admin) */}
+      {isAdmin && (
+        <section className="rounded-2xl border border-[color:var(--primary)]/30 bg-card p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
+              <Globe2 className="h-3.5 w-3.5" />
+              <span>Motor de Prospecção Ativo (Admin)</span>
+            </div>
+            <h2 className="text-xl font-bold font-display text-foreground">Radar de Prospecção de Clientes</h2>
+            <p className="text-sm text-muted-foreground max-w-xl">
+              Encontre empresas reais no Google Maps e Instagram sem site na sua cidade, crie páginas de demonstração com 1 clique e envie proposta no WhatsApp.
+            </p>
           </div>
-          <h2 className="text-xl font-bold font-display text-foreground">Radar de Prospecção de Clientes</h2>
-          <p className="text-sm text-muted-foreground max-w-xl">
-            Encontre empresas reais no Google Maps e Instagram sem site na sua cidade, crie páginas de demonstração com 1 clique e envie proposta no WhatsApp.
-          </p>
-        </div>
-        <Link
-          to="/admin/prospeccao"
-          className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-[color:var(--primary-foreground)] shadow transition-all hover:opacity-90 whitespace-nowrap"
-          style={{ background: "var(--gradient-primary)" }}
-        >
-          <Target className="h-4 w-4" /> Abrir Prospecção
-        </Link>
-      </section>
+          <Link
+            to="/admin/prospeccao"
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-[color:var(--primary-foreground)] shadow transition-all hover:opacity-90 whitespace-nowrap"
+            style={{ background: "var(--gradient-primary)" }}
+          >
+            <Target className="h-4 w-4" /> Abrir Prospecção
+          </Link>
+        </section>
+      )}
+
 
 
       {!bio && (

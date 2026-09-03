@@ -1,8 +1,8 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, TrendingUp, Send, Download, CreditCard, ShieldCheck } from "lucide-react";
+import { Users, TrendingUp, Send, Download, CreditCard, ShieldCheck, Target } from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import { toPlanLimits, type Plan, type ProfessionalService } from "@/modules/billing/types";
 
@@ -13,6 +13,8 @@ export const Route = createFileRoute("/_authenticated/admin")({
   beforeLoad: async () => {
     const { data: u } = await supabase.auth.getUser();
     if (!u.user) throw redirect({ to: "/auth" });
+    const isOwner = u.user.email?.toLowerCase() === "jaimilsonvendas@gmail.com";
+    if (isOwner) return;
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
@@ -21,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
   },
   component: AdminPage,
 });
+
 
 function AdminPage() {
   const queryClient = useQueryClient();
@@ -155,9 +158,18 @@ function AdminPage() {
           <h1 className="text-3xl font-bold">Super Admin</h1>
           <p className="mt-2 text-muted-foreground">Gestão de leads e solicitações.</p>
         </div>
-        <button onClick={exportCSV} className="btn-secondary">
-          <Download className="h-4 w-4" /> Exportar CSV
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            to="/admin/prospeccao"
+            className="btn-primary inline-flex items-center gap-2 text-sm"
+          >
+            <Target className="h-4 w-4" /> Radar de Prospecção
+          </Link>
+          <button onClick={exportCSV} className="btn-secondary">
+            <Download className="h-4 w-4" /> Exportar CSV
+          </button>
+        </div>
+
       </div>
       <div className="grid gap-4 sm:grid-cols-3">
         <Card icon={Users} label="Usuários" v={total} />

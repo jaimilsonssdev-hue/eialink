@@ -36,7 +36,6 @@ export const Route = createFileRoute("/_authenticated")({
 
 const NAV = [
   { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-  { to: "/admin/prospeccao", label: "Prospecção", icon: Target },
   { to: "/pages", label: "Páginas", icon: PanelsTopLeft },
   { to: "/agenda", label: "Agenda", icon: CalendarDays },
   { to: "/analytics", label: "Resultados", icon: BarChart3 },
@@ -45,7 +44,7 @@ const NAV = [
   { to: "/settings", label: "Configurações", icon: Settings },
 ] as const;
 
-const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[4]] as const;
+const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[5]] as const;
 
 
 function AuthedLayout() {
@@ -57,13 +56,15 @@ function AuthedLayout() {
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
+      const isOwner = data.user.email?.toLowerCase() === "jaimilsonvendas@gmail.com";
       const { data: roles } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", data.user.id);
-      setIsAdmin(!!roles?.some((r) => r.role === "admin"));
+      setIsAdmin(isOwner || !!roles?.some((r) => r.role === "admin"));
     });
   }, []);
+
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -113,14 +114,27 @@ function AuthedLayout() {
             );
           })}
           {isAdmin && (
-            <Link
-              to="/admin"
-              onClick={() => setOpen(false)}
-              className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm mt-4 border-t border-border pt-4 ${pathname.startsWith("/admin") ? "text-foreground" : "text-muted-foreground hover:bg-surface-elevated/60"}`}
-            >
-              <Shield className="h-4 w-4 text-[color:var(--accent)]" /> Super Admin
-            </Link>
+            <div className="mt-4 border-t border-border pt-4 space-y-1">
+              <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                Administração
+              </p>
+              <Link
+                to="/admin/prospeccao"
+                onClick={() => setOpen(false)}
+                className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin/prospeccao" ? "is-active" : ""}`}
+              >
+                <Target className="h-4 w-4 text-[color:var(--primary)]" /> Prospecção
+              </Link>
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin" ? "is-active" : ""}`}
+              >
+                <Shield className="h-4 w-4 text-[color:var(--accent)]" /> Super Admin
+              </Link>
+            </div>
           )}
+
         </nav>
         <div className="absolute bottom-4 left-3 right-3">
           <button

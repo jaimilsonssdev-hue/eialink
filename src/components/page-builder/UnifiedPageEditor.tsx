@@ -29,10 +29,15 @@ import { parseSocialLinks } from "@/lib/social-links";
 import { NICHES } from "@/lib/constants";
 import {
   freeTemplateBase,
-  freeTemplateWithTypography,
+  freeTemplateWithOptions,
   freeTypographyFromTemplate,
+  freeAccentFromTemplate,
+  freeButtonShapeFromTemplate,
+  FREE_ACCENTS,
+  FREE_BUTTON_SHAPES,
   type FreeTypography,
 } from "@/lib/free-layout-options";
+import type { FreeAccent, FreeButtonShape } from "@/lib/free-layout-options";
 import { UpgradePrompt, commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import type { PlanAccess } from "@/modules/billing/types";
 import {
@@ -255,6 +260,12 @@ export function UnifiedPageEditor({
   );
   const [freeTypography, setFreeTypography] = useState<FreeTypography>(() =>
     freeTypographyFromTemplate(initialBio.template_id),
+  );
+  const [freeAccent, setFreeAccent] = useState<FreeAccent>(() =>
+    freeAccentFromTemplate(initialBio.template_id),
+  );
+  const [freeShape, setFreeShape] = useState<FreeButtonShape>(() =>
+    freeButtonShapeFromTemplate(initialBio.template_id),
   );
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
@@ -565,6 +576,10 @@ export function UnifiedPageEditor({
               setDraftTemplate={setDraftTemplate}
               freeTypography={freeTypography}
               setFreeTypography={setFreeTypography}
+              freeAccent={freeAccent}
+              setFreeAccent={setFreeAccent}
+              freeShape={freeShape}
+              setFreeShape={setFreeShape}
             />
             {saveState === "error" && (
               <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
@@ -666,6 +681,10 @@ function SectionForm({
   setDraftTemplate,
   freeTypography,
   setFreeTypography,
+  freeAccent,
+  setFreeAccent,
+  freeShape,
+  setFreeShape,
 }: {
   section: EditorSection;
   bio: BioForm;
@@ -684,6 +703,10 @@ function SectionForm({
   setDraftTemplate(id: string): void;
   freeTypography: FreeTypography;
   setFreeTypography(typography: FreeTypography): void;
+  freeAccent: FreeAccent;
+  setFreeAccent(accent: FreeAccent): void;
+  freeShape: FreeButtonShape;
+  setFreeShape(shape: FreeButtonShape): void;
 }) {
   const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
   const hasProfessionalSubdomain = Boolean(planAccess?.isPro && planAccess.features.custom_domain);
@@ -726,7 +749,11 @@ function SectionForm({
                       setDraftTemplate(template.id);
                       updateBio({
                         template_id: isFreeLayout
-                          ? freeTemplateWithTypography(template.id, freeTypography)
+                          ? freeTemplateWithOptions(template.id, {
+                              typography: freeTypography,
+                              accent: freeAccent,
+                              shape: freeShape,
+                            })
                           : template.id,
                       });
                     }
@@ -757,7 +784,11 @@ function SectionForm({
                     onClick={() => {
                       setFreeTypography(id);
                       updateBio({
-                        template_id: freeTemplateWithTypography(draftTemplate, id),
+                        template_id: freeTemplateWithOptions(draftTemplate, {
+                          typography: id,
+                          accent: freeAccent,
+                          shape: freeShape,
+                        }),
                       });
                     }}
                     className={`${fontClass} rounded-lg border px-2 py-3 text-sm transition-all ${freeTypography === id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]" : "border-border hover:border-[color:var(--primary)]/50"}`}

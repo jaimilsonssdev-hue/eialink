@@ -95,23 +95,27 @@ export const PageService = {
     variantIndex?: number;
   }) {
     const userId = await this.getCurrentUserId();
-    const cleanSlug = slugify(companyName);
+    const sanitizedCompanyName = companyName
+      .replace(/clinical\s+innovate/gi, "Clínica Inove")
+      .replace(/^clinical\s+/gi, "Clínica ")
+      .trim();
+    const cleanSlug = slugify(sanitizedCompanyName);
     const suffix = crypto.randomUUID().slice(0, 4);
     const slug = `${cleanSlug}-${suffix}`;
 
     // Identifica preset Pro completo de alta conversão
-    const preset = getPresetForCompany(niche, companyName, variantIndex);
-    const description = preset.generateDescription(companyName, city || "sua região");
+    const preset = getPresetForCompany(niche, sanitizedCompanyName, variantIndex);
+    const description = preset.generateDescription(sanitizedCompanyName, city || "sua região");
 
     const { data, error } = await supabase
       .from("bio_pages")
       .insert({
         user_id: userId,
-        display_name: companyName,
+        display_name: sanitizedCompanyName,
         slug,
         whatsapp: whatsapp ?? null,
         whatsapp_button_label: preset.whatsapp_button_label,
-        whatsapp_message: preset.whatsapp_message(companyName),
+        whatsapp_message: preset.whatsapp_message(sanitizedCompanyName),
         instagram: instagram ?? null,
         template_id: preset.template_id,
         theme: preset.theme,

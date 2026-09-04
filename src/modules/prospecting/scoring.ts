@@ -32,8 +32,16 @@ export function normalizeText(value: string | null | undefined) {
 }
 
 export function normalizeName(value: string | null | undefined) {
-  const clean = normalizeText(value);
+  let clean = normalizeText(value);
   if (!clean) return null;
+
+  // Desfaz traduções indevidas de proxies internacionais (ex: "Clinical Innovate" -> "Clínica Inove")
+  if (/clinical\s+innovate/i.test(clean)) {
+    clean = clean.replace(/clinical\s+innovate/gi, "Clínica Inove");
+  } else if (/^clinical\s+/i.test(clean)) {
+    clean = clean.replace(/^clinical\s+/i, "Clínica ");
+  }
+
   return clean
     .toLocaleLowerCase("pt-BR")
     .split(" ")

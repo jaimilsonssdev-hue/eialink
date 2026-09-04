@@ -30,7 +30,9 @@ interface RawScrapedLead {
  */
 async function scrapeGoogleMaps(niche: string, city: string): Promise<RawScrapedLead[]> {
   const cleanQuery = `${niche} em ${city}`.replace(/[^\w\sÀ-ÿ]/g, " ").trim().replace(/\s+/g, "+");
-  const targetUrl = `https://www.google.com/maps/search/${cleanQuery}`;
+  // Garante localização e idioma brasileiro para o Google Maps não traduzir nomes próprios
+  // em proxies internacionais (evitando que "Clínica Inove" vire "Clinical Innovate")
+  const targetUrl = `https://www.google.com/maps/search/${cleanQuery}?hl=pt-BR&gl=BR`;
   const jinaUrl = `https://r.jina.ai/${targetUrl}`;
 
   try {
@@ -39,6 +41,10 @@ async function scrapeGoogleMaps(niche: string, city: string): Promise<RawScraped
 
     const res = await fetch(jinaUrl, {
       signal: controller.signal,
+      headers: {
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "x-locale": "pt-BR",
+      },
     });
     clearTimeout(timeout);
 
@@ -69,10 +75,17 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
     if (!rawName) continue;
 
     // Limpa sufixos de cidade repetidos no nome (ex: "Clínica Inove - Teixeira de Freitas" -> "Clínica Inove")
-    const cleanName = rawName
+    let cleanName = rawName
       .replace(/\s*-\s*(?:Teixeira de Freitas|BA|Bahia).*/i, "")
       .replace(/\s*\|\s*.*/i, "")
       .trim();
+
+    // Desfaz traduções espúrias comuns do Google Maps internacional
+    if (/clinical\s+innovate/i.test(cleanName)) {
+      cleanName = cleanName.replace(/clinical\s+innovate/gi, "Clínica Inove");
+    } else if (/^clinical\s+/i.test(cleanName)) {
+      cleanName = cleanName.replace(/^clinical\s+/i, "Clínica ");
+    }
 
     const normalizedKey = cleanName.toLowerCase();
     if (seen.has(normalizedKey)) continue;
@@ -132,7 +145,7 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
 async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedLead[]> {
   const cleanCity = city.replace(/[^\w\sÀ-ÿ]/g, " ").trim();
   const query = `site:instagram.com "${niche}" "${cleanCity}" ("wa.me" OR "whatsapp")`;
-  const targetUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&hl=pt-BR`;
+  const targetUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&hl=pt-BR&gl=BR`;
   const jinaUrl = `https://r.jina.ai/${targetUrl}`;
 
   try {
@@ -141,6 +154,10 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
 
     const res = await fetch(jinaUrl, {
       signal: controller.signal,
+      headers: {
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "x-locale": "pt-BR",
+      },
     });
     clearTimeout(timeout);
 

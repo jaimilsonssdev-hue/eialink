@@ -1,227 +1,10 @@
-import { ImagePlus, Loader2 } from "lucide-react";
+import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { PageService } from "@/modules/page/services/PageService";
+import { getGalleryForNiche, type CuratedPhoto } from "@/modules/prospecting/nichePresets";
 
-const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp"];
-const DEFAULT_MAX_SIZE = 5 * 1024 * 1024;
-
-const COVER_LIBRARY = {
-  restaurant: [
-    {
-      id: "restaurant-eialink",
-      src: "/template-assets/niche-covers/restaurant-eialink-cover.webp",
-      label: "Restaurante moderno",
-    },
-    {
-      id: "restaurant-burger",
-      src: "/template-assets/restaurant-demo-cover.png",
-      label: "Hambúrguer",
-    },
-    {
-      id: "restaurant-burger-evening",
-      src: "/template-assets/restaurant-burger-evening-cover.png",
-      label: "Hambúrguer gourmet",
-    },
-    {
-      id: "restaurant-pizza",
-      src: "/template-assets/restaurant-cover-pizza.png",
-      label: "Pizza artesanal",
-    },
-    {
-      id: "restaurant-brunch",
-      src: "/template-assets/restaurant-cover-brunch.png",
-      label: "Café e brunch",
-    },
-  ],
-  clinic: [
-    {
-      id: "clinic-eialink",
-      src: "/template-assets/niche-covers/clinic-eialink-cover.webp",
-      label: "Clínica acolhedora",
-    },
-    { id: "clinic-reception", src: "/template-assets/clinic-demo-cover.png", label: "Recepção" },
-    {
-      id: "clinic-wellness",
-      src: "/template-assets/clinic-cover-wellness.png",
-      label: "Bem-estar",
-    },
-    {
-      id: "clinic-consultation",
-      src: "/template-assets/clinic-cover-consultation.png",
-      label: "Consultório",
-    },
-  ],
-  therapy: [
-    {
-      id: "therapy-eialink",
-      src: "/template-assets/niche-covers/therapy-eialink-cover.webp",
-      label: "Consultório terapêutico",
-    },
-    {
-      id: "therapy-serenity",
-      src: "/template-assets/therapy-cover-serenity.png",
-      label: "Espaço sereno",
-    },
-    {
-      id: "therapy-conversation",
-      src: "/template-assets/therapy-cover-conversation.png",
-      label: "Sala de conversa",
-    },
-    {
-      id: "therapy-nature",
-      src: "/template-assets/therapy-cover-nature.png",
-      label: "Natureza e calma",
-    },
-  ],
-  store: [
-    {
-      id: "store-eialink",
-      src: "/template-assets/niche-covers/store-eialink-cover.webp",
-      label: "Loja e boutique",
-    },
-    { id: "store-shoes", src: "/template-assets/store-demo-cover.png", label: "Vitrine" },
-    { id: "store-boutique", src: "/template-assets/store-cover-boutique.png", label: "Boutique" },
-    {
-      id: "store-sneakers",
-      src: "/template-assets/store-cover-sneakers.png",
-      label: "Tênis e acessórios",
-    },
-  ],
-  beauty: [
-    {
-      id: "beauty-eialink",
-      src: "/template-assets/niche-covers/beauty-eialink-cover.webp",
-      label: "Estúdio de beleza",
-    },
-    { id: "beauty-studio", src: "/template-assets/beauty-demo-cover.png", label: "Estudio beauty" },
-  ],
-  creator: [
-    {
-      id: "creator-eialink",
-      src: "/template-assets/niche-covers/creator-eialink-cover.webp",
-      label: "Estúdio de conteúdo",
-    },
-    {
-      id: "creator-studio",
-      src: "/template-assets/creator-demo-cover.png",
-      label: "Estudio criativo",
-    },
-  ],
-  business: [
-    {
-      id: "business-eialink",
-      src: "/template-assets/niche-covers/business-eialink-cover.webp",
-      label: "Escritório moderno",
-    },
-    {
-      id: "business-office",
-      src: "/template-assets/business-demo-cover.png",
-      label: "Atendimento profissional",
-    },
-  ],
-  education: [
-    {
-      id: "education-classroom",
-      src: "/template-assets/niche-covers-v2/education-cover.webp",
-      label: "Cursos e aprendizado",
-    },
-  ],
-  commerce: [
-    {
-      id: "commerce-local-store",
-      src: "/template-assets/niche-covers-v2/commerce-cover.webp",
-      label: "Comércio local",
-    },
-  ],
-  technology: [
-    {
-      id: "technology-studio",
-      src: "/template-assets/niche-covers-v2/technology-cover.webp",
-      label: "Tecnologia e inovação",
-    },
-  ],
-  realEstate: [
-    {
-      id: "real-estate-property",
-      src: "/template-assets/niche-covers-v2/real-estate-cover.webp",
-      label: "Imóveis e arquitetura",
-    },
-  ],
-  petShop: [
-    {
-      id: "pet-shop-dog-cat",
-      src: "/template-assets/niche-covers-v2/pet-shop-cover.webp",
-      label: "Pet shop e cuidados",
-    },
-  ],
-  academy: [
-    {
-      id: "academy-eialink",
-      src: "/template-assets/niche-covers/academy-eialink-cover.webp",
-      label: "Academia premium",
-    },
-    { id: "academy-strength", src: "/template-assets/academy-gym-cover.png", label: "Musculação" },
-    {
-      id: "academy-studio",
-      src: "/template-assets/academy-studio-cover.jpg",
-      label: "Studio premium",
-    },
-    {
-      id: "academy-rooftop",
-      src: "/template-assets/academy-rooftop-cover.jpg",
-      label: "Treino ao amanhecer",
-    },
-  ],
-  law: [
-    {
-      id: "law-eialink",
-      src: "/template-assets/niche-covers/law-eialink-cover.webp",
-      label: "Escritório jurídico",
-    },
-    { id: "law-office", src: "/template-assets/law-office-cover.png", label: "Escritório" },
-    {
-      id: "law-library",
-      src: "/template-assets/law-library-cover.jpg",
-      label: "Biblioteca jurídica",
-    },
-    {
-      id: "law-courthouse",
-      src: "/template-assets/law-courthouse-cover.jpg",
-      label: "Arquitetura institucional",
-    },
-  ],
-} as const;
-
-function coverCategory(templateId?: string | null, niche?: string | null) {
-  const nicheCategories: Record<string, keyof typeof COVER_LIBRARY> = {
-    Alimentação: "restaurant",
-    "Beleza & Estética": "beauty",
-    Saúde: "clinic",
-    Terapia: "therapy",
-    Advocacia: "law",
-    "Pet Shop": "petShop",
-    Educação: "education",
-    Moda: "store",
-    Serviços: "business",
-    Comércio: "commerce",
-    Tecnologia: "technology",
-    Imobiliário: "realEstate",
-    Outro: "creator",
-  };
-  const nicheCategory = nicheCategories[niche ?? ""];
-  if (nicheCategory) return nicheCategory;
-
-  if (templateId?.includes("clinic")) return "clinic";
-  if (templateId?.includes("therapy")) return "therapy";
-  if (templateId?.includes("academy")) return "academy";
-  if (templateId?.includes("law")) return "law";
-  if (templateId?.includes("store")) return "store";
-  if (templateId?.includes("beauty")) return "beauty";
-  if (templateId?.includes("creator")) return "creator";
-  if (templateId?.includes("business")) return "business";
-
-  return "business";
-}
+const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+const DEFAULT_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 export function MediaUploader({
   label,
@@ -243,26 +26,20 @@ export function MediaUploader({
   const inputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
   const [error, setError] = useState<string>();
+  const [customUrl, setCustomUrl] = useState("");
+  const [showUrlInput, setShowUrlInput] = useState(false);
   const limitMb = Math.round(maxSizeBytes / 1024 / 1024);
 
-  async function validate(file: File) {
-    if (!ACCEPTED_TYPES.includes(file.type)) throw new Error("Envie JPG, PNG ou WEBP.");
-    if (file.size > maxSizeBytes) throw new Error(`A imagem deve ter no máximo ${limitMb} MB.`);
+  const isCover = variant === "cover";
+  const gallery = getGalleryForNiche(niche || templateId);
+  const curatedPhotos = isCover ? gallery.covers : gallery.avatars;
 
-    const source = URL.createObjectURL(file);
-    try {
-      const image = new window.Image();
-      await new Promise<void>((resolve, reject) => {
-        image.onload = () => resolve();
-        image.onerror = () => reject(new Error("Não foi possível ler esta imagem."));
-        image.src = source;
-      });
-      if (!image.naturalWidth || !image.naturalHeight)
-        throw new Error("A imagem não possui dimensões válidas.");
-      if (image.naturalWidth < 600 || image.naturalHeight < 600)
-        throw new Error("Use uma imagem de pelo menos 600 × 600 px.");
-    } finally {
-      URL.revokeObjectURL(source);
+  async function validate(file: File) {
+    if (!ACCEPTED_TYPES.includes(file.type)) {
+      throw new Error("Formato não suportado. Envie JPG, PNG, WEBP ou GIF.");
+    }
+    if (file.size > maxSizeBytes) {
+      throw new Error(`A imagem deve ter no máximo ${limitMb} MB.`);
     }
   }
 
@@ -278,6 +55,7 @@ export function MediaUploader({
 
     setStatus("uploading");
     setError(undefined);
+
     try {
       const userId = await PageService.getCurrentUserId();
       const extension = file.name.split(".").pop() || "jpg";
@@ -288,133 +66,191 @@ export function MediaUploader({
       onChange(publicUrl);
       setStatus("success");
     } catch (cause) {
-      setStatus("error");
-      setError(cause instanceof Error ? cause.message : "Não foi possível enviar a imagem.");
+      console.warn("Upload no storage falhou, usando FileReader local:", cause);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (typeof reader.result === "string") {
+          onChange(reader.result);
+          setStatus("success");
+        }
+      };
+      reader.onerror = () => {
+        setStatus("error");
+        setError("Não foi possível carregar esta imagem.");
+      };
+      reader.readAsDataURL(file);
     }
   }
 
-  const isCover = variant === "cover";
-  const category = coverCategory(templateId, niche);
-  const coverLibrary = COVER_LIBRARY[category];
-  const categoryLabel = {
-    restaurant: "restaurante",
-    clinic: "clínica",
-    therapy: "terapia",
-    academy: "academia",
-    law: "advocacia",
-    store: "loja",
-    beauty: "beleza",
-    creator: "criador",
-    business: "profissional",
-    education: "educação",
-    commerce: "comércio",
-    technology: "tecnologia",
-    realEstate: "imobiliário",
-    petShop: "pet shop",
-  }[category];
+  function handleApplyCustomUrl() {
+    if (!customUrl.trim()) return;
+    onChange(customUrl.trim());
+    setCustomUrl("");
+    setShowUrlInput(false);
+  }
 
   return (
-    <div>
-      <span className="text-sm font-medium">{label}</span>
-      <div className="mt-2 flex items-center gap-3">
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </span>
+        {value && (
+          <button
+            type="button"
+            className="inline-flex items-center gap-1 text-[11px] text-red-400 hover:text-red-300 transition-colors"
+            onClick={() => onChange(null)}
+          >
+            <Trash2 className="h-3 w-3" />
+            <span>Remover</span>
+          </button>
+        )}
+      </div>
+
+      {/* Prévia e Ação de Enviar */}
+      <div className="flex items-center gap-3">
         {value ? (
-          <img
-            src={value}
-            alt="Prévia da imagem selecionada"
-            className={
-              isCover ? "h-20 w-32 rounded-xl object-cover" : "h-20 w-20 rounded-xl object-cover"
-            }
-            onError={(event) => {
-              event.currentTarget.style.display = "none";
-            }}
-          />
+          <div className="relative group overflow-hidden rounded-xl border border-border shrink-0">
+            <img
+              src={value}
+              alt="Prévia"
+              className={
+                isCover ? "h-20 w-32 object-cover" : "h-16 w-16 object-cover"
+              }
+              onError={(e) => {
+                e.currentTarget.src = "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=600&q=80";
+              }}
+            />
+          </div>
         ) : (
           <div
             className={
               isCover
-                ? "grid h-20 w-32 place-items-center rounded-xl bg-muted"
-                : "grid h-20 w-20 place-items-center rounded-xl bg-muted"
+                ? "grid h-20 w-32 place-items-center rounded-xl border border-dashed border-border bg-surface-elevated/40 text-muted-foreground shrink-0"
+                : "grid h-16 w-16 place-items-center rounded-xl border border-dashed border-border bg-surface-elevated/40 text-muted-foreground shrink-0"
             }
           >
             <ImagePlus className="h-5 w-5" />
           </div>
         )}
-        <div>
+
+        <div className="flex-1 space-y-1.5">
           <button
             type="button"
             onClick={() => inputRef.current?.click()}
             disabled={status === "uploading"}
-            className="btn-secondary text-sm"
+            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-elevated/50 px-3 py-2 text-xs font-semibold text-foreground hover:bg-surface-elevated transition-all shadow-sm w-full sm:w-auto"
           >
             {status === "uploading" ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-[color:var(--primary)]" />
+                <span>Enviando foto...</span>
+              </>
             ) : (
-              <ImagePlus className="h-4 w-4" />
+              <>
+                <ImagePlus className="h-3.5 w-3.5 text-[color:var(--primary)]" />
+                <span>Subir Foto do Celular / PC</span>
+              </>
             )}
-            {status === "uploading" ? "Enviando..." : "Selecionar imagem"}
           </button>
-          {value && (
+
+          <div className="flex items-center gap-2">
             <button
               type="button"
-              className="ml-3 text-xs text-[color:var(--destructive)]"
-              onClick={() => onChange(null)}
+              onClick={() => setShowUrlInput(!showUrlInput)}
+              className="text-[11px] text-[color:var(--primary)] hover:underline font-medium inline-flex items-center gap-1"
             >
-              Remover
+              <LinkIcon className="h-3 w-3" />
+              <span>{showUrlInput ? "Ocultar campo de link" : "Colar link de imagem"}</span>
             </button>
-          )}
+          </div>
         </div>
+
         <input
           ref={inputRef}
-          className="sr-only"
+          className="hidden"
           type="file"
-          accept="image/png,image/jpeg,image/webp"
+          accept="image/png,image/jpeg,image/webp,image/gif"
           onChange={(event) => void upload(event.target.files?.[0])}
         />
       </div>
+
+      {showUrlInput && (
+        <div className="flex gap-2 animate-fade-in">
+          <input
+            value={customUrl}
+            onChange={(e) => setCustomUrl(e.target.value)}
+            placeholder="Cole o link da foto (https://...)"
+            className="input-field text-xs py-1.5 flex-1"
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                handleApplyCustomUrl();
+              }
+            }}
+          />
+          <button
+            type="button"
+            onClick={handleApplyCustomUrl}
+            disabled={!customUrl.trim()}
+            className="btn-primary text-xs px-3 py-1.5 shrink-0 rounded-xl"
+          >
+            Aplicar
+          </button>
+        </div>
+      )}
+
       {error && (
-        <p role="alert" className="mt-2 text-xs text-[color:var(--destructive)]">
+        <p role="alert" className="text-xs text-red-400">
           {error}
         </p>
       )}
-      {status === "success" && (
-        <p className="mt-2 text-xs text-[color:var(--success)]">
-          Imagem enviada. Salve a página para concluir.
-        </p>
-      )}
-      {!isCover && (
-        <p className="mt-1 text-xs text-muted-foreground">
-          JPG, PNG ou WEBP. Até {limitMb} MB; recomendado: 1200 × 1200 px.
-        </p>
-      )}
-      {isCover && (
-        <div className="media-library" aria-label="Biblioteca de capas">
-          <p className="media-library-help">
-            Para a capa, use JPG, PNG ou WEBP de até {limitMb} MB. Recomendado: 1600 × 900 px.
-          </p>
-          <ol className="media-library-steps" aria-label="Como trocar a capa">
-            <li>1. Clique em uma imagem.</li>
-            <li>2. Confira a prévia ao centro.</li>
-            <li>3. Clique em Salvar no topo.</li>
-          </ol>
-          <p>Ou escolha uma capa da biblioteca de {categoryLabel}</p>
-          <div className="media-library-grid">
-            {coverLibrary.map((asset) => (
-              <button
-                key={asset.id}
-                type="button"
-                className={value === asset.src ? "is-selected" : ""}
-                onClick={() => onChange(asset.src)}
-              >
-                <img src={asset.src} alt={`Capa de ${asset.label}`} loading="lazy" />
-                <span>{asset.label}</span>
-              </button>
-            ))}
+
+      {/* Galeria Curada Unsplash Padrão Ouro */}
+      {curatedPhotos.length > 0 && (
+        <div className="space-y-1.5 pt-1">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-muted-foreground inline-flex items-center gap-1">
+              <Sparkles className="h-3 w-3 text-[color:var(--primary)]" />
+              <span>Fotos Prontas em Alta Resolução (1 Clique):</span>
+            </span>
           </div>
-          <small>
-            Escolha uma imagem e clique em Salvar, no topo da página, para publicar sua mudança.
-          </small>
+          <div className="grid grid-cols-4 gap-2">
+            {curatedPhotos.map((photo) => {
+              const isSelected = value === photo.url;
+              return (
+                <button
+                  key={photo.id}
+                  type="button"
+                  onClick={() => onChange(photo.url)}
+                  className={`group relative overflow-hidden rounded-xl border transition-all ${
+                    isSelected
+                      ? "border-[color:var(--primary)] ring-2 ring-[color:var(--primary)]/30 scale-[1.02]"
+                      : "border-border/60 hover:border-border hover:opacity-90"
+                  }`}
+                  title={photo.label}
+                >
+                  <img
+                    src={photo.url}
+                    alt={photo.label}
+                    className="h-14 w-full object-cover transition-transform group-hover:scale-105"
+                    loading="lazy"
+                  />
+                  {isSelected && (
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--primary)] text-white shadow">
+                      <Check className="h-2.5 w-2.5 stroke-[3]" />
+                    </span>
+                  )}
+                  <span className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-[9px] text-white truncate text-center backdrop-blur-[2px]">
+                    {photo.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
   );
 }
+

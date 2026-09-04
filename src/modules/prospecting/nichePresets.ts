@@ -317,3 +317,118 @@ export function getPresetForCompany(nicheRaw?: string | null, companyNameRaw?: s
   return PRESETS.geral;
 }
 
+export { PRESETS };
+
+export interface CuratedPhoto {
+  id: string;
+  url: string;
+  label: string;
+}
+
+export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: CuratedPhoto[] }> = {
+  odontologia: {
+    covers: [
+      { id: "odonto-1", url: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=80", label: "Consultório Odontológico Moderno" },
+      { id: "odonto-2", url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80", label: "Sorriso Perfeito" },
+      { id: "odonto-3", url: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1200&q=80", label: "Tecnologia Odonto" },
+      { id: "odonto-4", url: "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=1200&q=80", label: "Recepção Dental Clean" },
+    ],
+    avatars: [
+      { id: "odonto-av-1", url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=400&q=80", label: "Dentista" },
+      { id: "odonto-av-2", url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80", label: "Especialista" },
+    ],
+  },
+  clinica: {
+    covers: [
+      { id: "clinica-1", url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80", label: "Clínica Clean Acolhedora" },
+      { id: "clinica-2", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80", label: "Atendimento Humanizado" },
+      { id: "clinica-3", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80", label: "Consultório Integrado" },
+      { id: "clinica-4", url: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80", label: "Espaço Saúde & Bem-estar" },
+    ],
+    avatars: [
+      { id: "clinica-av-1", url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80", label: "Médico" },
+      { id: "clinica-av-2", url: "https://images.unsplash.com/photo-1594824813581-22e38c92a9c3?auto=format&fit=crop&w=400&q=80", label: "Médica" },
+    ],
+  },
+  estetica: {
+    covers: [
+      { id: "estetica-1", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80", label: "Espaço Estética Glow" },
+      { id: "estetica-2", url: "https://images.unsplash.com/photo-1512290900672-1f5be1c6e1c8?auto=format&fit=crop&w=1200&q=80", label: "Harmonização & Skincare" },
+      { id: "estetica-3", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Tratamento Facial" },
+      { id: "estetica-4", url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=80", label: "Massagem & Spa" },
+    ],
+    avatars: [
+      { id: "estetica-av-1", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80", label: "Esteticista" },
+      { id: "estetica-av-2", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Dra. Estética" },
+    ],
+  },
+  barbearia: {
+    covers: [
+      { id: "barba-1", url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80", label: "Cadeiras de Barbearia Vintage" },
+      { id: "barba-2", url: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=1200&q=80", label: "Corte Degradê na Tesoura" },
+      { id: "barba-3", url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1200&q=80", label: "Barboterapia com Toalha Quente" },
+      { id: "barba-4", url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80", label: "Espaço Masculino Dark" },
+    ],
+    avatars: [
+      { id: "barba-av-1", url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=400&q=80", label: "Barbeiro Master" },
+      { id: "barba-av-2", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80", label: "Estilo Masculino" },
+    ],
+  },
+  advocacia: {
+    covers: [
+      { id: "adv-1", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80", label: "Escritório Jurídico Moderno" },
+      { id: "adv-2", url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80", label: "Balança da Justiça e Direito" },
+      { id: "adv-3", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", label: "Sede Corporativa" },
+      { id: "adv-4", url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80", label: "Biblioteca Jurídica" },
+    ],
+    avatars: [
+      { id: "adv-av-1", url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80", label: "Advogado" },
+      { id: "adv-av-2", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80", label: "Advogada" },
+    ],
+  },
+  restaurante: {
+    covers: [
+      { id: "rest-1", url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80", label: "Ambiente Bistrô & Gastronomia" },
+      { id: "rest-2", url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80", label: "Prato Gourmet da Casa" },
+      { id: "rest-3", url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80", label: "Pizza no Forno a Lenha" },
+      { id: "rest-4", url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80", label: "Mesa Posta Iluminada" },
+    ],
+    avatars: [
+      { id: "rest-av-1", url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80", label: "Restaurante" },
+      { id: "rest-av-2", url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=400&q=80", label: "Chef de Cozinha" },
+    ],
+  },
+  academia: {
+    covers: [
+      { id: "acad-1", url: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80", label: "Studio Fitness & Performance" },
+      { id: "acad-2", url: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80", label: "Área de Musculação Premium" },
+      { id: "acad-3", url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=80", label: "Treinamento Funcional" },
+      { id: "acad-4", url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80", label: "Equipamentos de Cardio" },
+    ],
+    avatars: [
+      { id: "acad-av-1", url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=400&q=80", label: "Personal Trainer" },
+      { id: "acad-av-2", url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=400&q=80", label: "Instrutora" },
+    ],
+  },
+  geral: {
+    covers: [
+      { id: "geral-1", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80", label: "Escritório & Negócios" },
+      { id: "geral-2", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80", label: "Vitrine & Loja" },
+      { id: "geral-3", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", label: "Edifício Corporativo" },
+    ],
+    avatars: [
+      { id: "geral-av-1", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80", label: "Negócios" },
+    ],
+  },
+};
+
+export function getGalleryForNiche(nicheKey?: string | null): { covers: CuratedPhoto[]; avatars: CuratedPhoto[] } {
+  if (!nicheKey) return NICHE_GALLERIES.geral;
+  const key = nicheKey.toLowerCase();
+  for (const [niche, gallery] of Object.entries(NICHE_GALLERIES)) {
+    if (key.includes(niche)) return gallery;
+  }
+  return NICHE_GALLERIES.geral;
+}
+
+

@@ -250,11 +250,14 @@ function PublicBio() {
     }
   };
 
+  const isFreeTemplate = !bio.template_id || bio.template_id === "default" || bio.template_id.startsWith("free-");
+  const shouldUseTemplate = !isFreeTemplate || hasProPlan || isDemo;
+
   return (
     <div onClickCapture={handleContainerClickCapture}>
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
       <BrandingProvider show={!hasProPlan && !isDemo}>
-        {hasProPlan ? (
+        {shouldUseTemplate ? (
           <TemplateRenderer
             bio={{ ...bio, theme }}
             links={links}

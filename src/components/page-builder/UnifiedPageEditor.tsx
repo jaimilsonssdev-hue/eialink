@@ -5,10 +5,8 @@ import {
   ExternalLink,
   Facebook,
   Globe2,
-  Image,
   Instagram,
   Linkedin,
-  Link2,
   Palette,
   Save,
   Sparkles,
@@ -18,17 +16,27 @@ import {
   X,
   Star,
   MessageSquareHeart,
+  Wand2,
+  Stethoscope,
+  Scissors,
+  Scale,
+  Dumbbell,
+  UtensilsCrossed,
+  Briefcase,
+  Layers,
+  Phone,
+  ShoppingBag,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
-import { TemplateService } from "@/modules/templates/services/TemplateService";
 import type { PublicBio, PublicLink } from "@/components/public-profile/types";
 import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
 import { parseSocialLinks } from "@/lib/social-links";
-import { NICHES } from "@/lib/constants";
 import {
   freeTemplateBase,
   freeTemplateWithOptions,
@@ -38,17 +46,18 @@ import {
   FREE_ACCENTS,
   FREE_BUTTON_SHAPES,
   type FreeTypography,
+  type FreeAccent,
+  type FreeButtonShape,
 } from "@/lib/free-layout-options";
-import type { FreeAccent, FreeButtonShape } from "@/lib/free-layout-options";
-import { UpgradePrompt, commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
+import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import type { PlanAccess } from "@/modules/billing/types";
 import {
   normalizePageSlug,
   publicPageUrl,
   subdomainValidationMessage,
 } from "@/lib/public-page-url";
-
 import type { CatalogItem } from "@/modules/products/types";
+import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
 
 type BioForm = Pick<
   Tables<"bio_pages">,
@@ -77,130 +86,182 @@ type BioForm = Pick<
   | "motion_ambient"
 >;
 
-type EditorSection =
-  | "appearance"
-  | "motion"
-  | "photo"
-  | "profile"
-  | "social"
-  | "contact"
-  | "pix"
-  | "links"
-  | "catalog";
+type EditorTab = "visual" | "profile" | "contact" | "catalog";
 
 type EditableLink = Pick<PublicLink, "id" | "title" | "url" | "active" | "position">;
 
-const MENU: {
-  id: EditorSection;
-  group: string;
-  label: string;
-  description: string;
-  icon: typeof Image;
-}[] = [
+export interface NicheModelConfig {
+  id: string;
+  templateId: string;
+  nicheKey: string;
+  nicheCategory: string;
+  title: string;
+  subtitle: string;
+  theme: string;
+  icon: typeof Stethoscope;
+  isGold: boolean;
+}
+
+export const NICHE_MODELS: NicheModelConfig[] = [
   {
-    id: "appearance",
-    group: "Aparência",
-    label: "Fundo e capa",
-    description: "Imagem, posição e tema",
-    icon: Image,
+    id: "odontologia",
+    templateId: "clinic-care",
+    nicheKey: "odontologia",
+    nicheCategory: "Clínicas e Saúde",
+    title: "Odontologia & Clínica Médica",
+    subtitle: "Estrutura médica de alto padrão, tratamentos e agendamento",
+    theme: "ocean",
+    icon: Stethoscope,
+    isGold: true,
   },
   {
-    id: "motion",
-    group: "Aparência",
-    label: "Animações",
-    description: "Movimento e destaque",
+    id: "estetica",
+    templateId: "beauty-glow",
+    nicheKey: "estetica",
+    nicheCategory: "Estética e Beleza",
+    title: "Estética, Beleza & Spa",
+    subtitle: "Visual glow sofisticado, procedimentos e catálogo elegante",
+    theme: "sunset",
     icon: Sparkles,
+    isGold: true,
   },
   {
-    id: "photo",
-    group: "Aparência",
-    label: "Foto de perfil",
-    description: "Imagem e prévia",
-    icon: UserRound,
+    id: "barbearia",
+    templateId: "spotlight-neon",
+    nicheKey: "barbearia",
+    nicheCategory: "Barbearias e Salões",
+    title: "Barbearia Dark & Cortes",
+    subtitle: "Visual dark moderno com cortes, barba e agendamento",
+    theme: "midnight",
+    icon: Scissors,
+    isGold: true,
   },
   {
-    id: "profile",
-    group: "Informações",
-    label: "Nome e descrição",
-    description: "Como sua marca aparece",
-    icon: UserRound,
+    id: "advocacia",
+    templateId: "law-authority",
+    nicheKey: "advocacia",
+    nicheCategory: "Advogados e Consultores",
+    title: "Advocacia & Consultoria",
+    subtitle: "Presença corporativa, autoridade jurídica e contato ágil",
+    theme: "midnight",
+    icon: Scale,
+    isGold: true,
   },
   {
-    id: "social",
-    group: "Informações",
-    label: "Redes sociais",
-    description: "Instagram e presença online",
-    icon: Link2,
+    id: "academia",
+    templateId: "academy-performance",
+    nicheKey: "academia",
+    nicheCategory: "Academias e Fitness",
+    title: "Academia, Fitness & Studio",
+    subtitle: "Performance esportiva, planos de treino e aula experimental",
+    theme: "forest",
+    icon: Dumbbell,
+    isGold: true,
   },
   {
-    id: "contact",
-    group: "Contato",
-    label: "WhatsApp",
-    description: "Seu contato principal",
-    icon: WalletCards,
+    id: "restaurante",
+    templateId: "restaurant-menu",
+    nicheKey: "restaurante",
+    nicheCategory: "Restaurantes e Alimentação",
+    title: "Restaurante & Gastronomia",
+    subtitle: "Cardápio apetitoso com fotos e pedidos via WhatsApp",
+    theme: "sunset",
+    icon: UtensilsCrossed,
+    isGold: true,
   },
   {
-    id: "pix",
-    group: "Contato",
-    label: "Pix",
-    description: "Receba pagamentos",
-    icon: WalletCards,
+    id: "geral",
+    templateId: "business-modern",
+    nicheKey: "geral",
+    nicheCategory: "Serviços e Negócios",
+    title: "Empresas & Serviços Gerais",
+    subtitle: "Apresentação corporativa clara para prestadores e comércio",
+    theme: "aurora",
+    icon: Briefcase,
+    isGold: true,
   },
   {
-    id: "links",
-    group: "Conteúdo",
-    label: "Links e botões",
-    description: "Links da sua página",
-    icon: Link2,
-  },
-  {
-    id: "catalog",
-    group: "Conteúdo",
-    label: "Produtos e serviços",
-    description: "O que você oferece",
-    icon: WalletCards,
+    id: "free",
+    templateId: "default",
+    nicheKey: "geral",
+    nicheCategory: "Outros",
+    title: "Página de Links Simples (Free)",
+    subtitle: "Layout minimalista para links de redes e bio clássica",
+    theme: "mono",
+    icon: Layers,
+    isGold: false,
   },
 ];
 
-const WORKFLOW: Array<{
-  id: string;
+const TABS: Array<{
+  id: EditorTab;
   label: string;
   description: string;
-  sections: EditorSection[];
+  icon: typeof Palette;
 }> = [
   {
+    id: "visual",
+    label: "Visual & Modelo",
+    description: "Nicho, fotos e cores",
+    icon: Palette,
+  },
+  {
     id: "profile",
-    label: "Perfil",
-    description: "Sua marca",
-    sections: ["profile", "photo"],
+    label: "Sobre o Negócio",
+    description: "Nome, bio e link",
+    icon: UserRound,
   },
   {
     id: "contact",
-    label: "Contato",
-    description: "Como falar com você",
-    sections: ["contact", "social", "pix"],
+    label: "WhatsApp & Contato",
+    description: "Triagem, 5 estrelas e redes",
+    icon: Phone,
   },
   {
-    id: "content",
-    label: "Conteúdo",
-    description: "Links e ofertas",
-    sections: ["links", "catalog"],
-  },
-  {
-    id: "visual",
-    label: "Visual",
-    description: "Estilo da página",
-    sections: ["appearance", "motion"],
+    id: "catalog",
+    label: "Serviços & Preços",
+    description: "Catálogo e links extras",
+    icon: ShoppingBag,
   },
 ];
 
 const THEMES = [
-  { id: "aurora", label: "Aurora" },
-  { id: "sunset", label: "Pôr do sol" },
-  { id: "ocean", label: "Oceano" },
-  { id: "forest", label: "Floresta" },
-  { id: "midnight", label: "Noite" },
-  { id: "mono", label: "Claro" },
+  {
+    id: "ocean",
+    label: "Oceano",
+    description: "Azul profissional & Turquesa",
+    gradientStyle: "linear-gradient(135deg, #0ea5e9, #10b981, #0369a1)",
+  },
+  {
+    id: "sunset",
+    label: "Pôr do Sol",
+    description: "Dourado quente, Beleza & Rosa",
+    gradientStyle: "linear-gradient(135deg, #ff6a3d, #ffcf3d, #d13a76)",
+  },
+  {
+    id: "midnight",
+    label: "Noite Dark",
+    description: "Dark sofisticado & Grafite",
+    gradientStyle: "linear-gradient(135deg, #1e293b, #334155, #050810)",
+  },
+  {
+    id: "aurora",
+    label: "Aurora",
+    description: "Ciano vibrante & Violeta",
+    gradientStyle: "linear-gradient(135deg, #6b3fff, #00d4ff, #ff4d9d)",
+  },
+  {
+    id: "forest",
+    label: "Floresta",
+    description: "Verde esmeralda & Saúde",
+    gradientStyle: "linear-gradient(135deg, #16a34a, #65a30d, #04140a)",
+  },
+  {
+    id: "mono",
+    label: "Claro Minimal",
+    description: "Fundo claro limpo & Elegante",
+    gradientStyle: "linear-gradient(135deg, #f6f5f2, #e2e8f0, #cbd5e1)",
+  },
 ];
 
 const SOCIAL_NETWORKS = [
@@ -252,45 +313,52 @@ export function UnifiedPageEditor({
     niche: string;
   }): Promise<{ products: CatalogItem[] }>;
 }) {
-  const [bio, setBio] = useState<BioForm>(initialBio);
+  const initialTemplate = useMemo(() => {
+    if (initialBio.template_id) return initialBio.template_id;
+    const preset = getPresetForCompany(defaults.niche, defaults.displayName);
+    return preset.template_id || "clinic-care";
+  }, [initialBio.template_id, defaults.niche, defaults.displayName]);
+
+  const [bio, setBio] = useState<BioForm>(() => ({
+    ...initialBio,
+    template_id: initialBio.template_id || initialTemplate,
+    theme: initialBio.theme || (getPresetForCompany(defaults.niche, defaults.displayName).theme) || "ocean",
+  }));
   const [links, setLinks] = useState<EditableLink[]>(initialLinks);
   const [products, setProducts] = useState<CatalogItem[]>(initialProducts);
   const [niche, setNiche] = useState(defaults.niche);
-  const [selected, setSelected] = useState<EditorSection>("profile");
-  const [draftTemplate, setDraftTemplate] = useState(
-    freeTemplateBase(initialBio.template_id ?? "default"),
-  );
+  const [activeTab, setActiveTab] = useState<EditorTab>("visual");
+
+  const [draftTemplate, setDraftTemplate] = useState(() => bio.template_id || "clinic-care");
   const [freeTypography, setFreeTypography] = useState<FreeTypography>(() =>
-    freeTypographyFromTemplate(initialBio.template_id),
+    freeTypographyFromTemplate(bio.template_id),
   );
   const [freeAccent, setFreeAccent] = useState<FreeAccent>(() =>
-    freeAccentFromTemplate(initialBio.template_id),
+    freeAccentFromTemplate(bio.template_id),
   );
   const [freeShape, setFreeShape] = useState<FreeButtonShape>(() =>
-    freeButtonShapeFromTemplate(initialBio.template_id),
+    freeButtonShapeFromTemplate(bio.template_id),
   );
+
   const [saving, setSaving] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [validationMessage, setValidationMessage] = useState<string>();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
     JSON.stringify({
-      bio: initialBio,
+      bio,
       links: initialLinks,
       products: initialProducts,
       niche: defaults.niche,
     }),
   );
+
   const previewRef = useRef<HTMLDivElement>(null);
   const inspectorRef = useRef<HTMLElement>(null);
   const snapshot = JSON.stringify({ bio, links, products, niche });
   const hasPendingChanges = snapshot !== savedSnapshot;
-  const setupSteps: Array<{
-    id: EditorSection;
-    label: string;
-    help: string;
-    complete: boolean;
-  }> = [
+
+  const setupSteps = [
     {
       id: "profile",
       label: "Apresente seu negócio",
@@ -304,18 +372,14 @@ export function UnifiedPageEditor({
       complete: (bio.whatsapp ?? "").replace(/\D/g, "").length >= 10,
     },
     {
-      id: "links",
-      label: "Adicione uma ação",
-      help: "Link, rede ou botão",
-      complete: links.some((link) => link.title.trim() && link.url.replace("https://", "").trim()),
+      id: "catalog",
+      label: "Serviços ou Links",
+      help: "Catálogo ou links da página",
+      complete: products.length > 0 || links.some((link) => link.title.trim() && link.url.replace("https://", "").trim()),
     },
   ];
   const completedSetupSteps = setupSteps.filter((step) => step.complete).length;
-  const activeWorkflowIndex = Math.max(
-    0,
-    WORKFLOW.findIndex((item) => item.sections.includes(selected)),
-  );
-  const activeWorkflow = WORKFLOW[activeWorkflowIndex];
+
   const previewBio = useMemo(
     () =>
       ({
@@ -324,11 +388,12 @@ export function UnifiedPageEditor({
         created_at: "",
         updated_at: "",
         ...bio,
-        display_name: bio.display_name || defaults.displayName || "Seu negócio",
+        display_name: bio.display_name || defaults.displayName || "Seu Negócio",
         slug: bio.slug || "minha-pagina",
       }) as PublicBio,
     [bio, defaults.displayName],
   );
+
   const previewLinks = useMemo(
     () =>
       links.map(
@@ -343,6 +408,7 @@ export function UnifiedPageEditor({
       ),
     [links],
   );
+
   const hasProfessionalSubdomain = Boolean(planAccess?.isPro && planAccess.features.custom_domain);
   const normalizedSlug = normalizePageSlug(bio.slug || bio.display_name);
   const pageUrl = publicPageUrl(normalizedSlug, hasProfessionalSubdomain);
@@ -361,20 +427,11 @@ export function UnifiedPageEditor({
   }, [hasPendingChanges]);
 
   const updateBio = (patch: Partial<BioForm>) => setBio((current) => ({ ...current, ...patch }));
-  const select = (section: EditorSection) => {
-    setSelected(section);
-    setSaveState("idle");
-    if (window.matchMedia("(max-width: 900px)").matches) {
-      window.setTimeout(
-        () => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
-        0,
-      );
-    }
-  };
+
   const addLink = () => {
     if ((planAccess?.limits.links ?? 4) !== -1 && links.length >= (planAccess?.limits.links ?? 4)) {
       setValidationMessage(
-        "O Eialink Essencial permite até quatro links. Faça upgrade para adicionar mais.",
+        "O plano atual permite até 4 links. Faça upgrade para adicionar links ilimitados.",
       );
       setSaveState("error");
       return;
@@ -390,8 +447,73 @@ export function UnifiedPageEditor({
       },
     ]);
   };
+
   const updateLink = (id: string, patch: Partial<EditableLink>) =>
     setLinks((current) => current.map((link) => (link.id === id ? { ...link, ...patch } : link)));
+
+  const removeLink = (id: string) =>
+    setLinks((current) => current.filter((link) => link.id !== id));
+
+  const activeNicheModel = useMemo(() => {
+    const currentTemplate = bio.template_id || draftTemplate || "clinic-care";
+    return (
+      NICHE_MODELS.find(
+        (m) =>
+          m.templateId === currentTemplate ||
+          (m.templateId === "clinic-care" && currentTemplate.includes("clinic")) ||
+          (m.templateId === "beauty-glow" && currentTemplate.includes("beauty")) ||
+          (m.templateId === "spotlight-neon" && (currentTemplate.includes("spotlight") || currentTemplate.includes("neon"))) ||
+          (m.templateId === "law-authority" && currentTemplate.includes("law")) ||
+          (m.templateId === "academy-performance" && currentTemplate.includes("academy")) ||
+          (m.templateId === "restaurant-menu" && currentTemplate.includes("restaurant")) ||
+          (m.templateId === "business-modern" && (currentTemplate.includes("business") || currentTemplate.includes("store")))
+      ) || NICHE_MODELS[0]
+    );
+  }, [bio.template_id, draftTemplate]);
+
+  const selectNicheModel = (model: NicheModelConfig) => {
+    setDraftTemplate(model.templateId);
+    setNiche(model.nicheCategory);
+    updateBio({
+      template_id: model.templateId,
+      theme: model.theme,
+    });
+  };
+
+  const applyNicheDefaults = (nicheKey: string) => {
+    const preset = getPresetForCompany(nicheKey, bio.display_name);
+    if (!preset) return;
+
+    const patch: Partial<BioForm> = {
+      cover_url: preset.cover_url,
+      avatar_url: preset.avatar_url,
+      whatsapp_button_label: preset.whatsapp_button_label,
+      theme: preset.theme,
+    };
+    if (!bio.description || bio.description.trim().length === 0 || bio.description === defaults.displayName) {
+      patch.description = preset.generateDescription(bio.display_name || defaults.displayName || "Nossa Empresa", "sua cidade");
+    }
+    if (!bio.whatsapp_message || bio.whatsapp_message.trim().length === 0) {
+      patch.whatsapp_message = preset.whatsapp_message(bio.display_name || defaults.displayName || "Nossa Empresa");
+    }
+    updateBio(patch);
+
+    if (preset.services && preset.services.length > 0) {
+      const newProducts: CatalogItem[] = preset.services.map((s, idx) => ({
+        id: `service-${crypto.randomUUID()}`,
+        type: "service",
+        name: s.name,
+        description: s.description,
+        price: s.price,
+        image_url: s.image_url,
+        button_label: "Agendar",
+        button_url: null,
+        position: idx,
+        active: true,
+      }));
+      setProducts(newProducts);
+    }
+  };
 
   async function save() {
     if (addressError) {
@@ -432,7 +554,7 @@ export function UnifiedPageEditor({
       );
       setSaveState("success");
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Catalog save failed", error);
+      if (import.meta.env.DEV) console.error("Save failed", error);
       setValidationMessage(
         error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente.",
       );
@@ -442,12 +564,18 @@ export function UnifiedPageEditor({
     }
   }
 
+  const isFreeTemplate =
+    !previewBio.template_id ||
+    previewBio.template_id === "default" ||
+    previewBio.template_id.startsWith("free-");
+
   return (
     <div className="premium-builder space-y-5">
+      {/* Barra de Ações Superior */}
       <header className="builder-topbar sticky top-0 z-20 -mx-6 flex flex-wrap items-center justify-between gap-3 px-6 py-4 backdrop-blur md:-mx-10 md:px-10">
         <div className="builder-heading">
           <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
-            Minha Página
+            Minha Página Bio Link
           </p>
           <h1 className="mt-1 text-2xl font-bold">Edite, confira e publique.</h1>
         </div>
@@ -494,6 +622,7 @@ export function UnifiedPageEditor({
         </div>
       </header>
 
+      {/* Barra de Progresso e Prontidão */}
       <section className="editor-readiness" aria-label="Progresso da página">
         <div className="editor-readiness-copy">
           <span className={completedSetupSteps === 3 ? "is-ready" : ""}>
@@ -502,10 +631,10 @@ export function UnifiedPageEditor({
           <div>
             <b>
               {completedSetupSteps === 3
-                ? "Sua página está pronta"
-                : "Vamos deixar sua página pronta"}
+                ? "Sua página está pronta para converter clientes"
+                : "Complete os passos para ativar sua página"}
             </b>
-            <small>{completedSetupSteps}/3 itens essenciais concluídos</small>
+            <small>{completedSetupSteps}/3 itens essenciais configurados</small>
           </div>
         </div>
         <div className="editor-readiness-track" aria-hidden="true">
@@ -513,76 +642,762 @@ export function UnifiedPageEditor({
         </div>
       </section>
 
+      {/* Layout Principal: Painel de Controle (4 Abas) + Prévia Celular */}
       <div className="builder-layout">
         <section className="builder-control-panel">
+          {/* Navegação Principal das 4 Abas */}
           <nav className="editor-workflow" aria-label="Etapas de edição">
-            {WORKFLOW.map((workflow, index) => {
-              const active = index === activeWorkflowIndex;
+            {TABS.map((tab, index) => {
+              const active = activeTab === tab.id;
+              const Icon = tab.icon;
               return (
                 <button
-                  key={workflow.id}
+                  key={tab.id}
                   type="button"
                   className={active ? "is-active" : ""}
                   aria-current={active ? "step" : undefined}
                   onClick={() => {
-                    const firstAvailable = workflow.sections.find(
-                      (section) => section !== "catalog" || planAccess?.features.catalog,
-                    );
-                    if (firstAvailable) select(firstAvailable);
+                    setActiveTab(tab.id);
+                    setSaveState("idle");
+                    if (window.matchMedia("(max-width: 900px)").matches) {
+                      window.setTimeout(
+                        () => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
+                        0,
+                      );
+                    }
                   }}
                 >
                   <span>{index + 1}</span>
-                  <b>{workflow.label}</b>
-                  <small>{workflow.description}</small>
+                  <b className="flex items-center gap-1.5">
+                    <Icon className="h-3.5 w-3.5 hidden sm:inline opacity-80" />
+                    {tab.label}
+                  </b>
+                  <small>{tab.description}</small>
                 </button>
               );
             })}
           </nav>
 
-          <div className="editor-section-tabs" aria-label={`Opções de ${activeWorkflow.label}`}>
-            {activeWorkflow.sections
-              .filter((section) => section !== "catalog" || planAccess?.features.catalog)
-              .map((section) => {
-                const item = MENU.find((menuItem) => menuItem.id === section)!;
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={section}
-                    type="button"
-                    className={selected === section ? "is-active" : ""}
-                    onClick={() => select(section)}
-                  >
-                    <Icon aria-hidden />
-                    {item.label}
-                  </button>
-                );
-              })}
-          </div>
-
+          {/* Painel com o Conteúdo da Aba Ativa */}
           <aside ref={inspectorRef} className="builder-inspector card-surface">
-            <SectionForm
-              section={selected}
-              bio={bio}
-              links={links}
-              defaults={defaults}
-              niche={niche}
-              setNiche={setNiche}
-              updateBio={updateBio}
-              updateLink={updateLink}
-              removeLink={(id) => setLinks((current) => current.filter((link) => link.id !== id))}
-              addLink={addLink}
-              products={products}
-              setProducts={setProducts}
-              planAccess={planAccess}
-              draftTemplate={draftTemplate}
-              setDraftTemplate={setDraftTemplate}
-              freeTypography={freeTypography}
-              setFreeTypography={setFreeTypography}
-              freeAccent={freeAccent}
-              setFreeAccent={setFreeAccent}
-              freeShape={freeShape}
-              setFreeShape={setFreeShape}
-            />
+            {/* ABA 1: VISUAL & MODELO */}
+            {activeTab === "visual" && (
+              <div className="space-y-6">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+                    Design & Personalização
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold">Modelo do Nicho & Estilo Visual</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Selecione o nicho do seu negócio. Todos os nichos utilizam o Padrão Ouro completo com serviços, avaliações e agendamento.
+                  </p>
+                </div>
+
+                {/* 1. Grade de Nichos / Modelos */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-semibold text-foreground">
+                      1. Escolha o Nicho e Modelo
+                    </label>
+                    <span className="text-xs text-[color:var(--primary)] font-medium">
+                      Ativo: {activeNicheModel.title}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    {NICHE_MODELS.map((model) => {
+                      const Icon = model.icon;
+                      const isSelected =
+                        draftTemplate === model.templateId ||
+                        bio.template_id === model.templateId ||
+                        (model.id === "odontologia" && (draftTemplate.includes("clinic") || bio.template_id?.includes("clinic")));
+                      return (
+                        <button
+                          key={model.id}
+                          type="button"
+                          onClick={() => selectNicheModel(model)}
+                          className={`flex items-start gap-3 rounded-xl border p-3 text-left transition-all ${
+                            isSelected
+                              ? "border-[color:var(--primary)] bg-[color:var(--primary)]/10 shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_60%)]"
+                              : "border-border hover:border-[color:var(--primary)]/50 hover:bg-surface-elevated/40"
+                          }`}
+                        >
+                          <div
+                            className={`mt-0.5 rounded-lg p-2 ${
+                              isSelected
+                                ? "bg-[color:var(--primary)] text-white"
+                                : "bg-surface-elevated text-muted-foreground"
+                            }`}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="font-semibold text-sm truncate">{model.title}</p>
+                              {model.isGold ? (
+                                <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
+                                  Ouro
+                                </span>
+                              ) : (
+                                <span className="shrink-0 rounded bg-slate-500/15 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
+                                  Free
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                              {model.subtitle}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Banner de 1-Clique para Fotos & Serviços Recomendados */}
+                  {activeNicheModel.nicheKey !== "geral" && (
+                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="space-y-0.5">
+                        <p className="font-semibold text-sm flex items-center gap-1.5 text-foreground">
+                          <Sparkles className="h-4 w-4 text-[color:var(--primary)]" />
+                          <span>Fotos e Serviços Recomendados de {activeNicheModel.title}</span>
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Preencher capa, avatar e catálogo com fotos profissionais do Unsplash e tratamentos deste nicho.
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => applyNicheDefaults(activeNicheModel.nicheKey)}
+                        className="btn-primary shrink-0 text-xs py-2 px-3 flex items-center gap-1.5 whitespace-nowrap"
+                      >
+                        <Wand2 className="h-3.5 w-3.5" />
+                        <span>Aplicar Fotos & Catálogo</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* 2. Cores e Paleta do Tema */}
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold text-foreground">
+                    2. Paleta de Cores do Tema
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {THEMES.map((theme) => {
+                      const isSelected = (bio.theme || "aurora") === theme.id;
+                      return (
+                        <button
+                          key={theme.id}
+                          type="button"
+                          onClick={() => updateBio({ theme: theme.id })}
+                          className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
+                            isSelected
+                              ? "border-[color:var(--primary)] bg-[color:var(--primary)]/10 shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_60%)]"
+                              : "border-border hover:border-[color:var(--primary)]/50"
+                          }`}
+                        >
+                          <span
+                            className="h-6 w-6 shrink-0 rounded-full border border-white/20 shadow-sm"
+                            style={{ background: theme.gradientStyle }}
+                          />
+                          <div className="min-w-0">
+                            <p className="font-semibold text-xs truncate">{theme.label}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{theme.description}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 3. Fotos e Logotipo do Negócio */}
+                <div className="space-y-4 pt-1">
+                  <div>
+                    <label className="text-sm font-semibold text-foreground">
+                      3. Fotos do Seu Negócio & Logotipo
+                    </label>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Toque nas opções recomendadas do Unsplash ou envie do seu dispositivo (qualquer tamanho).
+                    </p>
+                  </div>
+
+                  <MediaUploader
+                    label="Imagem de Capa (Topo da Página)"
+                    value={bio.cover_url}
+                    variant="cover"
+                    templateId={draftTemplate}
+                    niche={niche}
+                    onChange={(cover_url) => updateBio({ cover_url })}
+                  />
+
+                  <MediaUploader
+                    label="Foto de Perfil ou Logotipo da Empresa"
+                    value={bio.avatar_url}
+                    variant="avatar"
+                    templateId={draftTemplate}
+                    niche={niche}
+                    onChange={(avatar_url) => updateBio({ avatar_url })}
+                  />
+
+                  <details className="editor-advanced-settings">
+                    <summary>Ajustes avançados da capa</summary>
+                    <div className="space-y-4 pt-4">
+                      <Field label="Posição da imagem">
+                        <select
+                          className="input-base"
+                          value={bio.cover_position}
+                          onChange={(event) => updateBio({ cover_position: event.target.value })}
+                        >
+                          <option value="top">Topo</option>
+                          <option value="center">Centro</option>
+                          <option value="bottom">Base</option>
+                        </select>
+                      </Field>
+                      <Field label="Ajuste">
+                        <select
+                          className="input-base"
+                          value={bio.cover_fit}
+                          onChange={(event) => updateBio({ cover_fit: event.target.value })}
+                        >
+                          <option value="cover">Preencher a capa</option>
+                          <option value="contain">Mostrar a imagem inteira</option>
+                        </select>
+                      </Field>
+                      <label className="flex items-center gap-2 text-sm">
+                        <input
+                          type="checkbox"
+                          checked={bio.cover_overlay}
+                          onChange={(event) => updateBio({ cover_overlay: event.target.checked })}
+                        />
+                        Melhorar leitura com sobreposição escura
+                      </label>
+                      {bio.cover_overlay && (
+                        <Field label={`Opacidade da sobreposição (${bio.cover_overlay_opacity}%)`}>
+                          <input
+                            className="w-full"
+                            type="range"
+                            min="0"
+                            max="100"
+                            value={bio.cover_overlay_opacity}
+                            onChange={(event) =>
+                              updateBio({ cover_overlay_opacity: Number(event.target.value) })
+                            }
+                          />
+                        </Field>
+                      )}
+                    </div>
+                  </details>
+                </div>
+
+                {/* 4. Animações e Movimento */}
+                <div className="space-y-3 pt-2">
+                  <label className="text-sm font-semibold text-foreground">
+                    4. Efeitos e Animações
+                  </label>
+                  <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface-elevated p-3.5 text-sm">
+                    <div>
+                      <b className="block text-sm">Ativar animações suaves na página</b>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        Efeitos elegantes de entrada ao carregar no celular do visitante.
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={bio.motion_enabled ?? true}
+                      onChange={(event) => updateBio({ motion_enabled: event.target.checked })}
+                      className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
+                    />
+                  </label>
+                </div>
+
+                {/* Se for página Free, exibe opções adicionais de personalização */}
+                {isFreeTemplate && (
+                  <div className="space-y-4 pt-4 border-t border-border">
+                    <Field label="Tipografia dos cards (Página Free)">
+                      <div className="grid grid-cols-3 gap-2">
+                        {(
+                          [
+                            ["modern", "Moderna", "font-sans"],
+                            ["elegant", "Elegante", "font-serif"],
+                            ["strong", "Marcante", "font-display"],
+                          ] as const
+                        ).map(([id, label, fontClass]) => (
+                          <button
+                            key={id}
+                            type="button"
+                            onClick={() => {
+                              setFreeTypography(id);
+                              updateBio({
+                                template_id: freeTemplateWithOptions(draftTemplate, {
+                                  typography: id,
+                                  accent: freeAccent,
+                                  shape: freeShape,
+                                }),
+                              });
+                            }}
+                            className={`${fontClass} rounded-lg border px-2 py-2 text-xs transition-all ${
+                              freeTypography === id
+                                ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]"
+                                : "border-border hover:border-[color:var(--primary)]/50"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+
+                    <Field label="Cor de destaque do botão (Free)">
+                      <div className="grid grid-cols-5 gap-2">
+                        {FREE_ACCENTS.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            aria-label={option.label}
+                            onClick={() => {
+                              setFreeAccent(option.id);
+                              updateBio({
+                                template_id: freeTemplateWithOptions(draftTemplate, {
+                                  typography: freeTypography,
+                                  accent: option.id,
+                                  shape: freeShape,
+                                }),
+                              });
+                            }}
+                            className={`rounded-lg border p-1.5 transition-all ${
+                              freeAccent === option.id
+                                ? "border-[color:var(--primary)] bg-[color:var(--primary)]/10"
+                                : "border-border hover:border-[color:var(--primary)]/50"
+                            }`}
+                          >
+                            <span
+                              className="block h-5 w-full rounded-md"
+                              style={{
+                                background: `linear-gradient(110deg, ${option.colors[0]}, ${option.colors[1]}, ${option.colors[2]})`,
+                              }}
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+
+                    <Field label="Formato dos botões (Free)">
+                      <div className="grid grid-cols-3 gap-2">
+                        {FREE_BUTTON_SHAPES.map((option) => (
+                          <button
+                            key={option.id}
+                            type="button"
+                            onClick={() => {
+                              setFreeShape(option.id);
+                              updateBio({
+                                template_id: freeTemplateWithOptions(draftTemplate, {
+                                  typography: freeTypography,
+                                  accent: freeAccent,
+                                  shape: option.id,
+                                }),
+                              });
+                            }}
+                            className={`border px-2 py-2 text-xs transition-all ${
+                              option.id === "pill"
+                                ? "rounded-full"
+                                : option.id === "square"
+                                  ? "rounded-none"
+                                  : "rounded-lg"
+                            } ${
+                              freeShape === option.id
+                                ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]"
+                                : "border-border hover:border-[color:var(--primary)]/50"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </Field>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ABA 2: SOBRE O NEGÓCIO */}
+            {activeTab === "profile" && (
+              <div className="space-y-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+                    Sobre o Negócio
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold">Apresentação da Marca</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Nome comercial, descrição e link exclusivo da sua página.
+                  </p>
+                </div>
+
+                <Field label="Nome da Empresa / Profissional">
+                  <input
+                    className="input-base"
+                    value={bio.display_name}
+                    placeholder={defaults.displayName || "Ex: Clínica Odontológica Sorriso"}
+                    onChange={(event) => updateBio({ display_name: event.target.value })}
+                  />
+                </Field>
+
+                <Field label="Descrição / Bio do Negócio">
+                  <textarea
+                    className="input-base min-h-28 resize-y"
+                    rows={4}
+                    value={bio.description ?? ""}
+                    placeholder="Conte resumidamente o que sua empresa oferece, seus diferenciais e especialidades."
+                    onChange={(event) => updateBio({ description: event.target.value })}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Esta mensagem fica visível com destaque logo abaixo do logotipo na sua página.
+                  </p>
+                </Field>
+
+                <Field
+                  label={hasProfessionalSubdomain ? "Seu Subdomínio Profissional" : "Endereço da Página (Link personalizado)"}
+                >
+                  <div className="flex items-center rounded-xl border border-border bg-surface-elevated/40 focus-within:border-[color:var(--primary)] overflow-hidden">
+                    <span className="px-3 text-xs text-muted-foreground bg-surface-elevated border-r border-border py-2.5 whitespace-nowrap">
+                      {hasProfessionalSubdomain ? "https://" : "eialink.com.br/p/"}
+                    </span>
+                    <input
+                      className="w-full bg-transparent px-3 py-2 text-sm outline-none"
+                      value={bio.slug}
+                      placeholder="minha-empresa"
+                      onChange={(event) => updateBio({ slug: event.target.value })}
+                      aria-invalid={Boolean(addressError)}
+                    />
+                    {hasProfessionalSubdomain && (
+                      <span className="px-3 text-xs text-muted-foreground bg-surface-elevated border-l border-border py-2.5 whitespace-nowrap">
+                        .eialink.com.br
+                      </span>
+                    )}
+                  </div>
+                  <p
+                    className={`mt-1.5 text-xs ${addressError ? "text-[color:var(--destructive)]" : "text-muted-foreground"}`}
+                  >
+                    {addressError ??
+                      (hasProfessionalSubdomain
+                        ? `Seu link oficial: https://${normalizedSlug}.eialink.com.br`
+                        : `Seu link oficial: https://eialink.com.br/p/${normalizedSlug}`)}
+                  </p>
+                </Field>
+              </div>
+            )}
+
+            {/* ABA 3: WHATSAPP & CONTATO */}
+            {activeTab === "contact" && (
+              <div className="space-y-5">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+                    Canais de Contato
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold">WhatsApp, Reputação & Redes</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Configure seu WhatsApp, filtro de avaliações 5 estrelas e redes sociais.
+                  </p>
+                </div>
+
+                <Field label="WhatsApp Principal (com DDD)">
+                  <input
+                    className="input-base"
+                    value={bio.whatsapp ?? ""}
+                    placeholder={defaults.whatsapp || "5511999999999"}
+                    onChange={(event) => updateBio({ whatsapp: event.target.value })}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Apenas números, incluindo o código do país (55) e o DDD. Ex: 5511998765432
+                  </p>
+                </Field>
+
+                <Field label="Mensagem Inicial do WhatsApp">
+                  <textarea
+                    className="input-base min-h-20 resize-y"
+                    value={bio.whatsapp_message ?? ""}
+                    maxLength={1000}
+                    placeholder="Olá! Conheci a página de vocês e gostaria de agendar um atendimento."
+                    onChange={(event) => updateBio({ whatsapp_message: event.target.value })}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Esta mensagem já virá preenchida no celular do cliente quando ele clicar em falar com você.
+                  </p>
+                </Field>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <Field label="Texto do Botão Principal">
+                    <input
+                      className="input-base"
+                      value={bio.whatsapp_button_label ?? ""}
+                      maxLength={60}
+                      placeholder="Agendar Consulta / Atendimento"
+                      onChange={(event) => updateBio({ whatsapp_button_label: event.target.value })}
+                    />
+                  </Field>
+                  <Field label="Texto de Apoio do Botão">
+                    <input
+                      className="input-base"
+                      value={bio.whatsapp_button_subtitle ?? ""}
+                      maxLength={80}
+                      placeholder="Resposta rápida no WhatsApp"
+                      onChange={(event) => updateBio({ whatsapp_button_subtitle: event.target.value })}
+                    />
+                  </Field>
+                </div>
+
+                {/* Módulo de Reputação & Avaliações Google Maps */}
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                        <span>Filtro 5 Estrelas (Google Maps)</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Estimula avaliações 5 estrelas no Google e direciona insatisfações direto para seu WhatsApp.
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={Boolean((bio.social_links as Record<string, unknown>)?.google_review_enabled)}
+                      onChange={(e) => {
+                        const current = (bio.social_links as Record<string, unknown>) || {};
+                        updateBio({
+                          social_links: {
+                            ...current,
+                            google_review_enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
+                    />
+                  </div>
+
+                  {Boolean((bio.social_links as Record<string, unknown>)?.google_review_enabled) && (
+                    <Field label="Link direto de avaliação do Google da sua empresa">
+                      <input
+                        className="input-base"
+                        value={((bio.social_links as Record<string, unknown>)?.google_review_url as string) || ""}
+                        placeholder="https://g.page/r/.../review ou deixe em branco para busca automática"
+                        onChange={(e) => {
+                          const current = (bio.social_links as Record<string, unknown>) || {};
+                          updateBio({
+                            social_links: {
+                              ...current,
+                              google_review_url: e.target.value,
+                            },
+                          });
+                        }}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Deixe vazio para o sistema gerar automaticamente uma busca no Google pelo nome do seu negócio.
+                      </p>
+                    </Field>
+                  )}
+                </div>
+
+                {/* Módulo de Triagem Inteligente de WhatsApp */}
+                <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                        <MessageSquareHeart className="h-4 w-4 text-emerald-400" />
+                        <span>Triagem Inteligente de WhatsApp</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Apresenta 2 perguntas rápidas antes de abrir o WhatsApp para já qualificar o lead.
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={Boolean((bio.social_links as Record<string, unknown>)?.triage_enabled)}
+                      onChange={(e) => {
+                        const current = (bio.social_links as Record<string, unknown>) || {};
+                        updateBio({
+                          social_links: {
+                            ...current,
+                            triage_enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
+                    />
+                  </div>
+                  {Boolean((bio.social_links as Record<string, unknown>)?.triage_enabled) && (
+                    <div className="space-y-1.5 pt-1 text-xs text-muted-foreground">
+                      <p>✅ O cliente seleciona o serviço desejado e o melhor período (manhã/tarde) antes de abrir a conversa.</p>
+                      <p>✅ Se escolher agendamento, oferece atalho para a sua agenda online integrada.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Redes Sociais */}
+                <div className="space-y-3 pt-2">
+                  <label className="text-sm font-semibold text-foreground">
+                    Redes Sociais & Links Externos
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {SOCIAL_NETWORKS.map(({ id, label, placeholder, icon: Icon }) => {
+                      const values = socialValues(bio.social_links);
+                      const value =
+                        id === "instagram" ? (values.instagram ?? bio.instagram ?? "") : (values[id] ?? "");
+                      return (
+                        <Field key={id} label={label}>
+                          <div className="relative">
+                            <Icon className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-[color:var(--primary)]" />
+                            <input
+                              className="input-base pl-9"
+                              value={value}
+                              placeholder={
+                                id === "instagram" ? defaults.instagram || placeholder : placeholder
+                              }
+                              onChange={(event) => {
+                                const next = { ...values };
+                                const nextValue = event.target.value.trim();
+                                if (nextValue) next[id] = nextValue;
+                                else delete next[id];
+                                updateBio({
+                                  social_links: next,
+                                  ...(id === "instagram" ? { instagram: event.target.value.trim() } : {}),
+                                });
+                              }}
+                            />
+                          </div>
+                        </Field>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Chave Pix */}
+                <Field label="Chave Pix (Opcional)">
+                  <input
+                    className="input-base"
+                    value={bio.pix_key ?? ""}
+                    placeholder="CPF, CNPJ, e-mail, celular ou chave aleatória"
+                    onChange={(event) => updateBio({ pix_key: event.target.value })}
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Visitantes poderão copiar sua chave Pix com 1 toque na página.
+                  </p>
+                </Field>
+              </div>
+            )}
+
+            {/* ABA 4: SERVIÇOS & PREÇOS */}
+            {activeTab === "catalog" && (
+              <div className="space-y-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+                      Catálogo & Serviços
+                    </p>
+                    <h2 className="mt-1 text-xl font-semibold">Serviços, Preços & Links</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Apresente seus principais serviços com valores e fotos em destaque.
+                    </p>
+                  </div>
+                  {products.length === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const preset = getPresetForCompany(activeNicheModel.nicheKey, bio.display_name);
+                        if (preset?.services) {
+                          setProducts(
+                            preset.services.map((s, idx) => ({
+                              id: `service-${crypto.randomUUID()}`,
+                              type: "service",
+                              name: s.name,
+                              description: s.description,
+                              price: s.price,
+                              image_url: s.image_url,
+                              button_label: "Agendar",
+                              button_url: null,
+                              position: idx,
+                              active: true,
+                            }))
+                          );
+                        }
+                      }}
+                      className="btn-secondary shrink-0 text-xs py-2 px-3 flex items-center gap-1.5"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-[color:var(--primary)]" />
+                      <span>Importar Serviços do Nicho</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Editor do Catálogo de Produtos e Serviços */}
+                <div className="rounded-xl border border-border bg-surface-elevated/20 p-4">
+                  <CatalogEditor
+                    items={products}
+                    onChange={setProducts}
+                    maxItems={planAccess?.isPro ? -1 : 3}
+                  />
+                </div>
+
+                {/* Links e Botões Adicionais */}
+                <div className="space-y-3 pt-4 border-t border-border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">Links e Botões Adicionais</h3>
+                      <p className="text-xs text-muted-foreground">
+                        Botões com links externos (ex: Site institucional, Catálogo em PDF, Localização).
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addLink}
+                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>Novo Link</span>
+                    </button>
+                  </div>
+
+                  <div className="space-y-2.5">
+                    {links.map((link) => (
+                      <div key={link.id} className="rounded-xl border border-border bg-surface-elevated/40 p-3 space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input
+                            className="input-base text-sm"
+                            value={link.title}
+                            placeholder="Título do botão"
+                            onChange={(event) => updateLink(link.id, { title: event.target.value })}
+                          />
+                          <input
+                            className="input-base text-sm"
+                            value={link.url}
+                            placeholder="https://..."
+                            onChange={(event) => updateLink(link.id, { url: event.target.value })}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between pt-1">
+                          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={link.active}
+                              onChange={(event) => updateLink(link.id, { active: event.target.checked })}
+                              className="rounded border-border text-[color:var(--primary)]"
+                            />
+                            Exibir na página
+                          </label>
+                          <button
+                            type="button"
+                            className="text-xs text-[color:var(--destructive)] hover:underline flex items-center gap-1"
+                            onClick={() => removeLink(link.id)}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                            <span>Remover</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {saveState === "error" && (
               <p role="alert" className="mt-4 text-sm text-[color:var(--destructive)]">
                 {validationMessage ||
@@ -592,6 +1407,7 @@ export function UnifiedPageEditor({
           </aside>
         </section>
 
+        {/* Prévia Interativa do Celular em Tempo Real */}
         <main
           ref={previewRef}
           className={`builder-preview-stage min-w-0 xl:order-none ${previewOpen ? "is-mobile-open" : ""}`}
@@ -606,21 +1422,12 @@ export function UnifiedPageEditor({
             </button>
           </div>
           <p className="builder-preview-label mb-3 text-center text-sm font-medium text-muted-foreground">
-            Sua página enquanto você edita
+            Sua página enquanto você edita (Tempo Real)
           </p>
           <div
             className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} mx-auto max-w-[25rem] overflow-hidden bg-background`}
           >
-            {planAccess?.isPro ? (
-              <TemplateRenderer
-                bio={previewBio}
-                links={previewLinks.filter((link) => link.active)}
-                onTrack={() => undefined}
-                onShare={() => undefined}
-                products={products}
-                motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
-              />
-            ) : (
+            {isFreeTemplate ? (
               <FreeLinkRenderer
                 bio={previewBio}
                 links={previewLinks.filter((link) => link.active)}
@@ -628,17 +1435,27 @@ export function UnifiedPageEditor({
                 onShare={() => undefined}
                 products={products}
               />
+            ) : (
+              <TemplateRenderer
+                bio={previewBio}
+                links={previewLinks.filter((link) => link.active)}
+                onTrack={() => undefined}
+                onShare={() => undefined}
+                products={products}
+                bookingUrl={`/agendar/${previewBio.slug}`}
+                motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
+              />
             )}
           </div>
         </main>
       </div>
+
       {saveState === "success" && bio.published && (
         <section className="card-surface flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="font-semibold">Seu Eialink está publicado.</p>
+            <p className="font-semibold">Seu Eialink está publicado e ativo!</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              Quer que a Talento configure sua página profissionalmente ou avalie o próximo passo do
-              seu negócio?
+              Quer que a nossa equipe avalie ou configure sua presença comercial estrategicamente?
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -648,7 +1465,7 @@ export function UnifiedPageEditor({
               target="_blank"
               rel="noreferrer"
             >
-              Quero ajuda
+              Falar com Especialista
             </a>
             <a
               className="btn-primary"
@@ -665,712 +1482,11 @@ export function UnifiedPageEditor({
   );
 }
 
-function SectionForm({
-  section,
-  bio,
-  links,
-  defaults,
-  niche,
-  setNiche,
-  updateBio,
-  updateLink,
-  removeLink,
-  addLink,
-  products,
-  setProducts,
-  planAccess,
-  draftTemplate,
-  setDraftTemplate,
-  freeTypography,
-  setFreeTypography,
-  freeAccent,
-  setFreeAccent,
-  freeShape,
-  setFreeShape,
-}: {
-  section: EditorSection;
-  bio: BioForm;
-  links: EditableLink[];
-  defaults: { displayName: string; whatsapp: string; instagram: string; niche: string };
-  niche: string;
-  setNiche(niche: string): void;
-  updateBio(patch: Partial<BioForm>): void;
-  updateLink(id: string, patch: Partial<EditableLink>): void;
-  removeLink(id: string): void;
-  addLink(): void;
-  products: CatalogItem[];
-  setProducts(items: CatalogItem[]): void;
-  planAccess?: PlanAccess;
-  draftTemplate: string;
-  setDraftTemplate(id: string): void;
-  freeTypography: FreeTypography;
-  setFreeTypography(typography: FreeTypography): void;
-  freeAccent: FreeAccent;
-  setFreeAccent(accent: FreeAccent): void;
-  freeShape: FreeButtonShape;
-  setFreeShape(shape: FreeButtonShape): void;
-}) {
-  const title = MENU.find((item) => item.id === section)?.label ?? "Personalizar";
-  const hasProfessionalSubdomain = Boolean(planAccess?.isPro && planAccess.features.custom_domain);
-  const normalizedSlug = normalizePageSlug(bio.slug || bio.display_name);
-  const addressError = hasProfessionalSubdomain
-    ? subdomainValidationMessage(bio.slug || bio.display_name)
-    : null;
-  return (
-    <div className="space-y-4">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
-          Personalização
-        </p>
-        <h2 className="mt-1 text-xl font-semibold">{title}</h2>
-      </div>
-      {section === "appearance" && (
-        <>
-          <Field label={planAccess?.isPro ? "Template" : "Estilo da página Free"}>
-            <div className="grid grid-cols-2 gap-2">
-              {(planAccess?.isPro
-                ? TemplateService.list()
-                : [
-                    { id: "default", name: "Essencial", status: "active" as const },
-                    { id: "free-showcase", name: "Vitrine", status: "active" as const },
-                    { id: "free-social", name: "Social", status: "active" as const },
-                    { id: "free-neon", name: "Neon", status: "active" as const },
-                  ]
-              ).map((template) => (
-                <button
-                  key={template.id}
-                  type="button"
-                  onClick={() => {
-                    const isFreeLayout = [
-                      "default",
-                      "free-showcase",
-                      "free-social",
-                      "free-neon",
-                    ].includes(template.id);
-                    if (isFreeLayout || TemplateService.get(template.id).status === "active") {
-                      setDraftTemplate(template.id);
-                      updateBio({
-                        template_id: isFreeLayout || template.id === "spotlight-neon"
-                          ? freeTemplateWithOptions(template.id, {
-                              typography: freeTypography,
-                              accent: freeAccent,
-                              shape: freeShape,
-                            })
-                          : template.id,
-                      });
-
-                    }
-                  }}
-                  className={`rounded-lg border px-3 py-2 text-sm transition-all ${draftTemplate === template.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_70%)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
-                >
-                  {template.name}
-                </button>
-              ))}
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Toque em um estilo para visualizar imediatamente.
-            </p>
-          </Field>
-          {!planAccess?.isPro && (
-            <Field label="Tipografia dos cards">
-              <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    ["modern", "Moderna", "font-sans"],
-                    ["elegant", "Elegante", "font-serif"],
-                    ["strong", "Marcante", "font-display"],
-                  ] as const
-                ).map(([id, label, fontClass]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => {
-                      setFreeTypography(id);
-                      updateBio({
-                        template_id: freeTemplateWithOptions(draftTemplate, {
-                          typography: id,
-                          accent: freeAccent,
-                          shape: freeShape,
-                        }),
-                      });
-                    }}
-                    className={`${fontClass} rounded-lg border px-2 py-3 text-sm transition-all ${freeTypography === id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <p className="mt-2 text-xs text-muted-foreground">
-                A escolha vale para os títulos e chamadas de todos os cards.
-              </p>
-            </Field>
-          )}
-          {(!planAccess?.isPro || draftTemplate === "spotlight-neon") && (
-            <>
-              <Field label="Cor de destaque">
-                <div className="grid grid-cols-5 gap-2">
-                  {FREE_ACCENTS.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      aria-label={option.label}
-                      onClick={() => {
-                        setFreeAccent(option.id);
-                        updateBio({
-                          template_id: freeTemplateWithOptions(draftTemplate, {
-                            typography: freeTypography,
-                            accent: option.id,
-                            shape: freeShape,
-                          }),
-                        });
-                      }}
-                      className={`rounded-lg border p-1.5 transition-all ${freeAccent === option.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/10" : "border-border hover:border-[color:var(--primary)]/50"}`}
-                    >
-                      <span
-                        className="block h-6 w-full rounded-md"
-                        style={{
-                          background: `linear-gradient(110deg, ${option.colors[0]}, ${option.colors[1]}, ${option.colors[2]})`,
-                        }}
-                      />
-                    </button>
-                  ))}
-                </div>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Define os brilhos dos botões e das bordas.
-                </p>
-              </Field>
-              <Field label="Formato dos botões">
-                <div className="grid grid-cols-3 gap-2">
-                  {FREE_BUTTON_SHAPES.map((option) => (
-                    <button
-                      key={option.id}
-                      type="button"
-                      onClick={() => {
-                        setFreeShape(option.id);
-                        updateBio({
-                          template_id: freeTemplateWithOptions(draftTemplate, {
-                            typography: freeTypography,
-                            accent: freeAccent,
-                            shape: option.id,
-                          }),
-                        });
-                      }}
-                      className={`border px-2 py-3 text-sm transition-all ${option.id === "pill" ? "rounded-full" : option.id === "square" ? "rounded-none" : "rounded-lg"} ${freeShape === option.id ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]" : "border-border hover:border-[color:var(--primary)]/50"}`}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              </Field>
-            </>
-          )}
-          <MediaUploader
-            label="Imagem de capa"
-            value={bio.cover_url}
-            variant="cover"
-            templateId={draftTemplate}
-            niche={niche}
-            onChange={(cover_url) => updateBio({ cover_url })}
-          />
-          <details className="editor-advanced-settings">
-            <summary>Ajustes avançados da capa</summary>
-            <div className="space-y-4 pt-4">
-              <Field label="Posição da imagem">
-                <select
-                  className="input-base"
-                  value={bio.cover_position}
-                  onChange={(event) => updateBio({ cover_position: event.target.value })}
-                >
-                  <option value="top">Topo</option>
-                  <option value="center">Centro</option>
-                  <option value="bottom">Base</option>
-                </select>
-              </Field>
-              <Field label="Ajuste">
-                <select
-                  className="input-base"
-                  value={bio.cover_fit}
-                  onChange={(event) => updateBio({ cover_fit: event.target.value })}
-                >
-                  <option value="cover">Preencher a capa</option>
-                  <option value="contain">Mostrar a imagem inteira</option>
-                </select>
-              </Field>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={bio.cover_overlay}
-                  onChange={(event) => updateBio({ cover_overlay: event.target.checked })}
-                />
-                Melhorar leitura com sobreposição
-              </label>
-              {bio.cover_overlay && (
-                <Field label={`Opacidade (${bio.cover_overlay_opacity}%)`}>
-                  <input
-                    className="w-full"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={bio.cover_overlay_opacity}
-                    onChange={(event) =>
-                      updateBio({ cover_overlay_opacity: Number(event.target.value) })
-                    }
-                  />
-                </Field>
-              )}
-            </div>
-          </details>
-          <Field label="Tema">
-            <div className="grid grid-cols-2 gap-2">
-              {THEMES.map((theme) => (
-                <button
-                  key={theme.id}
-                  type="button"
-                  onClick={() => updateBio({ theme: theme.id })}
-                  className={`rounded-lg border px-3 py-2 text-sm ${bio.theme === theme.id ? "border-[color:var(--primary)] bg-surface-elevated" : "border-border"}`}
-                >
-                  {theme.label}
-                </button>
-              ))}
-            </div>
-          </Field>
-        </>
-      )}
-      {section === "motion" && (
-        <>
-          <p className="text-sm text-muted-foreground">
-            Escolha movimentos discretos para a sua página. A prévia é atualizada na hora e as
-            opções ficam publicadas quando você clicar em Salvar.
-          </p>
-          <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface-elevated p-4 text-sm">
-            <span>
-              <b className="block">Ativar animações</b>
-              <span className="mt-1 block text-xs text-muted-foreground">
-                Você pode desligar todos os efeitos da sua página a qualquer momento.
-              </span>
-            </span>
-            <input
-              type="checkbox"
-              role="switch"
-              className="h-6 w-11 shrink-0 cursor-pointer appearance-none rounded-full border border-border bg-surface transition-colors checked:bg-[color:var(--primary)] relative before:absolute before:top-0.5 before:left-0.5 before:h-4 before:w-4 before:rounded-full before:bg-foreground before:transition-transform checked:before:translate-x-5 checked:before:bg-white"
-              checked={bio.motion_enabled ?? true}
-              onChange={(event) => updateBio({ motion_enabled: event.target.checked })}
-              aria-label="Ativar animações na página"
-            />
-          </label>
-          <p className="text-xs text-muted-foreground">
-            Ao desligar, sua página publicada fica totalmente estática — útil para quem prefere
-            leitura sem movimento.
-          </p>
-          {bio.motion_enabled !== false && (
-            <>
-              <Field label="Entrada da página">
-                <MotionChoices
-                  value={bio.motion_entrance ?? "gentle"}
-                  choices={[
-                    ["gentle", "Suave"],
-                    ["rise", "Surgir de baixo"],
-                    ["none", "Sem entrada"],
-                  ]}
-                  onChange={(motion_entrance) => updateBio({ motion_entrance })}
-                />
-              </Field>
-              <Field label="Botão principal">
-                {planAccess?.features.advanced_appearance ? (
-                  <MotionChoices
-                    value={bio.motion_cta ?? "none"}
-                    choices={[
-                      ["none", "Sem efeito"],
-                      ["pulse", "Pulso suave"],
-                      ["glow", "Brilho"],
-                    ]}
-                    onChange={(motion_cta) => updateBio({ motion_cta })}
-                  />
-                ) : (
-                  <UpgradePrompt
-                    compact
-                    title="Destaque do botão é um recurso Pro"
-                    description="Dê mais vida à sua ação principal com pulso ou brilho discreto."
-                  />
-                )}
-              </Field>
-              <Field label="Capa e fundo">
-                {planAccess?.features.advanced_appearance ? (
-                  <MotionChoices
-                    value={bio.motion_ambient ?? "soft"}
-                    choices={[
-                      ["none", "Sem efeito"],
-                      ["soft", "Brilho suave"],
-                      ["spotlight", "Destaque ambiente"],
-                    ]}
-                    onChange={(motion_ambient) => updateBio({ motion_ambient })}
-                  />
-                ) : (
-                  <UpgradePrompt
-                    compact
-                    title="Efeito na capa é um recurso Pro"
-                    description="Use movimento ambiente para valorizar a sua imagem de capa."
-                  />
-                )}
-              </Field>
-            </>
-          )}
-          <p className="text-xs text-muted-foreground">
-            Respeitamos a preferência do visitante por reduzir movimento no dispositivo.
-          </p>
-        </>
-      )}
-      {section === "photo" && (
-        <>
-          <MediaUploader
-            label="Foto de perfil"
-            value={bio.avatar_url}
-            onChange={(avatar_url) => updateBio({ avatar_url })}
-          />
-          <p className="text-xs text-muted-foreground">
-            PNG, JPG ou WEBP até 5 MB. Uma imagem quadrada funciona melhor.
-          </p>
-        </>
-      )}
-      {section === "profile" && (
-        <>
-          <Field label="Nicho do negócio">
-            <select
-              className="input-base"
-              value={niche}
-              onChange={(event) => setNiche(event.target.value)}
-            >
-              {NICHES.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Usamos o nicho para recomendar capas mais adequadas ao seu negócio.
-            </p>
-          </Field>
-          <Field label="Nome exibido">
-            <input
-              className="input-base"
-              value={bio.display_name}
-              placeholder={defaults.displayName}
-              onChange={(event) => updateBio({ display_name: event.target.value })}
-            />
-          </Field>
-          <Field label="Descrição">
-            <textarea
-              className="input-base"
-              rows={4}
-              value={bio.description ?? ""}
-              placeholder="Conte brevemente o que você faz"
-              onChange={(event) => updateBio({ description: event.target.value })}
-            />
-          </Field>
-          <Field
-            label={hasProfessionalSubdomain ? "Seu subdomínio profissional" : "Endereço da página"}
-          >
-            <input
-              className="input-base"
-              value={bio.slug}
-              onChange={(event) => updateBio({ slug: event.target.value })}
-              aria-invalid={Boolean(addressError)}
-            />
-            <p
-              className={`mt-2 text-xs ${addressError ? "text-[color:var(--destructive)]" : "text-muted-foreground"}`}
-            >
-              {addressError ??
-                (hasProfessionalSubdomain
-                  ? `${normalizedSlug}.eialink.com.br`
-                  : `eialink.com.br/p/${normalizedSlug}`)}
-            </p>
-            {hasProfessionalSubdomain && (
-              <p className="mt-1 text-xs text-muted-foreground">
-                Exclusivo do Pro. O endereço antigo continuará funcionando normalmente.
-              </p>
-            )}
-          </Field>
-        </>
-      )}
-      {section === "social" && (
-        <div className="space-y-4">
-          <p className="rounded-xl border border-border bg-surface-elevated/40 p-3 text-xs text-muted-foreground">
-            Adicione somente os perfis que você usa. Eles aparecerão junto aos seus links quando o
-            visual escolhido oferecer esse espaço.
-          </p>
-          {SOCIAL_NETWORKS.map(({ id, label, placeholder, icon: Icon }) => {
-            const values = socialValues(bio.social_links);
-            const value =
-              id === "instagram" ? (values.instagram ?? bio.instagram ?? "") : (values[id] ?? "");
-            return (
-              <Field key={id} label={label}>
-                <div className="relative">
-                  <Icon className="pointer-events-none absolute left-3 top-3 h-4 w-4 text-[color:var(--primary)]" />
-                  <input
-                    className="input-base pl-9"
-                    value={value}
-                    placeholder={
-                      id === "instagram" ? defaults.instagram || placeholder : placeholder
-                    }
-                    onChange={(event) => {
-                      const next = { ...values };
-                      const nextValue = event.target.value.trim();
-                      if (nextValue) next[id] = nextValue;
-                      else delete next[id];
-                      updateBio({
-                        social_links: next,
-                        ...(id === "instagram" ? { instagram: event.target.value.trim() } : {}),
-                      });
-                    }}
-                  />
-                </div>
-              </Field>
-            );
-          })}
-        </div>
-      )}
-      {section === "contact" && (
-        <>
-          <Field label="WhatsApp">
-            <input
-              className="input-base"
-              value={bio.whatsapp ?? ""}
-              placeholder={defaults.whatsapp || "5511999999999"}
-              onChange={(event) => updateBio({ whatsapp: event.target.value })}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Use apenas números, incluindo DDD e código do país.
-            </p>
-          </Field>
-          <Field label="Mensagem inicial do WhatsApp">
-            <textarea
-              className="input-base min-h-24 resize-y"
-              value={bio.whatsapp_message ?? ""}
-              maxLength={1000}
-              placeholder="Olá! Gostaria de saber mais sobre seus serviços."
-              onChange={(event) => updateBio({ whatsapp_message: event.target.value })}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Esta mensagem será preenchida para o visitante antes de abrir o WhatsApp.
-            </p>
-          </Field>
-          <Field label="Texto do botão">
-            <input
-              className="input-base"
-              value={bio.whatsapp_button_label ?? ""}
-              maxLength={60}
-              placeholder="Falar no WhatsApp"
-              onChange={(event) => updateBio({ whatsapp_button_label: event.target.value })}
-            />
-            <p className="mt-1 text-xs text-muted-foreground">
-              Use uma chamada curta e clara, por exemplo: “Pedir orçamento”.
-            </p>
-          </Field>
-          <Field label="Texto de apoio do botão">
-            <input
-              className="input-base"
-              value={bio.whatsapp_button_subtitle ?? ""}
-              maxLength={80}
-              placeholder="Resposta rápida"
-              onChange={(event) => updateBio({ whatsapp_button_subtitle: event.target.value })}
-            />
-          </Field>
-
-          {/* Módulo de Reputação & Avaliações Google Maps */}
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
-                  <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                  <span>Filtro 5 Estrelas (Google Maps)</span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Estimula avaliações 5 estrelas no Google e filtra insatisfações direto para seu WhatsApp.
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={Boolean((bio.social_links as any)?.google_review_enabled)}
-                onChange={(e) => {
-                  const current = (bio.social_links as Record<string, any>) || {};
-                  updateBio({
-                    social_links: {
-                      ...current,
-                      google_review_enabled: e.target.checked,
-                    },
-                  });
-                }}
-                className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
-              />
-            </div>
-
-            {Boolean((bio.social_links as any)?.google_review_enabled) && (
-              <Field label="Link direto de avaliação do Google da sua empresa">
-                <input
-                  className="input-base"
-                  value={(bio.social_links as any)?.google_review_url || ""}
-                  placeholder="https://g.page/r/.../review ou link de pesquisa"
-                  onChange={(e) => {
-                    const current = (bio.social_links as Record<string, any>) || {};
-                    updateBio({
-                      social_links: {
-                        ...current,
-                        google_review_url: e.target.value,
-                      },
-                    });
-                  }}
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Deixe vazio para o sistema gerar automaticamente uma busca no Google pelo nome do negócio.
-                </p>
-              </Field>
-            )}
-          </div>
-
-          {/* Módulo de Triagem Inteligente de WhatsApp */}
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
-                  <MessageSquareHeart className="h-4 w-4 text-emerald-400" />
-                  <span>Triagem Inteligente de WhatsApp</span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Apresenta 2 perguntas rápidas antes de abrir o WhatsApp para já qualificar o lead.
-                </p>
-              </div>
-              <input
-                type="checkbox"
-                checked={Boolean((bio.social_links as any)?.triage_enabled)}
-                onChange={(e) => {
-                  const current = (bio.social_links as Record<string, any>) || {};
-                  updateBio({
-                    social_links: {
-                      ...current,
-                      triage_enabled: e.target.checked,
-                    },
-                  });
-                }}
-                className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
-              />
-            </div>
-            {Boolean((bio.social_links as any)?.triage_enabled) && (
-              <div className="space-y-2 pt-1 text-xs text-muted-foreground">
-                <p>✅ O lead responderá sobre o tipo de serviço que busca e o período de preferência antes de abrir o WhatsApp.</p>
-                <p>✅ As respostas chegam formatadas e com tag de origem (ex: [Via Instagram]).</p>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {section === "pix" && (
-        <Field label="Chave Pix">
-          <input
-            className="input-base"
-            value={bio.pix_key ?? ""}
-            placeholder="CPF, e-mail, celular ou chave aleatória"
-            onChange={(event) => updateBio({ pix_key: event.target.value })}
-          />
-          <p className="mt-1 text-xs text-muted-foreground">
-            Chaves comuns exibem o botão de copiar. Para mostrar também um QR Code, cole um código
-            Pix Copia e Cola completo.
-          </p>
-        </Field>
-      )}
-      {section === "links" && (
-        <div className="space-y-3">
-          {links.map((link) => (
-            <div key={link.id} className="rounded-xl border border-border p-3">
-              <input
-                className="input-base mb-2"
-                value={link.title}
-                aria-label="Título do link"
-                onChange={(event) => updateLink(link.id, { title: event.target.value })}
-              />
-              <input
-                className="input-base"
-                value={link.url}
-                aria-label="Endereço do link"
-                onChange={(event) => updateLink(link.id, { url: event.target.value })}
-              />
-              <div className="mt-2 flex items-center justify-between">
-                <label className="text-xs">
-                  <input
-                    type="checkbox"
-                    checked={link.active}
-                    onChange={(event) => updateLink(link.id, { active: event.target.checked })}
-                  />{" "}
-                  Exibir
-                </label>
-                <button
-                  type="button"
-                  className="text-xs text-[color:var(--destructive)]"
-                  onClick={() => removeLink(link.id)}
-                >
-                  Remover
-                </button>
-              </div>
-            </div>
-          ))}
-          <button type="button" className="btn-secondary w-full" onClick={addLink}>
-            Adicionar link
-          </button>
-        </div>
-      )}
-      {section === "catalog" &&
-        (planAccess?.features.catalog ? (
-          <CatalogEditor
-            items={products}
-            onChange={setProducts}
-            maxItems={planAccess.limits.catalog_items}
-          />
-        ) : (
-          <UpgradePrompt
-            compact
-            title="Produtos e serviços ficam no Pro"
-            description="Seu catálogo completo será liberado sem apagar nada que você já criou."
-          />
-        ))}
-    </div>
-  );
-}
-
-function MotionChoices({
-  value,
-  choices,
-  onChange,
-}: {
-  value: string;
-  choices: readonly (readonly [string, string])[];
-  onChange(value: string): void;
-}) {
-  return (
-    <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-      {choices.map(([id, label]) => (
-        <button
-          key={id}
-          type="button"
-          aria-pressed={value === id}
-          onClick={() => onChange(id)}
-          className={`rounded-lg border px-3 py-2 text-sm transition-colors ${
-            value === id
-              ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]"
-              : "border-border hover:border-[color:var(--primary)]/50"
-          }`}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label className="block text-sm font-medium">
-      <span>{label}</span>
-      <div className="mt-1">{children}</div>
+      <span className="text-sm font-medium text-foreground">{label}</span>
+      <div className="mt-1.5">{children}</div>
     </label>
   );
 }

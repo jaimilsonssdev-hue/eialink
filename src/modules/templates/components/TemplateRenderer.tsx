@@ -11,26 +11,28 @@ import { CatalogSection } from "@/modules/products/components/CatalogSection";
 import { safeExternalUrl } from "@/lib/safe-url";
 
 const NICHE_FALLBACK_COVERS: Record<string, string> = {
-  restaurant: "/template-assets/restaurant-demo-cover.png",
-  clinic: "/template-assets/clinic-demo-cover.png",
-  academy: "/template-assets/academy-gym-cover.png",
-  law: "/template-assets/law-office-cover.png",
-  store: "/template-assets/store-demo-cover.png",
-  beauty: "/template-assets/beauty-demo-cover.png",
-  creator: "/template-assets/creator-demo-cover.png",
-  business: "/template-assets/business-demo-cover.png",
+  restaurant: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
+  clinic: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=80",
+  academy: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80",
+  law: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80",
+  store: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80",
+  beauty: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80",
+  spotlight: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80",
+  creator: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80",
+  business: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80",
 };
 
 function getFallbackCover(templateId: string) {
   if (templateId.includes("restaurant")) return NICHE_FALLBACK_COVERS.restaurant;
   if (templateId.includes("clinic")) return NICHE_FALLBACK_COVERS.clinic;
-  if (templateId.includes("academy")) return NICHE_FALLBACK_COVERS.academy;
+  if (templateId.includes("academy") || templateId.includes("gym")) return NICHE_FALLBACK_COVERS.academy;
   if (templateId.includes("law")) return NICHE_FALLBACK_COVERS.law;
   if (templateId.includes("store")) return NICHE_FALLBACK_COVERS.store;
   if (templateId.includes("beauty")) return NICHE_FALLBACK_COVERS.beauty;
+  if (templateId.includes("spotlight") || templateId.includes("neon")) return NICHE_FALLBACK_COVERS.spotlight;
   if (templateId.includes("creator")) return NICHE_FALLBACK_COVERS.creator;
   if (templateId.includes("business")) return NICHE_FALLBACK_COVERS.business;
-  return null;
+  return NICHE_FALLBACK_COVERS.business;
 }
 
 export function TemplateRenderer({

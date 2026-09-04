@@ -1,7 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
 
 export type OwnedPage = Tables<"bio_pages">;
+
 
 function slugify(value: string) {
   const normalized = value
@@ -86,7 +88,10 @@ export const PageService = {
     const cleanSlug = slugify(companyName);
     const suffix = crypto.randomUUID().slice(0, 4);
     const slug = `${cleanSlug}-${suffix}`;
-    const description = `${companyName} em ${city || "sua região"}. Agendamentos e atendimento rápido pelo WhatsApp.`;
+
+    // Identifica preset Pro completo de alta conversão
+    const preset = getPresetForCompany(niche, companyName);
+    const description = preset.generateDescription(companyName, city || "sua região");
 
     const { data, error } = await supabase
       .from("bio_pages")
@@ -95,48 +100,110 @@ export const PageService = {
         display_name: companyName,
         slug,
         whatsapp: whatsapp ?? null,
-        whatsapp_button_label: "Agendar Atendimento",
-        whatsapp_message: `Olá! Vi a página da ${companyName} e gostaria de mais informações.`,
+        whatsapp_button_label: preset.whatsapp_button_label,
+        whatsapp_message: preset.whatsapp_message(companyName),
         instagram: instagram ?? null,
-        template_id: "spotlight-neon",
-        description: `[DEMO] ${description}`,
+        template_id: preset.template_id,
+        theme: preset.theme,
+        cover_url: preset.cover_url,
+        avatar_url: preset.avatar_url,
+        description,
         social_links: {
           instagram: instagram ?? undefined,
           is_demo: true,
           demo_company: companyName,
           triage_enabled: true,
+          google_rating: 5,
         },
-        theme: "aurora",
         published: true,
       })
       .select("*")
       .single();
 
-    if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a demonstração.");
+    if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a página demonstrativa.");
 
-    // Cria links iniciais demonstrativos de alta conversão
+    // 1. Cadastra Vitrine de Serviços Premium (catalog_items)
+    if (preset.services.length > 0) {
+      const catalogInserts = preset.services.map((srv, idx) => ({
+        bio_page_id: data.id,
+        name: srv.name,
+        description: srv.description,
+        price: srv.price,
+        image_url: srv.image_url,
+        button_label: "Agendar Procedimento",
+        button_url: `/agendar/${data.slug}`,
+        type: "service",
+        position: idx,
+        active: true,
+      }));
+      await supabase.from("catalog_items").insert(catalogInserts);
+    }
+
+    // 2. Configura e Ativa o Sistema de Agendamentos / Agenda Interativa
+    try {
+      await supabase.from("booking_settings").insert({
+        bio_page_id: data.id,
+        active: true,
+        timezone: "America/Sao_Paulo",
+        min_notice_hours: 2,
+        max_days_ahead: 30,
+      });
+
+      const bookingServicesInserts = preset.services.map((srv, idx) => ({
+        bio_page_id: data.id,
+        name: srv.name,
+        description: srv.description,
+        duration_minutes: srv.duration_minutes,
+        price: srv.price,
+        position: idx,
+        active: true,
+      }));
+      await supabase.from("booking_services").insert(bookingServicesInserts);
+
+      const weekdays = [1, 2, 3, 4, 5, 6];
+      const availabilityInserts = weekdays.map((day) => ({
+        bio_page_id: data.id,
+        weekday: day,
+        start_time: "08:00",
+        end_time: day === 6 ? "12:00" : "18:00",
+        active: true,
+      }));
+      await supabase.from("booking_availability").insert(availabilityInserts);
+    } catch (bookingErr) {
+      console.warn("Aviso ao inicializar agenda demonstrativa:", bookingErr);
+    }
+
+    // 3. Links de Autoridade e Prova Social (Google Reviews & Maps)
     const reviewSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(companyName + " " + (city || "") + " avaliar")}`;
     const mapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(companyName + " " + (city || ""))}`;
 
     await supabase.from("bio_links").insert([
       {
         bio_page_id: data.id,
-        title: "⭐ Avaliar Atendimento no Google",
+        title: "⭐ Avaliações no Google (5 Estrelas)",
         url: reviewSearchUrl,
         position: 0,
         active: true,
       },
       {
         bio_page_id: data.id,
-        title: "📍 Como Chegar (Google Maps)",
+        title: "📍 Localização & Como Chegar (GPS)",
         url: mapsSearchUrl,
         position: 1,
+        active: true,
+      },
+      {
+        bio_page_id: data.id,
+        title: "📅 Agendar Horário Online",
+        url: `/agendar/${data.slug}`,
+        position: 2,
         active: true,
       },
     ]);
 
     return data;
   },
+
 
   async uploadMedia(file: File, path: string) {
     const { error } = await supabase.storage

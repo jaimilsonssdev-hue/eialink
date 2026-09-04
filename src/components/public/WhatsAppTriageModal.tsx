@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MessageCircle, Check, X, ArrowRight, Sparkles } from "lucide-react";
+import { MessageCircle, Check, X, ArrowRight, Sparkles, Calendar } from "lucide-react";
 import { buildAttributedWhatsAppUrl } from "@/lib/attribution";
 
 export interface TriageQuestion {
@@ -19,6 +19,7 @@ interface WhatsAppTriageModalProps {
   phone: string;
   config: TriageConfig;
   baseMessage?: string | null;
+  bookingUrl?: string;
 }
 
 export function WhatsAppTriageModal({
@@ -27,6 +28,7 @@ export function WhatsAppTriageModal({
   phone,
   config,
   baseMessage,
+  bookingUrl,
 }: WhatsAppTriageModalProps) {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, string>>({});
 
@@ -44,6 +46,9 @@ export function WhatsAppTriageModal({
   ];
 
   const isComplete = questions.every((_, idx) => Boolean(selectedAnswers[idx]));
+  const hasSchedulingIntent = Object.values(selectedAnswers).some((ans) =>
+    /agend|marcar|consult/i.test(ans),
+  );
 
   const handleSelectOption = (questionIndex: number, option: string) => {
     setSelectedAnswers((prev) => ({
@@ -94,7 +99,27 @@ export function WhatsAppTriageModal({
           </button>
         </div>
 
-        <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-1">
+        {bookingUrl && hasSchedulingIntent && (
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 space-y-2 animate-fade-in">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-400">
+              <Calendar className="h-4 w-4 shrink-0" />
+              <span>Deseja agendar online direto agora?</span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Você pode escolher dia, horário e serviço na nossa agenda digital em tempo real sem precisar esperar retorno no WhatsApp.
+            </p>
+            <a
+              href={bookingUrl}
+              className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-colors"
+            >
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Abrir Agenda Online Agora</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+        )}
+
+        <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
           {questions.map((q, qIndex) => (
             <div key={qIndex} className="space-y-2">
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -126,7 +151,7 @@ export function WhatsAppTriageModal({
           ))}
         </div>
 
-        <div className="pt-2">
+        <div className="pt-2 space-y-2">
           <button
             type="button"
             onClick={handleFinish}
@@ -138,13 +163,25 @@ export function WhatsAppTriageModal({
                 : "var(--surface-elevated)",
             }}
           >
-            <span>Continuar para o WhatsApp</span>
+            <span>{hasSchedulingIntent ? "Continuar com Agendamento via WhatsApp" : "Continuar para o WhatsApp"}</span>
             <ArrowRight className="h-4 w-4" />
           </button>
           {!isComplete && (
-            <p className="text-center text-[11px] text-muted-foreground mt-2">
+            <p className="text-center text-[11px] text-muted-foreground">
               Selecione uma opção de cada pergunta para continuar
             </p>
+          )}
+
+          {bookingUrl && !hasSchedulingIntent && (
+            <div className="text-center pt-1">
+              <a
+                href={bookingUrl}
+                className="inline-flex items-center gap-1 text-[11px] text-[color:var(--primary)] hover:underline font-medium"
+              >
+                <Calendar className="h-3 w-3" />
+                <span>Prefere agendar online? Clique aqui para ver horários</span>
+              </a>
+            </div>
           )}
         </div>
       </div>

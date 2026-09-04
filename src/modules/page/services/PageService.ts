@@ -113,7 +113,6 @@ export const PageService = {
         social_links: {
           instagram: instagram ?? undefined,
           is_demo: isDemo,
-          demo_company: companyName,
           triage_enabled: true,
           google_rating: 5,
         },

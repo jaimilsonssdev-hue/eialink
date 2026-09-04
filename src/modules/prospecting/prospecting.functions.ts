@@ -1,5 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
-import { searchGoogleMapsAndInstagram } from "./LiveProspectingEngine";
+import { searchGoogleMapsAndInstagram, lookupBusinessProfile } from "./LiveProspectingEngine";
 import type { ProspectDraft } from "./types";
 
 export const runLiveProspecting = createServerFn({ method: "POST" })
@@ -14,4 +14,16 @@ export const runLiveProspecting = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<ProspectDraft[]> => {
     return await searchGoogleMapsAndInstagram(data.niche, data.city, data.limit ?? 15);
   });
+
+export const lookupBusinessProfileFn = createServerFn({ method: "POST" })
+  .inputValidator((data: { query: string }) => {
+    if (!data.query?.trim()) {
+      throw new Error("Termo ou link de busca obrigatório.");
+    }
+    return data;
+  })
+  .handler(async ({ data }): Promise<ProspectDraft[]> => {
+    return await lookupBusinessProfile(data.query);
+  });
+
 

@@ -254,3 +254,65 @@ export async function searchGoogleMapsAndInstagram(
   // Prioriza oportunidades de alta conversão (sem site e com WhatsApp primeiro)
   return results.sort((a, b) => b.score - a.score);
 }
+
+/**
+ * Localiza perfil de negócio por nome/termo ou link direto (Google Maps ou Instagram).
+ */
+export async function lookupBusinessProfile(queryOrUrl: string): Promise<ProspectDraft[]> {
+  const trimmed = queryOrUrl.trim();
+  if (!trimmed) return [];
+
+  // 1. Se for link ou perfil do Instagram (ex: instagram.com/clinica.silva ou @clinica.silva)
+  const instaRegex = /(?:https?:\/\/(?:www\.)?instagram\.com\/|@)([a-zA-Z0-9._]+)/i;
+  const instaMatch = trimmed.match(instaRegex);
+  if (instaMatch && !["explore", "p", "reel", "stories", "accounts"].includes(instaMatch[1].toLowerCase())) {
+    const handle = instaMatch[1];
+    const cleanName = handle
+      .replace(/[._]/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    return [
+      {
+        name: cleanName,
+        niche: "geral",
+        city: "",
+        state: null,
+        phone: null,
+        whatsapp: null,
+        email: null,
+        instagram: `@${handle}`,
+        website: null,
+        has_website: false,
+        rating: 5.0,
+        reviews_count: null,
+        source: "instagram_link",
+        status: "novo",
+        notes: `Importado via Instagram: @${handle}`,
+        dedupe_key: `insta:${handle.toLowerCase()}`,
+        score: 75,
+        priority: "alta",
+      },
+    ];
+  }
+
+  // 2. Se for link do Google Maps
+  let searchTerm = trimmed;
+  if (trimmed.includes("google.com/maps") || trimmed.includes("maps.app.goo.gl")) {
+    const qMatch = trimmed.match(/[?&]q=([^&]+)/) || trimmed.match(/\/place\/([^/@?]+)/);
+    if (qMatch) {
+      searchTerm = decodeURIComponent(qMatch[1].replace(/\+/g, " "));
+    }
+  }
+
+  // Extrai cidade se o usuário digitou "em Cidade" ou "- Cidade"
+  let niche = searchTerm;
+  let city = "";
+  const cityMatch = searchTerm.match(/(.+?)\s+(?:em|na|no|-)\s+([A-Za-zÀ-ÿ\s]{3,})$/i);
+  if (cityMatch) {
+    niche = cityMatch[1].trim();
+    city = cityMatch[2].trim();
+  }
+
+  return await searchGoogleMapsAndInstagram(niche, city, 5);
+}
+

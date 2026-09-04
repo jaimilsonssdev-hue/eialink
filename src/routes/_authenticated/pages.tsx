@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowRight,
+  Building2,
   Check,
   Copy,
   Dumbbell,
@@ -9,10 +10,12 @@ import {
   Eye,
   HeartPulse,
   Loader2,
+  MapPin,
   Pencil,
   Plus,
   Scale,
   Scissors,
+  Search,
   ShoppingBag,
   Sparkles,
   Stethoscope,
@@ -26,6 +29,10 @@ import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { UpgradePrompt } from "@/modules/billing/components/UpgradePrompt";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { publicPageUrl } from "@/lib/public-page-url";
+import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
+import { lookupBusinessProfileFn } from "@/modules/prospecting/prospecting.functions";
+import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
+import type { ProspectDraft } from "@/modules/prospecting/types";
 
 export const Route = createFileRoute("/_authenticated/pages")({
   component: PagesWorkspace,
@@ -117,6 +124,12 @@ function PagesWorkspace() {
   const [wizardWhatsapp, setWizardWhatsapp] = useState("");
   const [wizardCity, setWizardCity] = useState("");
   const [isCreatingWizard, setIsCreatingWizard] = useState(false);
+
+  // Auto-importador do Perfil do Google Maps / Link
+  const [lookupQuery, setLookupQuery] = useState("");
+  const [isLookingUp, setIsLookingUp] = useState(false);
+  const [lookupResults, setLookupResults] = useState<ProspectDraft[]>([]);
+  const [lookupFeedback, setLookupFeedback] = useState<string | null>(null);
 
   const [isCreatingBlank, setIsCreatingBlank] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -215,8 +228,61 @@ function PagesWorkspace() {
     }
   }
 
+  async function handleLookupProfile() {
+    const q = lookupQuery.trim();
+    if (!q) return;
+
+    setIsLookingUp(true);
+    setLookupFeedback(null);
+    setLookupResults([]);
+
+    try {
+      let results: ProspectDraft[] = [];
+      try {
+        results = await lookupBusinessProfile(q);
+      } catch (err) {
+        console.warn("[Lookup] Falha na busca direta no cliente, tentando via servidor:", err);
+        results = await lookupBusinessProfileFn({ data: { query: q } });
+      }
+
+      if (results.length === 1) {
+        applyProfileData(results[0]);
+        setLookupFeedback(`Perfil de "${results[0].name}" carregado com sucesso!`);
+      } else if (results.length > 1) {
+        setLookupResults(results);
+        setLookupFeedback(`${results.length} empresas encontradas. Clique na sua abaixo para preencher.`);
+      } else {
+        // Se não encontrou no Maps, usa o texto digitado pelo usuário como nome
+        setWizardName(q);
+        const preset = getPresetForCompany(null, q);
+        setSelectedNiche(preset.nicheKey);
+        setLookupFeedback("Nome preenchido! Complete os campos abaixo para gerar sua página.");
+      }
+    } catch (err) {
+      setLookupFeedback(err instanceof Error ? err.message : "Erro ao pesquisar perfil.");
+    } finally {
+      setIsLookingUp(false);
+    }
+  }
+
+  function applyProfileData(profile: ProspectDraft) {
+    setWizardName(profile.name);
+    if (profile.whatsapp || profile.phone) {
+      setWizardWhatsapp(profile.whatsapp || profile.phone || "");
+    }
+    if (profile.city) {
+      setWizardCity(profile.city);
+    }
+    const preset = getPresetForCompany(profile.niche, profile.name);
+    setSelectedNiche(preset.nicheKey);
+    setLookupResults([]);
+  }
+
   function openWizardWithNiche(nicheKey: string) {
     setSelectedNiche(nicheKey);
+    setLookupQuery("");
+    setLookupResults([]);
+    setLookupFeedback(null);
     setIsWizardOpen(true);
   }
 
@@ -539,6 +605,84 @@ function PagesWorkspace() {
             </div>
 
             <form onSubmit={handleMagicCreate} className="space-y-4">
+              {/* Preenchimento Inteligente via Google Maps / Link */}
+              <div className="rounded-2xl border border-[color:var(--primary)]/30 bg-[color:var(--primary)]/5 p-3.5 space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-[color:var(--primary)]">
+                    <Search className="h-4 w-4 shrink-0" />
+                    <span>Puxar Perfil Automático (Google Maps ou Link)</span>
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-0.5 rounded-full">
+                    Mágico
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-snug">
+                  Digite o nome da sua empresa (ex: <i>Clínica Sorriso Salvador</i>) ou cole o link do Google Maps / Instagram:
+                </p>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      value={lookupQuery}
+                      onChange={(e) => setLookupQuery(e.target.value)}
+                      placeholder="Nome da empresa ou link..."
+                      className="input-field w-full pl-8 text-xs py-2"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          void handleLookupProfile();
+                        }
+                      }}
+                    />
+                    <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleLookupProfile}
+                    disabled={isLookingUp || !lookupQuery.trim()}
+                    className="btn-primary shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5 transition-all"
+                  >
+                    {isLookingUp ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Buscando...
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-3.5 w-3.5" /> Puxar Dados
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {lookupFeedback && (
+                  <p className="text-xs font-medium text-[color:var(--primary)] animate-fade-in">
+                    {lookupFeedback}
+                  </p>
+                )}
+
+                {lookupResults.length > 0 && (
+                  <div className="space-y-1.5 pt-1 max-h-36 overflow-y-auto pr-1">
+                    {lookupResults.map((lead, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => applyProfileData(lead)}
+                        className="w-full text-left p-2 rounded-xl border border-border/70 bg-card hover:border-[color:var(--primary)] hover:bg-[color:var(--primary)]/10 transition-all flex items-center justify-between gap-2 text-xs"
+                      >
+                        <div className="truncate">
+                          <span className="font-bold text-foreground block truncate">{lead.name}</span>
+                          <span className="text-[11px] text-muted-foreground">
+                            {[lead.city, lead.phone || lead.whatsapp, lead.rating ? `⭐ ${lead.rating}` : null].filter(Boolean).join(" · ")}
+                          </span>
+                        </div>
+                        <span className="shrink-0 text-[10px] font-bold text-[color:var(--primary)] bg-[color:var(--primary)]/15 px-2 py-1 rounded-lg">
+                          Usar este
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Seleção de Nicho */}
               <div>
                 <label className="block text-xs font-bold text-foreground mb-1.5">

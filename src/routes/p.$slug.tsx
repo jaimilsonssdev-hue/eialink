@@ -232,12 +232,17 @@ function PublicBio() {
     const anchor = (e.target as HTMLElement).closest("a");
     if (!anchor) return;
     const href = anchor.getAttribute("href") || "";
+
+    // IMPORTANTE: Links de agendamento online NUNCA devem abrir a triagem de WhatsApp, vão direto para a agenda
+    if (href.includes("/agendar/") || href.startsWith("/agendar")) {
+      return;
+    }
+
     // Intercepta qualquer botão que aponte para o WhatsApp
     if (
       href.includes("wa.me") ||
       href.includes("whatsapp.com") ||
-      anchor.classList.contains("public-profile-action-whatsapp") ||
-      anchor.classList.contains("niche-clinic-cta-primary")
+      anchor.classList.contains("public-profile-action-whatsapp")
     ) {
       e.preventDefault();
       e.stopPropagation();
@@ -292,6 +297,7 @@ function PublicBio() {
           phone={bio.whatsapp}
           config={triageConfig}
           baseMessage={bio.whatsapp_message}
+          bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
         />
       )}
     </div>

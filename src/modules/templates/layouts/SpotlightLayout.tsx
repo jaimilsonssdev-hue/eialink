@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { CalendarCheck } from "lucide-react";
 import type { TemplateRenderModel } from "../types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import { ProfileHeader } from "@/components/public-profile/ProfileHeader";
@@ -25,7 +26,7 @@ export class SpotlightLayout implements TemplateLayoutRenderer {
     return model.template.layout === "spotlight";
   }
   render(_model: TemplateRenderModel, ctx: LayoutRenderContext): ReactNode {
-    const { bio, links, onTrack, onShare, products = [], supplemental } = ctx;
+    const { bio, links, onTrack, onShare, products = [], bookingUrl, supplemental } = ctx;
     const items = products.filter((item) => item.active);
     const accent = freeAccentFromTemplate(bio.template_id);
     const buttonShape = freeButtonShapeFromTemplate(bio.template_id);
@@ -41,6 +42,18 @@ export class SpotlightLayout implements TemplateLayoutRenderer {
             />
           )}
           <ProfileHeader bio={bio} onTrack={onTrack} />
+          {bookingUrl && (
+            <div className="px-4 my-2">
+              <a
+                href={bookingUrl}
+                onClick={() => onTrack("booking_click")}
+                className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl font-bold bg-cyan-400 hover:bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-400/20 transition-all text-sm uppercase tracking-wide"
+              >
+                <CalendarCheck size={18} />
+                Agendar Horário Online
+              </a>
+            </div>
+          )}
           <PublicSocialLinks bio={bio} onTrack={onTrack} />
           <ActionButtons
             bio={bio}

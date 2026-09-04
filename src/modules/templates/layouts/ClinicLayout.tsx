@@ -6,6 +6,7 @@ import {
   Instagram,
   MessageCircle,
   ShieldCheck,
+  Star,
   Stethoscope,
 } from "lucide-react";
 import type { PublicLink } from "@/components/public-profile/types";
@@ -23,7 +24,7 @@ export class ClinicLayout implements TemplateLayoutRenderer {
     return model.template.layout === "clinic";
   }
   render(_model: TemplateRenderModel, ctx: LayoutRenderContext): ReactNode {
-    const { bio, links, onTrack, onShare, products = [], supplemental } = ctx;
+    const { bio, links, onTrack, onShare, products = [], bookingUrl, supplemental } = ctx;
     const treatments = products.filter((p) => p.active);
     const secondary = links.filter((l) => l.active);
     const insta = bio.instagram?.replace("@", "");
@@ -33,11 +34,14 @@ export class ClinicLayout implements TemplateLayoutRenderer {
         <header className="niche-clinic-hero">
           <div className="niche-clinic-hero-copy">
             <span className="niche-clinic-eyebrow">
-              <Stethoscope size={14} aria-hidden /> Atendimento humano
+              <Stethoscope size={14} aria-hidden /> Atendimento humano & acolhedor
             </span>
             <h1 className="niche-clinic-name">{bio.display_name}</h1>
             {bio.description && <p className="niche-clinic-lead">{bio.description}</p>}
             <div className="niche-clinic-trust">
+              <span>
+                <Star size={14} className="text-amber-400 fill-amber-400" aria-hidden /> 5.0 no Google
+              </span>
               <span>
                 <ShieldCheck size={14} aria-hidden /> Ambiente seguro
               </span>
@@ -46,16 +50,39 @@ export class ClinicLayout implements TemplateLayoutRenderer {
               </span>
             </div>
             <div className="niche-clinic-cta-row">
-              {whats && (
+              {bookingUrl ? (
                 <a
-                  href={whatsappUrl(whats, bio.whatsapp_message || "Olá, gostaria de agendar uma consulta")}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => onTrack("whatsapp_click")}
+                  href={bookingUrl}
+                  onClick={() => onTrack("booking_click")}
                   className="niche-clinic-cta-primary"
                 >
                   <CalendarCheck size={18} aria-hidden />
-                  {bio.whatsapp_button_label || "Agendar consulta"}
+                  Agendar Horário Online
+                </a>
+              ) : (
+                whats && (
+                  <a
+                    href={whatsappUrl(whats, bio.whatsapp_message || "Olá, gostaria de agendar uma consulta")}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => onTrack("whatsapp_click")}
+                    className="niche-clinic-cta-primary"
+                  >
+                    <CalendarCheck size={18} aria-hidden />
+                    {bio.whatsapp_button_label || "Agendar consulta"}
+                  </a>
+                )
+              )}
+              {whats && bookingUrl && (
+                <a
+                  href={whatsappUrl(whats, bio.whatsapp_message || "Olá! Gostaria de tirar algumas dúvidas.")}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => onTrack("whatsapp_click")}
+                  className="niche-clinic-cta-secondary"
+                >
+                  <MessageCircle size={18} aria-hidden />
+                  WhatsApp
                 </a>
               )}
               <button
@@ -80,15 +107,21 @@ export class ClinicLayout implements TemplateLayoutRenderer {
         {treatments.length > 0 && (
           <section className="niche-clinic-section" aria-label="Especialidades">
             <div className="niche-clinic-section-head">
-              <p className="niche-clinic-eyebrow">Especialidades</p>
+              <p className="niche-clinic-eyebrow">Especialidades & Procedimentos</p>
               <h2>Tratamentos oferecidos</h2>
             </div>
             <ul className="niche-clinic-services">
               {treatments.map((item) => (
                 <li key={item.id} className="niche-clinic-service">
-                  <div className="niche-clinic-service-icon" aria-hidden>
-                    <HeartPulse size={22} />
-                  </div>
+                  {item.image_url ? (
+                    <div className="niche-clinic-service-media">
+                      <img src={item.image_url} alt={item.name} loading="lazy" />
+                    </div>
+                  ) : (
+                    <div className="niche-clinic-service-icon" aria-hidden>
+                      <HeartPulse size={22} />
+                    </div>
+                  )}
                   <div className="min-w-0 flex-1">
                     <h3>{item.name}</h3>
                     {item.description && <p>{item.description}</p>}
@@ -96,11 +129,24 @@ export class ClinicLayout implements TemplateLayoutRenderer {
                       {item.price !== null && (
                         <span>A partir de R$ {item.price.toFixed(2).replace(".", ",")}</span>
                       )}
-                      {item.button_url && (
+                      {bookingUrl ? (
+                        <a href={bookingUrl} onClick={() => onTrack("booking_click", item.id)}>
+                          Agendar <ArrowUpRight size={14} aria-hidden />
+                        </a>
+                      ) : item.button_url ? (
                         <a href={item.button_url} target="_blank" rel="noreferrer">
                           {item.button_label} <ArrowUpRight size={14} aria-hidden />
                         </a>
-                      )}
+                      ) : whats ? (
+                        <a
+                          href={whatsappUrl(whats, `Olá! Gostaria de agendar o atendimento para ${item.name}.`)}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={() => onTrack("whatsapp_click", item.id)}
+                        >
+                          Agendar <ArrowUpRight size={14} aria-hidden />
+                        </a>
+                      ) : null}
                     </div>
                   </div>
                 </li>

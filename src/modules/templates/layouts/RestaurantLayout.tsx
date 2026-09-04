@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight, Instagram, MapPin, MessageCircle, UtensilsCrossed } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, Instagram, MapPin, MessageCircle, Star, UtensilsCrossed } from "lucide-react";
 import type { CatalogItem } from "@/modules/products/types";
 import type { PublicLink } from "@/components/public-profile/types";
 import type { TemplateRenderModel } from "../types";
@@ -16,7 +16,7 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
     return model.template.layout === "restaurant";
   }
   render(_model: TemplateRenderModel, ctx: LayoutRenderContext): ReactNode {
-    const { bio, links, onTrack, onShare, products = [], supplemental } = ctx;
+    const { bio, links, onTrack, onShare, products = [], bookingUrl, supplemental } = ctx;
     const menu = products.filter((p) => p.active);
     const secondary = links.filter((l) => l.active);
     const insta = bio.instagram?.replace("@", "");
@@ -40,13 +40,16 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
           </button>
           <div className="niche-restaurant-hero-content">
             <span className="niche-eyebrow">
-              <UtensilsCrossed size={14} aria-hidden /> Casa
+              <UtensilsCrossed size={14} aria-hidden /> Gastronomia & Sabor
             </span>
             <h1 className="niche-restaurant-name">{bio.display_name}</h1>
             {bio.description && (
               <p className="niche-restaurant-lead">{bio.description}</p>
             )}
             <div className="niche-restaurant-meta">
+              <span>
+                <Star size={14} className="text-amber-400 fill-amber-400 inline" aria-hidden /> 5.0 no Google
+              </span>
               {insta && (
                 <a
                   href={`https://instagram.com/${insta}`}
@@ -65,22 +68,38 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
           </div>
         </header>
 
-        {whats && (
-          <a
-            href={whatsappUrl(whats, bio.whatsapp_message || "Olá, gostaria de fazer um pedido")}
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => onTrack("whatsapp_click")}
-            className="niche-restaurant-cta"
-          >
-            <MessageCircle size={20} aria-hidden />
-            <span className="flex-1 text-left">
-              <span className="block text-sm font-bold uppercase tracking-wider">Fazer pedido</span>
-              <span className="block text-xs opacity-90">Pelo WhatsApp — resposta rápida</span>
-            </span>
-            <ArrowUpRight size={20} aria-hidden />
-          </a>
-        )}
+        <div className="flex flex-col gap-2.5 my-3">
+          {bookingUrl && (
+            <a
+              href={bookingUrl}
+              onClick={() => onTrack("booking_click")}
+              className="niche-restaurant-cta bg-amber-500 hover:bg-amber-400 text-black font-bold"
+            >
+              <CalendarCheck size={20} aria-hidden />
+              <span className="flex-1 text-left">
+                <span className="block text-sm font-bold uppercase tracking-wider">Reservar Mesa / Horário Online</span>
+                <span className="block text-xs opacity-90">Escolha o melhor dia e horário</span>
+              </span>
+              <ArrowUpRight size={20} aria-hidden />
+            </a>
+          )}
+          {whats && (
+            <a
+              href={whatsappUrl(whats, bio.whatsapp_message || "Olá, gostaria de fazer um pedido")}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => onTrack("whatsapp_click")}
+              className="niche-restaurant-cta"
+            >
+              <MessageCircle size={20} aria-hidden />
+              <span className="flex-1 text-left">
+                <span className="block text-sm font-bold uppercase tracking-wider">Fazer pedido pelo WhatsApp</span>
+                <span className="block text-xs opacity-90">Cardápio completo e resposta rápida</span>
+              </span>
+              <ArrowUpRight size={20} aria-hidden />
+            </a>
+          )}
+        </div>
 
         {menu.length > 0 && (
           <section className="niche-restaurant-menu" aria-label="Cardápio">

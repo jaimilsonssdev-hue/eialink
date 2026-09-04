@@ -200,7 +200,7 @@ const PRESETS: Record<string, NichePreset> = {
 
   restaurante: {
     nicheKey: "restaurante",
-    template_id: "restaurant-flavor",
+    template_id: "restaurant-menu",
     theme: "sunset",
     cover_url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
     avatar_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=400&q=80",

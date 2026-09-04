@@ -105,7 +105,8 @@ export type TemplateDefinition = {
     | "academy"
     | "law"
     | "storefront"
-    | "spotlight";
+    | "spotlight"
+    | "beauty";
   components: TemplateComponentType[];
   componentVariants: ComponentVariants;
   smart?: SmartTemplateDefinition;

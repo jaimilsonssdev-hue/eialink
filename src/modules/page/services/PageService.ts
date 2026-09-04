@@ -77,12 +77,14 @@ export const PageService = {
     niche,
     city,
     instagram,
+    isDemo = true,
   }: {
     companyName: string;
     whatsapp?: string | null;
     niche?: string | null;
     city?: string | null;
     instagram?: string | null;
+    isDemo?: boolean;
   }) {
     const userId = await this.getCurrentUserId();
     const cleanSlug = slugify(companyName);
@@ -110,7 +112,7 @@ export const PageService = {
         description,
         social_links: {
           instagram: instagram ?? undefined,
-          is_demo: true,
+          is_demo: isDemo,
           demo_company: companyName,
           triage_enabled: true,
           google_rating: 5,
@@ -212,5 +214,32 @@ export const PageService = {
     if (error) throw error;
     return supabase.storage.from("bio-media").getPublicUrl(path).data.publicUrl;
   },
+
+  async deletePage(pageId: string) {
+    const userId = await this.getCurrentUserId();
+
+    // 1. Remove registros vinculados primeiro para garantir que nenhuma restrição de chave estrangeira falhe
+    await Promise.allSettled([
+      supabase.from("bio_links").delete().eq("bio_page_id", pageId),
+      supabase.from("catalog_items").delete().eq("bio_page_id", pageId),
+      supabase.from("booking_availability").delete().eq("bio_page_id", pageId),
+      supabase.from("booking_services").delete().eq("bio_page_id", pageId),
+      supabase.from("booking_settings").delete().eq("bio_page_id", pageId),
+      supabase.from("appointments").delete().eq("bio_page_id", pageId),
+      supabase.from("page_blocks").delete().eq("bio_page_id", pageId),
+      supabase.from("analytics_events").delete().eq("bio_page_id", pageId),
+    ]);
+
+    // 2. Remove a página da tabela bio_pages
+    const { error } = await supabase
+      .from("bio_pages")
+      .delete()
+      .eq("id", pageId)
+      .eq("user_id", userId);
+
+    if (error) throw new Error(error.message);
+    return true;
+  },
 };
+
 

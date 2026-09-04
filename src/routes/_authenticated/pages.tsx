@@ -189,16 +189,18 @@ function PagesWorkspace() {
       slug: string;
       phone?: string | null;
       email?: string | null;
+      instagram?: string | null;
       isDemo?: boolean;
     };
   } | null>(null);
   const [officialLoadingId, setOfficialLoadingId] = useState<string | null>(null);
 
-  async function handleMakeOfficial(page: OwnedPage) {
-    setOfficialLoadingId(page.id);
+  async function handleMakeOfficial(pageOrId: OwnedPage | string) {
+    const pageId = typeof pageOrId === "string" ? pageOrId : pageOrId.id;
+    setOfficialLoadingId(pageId);
     try {
-      await PageService.makePageOfficial(page.id);
-      await pages.refetch();
+      await PageService.makePageOfficial(pageId);
+      void pages.refetch();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao tornar oficial.";
       alert(msg);
@@ -216,6 +218,7 @@ function PagesWorkspace() {
         displayName: page.display_name,
         slug: page.slug,
         phone: page.whatsapp,
+        instagram: (page.social_links as any)?.instagram || null,
         isDemo,
       },
     });

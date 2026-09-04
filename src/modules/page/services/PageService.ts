@@ -84,6 +84,7 @@ export const PageService = {
     city,
     instagram,
     isDemo = true,
+    variantIndex,
   }: {
     companyName: string;
     whatsapp?: string | null;
@@ -91,6 +92,7 @@ export const PageService = {
     city?: string | null;
     instagram?: string | null;
     isDemo?: boolean;
+    variantIndex?: number;
   }) {
     const userId = await this.getCurrentUserId();
     const cleanSlug = slugify(companyName);
@@ -98,7 +100,7 @@ export const PageService = {
     const slug = `${cleanSlug}-${suffix}`;
 
     // Identifica preset Pro completo de alta conversão
-    const preset = getPresetForCompany(niche, companyName);
+    const preset = getPresetForCompany(niche, companyName, variantIndex);
     const description = preset.generateDescription(companyName, city || "sua região");
 
     const { data, error } = await supabase

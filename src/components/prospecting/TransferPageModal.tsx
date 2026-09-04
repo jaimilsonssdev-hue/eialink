@@ -11,6 +11,7 @@ import {
   ExternalLink,
   Sparkles,
   Mail,
+  Instagram,
 } from "lucide-react";
 import { PageService } from "@/modules/page/services/PageService";
 
@@ -23,19 +24,24 @@ export interface TransferPageModalProps {
     slug: string;
     phone?: string | null;
     email?: string | null;
+    instagram?: string | null;
     isDemo?: boolean;
   };
   onSuccess?: () => void;
 }
 
 export function TransferPageModal({ isOpen, onClose, page, onSuccess }: TransferPageModalProps) {
-  const [activeTab, setActiveTab] = useState<"claim" | "email">("claim");
+  const [activeTab, setActiveTab] = useState<"claim" | "instagram" | "email">("claim");
 
   // Estados do Link de Resgate
   const [claimLoading, setClaimLoading] = useState(false);
   const [claimUrl, setClaimUrl] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedMessage, setCopiedMessage] = useState(false);
+
+  // Estados do Instagram Direct
+  const [targetInstagram, setTargetInstagram] = useState(page.instagram || "");
+  const [copiedInstaMessage, setCopiedInstaMessage] = useState(false);
 
   // Estados de Transferência por E-mail
   const [targetEmail, setTargetEmail] = useState(page.email || "");
@@ -102,6 +108,36 @@ Ao acessar, você pode definir sua senha de acesso gratuita para gerenciar seus 
       ? `https://wa.me/${whatsappTarget}?text=${encodeURIComponent(whatsappMessage)}`
       : `https://wa.me/?text=${encodeURIComponent(whatsappMessage)}`;
     window.open(url, "_blank", "noopener,noreferrer");
+  }
+
+  const cleanInsta = targetInstagram
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/^@/, "")
+    .replace(/\/.*$/, "")
+    .trim();
+
+  const instaMessage = `Olá! Notamos o excelente trabalho da ${page.displayName} aqui no Instagram e preparamos um presente exclusivo: criamos uma versão interativa e profissional do seu novo site oficial no EIA Link.
+
+Confira aqui como ficou:
+👉 ${claimUrl || `https://eialink.com.br/p/${page.slug}`}
+
+Você pode assumir o controle da página gratuitamente agora mesmo e colocar o link na sua bio!`;
+
+  function handleCopyInstaMessage() {
+    void navigator.clipboard.writeText(instaMessage);
+    setCopiedInstaMessage(true);
+    setTimeout(() => setCopiedInstaMessage(false), 2000);
+  }
+
+  function handleOpenInstagramDirect() {
+    void navigator.clipboard.writeText(instaMessage);
+    setCopiedInstaMessage(true);
+    setTimeout(() => setCopiedInstaMessage(false), 2000);
+
+    const targetUrl = cleanInsta
+      ? `https://ig.me/m/${cleanInsta}`
+      : "https://www.instagram.com/direct/inbox/";
+    window.open(targetUrl, "_blank", "noopener,noreferrer");
   }
 
   async function handleMakeOfficial() {
@@ -189,30 +225,42 @@ Ao acessar, você pode definir sua senha de acesso gratuita para gerenciar seus 
         </div>
 
         {/* Abas */}
-        <div className="flex rounded-xl bg-surface p-1 border border-border">
+        <div className="flex rounded-xl bg-surface p-1 border border-border gap-1">
           <button
             type="button"
             onClick={() => setActiveTab("claim")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
               activeTab === "claim"
                 ? "bg-[color:var(--primary)] text-[color:var(--primary-foreground)] shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <MessageCircle className="h-4 w-4" />
-            Link de Resgate no WhatsApp
+            WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("instagram")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
+              activeTab === "instagram"
+                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <Instagram className="h-4 w-4" />
+            Instagram Direct
           </button>
           <button
             type="button"
             onClick={() => setActiveTab("email")}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold transition-all ${
               activeTab === "email"
                 ? "bg-[color:var(--primary)] text-[color:var(--primary-foreground)] shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
             <Mail className="h-4 w-4" />
-            Transferir por E-mail
+            E-mail
           </button>
         </div>
 
@@ -308,7 +356,94 @@ Ao acessar, você pode definir sua senha de acesso gratuita para gerenciar seus 
           </div>
         )}
 
-        {/* Aba 2: Transferir por E-mail do Cliente */}
+        {/* Aba 2: Direct no Instagram */}
+        {activeTab === "instagram" && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-pink-500/20 bg-pink-500/5 p-3 text-xs text-foreground/90 space-y-1">
+              <p className="font-semibold flex items-center gap-1.5 text-pink-500">
+                <Instagram className="h-4 w-4" /> Prospecção via Instagram Direct:
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                Ideal para empresas e profissionais que não possuem WhatsApp público ou respondem mais rápido pelo Instagram.
+                Ao clicar no botão abaixo, a mensagem é <strong>copiada para sua área de transferência</strong> e o chat do perfil é aberto diretamente. Basta colar e enviar!
+              </p>
+            </div>
+
+            {/* Campo de Usuário do Instagram */}
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                Perfil do Instagram da Empresa
+              </label>
+              <div className="mt-1.5 flex items-center gap-2">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground">@</span>
+                  <input
+                    type="text"
+                    placeholder="usuario.da.empresa"
+                    value={targetInstagram}
+                    onChange={(e) => setTargetInstagram(e.target.value)}
+                    className="input-field w-full pl-7 text-xs font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Mensagem Formatada para Instagram */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Pitch Formatado para Direct
+                </label>
+                <button
+                  type="button"
+                  onClick={handleCopyInstaMessage}
+                  className="text-xs text-pink-500 hover:underline flex items-center gap-1"
+                >
+                  {copiedInstaMessage ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copiedInstaMessage ? "Copiado!" : "Copiar mensagem"}
+                </button>
+              </div>
+              <div className="rounded-xl border border-border bg-surface/50 p-3 text-xs font-mono text-muted-foreground whitespace-pre-wrap leading-relaxed max-h-36 overflow-y-auto">
+                {instaMessage}
+              </div>
+            </div>
+
+            {/* Ações da Aba Instagram */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border">
+              <button
+                type="button"
+                onClick={handleMakeOfficial}
+                disabled={officialLoading || officialDone}
+                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
+                  officialDone
+                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                    : "border-border bg-surface hover:bg-surface-elevated text-foreground"
+                }`}
+                title="Remove a tarja de demonstração da página pública"
+              >
+                {officialLoading ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : officialDone ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                ) : (
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                )}
+                {officialDone ? "Página Oficializada" : "Tornar Oficial Sem Transferir"}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleOpenInstagramDirect}
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white px-4 py-2 text-xs font-semibold shadow-md shadow-pink-500/15 transition-all"
+              >
+                <Instagram className="h-4 w-4" />
+                Copiar Pitch & Abrir Direct
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Aba 3: Transferir por E-mail do Cliente */}
         {activeTab === "email" && (
           <form onSubmit={handleTransferByEmail} className="space-y-4">
             <div className="rounded-xl border border-border bg-surface/50 p-3 text-xs text-muted-foreground leading-relaxed">

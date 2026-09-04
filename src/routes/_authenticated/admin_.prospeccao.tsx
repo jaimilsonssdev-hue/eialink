@@ -23,12 +23,16 @@ import {
   ExternalLink,
   Loader2,
   Instagram,
+  RotateCcw,
+  X,
+  Copy,
 } from "lucide-react";
 
 import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
 import { PageService } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
+import { NICHE_PRESETS_VARIANTS, detectNicheKey } from "@/modules/prospecting/nichePresets";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -151,7 +155,9 @@ function ProspectingPage() {
   const [selectedLiveIndices, setSelectedLiveIndices] = useState<Set<number>>(new Set());
 
   const [creatingPageId, setCreatingPageId] = useState<string | null>(null);
+  const [regeneratingPageId, setRegeneratingPageId] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [instaModalCompany, setInstaModalCompany] = useState<ProspectedCompany | null>(null);
   const [transferModalData, setTransferModalData] = useState<{
     isOpen: boolean;
     page: {
@@ -160,6 +166,7 @@ function ProspectingPage() {
       slug: string;
       phone?: string | null;
       email?: string | null;
+      instagram?: string | null;
       isDemo?: boolean;
     };
   } | null>(null);
@@ -326,12 +333,73 @@ function ProspectingPage() {
     }
   }
 
+  async function handleRegenerateDemo(company: ProspectedCompany) {
+    setRegeneratingPageId(company.id);
+    setFeedback(null);
+    try {
+      const demoInfo = parseDemoInfo(company.notes);
+      const nicheKey = detectNicheKey(company.niche, company.name);
+      const variants = NICHE_PRESETS_VARIANTS[nicheKey] || NICHE_PRESETS_VARIANTS.geral;
+
+      // Identifica o modelo atual anotado
+      const currentModelMatch = company.notes?.match(/\[Modelo:\s*([^\]]+)\]/i);
+      const currentModelName = currentModelMatch ? currentModelMatch[1].trim() : null;
+      const currentIndex = currentModelName
+        ? variants.findIndex((v) => v.modelName.toLowerCase() === currentModelName.toLowerCase())
+        : -1;
+
+      // Avança sequencialmente para o próximo modelo (0 -> 1 -> 2 -> 0)
+      const nextIndex = (currentIndex + 1) % variants.length;
+      const nextVariant = variants[nextIndex];
+
+      // Remove a página demo anterior para manter tudo limpo
+      if (demoInfo.pageId) {
+        try {
+          await PageService.deletePage(demoInfo.pageId);
+        } catch (e) {
+          console.warn("Aviso ao remover demo anterior:", e);
+        }
+      }
+
+      // Gera a nova demonstração com o novo design
+      const page = await PageService.createProspectDemoPage({
+        companyName: company.name,
+        whatsapp: company.whatsapp ?? company.phone,
+        niche: company.niche,
+        city: company.city,
+        instagram: company.instagram,
+        variantIndex: nextIndex,
+      });
+
+      const modelVariant = (page.social_links as any)?.model_variant || nextVariant.modelName;
+      const url = `https://eialink.com.br/p/${page.slug}`;
+
+      // Limpa a linha anterior de Demo das notas
+      const cleanNotes = (company.notes || "")
+        .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+        .replace(/\n\s*\n/g, "\n")
+        .trim();
+
+      const newNotes = cleanNotes
+        ? `${cleanNotes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
+        : `Demo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`;
+
+      await ProspectingService.updateNotes(company.id, newNotes);
+      setFeedback(`🎨 Modelo alterado para "${modelVariant}" para ${company.name}! O novo link já está pronto.`);
+      invalidate();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao trocar modelo da página.";
+      setFeedback(message);
+    } finally {
+      setRegeneratingPageId(null);
+    }
+  }
+
   async function handleInstagramApproach(company: ProspectedCompany) {
     const handle = cleanInstagramHandle(company.instagram);
     if (!handle) {
-      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`;
-      window.open(searchUrl, "_blank");
-      setFeedback(`Buscando perfil do Instagram para "${company.name}" no Google...`);
+      // Abre o modal dedicado para digitar o @perfil, visualizar o pitch e enviar
+      setInstaModalCompany(company);
       return;
     }
 
@@ -389,6 +457,7 @@ function ProspectingPage() {
         displayName: company.name,
         slug,
         phone: company.whatsapp || company.phone,
+        instagram: company.instagram,
         isDemo: true,
       },
     });
@@ -561,20 +630,44 @@ function ProspectingPage() {
                           href={demo.url}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/25"
-                          title="Ver Página Pro"
+                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/25 transition-colors"
+                          title="Ver Página Pro no ar"
                         >
                           <ExternalLink className="h-3.5 w-3.5" /> Ver
                         </a>
                         {demo.pageId && (
-                          <Link
-                            to="/builder"
-                            search={{ page: demo.pageId }}
-                            className="inline-flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/15 text-blue-400 px-2 py-1 text-xs hover:bg-blue-500/25"
-                            title="Editar no Construtor"
-                          >
-                            <Pencil className="h-3.5 w-3.5" /> Editar
-                          </Link>
+                          <>
+                            <Link
+                              to="/builder"
+                              search={{ page: demo.pageId }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/15 text-blue-400 px-2 py-1 text-xs hover:bg-blue-500/25 transition-colors"
+                              title="Editar no Construtor"
+                            >
+                              <Pencil className="h-3.5 w-3.5" /> Editar
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={() => void handleRegenerateDemo(company)}
+                              disabled={regeneratingPageId === company.id}
+                              className="inline-flex items-center gap-1 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 px-2 py-1 text-xs hover:bg-purple-500/25 transition-all"
+                              title="Alternar entre os 3 modelos visuais de alta conversão para esta empresa"
+                            >
+                              {regeneratingPageId === company.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <RotateCcw className="h-3.5 w-3.5" />
+                              )}
+                              {regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-amber-500/50 bg-amber-500/15 text-amber-300 px-2 py-1 text-xs hover:bg-amber-500/25 transition-all"
+                              title="Entregar e Oficializar página para o cliente"
+                            >
+                              <Share2 className="h-3.5 w-3.5" /> Entregar
+                            </button>
+                          </>
                         )}
                       </>
                     );
@@ -604,45 +697,33 @@ function ProspectingPage() {
                     <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                   </a>
                 )}
-                {company.instagram ? (
-                  <button
-                    type="button"
-                    onClick={() => void handleInstagramApproach(company)}
-                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all ${
-                      !whatsappLink(company)
-                        ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-sm hover:opacity-90"
-                        : "border border-pink-500/40 bg-pink-500/10 text-pink-400 hover:bg-pink-500/20"
-                    }`}
-                    title={
-                      copiedInstagramCompanyId === company.id
-                        ? "Mensagem copiada!"
-                        : !whatsappLink(company)
-                          ? "Sem WhatsApp! Copiar pitch e abrir Direct no Instagram"
-                          : "Copiar pitch e abrir Direct no Instagram"
-                    }
-                  >
-                    {copiedInstagramCompanyId === company.id ? (
-                      <Check className="h-3.5 w-3.5 text-emerald-300" />
-                    ) : (
-                      <Instagram className="h-3.5 w-3.5" />
-                    )}
-                    {copiedInstagramCompanyId === company.id
-                      ? "Copiado!"
-                      : !whatsappLink(company)
-                        ? "Direct IG (Sem Whats)"
-                        : "Direct IG"}
-                  </button>
-                ) : (
-                  <a
-                    href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:text-pink-400 hover:border-pink-500/30"
-                    title="Buscar perfil do Instagram"
-                  >
-                    <Instagram className="h-3.5 w-3.5" /> Buscar IG
-                  </a>
-                )}
+                <button
+                  type="button"
+                  onClick={() => void handleInstagramApproach(company)}
+                  className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all ${
+                    !whatsappLink(company)
+                      ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-sm hover:opacity-90"
+                      : "border border-pink-500/40 bg-pink-500/10 text-pink-300 hover:bg-pink-500/20"
+                  }`}
+                  title={
+                    copiedInstagramCompanyId === company.id
+                      ? "Mensagem copiada!"
+                      : company.instagram
+                        ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
+                        : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
+                  }
+                >
+                  {copiedInstagramCompanyId === company.id ? (
+                    <Check className="h-3.5 w-3.5 text-emerald-300" />
+                  ) : (
+                    <Instagram className="h-3.5 w-3.5 text-pink-400" />
+                  )}
+                  {copiedInstagramCompanyId === company.id
+                    ? "Copiado!"
+                    : company.instagram
+                      ? `Direct (@${cleanInstagramHandle(company.instagram)})`
+                      : "Direct IG"}
+                </button>
                 <button
                   className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs"
                   onClick={() => setActiveCompany(company)}
@@ -1124,6 +1205,20 @@ function ProspectingPage() {
                                   </Link>
                                   <button
                                     type="button"
+                                    onClick={() => void handleRegenerateDemo(company)}
+                                    disabled={regeneratingPageId === company.id}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 px-2 py-1 text-xs hover:bg-purple-500/25 transition-colors"
+                                    title="Alternar entre os 3 modelos visuais de alta conversão"
+                                  >
+                                    {regeneratingPageId === company.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <RotateCcw className="h-3.5 w-3.5" />
+                                    )}
+                                    {regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}
+                                  </button>
+                                  <button
+                                    type="button"
                                     onClick={() => void handleMakeOfficial(company, demo.pageId!)}
                                     disabled={actionLoadingId === demo.pageId || isOfficial}
                                     className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition-colors ${
@@ -1178,45 +1273,31 @@ function ProspectingPage() {
                           <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                         </a>
                       )}
-                      {company.instagram ? (
-                        <button
-                          type="button"
-                          onClick={() => void handleInstagramApproach(company)}
-                          className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all ${
-                            !whatsappLink(company)
-                              ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-sm hover:opacity-90"
-                              : "border border-pink-500/40 bg-pink-500/10 text-pink-400 hover:bg-pink-500/20"
-                          }`}
-                          title={
-                            copiedInstagramCompanyId === company.id
-                              ? "Mensagem copiada!"
-                              : !whatsappLink(company)
-                                ? "Sem WhatsApp! Copiar pitch e abrir Direct no Instagram"
-                                : "Copiar pitch e abrir Direct no Instagram"
-                          }
-                        >
-                          {copiedInstagramCompanyId === company.id ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-300" />
-                          ) : (
-                            <Instagram className="h-3.5 w-3.5" />
-                          )}
-                          {copiedInstagramCompanyId === company.id
-                            ? "Copiado!"
-                            : !whatsappLink(company)
-                              ? "Direct IG"
-                              : "Direct"}
-                        </button>
-                      ) : (
-                        <a
-                          href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:text-pink-400 hover:border-pink-500/30"
-                          title="Buscar perfil do Instagram"
-                        >
-                          <Instagram className="h-3.5 w-3.5" /> Buscar IG
-                        </a>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => void handleInstagramApproach(company)}
+                        className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all ${
+                          !whatsappLink(company)
+                            ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-sm hover:opacity-90"
+                            : "border border-pink-500/40 bg-pink-500/10 text-pink-300 hover:bg-pink-500/20"
+                        }`}
+                        title={
+                          copiedInstagramCompanyId === company.id
+                            ? "Mensagem copiada!"
+                            : company.instagram
+                              ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
+                              : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
+                        }
+                      >
+                        {copiedInstagramCompanyId === company.id ? (
+                          <Check className="h-3.5 w-3.5 text-emerald-300" />
+                        ) : (
+                          <Instagram className="h-3.5 w-3.5 text-pink-400" />
+                        )}
+                        {copiedInstagramCompanyId === company.id
+                          ? "Copiado!"
+                          : "Direct IG"}
+                      </button>
                       <button
                         className="rounded-lg border border-border px-2 py-1 text-xs"
                         onClick={() => setActiveCompany(company)}
@@ -1268,6 +1349,17 @@ function ProspectingPage() {
           onSuccess={() => {
             setFeedback("Página oficializada/transferida com sucesso!");
             invalidate();
+          }}
+        />
+      )}
+
+      {instaModalCompany && (
+        <InstaApproachModal
+          company={instaModalCompany}
+          onClose={() => setInstaModalCompany(null)}
+          onSuccess={() => {
+            invalidate();
+            setFeedback(`📸 Abordagem via Instagram Direct iniciada para ${instaModalCompany.name}!`);
           }}
         />
       )}
@@ -1383,6 +1475,171 @@ function ActivityDialog({
             onClick={() => saveMutation.mutate()}
           >
             {saveMutation.isPending ? "Salvando..." : "Salvar"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface InstaApproachModalProps {
+  company: ProspectedCompany;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+function InstaApproachModal({ company, onClose, onSuccess }: InstaApproachModalProps) {
+  const [handle, setHandle] = useState(cleanInstagramHandle(company.instagram) || "");
+  const [pitch, setPitch] = useState(buildInstagramPitch(company));
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const cleanHandle = cleanInstagramHandle(handle);
+
+  function handleCopyPitch() {
+    void navigator.clipboard.writeText(pitch);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleSendDirect() {
+    setSaving(true);
+    try {
+      if (cleanHandle && cleanHandle !== company.instagram) {
+        await ProspectingService.updateCompany(company.id, { instagram: cleanHandle });
+      }
+      void navigator.clipboard.writeText(pitch);
+      setCopied(true);
+
+      const url = cleanHandle
+        ? `https://ig.me/m/${cleanHandle}`
+        : "https://www.instagram.com/direct/inbox/";
+      window.open(url, "_blank", "noopener,noreferrer");
+
+      onSuccess?.();
+      onClose();
+    } catch (e) {
+      console.error("Erro ao salvar instagram:", e);
+      const url = cleanHandle ? `https://ig.me/m/${cleanHandle}` : "https://www.instagram.com/direct/inbox/";
+      window.open(url, "_blank", "noopener,noreferrer");
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        {/* Cabeçalho */}
+        <div className="flex items-start justify-between gap-3 border-b border-border pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-tr from-purple-600 via-pink-600 to-rose-500 text-white shadow-md shadow-pink-500/20">
+              <Instagram className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold font-display text-foreground leading-tight">
+                Abordagem no Instagram Direct
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                <span className="font-semibold text-foreground">{company.name}</span>
+                {[company.niche, company.city].filter(Boolean).length > 0 && (
+                  <span> · {[company.niche, company.city].filter(Boolean).join(" · ")}</span>
+                )}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-1.5 text-muted-foreground hover:bg-surface-elevated hover:text-foreground transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Dica de Prospecção */}
+        <div className="rounded-xl border border-pink-500/20 bg-pink-500/5 p-3 text-xs text-foreground/90 space-y-1">
+          <p className="font-semibold flex items-center gap-1.5 text-pink-400">
+            <Sparkles className="h-4 w-4" /> Envio rápido em 2 passos:
+          </p>
+          <p className="text-muted-foreground leading-relaxed">
+            1. Digite ou confirme o usuário do Instagram da empresa.<br />
+            2. Ao clicar no botão, o pitch é <strong>copiado automaticamente</strong> e o Direct é aberto direto no aplicativo ou navegador para colar e enviar.
+          </p>
+        </div>
+
+        {/* Campo Usuário Instagram */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Perfil do Instagram da Empresa
+            </label>
+            <a
+              href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-pink-400 hover:underline flex items-center gap-1"
+            >
+              <Search className="h-3 w-3" /> Buscar perfil no Google
+            </a>
+          </div>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-mono text-muted-foreground">@</span>
+            <input
+              type="text"
+              placeholder="ex: clinica.sorrisos"
+              value={handle}
+              onChange={(e) => setHandle(e.target.value)}
+              className="input-field w-full pl-7 text-xs font-mono"
+            />
+          </div>
+        </div>
+
+        {/* Preview do Pitch */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Pitch de Abordagem Pronto
+            </label>
+            <button
+              type="button"
+              onClick={handleCopyPitch}
+              className="text-xs text-pink-400 hover:underline flex items-center gap-1"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copiado!" : "Copiar mensagem"}
+            </button>
+          </div>
+          <textarea
+            rows={4}
+            value={pitch}
+            onChange={(e) => setPitch(e.target.value)}
+            className="input-field w-full text-xs font-sans resize-none"
+          />
+        </div>
+
+        {/* Rodapé e Ações */}
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleSendDirect()}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 hover:opacity-95 text-white px-4 py-2 text-xs font-semibold shadow-lg shadow-pink-500/20 transition-all"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Instagram className="h-4 w-4" />
+            )}
+            {saving ? "Salvando..." : "Copiar Pitch & Abrir Direct 📲"}
           </button>
         </div>
       </div>

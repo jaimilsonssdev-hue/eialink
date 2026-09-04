@@ -123,6 +123,14 @@ export const ProspectingService = {
       .eq("id", id);
     if (error) throw new Error(error.message);
   },
+
+  async updateCompany(id: string, updates: Record<string, any>) {
+    const { error } = await supabase
+      .from("prospected_companies")
+      .update(updates)
+      .eq("id", id);
+    if (error) throw new Error(error.message);
+  },
 };
 
 

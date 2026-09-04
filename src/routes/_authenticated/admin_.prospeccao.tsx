@@ -12,6 +12,7 @@ import {
   Pencil,
   Plus,
 
+  Check,
   CheckCircle,
   CheckCircle2,
   UserCheck,
@@ -113,6 +114,25 @@ function whatsappLink(company: ProspectedCompany) {
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
+function cleanInstagramHandle(ig?: string | null): string | null {
+  if (!ig) return null;
+  const cleaned = ig
+    .replace(/^@/, "")
+    .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "")
+    .replace(/\/$/, "")
+    .trim();
+  return cleaned || null;
+}
+
+function buildInstagramPitch(company: ProspectedCompany) {
+  const matchDemo = company.notes?.match(/https?:\/\/[^\s]+/);
+  const demoUrl = matchDemo ? matchDemo[0] : null;
+
+  return demoUrl
+    ? `Olá, ${company.name}! 👋 Vi o perfil de vocês no Instagram. Montei uma sugestão exclusiva de presença digital oficial para vocês no ar: ${demoUrl} . Posso te mostrar como funciona para receber agendamentos direto no WhatsApp e no Direct?`
+    : `Olá, ${company.name}! 👋 Vi o perfil de vocês no Instagram. Vi que a empresa ainda não tem um site ou biolink oficial e preparei uma sugestão gratuita de presença digital para vocês. Posso te mostrar?`;
+}
+
 function ProspectingPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<"all" | ProspectStatus>("all");
@@ -121,6 +141,7 @@ function ProspectingPage() {
   const [preview, setPreview] = useState<CsvRowPreview[] | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
   const [activeCompany, setActiveCompany] = useState<ProspectedCompany | null>(null);
+  const [copiedInstagramCompanyId, setCopiedInstagramCompanyId] = useState<string | null>(null);
 
   // Estados da Varredura Automática (Google Maps + Instagram)
   const [searchNiche, setSearchNiche] = useState("Clínica");
@@ -289,12 +310,13 @@ function ProspectingPage() {
         city: company.city,
         instagram: company.instagram,
       });
+      const modelVariant = (page.social_links as any)?.model_variant || "Design Pro";
       const url = `https://eialink.com.br/p/${page.slug}`;
       const newNotes = company.notes
-        ? `${company.notes}\nDemo: ${url} (id:${page.id})`
-        : `Demo: ${url} (id:${page.id})`;
+        ? `${company.notes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
+        : `Demo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`;
       await ProspectingService.updateNotes(company.id, newNotes);
-      setFeedback(`Página gerada com sucesso para ${company.name}! O link ${url} já foi anexado à mensagem do WhatsApp.`);
+      setFeedback(`🎉 Página gerada no modelo "${modelVariant}" para ${company.name}! O link já foi anexado para envio no WhatsApp e no Instagram.`);
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao gerar página de demonstração.";
@@ -302,6 +324,29 @@ function ProspectingPage() {
     } finally {
       setCreatingPageId(null);
     }
+  }
+
+  async function handleInstagramApproach(company: ProspectedCompany) {
+    const handle = cleanInstagramHandle(company.instagram);
+    if (!handle) {
+      const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`;
+      window.open(searchUrl, "_blank");
+      setFeedback(`Buscando perfil do Instagram para "${company.name}" no Google...`);
+      return;
+    }
+
+    const pitch = buildInstagramPitch(company);
+    try {
+      await navigator.clipboard.writeText(pitch);
+      setCopiedInstagramCompanyId(company.id);
+      setTimeout(() => setCopiedInstagramCompanyId(null), 4000);
+      setFeedback(`📋 Mensagem de abordagem copiada! Abrindo o Direct no Instagram de @${handle}... Basta tocar no campo e colar 📲`);
+    } catch (e) {
+      console.warn("Aviso ao copiar para área de transferência:", e);
+    }
+
+    // Abre o direct oficial no app / web
+    window.open(`https://ig.me/m/${handle}`, "_blank", "noopener,noreferrer");
   }
 
   function parseDemoInfo(notes?: string | null) {
@@ -560,15 +605,33 @@ function ProspectingPage() {
                   </a>
                 )}
                 {company.instagram ? (
-                  <a
-                    href={`https://instagram.com/${company.instagram.replace("@", "")}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-pink-500/30 bg-pink-500/10 text-pink-400 px-2 py-1 text-xs hover:bg-pink-500/20"
-                    title={`Instagram: ${company.instagram}`}
+                  <button
+                    type="button"
+                    onClick={() => void handleInstagramApproach(company)}
+                    className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all ${
+                      !whatsappLink(company)
+                        ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-sm hover:opacity-90"
+                        : "border border-pink-500/40 bg-pink-500/10 text-pink-400 hover:bg-pink-500/20"
+                    }`}
+                    title={
+                      copiedInstagramCompanyId === company.id
+                        ? "Mensagem copiada!"
+                        : !whatsappLink(company)
+                          ? "Sem WhatsApp! Copiar pitch e abrir Direct no Instagram"
+                          : "Copiar pitch e abrir Direct no Instagram"
+                    }
                   >
-                    <Instagram className="h-3.5 w-3.5" /> {company.instagram}
-                  </a>
+                    {copiedInstagramCompanyId === company.id ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-300" />
+                    ) : (
+                      <Instagram className="h-3.5 w-3.5" />
+                    )}
+                    {copiedInstagramCompanyId === company.id
+                      ? "Copiado!"
+                      : !whatsappLink(company)
+                        ? "Direct IG (Sem Whats)"
+                        : "Direct IG"}
+                  </button>
                 ) : (
                   <a
                     href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
@@ -577,7 +640,7 @@ function ProspectingPage() {
                     className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:text-pink-400 hover:border-pink-500/30"
                     title="Buscar perfil do Instagram"
                   >
-                    <Instagram className="h-3.5 w-3.5" /> Instagram
+                    <Instagram className="h-3.5 w-3.5" /> Buscar IG
                   </a>
                 )}
                 <button
@@ -1113,6 +1176,45 @@ function ProspectingPage() {
                           className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs"
                         >
                           <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                        </a>
+                      )}
+                      {company.instagram ? (
+                        <button
+                          type="button"
+                          onClick={() => void handleInstagramApproach(company)}
+                          className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all ${
+                            !whatsappLink(company)
+                              ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-sm hover:opacity-90"
+                              : "border border-pink-500/40 bg-pink-500/10 text-pink-400 hover:bg-pink-500/20"
+                          }`}
+                          title={
+                            copiedInstagramCompanyId === company.id
+                              ? "Mensagem copiada!"
+                              : !whatsappLink(company)
+                                ? "Sem WhatsApp! Copiar pitch e abrir Direct no Instagram"
+                                : "Copiar pitch e abrir Direct no Instagram"
+                          }
+                        >
+                          {copiedInstagramCompanyId === company.id ? (
+                            <Check className="h-3.5 w-3.5 text-emerald-300" />
+                          ) : (
+                            <Instagram className="h-3.5 w-3.5" />
+                          )}
+                          {copiedInstagramCompanyId === company.id
+                            ? "Copiado!"
+                            : !whatsappLink(company)
+                              ? "Direct IG"
+                              : "Direct"}
+                        </button>
+                      ) : (
+                        <a
+                          href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:text-pink-400 hover:border-pink-500/30"
+                          title="Buscar perfil do Instagram"
+                        >
+                          <Instagram className="h-3.5 w-3.5" /> Buscar IG
                         </a>
                       )}
                       <button

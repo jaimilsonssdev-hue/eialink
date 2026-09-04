@@ -121,6 +121,7 @@ export const PageService = {
           is_demo: isDemo,
           triage_enabled: true,
           google_rating: 5,
+          model_variant: preset.modelName,
         },
         published: true,
       })

@@ -7,7 +7,7 @@ interface DemoConversionBannerProps {
 
 export function DemoConversionBanner({
   companyName,
-  agencyWhatsApp = "5573991487816",
+  agencyWhatsApp = (import.meta.env.VITE_AGENCY_WHATSAPP as string) || "5573991487816",
 }: DemoConversionBannerProps) {
   const cleanPhone = agencyWhatsApp.replace(/\D/g, "");
   const message = `Olá! Vi a demonstração que vocês criaram para a empresa *${companyName}* no EIA Link e gostaria de ativar nossa presença oficial com domínio próprio. Como podemos fazer?`;
@@ -16,6 +16,7 @@ export function DemoConversionBanner({
   return (
     <aside
       aria-label="Aviso de demonstração"
+      data-no-triage="true"
       className="sticky top-0 z-50 w-full border-b border-[color:var(--primary)]/30 bg-background/85 px-4 py-2.5 backdrop-blur-md shadow-lg shadow-[color:var(--primary)]/5"
     >
       <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-3 text-sm">
@@ -37,6 +38,7 @@ export function DemoConversionBanner({
           href={whatsappUrl}
           target="_blank"
           rel="noopener noreferrer"
+          data-no-triage="true"
           className="inline-flex items-center gap-2 rounded-xl px-3.5 py-1.5 text-xs font-bold text-[color:var(--primary-foreground)] shadow-md transition-all hover:scale-105 active:scale-95"
           style={{ background: "var(--gradient-primary)" }}
         >

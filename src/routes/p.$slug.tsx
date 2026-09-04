@@ -238,6 +238,16 @@ function PublicBio() {
       return;
     }
 
+    // Links de conversão da agência (banner demo) ou marcados com data-no-triage NUNCA abrem triagem
+    if (
+      anchor.closest("[data-no-triage]") ||
+      anchor.hasAttribute("data-no-triage") ||
+      anchor.closest("aside") ||
+      href.includes("5573991487816")
+    ) {
+      return;
+    }
+
     // Intercepta qualquer botão que aponte para o WhatsApp
     if (
       href.includes("wa.me") ||
@@ -254,55 +264,57 @@ function PublicBio() {
   const shouldUseTemplate = !isFreeTemplate || hasProPlan || isDemo;
 
   return (
-    <div onClickCapture={handleContainerClickCapture}>
+    <div className="min-h-screen flex flex-col">
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
-      <BrandingProvider show={!hasProPlan && !isDemo}>
-        {shouldUseTemplate ? (
-          <TemplateRenderer
-            bio={{ ...bio, theme }}
-            links={links}
-            onTrack={track}
-            onShare={share}
-            products={products}
+      <div onClickCapture={handleContainerClickCapture} className="flex-1">
+        <BrandingProvider show={!hasProPlan && !isDemo}>
+          {shouldUseTemplate ? (
+            <TemplateRenderer
+              bio={{ ...bio, theme }}
+              links={links}
+              onTrack={track}
+              onShare={share}
+              products={products}
+              bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
+              motionLevel={bio.motion_enabled === false ? "off" : "pro"}
+              supplemental={
+                <>
+                  {supplementalBlocks.map((block: PageBlock) => (
+                    <BlockRenderer key={block.id} block={block} />
+                  ))}
+                </>
+              }
+            />
+          ) : (
+            <FreeLinkRenderer
+              bio={{ ...bio, theme }}
+              links={links}
+              onTrack={track}
+              onShare={share}
+              products={products}
+              supplemental={
+                <>
+                  {supplementalBlocks.map((block: PageBlock) => (
+                    <BlockRenderer key={block.id} block={block} />
+                  ))}
+                </>
+              }
+            />
+          )}
+        </BrandingProvider>
+
+        {/* Modal de Triagem Inteligente para todos os layouts */}
+        {isTriageActive && bio.whatsapp && (
+          <WhatsAppTriageModal
+            isOpen={isTriageOpen}
+            onClose={() => setIsTriageOpen(false)}
+            phone={bio.whatsapp}
+            config={triageConfig}
+            baseMessage={bio.whatsapp_message}
             bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
-            motionLevel={bio.motion_enabled === false ? "off" : "pro"}
-            supplemental={
-              <>
-                {supplementalBlocks.map((block: PageBlock) => (
-                  <BlockRenderer key={block.id} block={block} />
-                ))}
-              </>
-            }
-          />
-        ) : (
-          <FreeLinkRenderer
-            bio={{ ...bio, theme }}
-            links={links}
-            onTrack={track}
-            onShare={share}
-            products={products}
-            supplemental={
-              <>
-                {supplementalBlocks.map((block: PageBlock) => (
-                  <BlockRenderer key={block.id} block={block} />
-                ))}
-              </>
-            }
           />
         )}
-      </BrandingProvider>
-
-      {/* Modal de Triagem Inteligente para todos os layouts */}
-      {isTriageActive && bio.whatsapp && (
-        <WhatsAppTriageModal
-          isOpen={isTriageOpen}
-          onClose={() => setIsTriageOpen(false)}
-          phone={bio.whatsapp}
-          config={triageConfig}
-          baseMessage={bio.whatsapp_message}
-          bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
-        />
-      )}
+      </div>
     </div>
   );
 }

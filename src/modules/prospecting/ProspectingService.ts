@@ -108,6 +108,14 @@ export const ProspectingService = {
     if (error) throw new Error(error.message);
   },
 
+  async clearAll() {
+    const { error } = await supabase
+      .from("prospected_companies")
+      .delete()
+      .neq("id", "00000000-0000-0000-0000-000000000000");
+    if (error) throw new Error(error.message);
+  },
+
   async updateNotes(id: string, notes: string) {
     const { error } = await supabase
       .from("prospected_companies")
@@ -116,4 +124,5 @@ export const ProspectingService = {
     if (error) throw new Error(error.message);
   },
 };
+
 

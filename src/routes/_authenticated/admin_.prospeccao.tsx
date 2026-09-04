@@ -9,7 +9,9 @@ import {
   ArrowLeft,
   MessageCircle,
   Trash2,
+  Pencil,
   Plus,
+
   CheckCircle2,
   Search,
   Sparkles,
@@ -273,8 +275,8 @@ function ProspectingPage() {
       });
       const url = `https://eialink.com.br/p/${page.slug}`;
       const newNotes = company.notes
-        ? `${company.notes}\nDemo: ${url}`
-        : `Demo: ${url}`;
+        ? `${company.notes}\nDemo: ${url} (id:${page.id})`
+        : `Demo: ${url} (id:${page.id})`;
       await ProspectingService.updateNotes(company.id, newNotes);
       setFeedback(`Página gerada com sucesso para ${company.name}! O link ${url} já foi anexado à mensagem do WhatsApp.`);
       invalidate();
@@ -285,6 +287,63 @@ function ProspectingPage() {
       setCreatingPageId(null);
     }
   }
+
+  function parseDemoInfo(notes?: string | null) {
+    if (!notes) return { url: null, pageId: null };
+    const urlMatch = notes.match(/https?:\/\/[^\s)]+/);
+    const idMatch = notes.match(/\(id:([a-f0-9-]+)\)/i);
+    return {
+      url: urlMatch ? urlMatch[0] : null,
+      pageId: idMatch ? idMatch[1] : null,
+    };
+  }
+
+  const deleteCompanyMutation = useMutation({
+    mutationFn: async ({ companyId, pageId }: { companyId: string; pageId?: string | null }) => {
+      await ProspectingService.remove(companyId);
+      if (pageId) {
+        await PageService.deletePage(pageId).catch((e) => console.warn("Aviso ao excluir página vinculada:", e));
+      }
+    },
+    onSuccess: () => {
+      setFeedback("Oportunidade removida do radar.");
+      invalidate();
+    },
+    onError: (err) => {
+      setFeedback(`Erro ao remover: ${err instanceof Error ? err.message : "Erro desconhecido"}`);
+    },
+  });
+
+  const clearRadarMutation = useMutation({
+    mutationFn: async () => {
+      await ProspectingService.clearAll();
+    },
+    onSuccess: () => {
+      setFeedback("Todas as oportunidades foram limpas do radar com sucesso.");
+      invalidate();
+    },
+    onError: (err) => {
+      setFeedback(`Erro ao limpar radar: ${err instanceof Error ? err.message : "Erro desconhecido"}`);
+    },
+  });
+
+  function handleDeleteCompany(company: ProspectedCompany) {
+    const { pageId } = parseDemoInfo(company.notes);
+    let message = `Deseja remover "${company.name}" do radar de prospecção?`;
+    if (pageId) {
+      message += " A página de demonstração criada para ela também será excluída permanentemente.";
+    }
+    if (confirm(message)) {
+      deleteCompanyMutation.mutate({ companyId: company.id, pageId });
+    }
+  }
+
+  function handleClearAllRadar() {
+    if (confirm("Tem certeza que deseja limpar TODAS as oportunidades salvas no Radar de Prospecção? Esta ação é irreversível.")) {
+      clearRadarMutation.mutate();
+    }
+  }
+
 
 
   function handleManualSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -397,29 +456,48 @@ function ProspectingPage() {
                 <span className={`rounded-full px-2 py-0.5 text-xs ${PRIORITY_STYLE[company.priority]}`}>
                   {company.score}
                 </span>
-                {company.notes?.match(/https?:\/\/[^\s]+/) ? (
-                  <a
-                    href={company.notes.match(/https?:\/\/[^\s]+/)![0]}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs"
-                  >
-                    <ExternalLink className="h-3.5 w-3.5" /> Ver Página
-                  </a>
-                ) : (
-                  <button
-                    className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-1 text-xs transition-all hover:bg-[color:var(--primary)]/25"
-                    onClick={() => void handleGenerateDemo(company)}
-                    disabled={creatingPageId === company.id}
-                  >
-                    {creatingPageId === company.id ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    ) : (
-                      <Sparkles className="h-3.5 w-3.5" />
-                    )}
-                    {creatingPageId === company.id ? "Gerando..." : "Gerar Página"}
-                  </button>
-                )}
+                {(() => {
+                  const demo = parseDemoInfo(company.notes);
+                  if (demo.url) {
+                    return (
+                      <>
+                        <a
+                          href={demo.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/25"
+                          title="Ver Página Pro"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" /> Ver
+                        </a>
+                        {demo.pageId && (
+                          <Link
+                            to="/builder"
+                            search={{ page: demo.pageId }}
+                            className="inline-flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/15 text-blue-400 px-2 py-1 text-xs hover:bg-blue-500/25"
+                            title="Editar no Construtor"
+                          >
+                            <Pencil className="h-3.5 w-3.5" /> Editar
+                          </Link>
+                        )}
+                      </>
+                    );
+                  }
+                  return (
+                    <button
+                      className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-1 text-xs transition-all hover:bg-[color:var(--primary)]/25"
+                      onClick={() => void handleGenerateDemo(company)}
+                      disabled={creatingPageId === company.id}
+                    >
+                      {creatingPageId === company.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Sparkles className="h-3.5 w-3.5" />
+                      )}
+                      {creatingPageId === company.id ? "Gerando..." : "Gerar Página"}
+                    </button>
+                  );
+                })()}
                 {whatsappLink(company) && (
                   <a
                     href={whatsappLink(company)!}
@@ -457,7 +535,15 @@ function ProspectingPage() {
                 >
                   <CheckCircle2 className="h-3.5 w-3.5" /> Registrar
                 </button>
+                <button
+                  className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:text-rose-400 hover:border-rose-500/30 transition-colors"
+                  onClick={() => handleDeleteCompany(company)}
+                  title="Remover oportunidade do radar"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
               </div>
+
 
             </li>
           ))}
@@ -770,7 +856,23 @@ function ProspectingPage() {
       {/* Pipeline */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-display text-lg font-bold mr-auto">Pipeline</h2>
+          <h2 className="font-display text-lg font-bold mr-auto flex items-center gap-2">
+            Pipeline
+            <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+              {companies.length} {companies.length === 1 ? "lead" : "leads"}
+            </span>
+          </h2>
+          {companies.length > 0 && (
+            <button
+              onClick={handleClearAllRadar}
+              disabled={clearRadarMutation.isPending}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-3 py-1.5 text-xs font-medium transition-colors"
+              title="Limpar toda a lista de prospecção"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              {clearRadarMutation.isPending ? "Limpando..." : "Limpar Radar"}
+            </button>
+          )}
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
@@ -881,29 +983,47 @@ function ProspectingPage() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex items-center gap-2">
-                      {company.notes?.match(/https?:\/\/[^\s]+/) ? (
-                        <a
-                          href={company.notes.match(/https?:\/\/[^\s]+/)![0]}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs"
-                        >
-                          <ExternalLink className="h-3.5 w-3.5" /> Ver Página
-                        </a>
-                      ) : (
-                        <button
-                          className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-1 text-xs transition-all hover:bg-[color:var(--primary)]/25"
-                          onClick={() => void handleGenerateDemo(company)}
-                          disabled={creatingPageId === company.id}
-                        >
-                          {creatingPageId === company.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <Sparkles className="h-3.5 w-3.5" />
-                          )}
-                          {creatingPageId === company.id ? "Gerando..." : "Gerar Página"}
-                        </button>
-                      )}
+                      {(() => {
+                        const demo = parseDemoInfo(company.notes);
+                        if (demo?.url) {
+                          return (
+                            <>
+                              <a
+                                href={demo.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/25 transition-colors"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" /> Ver
+                              </a>
+                              {demo.pageId && (
+                                <Link
+                                  to="/builder"
+                                  search={{ page: demo.pageId }}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/15 text-blue-400 px-2 py-1 text-xs hover:bg-blue-500/25 transition-colors"
+                                  title="Editar página no Construtor"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" /> Editar
+                                </Link>
+                              )}
+                            </>
+                          );
+                        }
+                        return (
+                          <button
+                            className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-1 text-xs transition-all hover:bg-[color:var(--primary)]/25"
+                            onClick={() => void handleGenerateDemo(company)}
+                            disabled={creatingPageId === company.id}
+                          >
+                            {creatingPageId === company.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Sparkles className="h-3.5 w-3.5" />
+                            )}
+                            {creatingPageId === company.id ? "Gerando..." : "Gerar Página"}
+                          </button>
+                        );
+                      })()}
                       {whatsappLink(company) && (
                         <a
                           href={whatsappLink(company)!}
@@ -921,9 +1041,10 @@ function ProspectingPage() {
                         Abordagem
                       </button>
                       <button
-                        className="rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground"
-                        onClick={() => removeMutation.mutate(company.id)}
+                        className="rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:text-rose-400 hover:border-rose-500/30 transition-colors"
+                        onClick={() => handleDeleteCompany(company)}
                         aria-label={`Remover ${company.name}`}
+                        title="Remover oportunidade do radar"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

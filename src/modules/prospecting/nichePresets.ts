@@ -316,3 +316,4 @@ export function getPresetForCompany(nicheRaw?: string | null, companyNameRaw?: s
 
   return PRESETS.geral;
 }
+

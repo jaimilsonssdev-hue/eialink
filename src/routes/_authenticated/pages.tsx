@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, FilePlus2, Loader2, Pencil, Plus, Sparkles } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ExternalLink, FilePlus2, Loader2, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+
 import { useState } from "react";
 import { PageService } from "@/modules/page/services/PageService";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
@@ -16,13 +17,34 @@ export const Route = createFileRoute("/_authenticated/pages")({
 
 function PagesWorkspace() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [isCreating, setIsCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [creationError, setCreationError] = useState<string | null>(null);
   const access = usePlanAccess();
   const pages = useQuery({
     queryKey: ["owned-bio-pages"],
     queryFn: () => PageService.listOwnedPages(),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (pageId: string) => PageService.deletePage(pageId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["owned-bio-pages"] });
+    },
+    onError: (err) => {
+      alert(`Erro ao excluir página: ${err instanceof Error ? err.message : "Erro desconhecido"}`);
+    },
+    onSettled: () => setDeletingId(null),
+  });
+
+  function handleDeletePage(pageId: string, pageName: string) {
+    if (confirm(`Tem certeza que deseja excluir permanentemente a página "${pageName}"? Esta ação não pode ser desfeita.`)) {
+      setDeletingId(pageId);
+      deleteMutation.mutate(pageId);
+    }
+  }
+
   const featuredTemplates = TemplateService.list()
     .filter((item) => item.status === "active" && (item.smart || item.id === "default"))
     .filter((item) => access.data?.features.premium_templates || item.id === "default")
@@ -142,10 +164,26 @@ function PagesWorkspace() {
                   rel="noopener"
                   className="btn-secondary"
                   aria-label={`Abrir ${page.display_name}`}
+                  title="Abrir página pública"
                 >
                   <ExternalLink className="h-4 w-4" />
                 </a>
+                <button
+                  type="button"
+                  onClick={() => handleDeletePage(page.id, page.display_name)}
+                  disabled={deletingId === page.id}
+                  className="btn-secondary text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 border-rose-500/20 transition-colors"
+                  aria-label={`Excluir ${page.display_name}`}
+                  title="Excluir página permanentemente"
+                >
+                  {deletingId === page.id ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                </button>
               </div>
+
             </article>
           ))}
           <button

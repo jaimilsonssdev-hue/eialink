@@ -25,7 +25,8 @@ import {
   UtensilsCrossed,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { PageService, type OwnedPage } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
@@ -138,6 +139,19 @@ function PagesWorkspace() {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [creationError, setCreationError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const isOwner = data.user.email?.toLowerCase() === "jaimilsonvendas@gmail.com";
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", data.user.id);
+      setIsAdmin(isOwner || !!roles?.some((r) => r.role === "admin"));
+    });
+  }, []);
 
   const access = usePlanAccess();
   const pages = useQuery({
@@ -479,7 +493,7 @@ function PagesWorkspace() {
                         />
                         {page.published ? "Publicado" : "Rascunho"}
                       </span>
-                      {Boolean((page.social_links as any)?.is_demo) && (
+                      {isAdmin && Boolean((page.social_links as any)?.is_demo) && (
                         <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
                           <Sparkles className="h-3 w-3" /> Modo Demo
                         </span>
@@ -551,7 +565,7 @@ function PagesWorkspace() {
                         <Pencil className="h-3.5 w-3.5" /> Editar
                       </Link>
 
-                      {Boolean((page.social_links as any)?.is_demo) && (
+                      {isAdmin && Boolean((page.social_links as any)?.is_demo) && (
                         <button
                           type="button"
                           onClick={() => void handleMakeOfficial(page)}
@@ -568,15 +582,17 @@ function PagesWorkspace() {
                         </button>
                       )}
 
-                      <button
-                        type="button"
-                        onClick={() => handleOpenTransfer(page)}
-                        className="inline-flex items-center justify-center gap-1 rounded-xl border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 px-2.5 py-2 text-xs font-semibold transition-colors"
-                        title="Entregar para o cliente no WhatsApp ou transferir por e-mail"
-                      >
-                        <UserCheck className="h-3.5 w-3.5" />
-                        Entregar
-                      </button>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenTransfer(page)}
+                          className="inline-flex items-center justify-center gap-1 rounded-xl border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 px-2.5 py-2 text-xs font-semibold transition-colors"
+                          title="Entregar para o cliente no WhatsApp ou transferir por e-mail"
+                        >
+                          <UserCheck className="h-3.5 w-3.5" />
+                          Entregar
+                        </button>
+                      )}
 
                       <a
                         href={publicUrl}

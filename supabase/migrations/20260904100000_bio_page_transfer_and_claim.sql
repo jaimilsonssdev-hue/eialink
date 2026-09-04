@@ -141,3 +141,4 @@ $$;
 GRANT EXECUTE ON FUNCTION public.transfer_bio_page(UUID, TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.claim_bio_page(TEXT) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.get_claim_page_info(TEXT) TO anon, authenticated;
+

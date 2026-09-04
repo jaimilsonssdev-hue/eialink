@@ -12,7 +12,10 @@ import {
   Pencil,
   Plus,
 
+  CheckCircle,
   CheckCircle2,
+  UserCheck,
+  Share2,
   Search,
   Sparkles,
   Globe2,
@@ -24,6 +27,7 @@ import {
 import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
 import { PageService } from "@/modules/page/services/PageService";
+import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -126,6 +130,18 @@ function ProspectingPage() {
   const [selectedLiveIndices, setSelectedLiveIndices] = useState<Set<number>>(new Set());
 
   const [creatingPageId, setCreatingPageId] = useState<string | null>(null);
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [transferModalData, setTransferModalData] = useState<{
+    isOpen: boolean;
+    page: {
+      id: string;
+      displayName: string;
+      slug: string;
+      phone?: string | null;
+      email?: string | null;
+      isDemo?: boolean;
+    };
+  } | null>(null);
 
 
   const companiesQuery = useQuery({
@@ -296,6 +312,41 @@ function ProspectingPage() {
       url: urlMatch ? urlMatch[0] : null,
       pageId: idMatch ? idMatch[1] : null,
     };
+  }
+
+  async function handleMakeOfficial(company: ProspectedCompany, pageId: string) {
+    setActionLoadingId(pageId);
+    setFeedback(null);
+    try {
+      await PageService.makePageOfficial(pageId);
+      const newNotes = company.notes
+        ? `${company.notes}\n[Página Oficializada]`
+        : "[Página Oficializada]";
+      await ProspectingService.updateNotes(company.id, newNotes);
+      await ProspectingService.updateStatus(company.id, "cliente");
+      setFeedback(`🎉 Página de "${company.name}" tornada oficial! A tarja de demonstração foi removida e a empresa marcada como cliente.`);
+      invalidate();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao oficializar página.";
+      setFeedback(message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
+  function handleOpenTransfer(company: ProspectedCompany, pageId: string, demoUrl: string) {
+    const slugMatch = demoUrl.match(/\/p\/([^/?#\s]+)/);
+    const slug = slugMatch ? slugMatch[1] : company.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    setTransferModalData({
+      isOpen: true,
+      page: {
+        id: pageId,
+        displayName: company.name,
+        slug,
+        phone: company.whatsapp || company.phone,
+        isDemo: true,
+      },
+    });
   }
 
   const deleteCompanyMutation = useMutation({
@@ -986,6 +1037,7 @@ function ProspectingPage() {
                       {(() => {
                         const demo = parseDemoInfo(company.notes);
                         if (demo?.url) {
+                          const isOfficial = company.notes?.includes("[Página Oficializada]") || company.status === "cliente";
                           return (
                             <>
                               <a
@@ -993,18 +1045,47 @@ function ProspectingPage() {
                                 target="_blank"
                                 rel="noreferrer"
                                 className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/25 transition-colors"
+                                title="Ver página no navegador"
                               >
                                 <ExternalLink className="h-3.5 w-3.5" /> Ver
                               </a>
                               {demo.pageId && (
-                                <Link
-                                  to="/builder"
-                                  search={{ page: demo.pageId }}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/15 text-blue-400 px-2 py-1 text-xs hover:bg-blue-500/25 transition-colors"
-                                  title="Editar página no Construtor"
-                                >
-                                  <Pencil className="h-3.5 w-3.5" /> Editar
-                                </Link>
+                                <>
+                                  <Link
+                                    to="/builder"
+                                    search={{ page: demo.pageId }}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/15 text-blue-400 px-2 py-1 text-xs hover:bg-blue-500/25 transition-colors"
+                                    title="Editar página no Construtor"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5" /> Editar
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                                    disabled={actionLoadingId === demo.pageId || isOfficial}
+                                    className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition-colors ${
+                                      isOfficial
+                                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-default"
+                                        : "border-teal-500/50 bg-teal-500/15 text-teal-300 hover:bg-teal-500/25"
+                                    }`}
+                                    title={isOfficial ? "Página já está oficial" : "Tornar Oficial (remove tarja de demonstração e marca como cliente)"}
+                                  >
+                                    {actionLoadingId === demo.pageId ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <CheckCircle className="h-3.5 w-3.5" />
+                                    )}
+                                    {isOfficial ? "Oficial" : "Tornar Oficial"}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                                    className="inline-flex items-center gap-1 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 px-2 py-1 text-xs hover:bg-purple-500/25 transition-colors"
+                                    title="Entregar para o cliente no WhatsApp ou transferir por e-mail"
+                                  >
+                                    <UserCheck className="h-3.5 w-3.5 text-purple-400" /> Entregar
+                                  </button>
+                                </>
                               )}
                             </>
                           );
@@ -1072,6 +1153,18 @@ function ProspectingPage() {
           onSaved={() => {
             setActiveCompany(null);
             setFeedback("Abordagem registrada.");
+            invalidate();
+          }}
+        />
+      )}
+
+      {transferModalData && (
+        <TransferPageModal
+          isOpen={transferModalData.isOpen}
+          onClose={() => setTransferModalData(null)}
+          page={transferModalData.page}
+          onSuccess={() => {
+            setFeedback("Página oficializada/transferida com sucesso!");
             invalidate();
           }}
         />

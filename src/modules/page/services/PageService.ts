@@ -1,6 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
+import {
+  makePageOfficialFn,
+  transferPageOwnershipFn,
+  getClaimPageInfoFn,
+  claimPageFn,
+} from "@/modules/page/page.functions";
 
 export type OwnedPage = Tables<"bio_pages">;
 
@@ -238,6 +244,133 @@ export const PageService = {
 
     if (error) throw new Error(error.message);
     return true;
+  },
+  async makePageOfficial(pageId: string) {
+    try {
+      return await makePageOfficialFn({ data: { pageId } });
+    } catch {
+      // Fallback local via cliente autenticado
+      const userId = await this.getCurrentUserId();
+      const { data: page, error: fetchErr } = await supabase
+        .from("bio_pages")
+        .select("*")
+        .eq("id", pageId)
+        .eq("user_id", userId)
+        .single();
+      if (fetchErr || !page) throw new Error("Página não encontrada ou sem permissão.");
+
+      const currentSocial = (page.social_links as Record<string, any>) || {};
+      const updatedSocial = { ...currentSocial, is_demo: false };
+      delete updatedSocial.claim_token;
+
+      let description = page.description || "";
+      if (description.startsWith("[DEMO] ")) {
+        description = description.replace("[DEMO] ", "").trim();
+      } else if (description.startsWith("[DEMO]")) {
+        description = description.replace("[DEMO]", "").trim();
+      }
+
+      const { error: updateErr } = await supabase
+        .from("bio_pages")
+        .update({
+          social_links: updatedSocial,
+          description,
+          published: true,
+        })
+        .eq("id", pageId)
+        .eq("user_id", userId);
+
+      if (updateErr) throw new Error(updateErr.message);
+
+      try {
+        await supabase
+          .from("prospected_companies")
+          .update({ status: "cliente" })
+          .ilike("notes", `%${pageId}%`);
+      } catch (radarErr) {
+        console.warn("Aviso ao atualizar radar:", radarErr);
+      }
+
+      return { success: true, slug: page.slug, displayName: page.display_name };
+    }
+  },
+
+  async createClaimLink(pageId: string, targetEmail?: string) {
+    const userId = await this.getCurrentUserId();
+    const claimToken = crypto.randomUUID();
+
+    const { data: page, error: fetchErr } = await supabase
+      .from("bio_pages")
+      .select("social_links, slug, display_name")
+      .eq("id", pageId)
+      .eq("user_id", userId)
+      .single();
+
+    if (fetchErr || !page) throw new Error("Página não encontrada.");
+
+    const currentSocial = (page.social_links as Record<string, any>) || {};
+    const updatedSocial = {
+      ...currentSocial,
+      claim_token: claimToken,
+      claim_email: targetEmail?.trim().toLowerCase() || undefined,
+      is_demo: false,
+    };
+
+    const { error: updateErr } = await supabase
+      .from("bio_pages")
+      .update({ social_links: updatedSocial })
+      .eq("id", pageId)
+      .eq("user_id", userId);
+
+    if (updateErr) throw new Error(updateErr.message);
+
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://eialink.com.br";
+    const claimUrl = `${origin}/resgatar?token=${claimToken}`;
+
+    return {
+      claimToken,
+      claimUrl,
+      companyName: page.display_name,
+      slug: page.slug,
+    };
+  },
+
+  async transferOwnership(pageId: string, targetEmail: string) {
+    return await transferPageOwnershipFn({ data: { pageId, targetEmail } });
+  },
+
+  async getClaimInfo(token: string) {
+    try {
+      return await getClaimPageInfoFn({ data: { token } });
+    } catch {
+      // Fallback via consulta direta
+      const { data: page, error } = await supabase
+        .from("bio_pages")
+        .select("id, display_name, slug, theme, cover_url, avatar_url, description, social_links")
+        .filter("social_links->>claim_token", "eq", token)
+        .maybeSingle();
+
+      if (error || !page) return { valid: false };
+
+      const social = (page.social_links as Record<string, any>) || {};
+      return {
+        valid: true,
+        page: {
+          id: page.id,
+          displayName: page.display_name,
+          slug: page.slug,
+          theme: page.theme,
+          coverUrl: page.cover_url,
+          avatarUrl: page.avatar_url,
+          description: page.description,
+          targetEmail: social.claim_email || null,
+        },
+      };
+    }
+  },
+
+  async claimPage(token: string) {
+    return await claimPageFn({ data: { token } });
   },
 };
 

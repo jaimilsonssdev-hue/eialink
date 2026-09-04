@@ -4,6 +4,7 @@ import {
   ArrowRight,
   Building2,
   Check,
+  CheckCircle,
   Copy,
   Dumbbell,
   ExternalLink,
@@ -20,11 +21,13 @@ import {
   Sparkles,
   Stethoscope,
   Trash2,
+  UserCheck,
   UtensilsCrossed,
   X,
 } from "lucide-react";
 import { useState } from "react";
-import { PageService } from "@/modules/page/services/PageService";
+import { PageService, type OwnedPage } from "@/modules/page/services/PageService";
+import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 import { TemplateService } from "@/modules/templates/services/TemplateService";
 import { UpgradePrompt } from "@/modules/billing/components/UpgradePrompt";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
@@ -162,6 +165,46 @@ function PagesWorkspace() {
       setDeletingId(pageId);
       deleteMutation.mutate(pageId);
     }
+  }
+
+  const [transferModalData, setTransferModalData] = useState<{
+    isOpen: boolean;
+    page: {
+      id: string;
+      displayName: string;
+      slug: string;
+      phone?: string | null;
+      email?: string | null;
+      isDemo?: boolean;
+    };
+  } | null>(null);
+  const [officialLoadingId, setOfficialLoadingId] = useState<string | null>(null);
+
+  async function handleMakeOfficial(page: OwnedPage) {
+    setOfficialLoadingId(page.id);
+    try {
+      await PageService.makePageOfficial(page.id);
+      await pages.refetch();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao tornar oficial.";
+      alert(msg);
+    } finally {
+      setOfficialLoadingId(null);
+    }
+  }
+
+  function handleOpenTransfer(page: OwnedPage) {
+    const isDemo = Boolean((page.social_links as any)?.is_demo);
+    setTransferModalData({
+      isOpen: true,
+      page: {
+        id: page.id,
+        displayName: page.display_name,
+        slug: page.slug,
+        phone: page.whatsapp,
+        isDemo,
+      },
+    });
   }
 
   function handleCopyUrl(slug: string) {
@@ -422,8 +465,8 @@ function PagesWorkspace() {
                     )}
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-                    {/* Status Pill */}
-                    <div className="absolute top-3 left-3">
+                    {/* Status Pill & Demo Pill */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
                       <span
                         className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold backdrop-blur-md ${
                           page.published
@@ -436,6 +479,11 @@ function PagesWorkspace() {
                         />
                         {page.published ? "Publicado" : "Rascunho"}
                       </span>
+                      {Boolean((page.social_links as any)?.is_demo) && (
+                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                          <Sparkles className="h-3 w-3" /> Modo Demo
+                        </span>
+                      )}
                     </div>
 
                     {/* Template Badge */}
@@ -494,14 +542,41 @@ function PagesWorkspace() {
                     </div>
 
                     {/* Ações do Card */}
-                    <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                    <div className="flex items-center gap-1.5 pt-2 border-t border-border/50">
                       <Link
                         to="/builder"
                         search={{ page: page.id }}
-                        className="flex-1 btn-primary inline-flex items-center justify-center gap-1.5 rounded-xl py-2 text-xs font-semibold"
+                        className="flex-1 btn-primary inline-flex items-center justify-center gap-1 rounded-xl py-2 text-xs font-semibold"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Editar
                       </Link>
+
+                      {Boolean((page.social_links as any)?.is_demo) && (
+                        <button
+                          type="button"
+                          onClick={() => void handleMakeOfficial(page)}
+                          disabled={officialLoadingId === page.id}
+                          className="inline-flex items-center justify-center gap-1 rounded-xl border border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 px-2.5 py-2 text-xs font-semibold transition-colors"
+                          title="Tornar Oficial (remove a tarja de demonstração da página)"
+                        >
+                          {officialLoadingId === page.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle className="h-3.5 w-3.5" />
+                          )}
+                          Oficial
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleOpenTransfer(page)}
+                        className="inline-flex items-center justify-center gap-1 rounded-xl border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 px-2.5 py-2 text-xs font-semibold transition-colors"
+                        title="Entregar para o cliente no WhatsApp ou transferir por e-mail"
+                      >
+                        <UserCheck className="h-3.5 w-3.5" />
+                        Entregar
+                      </button>
 
                       <a
                         href={publicUrl}
@@ -779,6 +854,17 @@ function PagesWorkspace() {
             </form>
           </div>
         </div>
+      )}
+
+      {transferModalData && (
+        <TransferPageModal
+          isOpen={transferModalData.isOpen}
+          onClose={() => setTransferModalData(null)}
+          page={transferModalData.page}
+          onSuccess={() => {
+            void pages.refetch();
+          }}
+        />
       )}
     </div>
   );

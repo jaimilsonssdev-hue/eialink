@@ -69,6 +69,18 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "estetica-av-2", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Dra. Estética" },
     ],
   },
+  salao: {
+    covers: [
+      { id: "salao-1", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80", label: "Studio Hair & Visagismo" },
+      { id: "salao-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Tratamento Capilar & Mechas" },
+      { id: "salao-3", url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1200&q=80", label: "Lavatório & Cachos Naturais" },
+      { id: "salao-4", url: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=1200&q=80", label: "Escova & Finalização Glow" },
+    ],
+    avatars: [
+      { id: "salao-av-1", url: "https://images.unsplash.com/photo-1580618672591-eb180b1a973f?auto=format&fit=crop&w=400&q=80", label: "Hair Stylist" },
+      { id: "salao-av-2", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80", label: "Studio de Beleza" },
+    ],
+  },
   barbearia: {
     covers: [
       { id: "barba-1", url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80", label: "Cadeiras de Barbearia Vintage" },
@@ -415,6 +427,124 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           price: 150,
           duration_minutes: 50,
           image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  salao: [
+    {
+      nicheKey: "salao",
+      modelName: "Studio Hair & Visagismo Pro",
+      template_id: "clinic-care",
+      theme: "sunset",
+      cover_url: NICHE_GALLERIES.salao.covers[0].url,
+      avatar_url: NICHE_GALLERIES.salao.avatars[0].url,
+      generateHeadline: (company, city) => `Referência em Cortes Autorais & Visagismo em ${city}`,
+      generateDescription: (company, city) =>
+        `No ${company}, valorizamos sua identidade com técnicas modernas de visagismo, mechas iluminadas, corte autoral e tratamento capilar de alta performance em ${city}. Agende seu horário com exclusividade.`,
+      whatsapp_button_label: "Agendar Horário no Studio",
+      whatsapp_message: (company) => `Olá! Vi o trabalho do ${company} e gostaria de agendar um horário para corte/cabelo.`,
+      services: [
+        {
+          name: "Corte Visagista & Design Capilar",
+          description: "Análise de formato do rosto, textura e estilo pessoal para um corte moderno e de fácil manutenção diária.",
+          price: 130,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Mechas Criativas & Morena Iluminada",
+          description: "Clareamento estratégico preservando a fibra capilar, com esfumado de raiz e brilho tridimensional.",
+          price: 460,
+          duration_minutes: 180,
+          image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Cronograma Capilar & Reconstrução",
+          description: "Tratamento intensivo de reposição de massa, aminoácidos e lipídios para cabelos danificados ou quimicamente tratados.",
+          price: 180,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Escova Modelada com Tratamento Glow",
+          description: "Higienização especial no lavatório, máscara nutritiva e finalização modelada com proteção térmica.",
+          price: 85,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "salao",
+      modelName: "Terapia & Cachos VIP",
+      template_id: "spotlight-neon",
+      theme: "emerald",
+      cover_url: NICHE_GALLERIES.salao.covers[2].url,
+      avatar_url: NICHE_GALLERIES.salao.avatars[1].url,
+      generateHeadline: (company, city) => `Especialista em Cachos, Crespos & Transição Capilar em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} é o espaço definitivo para valorizar a textura natural dos seus fios em ${city}. Corte a seco com visagismo, fitagem personalizada e nutrição profunda para liberdade e definição.`,
+      whatsapp_button_label: "Agendar Avaliação de Cachos",
+      whatsapp_message: (company) => `Olá! Conheci a ${company} e gostaria de agendar um atendimento para meus cachos.`,
+      services: [
+        {
+          name: "Corte a Seco Especialista em Cachos",
+          description: "Técnica que respeita o fator encolhimento e o padrão natural de curvatura dos fios, garantindo movimento e volume harmônico.",
+          price: 150,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Fitagem & Definição Hidratada",
+          description: "Higienização botânica, condicionamento selante e fitagem mecha a mecha com finalizador rico em óleos vegetais.",
+          price: 110,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Transição Capilar & Ozonioterapia",
+          description: "Desintoxicação do couro cabeludo com vapor de ozônio, estímulo do folículo e nutrição profunda das duas texturas.",
+          price: 210,
+          duration_minutes: 75,
+          image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "salao",
+      modelName: "Salão Express Clean",
+      template_id: "store-showcase",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.salao.covers[1].url,
+      avatar_url: NICHE_GALLERIES.salao.avatars[0].url,
+      generateHeadline: (company, city) => `Studio de Beleza, Penteados & Produção em ${city}`,
+      generateDescription: (company, city) =>
+        `No ${company}, você encontra agilidade, excelência e atendimento acolhedor em ${city}. Escovas modeladas, botox capilar, manicure e produções para eventos e ocasiões especiais.`,
+      whatsapp_button_label: "Agendar Horário Rápido",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar um horário no ${company}.`,
+      services: [
+        {
+          name: "Botox Capilar & Redução de Frizz",
+          description: "Alinhamento térmico suave com reposição de aminoácidos, devolvendo o brilho espelhado e maciez aos fios.",
+          price: 180,
+          duration_minutes: 70,
+          image_url: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Lavatório Spa & Hidratação Express",
+          description: "Massagem craniana relaxante durante a higienização combinada com ampola de nutrição ultrarrápida.",
+          price: 90,
+          duration_minutes: 35,
+          image_url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Penteado & Make para Festas",
+          description: "Penteados modernos (preso, semi-preso, tranças elaboradas) com alta fixação e elegância.",
+          price: 160,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=600&q=80",
         },
       ],
     },
@@ -808,6 +938,7 @@ export const PRESETS: Record<string, NichePreset> = {
   odontologia: NICHE_PRESETS_VARIANTS.odontologia[0],
   clinica: NICHE_PRESETS_VARIANTS.clinica[0],
   estetica: NICHE_PRESETS_VARIANTS.estetica[0],
+  salao: NICHE_PRESETS_VARIANTS.salao[0],
   barbearia: NICHE_PRESETS_VARIANTS.barbearia[0],
   advocacia: NICHE_PRESETS_VARIANTS.advocacia[0],
   restaurante: NICHE_PRESETS_VARIANTS.restaurante[0],
@@ -821,12 +952,28 @@ export const PRESETS: Record<string, NichePreset> = {
 export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string | null): string {
   const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();
 
-  if (/odonto|dent|sorris|oral|dente|protese/i.test(combined)) return "odontologia";
-  if (/est[eé]tic|beleza|spa|lash|unha|sobrancelha|pele|make|harmoniz/i.test(combined)) return "estetica";
-  if (/barbe|barba|cabelo|barber|fade/i.test(combined)) return "barbearia";
+  // 1. Salão de beleza, cabelos, cachos, estúdios capilares
+  if (/cacho|cabel|sal[aã]o|hair|pentead|visagism|mecha|liso|alisament|progressiv|escova|megahair|corte\s+feminino/i.test(combined)) return "salao";
+
+  // 2. Barbearia e cortes masculinos
+  if (/barbe|barba|barber|fade|navalha/i.test(combined)) return "barbearia";
+
+  // 3. Odontologia e dentistas
+  if (/odonto|dent|sorris|oral|dente|protese|implant/i.test(combined)) return "odontologia";
+
+  // 4. Clínicas médicas, odontológicas integradas e saúde
   if (/cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|oftalm|fisioter|psic[oó]l|terap/i.test(combined)) return "clinica";
+
+  // 5. Estética facial/corporal, sobrancelha, spa e unhas
+  if (/est[eé]tic|beleza|spa|lash|unha|sobrancelha|pele|make|harmoniz|botox|depila/i.test(combined)) return "estetica";
+
+  // 6. Advocacia e serviços jurídicos
   if (/advoc|advogad|jur[ií]d|direito|lei|oab/i.test(combined)) return "advocacia";
+
+  // 7. Gastronomia, restaurantes e lanches
   if (/pizz|restauran|burger|hamburg|lanche|comida|gastr|caf[eé]|bistr[oô]/i.test(combined)) return "restaurante";
+
+  // 8. Fitness e academias
   if (/academ|fitness|cross|trein|personal|gym/i.test(combined)) return "academia";
 
   return "geral";

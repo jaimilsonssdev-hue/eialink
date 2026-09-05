@@ -158,6 +158,7 @@ function ProspectingPage() {
   const [regeneratingPageId, setRegeneratingPageId] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [instaModalCompany, setInstaModalCompany] = useState<ProspectedCompany | null>(null);
+  const [whatsModalCompany, setWhatsModalCompany] = useState<ProspectedCompany | null>(null);
   const [transferModalData, setTransferModalData] = useState<{
     isOpen: boolean;
     page: {
@@ -609,18 +610,20 @@ function ProspectingPage() {
           {attackList.map((company) => (
             <li
               key={company.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/60 px-3 py-2"
+              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-border/60 p-3 sm:py-2.5"
             >
-              <div className="min-w-0">
-                <p className="truncate font-medium">{company.name}</p>
-                <p className="truncate text-xs text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${PRIORITY_STYLE[company.priority]}`}>
+                    Score {company.score}
+                  </span>
+                  <p className="font-semibold text-foreground truncate">{company.name}</p>
+                </div>
+                <p className="truncate text-xs text-muted-foreground mt-0.5">
                   {[company.niche, company.city].filter(Boolean).join(" · ") || "Sem detalhes"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className={`rounded-full px-2 py-0.5 text-xs ${PRIORITY_STYLE[company.priority]}`}>
-                  {company.score}
-                </span>
+              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
                 {(() => {
                   const demo = parseDemoInfo(company.notes);
                   if (demo.url) {
@@ -687,15 +690,25 @@ function ProspectingPage() {
                     </button>
                   );
                 })()}
-                {whatsappLink(company) && (
+                {whatsappLink(company) ? (
                   <a
                     href={whatsappLink(company)!}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs"
+                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 px-2 py-1 text-xs hover:bg-emerald-500/20 transition-colors"
+                    title={`Enviar proposta via WhatsApp para ${company.name}`}
                   >
-                    <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                    <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
                   </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setWhatsModalCompany(company)}
+                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-surface-elevated text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/15 transition-colors"
+                    title={`Definir WhatsApp e enviar proposta para ${company.name}`}
+                  >
+                    <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
+                  </button>
                 )}
                 <button
                   type="button"
@@ -738,8 +751,6 @@ function ProspectingPage() {
                   <Trash2 className="h-3.5 w-3.5" />
                 </button>
               </div>
-
-
             </li>
           ))}
 
@@ -1050,54 +1061,58 @@ function ProspectingPage() {
 
       {/* Pipeline */}
       <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-display text-lg font-bold mr-auto flex items-center gap-2">
-            Pipeline
-            <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-              {companies.length} {companies.length === 1 ? "lead" : "leads"}
-            </span>
-          </h2>
-          {companies.length > 0 && (
-            <button
-              onClick={handleClearAllRadar}
-              disabled={clearRadarMutation.isPending}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-3 py-1.5 text-xs font-medium transition-colors"
-              title="Limpar toda a lista de prospecção"
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-lg font-bold flex items-center gap-2">
+              Pipeline
+              <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                {companies.length} {companies.length === 1 ? "lead" : "leads"}
+              </span>
+            </h2>
+            {companies.length > 0 && (
+              <button
+                onClick={handleClearAllRadar}
+                disabled={clearRadarMutation.isPending}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-2.5 py-1 text-xs font-medium transition-colors"
+                title="Limpar toda a lista de prospecção"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+                {clearRadarMutation.isPending ? "Limpando..." : "Limpar Radar"}
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Buscar..."
+              className="input-field flex-1 sm:w-48 text-xs"
+            />
+            <select
+              className="input-field text-xs flex-1 sm:w-auto"
+              value={statusFilter}
+              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
             >
-              <Trash2 className="h-3.5 w-3.5" />
-              {clearRadarMutation.isPending ? "Limpando..." : "Limpar Radar"}
-            </button>
-          )}
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar"
-            className="input-field"
-          />
-          <select
-            className="input-field"
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-          >
-            <option value="all">Todas as etapas</option>
-            {STATUS_OPTIONS.map((status) => (
-              <option key={status} value={status}>
-                {STATUS_LABEL[status]}
-              </option>
-            ))}
-          </select>
-          <select
-            className="input-field"
-            value={priorityFilter}
-            onChange={(event) => setPriorityFilter(event.target.value as typeof priorityFilter)}
-          >
-            <option value="all">Todas as prioridades</option>
-            {(Object.keys(PRIORITY_LABEL) as ProspectPriority[]).map((priority) => (
-              <option key={priority} value={priority}>
-                {PRIORITY_LABEL[priority]}
-              </option>
-            ))}
-          </select>
+              <option value="all">Todas as etapas</option>
+              {STATUS_OPTIONS.map((status) => (
+                <option key={status} value={status}>
+                  {STATUS_LABEL[status]}
+                </option>
+              ))}
+            </select>
+            <select
+              className="input-field text-xs flex-1 sm:w-auto"
+              value={priorityFilter}
+              onChange={(event) => setPriorityFilter(event.target.value as typeof priorityFilter)}
+            >
+              <option value="all">Todas as prioridades</option>
+              {(Object.keys(PRIORITY_LABEL) as ProspectPriority[]).map((priority) => (
+                <option key={priority} value={priority}>
+                  {PRIORITY_LABEL[priority]}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="overflow-x-auto">
@@ -1177,7 +1192,7 @@ function ProspectingPage() {
                       : "—"}
                   </td>
                   <td className="px-3 py-2">
-                    <div className="flex items-center gap-2">
+                    <div className="min-w-[280px] flex flex-wrap items-center gap-1.5 py-1">
                       {(() => {
                         const demo = parseDemoInfo(company.notes);
                         if (demo?.url) {
@@ -1263,15 +1278,25 @@ function ProspectingPage() {
                           </button>
                         );
                       })()}
-                      {whatsappLink(company) && (
+                      {whatsappLink(company) ? (
                         <a
                           href={whatsappLink(company)!}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs"
+                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 px-2 py-1 text-xs hover:bg-emerald-500/20 transition-colors"
+                          title={`Enviar proposta via WhatsApp para ${company.name}`}
                         >
-                          <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
+                          <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
                         </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setWhatsModalCompany(company)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-surface-elevated text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/15 transition-colors"
+                          title={`Definir WhatsApp e enviar proposta para ${company.name}`}
+                        >
+                          <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
+                        </button>
                       )}
                       <button
                         type="button"
@@ -1360,6 +1385,17 @@ function ProspectingPage() {
           onSuccess={() => {
             invalidate();
             setFeedback(`📸 Abordagem via Instagram Direct iniciada para ${instaModalCompany.name}!`);
+          }}
+        />
+      )}
+
+      {whatsModalCompany && (
+        <WhatsApproachModal
+          company={whatsModalCompany}
+          onClose={() => setWhatsModalCompany(null)}
+          onSuccess={() => {
+            invalidate();
+            setFeedback(`💬 Abordagem via WhatsApp iniciada para ${whatsModalCompany.name}!`);
           }}
         />
       )}
@@ -1640,6 +1676,187 @@ function InstaApproachModal({ company, onClose, onSuccess }: InstaApproachModalP
               <Instagram className="h-4 w-4" />
             )}
             {saving ? "Salvando..." : "Copiar Pitch & Abrir Direct 📲"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface WhatsApproachModalProps {
+  company: ProspectedCompany;
+  onClose: () => void;
+  onSuccess?: () => void;
+}
+
+function WhatsApproachModal({ company, onClose, onSuccess }: WhatsApproachModalProps) {
+  const initialPhone = company.whatsapp || company.phone || "";
+  const [phone, setPhone] = useState(initialPhone);
+  const [pitch, setPitch] = useState(() => {
+    const demo = company.notes?.match(/https?:\/\/[^\s]+/);
+    const demoUrl = demo ? demo[0] : null;
+    return demoUrl
+      ? `Olá, ${company.name}! Aqui é da EIA Link. Montei uma sugestão exclusiva de presença digital para vocês no ar: ${demoUrl} . Posso te mostrar como funciona para receber agendamentos direto no WhatsApp?`
+      : `Olá, ${company.name}! Aqui é da EIA Link. Vi que a empresa ainda não tem uma página profissional na internet e preparei uma sugestão de presença digital para vocês. Posso te mostrar?`;
+  });
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleCopyPitch() {
+    void navigator.clipboard.writeText(pitch);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  async function handleOpenWhatsApp() {
+    setError(null);
+    const cleanPhone = normalizePhone(phone);
+    if (!cleanPhone) {
+      setError("Por favor, digite um telefone com DDD válido (ex: 73999998888 ou (73) 99999-8888).");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (cleanPhone !== company.whatsapp) {
+        await ProspectingService.updateCompany(company.id, {
+          whatsapp: cleanPhone,
+          phone: cleanPhone,
+        });
+      }
+
+      void navigator.clipboard.writeText(pitch);
+      setCopied(true);
+
+      const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(pitch)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+
+      onSuccess?.();
+      onClose();
+    } catch (err: unknown) {
+      console.error("Erro ao salvar WhatsApp:", err);
+      const url = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(pitch)}`;
+      window.open(url, "_blank", "noopener,noreferrer");
+      onClose();
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-3 sm:p-4 backdrop-blur-sm overflow-y-auto">
+      <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200">
+        {/* Cabeçalho */}
+        <div className="flex items-start justify-between gap-3 border-b border-border pb-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-md shadow-emerald-500/10">
+              <MessageCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold font-display text-foreground leading-tight">
+                Abordagem no WhatsApp
+              </h2>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                <span className="font-semibold text-foreground">{company.name}</span>
+                {[company.niche, company.city].filter(Boolean).length > 0 && (
+                  <span> · {[company.niche, company.city].filter(Boolean).join(" · ")}</span>
+                )}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl p-1.5 text-muted-foreground hover:bg-surface-elevated hover:text-foreground transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Dica */}
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3 text-xs text-foreground/90 space-y-1">
+          <p className="font-semibold flex items-center gap-1.5 text-emerald-400">
+            <Sparkles className="h-4 w-4" /> Conexão Imediata em 2 passos:
+          </p>
+          <p className="text-muted-foreground leading-relaxed">
+            1. Digite ou confirme o WhatsApp com DDD da empresa.<br />
+            2. Ao clicar no botão, o número será salvo no cadastro da empresa e a conversa será aberta com a mensagem pronta de abordagem.
+          </p>
+        </div>
+
+        {/* Campo WhatsApp */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              WhatsApp / Telefone com DDD
+            </label>
+            <a
+              href={`https://www.google.com/search?q=${encodeURIComponent(`${company.name} ${company.city || ""} telefone whatsapp`)}`}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs text-emerald-400 hover:underline flex items-center gap-1"
+            >
+              <Search className="h-3 w-3" /> Buscar telefone no Google
+            </a>
+          </div>
+          <input
+            type="text"
+            placeholder="ex: (73) 99999-9999 ou 73999999999"
+            value={phone}
+            onChange={(e) => {
+              setPhone(e.target.value);
+              if (error) setError(null);
+            }}
+            className="input-field w-full text-xs font-mono"
+          />
+          {error && <p className="text-xs text-rose-400 mt-1">{error}</p>}
+        </div>
+
+        {/* Preview do Pitch */}
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Mensagem Pronta de Abordagem
+            </label>
+            <button
+              type="button"
+              onClick={handleCopyPitch}
+              className="text-xs text-emerald-400 hover:underline flex items-center gap-1"
+            >
+              {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? "Copiada!" : "Copiar mensagem"}
+            </button>
+          </div>
+          <textarea
+            rows={4}
+            value={pitch}
+            onChange={(e) => setPitch(e.target.value)}
+            className="input-field w-full text-xs font-sans resize-none"
+          />
+        </div>
+
+        {/* Rodapé e Ações */}
+        <div className="flex items-center justify-end gap-2 pt-2 border-t border-border">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleOpenWhatsApp()}
+            disabled={saving}
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-xs font-semibold shadow-lg shadow-emerald-500/20 transition-all"
+          >
+            {saving ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <MessageCircle className="h-4 w-4" />
+            )}
+            {saving ? "Salvando..." : "Salvar e Iniciar WhatsApp 📲"}
           </button>
         </div>
       </div>

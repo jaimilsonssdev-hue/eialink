@@ -91,8 +91,8 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
     if (seen.has(normalizedKey)) continue;
     seen.add(normalizedKey);
 
-    // Extrai telefone brasileiro com DDD
-    const phoneMatch = block.match(/(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)?(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
+    // Extrai telefone brasileiro com DDD obrigatório (evita capturar números aleatórios de imagens ou parâmetros)
+    const phoneMatch = block.match(/(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
     const rawPhone = phoneMatch ? phoneMatch[0] : null;
 
     // Extrai nota
@@ -268,8 +268,14 @@ export async function searchGoogleMapsAndInstagram(
     if (results.length >= limit) break;
   }
 
-  // Prioriza oportunidades de alta conversão (sem site e com WhatsApp primeiro)
-  return results.sort((a, b) => b.score - a.score);
+  // Prioriza oportunidades que possuem canal direto de contato (WhatsApp ou Instagram) primeiro
+  return results.sort((a, b) => {
+    const aContact = Boolean(a.whatsapp || a.phone || a.instagram);
+    const bContact = Boolean(b.whatsapp || b.phone || b.instagram);
+    if (aContact && !bContact) return -1;
+    if (!aContact && bContact) return 1;
+    return (b.score ?? 0) - (a.score ?? 0);
+  });
 }
 
 /**

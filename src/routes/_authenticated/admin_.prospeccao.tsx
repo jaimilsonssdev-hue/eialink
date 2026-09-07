@@ -26,6 +26,7 @@ import {
   X,
   Copy,
   MoreHorizontal,
+  Building2,
 } from "lucide-react";
 
 import {
@@ -50,11 +51,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 
 import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
 import { PageService } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
+import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
+import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";
 import { NICHE_PRESETS_VARIANTS, detectNicheKey } from "@/modules/prospecting/nichePresets";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
@@ -202,7 +210,17 @@ function ProspectingPage() {
   } | null>(null);
 
 
-  const [entryTab, setEntryTab] = useState<"csv" | "manual">("csv");
+  const [entryTab, setEntryTab] = useState<"csv" | "cnpj" | "manual">("csv");
+
+  async function handleAddCnpjCompany(draft: Parameters<typeof ProspectingService.create>[0]) {
+    try {
+      await createMutation.mutateAsync(draft);
+      setFeedback(`Empresa "${draft.name}" adicionada ao radar com sucesso.`);
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, message: err?.message || "Erro ao adicionar empresa." };
+    }
+  }
 
   const companiesQuery = useQuery({
     queryKey: ["prospecting", "companies"],
@@ -574,19 +592,28 @@ function ProspectingPage() {
 
   return (
     <div className="space-y-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <Link
             to="/admin"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" /> Super Admin
+            <ArrowLeft className="h-3.5 w-3.5" /> Super Admin
           </Link>
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2 mt-1">
-            <Radar className="h-6 w-6 text-[color:var(--accent)]" /> Radar de Prospecção
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Motor de demanda: importe listas, priorize por score e registre cada abordagem.
+          <div className="flex items-center gap-3 mt-1.5">
+            <h1 className="font-display text-2xl font-bold flex items-center gap-2 text-white">
+              <Radar className="h-6 w-6 text-primary" /> Radar de Prospecção
+            </h1>
+            <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <span>Live Ops • Radar Ativo</span>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Motor de demanda ativa: varredura no Google e Instagram, modelos demonstrativos e conversão no WhatsApp.
           </p>
         </div>
       </header>
@@ -673,12 +700,10 @@ function ProspectingPage() {
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLE[company.priority]}`}>
-                      Score {company.score}
-                    </span>
-                    <p className="font-medium text-foreground tracking-tight text-sm truncate">{company.name}</p>
+                    <LeadTemperatureBadge score={company.score} />
+                    <p className="font-medium text-white tracking-tight text-sm truncate">{company.name}</p>
                   </div>
-                  <p className="truncate text-xs font-normal text-muted-foreground/80 mt-1">
+                  <p className="truncate text-xs font-normal text-muted-foreground mt-1">
                     {[company.niche, company.city].filter(Boolean).join(" · ") || "Sem detalhes"}
                   </p>
                 </div>
@@ -686,16 +711,49 @@ function ProspectingPage() {
                 <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
                   {demo.url ? (
                     <>
-                      <a
-                        href={demo.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
-                        title="Ver Página Pro no ar"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
-                        <span>Ver</span>
-                      </a>
+                      <HoverCard openDelay={150} closeDelay={150}>
+                        <HoverCardTrigger asChild>
+                          <a
+                            href={demo.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                            title="Ver Página Pro no ar"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
+                            <span>Ver</span>
+                          </a>
+                        </HoverCardTrigger>
+                        <HoverCardContent align="end" className="w-80 border-border bg-[#160d29]/95 backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
+                          <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                              <span className="text-xs font-semibold text-white">Modelo Demonstrativo</span>
+                            </div>
+                            <span className="text-[11px] text-muted-foreground font-mono">EIA Link</span>
+                          </div>
+                          <div className="rounded-lg border border-border/70 bg-background/80 p-3 space-y-1">
+                            <p className="text-xs font-bold text-white tracking-tight">{company.name}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {[company.niche, company.city].filter(Boolean).join(" · ")}
+                            </p>
+                            <div className="pt-2 flex items-center justify-between text-[11px]">
+                              <span className="text-emerald-400 font-medium">WhatsApp Pronto</span>
+                              <span className="text-purple-400 font-mono">Online</span>
+                            </div>
+                          </div>
+                          <div className="pt-1">
+                            <a
+                              href={demo.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-xs text-primary hover:underline inline-flex items-center gap-1 font-medium"
+                            >
+                              Abrir página em nova aba <ExternalLink className="h-3 w-3" />
+                            </a>
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
                       {demo.pageId && (
                         <Link
                           to="/builder"
@@ -710,17 +768,17 @@ function ProspectingPage() {
                     </>
                   ) : (
                     <button
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-transparent text-foreground px-2.5 py-1.5 text-xs font-medium hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/20 text-white px-3 py-1.5 text-xs font-semibold hover:bg-primary/30 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
                       onClick={() => void handleGenerateDemo(company)}
                       disabled={creatingPageId === company.id}
                       title="Gerar modelo demonstrativo para prospecção"
                     >
                       {creatingPageId === company.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
                       ) : (
-                        <Sparkles className="h-3.5 w-3.5 text-muted-foreground/70" />
+                        <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                       )}
-                      <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Página"}</span>
+                      <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo 🪄"}</span>
                     </button>
                   )}
 
@@ -729,20 +787,30 @@ function ProspectingPage() {
                       href={whatsappLink(company)!}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
-                      title={`Enviar proposta via WhatsApp para ${company.name}`}
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                        company.status === "contatado"
+                          ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
+                          : demo.url && (company.status === "novo" || company.status === "qualificado")
+                            ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
+                            : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
+                      }`}
+                      title={company.status === "contatado" ? `Follow-up via WhatsApp com ${company.name}` : `Enviar proposta via WhatsApp para ${company.name}`}
                     >
-                      <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
-                      <span>WhatsApp</span>
+                      <MessageCircle className="h-3.5 w-3.5 text-current" />
+                      <span>{company.status === "contatado" ? "Follow-up" : "WhatsApp"}</span>
                     </a>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setWhatsModalCompany(company)}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                        demo.url && (company.status === "novo" || company.status === "qualificado")
+                          ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
+                          : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
+                      }`}
                       title={`Definir WhatsApp e enviar proposta para ${company.name}`}
                     >
-                      <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
+                      <MessageCircle className="h-3.5 w-3.5 text-current" />
                       <span>WhatsApp</span>
                     </button>
                   )}
@@ -1054,7 +1122,7 @@ function ProspectingPage() {
               <button
                 type="button"
                 onClick={() => setEntryTab("csv")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium transition-all ${
                   entryTab === "csv"
                     ? "bg-muted text-white shadow-xs"
                     : "text-muted-foreground hover:text-white"
@@ -1064,14 +1132,25 @@ function ProspectingPage() {
               </button>
               <button
                 type="button"
+                onClick={() => setEntryTab("cnpj")}
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium transition-all ${
+                  entryTab === "cnpj"
+                    ? "bg-primary text-white shadow-xs font-semibold"
+                    : "text-muted-foreground hover:text-white"
+                }`}
+              >
+                <Building2 className="h-3.5 w-3.5" /> Buscar CNPJ 🏢
+              </button>
+              <button
+                type="button"
                 onClick={() => setEntryTab("manual")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium transition-all ${
                   entryTab === "manual"
                     ? "bg-muted text-white shadow-xs"
                     : "text-muted-foreground hover:text-white"
                 }`}
               >
-                <Plus className="h-3.5 w-3.5" /> Adicionar Manual
+                <Plus className="h-3.5 w-3.5" /> Manual
               </button>
             </div>
           </CardHeader>
@@ -1165,7 +1244,12 @@ function ProspectingPage() {
               </div>
             )}
 
-            {/* Tab 2: Adicionar Manual */}
+            {/* Tab 2: Consultar CNPJ */}
+            {entryTab === "cnpj" && (
+              <CnpjLookupCard onAddCompany={handleAddCnpjCompany} />
+            )}
+
+            {/* Tab 3: Adicionar Manual */}
             {entryTab === "manual" && (
               <form onSubmit={handleManualSubmit} className="space-y-2.5">
                 <p className="text-xs text-muted-foreground">
@@ -1280,8 +1364,7 @@ function ProspectingPage() {
               <TableHeader className="bg-muted/40 border-b border-border">
                 <TableRow className="border-border hover:bg-transparent">
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Empresa</TableHead>
-                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
-                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Prioridade</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Temperatura</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Etapa</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Último contato</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80 text-right">Ações</TableHead>
@@ -1323,15 +1406,8 @@ function ProspectingPage() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="py-3.5 px-4">
-                        <span className="font-semibold text-sm tabular-nums text-white">{company.score}</span>
-                      </TableCell>
                       <TableCell className="py-3.5 px-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLE[company.priority]}`}
-                        >
-                          {PRIORITY_LABEL[company.priority]}
-                        </span>
+                        <LeadTemperatureBadge score={company.score} />
                       </TableCell>
                       <TableCell className="py-3.5 px-4 whitespace-nowrap">
                         <select
@@ -1360,16 +1436,49 @@ function ProspectingPage() {
                         <div className="flex items-center justify-end gap-1.5 flex-wrap">
                           {demo.url ? (
                             <>
-                              <a
-                                href={demo.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
-                                title="Ver Página Pro no ar"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
-                                <span>Ver</span>
-                              </a>
+                              <HoverCard openDelay={150} closeDelay={150}>
+                                <HoverCardTrigger asChild>
+                                  <a
+                                    href={demo.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                                    title="Ver Página Pro no ar"
+                                  >
+                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
+                                    <span>Ver</span>
+                                  </a>
+                                </HoverCardTrigger>
+                                <HoverCardContent align="end" className="w-80 border-border bg-[#160d29]/95 backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
+                                  <div className="flex items-center justify-between border-b border-border/60 pb-2">
+                                    <div className="flex items-center gap-2">
+                                      <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                                      <span className="text-xs font-semibold text-white">Modelo Demonstrativo</span>
+                                    </div>
+                                    <span className="text-[11px] text-muted-foreground font-mono">EIA Link</span>
+                                  </div>
+                                  <div className="rounded-lg border border-border/70 bg-background/80 p-3 space-y-1">
+                                    <p className="text-xs font-bold text-white tracking-tight">{company.name}</p>
+                                    <p className="text-[11px] text-muted-foreground">
+                                      {[company.niche, company.city].filter(Boolean).join(" · ")}
+                                    </p>
+                                    <div className="pt-2 flex items-center justify-between text-[11px]">
+                                      <span className="text-emerald-400 font-medium">WhatsApp Pronto</span>
+                                      <span className="text-purple-400 font-mono">Online</span>
+                                    </div>
+                                  </div>
+                                  <div className="pt-1">
+                                    <a
+                                      href={demo.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-xs text-primary hover:underline inline-flex items-center gap-1 font-medium"
+                                    >
+                                      Abrir página em nova aba <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  </div>
+                                </HoverCardContent>
+                              </HoverCard>
                               {demo.pageId && (
                                 <Link
                                   to="/builder"
@@ -1384,17 +1493,17 @@ function ProspectingPage() {
                             </>
                           ) : (
                             <button
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-transparent text-white px-2.5 py-1.5 text-xs font-medium hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/20 text-white px-3 py-1.5 text-xs font-semibold hover:bg-primary/30 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
                               onClick={() => void handleGenerateDemo(company)}
                               disabled={creatingPageId === company.id}
                               title="Gerar modelo demonstrativo para prospecção"
                             >
                               {creatingPageId === company.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
                               ) : (
-                                <Sparkles className="h-3.5 w-3.5 text-muted-foreground/70" />
+                                <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                               )}
-                              <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Página"}</span>
+                              <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo 🪄"}</span>
                             </button>
                           )}
 
@@ -1403,20 +1512,30 @@ function ProspectingPage() {
                               href={whatsappLink(company)!}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
-                              title={`Enviar proposta via WhatsApp para ${company.name}`}
+                              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                                company.status === "contatado"
+                                  ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
+                                  : demo.url && (company.status === "novo" || company.status === "qualificado")
+                                    ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
+                                    : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
+                              }`}
+                              title={company.status === "contatado" ? `Follow-up via WhatsApp com ${company.name}` : `Enviar proposta via WhatsApp para ${company.name}`}
                             >
-                              <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
-                              <span>WhatsApp</span>
+                              <MessageCircle className="h-3.5 w-3.5 text-current" />
+                              <span>{company.status === "contatado" ? "Follow-up" : "WhatsApp"}</span>
                             </a>
                           ) : (
                             <button
                               type="button"
                               onClick={() => setWhatsModalCompany(company)}
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                                demo.url && (company.status === "novo" || company.status === "qualificado")
+                                  ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
+                                  : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
+                              }`}
                               title={`Definir WhatsApp e enviar proposta para ${company.name}`}
                             >
-                              <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
+                              <MessageCircle className="h-3.5 w-3.5 text-current" />
                               <span>WhatsApp</span>
                             </button>
                           )}
@@ -1521,7 +1640,7 @@ function ProspectingPage() {
                 })}
                 {!filtered.length && (
                   <TableRow>
-                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
                       Nenhuma empresa encontrada.
                     </TableCell>
                   </TableRow>

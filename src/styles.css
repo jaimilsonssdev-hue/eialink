@@ -122,9 +122,9 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     background-image:
-      radial-gradient(1200px 600px at 10% -10%, oklch(0.35 0.15 240 / 0.35), transparent),
-      radial-gradient(900px 500px at 100% 0%, oklch(0.35 0.15 320 / 0.25), transparent),
-      radial-gradient(700px 400px at 50% 100%, oklch(0.3 0.15 200 / 0.15), transparent);
+      radial-gradient(ellipse 90% 50% at 50% -10%, rgba(168, 85, 247, 0.18), transparent 70%),
+      radial-gradient(900px 500px at 100% 0%, rgba(217, 70, 239, 0.08), transparent),
+      radial-gradient(700px 400px at 0% 50%, rgba(168, 85, 247, 0.05), transparent);
     background-attachment: fixed;
   }
   h1,

@@ -20,6 +20,7 @@ import {
 import { TemplateMarketplace } from "@/components/templates/TemplateMarketplace";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { publicPageUrl } from "@/lib/public-page-url";
+import { QuickBusinessEditor } from "@/components/dashboard/QuickBusinessEditor";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -241,23 +242,8 @@ function Dashboard() {
         </div>
       )}
 
-      {bio && setupCompleted < setupItems.length && (
-        <section className="dashboard-setup-card">
-          <div>
-            <p className="eyebrow">Configuração rápida</p>
-            <h2>Deixe seu EiaLink pronto em poucos minutos</h2>
-            <div className="dashboard-setup-list">
-              {setupItems.map((item) => (
-                <span className={item.complete ? "is-complete" : ""} key={item.label}>
-                  {item.complete ? "✓" : "○"} {item.label}
-                </span>
-              ))}
-            </div>
-          </div>
-          <Link to="/builder" className="btn-primary">
-            Continuar configuração
-          </Link>
-        </section>
+      {bio && (
+        <QuickBusinessEditor bio={bio} publicUrl={publicUrl} />
       )}
 
       <div className="premium-section-heading">

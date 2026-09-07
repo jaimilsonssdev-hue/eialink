@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -551,17 +552,7 @@ function AdminPage() {
                       {[p.city, p.state].filter(Boolean).join(" / ") || "—"}
                     </TableCell>
                     <TableCell className="py-3.5 px-4 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium tabular-nums ${
-                          (p.lead_score ?? 0) >= 70
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            : (p.lead_score ?? 0) >= 31
-                              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                              : "bg-muted/60 text-muted-foreground border border-border/40"
-                        }`}
-                      >
-                        {p.lead_score ?? 0}
-                      </span>
+                      <LeadTemperatureBadge score={p.lead_score ?? 0} />
                     </TableCell>
                     <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
                       {p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "—"}

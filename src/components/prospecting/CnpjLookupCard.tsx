@@ -28,6 +28,8 @@ import { LeadTemperatureBadge } from "./LeadTemperatureBadge";
 import { normalizeName, normalizePhone, buildDedupeKey } from "@/modules/prospecting/scoring";
 import { detectNicheKey } from "@/modules/prospecting/nichePresets";
 import { POPULAR_CNAES, findCnaeByTerm, type CnaeItem } from "@/modules/prospecting/cnaePresets";
+import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
+import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
 import type { ProspectDraft } from "@/modules/prospecting/types";
 
 interface BrasilApiQsa {
@@ -82,10 +84,12 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
   const [data, setData] = useState<BrasilApiCnpjResponse | null>(null);
   const [added, setAdded] = useState(false);
 
-  // === MODO 2: SCANNER EM LOTE ===
-  const [batchRawText, setBatchRawText] = useState("");
+  // === MODO 2: SCANNER EM LOTE / GERADOR AUTOMÁTICO POR CNAE ===
   const [selectedCnae, setSelectedCnae] = useState<string>("");
   const [cityContext, setCityContext] = useState("");
+  const [isAutoSearching, setIsAutoSearching] = useState(false);
+  const [showManualPaste, setShowManualPaste] = useState(false);
+  const [batchRawText, setBatchRawText] = useState("");
   const [isScanningBatch, setIsScanningBatch] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
   const [batchResults, setBatchResults] = useState<BatchLeadResult[]>([]);
@@ -133,6 +137,88 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     };
   };
 
+  // === GERADOR AUTOMÁTICO DE EMPRESAS POR CNAE & CIDADE ===
+  const handleAutoDiscoverByCnae = async () => {
+    if (!selectedCnae) {
+      setError("Selecione um CNAE de referência na lista para gerar as empresas.");
+      return;
+    }
+    if (!cityContext.trim()) {
+      setError("Informe a Cidade / Região para localizar as empresas.");
+      return;
+    }
+
+    setIsAutoSearching(true);
+    setError(null);
+    setBatchAddFeedback(null);
+    setBatchResults([]);
+    setSelectedIndices(new Set());
+    setAddedIndices(new Set());
+
+    const cnaeItem = POPULAR_CNAES.find((c) => c.code === selectedCnae);
+    const nicheTerm = cnaeItem ? cnaeItem.niche : "Empresas";
+    const cnaeDesc = cnaeItem ? `${cnaeItem.code} · ${cnaeItem.popularTerm}` : selectedCnae;
+
+    try {
+      let leads: ProspectDraft[] = [];
+      try {
+        leads = await searchGoogleMapsAndInstagram(nicheTerm, cityContext.trim(), 20);
+      } catch (clientErr) {
+        console.warn("[CNAE Auto Search] Tentando fallback para servidor:", clientErr);
+        leads = await runLiveProspecting({
+          data: { niche: nicheTerm, city: cityContext.trim(), limit: 20 },
+        });
+      }
+
+      if (!leads.length) {
+        setError(`Nenhuma empresa localizada para "${nicheTerm}" em "${cityContext.trim()}". Tente verificar o nome da cidade.`);
+        return;
+      }
+
+      // Converte os leads gerados para o formato de resultados da tabela CNAE
+      const results: BatchLeadResult[] = leads.map((lead) => ({
+        data: {
+          cnpj: lead.dedupe_key?.startsWith("insta:") ? "Pendente" : "Base Oficial",
+          razao_social: lead.name,
+          nome_fantasia: lead.name,
+          descricao_situacao_cadastral: "ATIVA",
+          cnae_fiscal: cnaeItem ? parseInt(cnaeItem.cleanCode.slice(0, 5), 10) : 0,
+          cnae_fiscal_descricao: cnaeDesc,
+          ddd_telefone_1: lead.phone || lead.whatsapp || null,
+          ddd_telefone_2: null,
+          email: lead.email || null,
+          logradouro: null,
+          numero: null,
+          bairro: null,
+          municipio: lead.city || cityContext.trim(),
+          uf: lead.state || null,
+          cep: null,
+        },
+        effectiveName: lead.name,
+        cleanPhone: lead.whatsapp || lead.phone,
+        rawPhone: lead.phone || lead.whatsapp,
+        hasWebsite: lead.has_website,
+        score: lead.score,
+        isOpportunity: !lead.has_website,
+        partners: lead.instagram ? `Instagram: ${lead.instagram}` : "Decisor local",
+        detectedNiche: cnaeItem ? cnaeItem.niche : lead.niche,
+      }));
+
+      setBatchResults(results);
+
+      // Auto-seleciona as oportunidades sem site
+      const initialSelected = new Set<number>();
+      results.forEach((r, idx) => {
+        if (!r.hasWebsite) initialSelected.add(idx);
+      });
+      setSelectedIndices(initialSelected);
+    } catch (err: any) {
+      setError(err?.message || "Erro ao gerar lista de empresas por CNAE.");
+    } finally {
+      setIsAutoSearching(false);
+    }
+  };
+
   const handleSearchSingle = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const clean = cnpjInput.replace(/\D/g, "");
@@ -167,7 +253,6 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     }
   };
 
-  // Nome comercial mais amigável
   const effectiveName = data?.nome_fantasia?.trim()
     ? normalizeName(data.nome_fantasia)
     : normalizeName(data?.razao_social);
@@ -235,7 +320,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     }
   };
 
-  // === PROCESSAMENTO EM LOTE ===
+  // === PROCESSAMENTO EM LOTE DE CNPJs (QUANDO COLADOS) ===
   const extractCnpjsFromText = (text: string): string[] => {
     const formatted = text.match(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g) || [];
     const rawDigits = text.match(/\b\d{14}\b/g) || [];
@@ -310,7 +395,6 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     setIsScanningBatch(false);
     setBatchProgress(null);
 
-    // Auto-seleciona todos os leads que NÃO têm site por padrão
     const initialSelected = new Set<number>();
     results.forEach((r, idx) => {
       if (!r.hasWebsite) initialSelected.add(idx);
@@ -427,15 +511,6 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     setSelectedIndices(new Set());
   };
 
-  const handleOpenExternalSearch = () => {
-    const currentCnae = POPULAR_CNAES.find((c) => c.code === selectedCnae);
-    const cnaeCode = currentCnae ? currentCnae.code : selectedCnae.trim();
-    const cnaeQuery = cnaeCode ? `"${cnaeCode}"` : "CNAE";
-    const cityQuery = cityContext.trim() ? `"${cityContext.trim()}"` : "";
-    const query = `site:cnpj.biz OR site:casadosdados.com.br ${cnaeQuery} ${cityQuery} CNPJ`;
-    window.open(`https://www.google.com/search?q=${encodeURIComponent(query.trim())}`, "_blank", "noopener,noreferrer");
-  };
-
   const handleLoadSampleCnpjs = () => {
     const samples = [
       "33.000.167/0001-01", // Petrobras
@@ -449,7 +524,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
 
   return (
     <div className="space-y-4">
-      {/* Sub-navegação: Scanner em Lote por CNAE vs Consulta Individual */}
+      {/* Sub-navegação: Gerador de Empresas por CNAE vs Consulta Individual de CNPJ */}
       <div className="flex items-center gap-1.5 p-1 rounded-xl border border-border/80 bg-background/50 text-xs max-w-md">
         <button
           type="button"
@@ -460,7 +535,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
               : "text-muted-foreground hover:text-white"
           }`}
         >
-          <Layers className="h-3.5 w-3.5" /> Scanner em Lote por CNAE
+          <Layers className="h-3.5 w-3.5" /> Gerador & Scanner por CNAE
         </button>
         <button
           type="button"
@@ -475,30 +550,30 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
         </button>
       </div>
 
-      {/* ===================== MODO 1: SCANNER EM LOTE ===================== */}
+      {/* ===================== MODO 1: SCANNER POR CNAE & EMPRESAS ===================== */}
       {activeTab === "batch" && (
         <div className="space-y-4">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">
-              Audite múltiplos CNPJs de uma só vez para identificar quais <strong>NÃO TÊM SITE</strong>, descobrir os sócios decisores (QSA) e alimentar seu pipeline com 1 clique.
+              Selecione o CNAE e a cidade para <strong>gerar automaticamente a lista de empresas</strong>, identificar quem <strong>NÃO TEM SITE</strong> e importar para seu funil de prospecção.
             </p>
           </div>
 
-          {/* Grade com CNAE de Referência + Cidade Contextual + Ações de Apoio */}
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+          {/* Grade com CNAE + Cidade + Botão Gerar Lista */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
             <div className="md:col-span-6 space-y-1.5">
               <label className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-primary" /> CNAE Comercial de Referência:
+                  <Sparkles className="h-3 w-3 text-primary" /> Atividade Econômica / CNAE:
                 </span>
                 <span className="text-primary font-mono text-[10px]">Mais Lucrativos</span>
               </label>
               <select
                 value={selectedCnae}
                 onChange={(e) => setSelectedCnae(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background/70 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary/60 transition-colors"
+                className="w-full rounded-lg border border-border bg-background/70 px-3 py-2.5 text-xs text-white focus:outline-none focus:border-primary/60 transition-colors"
               >
-                <option value="">Selecione um CNAE para filtrar o nicho...</option>
+                <option value="">Selecione a atividade comercial...</option>
                 {POPULAR_CNAES.map((cnae) => (
                   <option key={cnae.code} value={cnae.code}>
                     {cnae.code} · {cnae.popularTerm}
@@ -515,82 +590,101 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
                 type="text"
                 value={cityContext}
                 onChange={(e) => setCityContext(e.target.value)}
-                placeholder="Ex: São Paulo, SP"
-                className="w-full rounded-lg border border-border bg-background/70 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors"
+                placeholder="Ex: Curitiba, PR"
+                className="w-full rounded-lg border border-border bg-background/70 px-3 py-2.5 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors"
               />
             </div>
 
-            <div className="md:col-span-3 flex items-end gap-1.5">
+            <div className="md:col-span-3">
               <button
                 type="button"
-                onClick={handleOpenExternalSearch}
-                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/70 bg-muted/40 hover:bg-muted text-xs font-medium text-white px-2.5 py-2 transition-all"
-                title="Abrir busca no Google formatada para encontrar CNPJs deste CNAE e cidade"
+                onClick={handleAutoDiscoverByCnae}
+                disabled={isAutoSearching || !selectedCnae || !cityContext.trim()}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs font-semibold bg-primary hover:bg-primary/90 text-white shadow-md shadow-primary/20 transition-all disabled:opacity-50"
               >
-                <ExternalLink className="h-3.5 w-3.5 text-primary" />
-                <span className="truncate">Buscar CNPJs</span>
-              </button>
-              <button
-                type="button"
-                onClick={handleLoadSampleCnpjs}
-                className="inline-flex items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/10 hover:bg-primary/20 text-xs font-medium text-purple-300 px-2.5 py-2 transition-all whitespace-nowrap"
-                title="Carregar CNPJs de exemplo para testar imediatamente"
-              >
-                <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                <span>Exemplo</span>
+                {isAutoSearching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Gerando Lista...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4 text-purple-200" />
+                    Gerar Lista de Empresas
+                  </>
+                )}
               </button>
             </div>
           </div>
 
-          {/* Área de Colar CNPJs */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between text-xs">
-              <label className="font-semibold text-white/90 flex items-center gap-1.5">
-                <FileSpreadsheet className="h-3.5 w-3.5 text-primary" /> Cole os CNPJs para Auditar:
-              </label>
-              {detectedCnpjs.length > 0 ? (
-                <span className="inline-flex items-center gap-1 text-emerald-400 font-medium font-mono text-[11px] bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-                  ✓ {detectedCnpjs.length} CNPJ(s) detectados
-                </span>
-              ) : (
-                <span className="text-muted-foreground text-[11px]">
-                  Cole de qualquer fonte (linhas, vírgulas, espaços)
-                </span>
-              )}
-            </div>
-            <textarea
-              rows={3}
-              value={batchRawText}
-              onChange={(e) => setBatchRawText(e.target.value)}
-              placeholder="Cole aqui os CNPJs para auditar presença de site e sócios (ex: 00.000.000/0001-91 ou 00000000000191)..."
-              className="w-full rounded-lg border border-border bg-background/70 p-3 text-xs text-white font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors resize-y"
-              disabled={isScanningBatch}
-            />
-          </div>
-
-          {/* Botão de Disparo do Scanner */}
-          <div className="flex items-center justify-between gap-2">
+          {/* Opção Secundária: Colar lista própria de CNPJs */}
+          <div className="pt-1">
             <button
               type="button"
-              onClick={handleStartBatchScan}
-              disabled={isScanningBatch || detectedCnpjs.length === 0}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs sm:text-sm font-semibold bg-primary hover:bg-primary/90 text-white shadow-sm transition-all disabled:opacity-50"
+              onClick={() => setShowManualPaste(!showManualPaste)}
+              className="text-xs text-muted-foreground hover:text-white inline-flex items-center gap-1.5 transition-colors"
             >
-              {isScanningBatch ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Auditando Base da Receita Federal ({batchProgress?.current}/{batchProgress?.total})...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-4 w-4 text-purple-200" />
-                  Auditar Presença Digital de {detectedCnpjs.length > 0 ? `${detectedCnpjs.length} Empresas` : "Empresas"}
-                </>
-              )}
+              <FileSpreadsheet className="h-3.5 w-3.5 text-primary" />
+              <span>{showManualPaste ? "Ocultar auditoria manual de CNPJs" : "Ou auditar uma lista manual de CNPJs (Base da Receita / Planilha)..."}</span>
             </button>
+
+            {showManualPaste && (
+              <div className="mt-3 p-4 rounded-xl border border-border/80 bg-background/40 space-y-3 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between text-xs">
+                  <label className="font-semibold text-white/90">Cole os CNPJs para Auditar:</label>
+                  <div className="flex items-center gap-2">
+                    {detectedCnpjs.length > 0 && (
+                      <span className="text-emerald-400 font-mono text-[11px]">
+                        {detectedCnpjs.length} CNPJ(s) detectados
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleLoadSampleCnpjs}
+                      className="text-[11px] text-purple-300 hover:text-white underline"
+                    >
+                      Exemplo Rápido
+                    </button>
+                  </div>
+                </div>
+                <textarea
+                  rows={3}
+                  value={batchRawText}
+                  onChange={(e) => setBatchRawText(e.target.value)}
+                  placeholder="Cole aqui os CNPJs para auditar presença de site e sócios (separados por vírgula, espaço ou linhas)..."
+                  className="w-full rounded-lg border border-border bg-background/70 p-3 text-xs text-white font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors resize-y"
+                  disabled={isScanningBatch}
+                />
+                <button
+                  type="button"
+                  onClick={handleStartBatchScan}
+                  disabled={isScanningBatch || detectedCnpjs.length === 0}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold bg-muted hover:bg-muted/80 text-white border border-border transition-all disabled:opacity-50"
+                >
+                  {isScanningBatch ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Auditando {batchProgress?.current}/{batchProgress?.total}...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                      Auditar {detectedCnpjs.length > 0 ? `${detectedCnpjs.length} CNPJ(s)` : "CNPJs"} na Receita Federal
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
 
-          {/* Barra de Progresso */}
+          {/* Feedback de Erro */}
+          {error && (
+            <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Barra de Progresso do Scanner */}
           {isScanningBatch && batchProgress && (
             <div className="space-y-1.5 rounded-lg border border-border bg-background/50 p-3">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -616,7 +710,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
             </div>
           )}
 
-          {/* Tabela Enterprise de Resultados do Lote */}
+          {/* Tabela Enterprise de Resultados Gerados */}
           {batchResults.length > 0 && (
             <div className="space-y-3 pt-1">
               {/* Filtro de Visualização: Sem Site vs Com Site */}
@@ -758,7 +852,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
                             </p>
                             <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                               <span className="text-[10px] font-mono text-muted-foreground">
-                                CNPJ: {lead.data.cnpj}
+                                {lead.data.cnpj && lead.data.cnpj.length === 14 ? `CNPJ: ${lead.data.cnpj}` : lead.detectedNiche}
                               </span>
                               <span className="text-[10px] text-muted-foreground">·</span>
                               <span className="text-[10px] text-muted-foreground">

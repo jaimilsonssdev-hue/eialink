@@ -11,7 +11,6 @@ import {
   Trash2,
   Pencil,
   Plus,
-
   Check,
   CheckCircle,
   CheckCircle2,
@@ -26,7 +25,16 @@ import {
   RotateCcw,
   X,
   Copy,
+  MoreHorizontal,
 } from "lucide-react";
+
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
@@ -93,9 +101,9 @@ const CHANNEL_OPTIONS = Object.keys(CHANNEL_LABEL) as ProspectChannel[];
 const OUTCOME_OPTIONS = Object.keys(OUTCOME_LABEL) as ProspectOutcome[];
 
 const PRIORITY_STYLE: Record<ProspectPriority, string> = {
-  alta: "bg-[color:var(--accent)]/15 text-[color:var(--accent)]",
-  media: "bg-[color:var(--primary)]/15 text-[color:var(--primary)]",
-  baixa: "bg-surface-elevated text-muted-foreground",
+  alta: "bg-amber-500/10 text-amber-400 border border-amber-500/25",
+  media: "bg-blue-500/10 text-blue-400 border border-blue-500/25",
+  baixa: "bg-muted/60 text-muted-foreground border border-border/60",
 };
 
 function isToday(value: string | null) {
@@ -607,152 +615,173 @@ function ProspectingPage() {
           As 10 melhores oportunidades ainda não trabalhadas hoje.
         </p>
         <ul className="mt-4 space-y-2">
-          {attackList.map((company) => (
-            <li
-              key={company.id}
-              className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-border/60 p-3 sm:py-2.5"
-            >
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${PRIORITY_STYLE[company.priority]}`}>
-                    Score {company.score}
-                  </span>
-                  <p className="font-semibold text-foreground truncate">{company.name}</p>
+          {attackList.map((company) => {
+            const demo = parseDemoInfo(company.notes);
+            return (
+              <li
+                key={company.id}
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-border/60 bg-card/40 hover:bg-card/90 px-4 py-3 sm:px-5 sm:py-3.5 transition-all shadow-xs"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLE[company.priority]}`}>
+                      Score {company.score}
+                    </span>
+                    <p className="font-medium text-foreground tracking-tight text-sm truncate">{company.name}</p>
+                  </div>
+                  <p className="truncate text-xs font-normal text-muted-foreground/80 mt-1">
+                    {[company.niche, company.city].filter(Boolean).join(" · ") || "Sem detalhes"}
+                  </p>
                 </div>
-                <p className="truncate text-xs text-muted-foreground mt-0.5">
-                  {[company.niche, company.city].filter(Boolean).join(" · ") || "Sem detalhes"}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
-                {(() => {
-                  const demo = parseDemoInfo(company.notes);
-                  if (demo.url) {
-                    return (
-                      <>
-                        <a
-                          href={demo.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/25 transition-colors"
-                          title="Ver Página Pro no ar"
+
+                <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
+                  {demo.url ? (
+                    <>
+                      <a
+                        href={demo.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                        title="Ver Página Pro no ar"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
+                        <span>Ver</span>
+                      </a>
+                      {demo.pageId && (
+                        <Link
+                          to="/builder"
+                          search={{ page: demo.pageId }}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
+                          title="Editar no Construtor"
                         >
-                          <ExternalLink className="h-3.5 w-3.5" /> Ver
-                        </a>
-                        {demo.pageId && (
-                          <>
-                            <Link
-                              to="/builder"
-                              search={{ page: demo.pageId }}
-                              className="inline-flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/15 text-blue-400 px-2 py-1 text-xs hover:bg-blue-500/25 transition-colors"
-                              title="Editar no Construtor"
-                            >
-                              <Pencil className="h-3.5 w-3.5" /> Editar
-                            </Link>
-                            <button
-                              type="button"
-                              onClick={() => void handleRegenerateDemo(company)}
-                              disabled={regeneratingPageId === company.id}
-                              className="inline-flex items-center gap-1 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 px-2 py-1 text-xs hover:bg-purple-500/25 transition-all"
-                              title="Alternar entre os 3 modelos visuais de alta conversão para esta empresa"
-                            >
-                              {regeneratingPageId === company.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <RotateCcw className="h-3.5 w-3.5" />
-                              )}
-                              {regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
-                              className="inline-flex items-center gap-1 rounded-lg border border-amber-500/50 bg-amber-500/15 text-amber-300 px-2 py-1 text-xs hover:bg-amber-500/25 transition-all"
-                              title="Entregar e Oficializar página para o cliente"
-                            >
-                              <Share2 className="h-3.5 w-3.5" /> Entregar
-                            </button>
-                          </>
-                        )}
-                      </>
-                    );
-                  }
-                  return (
+                          <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
+                          <span>Editar</span>
+                        </Link>
+                      )}
+                    </>
+                  ) : (
                     <button
-                      className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-1 text-xs transition-all hover:bg-[color:var(--primary)]/25"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-transparent text-foreground px-2.5 py-1.5 text-xs font-medium hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all"
                       onClick={() => void handleGenerateDemo(company)}
                       disabled={creatingPageId === company.id}
+                      title="Gerar modelo demonstrativo para prospecção"
                     >
                       {creatingPageId === company.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                       ) : (
-                        <Sparkles className="h-3.5 w-3.5" />
+                        <Sparkles className="h-3.5 w-3.5 text-muted-foreground/70" />
                       )}
-                      {creatingPageId === company.id ? "Gerando..." : "Gerar Página"}
+                      <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Página"}</span>
                     </button>
-                  );
-                })()}
-                {whatsappLink(company) ? (
-                  <a
-                    href={whatsappLink(company)!}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 px-2 py-1 text-xs hover:bg-emerald-500/20 transition-colors"
-                    title={`Enviar proposta via WhatsApp para ${company.name}`}
-                  >
-                    <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
-                  </a>
-                ) : (
+                  )}
+
+                  {whatsappLink(company) ? (
+                    <a
+                      href={whatsappLink(company)!}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                      title={`Enviar proposta via WhatsApp para ${company.name}`}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
+                      <span>WhatsApp</span>
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setWhatsModalCompany(company)}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                      title={`Definir WhatsApp e enviar proposta para ${company.name}`}
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
+                      <span>WhatsApp</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
-                    onClick={() => setWhatsModalCompany(company)}
-                    className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-surface-elevated text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/15 transition-colors"
-                    title={`Definir WhatsApp e enviar proposta para ${company.name}`}
+                    onClick={() => void handleInstagramApproach(company)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
+                    title={
+                      copiedInstagramCompanyId === company.id
+                        ? "Mensagem copiada!"
+                        : company.instagram
+                          ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
+                          : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
+                    }
                   >
-                    <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
+                    {copiedInstagramCompanyId === company.id ? (
+                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                    ) : (
+                      <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
+                    )}
+                    <span>
+                      {copiedInstagramCompanyId === company.id
+                        ? "Copiado!"
+                        : "Direct IG"}
+                    </span>
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => void handleInstagramApproach(company)}
-                  className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all ${
-                    !whatsappLink(company)
-                      ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-sm hover:opacity-90"
-                      : "border border-pink-500/40 bg-pink-500/10 text-pink-300 hover:bg-pink-500/20"
-                  }`}
-                  title={
-                    copiedInstagramCompanyId === company.id
-                      ? "Mensagem copiada!"
-                      : company.instagram
-                        ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
-                        : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
-                  }
-                >
-                  {copiedInstagramCompanyId === company.id ? (
-                    <Check className="h-3.5 w-3.5 text-emerald-300" />
-                  ) : (
-                    <Instagram className="h-3.5 w-3.5 text-pink-400" />
-                  )}
-                  {copiedInstagramCompanyId === company.id
-                    ? "Copiado!"
-                    : company.instagram
-                      ? `Direct (@${cleanInstagramHandle(company.instagram)})`
-                      : "Direct IG"}
-                </button>
-                <button
-                  className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs"
-                  onClick={() => setActiveCompany(company)}
-                >
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Registrar
-                </button>
-                <button
-                  className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:text-rose-400 hover:border-rose-500/30 transition-colors"
-                  onClick={() => handleDeleteCompany(company)}
-                  title="Remover oportunidade do radar"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            </li>
-          ))}
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                        title="Mais opções"
+                      >
+                        <MoreHorizontal className="h-4 w-4 text-muted-foreground/80" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-52">
+                      {demo.url && demo.pageId && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => void handleRegenerateDemo(company)}
+                            disabled={regeneratingPageId === company.id}
+                            className="cursor-pointer text-xs"
+                          >
+                            {regeneratingPageId === company.id ? (
+                              <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
+                            ) : (
+                              <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                            )}
+                            <span>{regeneratingPageId === company.id ? "Trocando modelo..." : "Trocar Modelo"}</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                            className="cursor-pointer text-xs"
+                          >
+                            <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                            <span>Entregar / Transferir</span>
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                        </>
+                      )}
+
+                      <DropdownMenuItem
+                        onClick={() => setActiveCompany(company)}
+                        className="cursor-pointer text-xs"
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                        <span>Registrar Abordagem</span>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuSeparator />
+
+                      <DropdownMenuItem
+                        onClick={() => handleDeleteCompany(company)}
+                        className="cursor-pointer text-xs text-rose-400 hover:text-rose-300 focus:text-rose-400 focus:bg-rose-500/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
+                        <span>Remover do Radar</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </li>
+            );
+          })}
 
           {!attackList.length && (
             <li className="text-sm text-muted-foreground">
@@ -857,13 +886,14 @@ function ProspectingPage() {
               </div>
             </div>
 
-            <div className="max-h-96 overflow-auto rounded-xl border border-border">
+            <div className="max-h-96 overflow-auto rounded-xl border border-border/60">
               <table className="w-full text-sm">
-                <thead className="bg-surface-elevated/60 text-left text-xs uppercase text-muted-foreground">
+                <thead className="bg-muted/20 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-border/60">
                   <tr>
-                    <th className="px-3 py-2 w-8">
+                    <th className="px-4 py-3 w-8">
                       <input
                         type="checkbox"
+                        className="rounded border-border/70"
                         checked={selectedLiveIndices.size === liveResults.length}
                         onChange={(e) => {
                           if (e.target.checked) {
@@ -874,24 +904,25 @@ function ProspectingPage() {
                         }}
                       />
                     </th>
-                    <th className="px-3 py-2">Empresa</th>
-                    <th className="px-3 py-2">WhatsApp</th>
-                    <th className="px-3 py-2">Instagram</th>
-                    <th className="px-3 py-2">Status do Site</th>
-                    <th className="px-3 py-2">Score</th>
+                    <th className="px-4 py-3">Empresa</th>
+                    <th className="px-4 py-3">WhatsApp</th>
+                    <th className="px-4 py-3">Instagram</th>
+                    <th className="px-4 py-3">Status do Site</th>
+                    <th className="px-4 py-3">Score</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-border/40">
                   {liveResults.map((lead, index) => {
                     const isSelected = selectedLiveIndices.has(index);
                     return (
                       <tr
                         key={lead.dedupe_key || index}
-                        className={`border-t border-border/60 transition-colors ${isSelected ? "bg-[color:var(--primary)]/5" : "opacity-75"}`}
+                        className={`transition-colors ${isSelected ? "bg-primary/5" : "hover:bg-muted/20 opacity-80"}`}
                       >
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-3">
                           <input
                             type="checkbox"
+                            className="rounded border-border/70"
                             checked={isSelected}
                             onChange={() => {
                               const next = new Set(selectedLiveIndices);
@@ -901,24 +932,24 @@ function ProspectingPage() {
                             }}
                           />
                         </td>
-                        <td className="px-3 py-2">
-                          <p className="font-medium text-foreground">{lead.name}</p>
-                          <p className="text-xs text-muted-foreground">
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-foreground tracking-tight text-sm">{lead.name}</p>
+                          <p className="text-xs font-normal text-muted-foreground/80 mt-0.5">
                             {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
                           </p>
                         </td>
-                        <td className="px-3 py-2 text-xs font-mono">
+                        <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
                           {lead.whatsapp || "—"}
                         </td>
-                        <td className="px-3 py-2 text-xs">
+                        <td className="px-4 py-3 text-xs">
                           {lead.instagram ? (
                             <a
                               href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1 font-semibold text-pink-400 hover:text-pink-300 transition-colors"
+                              className="inline-flex items-center gap-1.5 font-normal text-xs text-muted-foreground hover:text-pink-400 transition-colors"
                             >
-                              <Instagram className="h-3.5 w-3.5" />
+                              <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
                               <span>{lead.instagram}</span>
                             </a>
                           ) : (
@@ -926,28 +957,28 @@ function ProspectingPage() {
                               href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${lead.name}" "${lead.city}"`)}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="inline-flex items-center gap-1 rounded-md border border-pink-500/30 bg-pink-500/10 px-2 py-0.5 text-[11px] font-medium text-pink-400 hover:bg-pink-500/20 transition-all"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
                               title="Buscar Instagram desta empresa"
                             >
-                              <Instagram className="h-3 w-3" />
+                              <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
                               <span>Achar perfil</span>
                             </a>
                           )}
                         </td>
 
-                        <td className="px-3 py-2">
+                        <td className="px-4 py-3 whitespace-nowrap">
                           {lead.has_website ? (
-                            <span className="rounded-md border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
+                            <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs font-normal text-muted-foreground">
                               Já tem site
                             </span>
                           ) : (
-                            <span className="rounded-md border border-emerald-500/40 bg-emerald-500/10 px-1.5 py-0.5 text-xs font-medium text-emerald-400">
+                            <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
                               ⭐ Sem site (Oportunidade)
                             </span>
                           )}
                         </td>
-                        <td className="px-3 py-2 font-bold text-sm">
-                          {lead.score}
+                        <td className="px-4 py-3">
+                          <span className="font-semibold text-sm tabular-nums text-foreground">{lead.score}</span>
                         </td>
                       </tr>
                     );
@@ -985,32 +1016,46 @@ function ProspectingPage() {
               {importable.length} nova(s) · {preview.filter((r) => r.duplicateOf).length}{" "}
               duplicada(s) · {preview.filter((r) => r.error).length} com erro
             </p>
-            <div className="max-h-80 overflow-auto rounded-xl border border-border">
+            <div className="max-h-80 overflow-auto rounded-xl border border-border/60">
               <table className="w-full text-sm">
-                <thead className="bg-surface-elevated/60 text-left text-xs uppercase text-muted-foreground">
+                <thead className="bg-muted/20 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-border/60">
                   <tr>
-                    <th className="px-3 py-2">Empresa</th>
-                    <th className="px-3 py-2">Nicho</th>
-                    <th className="px-3 py-2">Cidade</th>
-                    <th className="px-3 py-2">WhatsApp</th>
-                    <th className="px-3 py-2">Score</th>
-                    <th className="px-3 py-2">Situação</th>
+                    <th className="px-4 py-3">Empresa</th>
+                    <th className="px-4 py-3">Nicho</th>
+                    <th className="px-4 py-3">Cidade</th>
+                    <th className="px-4 py-3">WhatsApp</th>
+                    <th className="px-4 py-3">Score</th>
+                    <th className="px-4 py-3">Situação</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-border/40">
                   {preview.map((row) => (
-                    <tr key={row.line} className="border-t border-border/60">
-                      <td className="px-3 py-2">{row.draft?.name ?? `Linha ${row.line}`}</td>
-                      <td className="px-3 py-2">{row.draft?.niche ?? "—"}</td>
-                      <td className="px-3 py-2">{row.draft?.city ?? "—"}</td>
-                      <td className="px-3 py-2">{row.draft?.whatsapp ?? "—"}</td>
-                      <td className="px-3 py-2">{row.draft?.score ?? "—"}</td>
-                      <td className="px-3 py-2 text-xs text-muted-foreground">
-                        {row.error
-                          ? row.error
-                          : row.duplicateOf
-                            ? `Duplicada (${row.duplicateOf})`
-                            : "Pronta para importar"}
+                    <tr key={row.line} className="hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3 font-medium text-foreground tracking-tight text-sm">
+                        {row.draft?.name ?? `Linha ${row.line}`}
+                      </td>
+                      <td className="px-4 py-3 text-xs font-normal text-muted-foreground/80">
+                        {row.draft?.niche ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs font-normal text-muted-foreground/80">
+                        {row.draft?.city ?? "—"}
+                      </td>
+                      <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
+                        {row.draft?.whatsapp ?? "—"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="font-semibold text-sm tabular-nums text-foreground">
+                          {row.draft?.score ?? "—"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                        {row.error ? (
+                          <span className="text-rose-400">{row.error}</span>
+                        ) : row.duplicateOf ? (
+                          <span className="text-amber-400">Duplicada ({row.duplicateOf})</span>
+                        ) : (
+                          <span className="text-emerald-400">Pronta para importar</span>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -1115,236 +1160,253 @@ function ProspectingPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-xl border border-border/60">
           <table className="w-full text-sm">
-            <thead className="text-left text-xs uppercase text-muted-foreground">
+            <thead className="bg-muted/20 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-border/60">
               <tr>
-                <th className="px-3 py-2">Empresa</th>
-                <th className="px-3 py-2">Score</th>
-                <th className="px-3 py-2">Prioridade</th>
-                <th className="px-3 py-2">Etapa</th>
-                <th className="px-3 py-2">Último contato</th>
-                <th className="px-3 py-2" />
+                <th className="px-4 py-3.5">Empresa</th>
+                <th className="px-4 py-3.5">Score</th>
+                <th className="px-4 py-3.5">Prioridade</th>
+                <th className="px-4 py-3.5">Etapa</th>
+                <th className="px-4 py-3.5">Último contato</th>
+                <th className="px-4 py-3.5 text-right">Ações</th>
               </tr>
             </thead>
-            <tbody>
-              {filtered.map((company) => (
-                <tr key={company.id} className="border-t border-border/60">
-                  <td className="px-3 py-2">
-                    <p className="font-medium">{company.name}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
-                      <span>
-                        {[company.niche, company.city, company.has_website ? "tem site" : "sem site"]
-                          .filter(Boolean)
-                          .join(" · ")}
+            <tbody className="divide-y divide-border/40">
+              {filtered.map((company) => {
+                const demo = parseDemoInfo(company.notes);
+                const isOfficial = company.notes?.includes("[Página Oficializada]") || company.status === "cliente";
+                return (
+                  <tr key={company.id} className="hover:bg-muted/20 transition-colors">
+                    <td className="px-4 py-3.5 min-w-[220px]">
+                      <p className="font-medium text-foreground tracking-tight text-sm">{company.name}</p>
+                      <div className="text-xs font-normal text-muted-foreground/80 mt-1 flex items-center gap-2 flex-wrap">
+                        <span>
+                          {[company.niche, company.city, company.has_website ? "tem site" : "sem site"]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                        {company.instagram ? (
+                          <a
+                            href={`https://instagram.com/${company.instagram.replace("@", "")}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-muted-foreground hover:text-pink-400 font-normal transition-colors"
+                          >
+                            <Instagram className="h-3 w-3 text-muted-foreground/70" /> {company.instagram}
+                          </a>
+                        ) : (
+                          <a
+                            href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-pink-400 transition-colors"
+                            title="Achar perfil no Instagram"
+                          >
+                            <Instagram className="h-2.5 w-2.5" /> Achar @IG
+                          </a>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <span className="font-semibold text-sm tabular-nums text-foreground">{company.score}</span>
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLE[company.priority]}`}
+                      >
+                        {PRIORITY_LABEL[company.priority]}
                       </span>
-                      {company.instagram ? (
-                        <a
-                          href={`https://instagram.com/${company.instagram.replace("@", "")}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-0.5 text-pink-400 hover:text-pink-300 font-medium"
-                        >
-                          <Instagram className="h-3 w-3" /> {company.instagram}
-                        </a>
-                      ) : (
-                        <a
-                          href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-pink-400"
-                          title="Achar perfil no Instagram"
-                        >
-                          <Instagram className="h-2.5 w-2.5" /> Achar @IG
-                        </a>
-                      )}
-                    </p>
-                  </td>
-                  <td className="px-3 py-2 font-semibold">{company.score}</td>
-                  <td className="px-3 py-2">
-                    <span
-                      className={`rounded-full px-2 py-0.5 text-xs ${PRIORITY_STYLE[company.priority]}`}
-                    >
-                      {PRIORITY_LABEL[company.priority]}
-                    </span>
-                  </td>
-                  <td className="px-3 py-2">
-                    <select
-                      className="input-field"
-                      value={company.status}
-                      onChange={(event) =>
-                        statusMutation.mutate({
-                          id: company.id,
-                          status: event.target.value as ProspectStatus,
-                        })
-                      }
-                    >
-                      {STATUS_OPTIONS.map((status) => (
-                        <option key={status} value={status}>
-                          {STATUS_LABEL[status]}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-3 py-2 text-xs text-muted-foreground">
-                    {company.last_contacted_at
-                      ? new Date(company.last_contacted_at).toLocaleDateString("pt-BR")
-                      : "—"}
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="min-w-[280px] flex flex-wrap items-center gap-1.5 py-1">
-                      {(() => {
-                        const demo = parseDemoInfo(company.notes);
-                        if (demo?.url) {
-                          const isOfficial = company.notes?.includes("[Página Oficializada]") || company.status === "cliente";
-                          return (
-                            <>
-                              <a
-                                href={demo.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/25 transition-colors"
-                                title="Ver página no navegador"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" /> Ver
-                              </a>
-                              {demo.pageId && (
-                                <>
-                                  <Link
-                                    to="/builder"
-                                    search={{ page: demo.pageId }}
-                                    className="inline-flex items-center gap-1 rounded-lg border border-blue-500/50 bg-blue-500/15 text-blue-400 px-2 py-1 text-xs hover:bg-blue-500/25 transition-colors"
-                                    title="Editar página no Construtor"
-                                  >
-                                    <Pencil className="h-3.5 w-3.5" /> Editar
-                                  </Link>
-                                  <button
-                                    type="button"
-                                    onClick={() => void handleRegenerateDemo(company)}
-                                    disabled={regeneratingPageId === company.id}
-                                    className="inline-flex items-center gap-1 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 px-2 py-1 text-xs hover:bg-purple-500/25 transition-colors"
-                                    title="Alternar entre os 3 modelos visuais de alta conversão"
-                                  >
-                                    {regeneratingPageId === company.id ? (
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                      <RotateCcw className="h-3.5 w-3.5" />
-                                    )}
-                                    {regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                                    disabled={actionLoadingId === demo.pageId || isOfficial}
-                                    className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-xs transition-colors ${
-                                      isOfficial
-                                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 cursor-default"
-                                        : "border-teal-500/50 bg-teal-500/15 text-teal-300 hover:bg-teal-500/25"
-                                    }`}
-                                    title={isOfficial ? "Página já está oficial" : "Tornar Oficial (remove tarja de demonstração e marca como cliente)"}
-                                  >
-                                    {actionLoadingId === demo.pageId ? (
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                      <CheckCircle className="h-3.5 w-3.5" />
-                                    )}
-                                    {isOfficial ? "Oficial" : "Tornar Oficial"}
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
-                                    className="inline-flex items-center gap-1 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 px-2 py-1 text-xs hover:bg-purple-500/25 transition-colors"
-                                    title="Entregar para o cliente no WhatsApp ou transferir por e-mail"
-                                  >
-                                    <UserCheck className="h-3.5 w-3.5 text-purple-400" /> Entregar
-                                  </button>
-                                </>
-                              )}
-                            </>
-                          );
+                    </td>
+                    <td className="px-4 py-3.5 whitespace-nowrap">
+                      <select
+                        className="h-8 px-2.5 py-1 text-xs font-medium rounded-lg border border-border/60 bg-background/50 hover:bg-background focus:ring-1 focus:ring-primary/40 transition-colors"
+                        value={company.status}
+                        onChange={(event) =>
+                          statusMutation.mutate({
+                            id: company.id,
+                            status: event.target.value as ProspectStatus,
+                          })
                         }
-                        return (
+                      >
+                        {STATUS_OPTIONS.map((status) => (
+                          <option key={status} value={status}>
+                            {STATUS_LABEL[status]}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                    <td className="px-4 py-3.5 text-xs font-normal text-muted-foreground whitespace-nowrap">
+                      {company.last_contacted_at
+                        ? new Date(company.last_contacted_at).toLocaleDateString("pt-BR")
+                        : "—"}
+                    </td>
+                    <td className="px-4 py-3.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        {demo.url ? (
+                          <>
+                            <a
+                              href={demo.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                              title="Ver Página Pro no ar"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
+                              <span>Ver</span>
+                            </a>
+                            {demo.pageId && (
+                              <Link
+                                to="/builder"
+                                search={{ page: demo.pageId }}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
+                                title="Editar no Construtor"
+                              >
+                                <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
+                                <span>Editar</span>
+                              </Link>
+                            )}
+                          </>
+                        ) : (
                           <button
-                            className="inline-flex items-center gap-1 rounded-lg border border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-1 text-xs transition-all hover:bg-[color:var(--primary)]/25"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-transparent text-foreground px-2.5 py-1.5 text-xs font-medium hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all"
                             onClick={() => void handleGenerateDemo(company)}
                             disabled={creatingPageId === company.id}
+                            title="Gerar modelo demonstrativo para prospecção"
                           >
                             {creatingPageId === company.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
                             ) : (
-                              <Sparkles className="h-3.5 w-3.5" />
+                              <Sparkles className="h-3.5 w-3.5 text-muted-foreground/70" />
                             )}
-                            {creatingPageId === company.id ? "Gerando..." : "Gerar Página"}
+                            <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Página"}</span>
                           </button>
-                        );
-                      })()}
-                      {whatsappLink(company) ? (
-                        <a
-                          href={whatsappLink(company)!}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-300 px-2 py-1 text-xs hover:bg-emerald-500/20 transition-colors"
-                          title={`Enviar proposta via WhatsApp para ${company.name}`}
-                        >
-                          <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
-                        </a>
-                      ) : (
+                        )}
+
+                        {whatsappLink(company) ? (
+                          <a
+                            href={whatsappLink(company)!}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                            title={`Enviar proposta via WhatsApp para ${company.name}`}
+                          >
+                            <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
+                            <span>WhatsApp</span>
+                          </a>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => setWhatsModalCompany(company)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                            title={`Definir WhatsApp e enviar proposta para ${company.name}`}
+                          >
+                            <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
+                            <span>WhatsApp</span>
+                          </button>
+                        )}
+
                         <button
                           type="button"
-                          onClick={() => setWhatsModalCompany(company)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/30 bg-surface-elevated text-emerald-400 px-2 py-1 text-xs hover:bg-emerald-500/15 transition-colors"
-                          title={`Definir WhatsApp e enviar proposta para ${company.name}`}
+                          onClick={() => void handleInstagramApproach(company)}
+                          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
+                          title={
+                            copiedInstagramCompanyId === company.id
+                              ? "Mensagem copiada!"
+                              : company.instagram
+                                ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
+                                : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
+                          }
                         >
-                          <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp
+                          {copiedInstagramCompanyId === company.id ? (
+                            <Check className="h-3.5 w-3.5 text-emerald-400" />
+                          ) : (
+                            <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
+                          )}
+                          <span>
+                            {copiedInstagramCompanyId === company.id
+                              ? "Copiado!"
+                              : "Direct IG"}
+                          </span>
                         </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => void handleInstagramApproach(company)}
-                        className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-all ${
-                          !whatsappLink(company)
-                            ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-500 text-white shadow-sm hover:opacity-90"
-                            : "border border-pink-500/40 bg-pink-500/10 text-pink-300 hover:bg-pink-500/20"
-                        }`}
-                        title={
-                          copiedInstagramCompanyId === company.id
-                            ? "Mensagem copiada!"
-                            : company.instagram
-                              ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
-                              : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
-                        }
-                      >
-                        {copiedInstagramCompanyId === company.id ? (
-                          <Check className="h-3.5 w-3.5 text-emerald-300" />
-                        ) : (
-                          <Instagram className="h-3.5 w-3.5 text-pink-400" />
-                        )}
-                        {copiedInstagramCompanyId === company.id
-                          ? "Copiado!"
-                          : "Direct IG"}
-                      </button>
-                      <button
-                        className="rounded-lg border border-border px-2 py-1 text-xs"
-                        onClick={() => setActiveCompany(company)}
-                      >
-                        Abordagem
-                      </button>
-                      <button
-                        className="rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground hover:text-rose-400 hover:border-rose-500/30 transition-colors"
-                        onClick={() => handleDeleteCompany(company)}
-                        aria-label={`Remover ${company.name}`}
-                        title="Remover oportunidade do radar"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </td>
 
-                </tr>
-              ))}
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              type="button"
+                              className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                              title="Mais opções"
+                            >
+                              <MoreHorizontal className="h-4 w-4 text-muted-foreground/80" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            {demo.url && demo.pageId && (
+                              <>
+                                <DropdownMenuItem
+                                  onClick={() => void handleRegenerateDemo(company)}
+                                  disabled={regeneratingPageId === company.id}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  {regeneratingPageId === company.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
+                                  ) : (
+                                    <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                  )}
+                                  <span>{regeneratingPageId === company.id ? "Trocando modelo..." : "Trocar Modelo"}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                                  disabled={actionLoadingId === demo.pageId || isOfficial}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  {actionLoadingId === demo.pageId ? (
+                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
+                                  ) : (
+                                    <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`} />
+                                  )}
+                                  <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                  <span>Entregar / Transferir</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
+
+                            <DropdownMenuItem
+                              onClick={() => setActiveCompany(company)}
+                              className="cursor-pointer text-xs"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                              <span>Registrar Abordagem</span>
+                            </DropdownMenuItem>
+
+                            <DropdownMenuSeparator />
+
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteCompany(company)}
+                              className="cursor-pointer text-xs text-rose-400 hover:text-rose-300 focus:text-rose-400 focus:bg-rose-500/10"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
+                              <span>Remover do Radar</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {!filtered.length && (
                 <tr>
-                  <td colSpan={6} className="px-3 py-6 text-center text-sm text-muted-foreground">
+                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
                     Nenhuma empresa encontrada.
                   </td>
                 </tr>

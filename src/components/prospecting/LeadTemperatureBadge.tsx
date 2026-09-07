@@ -34,3 +34,4 @@ export function LeadTemperatureBadge({ score, showScore = true, className = '' }
     </span>
   )
 }
+

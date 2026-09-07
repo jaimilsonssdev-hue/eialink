@@ -9,14 +9,18 @@ import {
   Phone,
   MapPin,
   Users,
-  ShieldCheck,
   Globe,
   Sparkles,
   ExternalLink,
+  Layers,
+  Filter,
+  FileSpreadsheet,
+  Check,
 } from "lucide-react";
 import { LeadTemperatureBadge } from "./LeadTemperatureBadge";
 import { normalizeName, normalizePhone, buildDedupeKey } from "@/modules/prospecting/scoring";
 import { detectNicheKey } from "@/modules/prospecting/nichePresets";
+import { POPULAR_CNAES, findCnaeByTerm, type CnaeItem } from "@/modules/prospecting/cnaePresets";
 import type { ProspectDraft } from "@/modules/prospecting/types";
 
 interface BrasilApiQsa {
@@ -44,17 +48,43 @@ interface BrasilApiCnpjResponse {
   qsa?: BrasilApiQsa[];
 }
 
+interface BatchLeadResult {
+  data: BrasilApiCnpjResponse;
+  effectiveName: string;
+  cleanPhone: string | null;
+  rawPhone: string | null;
+  hasWebsite: boolean;
+  score: number;
+  isOpportunity: boolean;
+  partners: string;
+  detectedNiche: string;
+}
+
 interface CnpjLookupCardProps {
   onAddCompany: (draft: ProspectDraft) => Promise<{ success: boolean; message?: string }>;
 }
 
 export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
+  const [activeTab, setActiveTab] = useState<"single" | "batch">("batch");
+
+  // === MODO 1: CONSULTA INDIVIDUAL ===
   const [cnpjInput, setCnpjInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<BrasilApiCnpjResponse | null>(null);
   const [added, setAdded] = useState(false);
+
+  // === MODO 2: SCANNER EM LOTE ===
+  const [batchRawText, setBatchRawText] = useState("");
+  const [selectedCnae, setSelectedCnae] = useState<string>("");
+  const [isScanningBatch, setIsScanningBatch] = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
+  const [batchResults, setBatchResults] = useState<BatchLeadResult[]>([]);
+  const [batchFilter, setBatchFilter] = useState<"no_website" | "has_website" | "all">("no_website");
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+  const [isAddingBatch, setIsAddingBatch] = useState(false);
+  const [batchAddFeedback, setBatchAddFeedback] = useState<string | null>(null);
 
   // Formata CNPJ enquanto o usuário digita
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,42 +96,6 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     if (raw.length > 12) formatted = `${formatted.slice(0, 15)}-${raw.slice(12)}`;
     setCnpjInput(formatted);
     setError(null);
-  };
-
-  const handleSearch = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const clean = cnpjInput.replace(/\D/g, "");
-    if (clean.length !== 14) {
-      setError("Digite um CNPJ válido com 14 dígitos.");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-    setData(null);
-    setAdded(false);
-
-    try {
-      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${clean}`, {
-        headers: {
-          Accept: "application/json",
-        },
-      });
-
-      if (!res.ok) {
-        if (res.status === 404) {
-          throw new Error("CNPJ não encontrado na base da Receita Federal.");
-        }
-        throw new Error("Não foi possível consultar este CNPJ no momento. Tente novamente.");
-      }
-
-      const json = (await res.json()) as BrasilApiCnpjResponse;
-      setData(json);
-    } catch (err: any) {
-      setError(err?.message || "Erro ao consultar CNPJ.");
-    } finally {
-      setLoading(false);
-    }
   };
 
   // Avaliação inteligente de presença de site
@@ -130,18 +124,50 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     };
   };
 
+  const handleSearchSingle = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = cnpjInput.replace(/\D/g, "");
+    if (clean.length !== 14) {
+      setError("Digite um CNPJ válido com 14 dígitos.");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setData(null);
+    setAdded(false);
+
+    try {
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${clean}`, {
+        headers: { Accept: "application/json" },
+      });
+
+      if (!res.ok) {
+        if (res.status === 404) {
+          throw new Error("CNPJ não encontrado na base da Receita Federal.");
+        }
+        throw new Error("Não foi possível consultar este CNPJ no momento. Tente novamente.");
+      }
+
+      const json = (await res.json()) as BrasilApiCnpjResponse;
+      setData(json);
+    } catch (err: any) {
+      setError(err?.message || "Erro ao consultar CNPJ.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Nome comercial mais amigável
   const effectiveName = data?.nome_fantasia?.trim()
     ? normalizeName(data.nome_fantasia)
     : normalizeName(data?.razao_social);
 
-  // Telefone / WhatsApp principal
   const rawPhone = data?.ddd_telefone_1 || data?.ddd_telefone_2 || "";
   const cleanPhone = normalizePhone(rawPhone);
-
   const websiteEvaluation = data ? evaluateWebsiteStatus(data) : null;
 
-  const handleAddToRadar = async () => {
+  const handleAddToRadarSingle = async () => {
     if (!data || !effectiveName) return;
     setAdding(true);
     try {
@@ -159,7 +185,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
       ];
       if (partners) notesArr.push(`Sócios/Decisores: ${partners}`);
       if (websiteEvaluation?.isOpportunity) {
-        notesArr.push("⚡ EMPRESA SEM SITE DETECTADA NA RECEITA");
+        notesArr.push("⚡ EMPRESA SEM SITE DETECTADA");
       }
 
       const draft: ProspectDraft = {
@@ -200,179 +226,555 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     }
   };
 
+  // === PROCESSAMENTO EM LOTE ===
+  const extractCnpjsFromText = (text: string): string[] => {
+    // Procura padrões de CNPJ formatados (00.000.000/0000-00) ou sequências de 14 dígitos
+    const formatted = text.match(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g) || [];
+    const rawDigits = text.match(/\b\d{14}\b/g) || [];
+    const all = [...formatted.map((c) => c.replace(/\D/g, "")), ...rawDigits];
+    return Array.from(new Set(all)).slice(0, 30); // Limite de 30 por lote para segurança e velocidade
+  };
+
+  const detectedCnpjs = extractCnpjsFromText(batchRawText);
+
+  const handleStartBatchScan = async () => {
+    if (!detectedCnpjs.length) {
+      setError("Cole pelo menos um CNPJ válido no campo abaixo.");
+      return;
+    }
+
+    setIsScanningBatch(true);
+    setError(null);
+    setBatchAddFeedback(null);
+    setBatchResults([]);
+    setSelectedIndices(new Set());
+    setBatchProgress({ current: 0, total: detectedCnpjs.length });
+
+    const results: BatchLeadResult[] = [];
+
+    for (let i = 0; i < detectedCnpjs.length; i++) {
+      const cnpj = detectedCnpjs[i];
+      setBatchProgress({ current: i + 1, total: detectedCnpjs.length });
+
+      try {
+        const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`, {
+          headers: { Accept: "application/json" },
+        });
+
+        if (res.ok) {
+          const json = (await res.json()) as BrasilApiCnpjResponse;
+          const evalResult = evaluateWebsiteStatus(json);
+          const name = json.nome_fantasia?.trim()
+            ? normalizeName(json.nome_fantasia)
+            : normalizeName(json.razao_social);
+
+          const rPhone = json.ddd_telefone_1 || json.ddd_telefone_2 || "";
+          const cPhone = normalizePhone(rPhone);
+          const partners = (json.qsa || [])
+            .map((s) => s.nome_socio)
+            .slice(0, 2)
+            .join(", ");
+          const niche = detectNicheKey(json.cnae_fiscal_descricao || "") || "Outros";
+
+          results.push({
+            data: json,
+            effectiveName: name || json.razao_social,
+            cleanPhone: cPhone,
+            rawPhone: rPhone,
+            hasWebsite: evalResult.hasWebsite,
+            score: evalResult.suggestedScore,
+            isOpportunity: evalResult.isOpportunity,
+            partners,
+            detectedNiche: niche,
+          });
+        }
+      } catch (e) {
+        console.warn(`Erro ao consultar CNPJ ${cnpj}:`, e);
+      }
+
+      // Pequeno delay entre requisições para evitar rate limit
+      if (i < detectedCnpjs.length - 1) {
+        await new Promise((r) => setTimeout(r, 250));
+      }
+    }
+
+    setBatchResults(results);
+    setIsScanningBatch(false);
+    setBatchProgress(null);
+
+    // Auto-seleciona todos os leads que NÃO têm site por padrão
+    const initialSelected = new Set<number>();
+    results.forEach((r, idx) => {
+      if (!r.hasWebsite) initialSelected.add(idx);
+    });
+    setSelectedIndices(initialSelected);
+  };
+
+  const filteredBatchResults = batchResults.filter((r) => {
+    if (batchFilter === "no_website") return !r.hasWebsite;
+    if (batchFilter === "has_website") return r.hasWebsite;
+    return true;
+  });
+
+  const handleAddBatchToRadar = async () => {
+    if (!selectedIndices.size) return;
+    setIsAddingBatch(true);
+    setBatchAddFeedback(null);
+    let insertedCount = 0;
+
+    for (const idx of Array.from(selectedIndices)) {
+      const item = batchResults[idx];
+      if (!item) continue;
+
+      const notesArr = [
+        `CNPJ: ${item.data.cnpj}`,
+        `CNAE: ${item.data.cnae_fiscal_descricao}`,
+      ];
+      if (item.partners) notesArr.push(`Sócios: ${item.partners}`);
+      if (!item.hasWebsite) notesArr.push("⚡ EMPRESA SEM SITE DETECTADA");
+
+      const draft: ProspectDraft = {
+        name: item.effectiveName,
+        niche: item.detectedNiche,
+        city: item.data.municipio ? normalizeName(item.data.municipio) : null,
+        state: item.data.uf || null,
+        phone: item.rawPhone ? item.rawPhone.replace(/\D/g, "") : null,
+        whatsapp: item.cleanPhone,
+        email: item.data.email ? item.data.email.toLowerCase().trim() : null,
+        instagram: null,
+        website: item.hasWebsite && item.data.email ? `https://${item.data.email.split("@")[1]}` : null,
+        has_website: item.hasWebsite,
+        rating: null,
+        reviews_count: null,
+        source: "Scanner CNAE/CNPJ",
+        score: item.score,
+        priority: item.score >= 80 ? "alta" : "media",
+        status: "novo",
+        notes: notesArr.join(" | "),
+        dedupe_key: buildDedupeKey({
+          name: item.effectiveName,
+          city: item.data.municipio,
+          whatsapp: item.cleanPhone,
+        }),
+      };
+
+      try {
+        const res = await onAddCompany(draft);
+        if (res.success) insertedCount++;
+      } catch (err) {
+        console.warn("Erro ao inserir item em lote:", err);
+      }
+    }
+
+    setIsAddingBatch(false);
+    setBatchAddFeedback(`${insertedCount} empresa(s) adicionada(s) ao Radar com sucesso!`);
+    setSelectedIndices(new Set());
+  };
+
   return (
     <div className="space-y-4">
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">
-          Consulte qualquer empresa brasileira pelo CNPJ. O sistema analisa dados oficiais, identifica os sócios/decisores e detecta empresas sem site próprio.
-        </p>
+      {/* Sub-navegação: Consulta Rápida vs Scanner em Lote por CNAE */}
+      <div className="flex items-center gap-1.5 p-1 rounded-lg border border-border/80 bg-background/50 text-xs">
+        <button
+          type="button"
+          onClick={() => setActiveTab("batch")}
+          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-md font-medium transition-all ${
+            activeTab === "batch"
+              ? "bg-primary text-white shadow-xs"
+              : "text-muted-foreground hover:text-white"
+          }`}
+        >
+          <Layers className="h-3.5 w-3.5" /> Scanner em Lote por CNAE
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("single")}
+          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-md font-medium transition-all ${
+            activeTab === "single"
+              ? "bg-primary text-white shadow-xs"
+              : "text-muted-foreground hover:text-white"
+          }`}
+        >
+          <Search className="h-3.5 w-3.5" /> Consulta Individual
+        </button>
       </div>
 
-      <form onSubmit={handleSearch} className="flex gap-2">
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={cnpjInput}
-            onChange={handleCnpjChange}
-            placeholder="00.000.000/0000-00"
-            className="w-full rounded-lg border border-border bg-background/70 px-3.5 py-2.5 text-sm text-white font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-            disabled={loading}
-          />
-        </div>
-        <button
-          type="submit"
-          disabled={loading || cnpjInput.replace(/\D/g, "").length < 14}
-          className="inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-xs font-semibold bg-primary hover:bg-primary/90 disabled:opacity-50 text-white transition-all shadow-xs shrink-0"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" /> Consultando...
-            </>
-          ) : (
-            <>
-              <Search className="h-4 w-4" /> Consultar
-            </>
-          )}
-        </button>
-      </form>
+      {/* ===================== MODO 1: SCANNER EM LOTE ===================== */}
+      {activeTab === "batch" && (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">
+              Audite múltiplos CNPJs de uma só vez para identificar quais <strong>NÃO TÊM SITE</strong> e já estão prontos para prospecção imediata.
+            </p>
+          </div>
 
-      {error && (
-        <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
-          <span>{error}</span>
+          {/* Atalho de Seleção de CNAE Popular */}
+          <div className="space-y-1.5">
+            <label className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between">
+              <span>CNAE Comercial de Referência (Opcional):</span>
+              <span className="text-primary font-mono text-[10px]">Mais lucrativos</span>
+            </label>
+            <select
+              value={selectedCnae}
+              onChange={(e) => setSelectedCnae(e.target.value)}
+              className="w-full rounded-lg border border-border bg-background/70 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary/60 transition-colors"
+            >
+              <option value="">Selecione um CNAE para guiar sua prospecção...</option>
+              {POPULAR_CNAES.map((cnae) => (
+                <option key={cnae.code} value={cnae.code}>
+                  {cnae.code} · {cnae.popularTerm}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Área de Colar CNPJs */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <label className="font-semibold text-white/90 flex items-center gap-1">
+                <FileSpreadsheet className="h-3.5 w-3.5 text-primary" /> Cole os CNPJs para Auditar:
+              </label>
+              {detectedCnpjs.length > 0 && (
+                <span className="text-emerald-400 font-medium font-mono text-[11px]">
+                  {detectedCnpjs.length} CNPJ(s) detectados
+                </span>
+              )}
+            </div>
+            <textarea
+              rows={3}
+              value={batchRawText}
+              onChange={(e) => setBatchRawText(e.target.value)}
+              placeholder="Cole aqui os CNPJs (separados por vírgula, espaço ou linhas) copiados do Portal da Transparência, Casa dos Dados ou planilha..."
+              className="w-full rounded-lg border border-border bg-background/70 p-3 text-xs text-white font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors resize-y"
+              disabled={isScanningBatch}
+            />
+          </div>
+
+          {/* Botão de Disparo do Scanner */}
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={handleStartBatchScan}
+              disabled={isScanningBatch || detectedCnpjs.length === 0}
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs font-semibold bg-primary hover:bg-primary/90 text-white shadow-sm transition-all disabled:opacity-50"
+            >
+              {isScanningBatch ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Auditando Presença Digital ({batchProgress?.current}/{batchProgress?.total})...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 text-purple-200" />
+                  Auditar Site de {detectedCnpjs.length > 0 ? detectedCnpjs.length : ""} Empresas
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Barra de Progresso */}
+          {isScanningBatch && batchProgress && (
+            <div className="space-y-1.5 rounded-lg border border-border bg-background/50 p-3">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Cruzando Receita Federal e Domínios...</span>
+                <span className="font-mono text-white">
+                  {Math.round((batchProgress.current / batchProgress.total) * 100)}%
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-primary to-emerald-400 rounded-full transition-all duration-300"
+                  style={{ width: `${(batchProgress.current / batchProgress.total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Feedback de Inserção */}
+          {batchAddFeedback && (
+            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+              <span>{batchAddFeedback}</span>
+            </div>
+          )}
+
+          {/* Tabela de Resultados do Lote */}
+          {batchResults.length > 0 && (
+            <div className="space-y-3 pt-1">
+              {/* Filtro de Visualização: Sem Site vs Com Site */}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+                <div className="flex items-center gap-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setBatchFilter("no_website")}
+                    className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
+                      batchFilter === "no_website"
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        : "text-muted-foreground hover:text-white"
+                    }`}
+                  >
+                    🔥 Sem Site ({batchResults.filter((r) => !r.hasWebsite).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBatchFilter("has_website")}
+                    className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
+                      batchFilter === "has_website"
+                        ? "bg-muted text-white border border-border"
+                        : "text-muted-foreground hover:text-white"
+                    }`}
+                  >
+                    🌐 Com Site ({batchResults.filter((r) => r.hasWebsite).length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBatchFilter("all")}
+                    className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
+                      batchFilter === "all"
+                        ? "bg-muted text-white border border-border"
+                        : "text-muted-foreground hover:text-white"
+                    }`}
+                  >
+                    Todas ({batchResults.length})
+                  </button>
+                </div>
+
+                {/* Seleção e Ação em Massa */}
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleAddBatchToRadar}
+                    disabled={isAddingBatch || selectedIndices.size === 0}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs disabled:opacity-40 transition-all"
+                  >
+                    {isAddingBatch ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5" />
+                    )}
+                    Adicionar Selecionadas ({selectedIndices.size})
+                  </button>
+                </div>
+              </div>
+
+              {/* Lista dos Resultados */}
+              <div className="max-h-72 overflow-auto rounded-xl border border-border bg-background/40 divide-y divide-border/40 text-xs">
+                {filteredBatchResults.map((lead, idx) => {
+                  const globalIndex = batchResults.indexOf(lead);
+                  const isChecked = selectedIndices.has(globalIndex);
+
+                  return (
+                    <div
+                      key={lead.data.cnpj || idx}
+                      className={`p-3 flex items-start gap-3 transition-colors ${
+                        isChecked ? "bg-primary/10" : "hover:bg-muted/10"
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-1 rounded border-border bg-background"
+                        checked={isChecked}
+                        onChange={() => {
+                          const next = new Set(selectedIndices);
+                          if (next.has(globalIndex)) next.delete(globalIndex);
+                          else next.add(globalIndex);
+                          setSelectedIndices(next);
+                        }}
+                      />
+                      <div className="flex-1 space-y-1 min-w-0">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-bold text-white text-xs tracking-tight truncate">
+                            {lead.effectiveName}
+                          </p>
+                          <LeadTemperatureBadge score={lead.score} showScore={false} />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate">
+                          {[lead.data.municipio, lead.data.uf].filter(Boolean).join(" · ")} · CNPJ: {lead.data.cnpj}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px]">
+                          {lead.isOpportunity ? (
+                            <span className="inline-flex items-center gap-1 font-semibold text-amber-400">
+                              <Sparkles className="h-3 w-3" /> Sem Site Detectado
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">🌐 Tem domínio oficial</span>
+                          )}
+                          {lead.cleanPhone && (
+                            <span className="text-emerald-400 font-mono">
+                              WhatsApp: {lead.rawPhone}
+                            </span>
+                          )}
+                          {lead.partners && (
+                            <span className="text-purple-300 truncate max-w-[200px]">
+                              Sócio: {lead.partners}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {filteredBatchResults.length === 0 && (
+                  <div className="p-6 text-center text-xs text-muted-foreground">
+                    Nenhuma empresa encontrada com o filtro selecionado.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
-      {data && (
-        <div className="rounded-xl border border-border/80 bg-background/50 p-4 space-y-4 animate-in fade-in duration-200">
-          {/* Cabeçalho do Resultado */}
-          <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border/60 pb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <h4 className="font-bold text-white text-sm tracking-tight">{effectiveName}</h4>
-                <span
-                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
-                    data.descricao_situacao_cadastral === "ATIVA"
-                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25"
-                      : "bg-rose-500/10 text-rose-400 border border-rose-500/25"
-                  }`}
-                >
-                  {data.descricao_situacao_cadastral}
-                </span>
-              </div>
-              {data.nome_fantasia && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Razão Social: <span className="font-mono">{data.razao_social}</span>
-                </p>
-              )}
-            </div>
-
-            <LeadTemperatureBadge score={websiteEvaluation?.suggestedScore ?? 95} />
+      {/* ===================== MODO 2: CONSULTA INDIVIDUAL ===================== */}
+      {activeTab === "single" && (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">
+              Consulte um CNPJ específico para puxar sócios, telefones e presença de site em alta resolução.
+            </p>
           </div>
 
-          {/* Destaque de Oportunidade Sem Site */}
-          {websiteEvaluation?.isOpportunity ? (
-            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 flex items-start gap-2.5">
-              <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-              <div className="text-xs space-y-0.5">
-                <p className="font-semibold text-amber-300">Empresa Sem Site Próprio Detectada</p>
-                <p className="text-amber-200/80 text-[11px]">
-                  Sem domínio corporativo oficial registrado na Receita. Oportunidade perfeita para apresentar uma página profissional pronta!
-                </p>
-              </div>
+          <form onSubmit={handleSearchSingle} className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={cnpjInput}
+                onChange={handleCnpjChange}
+                placeholder="00.000.000/0000-00"
+                className="w-full rounded-lg border border-border bg-background/70 px-3.5 py-2.5 text-sm text-white font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                disabled={loading}
+              />
             </div>
-          ) : (
-            <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-3 flex items-center gap-2 text-xs text-blue-300">
-              <Globe className="h-4 w-4 text-blue-400 shrink-0" />
-              <span>Domínio corporativo oficial identificado: {data.email?.split("@")[1]}</span>
+            <button
+              type="submit"
+              disabled={loading || cnpjInput.replace(/\D/g, "").length < 14}
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg px-4 py-2.5 text-xs font-semibold bg-primary hover:bg-primary/90 disabled:opacity-50 text-white transition-all shadow-xs shrink-0"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" /> Consultando...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" /> Consultar
+                </>
+              )}
+            </button>
+          </form>
+
+          {error && (
+            <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-300 flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+              <span>{error}</span>
             </div>
           )}
 
-          {/* Dados e Contatos */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-1">
-              <p className="text-[10px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
-                <MapPin className="h-3 w-3" /> Localização
-              </p>
-              <p className="text-white font-medium">
-                {[data.bairro, data.municipio, data.uf].filter(Boolean).join(", ")}
-              </p>
-              <p className="text-[11px] text-muted-foreground font-mono">
-                {[data.logradouro, data.numero].filter(Boolean).join(", ")} {data.cep ? `· CEP ${data.cep}` : ""}
-              </p>
-            </div>
-
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-1">
-              <p className="text-[10px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
-                <Phone className="h-3 w-3" /> Contato
-              </p>
-              <p className="text-white font-medium font-mono">
-                {rawPhone || "Não informado"}
-              </p>
-              {cleanPhone && (
-                <a
-                  href={`https://wa.me/${cleanPhone}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex items-center gap-1 text-[11px] text-emerald-400 hover:underline"
-                >
-                  Abrir WhatsApp <ExternalLink className="h-2.5 w-2.5" />
-                </a>
-              )}
-            </div>
-          </div>
-
-          {/* Sócios / Decisores (QSA) */}
-          {data.qsa && data.qsa.length > 0 && (
-            <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-1.5">
-              <p className="text-[10px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
-                <Users className="h-3 w-3" /> Sócios & Tomadores de Decisão ({data.qsa.length})
-              </p>
-              <div className="space-y-1">
-                {data.qsa.slice(0, 3).map((socio, idx) => (
-                  <div key={idx} className="flex items-center justify-between text-[11px]">
-                    <span className="text-white font-medium">{normalizeName(socio.nome_socio)}</span>
-                    <span className="text-muted-foreground font-mono text-[10px]">
-                      {socio.qualificacao_socio || "Sócio"}
+          {data && (
+            <div className="rounded-xl border border-border/80 bg-background/50 p-4 space-y-4 animate-in fade-in duration-200">
+              <div className="flex flex-wrap items-start justify-between gap-2 border-b border-border/60 pb-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-bold text-white text-sm tracking-tight">{effectiveName}</h4>
+                    <span
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
+                        data.descricao_situacao_cadastral === "ATIVA"
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25"
+                          : "bg-rose-500/10 text-rose-400 border border-rose-500/25"
+                      }`}
+                    >
+                      {data.descricao_situacao_cadastral}
                     </span>
                   </div>
-                ))}
+                  {data.nome_fantasia && (
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Razão Social: <span className="font-mono">{data.razao_social}</span>
+                    </p>
+                  )}
+                </div>
+
+                <LeadTemperatureBadge score={websiteEvaluation?.suggestedScore ?? 95} />
+              </div>
+
+              {websiteEvaluation?.isOpportunity ? (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 flex items-start gap-2.5">
+                  <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div className="text-xs space-y-0.5">
+                    <p className="font-semibold text-amber-300">Empresa Sem Site Próprio Detectada</p>
+                    <p className="text-amber-200/80 text-[11px]">
+                      Sem domínio corporativo oficial registrado. Oportunidade perfeita para gerar uma página profissional pronta!
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-lg border border-blue-500/20 bg-blue-500/10 p-3 flex items-center gap-2 text-xs text-blue-300">
+                  <Globe className="h-4 w-4 text-blue-400 shrink-0" />
+                  <span>Domínio corporativo oficial identificado: {data.email?.split("@")[1]}</span>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-1">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <MapPin className="h-3 w-3" /> Localização
+                  </p>
+                  <p className="text-white font-medium">
+                    {[data.bairro, data.municipio, data.uf].filter(Boolean).join(", ")}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-1">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <Phone className="h-3 w-3" /> Contato
+                  </p>
+                  <p className="text-white font-medium font-mono">{rawPhone || "Não informado"}</p>
+                </div>
+              </div>
+
+              {data.qsa && data.qsa.length > 0 && (
+                <div className="rounded-lg border border-border/60 bg-muted/20 p-2.5 space-y-1.5">
+                  <p className="text-[10px] font-semibold uppercase text-muted-foreground flex items-center gap-1">
+                    <Users className="h-3 w-3" /> Sócios & Decisores ({data.qsa.length})
+                  </p>
+                  <div className="space-y-1">
+                    {data.qsa.slice(0, 3).map((socio, idx) => (
+                      <div key={idx} className="flex items-center justify-between text-[11px]">
+                        <span className="text-white font-medium">{normalizeName(socio.nome_socio)}</span>
+                        <span className="text-muted-foreground font-mono text-[10px]">
+                          {socio.qualificacao_socio || "Sócio"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div className="pt-1 flex items-center justify-end">
+                {added ? (
+                  <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
+                    <CheckCircle2 className="h-4 w-4" /> Adicionado com Sucesso!
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleAddToRadarSingle}
+                    disabled={adding}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all"
+                  >
+                    {adding ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando...
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-3.5 w-3.5" /> Adicionar ao Radar
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           )}
-
-          {/* Atividade CNAE */}
-          {data.cnae_fiscal_descricao && (
-            <p className="text-[11px] text-muted-foreground">
-              <span className="font-semibold text-white/80">CNAE:</span> {data.cnae_fiscal_descricao}
-            </p>
-          )}
-
-          {/* Botão de Adição ao Radar */}
-          <div className="pt-1 flex items-center justify-end">
-            {added ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-xs font-semibold">
-                <CheckCircle2 className="h-4 w-4" /> Adicionado com Sucesso ao Radar!
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleAddToRadar}
-                disabled={adding}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all"
-              >
-                {adding ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando...
-                  </>
-                ) : (
-                  <>
-                    <Plus className="h-3.5 w-3.5" /> Adicionar ao Radar de Prospecção
-                  </>
-                )}
-              </button>
-            )}
-          </div>
         </div>
       )}
     </div>

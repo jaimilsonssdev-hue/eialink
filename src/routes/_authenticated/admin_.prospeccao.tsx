@@ -63,6 +63,7 @@ import { PageService } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
 import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";
+import { POPULAR_CNAES } from "@/modules/prospecting/cnaePresets";
 import { NICHE_PRESETS_VARIANTS, detectNicheKey } from "@/modules/prospecting/nichePresets";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
@@ -178,6 +179,7 @@ function ProspectingPage() {
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<"all" | ProspectStatus>("all");
   const [priorityFilter, setPriorityFilter] = useState<"all" | ProspectPriority>("all");
+  const [siteFilter, setSiteFilter] = useState<"all" | "no_website" | "has_website">("all");
   const [search, setSearch] = useState("");
   const [preview, setPreview] = useState<CsvRowPreview[] | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -189,6 +191,7 @@ function ProspectingPage() {
   const [searchCity, setSearchCity] = useState("Teixeira de Freitas, BA");
   const [isSearching, setIsSearching] = useState(false);
   const [liveResults, setLiveResults] = useState<ProspectDraft[]>([]);
+  const [liveSiteFilter, setLiveSiteFilter] = useState<"no_website" | "has_website" | "all">("no_website");
   const [selectedLiveIndices, setSelectedLiveIndices] = useState<Set<number>>(new Set());
 
   const [creatingPageId, setCreatingPageId] = useState<string | null>(null);
@@ -278,14 +281,17 @@ function ProspectingPage() {
     return companies.filter((company) => {
       const matchStatus = statusFilter === "all" || company.status === statusFilter;
       const matchPriority = priorityFilter === "all" || company.priority === priorityFilter;
+      const matchSite =
+        siteFilter === "all" ||
+        (siteFilter === "no_website" ? !company.has_website : company.has_website);
       const matchTerm =
         !term ||
         [company.name, company.niche, company.city, company.whatsapp]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(term));
-      return matchStatus && matchPriority && matchTerm;
+      return matchStatus && matchPriority && matchSite && matchTerm;
     });
-  }, [companies, priorityFilter, search, statusFilter]);
+  }, [companies, priorityFilter, search, statusFilter, siteFilter]);
 
   const metrics = useMemo(() => {
     const untouched = companies.filter((item) => item.status === "novo");
@@ -313,6 +319,14 @@ function ProspectingPage() {
         .slice(0, 10),
     [companies],
   );
+
+  const displayedLiveResults = useMemo(() => {
+    return liveResults.filter((lead) => {
+      if (liveSiteFilter === "no_website") return !lead.has_website;
+      if (liveSiteFilter === "has_website") return lead.has_website;
+      return true;
+    });
+  }, [liveResults, liveSiteFilter]);
 
   async function handleFile(file: File) {
     setFeedback(null);
@@ -928,6 +942,28 @@ function ProspectingPage() {
           </CardHeader>
 
           <CardContent className="space-y-4">
+            {/* Sugestões Rápidas de CNAE / Nichos */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+              <span className="text-[11px] text-muted-foreground whitespace-nowrap font-medium flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-primary" /> CNAEs Quentes:
+              </span>
+              {POPULAR_CNAES.slice(0, 8).map((item) => (
+                <button
+                  key={item.code}
+                  type="button"
+                  onClick={() => setSearchNiche(item.niche)}
+                  className={`px-2.5 py-1 rounded-full border text-[11px] whitespace-nowrap transition-all ${
+                    searchNiche.toLowerCase().includes(item.niche.toLowerCase())
+                      ? "border-primary bg-primary/20 text-white font-semibold shadow-xs"
+                      : "border-border/70 bg-background/50 text-muted-foreground hover:text-white hover:border-primary/40"
+                  }`}
+                  title={`${item.title} (CNAE ${item.code})`}
+                >
+                  {item.niche} <span className="opacity-60 text-[10px]">[{item.code.split("-")[0]}]</span>
+                </button>
+              ))}
+            </div>
+
             <form onSubmit={handleLiveSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
               <div className="sm:col-span-5">
                 <input
@@ -980,33 +1016,76 @@ function ProspectingPage() {
 
             {liveResults && liveResults.length > 0 && (
               <div className="space-y-3 pt-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <p className="text-xs sm:text-sm font-medium text-white">
-                    {liveResults.length} empresa(s) localizada(s) · {selectedLiveIndices.size} selecionada(s)
-                  </p>
+                {/* Abas de Filtro de Site na Varredura */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+                  <div className="flex items-center gap-1 text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setLiveSiteFilter("no_website")}
+                      className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
+                        liveSiteFilter === "no_website"
+                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-xs"
+                          : "text-muted-foreground hover:text-white"
+                      }`}
+                    >
+                      🔥 Sem Site ({liveResults.filter((r) => !r.has_website).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLiveSiteFilter("has_website")}
+                      className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
+                        liveSiteFilter === "has_website"
+                          ? "bg-muted text-white border border-border shadow-xs"
+                          : "text-muted-foreground hover:text-white"
+                      }`}
+                    >
+                      🌐 Com Site ({liveResults.filter((r) => r.has_website).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLiveSiteFilter("all")}
+                      className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
+                        liveSiteFilter === "all"
+                          ? "bg-muted text-white border border-border shadow-xs"
+                          : "text-muted-foreground hover:text-white"
+                      }`}
+                    >
+                      Todas ({liveResults.length})
+                    </button>
+                  </div>
+
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
                       className="text-xs text-muted-foreground hover:text-white underline transition-colors"
                       onClick={() => {
-                        if (selectedLiveIndices.size === liveResults.length) {
-                          setSelectedLiveIndices(new Set());
+                        const displayedIndices = displayedLiveResults.map((r) => liveResults.indexOf(r));
+                        const allDisplayedSelected = displayedIndices.length > 0 && displayedIndices.every((i) => selectedLiveIndices.has(i));
+                        const next = new Set(selectedLiveIndices);
+                        if (allDisplayedSelected) {
+                          displayedIndices.forEach((i) => next.delete(i));
                         } else {
-                          setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
+                          displayedIndices.forEach((i) => next.add(i));
                         }
+                        setSelectedLiveIndices(next);
                       }}
                     >
-                      {selectedLiveIndices.size === liveResults.length ? "Desmarcar todas" : "Selecionar todas"}
+                      {displayedLiveResults.length > 0 && displayedLiveResults.every((r) => selectedLiveIndices.has(liveResults.indexOf(r)))
+                        ? "Desmarcar visíveis"
+                        : "Selecionar visíveis"}
                     </button>
                     <button
                       type="button"
                       onClick={handleImportLive}
                       disabled={selectedLiveIndices.size === 0 || importMutation.isPending}
-                      className="rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium bg-primary hover:bg-primary/90 text-white transition-all disabled:opacity-50 shadow-sm"
+                      className="rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all disabled:opacity-50 shadow-sm flex items-center gap-1.5"
                     >
-                      {importMutation.isPending
-                        ? "Salvando..."
-                        : `Importar ${selectedLiveIndices.size} para o Radar`}
+                      {importMutation.isPending ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Plus className="h-3.5 w-3.5" />
+                      )}
+                      Importar {selectedLiveIndices.size} para o Radar
                     </button>
                   </div>
                 </div>
@@ -1019,13 +1098,19 @@ function ProspectingPage() {
                           <input
                             type="checkbox"
                             className="rounded border-border bg-background"
-                            checked={selectedLiveIndices.size === liveResults.length}
+                            checked={
+                              displayedLiveResults.length > 0 &&
+                              displayedLiveResults.every((r) => selectedLiveIndices.has(liveResults.indexOf(r)))
+                            }
                             onChange={(e) => {
+                              const displayedIndices = displayedLiveResults.map((r) => liveResults.indexOf(r));
+                              const next = new Set(selectedLiveIndices);
                               if (e.target.checked) {
-                                setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
+                                displayedIndices.forEach((i) => next.add(i));
                               } else {
-                                setSelectedLiveIndices(new Set());
+                                displayedIndices.forEach((i) => next.delete(i));
                               }
+                              setSelectedLiveIndices(next);
                             }}
                           />
                         </TableHead>
@@ -1037,11 +1122,12 @@ function ProspectingPage() {
                       </TableRow>
                     </TableHeader>
                     <TableBody className="divide-y divide-border/40">
-                      {liveResults.map((lead, index) => {
-                        const isSelected = selectedLiveIndices.has(index);
+                      {displayedLiveResults.map((lead) => {
+                        const globalIndex = liveResults.indexOf(lead);
+                        const isSelected = selectedLiveIndices.has(globalIndex);
                         return (
                           <TableRow
-                            key={lead.dedupe_key || index}
+                            key={lead.dedupe_key || globalIndex}
                             className={`transition-colors border-border/40 ${isSelected ? "bg-primary/10" : "hover:bg-muted/20"}`}
                           >
                             <TableCell className="px-3.5 py-2.5">
@@ -1051,8 +1137,8 @@ function ProspectingPage() {
                                 checked={isSelected}
                                 onChange={() => {
                                   const next = new Set(selectedLiveIndices);
-                                  if (next.has(index)) next.delete(index);
-                                  else next.add(index);
+                                  if (next.has(globalIndex)) next.delete(globalIndex);
+                                  else next.add(globalIndex);
                                   setSelectedLiveIndices(next);
                                 }}
                               />
@@ -1353,6 +1439,15 @@ function ProspectingPage() {
                     {PRIORITY_LABEL[priority]}
                   </option>
                 ))}
+              </select>
+              <select
+                className="h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
+                value={siteFilter}
+                onChange={(event) => setSiteFilter(event.target.value as typeof siteFilter)}
+              >
+                <option value="all">Todos os sites</option>
+                <option value="no_website">🔥 Apenas Sem Site</option>
+                <option value="has_website">🌐 Apenas Com Site</option>
               </select>
             </div>
           </div>

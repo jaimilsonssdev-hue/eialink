@@ -181,6 +181,8 @@ function ProspectingPage() {
   } | null>(null);
 
 
+  const [entryTab, setEntryTab] = useState<"csv" | "manual">("csv");
+
   const companiesQuery = useQuery({
     queryKey: ["prospecting", "companies"],
     queryFn: ProspectingService.list,
@@ -456,67 +458,41 @@ function ProspectingPage() {
     }
   }
 
-  function handleOpenTransfer(company: ProspectedCompany, pageId: string, demoUrl: string) {
-    const slugMatch = demoUrl.match(/\/p\/([^/?#\s]+)/);
-    const slug = slugMatch ? slugMatch[1] : company.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+  function handleOpenTransfer(company: ProspectedCompany, pageId: string, pageUrl: string) {
+    const isDemo = company.notes?.includes("Demo:") && !company.notes?.includes("[Página Oficializada]");
     setTransferModalData({
       isOpen: true,
       page: {
         id: pageId,
         displayName: company.name,
-        slug,
-        phone: company.whatsapp || company.phone,
+        slug: pageUrl.split("/p/")[1] || "",
+        phone: company.whatsapp ?? company.phone,
         instagram: company.instagram,
-        isDemo: true,
+        isDemo,
       },
     });
   }
 
-  const deleteCompanyMutation = useMutation({
-    mutationFn: async ({ companyId, pageId }: { companyId: string; pageId?: string | null }) => {
-      await ProspectingService.remove(companyId);
-      if (pageId) {
-        await PageService.deletePage(pageId).catch((e) => console.warn("Aviso ao excluir página vinculada:", e));
-      }
-    },
-    onSuccess: () => {
-      setFeedback("Oportunidade removida do radar.");
-      invalidate();
-    },
-    onError: (err) => {
-      setFeedback(`Erro ao remover: ${err instanceof Error ? err.message : "Erro desconhecido"}`);
-    },
-  });
-
-  const clearRadarMutation = useMutation({
-    mutationFn: async () => {
-      await ProspectingService.clearAll();
-    },
-    onSuccess: () => {
-      setFeedback("Todas as oportunidades foram limpas do radar com sucesso.");
-      invalidate();
-    },
-    onError: (err) => {
-      setFeedback(`Erro ao limpar radar: ${err instanceof Error ? err.message : "Erro desconhecido"}`);
-    },
-  });
-
-  function handleDeleteCompany(company: ProspectedCompany) {
-    const { pageId } = parseDemoInfo(company.notes);
-    let message = `Deseja remover "${company.name}" do radar de prospecção?`;
-    if (pageId) {
-      message += " A página de demonstração criada para ela também será excluída permanentemente.";
-    }
-    if (confirm(message)) {
-      deleteCompanyMutation.mutate({ companyId: company.id, pageId });
+  async function handleDeleteCompany(company: ProspectedCompany) {
+    if (!window.confirm(`Tem certeza que deseja remover "${company.name}" do radar de prospecção?`)) return;
+    try {
+      await removeMutation.mutateAsync(company.id);
+      setFeedback(`"${company.name}" foi removida do radar.`);
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : "Erro ao remover empresa.");
     }
   }
 
-  function handleClearAllRadar() {
-    if (confirm("Tem certeza que deseja limpar TODAS as oportunidades salvas no Radar de Prospecção? Esta ação é irreversível.")) {
-      clearRadarMutation.mutate();
+  async function handleClearAllRadar() {
+    if (!window.confirm(`ATENÇÃO: Deseja realmente excluir TODOS os ${companies.length} contatos do radar de prospecção? Esta ação não pode ser desfeita.`)) return;
+    try {
+      await clearRadarMutation.mutateAsync();
+      setFeedback("Todos os contatos foram removidos do radar.");
+    } catch (e) {
+      setFeedback(e instanceof Error ? e.message : "Erro ao limpar o radar.");
     }
   }
+
 
 
 
@@ -589,21 +565,57 @@ function ProspectingPage() {
         </div>
       )}
 
-      {/* Radar */}
-      <section className="grid gap-3 grid-cols-2 lg:grid-cols-6">
+      {/* Linha Superior: 4 Mini-Cards Geométricos de KPIs Rápidos */}
+      <section className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Empresas", value: metrics.total },
-          { label: "Prioridade alta", value: metrics.high },
-          { label: "Sem abordagem", value: metrics.untouched },
-          { label: "Em conversa", value: metrics.answered },
-          { label: "Clientes", value: metrics.clients },
-          { label: "Contatos hoje", value: metrics.todayDone },
-        ].map((item) => (
-          <div key={item.label} className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs text-muted-foreground">{item.label}</p>
-            <p className="font-display text-2xl font-bold">{item.value}</p>
-          </div>
-        ))}
+          {
+            label: "Leads no Radar",
+            value: metrics.total,
+            sub: "Total catalogado",
+            icon: Radar,
+            color: "text-zinc-400 group-hover:text-primary",
+          },
+          {
+            label: "Prioridade Alta",
+            value: metrics.high,
+            sub: "Oportunidades quentes",
+            icon: Flame,
+            color: "text-amber-400",
+          },
+          {
+            label: "Sem Site (Alvos)",
+            value: companies.filter((c) => !c.has_website).length,
+            sub: "Oportunidades limpas",
+            icon: Globe2,
+            color: "text-emerald-400",
+          },
+          {
+            label: "Trabalhados Hoje",
+            value: metrics.todayDone,
+            sub: "Abordagens realizadas",
+            icon: CheckCircle2,
+            color: "text-blue-400",
+          },
+        ].map((item) => {
+          const Icon = item.icon;
+          return (
+            <div
+              key={item.label}
+              className="group relative rounded-xl border border-[#1f1f23] bg-[#121214] p-4 flex items-center justify-between transition-all hover:border-zinc-700/60 shadow-xs"
+            >
+              <div className="min-w-0">
+                <p className="text-xs font-normal text-muted-foreground/80">{item.label}</p>
+                <p className="text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-foreground mt-0.5">
+                  {item.value}
+                </p>
+                <p className="text-[11px] text-zinc-500 font-normal mt-0.5">{item.sub}</p>
+              </div>
+              <div className="h-10 w-10 shrink-0 rounded-xl border border-[#1f1f23] bg-zinc-900/50 flex items-center justify-center transition-colors group-hover:border-zinc-700">
+                <Icon className={`h-5 w-5 ${item.color}`} />
+              </div>
+            </div>
+          );
+        })}
       </section>
 
       {/* Ataque de hoje */}
@@ -791,317 +803,378 @@ function ProspectingPage() {
         </ul>
       </section>
 
-      {/* Varredura Automática (Google Maps & Instagram) */}
-      <section className="rounded-2xl border border-[color:var(--primary)]/30 bg-card p-5 space-y-4 shadow-lg shadow-[color:var(--primary)]/5">
-
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div>
-            <h2 className="font-display text-lg font-bold flex items-center gap-2 text-foreground">
-              <Globe2 className="h-5 w-5 text-[color:var(--primary)]" /> Varredura Automática (Google Maps & Instagram)
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Busque empresas reais e perfis comerciais sem site na cidade desejada em tempo real.
-            </p>
-          </div>
-          <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400">
-            ⚡ Tempo Real & Sem Bloqueios
-          </span>
-        </div>
-
-        <form onSubmit={handleLiveSearch} className="grid gap-3 sm:grid-cols-5">
-          <input
-            value={searchNiche}
-            onChange={(e) => setSearchNiche(e.target.value)}
-            placeholder="Nicho (ex: Clínica, Dentista, Barbearia)"
-            className="input-field sm:col-span-2"
-            disabled={isSearching}
-            required
-          />
-          <input
-            value={searchCity}
-            onChange={(e) => setSearchCity(e.target.value)}
-            placeholder="Cidade (ex: Teixeira de Freitas, BA)"
-            className="input-field sm:col-span-2"
-            disabled={isSearching}
-            required
-          />
-          <button
-            type="submit"
-            disabled={isSearching}
-            className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium"
-          >
-            {isSearching ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
-              </>
-            ) : (
-              <>
-                <Search className="h-4 w-4" /> Iniciar Varredura
-              </>
-            )}
-          </button>
-        </form>
-
-        {isSearching && (
-          <div className="flex items-center gap-3 rounded-xl border border-border/80 bg-surface-elevated/40 p-4 text-sm text-muted-foreground animate-pulse">
-            <Loader2 className="h-5 w-5 animate-spin text-[color:var(--primary)]" />
+      {/* Bento Grid: Varredura Automática (Esquerda) + Ferramentas Secundárias em Abas (Direita) */}
+      <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+        {/* Bloco de Comando Principal: Varredura Automática (Google Maps & Instagram) */}
+        <div className="lg:col-span-7 xl:col-span-8 rounded-2xl border border-[#1f1f23] bg-[#121214] p-5 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <p className="font-medium text-foreground">Varrendo o Google Maps e perfis públicos do Instagram...</p>
-              <p className="text-xs">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
-            </div>
-          </div>
-        )}
-
-        {liveResults && liveResults.length > 0 && (
-          <div className="space-y-3 pt-2">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium">
-                {liveResults.length} empresa(s) localizada(s) · {selectedLiveIndices.size} selecionada(s)
+              <h2 className="font-display text-base sm:text-lg font-bold flex items-center gap-2 text-foreground">
+                <Globe2 className="h-5 w-5 text-[color:var(--primary)]" /> Varredura Automática
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground/80 mt-0.5">
+                Google Maps & Instagram em tempo real para encontrar oportunidades sem site.
               </p>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  className="text-xs text-muted-foreground hover:text-foreground underline"
-                  onClick={() => {
-                    if (selectedLiveIndices.size === liveResults.length) {
-                      setSelectedLiveIndices(new Set());
-                    } else {
-                      setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
-                    }
-                  }}
-                >
-                  {selectedLiveIndices.size === liveResults.length ? "Desmarcar todas" : "Selecionar todas"}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleImportLive}
-                  disabled={selectedLiveIndices.size === 0 || importMutation.isPending}
-                  className="rounded-xl px-4 py-2 text-sm font-medium text-[color:var(--primary-foreground)] transition-all"
-                  style={{ background: "var(--gradient-primary)" }}
-                >
-                  {importMutation.isPending
-                    ? "Salvando..."
-                    : `Importar ${selectedLiveIndices.size} para o Radar`}
-                </button>
+            </div>
+            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+              ⚡ Tempo Real & Sem Bloqueios
+            </span>
+          </div>
+
+          <form onSubmit={handleLiveSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+            <div className="sm:col-span-5">
+              <input
+                value={searchNiche}
+                onChange={(e) => setSearchNiche(e.target.value)}
+                placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
+                className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                disabled={isSearching}
+                required
+              />
+            </div>
+            <div className="sm:col-span-4">
+              <input
+                value={searchCity}
+                onChange={(e) => setSearchCity(e.target.value)}
+                placeholder="Cidade (ex: São Paulo, SP)"
+                className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                disabled={isSearching}
+                required
+              />
+            </div>
+            <div className="sm:col-span-3">
+              <button
+                type="submit"
+                disabled={isSearching}
+                className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[color:var(--primary-foreground)] transition-all"
+                style={{ background: "var(--gradient-primary)" }}
+              >
+                {isSearching ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
+                  </>
+                ) : (
+                  <>
+                    <Search className="h-4 w-4" /> Varrer
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+
+          {isSearching && (
+            <div className="flex items-center gap-3 rounded-xl border border-[#1f1f23] bg-zinc-950/40 p-4 text-sm text-muted-foreground animate-pulse">
+              <Loader2 className="h-5 w-5 animate-spin text-[color:var(--primary)] shrink-0" />
+              <div>
+                <p className="font-medium text-foreground text-xs sm:text-sm">Varrendo Google Maps e perfis públicos do Instagram...</p>
+                <p className="text-[11px] sm:text-xs text-muted-foreground/80">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
               </div>
             </div>
+          )}
 
-            <div className="max-h-96 overflow-auto rounded-xl border border-border/60">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/20 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-border/60">
-                  <tr>
-                    <th className="px-4 py-3 w-8">
-                      <input
-                        type="checkbox"
-                        className="rounded border-border/70"
-                        checked={selectedLiveIndices.size === liveResults.length}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
-                          } else {
-                            setSelectedLiveIndices(new Set());
-                          }
-                        }}
-                      />
-                    </th>
-                    <th className="px-4 py-3">Empresa</th>
-                    <th className="px-4 py-3">WhatsApp</th>
-                    <th className="px-4 py-3">Instagram</th>
-                    <th className="px-4 py-3">Status do Site</th>
-                    <th className="px-4 py-3">Score</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/40">
-                  {liveResults.map((lead, index) => {
-                    const isSelected = selectedLiveIndices.has(index);
-                    return (
-                      <tr
-                        key={lead.dedupe_key || index}
-                        className={`transition-colors ${isSelected ? "bg-primary/5" : "hover:bg-muted/20 opacity-80"}`}
-                      >
-                        <td className="px-4 py-3">
-                          <input
-                            type="checkbox"
-                            className="rounded border-border/70"
-                            checked={isSelected}
-                            onChange={() => {
-                              const next = new Set(selectedLiveIndices);
-                              if (next.has(index)) next.delete(index);
-                              else next.add(index);
-                              setSelectedLiveIndices(next);
-                            }}
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          <p className="font-medium text-foreground tracking-tight text-sm">{lead.name}</p>
-                          <p className="text-xs font-normal text-muted-foreground/80 mt-0.5">
-                            {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
-                          </p>
-                        </td>
-                        <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
-                          {lead.whatsapp || "—"}
-                        </td>
-                        <td className="px-4 py-3 text-xs">
-                          {lead.instagram ? (
-                            <a
-                              href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 font-normal text-xs text-muted-foreground hover:text-pink-400 transition-colors"
-                            >
-                              <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
-                              <span>{lead.instagram}</span>
-                            </a>
-                          ) : (
-                            <a
-                              href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${lead.name}" "${lead.city}"`)}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
-                              title="Buscar Instagram desta empresa"
-                            >
-                              <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
-                              <span>Achar perfil</span>
-                            </a>
-                          )}
-                        </td>
+          {liveResults && liveResults.length > 0 && (
+            <div className="space-y-3 pt-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs sm:text-sm font-medium text-foreground">
+                  {liveResults.length} empresa(s) localizada(s) · {selectedLiveIndices.size} selecionada(s)
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
+                    onClick={() => {
+                      if (selectedLiveIndices.size === liveResults.length) {
+                        setSelectedLiveIndices(new Set());
+                      } else {
+                        setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
+                      }
+                    }}
+                  >
+                    {selectedLiveIndices.size === liveResults.length ? "Desmarcar todas" : "Selecionar todas"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleImportLive}
+                    disabled={selectedLiveIndices.size === 0 || importMutation.isPending}
+                    className="rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-medium text-[color:var(--primary-foreground)] transition-all disabled:opacity-50"
+                    style={{ background: "var(--gradient-primary)" }}
+                  >
+                    {importMutation.isPending
+                      ? "Salvando..."
+                      : `Importar ${selectedLiveIndices.size} para o Radar`}
+                  </button>
+                </div>
+              </div>
 
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {lead.has_website ? (
-                            <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-xs font-normal text-muted-foreground">
-                              Já tem site
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-                              ⭐ Sem site (Oportunidade)
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="font-semibold text-sm tabular-nums text-foreground">{lead.score}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* Importação CSV */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <h2 className="font-display text-lg font-bold flex items-center gap-2">
-          <Upload className="h-5 w-5" /> Importar lista (CSV)
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          Colunas reconhecidas: nome, nicho, cidade, estado, telefone, whatsapp, email, instagram,
-          site, nota, avaliações, observação. Os dados são normalizados, deduplicados e pontuados
-          antes de salvar.
-        </p>
-        <input
-          type="file"
-          accept=".csv,text/csv"
-          className="text-sm"
-          onChange={(event) => {
-            const file = event.target.files?.[0];
-            if (file) void handleFile(file);
-          }}
-        />
-
-        {preview && (
-          <div className="space-y-3">
-            <p className="text-sm">
-              {importable.length} nova(s) · {preview.filter((r) => r.duplicateOf).length}{" "}
-              duplicada(s) · {preview.filter((r) => r.error).length} com erro
-            </p>
-            <div className="max-h-80 overflow-auto rounded-xl border border-border/60">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/20 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-border/60">
-                  <tr>
-                    <th className="px-4 py-3">Empresa</th>
-                    <th className="px-4 py-3">Nicho</th>
-                    <th className="px-4 py-3">Cidade</th>
-                    <th className="px-4 py-3">WhatsApp</th>
-                    <th className="px-4 py-3">Score</th>
-                    <th className="px-4 py-3">Situação</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/40">
-                  {preview.map((row) => (
-                    <tr key={row.line} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3 font-medium text-foreground tracking-tight text-sm">
-                        {row.draft?.name ?? `Linha ${row.line}`}
-                      </td>
-                      <td className="px-4 py-3 text-xs font-normal text-muted-foreground/80">
-                        {row.draft?.niche ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-xs font-normal text-muted-foreground/80">
-                        {row.draft?.city ?? "—"}
-                      </td>
-                      <td className="px-4 py-3 text-xs font-mono text-muted-foreground">
-                        {row.draft?.whatsapp ?? "—"}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="font-semibold text-sm tabular-nums text-foreground">
-                          {row.draft?.score ?? "—"}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {row.error ? (
-                          <span className="text-rose-400">{row.error}</span>
-                        ) : row.duplicateOf ? (
-                          <span className="text-amber-400">Duplicada ({row.duplicateOf})</span>
-                        ) : (
-                          <span className="text-emerald-400">Pronta para importar</span>
-                        )}
-                      </td>
+              <div className="max-h-96 overflow-auto rounded-xl border border-[#1f1f23] bg-zinc-950/30">
+                <table className="w-full text-sm">
+                  <thead className="bg-[#121214] text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-[#1f1f23] sticky top-0 z-10">
+                    <tr>
+                      <th className="px-3.5 py-2.5 w-8">
+                        <input
+                          type="checkbox"
+                          className="rounded border-[#1f1f23] bg-zinc-900"
+                          checked={selectedLiveIndices.size === liveResults.length}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
+                            } else {
+                              setSelectedLiveIndices(new Set());
+                            }
+                          }}
+                        />
+                      </th>
+                      <th className="px-3.5 py-2.5">Empresa</th>
+                      <th className="px-3.5 py-2.5">WhatsApp</th>
+                      <th className="px-3.5 py-2.5">Instagram</th>
+                      <th className="px-3.5 py-2.5">Status do Site</th>
+                      <th className="px-3.5 py-2.5">Score</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-[#1f1f23]/60">
+                    {liveResults.map((lead, index) => {
+                      const isSelected = selectedLiveIndices.has(index);
+                      return (
+                        <tr
+                          key={lead.dedupe_key || index}
+                          className={`transition-colors ${isSelected ? "bg-primary/5" : "hover:bg-zinc-900/30"}`}
+                        >
+                          <td className="px-3.5 py-2.5">
+                            <input
+                              type="checkbox"
+                              className="rounded border-[#1f1f23] bg-zinc-900"
+                              checked={isSelected}
+                              onChange={() => {
+                                const next = new Set(selectedLiveIndices);
+                                if (next.has(index)) next.delete(index);
+                                else next.add(index);
+                                setSelectedLiveIndices(next);
+                              }}
+                            />
+                          </td>
+                          <td className="px-3.5 py-2.5">
+                            <p className="font-medium text-foreground tracking-tight text-xs sm:text-sm">{lead.name}</p>
+                            <p className="text-[11px] font-normal text-muted-foreground/80 mt-0.5">
+                              {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
+                            </p>
+                          </td>
+                          <td className="px-3.5 py-2.5 text-xs font-mono text-muted-foreground">
+                            {lead.whatsapp || "—"}
+                          </td>
+                          <td className="px-3.5 py-2.5 text-xs">
+                            {lead.instagram ? (
+                              <a
+                                href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 font-normal text-xs text-muted-foreground hover:text-pink-400 transition-colors"
+                              >
+                                <Instagram className="h-3 w-3 text-muted-foreground/70" />
+                                <span>{lead.instagram}</span>
+                              </a>
+                            ) : (
+                              <a
+                                href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${lead.name}" "${lead.city}"`)}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 rounded-lg border border-[#1f1f23] bg-transparent px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
+                                title="Buscar Instagram desta empresa"
+                              >
+                                <Instagram className="h-3 w-3 text-muted-foreground/70" />
+                                <span>Achar perfil</span>
+                              </a>
+                            )}
+                          </td>
+                          <td className="px-3.5 py-2.5 whitespace-nowrap">
+                            {lead.has_website ? (
+                              <span className="inline-flex items-center rounded-full border border-[#1f1f23] bg-zinc-900/60 px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
+                                Já tem site
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+                                ⭐ Sem site
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3.5 py-2.5">
+                            <span className="font-semibold text-xs sm:text-sm tabular-nums text-foreground">{lead.score}</span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
-            <div className="flex gap-2">
+          )}
+        </div>
+
+        {/* Bloco Secundário: Abas de Importação CSV e Cadastro Manual */}
+        <div className="lg:col-span-5 xl:col-span-4 rounded-2xl border border-[#1f1f23] bg-[#121214] p-5 sm:p-6 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between border-b border-[#1f1f23] pb-3">
+            <div className="flex items-center gap-1 p-0.5 rounded-lg border border-[#1f1f23] bg-zinc-950/60 text-xs">
               <button
-                className="rounded-xl px-4 py-2 text-sm font-medium text-[color:var(--primary-foreground)]"
-                style={{ background: "var(--gradient-primary)" }}
-                disabled={!importable.length || importMutation.isPending}
-                onClick={() =>
-                  importMutation.mutate(importable.map((row) => row.draft!).filter(Boolean))
-                }
+                type="button"
+                onClick={() => setEntryTab("csv")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                  entryTab === "csv"
+                    ? "bg-zinc-800 text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                {importMutation.isPending ? "Importando..." : `Importar ${importable.length}`}
+                <Upload className="h-3.5 w-3.5" /> Importar CSV
               </button>
               <button
-                className="rounded-xl border border-border px-4 py-2 text-sm"
-                onClick={() => setPreview(null)}
+                type="button"
+                onClick={() => setEntryTab("manual")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
+                  entryTab === "manual"
+                    ? "bg-zinc-800 text-foreground shadow-xs"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                Cancelar
+                <Plus className="h-3.5 w-3.5" /> Adicionar Manual
               </button>
             </div>
           </div>
-        )}
-      </section>
 
-      {/* Cadastro manual */}
-      <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="font-display text-lg font-bold flex items-center gap-2">
-          <Plus className="h-5 w-5" /> Adicionar empresa
-        </h2>
-        <form onSubmit={handleManualSubmit} className="mt-3 grid gap-3 sm:grid-cols-5">
-          <input name="name" placeholder="Nome" className="input-field" />
-          <input name="niche" placeholder="Nicho" className="input-field" />
-          <input name="city" placeholder="Cidade" className="input-field" />
-          <input name="whatsapp" placeholder="WhatsApp" className="input-field" />
-          <input name="website" placeholder="Site (se tiver)" className="input-field" />
-          <button
-            type="submit"
-            className="rounded-xl border border-border px-4 py-2 text-sm sm:col-span-5 sm:w-fit"
-          >
-            Salvar no radar
-          </button>
-        </form>
+          {/* Tab 1: Importar CSV */}
+          {entryTab === "csv" && (
+            <div className="space-y-3.5">
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">
+                  Suba sua planilha de leads. Reconhece nome, nicho, cidade, telefone, whatsapp, instagram e site.
+                </p>
+              </div>
+
+              <label className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-dashed border-[#1f1f23] hover:border-zinc-700 bg-zinc-950/40 hover:bg-zinc-950/70 cursor-pointer transition-all">
+                <Upload className="h-6 w-6 text-zinc-400" />
+                <span className="text-xs text-zinc-300 font-medium">Clique para selecionar o arquivo .csv</span>
+                <span className="text-[11px] text-zinc-500">Deduplicação e pontuação automáticas</span>
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0];
+                    if (file) void handleFile(file);
+                  }}
+                />
+              </label>
+
+              {preview && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-emerald-400 font-medium">{importable.length} nova(s)</span>
+                    <span className="text-zinc-500">
+                      {preview.filter((r) => r.duplicateOf).length} dup · {preview.filter((r) => r.error).length} erro
+                    </span>
+                  </div>
+
+                  <div className="max-h-56 overflow-auto rounded-xl border border-[#1f1f23] bg-zinc-950/40">
+                    <table className="w-full text-xs">
+                      <thead className="bg-[#121214] text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-[#1f1f23]">
+                        <tr>
+                          <th className="px-3 py-2">Empresa</th>
+                          <th className="px-3 py-2">Cidade</th>
+                          <th className="px-3 py-2">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#1f1f23]/60">
+                        {preview.map((row) => (
+                          <tr key={row.line} className="hover:bg-zinc-900/30 transition-colors">
+                            <td className="px-3 py-2 font-medium text-foreground truncate max-w-[120px]">
+                              {row.draft?.name ?? `Linha ${row.line}`}
+                            </td>
+                            <td className="px-3 py-2 text-zinc-400 truncate max-w-[90px]">
+                              {row.draft?.city ?? "—"}
+                            </td>
+                            <td className="px-3 py-2">
+                              {row.error ? (
+                                <span className="text-rose-400">Erro</span>
+                              ) : row.duplicateOf ? (
+                                <span className="text-amber-400">Dup</span>
+                              ) : (
+                                <span className="text-emerald-400">Pronta</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      className="flex-1 rounded-xl px-3 py-2 text-xs font-medium text-[color:var(--primary-foreground)] transition-all disabled:opacity-50"
+                      style={{ background: "var(--gradient-primary)" }}
+                      disabled={!importable.length || importMutation.isPending}
+                      onClick={() =>
+                        importMutation.mutate(importable.map((row) => row.draft!).filter(Boolean))
+                      }
+                    >
+                      {importMutation.isPending ? "Importando..." : `Importar ${importable.length} leads`}
+                    </button>
+                    <button
+                      className="rounded-xl border border-[#1f1f23] px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      onClick={() => setPreview(null)}
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 2: Adicionar Manual */}
+          {entryTab === "manual" && (
+            <form onSubmit={handleManualSubmit} className="space-y-2.5">
+              <p className="text-xs text-muted-foreground">
+                Cadastre um lead diretamente no seu Radar de Prospecção.
+              </p>
+              <div>
+                <input
+                  name="name"
+                  placeholder="Nome da Empresa *"
+                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  name="niche"
+                  placeholder="Nicho (ex: Dentista)"
+                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                />
+                <input
+                  name="city"
+                  placeholder="Cidade"
+                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  name="whatsapp"
+                  placeholder="WhatsApp"
+                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                />
+                <input
+                  name="website"
+                  placeholder="Site (opcional)"
+                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={createMutation.isPending}
+                className="w-full rounded-xl border border-[#1f1f23] bg-zinc-900/60 hover:bg-zinc-800 px-3 py-2 text-xs font-medium text-foreground transition-all mt-2"
+              >
+                {createMutation.isPending ? "Salvando..." : "Salvar no Radar"}
+              </button>
+            </form>
+          )}
+        </div>
       </section>
 
       {/* Pipeline */}

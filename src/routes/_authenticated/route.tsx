@@ -156,7 +156,7 @@ function AuthedLayout() {
           </span>
           <ThemeToggle compact />
         </header>
-        <main className="app-content p-4 pb-24 sm:p-5 md:p-10 md:pb-10 max-w-7xl mx-auto">
+        <main className={`app-content p-4 pb-24 sm:p-5 md:p-8 md:pb-8 mx-auto ${pathname === "/builder" ? "max-w-[1600px]" : "max-w-7xl"}`}>
           <Outlet />
         </main>
         <nav className="app-mobile-nav md:hidden" aria-label="Navegação principal">

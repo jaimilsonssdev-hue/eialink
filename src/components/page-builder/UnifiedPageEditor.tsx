@@ -699,8 +699,8 @@ export function UnifiedPageEditor({
                     <label className="text-sm font-semibold text-foreground">
                       1. Escolha o Nicho e Modelo
                     </label>
-                    <span className="text-xs text-[color:var(--primary)] font-medium">
-                      Ativo: {activeNicheModel.title}
+                    <span className="text-xs text-muted-foreground font-medium">
+                      Ativo: <span className="text-foreground">{activeNicheModel.title}</span>
                     </span>
                   </div>
 
@@ -716,35 +716,26 @@ export function UnifiedPageEditor({
                           key={model.id}
                           type="button"
                           onClick={() => selectNicheModel(model)}
-                          className={`flex items-start gap-3 rounded-xl border p-3 text-left transition-all ${
+                          className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-150 ${
                             isSelected
-                              ? "border-[color:var(--primary)] bg-[color:var(--primary)]/10 shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_60%)]"
-                              : "border-border hover:border-[color:var(--primary)]/50 hover:bg-surface-elevated/40"
+                              ? "border-primary/60 bg-primary/5 shadow-xs ring-1 ring-primary/20"
+                              : "border-[#1f1f23] bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/40"
                           }`}
                         >
                           <div
-                            className={`mt-0.5 rounded-lg p-2 ${
+                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                               isSelected
-                                ? "bg-[color:var(--primary)] text-white"
-                                : "bg-surface-elevated text-muted-foreground"
+                                ? "border-primary/40 bg-primary/10 text-primary"
+                                : "border-[#1f1f23] bg-zinc-900/60 text-zinc-400 group-hover:text-zinc-200 group-hover:border-zinc-700"
                             }`}
                           >
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1">
-                              <p className="font-semibold text-sm truncate">{model.title}</p>
-                              {model.isGold ? (
-                                <span className="shrink-0 rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-bold text-amber-500">
-                                  Ouro
-                                </span>
-                              ) : (
-                                <span className="shrink-0 rounded bg-slate-500/15 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">
-                                  Free
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                            <p className={`text-xs sm:text-sm font-medium truncate ${isSelected ? "text-foreground font-semibold" : "text-zinc-300 group-hover:text-foreground"}`}>
+                              {model.title}
+                            </p>
+                            <p className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5 font-normal">
                               {model.subtitle}
                             </p>
                           </div>
@@ -755,23 +746,23 @@ export function UnifiedPageEditor({
 
                   {/* Banner de 1-Clique para Fotos & Serviços Recomendados */}
                   {activeNicheModel.nicheKey !== "geral" && (
-                    <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-                      <div className="space-y-0.5">
-                        <p className="font-semibold text-sm flex items-center gap-1.5 text-foreground">
-                          <Sparkles className="h-4 w-4 text-[color:var(--primary)]" />
+                    <div className="rounded-xl border border-[#1f1f23] bg-zinc-950/40 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                      <div className="space-y-0.5 min-w-0">
+                        <p className="font-medium text-xs sm:text-sm flex items-center gap-1.5 text-foreground">
+                          <Sparkles className="h-3.5 w-3.5 text-primary/80" />
                           <span>Fotos e Serviços Recomendados de {activeNicheModel.title}</span>
                         </p>
-                        <p className="text-xs text-muted-foreground">
-                          Preencher capa, avatar e catálogo com fotos profissionais do Unsplash e tratamentos deste nicho.
+                        <p className="text-[11px] text-zinc-400">
+                          Preencher capa, avatar e catálogo com fotos do Unsplash e tratamentos deste nicho.
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => applyNicheDefaults(activeNicheModel.nicheKey)}
-                        className="btn-primary shrink-0 text-xs py-2 px-3 flex items-center gap-1.5 whitespace-nowrap"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-secondary/70 hover:bg-secondary text-foreground text-xs font-medium px-3 py-1.5 transition-colors shrink-0"
                       >
-                        <Wand2 className="h-3.5 w-3.5" />
-                        <span>Aplicar Fotos & Catálogo</span>
+                        <Wand2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <span>Aplicar ao Catálogo</span>
                       </button>
                     </div>
                   )}
@@ -792,17 +783,17 @@ export function UnifiedPageEditor({
                           onClick={() => updateBio({ theme: theme.id })}
                           className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
                             isSelected
-                              ? "border-[color:var(--primary)] bg-[color:var(--primary)]/10 shadow-[0_0_0_1px_color-mix(in_srgb,var(--primary),transparent_60%)]"
-                              : "border-border hover:border-[color:var(--primary)]/50"
+                              ? "border-primary/60 bg-primary/5 text-foreground ring-1 ring-primary/20"
+                              : "border-[#1f1f23] bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/40 text-muted-foreground hover:text-foreground"
                           }`}
                         >
                           <span
-                            className="h-6 w-6 shrink-0 rounded-full border border-white/20 shadow-sm"
+                            className="h-5 w-5 shrink-0 rounded-full border border-white/20 shadow-sm"
                             style={{ background: theme.gradientStyle }}
                           />
                           <div className="min-w-0">
-                            <p className="font-semibold text-xs truncate">{theme.label}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{theme.description}</p>
+                            <p className="font-medium text-xs truncate">{theme.label}</p>
+                            <p className="text-[10px] text-zinc-400 truncate">{theme.description}</p>
                           </div>
                         </button>
                       );
@@ -1407,11 +1398,12 @@ export function UnifiedPageEditor({
           </aside>
         </section>
 
-        {/* Prévia Interativa do Celular em Tempo Real */}
+        {/* Prévia Interativa do Celular em Tempo Real (Coluna 40% Fixa) */}
         <main
           ref={previewRef}
-          className={`builder-preview-stage min-w-0 xl:order-none ${previewOpen ? "is-mobile-open" : ""}`}
+          className={`builder-preview-stage min-w-0 ${previewOpen ? "is-mobile-open" : ""}`}
         >
+          {/* Header Mobile da Gaveta */}
           <div className="builder-preview-mobile-header">
             <div>
               <b>Prévia da sua página</b>
@@ -1421,31 +1413,52 @@ export function UnifiedPageEditor({
               <X aria-hidden />
             </button>
           </div>
-          <p className="builder-preview-label mb-3 text-center text-sm font-medium text-muted-foreground">
-            Sua página enquanto você edita (Tempo Real)
-          </p>
-          <div
-            className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} mx-auto max-w-[25rem] overflow-hidden bg-background`}
-          >
-            {isFreeTemplate ? (
-              <FreeLinkRenderer
-                bio={previewBio}
-                links={previewLinks.filter((link) => link.active)}
-                onTrack={() => undefined}
-                onShare={() => undefined}
-                products={products}
-              />
-            ) : (
-              <TemplateRenderer
-                bio={previewBio}
-                links={previewLinks.filter((link) => link.active)}
-                onTrack={() => undefined}
-                onShare={() => undefined}
-                products={products}
-                bookingUrl={`/agendar/${previewBio.slug}`}
-                motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
-              />
-            )}
+
+          {/* Badge Minimalista de Status */}
+          <div className="hidden lg:inline-flex items-center gap-2 mb-2 px-3 py-1 rounded-full border border-[#1f1f23] bg-zinc-950/80 text-[11px] font-medium text-zinc-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Prévia em Tempo Real</span>
+          </div>
+
+          {/* Mockup do smartphone: centralizado verticalmente, sem cortes, com sombra projetada shadow-2xl */}
+          <div className="relative flex items-center justify-center w-full my-auto py-1">
+            {/* Sombra de profundidade e brilho ambiente suave para efeito de flutuação */}
+            <div className="absolute -inset-4 bg-gradient-to-b from-primary/10 via-purple-600/5 to-transparent rounded-[3.2rem] blur-2xl -z-10 pointer-events-none opacity-60" />
+
+            <div
+              className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} relative w-[285px] sm:w-[310px] xl:w-[330px] h-[min(650px,calc(100vh-10rem))] rounded-[2.8rem] border-[6px] border-[#18181b] bg-background shadow-2xl shadow-black/90 ring-1 ring-white/10 overflow-hidden flex flex-col transition-all`}
+              style={{
+                boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+              }}
+            >
+              {/* Dynamic Island / Notch minimalista */}
+              <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#111114] border border-white/5 rounded-full z-30 pointer-events-none flex items-center justify-center">
+                <div className="w-2.5 h-2.5 rounded-full bg-zinc-900 border border-white/10 ml-auto mr-2" />
+              </div>
+
+              {/* Área rolável interna do smartphone: o conteúdo rola suavemente sem cortar o celular */}
+              <div className="flex-1 w-full overflow-y-auto overflow-x-hidden pt-7 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                {isFreeTemplate ? (
+                  <FreeLinkRenderer
+                    bio={previewBio}
+                    links={previewLinks.filter((link) => link.active)}
+                    onTrack={() => undefined}
+                    onShare={() => undefined}
+                    products={products}
+                  />
+                ) : (
+                  <TemplateRenderer
+                    bio={previewBio}
+                    links={previewLinks.filter((link) => link.active)}
+                    onTrack={() => undefined}
+                    onShare={() => undefined}
+                    products={products}
+                    bookingUrl={`/agendar/${previewBio.slug}`}
+                    motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
+                  />
+                )}
+              </div>
+            </div>
           </div>
         </main>
       </div>

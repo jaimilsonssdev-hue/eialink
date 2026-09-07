@@ -11,10 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as ResgatarRouteImport } from './routes/resgatar'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as ResgatarRouteImport } from './routes/resgatar'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
@@ -37,11 +37,6 @@ import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedAdminProspeccaoRouteImport } from './routes/_authenticated/admin_.prospeccao'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
-const ResgatarRoute = ResgatarRouteImport.update({
-  id: '/resgatar',
-  path: '/resgatar',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
@@ -50,6 +45,11 @@ const TermsRoute = TermsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResgatarRoute = ResgatarRouteImport.update({
+  id: '/resgatar',
+  path: '/resgatar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RefundPolicyRoute = RefundPolicyRouteImport.update({
@@ -177,9 +177,9 @@ const ApiPublicPaymentsWebhookRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/resgatar': typeof ResgatarRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/resgatar': typeof ResgatarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -205,9 +205,9 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
-  '/resgatar': typeof ResgatarRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/resgatar': typeof ResgatarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
@@ -235,9 +235,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
-  '/resgatar': typeof ResgatarRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
+  '/resgatar': typeof ResgatarRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
@@ -265,9 +265,9 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
-    | '/resgatar'
     | '/privacy'
     | '/refund-policy'
+    | '/resgatar'
     | '/sitemap.xml'
     | '/terms'
     | '/admin'
@@ -293,9 +293,9 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
-    | '/resgatar'
     | '/privacy'
     | '/refund-policy'
+    | '/resgatar'
     | '/sitemap.xml'
     | '/terms'
     | '/admin'
@@ -322,9 +322,9 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
-    | '/resgatar'
     | '/privacy'
     | '/refund-policy'
+    | '/resgatar'
     | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/admin'
@@ -352,9 +352,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ResgatarRoute: typeof ResgatarRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
+  ResgatarRoute: typeof ResgatarRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   AgendarSlugRoute: typeof AgendarSlugRoute
@@ -379,6 +379,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/resgatar': {
+      id: '/resgatar'
+      path: '/resgatar'
+      fullPath: '/resgatar'
+      preLoaderRoute: typeof ResgatarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/refund-policy': {
       id: '/refund-policy'
       path: '/refund-policy'
@@ -398,13 +405,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/resgatar': {
-      id: '/resgatar'
-      path: '/resgatar'
-      fullPath: '/resgatar'
-      preLoaderRoute: typeof ResgatarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -600,9 +600,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ResgatarRoute: ResgatarRoute,
   PrivacyRoute: PrivacyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
+  ResgatarRoute: ResgatarRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   AgendarSlugRoute: AgendarSlugRoute,

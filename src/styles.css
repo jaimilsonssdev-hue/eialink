@@ -2187,6 +2187,61 @@
 .niche-beauty-footer { margin-top: 2.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
 .niche-beauty-insta-badge { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; border-radius: 999px; background: linear-gradient(135deg, rgb(225 48 108 / .12), rgb(253 29 29 / .12)); border: 1px solid rgb(225 48 108 / .3); color: #e1306c; font-size: .82rem; font-weight: 700; }
 
+/* ============ SPOTLIGHT VIP DARK ============ */
+.niche-spotlight { padding-bottom: 3.5rem; container-type: inline-size; max-width: 48rem; margin: 0 auto; color: #f8fafc; }
+.niche-spotlight-hero { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.niche-spotlight-cover-wrapper { position: relative; width: 100%; height: clamp(220px, 45vw, 300px); overflow: hidden; border-radius: 0 0 2rem 2rem; box-shadow: 0 16px 36px -12px rgb(0 0 0 / .6); }
+.niche-spotlight-cover { width: 100%; height: 100%; object-fit: cover; }
+.niche-spotlight-cover-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, rgb(15 23 42 / .85) 100%); }
+.niche-spotlight-share-btn { position: absolute; top: 1rem; right: 1rem; padding: .4rem .85rem; border-radius: 999px; background: rgb(0 0 0 / .55); backdrop-filter: blur(8px); border: 1px solid rgb(255 255 255 / .2); color: #fff; font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .2s ease; }
+.niche-spotlight-share-btn:hover { background: rgb(0 0 0 / .85); }
+.niche-spotlight-profile { position: relative; margin-top: -3.5rem; padding: 0 1.25rem; display: flex; flex-direction: column; align-items: center; width: 100%; }
+.niche-spotlight-avatar-ring { width: 96px; height: 96px; border-radius: 999px; padding: 3px; background: linear-gradient(135deg, #22d3ee, #818cf8, #c084fc); box-shadow: 0 0 25px -3px rgb(34 211 238 / .45); }
+.niche-spotlight-avatar { width: 100%; height: 100%; border-radius: 999px; object-fit: cover; border: 3px solid #0f172a; }
+.niche-spotlight-avatar-fallback { width: 100%; height: 100%; border-radius: 999px; background: #0e7490; color: #fff; display: grid; place-items: center; font-size: 2rem; font-weight: 700; border: 3px solid #0f172a; }
+.niche-spotlight-badges { display: flex; flex-wrap: wrap; gap: .5rem; justify-content: center; margin-top: .85rem; }
+.niche-spotlight-badge { display: inline-flex; align-items: center; gap: .35rem; padding: .3rem .75rem; border-radius: 999px; font-size: .75rem; font-weight: 700; }
+.niche-spotlight-badge-glow { background: rgb(34 211 238 / .15); border: 1px solid rgb(34 211 238 / .4); color: #38bdf8; text-shadow: 0 0 10px rgb(56 189 248 / .3); }
+.niche-spotlight-badge-star { background: rgb(245 158 11 / .15); border: 1px solid rgb(245 158 11 / .4); color: #f59e0b; }
+.niche-spotlight-title { margin-top: .75rem; font-size: clamp(1.6rem, 5vw, 2.3rem); font-weight: 800; letter-spacing: -.03em; color: #f8fafc; }
+.niche-spotlight-lead { margin-top: .5rem; max-width: 36rem; font-size: .95rem; line-height: 1.5; color: #94a3b8; }
+.niche-spotlight-meta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: .65rem; font-size: .78rem; color: #cbd5e1; font-weight: 500; }
+.niche-spotlight-meta-row span { display: inline-flex; align-items: center; gap: .35rem; }
+.niche-spotlight-trust-row { display: flex; flex-wrap: wrap; justify-content: center; gap: .85rem; margin-top: .85rem; font-size: .75rem; font-weight: 600; color: #94a3b8; }
+.niche-spotlight-trust-row span { display: inline-flex; align-items: center; gap: .35rem; }
+.niche-spotlight-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: .65rem; margin-top: 1.25rem; width: 100%; max-width: 28rem; }
+.niche-spotlight-cta-primary { flex: 1 1 14rem; display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .85rem 1.4rem; border-radius: 1.15rem; background: linear-gradient(135deg, #06b6d4, #2563eb); color: #fff; font-weight: 700; font-size: .92rem; box-shadow: 0 10px 25px -5px rgb(6 182 212 / .4); transition: transform .2s ease, box-shadow .2s ease; }
+.niche-spotlight-cta-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -5px rgb(6 182 212 / .5); }
+.niche-spotlight-cta-secondary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .85rem 1.2rem; border-radius: 1.15rem; background: rgb(30 41 59 / .85); border: 1px solid rgb(255 255 255 / .12); color: #f8fafc; font-weight: 700; font-size: .92rem; transition: transform .2s ease; }
+.niche-spotlight-cta-secondary:hover { transform: translateY(-2px); background: rgb(51 65 85 / .9); }
+.niche-spotlight-section { margin-top: 2.5rem; padding: 0 1.25rem; }
+.niche-spotlight-section-head { text-align: center; margin-bottom: 1.5rem; }
+.niche-spotlight-eyebrow { display: block; font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; color: #22d3ee; margin-bottom: .25rem; }
+.niche-spotlight-section-head h2 { font-size: 1.5rem; font-weight: 800; color: #f8fafc; letter-spacing: -.02em; }
+.niche-spotlight-section-head p { margin-top: .3rem; font-size: .88rem; color: #94a3b8; }
+.niche-spotlight-services-grid { display: grid; gap: 1rem; }
+@media (min-width: 600px) { .niche-spotlight-services-grid { grid-template-columns: repeat(2, 1fr); } }
+.niche-spotlight-service-card { display: flex; flex-direction: column; overflow: hidden; border-radius: 1.25rem; background: rgb(30 41 59 / .75); border: 1px solid rgb(255 255 255 / .08); box-shadow: 0 8px 24px -6px rgb(0 0 0 / .4); transition: transform .2s ease, border-color .2s ease; backdrop-filter: blur(12px); }
+.niche-spotlight-service-card:hover { transform: translateY(-3px); border-color: #22d3ee; }
+.niche-spotlight-service-media { width: 100%; height: 160px; overflow: hidden; background: #0f172a; }
+.niche-spotlight-service-media img { width: 100%; height: 100%; object-fit: cover; transition: transform .3s ease; }
+.niche-spotlight-service-card:hover .niche-spotlight-service-media img { transform: scale(1.04); }
+.niche-spotlight-service-body { padding: 1.1rem; display: flex; flex-direction: column; flex: 1; }
+.niche-spotlight-service-header { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+.niche-spotlight-service-header h3 { font-size: 1.05rem; font-weight: 750; color: #f8fafc; }
+.niche-spotlight-service-price { font-size: .95rem; font-weight: 800; color: #38bdf8; white-space: nowrap; }
+.niche-spotlight-service-desc { margin-top: .4rem; font-size: .82rem; line-height: 1.45; color: #94a3b8; flex: 1; }
+.niche-spotlight-service-footer { margin-top: .9rem; }
+.niche-spotlight-service-btn { display: inline-flex; align-items: center; justify-content: center; gap: .35rem; width: 100%; padding: .6rem; border-radius: .85rem; background: rgb(6 182 212 / .15); border: 1px solid rgb(6 182 212 / .3); color: #22d3ee; font-weight: 700; font-size: .82rem; transition: all .2s ease; }
+.niche-spotlight-service-btn:hover { background: #06b6d4; color: #fff; }
+.niche-spotlight-testimonials-grid { display: grid; gap: .85rem; }
+.niche-spotlight-testimonial-card { padding: 1.1rem; border-radius: 1.15rem; background: rgb(30 41 59 / .55); border: 1px solid rgb(255 255 255 / .06); }
+.niche-spotlight-links-list { display: grid; gap: .6rem; }
+.niche-spotlight-link-item { display: flex; align-items: center; justify-content: space-between; padding: .85rem 1.15rem; border-radius: 1rem; background: rgb(30 41 59 / .75); border: 1px solid rgb(255 255 255 / .08); color: #f8fafc; font-weight: 600; font-size: .9rem; transition: all .2s ease; }
+.niche-spotlight-link-item:hover { border-color: #22d3ee; transform: translateY(-2px); }
+.niche-spotlight-footer { margin-top: 2.5rem; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.niche-spotlight-insta-badge { display: inline-flex; align-items: center; gap: .4rem; padding: .5rem 1rem; border-radius: 999px; background: linear-gradient(135deg, rgb(225 48 108 / .15), rgb(253 29 29 / .15)); border: 1px solid rgb(225 48 108 / .3); color: #f43f5e; font-size: .82rem; font-weight: 700; }
+
 /* Clinic Service Media & Secondary CTA */
 .niche-clinic-service-media { width: 72px; height: 72px; flex: 0 0 auto; border-radius: .9rem; overflow: hidden; }
 .niche-clinic-service-media img { width: 100%; height: 100%; object-fit: cover; }

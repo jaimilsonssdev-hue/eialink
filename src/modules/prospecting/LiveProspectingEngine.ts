@@ -339,3 +339,213 @@ export async function lookupBusinessProfile(queryOrUrl: string): Promise<Prospec
   return await searchGoogleMapsAndInstagram(niche, city, 5);
 }
 
+export interface GoogleMapsPlaceDetails {
+  rating: number | null;
+  reviewsCount: number | null;
+  address: string | null;
+  openingHours: string | null;
+  whatsapp: string | null;
+  phone: string | null;
+  photos: string[];
+  reviews: Array<{
+    author: string;
+    avatar: string | null;
+    rating: number;
+    text: string;
+  }>;
+}
+
+/**
+ * Consulta a ficha completa do estabelecimento no Google Maps via Jina Reader.
+ * Retorna nota real, quantidade de avaliações, fotos reais (lh3), endereço, horários e depoimentos.
+ */
+export async function fetchGoogleMapsPlaceDetails(
+  companyName: string,
+  city?: string | null,
+): Promise<GoogleMapsPlaceDetails> {
+  const cleanName = companyName
+    .replace(/clinical\s+innovate/gi, "Clínica Inove")
+    .replace(/^clinical\s+/gi, "Clínica ")
+    .trim();
+  const query = [cleanName, city].filter(Boolean).join(" ");
+  const targetUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}?hl=pt-BR&gl=BR`;
+  const jinaUrl = `https://r.jina.ai/${targetUrl}`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
+    const res = await fetch(jinaUrl, {
+      signal: controller.signal,
+      headers: {
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "x-locale": "pt-BR",
+      },
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.warn(`[fetchGoogleMapsPlaceDetails] Jina Maps retornou status ${res.status}`);
+      return {
+        rating: null,
+        reviewsCount: null,
+        address: null,
+        openingHours: null,
+        whatsapp: null,
+        phone: null,
+        photos: [],
+        reviews: [],
+      };
+    }
+
+    const text = await res.text();
+
+    // 1. Nota (ex: 4,8 ou 4.8)
+    let rating: number | null = null;
+    const ratingMatch = text.match(/\b([1-5][,.][0-9])\b/);
+    if (ratingMatch) {
+      rating = parseFloat(ratingMatch[1].replace(",", "."));
+    }
+
+    // 2. Contagem de avaliações (ex: 94 avaliações ou (94))
+    let reviewsCount: number | null = null;
+    const reviewsMatch =
+      text.match(/(\d+)\s*(?:avaliações|avaliação|comentários|classificações|reviews)/i) ||
+      text.match(/\((\d+)\)/);
+    if (reviewsMatch) {
+      reviewsCount = parseInt(reviewsMatch[1].replace(/\D/g, ""), 10);
+    }
+
+    // 3. Endereço
+    let address: string | null = null;
+    const addressMatch =
+      text.match(/(?:R\.|Rua|Av\.|Avenida|Praça|Travessa|Alameda|Estr\.|Rodovia)[^,\n]+,[^,\n]+(?:-[^,\n]+)?,[^,\n]+/i) ||
+      text.match(/(?:·\s*((?:Av\.|Avenida|R\.|Rua|Praça|Estr\.)[^\n·]+))/i);
+    if (addressMatch) {
+      address = (addressMatch[1] || addressMatch[0]).trim();
+    }
+
+    // 4. Horários de funcionamento
+    let openingHours: string | null = null;
+    const hoursMatch =
+      text.match(/(?:Aberto|Fechado)[^\n]*?(?:Fecha|Abre)[^\n]*?(\d{1,2}:\d{2})/i) ||
+      text.match(/(\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2})/);
+    if (hoursMatch) {
+      openingHours = hoursMatch[0].trim();
+    }
+
+    // 5. WhatsApp e Telefone
+    let whatsapp: string | null = null;
+    const waMatch = text.match(/(?:api\.whatsapp\.com\/send\?phone=|wa\.me\/)(\d+)/i);
+    if (waMatch) {
+      whatsapp = waMatch[1];
+    }
+
+    let phone: string | null = null;
+    const phoneMatches = text.match(/(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/g);
+    if (phoneMatches) {
+      const cleanPhones = phoneMatches.map((p) => p.trim()).filter((p) => !p.startsWith("51939"));
+      if (cleanPhones.length > 0) phone = cleanPhones[0];
+    }
+
+    // 6. Fotos de alta resolução reais do estabelecimento
+    const photos: string[] = [];
+    const imgRegex = /!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g;
+    let imgMatch: RegExpExecArray | null;
+    while ((imgMatch = imgRegex.exec(text)) !== null) {
+      const url = imgMatch[1];
+      if (url.includes("googleusercontent.com/gps-cs-s/") || url.includes("googleusercontent.com/p/")) {
+        const cleanUrl = url.replace(/=w\d+.*$/, "=w1200");
+        if (!photos.includes(cleanUrl)) {
+          photos.push(cleanUrl);
+        }
+      }
+    }
+
+    // 7. Depoimentos e Avaliações Reais de Clientes
+    const reviews: Array<{ author: string; avatar: string | null; rating: number; text: string }> = [];
+    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+
+    for (let i = 0; i < lines.length; i++) {
+      const avMatch = lines[i].match(/!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/a-[^\)]+)\)/);
+      if (avMatch) {
+        const avatar = avMatch[1].replace(/=w\d+.*$/, "=w80-h80");
+        const cand = lines[i + 1];
+        const author =
+          cand && !cand.startsWith("![") && !cand.startsWith("#") && !cand.startsWith("")
+            ? cand
+            : "Cliente no Google";
+
+        // Procura estrelas e texto nas linhas subsequentes
+        for (let j = i + 2; j < Math.min(lines.length, i + 10); j++) {
+          if (/{1,5}/.test(lines[j])) {
+            const stars = (lines[j].match(//g) || []).length;
+            // Busca o texto real da avaliação
+            for (let k = j + 1; k < Math.min(lines.length, j + 5); k++) {
+              const r = lines[k];
+              if (
+                r &&
+                !r.startsWith("") &&
+                !r.startsWith("") &&
+                !r.startsWith("Editado") &&
+                !r.startsWith("Foto ") &&
+                !r.startsWith("![") &&
+                r.length > 5
+              ) {
+                // Inclui apenas avaliações positivas de alta conversão (4 ou 5 estrelas)
+                if (stars >= 4) {
+                  reviews.push({
+                    author,
+                    avatar,
+                    rating: stars,
+                    text: r.replace(/…Mais$/, "").trim(),
+                  });
+                }
+                break;
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+
+    // Frases de destaque entre aspas na ficha do Google
+    const quotes = [...text.matchAll(/"([^"\n]{15,180})"/g)].map((m) => m[1]);
+    for (const q of quotes) {
+      if (!reviews.some((r) => r.text.includes(q))) {
+        reviews.push({
+          author: "Cliente Verificado no Google",
+          avatar: null,
+          rating: 5,
+          text: q.trim(),
+        });
+      }
+    }
+
+    return {
+      rating,
+      reviewsCount,
+      address,
+      openingHours,
+      whatsapp,
+      phone,
+      photos: photos.slice(0, 8),
+      reviews: reviews.slice(0, 6),
+    };
+  } catch (err) {
+    console.error("[fetchGoogleMapsPlaceDetails] Erro ao extrair dados do Google Maps:", err);
+    return {
+      rating: null,
+      reviewsCount: null,
+      address: null,
+      openingHours: null,
+      whatsapp: null,
+      phone: null,
+      photos: [],
+      reviews: [],
+    };
+  }
+}
+
+

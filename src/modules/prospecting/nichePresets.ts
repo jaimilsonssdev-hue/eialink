@@ -223,9 +223,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     },
     {
       nicheKey: "odontologia",
-      modelName: "Vitrine Sorriso Clean",
-      template_id: "store-showcase",
-      theme: "aurora",
+      modelName: "Sorriso & Cuidado Humanizado",
+      template_id: "therapy-wellbeing",
+      theme: "serenity",
       cover_url: NICHE_GALLERIES.odontologia.covers[1].url,
       avatar_url: NICHE_GALLERIES.odontologia.avatars[0].url,
       generateHeadline: (company, city) => `Cuidado Dental Humanizado & Prevenção em ${city}`,
@@ -403,9 +403,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     },
     {
       nicheKey: "estetica",
-      modelName: "Vitrine Bem-Estar & Spa",
-      template_id: "store-showcase",
-      theme: "aurora",
+      modelName: "Bem-Estar & Spa Serenity",
+      template_id: "therapy-wellbeing",
+      theme: "sage",
       cover_url: NICHE_GALLERIES.estetica.covers[3].url,
       avatar_url: NICHE_GALLERIES.estetica.avatars[0].url,
       generateHeadline: (company, city) => `Seu Refúgio de Beleza, Relaxamento & Spa em ${city}`,
@@ -514,9 +514,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     },
     {
       nicheKey: "salao",
-      modelName: "Salão Express Clean",
-      template_id: "store-showcase",
-      theme: "midnight",
+      modelName: "Salão & Produção Glow",
+      template_id: "beauty-glow",
+      theme: "rose",
       cover_url: NICHE_GALLERIES.salao.covers[1].url,
       avatar_url: NICHE_GALLERIES.salao.avatars[0].url,
       generateHeadline: (company, city) => `Studio de Beleza, Penteados & Produção em ${city}`,
@@ -952,11 +952,11 @@ export const PRESETS: Record<string, NichePreset> = {
 export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string | null): string {
   const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();
 
-  // 1. Salão de beleza, cabelos, cachos, estúdios capilares
-  if (/cacho|cabel|sal[aã]o|hair|pentead|visagism|mecha|liso|alisament|progressiv|escova|megahair|corte\s+feminino/i.test(combined)) return "salao";
+  // 1. Barbearia e cortes masculinos (tem precedência sobre "cabelo" para que barbearias não virem salão feminino)
+  if (/(?:barbe|barba|barber|fade|navalha|corte\s+masculin)/i.test(combined)) return "barbearia";
 
-  // 2. Barbearia e cortes masculinos
-  if (/barbe|barba|barber|fade|navalha/i.test(combined)) return "barbearia";
+  // 2. Salão de beleza, cabelos, cachos, estúdios capilares, institutos e centros de beleza
+  if (/instituto\s+de\s+beleza|espa[çc]o\s+de\s+beleza|studio\s+de\s+beleza|centro\s+de\s+beleza|sal[aã]o|cacho|cabel|hair|pentead|visagism|mecha|liso|alisament|progressiv|escova|megahair|corte\s+feminino|manicure|pedicure/i.test(combined)) return "salao";
 
   // 3. Odontologia e dentistas
   if (/odonto|dent|sorris|oral|dente|protese|implant/i.test(combined)) return "odontologia";

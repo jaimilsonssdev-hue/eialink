@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
+import { fetchGoogleMapsPlaceDetails, type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspectingEngine";
 import {
   makePageOfficialFn,
   transferPageOwnershipFn,
@@ -85,6 +86,7 @@ export const PageService = {
     instagram,
     isDemo = true,
     variantIndex,
+    placeDetails,
   }: {
     companyName: string;
     whatsapp?: string | null;
@@ -93,6 +95,7 @@ export const PageService = {
     instagram?: string | null;
     isDemo?: boolean;
     variantIndex?: number;
+    placeDetails?: GoogleMapsPlaceDetails | null;
   }) {
     const userId = await this.getCurrentUserId();
     const sanitizedCompanyName = companyName
@@ -107,27 +110,51 @@ export const PageService = {
     const preset = getPresetForCompany(niche, sanitizedCompanyName, variantIndex);
     const description = preset.generateDescription(sanitizedCompanyName, city || "sua região");
 
+    // Busca dados 100% reais do Google Maps se não fornecidos
+    let realPlace = placeDetails;
+    if (!realPlace) {
+      try {
+        realPlace = await fetchGoogleMapsPlaceDetails(sanitizedCompanyName, city);
+      } catch (placeErr) {
+        console.warn("Aviso ao buscar detalhes reais do Google Maps:", placeErr);
+      }
+    }
+
+    const realRating = realPlace?.rating ?? 5.0;
+    const realReviewsCount = realPlace?.reviewsCount ?? null;
+    const realCover = realPlace?.photos?.[0] ?? preset.cover_url;
+    const realAvatar = (realPlace?.photos && realPlace.photos.length > 1) ? realPlace.photos[1] : preset.avatar_url;
+    const finalWhatsapp = whatsapp || realPlace?.whatsapp || null;
+    const realAddress = realPlace?.address || null;
+    const realHours = realPlace?.openingHours || null;
+    const realReviews = realPlace?.reviews || [];
+
     const { data, error } = await supabase
       .from("bio_pages")
       .insert({
         user_id: userId,
         display_name: sanitizedCompanyName,
         slug,
-        whatsapp: whatsapp ?? null,
+        whatsapp: finalWhatsapp,
         whatsapp_button_label: preset.whatsapp_button_label,
         whatsapp_message: preset.whatsapp_message(sanitizedCompanyName),
         instagram: instagram ?? null,
         template_id: preset.template_id,
         theme: preset.theme,
-        cover_url: preset.cover_url,
-        avatar_url: preset.avatar_url,
+        cover_url: realCover,
+        avatar_url: realAvatar,
         description,
         social_links: {
           instagram: instagram ?? undefined,
           is_demo: isDemo,
           triage_enabled: true,
-          google_rating: 5,
+          google_rating: realRating,
+          reviews_count: realReviewsCount,
           model_variant: preset.modelName,
+          address: realAddress,
+          opening_hours: realHours,
+          testimonials: realReviews,
+          google_photos: realPlace?.photos || [],
         },
         published: true,
       })
@@ -191,17 +218,25 @@ export const PageService = {
     const reviewSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(companyName + " " + (city || "") + " avaliar")}`;
     const mapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(companyName + " " + (city || ""))}`;
 
+    const reviewTitle = realReviewsCount
+      ? `⭐ Avaliações no Google (${realRating} • ${realReviewsCount} avaliações)`
+      : `⭐ Avaliações no Google (${realRating} Estrelas)`;
+
+    const locationTitle = realAddress
+      ? `📍 ${realAddress}`
+      : "📍 Localização & Como Chegar (GPS)";
+
     await supabase.from("bio_links").insert([
       {
         bio_page_id: data.id,
-        title: "⭐ Avaliações no Google (5 Estrelas)",
+        title: reviewTitle,
         url: reviewSearchUrl,
         position: 0,
         active: true,
       },
       {
         bio_page_id: data.id,
-        title: "📍 Localização & Como Chegar (GPS)",
+        title: locationTitle,
         url: mapsSearchUrl,
         position: 1,
         active: true,

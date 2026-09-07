@@ -2,8 +2,10 @@ import type { ReactNode } from "react";
 import {
   ArrowUpRight,
   CalendarCheck,
+  Clock,
   HeartPulse,
   Instagram,
+  MapPin,
   MessageCircle,
   ShieldCheck,
   Star,
@@ -29,6 +31,14 @@ export class ClinicLayout implements TemplateLayoutRenderer {
     const secondary = links.filter((l) => l.active);
     const insta = bio.instagram?.replace("@", "");
     const whats = bio.whatsapp?.replace(/\D/g, "");
+
+    const socialData = (bio.social_links as Record<string, any>) || {};
+    const rating = socialData.google_rating ?? 5.0;
+    const reviewsCount = socialData.reviews_count;
+    const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
+    const address = socialData.address;
+    const openingHours = socialData.opening_hours;
+
     return (
       <div className="niche-clinic">
         <header className="niche-clinic-hero">
@@ -40,7 +50,8 @@ export class ClinicLayout implements TemplateLayoutRenderer {
             {bio.description && <p className="niche-clinic-lead">{bio.description}</p>}
             <div className="niche-clinic-trust">
               <span>
-                <Star size={14} className="text-amber-400 fill-amber-400" aria-hidden /> 5.0 no Google
+                <Star size={14} className="text-amber-400 fill-amber-400" aria-hidden />
+                {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
               </span>
               <span>
                 <ShieldCheck size={14} aria-hidden /> Ambiente seguro
@@ -49,6 +60,22 @@ export class ClinicLayout implements TemplateLayoutRenderer {
                 <HeartPulse size={14} aria-hidden /> Cuidado personalizado
               </span>
             </div>
+            {(address || openingHours) && (
+              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-2">
+                {address && (
+                  <span className="inline-flex items-center gap-1 max-w-[280px] truncate" title={address}>
+                    <MapPin size={13} className="text-teal-600 flex-shrink-0" aria-hidden />
+                    <span className="truncate">{address}</span>
+                  </span>
+                )}
+                {openingHours && (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock size={13} className="text-teal-600 flex-shrink-0" aria-hidden />
+                    <span>{openingHours}</span>
+                  </span>
+                )}
+              </div>
+            )}
             <div className="niche-clinic-cta-row">
               {bookingUrl ? (
                 <a
@@ -152,6 +179,40 @@ export class ClinicLayout implements TemplateLayoutRenderer {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {testimonials.length > 0 && (
+          <section className="niche-clinic-section" aria-label="Avaliações do Google">
+            <div className="niche-clinic-section-head">
+              <p className="niche-clinic-eyebrow">Opinião de Pacientes</p>
+              <h2>Avaliações no Google</h2>
+            </div>
+
+            <div className="grid gap-3">
+              {testimonials.slice(0, 3).map((rev: any, idx: number) => (
+                <div key={idx} className="p-4 rounded-2xl bg-teal-50/50 border border-teal-100/60 shadow-sm">
+                  <div className="flex items-center gap-3 mb-2">
+                    {rev.avatar ? (
+                      <img src={rev.avatar} alt={rev.author} className="w-8 h-8 rounded-full object-cover border border-teal-200" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-teal-200 text-teal-800 flex items-center justify-center font-bold text-xs">
+                        {rev.author.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-xs font-bold text-gray-900">{rev.author}</h4>
+                      <div className="flex text-amber-400 text-xs">
+                        {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                          <span key={i}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-600 italic">"{rev.text}"</p>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 

@@ -213,8 +213,79 @@ function ProspectingPage() {
   } | null>(null);
 
 
-  const [prospectEngine, setProspectEngine] = useState<"maps" | "cnae" | "utilities">("maps");
+  const [prospectEngine, setProspectEngine] = useState<"maps" | "cnae" | "utilities" | "demos">(() => {
+    if (typeof window !== "undefined") {
+      const tab = new URLSearchParams(window.location.search).get("tab");
+      if (tab === "demos" || tab === "cnae" || tab === "utilities") return tab;
+    }
+    return "maps";
+  });
   const [entryTab, setEntryTab] = useState<"csv" | "manual">("csv");
+  const [demoSearch, setDemoSearch] = useState("");
+  const [copiedDemoId, setCopiedDemoId] = useState<string | null>(null);
+  const [copiedPitchDemoId, setCopiedPitchDemoId] = useState<string | null>(null);
+  const [deletingDemoId, setDeletingDemoId] = useState<string | null>(null);
+  const [makingOfficialDemoId, setMakingOfficialDemoId] = useState<string | null>(null);
+
+  const demoPagesQuery = useQuery({
+    queryKey: ["admin-demo-pages"],
+    queryFn: () => PageService.listDemoPages(),
+  });
+  const demoPages = useMemo(() => demoPagesQuery.data ?? [], [demoPagesQuery.data]);
+
+  const filteredDemos = useMemo(() => {
+    const term = demoSearch.trim().toLowerCase();
+    if (!term) return demoPages;
+    return demoPages.filter((p) => {
+      const name = (p.display_name || "").toLowerCase();
+      const slug = (p.slug || "").toLowerCase();
+      const model = ((p.social_links as any)?.model_variant || "").toLowerCase();
+      return name.includes(term) || slug.includes(term) || model.includes(term);
+    });
+  }, [demoPages, demoSearch]);
+
+  async function handleDeleteDemo(pageId: string, pageName: string) {
+    if (!window.confirm(`Deseja realmente excluir a página demonstrativa de "${pageName}"? Esta ação removerá a demo do ar e não pode ser desfeita.`)) return;
+    setDeletingDemoId(pageId);
+    try {
+      await PageService.deletePage(pageId);
+      setFeedback(`Página demonstrativa de "${pageName}" excluída com sucesso.`);
+      invalidate();
+    } catch (err: unknown) {
+      setFeedback(err instanceof Error ? err.message : "Erro ao excluir demonstração.");
+    } finally {
+      setDeletingDemoId(null);
+    }
+  }
+
+  async function handleMakeDemoOfficialDirect(page: typeof demoPages[0]) {
+    setMakingOfficialDemoId(page.id);
+    try {
+      await PageService.makePageOfficial(page.id);
+      setFeedback(`🎉 Demonstração de "${page.display_name}" tornada oficial! A página agora é definitiva.`);
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ["owned-bio-pages"] });
+    } catch (err: unknown) {
+      setFeedback(err instanceof Error ? err.message : "Erro ao tornar oficial.");
+    } finally {
+      setMakingOfficialDemoId(null);
+    }
+  }
+
+  function handleCopyDemoUrl(slug: string, id: string) {
+    const url = `https://eialink.com.br/p/${slug}`;
+    void navigator.clipboard.writeText(url);
+    setCopiedDemoId(id);
+    setTimeout(() => setCopiedDemoId(null), 2000);
+  }
+
+  function handleCopyDemoPitch(page: typeof demoPages[0]) {
+    const url = `https://eialink.com.br/p/${page.slug}`;
+    const pitch = `Olá! Aqui é da EIA Link. Montei uma demonstração exclusiva de presença digital para o(a) ${page.display_name}: ${url} . Posso te mostrar como funciona para receber agendamentos direto no seu WhatsApp?`;
+    void navigator.clipboard.writeText(pitch);
+    setCopiedPitchDemoId(page.id);
+    setTimeout(() => setCopiedPitchDemoId(null), 2000);
+  }
 
   async function handleAddCnpjCompany(draft: Parameters<typeof ProspectingService.create>[0]) {
     try {
@@ -232,8 +303,11 @@ function ProspectingPage() {
   });
   const companies = useMemo(() => companiesQuery.data ?? [], [companiesQuery.data]);
 
-  const invalidate = () =>
+  const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["prospecting", "companies"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-demo-pages"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-demo-pages-count"] });
+  };
 
   const importMutation = useMutation({
     mutationFn: (drafts: Parameters<typeof ProspectingService.importMany>[0]) =>
@@ -972,12 +1046,29 @@ function ProspectingPage() {
               <Upload className="h-4 w-4" />
               <span>Importar CSV / Manual</span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setProspectEngine("demos")}
+              className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                prospectEngine === "demos"
+                  ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
+                  : "text-muted-foreground hover:text-white hover:bg-muted/40"
+              }`}
+            >
+              <Sparkles className="h-4 w-4 text-purple-300" />
+              <span>Demos de Clientes</span>
+              <span className="inline-flex items-center rounded-full bg-purple-500/20 text-purple-200 border border-purple-500/40 px-2 py-0.5 text-[10px] font-bold">
+                {demoPages.length}
+              </span>
+            </button>
           </div>
 
           <div className="text-[11px] text-muted-foreground px-2 hidden lg:block">
             {prospectEngine === "maps" && "Varredura local no Google Maps e Instagram com filtro automático de quem tem ou não tem site."}
             {prospectEngine === "cnae" && "Auditoria de atividades econômicas e CNPJs oficiais com dados de sócios (QSA) e filtro de site."}
             {prospectEngine === "utilities" && "Importe planilhas externas com deduplicação ou cadastre oportunidades avulsas."}
+            {prospectEngine === "demos" && "Gerenciador exclusivo de páginas demonstrativas geradas para clientes locais."}
           </div>
         </div>
 
@@ -1442,6 +1533,283 @@ function ProspectingPage() {
               </CardContent>
             </Card>
           </div>
+        )}
+
+        {/* FERRAMENTA 4: GERENCIADOR EXCLUSIVO DE DEMOS DE CLIENTES */}
+        {prospectEngine === "demos" && (
+          <Card className="w-full border-border bg-card shadow-xs">
+            <CardHeader className="pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/60">
+              <div>
+                <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-purple-400" /> Central de Demonstrações Ativas
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                  Páginas demonstrativas de clientes geradas no sistema. Elas ficam 100% isoladas aqui e não aparecem nos seus Biolinks pessoais.
+                </CardDescription>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-300">
+                  <Sparkles className="h-3.5 w-3.5" /> {demoPages.length} {demoPages.length === 1 ? "demo cadastrada" : "demos cadastradas"}
+                </span>
+              </div>
+            </CardHeader>
+
+            <CardContent className="p-4 sm:p-6 space-y-4">
+              {/* Barra de Busca e Filtro de Demos */}
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div className="relative w-full sm:w-96">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <input
+                    value={demoSearch}
+                    onChange={(e) => setDemoSearch(e.target.value)}
+                    placeholder="Filtrar por empresa, modelo ou link..."
+                    className="w-full rounded-xl border border-border bg-background/60 pl-9 pr-8 py-2 text-xs sm:text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  />
+                  {demoSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setDemoSearch("")}
+                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-white p-0.5"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <p className="text-xs text-muted-foreground self-start sm:self-center">
+                  Exibindo {filteredDemos.length} de {demoPages.length} demonstrações
+                </p>
+              </div>
+
+              {filteredDemos.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border/80 bg-background/30 p-12 text-center space-y-3">
+                  <div className="mx-auto w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                    <Sparkles className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">Nenhuma página demonstrativa encontrada</h3>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
+                      {demoSearch
+                        ? "Nenhum resultado corresponde aos termos da sua pesquisa."
+                        : "Use o Radar Google Maps ou Radar CNAE para encontrar oportunidades e clique em 'Gerar Demo' para criar demonstrações prontas."}
+                    </p>
+                  </div>
+                  {!demoSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setProspectEngine("maps")}
+                      className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white px-4 py-2 text-xs font-semibold shadow transition-all"
+                    >
+                      <Globe2 className="h-4 w-4" /> Abrir Radar Google Maps
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="overflow-hidden rounded-xl border border-border bg-background/40">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      <TableRow className="border-border hover:bg-transparent">
+                        <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Empresa & Slug</TableHead>
+                        <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modelo Visual</TableHead>
+                        <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Link Demonstrativo</TableHead>
+                        <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Criação</TableHead>
+                        <TableHead className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ações de Venda</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-border/40">
+                      {filteredDemos.map((page) => {
+                        const modelVariant = (page.social_links as any)?.model_variant || "Design Pro";
+                        const googleRating = (page.social_links as any)?.google_rating;
+                        const reviewsCount = (page.social_links as any)?.reviews_count;
+                        const publicUrl = `https://eialink.com.br/p/${page.slug}`;
+
+                        return (
+                          <TableRow key={page.id} className="hover:bg-muted/20 border-border/40 transition-colors">
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center gap-3">
+                                {page.avatar_url ? (
+                                  <img
+                                    src={page.avatar_url}
+                                    alt=""
+                                    className="h-9 w-9 rounded-xl object-cover border border-border shrink-0"
+                                  />
+                                ) : (
+                                  <div className="h-9 w-9 rounded-xl bg-purple-500/10 text-purple-300 font-bold flex items-center justify-center text-xs shrink-0 border border-purple-500/20">
+                                    {page.display_name.slice(0, 2).toUpperCase()}
+                                  </div>
+                                )}
+                                <div className="min-w-0">
+                                  <p className="font-semibold text-white text-xs sm:text-sm truncate max-w-[200px]">
+                                    {page.display_name}
+                                  </p>
+                                  <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                                    {googleRating && (
+                                      <span className="text-[10px] text-amber-400 font-medium">
+                                        ⭐ {googleRating} {reviewsCount ? `(${reviewsCount})` : ""}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] text-muted-foreground font-mono">
+                                      /{page.slug}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 whitespace-nowrap">
+                              <span className="inline-flex items-center gap-1 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-0.5 text-[11px] font-medium text-purple-300">
+                                <Sparkles className="h-3 w-3 text-purple-400" />
+                                {modelVariant}
+                              </span>
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3">
+                              <div className="flex items-center gap-1.5">
+                                <a
+                                  href={publicUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="font-mono text-xs text-muted-foreground hover:text-purple-300 underline-offset-2 hover:underline truncate max-w-[180px] sm:max-w-[240px]"
+                                  title={publicUrl}
+                                >
+                                  {publicUrl}
+                                </a>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyDemoUrl(page.slug, page.id)}
+                                  className="p-1 text-muted-foreground hover:text-white transition-colors"
+                                  title="Copiar link da demonstração"
+                                >
+                                  {copiedDemoId === page.id ? (
+                                    <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                  ) : (
+                                    <Copy className="h-3.5 w-3.5" />
+                                  )}
+                                </button>
+                              </div>
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
+                              {new Date(page.created_at).toLocaleDateString("pt-BR")}
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 text-right whitespace-nowrap">
+                              <div className="flex items-center justify-end gap-1.5">
+                                {/* Visualizar Demo */}
+                                <a
+                                  href={publicUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-white hover:bg-muted/40 transition-all"
+                                  title="Abrir demonstração em nova aba"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  <span className="hidden md:inline">Ver</span>
+                                </a>
+
+                                {/* Copiar Pitch WhatsApp */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyDemoPitch(page)}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-2.5 py-1.5 text-xs font-semibold transition-all"
+                                  title="Copiar mensagem com link para envio no WhatsApp"
+                                >
+                                  {copiedPitchDemoId === page.id ? (
+                                    <>
+                                      <Check className="h-3.5 w-3.5 text-emerald-400" />
+                                      <span>Copiado!</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <MessageCircle className="h-3.5 w-3.5" />
+                                      <span className="hidden sm:inline">Pitch WhatsApp</span>
+                                    </>
+                                  )}
+                                </button>
+
+                                {/* Personalizar no Builder */}
+                                <Link
+                                  to="/builder"
+                                  search={{ page: page.id }}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-purple-300 hover:border-purple-500/40 hover:bg-purple-500/10 transition-all"
+                                  title="Ajustar dados e fotos no Builder"
+                                >
+                                  <Pencil className="h-3.5 w-3.5" />
+                                  <span className="hidden md:inline">Editar</span>
+                                </Link>
+
+                                {/* Dropdown Menu de Mais Ações */}
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button
+                                      type="button"
+                                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-white hover:bg-muted/60 transition-colors"
+                                      title="Mais opções da demo"
+                                    >
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-52">
+                                    <DropdownMenuItem
+                                      onClick={() => void handleMakeDemoOfficialDirect(page)}
+                                      disabled={makingOfficialDemoId === page.id}
+                                      className="cursor-pointer text-xs"
+                                    >
+                                      {makingOfficialDemoId === page.id ? (
+                                        <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
+                                      ) : (
+                                        <CheckCircle className="h-3.5 w-3.5 mr-2 text-teal-400" />
+                                      )}
+                                      <span>Tornar Oficial</span>
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setTransferModalData({
+                                          isOpen: true,
+                                          page: {
+                                            id: page.id,
+                                            displayName: page.display_name,
+                                            slug: page.slug,
+                                            phone: page.whatsapp,
+                                            instagram: (page.social_links as any)?.instagram || null,
+                                            isDemo: true,
+                                          },
+                                        });
+                                      }}
+                                      className="cursor-pointer text-xs"
+                                    >
+                                      <Share2 className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                      <span>Entregar / Transferir</span>
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuSeparator />
+
+                                    <DropdownMenuItem
+                                      onClick={() => void handleDeleteDemo(page.id, page.display_name)}
+                                      disabled={deletingDemoId === page.id}
+                                      className="cursor-pointer text-xs text-rose-400 hover:text-rose-300 focus:text-rose-400 focus:bg-rose-500/10"
+                                    >
+                                      {deletingDemoId === page.id ? (
+                                        <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-rose-400" />
+                                      ) : (
+                                        <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
+                                      )}
+                                      <span>Excluir Demonstração</span>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </section>
 

@@ -20,6 +20,7 @@ import {
   ShoppingBag,
   Sparkles,
   Stethoscope,
+  Target,
   Trash2,
   UserCheck,
   UtensilsCrossed,
@@ -157,6 +158,12 @@ function PagesWorkspace() {
   const pages = useQuery({
     queryKey: ["owned-bio-pages"],
     queryFn: () => PageService.listOwnedPages(),
+  });
+
+  const demoPages = useQuery({
+    queryKey: ["admin-demo-pages-count"],
+    enabled: isAdmin,
+    queryFn: () => PageService.listDemoPages(),
   });
 
   const deleteMutation = useMutation({
@@ -428,6 +435,33 @@ function PagesWorkspace() {
         </div>
       </section>
 
+      {/* Alerta de Isolamento de Prospecção (Exclusivo Admin) */}
+      {isAdmin && (demoPages.data?.length ?? 0) > 0 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-[color:var(--primary)]/30 bg-[color:var(--primary)]/5 p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-[color:var(--primary)]/10 text-[color:var(--primary)] flex items-center justify-center shrink-0">
+              <Target className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground">
+                {demoPages.data!.length} {demoPages.data!.length === 1 ? "demonstração de cliente isolada" : "demonstrações de clientes isoladas"} na Área Administrativa
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Suas páginas pessoais abaixo estão limpas e organizadas. Todas as demos de clientes geradas ficam salvas com segurança no Super Admin.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/admin/prospeccao"
+            search={{ tab: "demos" } as any}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-[color:var(--primary)] text-[color:var(--primary-foreground)] px-4 py-2 text-xs font-semibold hover:opacity-90 transition-opacity shrink-0 self-start sm:self-auto shadow"
+          >
+            <span>Gerenciar Demos</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      )}
+
       {/* Grid de Páginas do Usuário */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
@@ -496,11 +530,6 @@ function PagesWorkspace() {
                         />
                         {page.published ? "Publicado" : "Rascunho"}
                       </span>
-                      {isAdmin && Boolean((page.social_links as any)?.is_demo) && (
-                        <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold backdrop-blur-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                          <Sparkles className="h-3 w-3" /> Modo Demo
-                        </span>
-                      )}
                     </div>
 
                     {/* Template Badge */}
@@ -568,34 +597,6 @@ function PagesWorkspace() {
                         <Pencil className="h-3.5 w-3.5" /> Editar
                       </Link>
 
-                      {isAdmin && Boolean((page.social_links as any)?.is_demo) && (
-                        <button
-                          type="button"
-                          onClick={() => void handleMakeOfficial(page)}
-                          disabled={officialLoadingId === page.id}
-                          className="inline-flex items-center justify-center gap-1 rounded-xl border border-teal-500/40 bg-teal-500/10 text-teal-300 hover:bg-teal-500/20 px-2.5 py-2 text-xs font-semibold transition-colors"
-                          title="Tornar Oficial (remove a tarja de demonstração da página)"
-                        >
-                          {officialLoadingId === page.id ? (
-                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                          ) : (
-                            <CheckCircle className="h-3.5 w-3.5" />
-                          )}
-                          Oficial
-                        </button>
-                      )}
-
-                      {isAdmin && (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenTransfer(page)}
-                          className="inline-flex items-center justify-center gap-1 rounded-xl border border-purple-500/40 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 px-2.5 py-2 text-xs font-semibold transition-colors"
-                          title="Entregar para o cliente no WhatsApp ou transferir por e-mail"
-                        >
-                          <UserCheck className="h-3.5 w-3.5" />
-                          Entregar
-                        </button>
-                      )}
 
                       <a
                         href={publicUrl}

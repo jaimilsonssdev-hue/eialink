@@ -69,16 +69,18 @@ function AdminPage() {
         .order("created_at", { ascending: false });
       const [{ data: reqs }, { data: pages }] = await Promise.all([
         supabase.from("service_requests").select("id"),
-        supabase.from("bio_pages").select("user_id, published"),
+        supabase.from("bio_pages").select("user_id, published, social_links"),
       ]);
       const [plans, subscriptions, services] = await Promise.all([
         BillingService.listPlans(),
         BillingService.listSubscriptions(),
         BillingService.listServices(),
       ]);
+      const demoPagesCount = (pages ?? []).filter((p) => Boolean((p.social_links as any)?.is_demo)).length;
       return {
         profiles: profiles ?? [],
         pages: pages ?? [],
+        demoPagesCount,
         requests: reqs?.length ?? 0,
         plans,
         subscriptions,
@@ -213,7 +215,7 @@ function AdminPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
           icon={Users}
           label="Usuários"
@@ -232,7 +234,7 @@ function AdminPage() {
           icon={Send}
           label="Solicitações"
           value={data?.requests ?? 0}
-          description="Demandas de serviços registradas"
+          description="Demandas de serviços"
           colorClass="text-blue-400"
         />
         <StatCard
@@ -242,6 +244,19 @@ function AdminPage() {
           description="Contas com plano ativo"
           colorClass="text-amber-400"
         />
+        <Link
+          to="/admin/prospeccao"
+          search={{ tab: "demos" } as any}
+          className="group block"
+        >
+          <StatCard
+            icon={Target}
+            label="Demos de Clientes"
+            value={data?.demoPagesCount ?? 0}
+            description="Isoladas na prospecção →"
+            colorClass="text-primary group-hover:text-purple-300 transition-colors"
+          />
+        </Link>
       </div>
 
       {/* Planos da Plataforma */}

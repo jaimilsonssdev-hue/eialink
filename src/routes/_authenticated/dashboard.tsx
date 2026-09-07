@@ -57,9 +57,10 @@ function Dashboard() {
         .from("bio_pages")
         .select("*")
         .eq("user_id", u.user.id)
-        .order("updated_at", { ascending: false })
-        .limit(1);
-      return data?.[0] ?? null;
+        .order("updated_at", { ascending: false });
+      // Exclui páginas de demonstração de clientes para manter o painel limpo
+      const realPages = (data ?? []).filter((p) => !(p.social_links as any)?.is_demo);
+      return realPages[0] ?? null;
     },
   });
   const { data: isAdmin } = useQuery({

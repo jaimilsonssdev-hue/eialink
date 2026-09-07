@@ -31,9 +31,10 @@ function BuilderPage() {
         .from("bio_pages")
         .select("*")
         .eq("user_id", auth.user.id)
-        .order("updated_at", { ascending: false })
-        .limit(1);
-      if (requestedPageId) bioRequest = bioRequest.eq("id", requestedPageId);
+        .order("updated_at", { ascending: false });
+      if (requestedPageId) {
+        bioRequest = bioRequest.eq("id", requestedPageId).limit(1);
+      }
 
       const [{ data: bios, error: bioError }, { data: profile, error: profileError }] =
         await Promise.all([
@@ -43,7 +44,9 @@ function BuilderPage() {
       if (bioError) throw new Error(bioError.message);
       if (profileError) throw new Error(profileError.message);
 
-      const bio = bios?.[0] ?? null;
+      const bio = requestedPageId
+        ? (bios?.[0] ?? null)
+        : ((bios ?? []).find((b) => !(b.social_links as any)?.is_demo) ?? bios?.[0] ?? null);
       const { data: links, error: linksError } = bio
         ? await supabase.from("bio_links").select("*").eq("bio_page_id", bio.id).order("position")
         : { data: [], error: null };

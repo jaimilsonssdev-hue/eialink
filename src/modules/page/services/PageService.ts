@@ -29,27 +29,27 @@ export const PageService = {
     return data.user.id;
   },
   async getCurrentPage() {
-    const { data: auth, error } = await supabase.auth.getUser();
-    if (error || !auth.user) throw new Error(error?.message ?? "Sessão inválida.");
-    const [{ data: bio, error: bioError }, { data: profile, error: profileError }] =
+    const { data: auth, error: authError } = await supabase.auth.getUser();
+    if (authError || !auth.user) throw new Error(authError?.message ?? "Sessão inválida.");
+    const [{ data: bios, error: bioError }, { data: profile, error: profileError }] =
       await Promise.all([
         supabase
           .from("bio_pages")
           .select("*")
           .eq("user_id", auth.user.id)
-          .order("updated_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
+          .order("updated_at", { ascending: false }),
         supabase.from("profiles").select("*").eq("id", auth.user.id).maybeSingle(),
       ]);
     if (bioError || profileError) throw new Error(bioError?.message ?? profileError?.message);
-    const { data: links, error: linksError } = bio
-      ? await supabase.from("bio_links").select("*").eq("bio_page_id", bio.id).order("position")
+    // Prioriza estritamente páginas reais/oficiais (não-demo)
+    const realBio = (bios ?? []).find((b) => !(b.social_links as any)?.is_demo) ?? null;
+    const { data: links, error: linksError } = realBio
+      ? await supabase.from("bio_links").select("*").eq("bio_page_id", realBio.id).order("position")
       : { data: [], error: null };
     if (linksError) throw new Error(linksError.message);
-    return { userId: auth.user.id, bio, profile, links: links ?? [] };
+    return { userId: auth.user.id, bio: realBio, profile, links: links ?? [] };
   },
-  async listOwnedPages(): Promise<OwnedPage[]> {
+  async listOwnedPages({ includeDemos = false }: { includeDemos?: boolean } = {}): Promise<OwnedPage[]> {
     const userId = await this.getCurrentUserId();
     const { data, error } = await supabase
       .from("bio_pages")
@@ -57,7 +57,19 @@ export const PageService = {
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return data ?? [];
+    const pages = data ?? [];
+    if (includeDemos) return pages;
+    return pages.filter((p) => !(p.social_links as any)?.is_demo);
+  },
+  async listDemoPages(): Promise<OwnedPage[]> {
+    const userId = await this.getCurrentUserId();
+    const { data, error } = await supabase
+      .from("bio_pages")
+      .select("*")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+    if (error) throw new Error(error.message);
+    return (data ?? []).filter((p) => Boolean((p.social_links as any)?.is_demo));
   },
   async createPage({ displayName, templateId }: { displayName: string; templateId?: string }) {
     const userId = await this.getCurrentUserId();

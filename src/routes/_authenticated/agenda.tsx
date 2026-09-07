@@ -355,6 +355,197 @@ function AgendaPage() {
     setSelectedAppointment(null);
   }
 
+  function getLocalDateStr(date: Date | string) {
+    const d = typeof date === "string" ? new Date(date) : date;
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  function openBlockModal(date?: string | null) {
+    const today = getLocalDateStr(new Date());
+    setBlockingDate(date || today);
+    setBlockingAllDay(true);
+    setBlockingStartTime("08:00");
+    setBlockingEndTime("18:00");
+    setBlockingReason("Folga programada");
+    setBlockingModalOpen(true);
+  }
+
+  async function confirmBlock() {
+    if (!blockingDate || !blockingReason.trim()) return;
+    setSavingBlock(true);
+    try {
+      await BookingService.blockTime({
+        bioPageId: pageId,
+        date: blockingDate,
+        allDay: blockingAllDay,
+        startTime: blockingStartTime,
+        endTime: blockingEndTime,
+        reason: blockingReason.trim(),
+      });
+      await client.invalidateQueries({ queryKey: ["appointments", pageId] });
+      setBlockingModalOpen(false);
+      toast.success("Bloqueio de agenda criado. Horários protegidos contra novos agendamentos.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível criar o bloqueio.");
+    } finally {
+      setSavingBlock(false);
+    }
+  }
+
+  async function unblockAppointment(id: string) {
+    try {
+      await BookingService.unblockTime(id);
+      await client.invalidateQueries({ queryKey: ["appointments", pageId] });
+      if (selectedAppointment?.id === id) setSelectedAppointment(null);
+      toast.success("Folga/bloqueio cancelado. Horário liberado para agendamentos.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível cancelar a folga.");
+    }
+  }
+
+  function prevMonth() {
+    setCalendarMonth((curr) => new Date(curr.getFullYear(), curr.getMonth() - 1, 1));
+  }
+
+  function nextMonth() {
+    setCalendarMonth((curr) => new Date(curr.getFullYear(), curr.getMonth() + 1, 1));
+  }
+
+  function goToToday() {
+    const now = new Date();
+    setCalendarMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+    setSelectedDate(getLocalDateStr(now));
+  }
+
+  function applySchedulePreset(type: "commercial" | "morning" | "afternoon" | "night") {
+    const presets = {
+      commercial: { start: "08:00", end: "18:00", label: "Comercial (08h-18h)" },
+      morning: { start: "08:00", end: "12:00", label: "Apenas Manhã (08h-12h)" },
+      afternoon: { start: "13:00", end: "18:00", label: "Apenas Tarde (13h-18h)" },
+      night: { start: "18:00", end: "22:00", label: "Apenas Noite (18h-22h)" },
+    };
+    const config = presets[type];
+    setAvailability((current) => {
+      return [0, 1, 2, 3, 4, 5, 6].map((weekday) => {
+        const isWeekday = weekday >= 1 && weekday <= 5;
+        const existing = current.find((d) => d.weekday === weekday);
+        return {
+          id: existing?.id || `avail-${weekday}`,
+          bio_page_id: pageId,
+          weekday,
+          start_time: config.start,
+          end_time: config.end,
+          active: isWeekday,
+        };
+      });
+    });
+    toast.success(`Horário aplicado para Seg-Sex: ${config.label}.`);
+  }
+
+  const year = calendarMonth.getFullYear();
+  const month = calendarMonth.getMonth();
+  const firstDayWeekday = new Date(year, month, 1).getDay();
+  const totalDaysInMonth = new Date(year, month + 1, 0).getDate();
+  const prevMonthTotalDays = new Date(year, month, 0).getDate();
+
+  const monthName = useMemo(() => {
+    return new Intl.DateTimeFormat("pt-BR", { month: "long", year: "numeric" }).format(calendarMonth);
+  }, [calendarMonth]);
+
+  const appointmentsByDate = useMemo(() => {
+    const map = new Map<string, Appointment[]>();
+    if (!appointments.data) return map;
+    for (const item of appointments.data) {
+      const key = getLocalDateStr(item.start_at);
+      const list = map.get(key) ?? [];
+      list.push(item);
+      map.set(key, list);
+    }
+    return map;
+  }, [appointments.data]);
+
+  const calendarCells = useMemo(() => {
+    const cells: {
+      day: number;
+      dateStr: string;
+      isCurrentMonth: boolean;
+      isToday: boolean;
+      isSelected: boolean;
+      hasConfirmed: boolean;
+      hasBlocked: boolean;
+      hasCompleted: boolean;
+      count: number;
+    }[] = [];
+
+    const todayStr = getLocalDateStr(new Date());
+
+    for (let i = firstDayWeekday - 1; i >= 0; i--) {
+      const d = prevMonthTotalDays - i;
+      const prevDate = new Date(year, month - 1, d);
+      const dateStr = getLocalDateStr(prevDate);
+      cells.push({
+        day: d,
+        dateStr,
+        isCurrentMonth: false,
+        isToday: dateStr === todayStr,
+        isSelected: dateStr === selectedDate,
+        hasConfirmed: false,
+        hasBlocked: false,
+        hasCompleted: false,
+        count: 0,
+      });
+    }
+
+    for (let d = 1; d <= totalDaysInMonth; d++) {
+      const curDate = new Date(year, month, d);
+      const dateStr = getLocalDateStr(curDate);
+      const dayApps = appointmentsByDate.get(dateStr) ?? [];
+      const hasBlocked = dayApps.some((a) => a.client_name?.startsWith("[BLOQUEIO]") && a.status !== "cancelled");
+      const hasConfirmed = dayApps.some((a) => !a.client_name?.startsWith("[BLOQUEIO]") && a.status === "confirmed");
+      const hasCompleted = dayApps.some((a) => a.status === "completed");
+
+      cells.push({
+        day: d,
+        dateStr,
+        isCurrentMonth: true,
+        isToday: dateStr === todayStr,
+        isSelected: dateStr === selectedDate,
+        hasConfirmed,
+        hasBlocked,
+        hasCompleted,
+        count: dayApps.filter((a) => a.status !== "cancelled").length,
+      });
+    }
+
+    const remaining = (7 - (cells.length % 7)) % 7;
+    for (let d = 1; d <= remaining; d++) {
+      const nextDate = new Date(year, month + 1, d);
+      const dateStr = getLocalDateStr(nextDate);
+      cells.push({
+        day: d,
+        dateStr,
+        isCurrentMonth: false,
+        isToday: dateStr === todayStr,
+        isSelected: dateStr === selectedDate,
+        hasConfirmed: false,
+        hasBlocked: false,
+        hasCompleted: false,
+        count: 0,
+      });
+    }
+
+    return cells;
+  }, [year, month, firstDayWeekday, prevMonthTotalDays, totalDaysInMonth, appointmentsByDate, selectedDate]);
+
+  const filteredAppointments = useMemo(() => {
+    if (!appointments.data) return [];
+    if (!selectedDate) return appointments.data;
+    return appointments.data.filter((item) => getLocalDateStr(item.start_at) === selectedDate);
+  }, [appointments.data, selectedDate]);
+
   return (
     <div className="min-h-screen bg-[#0d0718] text-zinc-100 p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header & Page Selector */}
@@ -586,27 +777,63 @@ function AgendaPage() {
             <div className="lg:col-span-6 space-y-6">
               {/* Grade Semanal */}
               <Card className="bg-[#160d29] border-[#27233a] shadow-lg">
-                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#27233a]">
-                  <div>
-                    <div className="flex items-center gap-1.5 text-xs text-purple-400 font-semibold uppercase tracking-wider mb-1">
-                      <Clock className="h-3.5 w-3.5" />
-                      Etapa 2
+                <CardHeader className="flex flex-col gap-3 pb-4 border-b border-[#27233a]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div className="flex items-center gap-1.5 text-xs text-purple-400 font-semibold uppercase tracking-wider mb-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        Etapa 2
+                      </div>
+                      <CardTitle className="text-xl text-white">Disponibilidade Semanal</CardTitle>
+                      <CardDescription className="text-zinc-400 text-xs mt-0.5">
+                        Configure os dias e turnos de atendimento. Se atender apenas em um período, escolha o turno abaixo.
+                      </CardDescription>
                     </div>
-                    <CardTitle className="text-xl text-white">Disponibilidade Semanal</CardTitle>
-                    <CardDescription className="text-zinc-400 text-xs mt-0.5">
-                      Configure os dias e turnos de atendimento disponíveis.
-                    </CardDescription>
                   </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={applyBusinessHours}
-                    className="border-purple-500/30 bg-purple-950/40 hover:bg-purple-900/50 text-purple-200 text-xs flex items-center gap-1.5 shrink-0"
-                  >
-                    <Zap className="h-3.5 w-3.5 text-yellow-400" />
-                    Padrão Seg-Sex (08h-18h)
-                  </Button>
+                  {/* Presets de Turnos / Períodos */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#27233a]/60">
+                    <span className="text-[11px] text-zinc-400 font-medium mr-1">Atalhos de Turno:</span>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applySchedulePreset("commercial")}
+                      className="border-purple-500/30 bg-purple-950/40 hover:bg-purple-900/50 text-purple-200 text-xs h-7 px-2.5 flex items-center gap-1"
+                    >
+                      <Zap className="h-3 w-3 text-yellow-400" />
+                      Comercial (08h-18h)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applySchedulePreset("morning")}
+                      className="border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-200 text-xs h-7 px-2.5 flex items-center gap-1"
+                    >
+                      <Clock className="h-3 w-3 text-amber-400" />
+                      Só Manhã (08h-12h)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applySchedulePreset("afternoon")}
+                      className="border-blue-500/30 bg-blue-950/30 hover:bg-blue-900/40 text-blue-200 text-xs h-7 px-2.5 flex items-center gap-1"
+                    >
+                      <Clock className="h-3 w-3 text-blue-400" />
+                      Só Tarde (13h-18h)
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => applySchedulePreset("night")}
+                      className="border-indigo-500/30 bg-indigo-950/30 hover:bg-indigo-900/40 text-indigo-200 text-xs h-7 px-2.5 flex items-center gap-1"
+                    >
+                      <Clock className="h-3 w-3 text-indigo-400" />
+                      Só Noite (18h-22h)
+                    </Button>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 space-y-2.5">
                   {DAYS.map((label, weekday) => {
@@ -735,6 +962,63 @@ function AgendaPage() {
       ) : (
         /* Bookings Tab */
         <div className="space-y-6">
+          {/* Active Folgas / Bloqueios Card with Cancel Action */}
+          {appointments.data?.some(item => item.client_name?.startsWith("[BLOQUEIO]") && item.status !== "cancelled") && (
+            <Card className="border-amber-500/40 bg-gradient-to-r from-amber-950/30 via-[#160d29] to-[#120a22] shadow-lg overflow-hidden">
+              <CardHeader className="pb-3 border-b border-[#27233a] flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle className="text-base text-amber-200 flex items-center gap-2 font-semibold">
+                    <Coffee className="h-4 w-4 text-amber-400" />
+                    Folgas e Bloqueios de Agenda Ativos
+                  </CardTitle>
+                  <CardDescription className="text-zinc-400 text-xs mt-0.5">
+                    Estes períodos estão fechados para agendamentos. Para liberar o horário aos clientes, clique em Cancelar Folga.
+                  </CardDescription>
+                </div>
+              </CardHeader>
+              <CardContent className="p-4 space-y-2.5">
+                {appointments.data
+                  ?.filter(item => item.client_name?.startsWith("[BLOQUEIO]") && item.status !== "cancelled")
+                  .map((block) => {
+                    const reason = block.client_name.replace("[BLOQUEIO] ", "");
+                    return (
+                      <div
+                        key={block.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-950/40 hover:bg-amber-950/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 shrink-0">
+                            <Coffee className="h-4 w-4" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-semibold text-white flex items-center gap-2">
+                              <span>{reason}</span>
+                              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px]">
+                                Folga Ativa
+                              </Badge>
+                            </div>
+                            <div className="text-xs text-zinc-400 mt-0.5">
+                              {appointmentDate(block)}
+                            </div>
+                          </div>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => void unblockAppointment(block.id)}
+                          className="border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs self-end sm:self-center shrink-0"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                          Cancelar Folga (Liberar Horário)
+                        </Button>
+                      </div>
+                    );
+                  })}
+              </CardContent>
+            </Card>
+          )}
+
           {/* KPI Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-[#160d29] border-[#27233a] p-4">

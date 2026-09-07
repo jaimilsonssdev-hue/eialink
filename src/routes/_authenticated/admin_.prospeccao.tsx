@@ -35,6 +35,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
@@ -590,7 +605,7 @@ function ProspectingPage() {
             value: metrics.total,
             sub: "Total catalogado",
             icon: Radar,
-            color: "text-zinc-400 group-hover:text-primary",
+            color: "text-purple-400",
           },
           {
             label: "Prioridade Alta",
@@ -616,34 +631,39 @@ function ProspectingPage() {
         ].map((item) => {
           const Icon = item.icon;
           return (
-            <div
+            <Card
               key={item.label}
-              className="group relative rounded-xl border border-[#1f1f23] bg-[#121214] p-4 flex items-center justify-between transition-all hover:border-zinc-700/60 shadow-xs"
+              className="border-border bg-card shadow-xs transition-all hover:border-border/80"
             >
-              <div className="min-w-0">
-                <p className="text-xs font-normal text-muted-foreground/80">{item.label}</p>
-                <p className="text-xl sm:text-2xl font-semibold tracking-tight tabular-nums text-foreground mt-0.5">
-                  {item.value}
-                </p>
-                <p className="text-[11px] text-zinc-500 font-normal mt-0.5">{item.sub}</p>
-              </div>
-              <div className="h-10 w-10 shrink-0 rounded-xl border border-[#1f1f23] bg-zinc-900/50 flex items-center justify-center transition-colors group-hover:border-zinc-700">
-                <Icon className={`h-5 w-5 ${item.color}`} />
-              </div>
-            </div>
+              <CardContent className="p-4 sm:p-5 flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{item.label}</p>
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight tabular-nums text-white mt-1">
+                    {item.value}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground/80 font-normal mt-0.5">{item.sub}</p>
+                </div>
+                <div className="h-10 w-10 shrink-0 rounded-xl border border-border/80 bg-background/50 flex items-center justify-center transition-colors">
+                  <Icon className={`h-5 w-5 ${item.color}`} />
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
       </section>
 
       {/* Ataque de hoje */}
-      <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="font-display text-lg font-bold flex items-center gap-2">
-          <Flame className="h-5 w-5 text-[color:var(--accent)]" /> Ataque de Hoje
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          As 10 melhores oportunidades ainda não trabalhadas hoje.
-        </p>
-        <ul className="mt-4 space-y-2">
+      <Card className="border-border bg-card shadow-xs">
+        <CardHeader className="pb-3 sm:pb-4">
+          <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <Flame className="h-5 w-5 text-amber-400" /> Ataque de Hoje
+          </CardTitle>
+          <CardDescription className="text-xs sm:text-sm text-muted-foreground">
+            As 10 melhores oportunidades ainda não trabalhadas hoje.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2">
           {attackList.map((company) => {
             const demo = parseDemoInfo(company.notes);
             return (
@@ -818,225 +838,226 @@ function ProspectingPage() {
             </li>
           )}
         </ul>
-      </section>
+        </CardContent>
+      </Card>
 
       {/* Bento Grid: Varredura Automática (Esquerda) + Ferramentas Secundárias em Abas (Direita) */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Bloco de Comando Principal: Varredura Automática (Google Maps & Instagram) */}
-        <div className="lg:col-span-7 xl:col-span-8 rounded-2xl border border-[#1f1f23] bg-[#121214] p-5 sm:p-6 space-y-4 shadow-xs">
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        <Card className="lg:col-span-7 xl:col-span-8 border-border bg-card shadow-xs">
+          <CardHeader className="pb-4 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
             <div>
-              <h2 className="font-display text-base sm:text-lg font-bold flex items-center gap-2 text-foreground">
-                <Globe2 className="h-5 w-5 text-[color:var(--primary)]" /> Varredura Automática
-              </h2>
-              <p className="text-xs sm:text-sm text-muted-foreground/80 mt-0.5">
+              <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <Globe2 className="h-5 w-5 text-primary" /> Varredura Automática
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 Google Maps & Instagram em tempo real para encontrar oportunidades sem site.
-              </p>
+              </CardDescription>
             </div>
-            <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+            <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
               ⚡ Tempo Real & Sem Bloqueios
             </span>
-          </div>
+          </CardHeader>
 
-          <form onSubmit={handleLiveSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-            <div className="sm:col-span-5">
-              <input
-                value={searchNiche}
-                onChange={(e) => setSearchNiche(e.target.value)}
-                placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
-                className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
-                disabled={isSearching}
-                required
-              />
-            </div>
-            <div className="sm:col-span-4">
-              <input
-                value={searchCity}
-                onChange={(e) => setSearchCity(e.target.value)}
-                placeholder="Cidade (ex: São Paulo, SP)"
-                className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3.5 py-2.5 text-sm text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
-                disabled={isSearching}
-                required
-              />
-            </div>
-            <div className="sm:col-span-3">
-              <button
-                type="submit"
-                disabled={isSearching}
-                className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-[color:var(--primary-foreground)] transition-all"
-                style={{ background: "var(--gradient-primary)" }}
-              >
-                {isSearching ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
-                  </>
-                ) : (
-                  <>
-                    <Search className="h-4 w-4" /> Varrer
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
-
-          {isSearching && (
-            <div className="flex items-center gap-3 rounded-xl border border-[#1f1f23] bg-zinc-950/40 p-4 text-sm text-muted-foreground animate-pulse">
-              <Loader2 className="h-5 w-5 animate-spin text-[color:var(--primary)] shrink-0" />
-              <div>
-                <p className="font-medium text-foreground text-xs sm:text-sm">Varrendo Google Maps e perfis públicos do Instagram...</p>
-                <p className="text-[11px] sm:text-xs text-muted-foreground/80">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
+          <CardContent className="space-y-4">
+            <form onSubmit={handleLiveSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+              <div className="sm:col-span-5">
+                <input
+                  value={searchNiche}
+                  onChange={(e) => setSearchNiche(e.target.value)}
+                  placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
+                  className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  disabled={isSearching}
+                  required
+                />
               </div>
-            </div>
-          )}
+              <div className="sm:col-span-4">
+                <input
+                  value={searchCity}
+                  onChange={(e) => setSearchCity(e.target.value)}
+                  placeholder="Cidade (ex: São Paulo, SP)"
+                  className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  disabled={isSearching}
+                  required
+                />
+              </div>
+              <div className="sm:col-span-3">
+                <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium bg-primary hover:bg-primary/90 text-white transition-all shadow-sm"
+                >
+                  {isSearching ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-4 w-4" /> Varrer
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
 
-          {liveResults && liveResults.length > 0 && (
-            <div className="space-y-3 pt-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs sm:text-sm font-medium text-foreground">
-                  {liveResults.length} empresa(s) localizada(s) · {selectedLiveIndices.size} selecionada(s)
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
-                    onClick={() => {
-                      if (selectedLiveIndices.size === liveResults.length) {
-                        setSelectedLiveIndices(new Set());
-                      } else {
-                        setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
-                      }
-                    }}
-                  >
-                    {selectedLiveIndices.size === liveResults.length ? "Desmarcar todas" : "Selecionar todas"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleImportLive}
-                    disabled={selectedLiveIndices.size === 0 || importMutation.isPending}
-                    className="rounded-xl px-3.5 py-1.5 text-xs sm:text-sm font-medium text-[color:var(--primary-foreground)] transition-all disabled:opacity-50"
-                    style={{ background: "var(--gradient-primary)" }}
-                  >
-                    {importMutation.isPending
-                      ? "Salvando..."
-                      : `Importar ${selectedLiveIndices.size} para o Radar`}
-                  </button>
+            {isSearching && (
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground animate-pulse">
+                <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
+                <div>
+                  <p className="font-medium text-white text-xs sm:text-sm">Varrendo Google Maps e perfis públicos do Instagram...</p>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
                 </div>
               </div>
+            )}
 
-              <div className="max-h-96 overflow-auto rounded-xl border border-[#1f1f23] bg-zinc-950/30">
-                <table className="w-full text-sm">
-                  <thead className="bg-[#121214] text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-[#1f1f23] sticky top-0 z-10">
-                    <tr>
-                      <th className="px-3.5 py-2.5 w-8">
-                        <input
-                          type="checkbox"
-                          className="rounded border-[#1f1f23] bg-zinc-900"
-                          checked={selectedLiveIndices.size === liveResults.length}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
-                            } else {
-                              setSelectedLiveIndices(new Set());
-                            }
-                          }}
-                        />
-                      </th>
-                      <th className="px-3.5 py-2.5">Empresa</th>
-                      <th className="px-3.5 py-2.5">WhatsApp</th>
-                      <th className="px-3.5 py-2.5">Instagram</th>
-                      <th className="px-3.5 py-2.5">Status do Site</th>
-                      <th className="px-3.5 py-2.5">Score</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#1f1f23]/60">
-                    {liveResults.map((lead, index) => {
-                      const isSelected = selectedLiveIndices.has(index);
-                      return (
-                        <tr
-                          key={lead.dedupe_key || index}
-                          className={`transition-colors ${isSelected ? "bg-primary/5" : "hover:bg-zinc-900/30"}`}
-                        >
-                          <td className="px-3.5 py-2.5">
-                            <input
-                              type="checkbox"
-                              className="rounded border-[#1f1f23] bg-zinc-900"
-                              checked={isSelected}
-                              onChange={() => {
-                                const next = new Set(selectedLiveIndices);
-                                if (next.has(index)) next.delete(index);
-                                else next.add(index);
-                                setSelectedLiveIndices(next);
-                              }}
-                            />
-                          </td>
-                          <td className="px-3.5 py-2.5">
-                            <p className="font-medium text-foreground tracking-tight text-xs sm:text-sm">{lead.name}</p>
-                            <p className="text-[11px] font-normal text-muted-foreground/80 mt-0.5">
-                              {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
-                            </p>
-                          </td>
-                          <td className="px-3.5 py-2.5 text-xs font-mono text-muted-foreground">
-                            {lead.whatsapp || "—"}
-                          </td>
-                          <td className="px-3.5 py-2.5 text-xs">
-                            {lead.instagram ? (
-                              <a
-                                href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 font-normal text-xs text-muted-foreground hover:text-pink-400 transition-colors"
-                              >
-                                <Instagram className="h-3 w-3 text-muted-foreground/70" />
-                                <span>{lead.instagram}</span>
-                              </a>
-                            ) : (
-                              <a
-                                href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${lead.name}" "${lead.city}"`)}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="inline-flex items-center gap-1 rounded-lg border border-[#1f1f23] bg-transparent px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
-                                title="Buscar Instagram desta empresa"
-                              >
-                                <Instagram className="h-3 w-3 text-muted-foreground/70" />
-                                <span>Achar perfil</span>
-                              </a>
-                            )}
-                          </td>
-                          <td className="px-3.5 py-2.5 whitespace-nowrap">
-                            {lead.has_website ? (
-                              <span className="inline-flex items-center rounded-full border border-[#1f1f23] bg-zinc-900/60 px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
-                                Já tem site
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
-                                ⭐ Sem site
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3.5 py-2.5">
-                            <span className="font-semibold text-xs sm:text-sm tabular-nums text-foreground">{lead.score}</span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+            {liveResults && liveResults.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs sm:text-sm font-medium text-white">
+                    {liveResults.length} empresa(s) localizada(s) · {selectedLiveIndices.size} selecionada(s)
+                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="text-xs text-muted-foreground hover:text-white underline transition-colors"
+                      onClick={() => {
+                        if (selectedLiveIndices.size === liveResults.length) {
+                          setSelectedLiveIndices(new Set());
+                        } else {
+                          setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
+                        }
+                      }}
+                    >
+                      {selectedLiveIndices.size === liveResults.length ? "Desmarcar todas" : "Selecionar todas"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleImportLive}
+                      disabled={selectedLiveIndices.size === 0 || importMutation.isPending}
+                      className="rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-medium bg-primary hover:bg-primary/90 text-white transition-all disabled:opacity-50 shadow-sm"
+                    >
+                      {importMutation.isPending
+                        ? "Salvando..."
+                        : `Importar ${selectedLiveIndices.size} para o Radar`}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="max-h-96 overflow-auto rounded-xl border border-border bg-background/30">
+                  <Table>
+                    <TableHeader className="bg-muted/40 sticky top-0 z-10">
+                      <TableRow className="border-border hover:bg-transparent">
+                        <TableHead className="px-3.5 py-2.5 w-8">
+                          <input
+                            type="checkbox"
+                            className="rounded border-border bg-background"
+                            checked={selectedLiveIndices.size === liveResults.length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedLiveIndices(new Set(liveResults.map((_, i) => i)));
+                              } else {
+                                setSelectedLiveIndices(new Set());
+                              }
+                            }}
+                          />
+                        </TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Empresa</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">WhatsApp</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Instagram</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Status do Site</TableHead>
+                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-border/40">
+                      {liveResults.map((lead, index) => {
+                        const isSelected = selectedLiveIndices.has(index);
+                        return (
+                          <TableRow
+                            key={lead.dedupe_key || index}
+                            className={`transition-colors border-border/40 ${isSelected ? "bg-primary/10" : "hover:bg-muted/20"}`}
+                          >
+                            <TableCell className="px-3.5 py-2.5">
+                              <input
+                                type="checkbox"
+                                className="rounded border-border bg-background"
+                                checked={isSelected}
+                                onChange={() => {
+                                  const next = new Set(selectedLiveIndices);
+                                  if (next.has(index)) next.delete(index);
+                                  else next.add(index);
+                                  setSelectedLiveIndices(next);
+                                }}
+                              />
+                            </TableCell>
+                            <TableCell className="px-3.5 py-2.5">
+                              <p className="font-medium text-white tracking-tight text-xs sm:text-sm">{lead.name}</p>
+                              <p className="text-[11px] font-normal text-muted-foreground/80 mt-0.5">
+                                {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
+                              </p>
+                            </TableCell>
+                            <TableCell className="px-3.5 py-2.5 text-xs font-mono text-muted-foreground">
+                              {lead.whatsapp || "—"}
+                            </TableCell>
+                            <TableCell className="px-3.5 py-2.5 text-xs">
+                              {lead.instagram ? (
+                                <a
+                                  href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 font-normal text-xs text-muted-foreground hover:text-pink-400 transition-colors"
+                                >
+                                  <Instagram className="h-3 w-3 text-muted-foreground/70" />
+                                  <span>{lead.instagram}</span>
+                                </a>
+                              ) : (
+                                <a
+                                  href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${lead.name}" "${lead.city}"`)}`}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
+                                  title="Buscar Instagram desta empresa"
+                                >
+                                  <Instagram className="h-3 w-3 text-muted-foreground/70" />
+                                  <span>Achar perfil</span>
+                                </a>
+                              )}
+                            </TableCell>
+                            <TableCell className="px-3.5 py-2.5 whitespace-nowrap">
+                              {lead.has_website ? (
+                                <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
+                                  Já tem site
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+                                  ⭐ Sem site
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="px-3.5 py-2.5">
+                              <span className="font-semibold text-xs sm:text-sm tabular-nums text-white">{lead.score}</span>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Bloco Secundário: Abas de Importação CSV e Cadastro Manual */}
-        <div className="lg:col-span-5 xl:col-span-4 rounded-2xl border border-[#1f1f23] bg-[#121214] p-5 sm:p-6 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between border-b border-[#1f1f23] pb-3">
-            <div className="flex items-center gap-1 p-0.5 rounded-lg border border-[#1f1f23] bg-zinc-950/60 text-xs">
+        <Card className="lg:col-span-5 xl:col-span-4 border-border bg-card shadow-xs">
+          <CardHeader className="pb-3 border-b border-border">
+            <div className="flex items-center gap-1 p-1 rounded-lg border border-border bg-background/60 text-xs">
               <button
                 type="button"
                 onClick={() => setEntryTab("csv")}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
                   entryTab === "csv"
-                    ? "bg-zinc-800 text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-muted text-white shadow-xs"
+                    : "text-muted-foreground hover:text-white"
                 }`}
               >
                 <Upload className="h-3.5 w-3.5" /> Importar CSV
@@ -1046,465 +1067,470 @@ function ProspectingPage() {
                 onClick={() => setEntryTab("manual")}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md font-medium transition-all ${
                   entryTab === "manual"
-                    ? "bg-zinc-800 text-foreground shadow-xs"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-muted text-white shadow-xs"
+                    : "text-muted-foreground hover:text-white"
                 }`}
               >
                 <Plus className="h-3.5 w-3.5" /> Adicionar Manual
               </button>
             </div>
-          </div>
+          </CardHeader>
 
-          {/* Tab 1: Importar CSV */}
-          {entryTab === "csv" && (
-            <div className="space-y-3.5">
-              <div className="space-y-1">
-                <p className="text-xs text-muted-foreground">
-                  Suba sua planilha de leads. Reconhece nome, nicho, cidade, telefone, whatsapp, instagram e site.
-                </p>
-              </div>
-
-              <label className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-dashed border-[#1f1f23] hover:border-zinc-700 bg-zinc-950/40 hover:bg-zinc-950/70 cursor-pointer transition-all">
-                <Upload className="h-6 w-6 text-zinc-400" />
-                <span className="text-xs text-zinc-300 font-medium">Clique para selecionar o arquivo .csv</span>
-                <span className="text-[11px] text-zinc-500">Deduplicação e pontuação automáticas</span>
-                <input
-                  type="file"
-                  accept=".csv,text/csv"
-                  className="hidden"
-                  onChange={(event) => {
-                    const file = event.target.files?.[0];
-                    if (file) void handleFile(file);
-                  }}
-                />
-              </label>
-
-              {preview && (
-                <div className="space-y-3 pt-2">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="text-emerald-400 font-medium">{importable.length} nova(s)</span>
-                    <span className="text-zinc-500">
-                      {preview.filter((r) => r.duplicateOf).length} dup · {preview.filter((r) => r.error).length} erro
-                    </span>
-                  </div>
-
-                  <div className="max-h-56 overflow-auto rounded-xl border border-[#1f1f23] bg-zinc-950/40">
-                    <table className="w-full text-xs">
-                      <thead className="bg-[#121214] text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-[#1f1f23]">
-                        <tr>
-                          <th className="px-3 py-2">Empresa</th>
-                          <th className="px-3 py-2">Cidade</th>
-                          <th className="px-3 py-2">Status</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-[#1f1f23]/60">
-                        {preview.map((row) => (
-                          <tr key={row.line} className="hover:bg-zinc-900/30 transition-colors">
-                            <td className="px-3 py-2 font-medium text-foreground truncate max-w-[120px]">
-                              {row.draft?.name ?? `Linha ${row.line}`}
-                            </td>
-                            <td className="px-3 py-2 text-zinc-400 truncate max-w-[90px]">
-                              {row.draft?.city ?? "—"}
-                            </td>
-                            <td className="px-3 py-2">
-                              {row.error ? (
-                                <span className="text-rose-400">Erro</span>
-                              ) : row.duplicateOf ? (
-                                <span className="text-amber-400">Dup</span>
-                              ) : (
-                                <span className="text-emerald-400">Pronta</span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  <div className="flex gap-2 pt-1">
-                    <button
-                      className="flex-1 rounded-xl px-3 py-2 text-xs font-medium text-[color:var(--primary-foreground)] transition-all disabled:opacity-50"
-                      style={{ background: "var(--gradient-primary)" }}
-                      disabled={!importable.length || importMutation.isPending}
-                      onClick={() =>
-                        importMutation.mutate(importable.map((row) => row.draft!).filter(Boolean))
-                      }
-                    >
-                      {importMutation.isPending ? "Importando..." : `Importar ${importable.length} leads`}
-                    </button>
-                    <button
-                      className="rounded-xl border border-[#1f1f23] px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                      onClick={() => setPreview(null)}
-                    >
-                      Cancelar
-                    </button>
-                  </div>
+          <CardContent className="pt-4">
+            {/* Tab 1: Importar CSV */}
+            {entryTab === "csv" && (
+              <div className="space-y-3.5">
+                <div className="space-y-1">
+                  <p className="text-xs text-muted-foreground">
+                    Suba sua planilha de leads. Reconhece nome, nicho, cidade, telefone, whatsapp, instagram e site.
+                  </p>
                 </div>
-              )}
-            </div>
-          )}
 
-          {/* Tab 2: Adicionar Manual */}
-          {entryTab === "manual" && (
-            <form onSubmit={handleManualSubmit} className="space-y-2.5">
-              <p className="text-xs text-muted-foreground">
-                Cadastre um lead diretamente no seu Radar de Prospecção.
-              </p>
-              <div>
-                <input
-                  name="name"
-                  placeholder="Nome da Empresa *"
-                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
-                  required
-                />
+                <label className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-dashed border-border/80 hover:border-primary/50 bg-background/40 hover:bg-background/70 cursor-pointer transition-all">
+                  <Upload className="h-6 w-6 text-muted-foreground" />
+                  <span className="text-xs text-white font-medium">Clique para selecionar o arquivo .csv</span>
+                  <span className="text-[11px] text-muted-foreground/80">Deduplicação e pontuação automáticas</span>
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="hidden"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void handleFile(file);
+                    }}
+                  />
+                </label>
+
+                {preview && (
+                  <div className="space-y-3 pt-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-emerald-400 font-medium">{importable.length} nova(s)</span>
+                      <span className="text-muted-foreground">
+                        {preview.filter((r) => r.duplicateOf).length} dup · {preview.filter((r) => r.error).length} erro
+                      </span>
+                    </div>
+
+                    <div className="max-h-56 overflow-auto rounded-xl border border-border bg-background/40">
+                      <Table>
+                        <TableHeader className="bg-muted/40 text-[11px]">
+                          <TableRow className="border-border hover:bg-transparent">
+                            <TableHead className="px-3 py-2 text-[11px] uppercase font-semibold text-muted-foreground">Empresa</TableHead>
+                            <TableHead className="px-3 py-2 text-[11px] uppercase font-semibold text-muted-foreground">Cidade</TableHead>
+                            <TableHead className="px-3 py-2 text-[11px] uppercase font-semibold text-muted-foreground">Status</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody className="divide-y divide-border/40">
+                          {preview.map((row) => (
+                            <TableRow key={row.line} className="hover:bg-muted/20 border-border/40 transition-colors">
+                              <TableCell className="px-3 py-2 font-medium text-white truncate max-w-[120px]">
+                                {row.draft?.name ?? `Linha ${row.line}`}
+                              </TableCell>
+                              <TableCell className="px-3 py-2 text-muted-foreground truncate max-w-[90px]">
+                                {row.draft?.city ?? "—"}
+                              </TableCell>
+                              <TableCell className="px-3 py-2">
+                                {row.error ? (
+                                  <span className="text-rose-400">Erro</span>
+                                ) : row.duplicateOf ? (
+                                  <span className="text-amber-400">Dup</span>
+                                ) : (
+                                  <span className="text-emerald-400">Pronta</span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="flex gap-2 pt-1">
+                      <button
+                        className="flex-1 rounded-lg px-3 py-2 text-xs font-medium bg-primary hover:bg-primary/90 text-white transition-all disabled:opacity-50 shadow-sm"
+                        disabled={!importable.length || importMutation.isPending}
+                        onClick={() =>
+                          importMutation.mutate(importable.map((row) => row.draft!).filter(Boolean))
+                        }
+                      >
+                        {importMutation.isPending ? "Importando..." : `Importar ${importable.length} leads`}
+                      </button>
+                      <button
+                        className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground hover:text-white transition-colors"
+                        onClick={() => setPreview(null)}
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  name="niche"
-                  placeholder="Nicho (ex: Dentista)"
-                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
-                />
-                <input
-                  name="city"
-                  placeholder="Cidade"
-                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  name="whatsapp"
-                  placeholder="WhatsApp"
-                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
-                />
-                <input
-                  name="website"
-                  placeholder="Site (opcional)"
-                  className="w-full rounded-xl border border-[#1f1f23] bg-zinc-950/60 px-3 py-2 text-xs text-foreground placeholder:text-zinc-500 focus:outline-none focus:border-zinc-700 transition-colors"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={createMutation.isPending}
-                className="w-full rounded-xl border border-[#1f1f23] bg-zinc-900/60 hover:bg-zinc-800 px-3 py-2 text-xs font-medium text-foreground transition-all mt-2"
-              >
-                {createMutation.isPending ? "Salvando..." : "Salvar no Radar"}
-              </button>
-            </form>
-          )}
-        </div>
+            )}
+
+            {/* Tab 2: Adicionar Manual */}
+            {entryTab === "manual" && (
+              <form onSubmit={handleManualSubmit} className="space-y-2.5">
+                <p className="text-xs text-muted-foreground">
+                  Cadastre um lead diretamente no seu Radar de Prospecção.
+                </p>
+                <div>
+                  <input
+                    name="name"
+                    placeholder="Nome da Empresa *"
+                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                    required
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    name="niche"
+                    placeholder="Nicho (ex: Dentista)"
+                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  />
+                  <input
+                    name="city"
+                    placeholder="Cidade"
+                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    name="whatsapp"
+                    placeholder="WhatsApp"
+                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  />
+                  <input
+                    name="website"
+                    placeholder="Site (opcional)"
+                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={createMutation.isPending}
+                  className="w-full rounded-lg border border-border bg-muted/60 hover:bg-muted px-3 py-2 text-xs font-medium text-white transition-all mt-2"
+                >
+                  {createMutation.isPending ? "Salvando..." : "Salvar no Radar"}
+                </button>
+              </form>
+            )}
+          </CardContent>
+        </Card>
       </section>
 
       {/* Pipeline */}
-      <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-bold flex items-center gap-2">
-              Pipeline
-              <span className="text-xs font-normal text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
-                {companies.length} {companies.length === 1 ? "lead" : "leads"}
-              </span>
-            </h2>
-            {companies.length > 0 && (
-              <button
-                onClick={handleClearAllRadar}
-                disabled={clearRadarMutation.isPending}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-2.5 py-1 text-xs font-medium transition-colors"
-                title="Limpar toda a lista de prospecção"
+      <Card className="rounded-xl border border-border bg-card shadow-xs">
+        <CardHeader className="p-5 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-base font-semibold tracking-tight text-white flex items-center gap-2">
+                Pipeline de Prospecção
+                <span className="text-xs font-normal text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full border border-border/60">
+                  {companies.length} {companies.length === 1 ? "lead" : "leads"}
+                </span>
+              </CardTitle>
+              {companies.length > 0 && (
+                <button
+                  onClick={handleClearAllRadar}
+                  disabled={clearRadarMutation.isPending}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-2.5 py-1 text-xs font-medium transition-colors"
+                  title="Limpar toda a lista de prospecção"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                  {clearRadarMutation.isPending ? "Limpando..." : "Limpar Radar"}
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar empresa, nicho..."
+                className="h-8 rounded-lg border border-border bg-background/60 px-3 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-48 transition-colors"
+              />
+              <select
+                className="h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
               >
-                <Trash2 className="h-3.5 w-3.5" />
-                {clearRadarMutation.isPending ? "Limpando..." : "Limpar Radar"}
-              </button>
-            )}
+                <option value="all">Todas as etapas</option>
+                {STATUS_OPTIONS.map((status) => (
+                  <option key={status} value={status}>
+                    {STATUS_LABEL[status]}
+                  </option>
+                ))}
+              </select>
+              <select
+                className="h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
+                value={priorityFilter}
+                onChange={(event) => setPriorityFilter(event.target.value as typeof priorityFilter)}
+              >
+                <option value="all">Todas as prioridades</option>
+                {(Object.keys(PRIORITY_LABEL) as ProspectPriority[]).map((priority) => (
+                  <option key={priority} value={priority}>
+                    {PRIORITY_LABEL[priority]}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar..."
-              className="input-field flex-1 sm:w-48 text-xs"
-            />
-            <select
-              className="input-field text-xs flex-1 sm:w-auto"
-              value={statusFilter}
-              onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
-            >
-              <option value="all">Todas as etapas</option>
-              {STATUS_OPTIONS.map((status) => (
-                <option key={status} value={status}>
-                  {STATUS_LABEL[status]}
-                </option>
-              ))}
-            </select>
-            <select
-              className="input-field text-xs flex-1 sm:w-auto"
-              value={priorityFilter}
-              onChange={(event) => setPriorityFilter(event.target.value as typeof priorityFilter)}
-            >
-              <option value="all">Todas as prioridades</option>
-              {(Object.keys(PRIORITY_LABEL) as ProspectPriority[]).map((priority) => (
-                <option key={priority} value={priority}>
-                  {PRIORITY_LABEL[priority]}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        </CardHeader>
 
-        <div className="overflow-x-auto rounded-xl border border-border/60">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/20 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 border-b border-border/60">
-              <tr>
-                <th className="px-4 py-3.5">Empresa</th>
-                <th className="px-4 py-3.5">Score</th>
-                <th className="px-4 py-3.5">Prioridade</th>
-                <th className="px-4 py-3.5">Etapa</th>
-                <th className="px-4 py-3.5">Último contato</th>
-                <th className="px-4 py-3.5 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border/40">
-              {filtered.map((company) => {
-                const demo = parseDemoInfo(company.notes);
-                const isOfficial = company.notes?.includes("[Página Oficializada]") || company.status === "cliente";
-                return (
-                  <tr key={company.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="px-4 py-3.5 min-w-[220px]">
-                      <p className="font-medium text-foreground tracking-tight text-sm">{company.name}</p>
-                      <div className="text-xs font-normal text-muted-foreground/80 mt-1 flex items-center gap-2 flex-wrap">
-                        <span>
-                          {[company.niche, company.city, company.has_website ? "tem site" : "sem site"]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                        {company.instagram ? (
-                          <a
-                            href={`https://instagram.com/${company.instagram.replace("@", "")}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-muted-foreground hover:text-pink-400 font-normal transition-colors"
-                          >
-                            <Instagram className="h-3 w-3 text-muted-foreground/70" /> {company.instagram}
-                          </a>
-                        ) : (
-                          <a
-                            href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-pink-400 transition-colors"
-                            title="Achar perfil no Instagram"
-                          >
-                            <Instagram className="h-2.5 w-2.5" /> Achar @IG
-                          </a>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <span className="font-semibold text-sm tabular-nums text-foreground">{company.score}</span>
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">
-                      <span
-                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLE[company.priority]}`}
-                      >
-                        {PRIORITY_LABEL[company.priority]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 whitespace-nowrap">
-                      <select
-                        className="h-8 px-2.5 py-1 text-xs font-medium rounded-lg border border-border/60 bg-background/50 hover:bg-background focus:ring-1 focus:ring-primary/40 transition-colors"
-                        value={company.status}
-                        onChange={(event) =>
-                          statusMutation.mutate({
-                            id: company.id,
-                            status: event.target.value as ProspectStatus,
-                          })
-                        }
-                      >
-                        {STATUS_OPTIONS.map((status) => (
-                          <option key={status} value={status}>
-                            {STATUS_LABEL[status]}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="px-4 py-3.5 text-xs font-normal text-muted-foreground whitespace-nowrap">
-                      {company.last_contacted_at
-                        ? new Date(company.last_contacted_at).toLocaleDateString("pt-BR")
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-3.5 text-right">
-                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                        {demo.url ? (
-                          <>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/40 border-b border-border">
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Empresa</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Prioridade</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Etapa</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Último contato</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80 text-right">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map((company) => {
+                  const demo = parseDemoInfo(company.notes);
+                  const isOfficial = company.notes?.includes("[Página Oficializada]") || company.status === "cliente";
+                  return (
+                    <TableRow key={company.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                      <TableCell className="py-3.5 px-4 min-w-[220px]">
+                        <p className="font-medium text-white tracking-tight text-sm">{company.name}</p>
+                        <div className="text-xs font-normal text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+                          <span>
+                            {[company.niche, company.city, company.has_website ? "tem site" : "sem site"]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </span>
+                          {company.instagram ? (
                             <a
-                              href={demo.url}
+                              href={`https://instagram.com/${company.instagram.replace("@", "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-muted-foreground hover:text-pink-400 font-normal transition-colors"
+                            >
+                              <Instagram className="h-3 w-3 text-muted-foreground/70" /> {company.instagram}
+                            </a>
+                          ) : (
+                            <a
+                              href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-pink-400 transition-colors"
+                              title="Achar perfil no Instagram"
+                            >
+                              <Instagram className="h-2.5 w-2.5" /> Achar @IG
+                            </a>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4">
+                        <span className="font-semibold text-sm tabular-nums text-white">{company.score}</span>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${PRIORITY_STYLE[company.priority]}`}
+                        >
+                          {PRIORITY_LABEL[company.priority]}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                        <select
+                          className="h-8 px-2.5 py-1 text-xs font-medium rounded-lg border border-border/60 bg-background/60 text-white hover:bg-background focus:ring-1 focus:ring-primary/40 transition-colors"
+                          value={company.status}
+                          onChange={(event) =>
+                            statusMutation.mutate({
+                              id: company.id,
+                              status: event.target.value as ProspectStatus,
+                            })
+                          }
+                        >
+                          {STATUS_OPTIONS.map((status) => (
+                            <option key={status} value={status}>
+                              {STATUS_LABEL[status]}
+                            </option>
+                          ))}
+                        </select>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-xs font-normal text-muted-foreground whitespace-nowrap">
+                        {company.last_contacted_at
+                          ? new Date(company.last_contacted_at).toLocaleDateString("pt-BR")
+                          : "—"}
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                          {demo.url ? (
+                            <>
+                              <a
+                                href={demo.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                                title="Ver Página Pro no ar"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
+                                <span>Ver</span>
+                              </a>
+                              {demo.pageId && (
+                                <Link
+                                  to="/builder"
+                                  search={{ page: demo.pageId }}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
+                                  title="Editar no Construtor"
+                                >
+                                  <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
+                                  <span>Editar</span>
+                                </Link>
+                              )}
+                            </>
+                          ) : (
+                            <button
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-transparent text-white px-2.5 py-1.5 text-xs font-medium hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all"
+                              onClick={() => void handleGenerateDemo(company)}
+                              disabled={creatingPageId === company.id}
+                              title="Gerar modelo demonstrativo para prospecção"
+                            >
+                              {creatingPageId === company.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                              ) : (
+                                <Sparkles className="h-3.5 w-3.5 text-muted-foreground/70" />
+                              )}
+                              <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Página"}</span>
+                            </button>
+                          )}
+
+                          {whatsappLink(company) ? (
+                            <a
+                              href={whatsappLink(company)!}
                               target="_blank"
                               rel="noreferrer"
                               className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
-                              title="Ver Página Pro no ar"
+                              title={`Enviar proposta via WhatsApp para ${company.name}`}
                             >
-                              <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
-                              <span>Ver</span>
+                              <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
+                              <span>WhatsApp</span>
                             </a>
-                            {demo.pageId && (
-                              <Link
-                                to="/builder"
-                                search={{ page: demo.pageId }}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
-                                title="Editar no Construtor"
-                              >
-                                <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
-                                <span>Editar</span>
-                              </Link>
-                            )}
-                          </>
-                        ) : (
-                          <button
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-transparent text-foreground px-2.5 py-1.5 text-xs font-medium hover:text-primary hover:border-primary/50 hover:bg-primary/10 transition-all"
-                            onClick={() => void handleGenerateDemo(company)}
-                            disabled={creatingPageId === company.id}
-                            title="Gerar modelo demonstrativo para prospecção"
-                          >
-                            {creatingPageId === company.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                            ) : (
-                              <Sparkles className="h-3.5 w-3.5 text-muted-foreground/70" />
-                            )}
-                            <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Página"}</span>
-                          </button>
-                        )}
-
-                        {whatsappLink(company) ? (
-                          <a
-                            href={whatsappLink(company)!}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
-                            title={`Enviar proposta via WhatsApp para ${company.name}`}
-                          >
-                            <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
-                            <span>WhatsApp</span>
-                          </a>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => setWhatsModalCompany(company)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
-                            title={`Definir WhatsApp e enviar proposta para ${company.name}`}
-                          >
-                            <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
-                            <span>WhatsApp</span>
-                          </button>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={() => void handleInstagramApproach(company)}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
-                          title={
-                            copiedInstagramCompanyId === company.id
-                              ? "Mensagem copiada!"
-                              : company.instagram
-                                ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
-                                : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
-                          }
-                        >
-                          {copiedInstagramCompanyId === company.id ? (
-                            <Check className="h-3.5 w-3.5 text-emerald-400" />
                           ) : (
-                            <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
-                          )}
-                          <span>
-                            {copiedInstagramCompanyId === company.id
-                              ? "Copiado!"
-                              : "Direct IG"}
-                          </span>
-                        </button>
-
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
                             <button
                               type="button"
-                              className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                              title="Mais opções"
+                              onClick={() => setWhatsModalCompany(company)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                              title={`Definir WhatsApp e enviar proposta para ${company.name}`}
                             >
-                              <MoreHorizontal className="h-4 w-4 text-muted-foreground/80" />
+                              <MessageCircle className="h-3.5 w-3.5 text-muted-foreground/70" />
+                              <span>WhatsApp</span>
                             </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-52">
-                            {demo.url && demo.pageId && (
-                              <>
-                                <DropdownMenuItem
-                                  onClick={() => void handleRegenerateDemo(company)}
-                                  disabled={regeneratingPageId === company.id}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  {regeneratingPageId === company.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
-                                  ) : (
-                                    <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                  )}
-                                  <span>{regeneratingPageId === company.id ? "Trocando modelo..." : "Trocar Modelo"}</span>
-                                </DropdownMenuItem>
+                          )}
 
-                                <DropdownMenuItem
-                                  onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                                  disabled={actionLoadingId === demo.pageId || isOfficial}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  {actionLoadingId === demo.pageId ? (
-                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
-                                  ) : (
-                                    <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`} />
-                                  )}
-                                  <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
-                                </DropdownMenuItem>
-
-                                <DropdownMenuItem
-                                  onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                  <span>Entregar / Transferir</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                              </>
+                          <button
+                            type="button"
+                            onClick={() => void handleInstagramApproach(company)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
+                            title={
+                              copiedInstagramCompanyId === company.id
+                                ? "Mensagem copiada!"
+                                : company.instagram
+                                  ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
+                                  : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
+                            }
+                          >
+                            {copiedInstagramCompanyId === company.id ? (
+                              <Check className="h-3.5 w-3.5 text-emerald-400" />
+                            ) : (
+                              <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
                             )}
+                            <span>
+                              {copiedInstagramCompanyId === company.id
+                                ? "Copiado!"
+                                : "Direct IG"}
+                            </span>
+                          </button>
 
-                            <DropdownMenuItem
-                              onClick={() => setActiveCompany(company)}
-                              className="cursor-pointer text-xs"
-                            >
-                              <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                              <span>Registrar Abordagem</span>
-                            </DropdownMenuItem>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button
+                                type="button"
+                                className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-white hover:bg-muted/60 transition-colors"
+                                title="Mais opções"
+                              >
+                                <MoreHorizontal className="h-4 w-4 text-muted-foreground/80" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52">
+                              {demo.url && demo.pageId && (
+                                <>
+                                  <DropdownMenuItem
+                                    onClick={() => void handleRegenerateDemo(company)}
+                                    disabled={regeneratingPageId === company.id}
+                                    className="cursor-pointer text-xs"
+                                  >
+                                    {regeneratingPageId === company.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
+                                    ) : (
+                                      <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                    )}
+                                    <span>{regeneratingPageId === company.id ? "Trocando modelo..." : "Trocar Modelo"}</span>
+                                  </DropdownMenuItem>
 
-                            <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                                    disabled={actionLoadingId === demo.pageId || isOfficial}
+                                    className="cursor-pointer text-xs"
+                                  >
+                                    {actionLoadingId === demo.pageId ? (
+                                      <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
+                                    ) : (
+                                      <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`} />
+                                    )}
+                                    <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
+                                  </DropdownMenuItem>
 
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteCompany(company)}
-                              className="cursor-pointer text-xs text-rose-400 hover:text-rose-300 focus:text-rose-400 focus:bg-rose-500/10"
-                            >
-                              <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
-                              <span>Remover do Radar</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-              {!filtered.length && (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-sm text-muted-foreground">
-                    Nenhuma empresa encontrada.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+                                  <DropdownMenuItem
+                                    onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                                    className="cursor-pointer text-xs"
+                                  >
+                                    <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                    <span>Entregar / Transferir</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                </>
+                              )}
+
+                              <DropdownMenuItem
+                                onClick={() => setActiveCompany(company)}
+                                className="cursor-pointer text-xs"
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                <span>Registrar Abordagem</span>
+                              </DropdownMenuItem>
+
+                              <DropdownMenuSeparator />
+
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteCompany(company)}
+                                className="cursor-pointer text-xs text-rose-400 hover:text-rose-300 focus:text-rose-400 focus:bg-rose-500/10"
+                              >
+                                <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
+                                <span>Remover do Radar</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {!filtered.length && (
+                  <TableRow>
+                    <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
+                      Nenhuma empresa encontrada.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
 
       {activeCompany && (
         <ActivityDialog

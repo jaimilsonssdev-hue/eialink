@@ -2,9 +2,36 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, TrendingUp, Send, Download, CreditCard, ShieldCheck, Target } from "lucide-react";
+import {
+  Users,
+  TrendingUp,
+  Send,
+  Download,
+  CreditCard,
+  ShieldCheck,
+  Target,
+  Briefcase,
+  Filter,
+  CheckCircle2,
+} from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import { toPlanLimits, type Plan, type ProfessionalService } from "@/modules/billing/types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({
@@ -153,299 +180,449 @@ function AdminPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Header & Quick Actions */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">Super Admin</h1>
-          <p className="mt-2 text-muted-foreground">Gestão de leads e solicitações.</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-white">Super Admin</h1>
+            <Badge variant="outline" className="text-[11px] font-normal border-primary/40 bg-primary/10 text-primary">
+              Controle Geral
+            </Badge>
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Gestão estratégica de leads, solicitações, limites e assinaturas da plataforma.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             to="/admin/prospeccao"
-            className="btn-primary inline-flex items-center gap-2 text-sm"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary hover:bg-primary/90 text-white px-3.5 py-2 text-xs font-medium shadow-sm transition-all"
           >
-            <Target className="h-4 w-4" /> Radar de Prospecção
+            <Target className="h-4 w-4" />
+            <span>Radar de Prospecção</span>
           </Link>
-          <button onClick={exportCSV} className="btn-secondary">
-            <Download className="h-4 w-4" /> Exportar CSV
+          <button
+            onClick={exportCSV}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card hover:bg-muted/40 text-muted-foreground hover:text-white px-3.5 py-2 text-xs font-medium transition-colors"
+          >
+            <Download className="h-4 w-4" />
+            <span>Exportar CSV</span>
           </button>
         </div>
-
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card icon={Users} label="Usuários" v={total} />
-        <Card icon={TrendingUp} label="Leads Quentes" v={hot} />
-        <Card icon={Send} label="Solicitações" v={data?.requests ?? 0} />
-        <Card
+
+      {/* KPI Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          icon={Users}
+          label="Usuários"
+          value={total}
+          description="Contas totais na base"
+          colorClass="text-purple-400"
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Leads Quentes"
+          value={hot}
+          description="Score de qualificação ≥ 70"
+          colorClass="text-emerald-400"
+        />
+        <StatCard
+          icon={Send}
+          label="Solicitações"
+          value={data?.requests ?? 0}
+          description="Demandas de serviços registradas"
+          colorClass="text-blue-400"
+        />
+        <StatCard
           icon={CreditCard}
-          label="Assinaturas ativas"
-          v={data?.subscriptions.filter((item) => item.status === "active").length ?? 0}
+          label="Assinaturas Ativas"
+          value={data?.subscriptions.filter((item) => item.status === "active").length ?? 0}
+          description="Contas com plano ativo"
+          colorClass="text-amber-400"
         />
       </div>
-      <section className="card-surface">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[color:var(--accent)]">
-              Planos da plataforma
-            </p>
-            <h2 className="mt-1 text-xl font-bold">Limites centralizados</h2>
+
+      {/* Planos da Plataforma */}
+      <Card className="rounded-xl border border-border bg-card shadow-xs">
+        <CardHeader className="p-5 pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+                Planos da Plataforma
+              </p>
+              <CardTitle className="text-base font-semibold tracking-tight text-white mt-0.5">
+                Limites e Modelos Comerciais
+              </CardTitle>
+            </div>
+            <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full border border-border/60">
+              {data?.services.length ?? 0} serviços profissionais ativos
+            </span>
           </div>
-          <span className="text-sm text-muted-foreground">
-            {data?.services.length ?? 0} serviços profissionais ativos
-          </span>
-        </div>
-        <div className="grid gap-4 xl:grid-cols-3">
-          {data?.plans.map((plan) => (
-            <PlanEditor
-              key={plan.id}
-              plan={plan}
-              saving={updatePlan.isPending}
-              onSave={(id, input) => updatePlan.mutate({ id, input })}
-            />
-          ))}
-        </div>
-        {updatePlan.isError && (
-          <p className="mt-3 text-sm text-red-400">
-            {updatePlan.error instanceof Error
-              ? updatePlan.error.message
-              : "Não foi possível salvar o plano. Verifique a conexão e tente novamente."}
-          </p>
-        )}
-      </section>
-      <section className="card-surface">
-        <div className="mb-4">
-          <h2 className="font-bold">Filtros de oportunidades</h2>
-          <p className="text-sm text-muted-foreground">
-            Encontre contas pelo plano, nicho e cidade para um atendimento mais útil.
-          </p>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-5">
-          <label className="text-xs text-muted-foreground">
-            Plano
-            <select
-              className="input-base mt-1"
-              value={planFilter}
-              onChange={(event) => setPlanFilter(event.target.value)}
-            >
-              <option value="all">Todos os planos</option>
-              {data?.plans.map((plan) => (
-                <option key={plan.id} value={plan.slug}>
-                  {plan.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="text-xs text-muted-foreground">
-            Nicho
-            <select
-              className="input-base mt-1"
-              value={nicheFilter}
-              onChange={(event) => setNicheFilter(event.target.value)}
-            >
-              <option value="all">Todos os nichos</option>
-              {[...new Set(data?.profiles.map((profile) => profile.niche).filter(Boolean))].map(
-                (niche) => (
-                  <option key={niche} value={niche ?? ""}>
-                    {niche}
-                  </option>
-                ),
-              )}
-            </select>
-          </label>
-          <label className="text-xs text-muted-foreground">
-            Cidade
-            <input
-              className="input-base mt-1"
-              value={cityFilter}
-              onChange={(event) => setCityFilter(event.target.value)}
-              placeholder="Ex.: Teixeira de Freitas"
-            />
-          </label>
-          <label className="text-xs text-muted-foreground">
-            Página
-            <select
-              className="input-base mt-1"
-              value={publicationFilter}
-              onChange={(event) => setPublicationFilter(event.target.value)}
-            >
-              <option value="all">Todas</option>
-              <option value="published">Publicada</option>
-              <option value="unpublished">Não publicada</option>
-            </select>
-          </label>
-          <label className="text-xs text-muted-foreground">
-            Cadastrado a partir de
-            <input
-              className="input-base mt-1"
-              type="date"
-              value={registeredAfter}
-              onChange={(event) => setRegisteredAfter(event.target.value)}
-            />
-          </label>
-        </div>
-      </section>
-      <section className="card-surface overflow-x-auto">
-        <div className="mb-4 flex items-center gap-2">
-          <ShieldCheck className="h-5 w-5 text-[color:var(--accent)]" />
-          <div>
-            <h2 className="font-bold">Assinaturas</h2>
-            <p className="text-sm text-muted-foreground">
-              Altere o plano ou status de cada conta. A validação é feita pelo banco.
-            </p>
-          </div>
-        </div>
-        <table className="w-full min-w-[720px] text-sm">
-          <thead className="text-left text-xs uppercase text-muted-foreground">
-            <tr>
-              <Th>Cliente</Th>
-              <Th>Plano</Th>
-              <Th>Status</Th>
-              <Th>Ação</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProfiles.map((profile) => {
-              const subscription = data?.subscriptions.find((item) => item.user_id === profile.id);
-              return (
-                <tr key={profile.id} className="border-t border-border">
-                  <Td>
-                    <div className="font-medium">{profile.full_name}</div>
-                    <div className="text-xs text-muted-foreground">{profile.email}</div>
-                  </Td>
-                  <Td>
-                    <select
-                      className="input-base min-w-36 py-2"
-                      defaultValue={subscription?.plan_id}
-                      aria-label={`Plano de ${profile.full_name}`}
-                      onChange={(event) =>
-                        updateSubscription.mutate({
-                          userId: profile.id,
-                          planId: event.target.value,
-                          status: subscription?.status ?? "active",
-                        })
-                      }
-                    >
-                      {data?.plans.map((plan) => (
-                        <option key={plan.id} value={plan.id}>
-                          {plan.name}
-                        </option>
-                      ))}
-                    </select>
-                  </Td>
-                  <Td>
-                    <select
-                      className="input-base min-w-28 py-2"
-                      defaultValue={subscription?.status ?? "active"}
-                      aria-label={`Status de ${profile.full_name}`}
-                      onChange={(event) =>
-                        subscription &&
-                        updateSubscription.mutate({
-                          userId: profile.id,
-                          planId: subscription.plan_id,
-                          status: event.target.value,
-                        })
-                      }
-                    >
-                      <option value="active">Ativa</option>
-                      <option value="trialing">Teste</option>
-                      <option value="past_due">Pendente</option>
-                      <option value="cancelled">Cancelada</option>
-                      <option value="expired">Expirada</option>
-                    </select>
-                  </Td>
-                  <Td>
-                    {updateSubscription.isPending ? (
-                      <span className="text-xs text-muted-foreground">Salvando…</span>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">Salva automaticamente</span>
-                    )}
-                  </Td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-        {updateSubscription.isError && (
-          <p className="mt-3 text-sm text-red-400">
-            Não foi possível atualizar a assinatura. Confirme se a migration foi aplicada.
-          </p>
-        )}
-      </section>
-      <section className="card-surface">
-        <div className="mb-4">
-          <h2 className="font-bold">Serviços profissionais</h2>
-          <p className="text-sm text-muted-foreground">
-            Ofertas exibidas na área de crescimento. Você pode ativar ou pausar quando quiser.
-          </p>
-        </div>
-        <div className="grid gap-3 md:grid-cols-2">
-          {data?.services.map((service) => (
-            <ServiceAdminCard
-              key={service.id}
-              service={service}
-              saving={updateService.isPending}
-              onToggle={(id, active) => updateService.mutate({ id, input: { active } })}
-            />
-          ))}
-        </div>
-      </section>
-      <div className="card-surface overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="text-xs text-muted-foreground uppercase">
-            <tr>
-              <Th>Nome</Th>
-              <Th>Empresa</Th>
-              <Th>WhatsApp</Th>
-              <Th>Nicho</Th>
-              <Th>Cidade/UF</Th>
-              <Th>Score</Th>
-              <Th>Cadastro</Th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredProfiles.map((p) => (
-              <tr key={p.id} className="border-t border-border">
-                <Td>{p.full_name}</Td>
-                <Td>{p.company_name}</Td>
-                <Td>{p.whatsapp}</Td>
-                <Td>{p.niche}</Td>
-                <Td>
-                  {p.city}/{p.state}
-                </Td>
-                <Td>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs ${(p.lead_score ?? 0) >= 70 ? "bg-[color:var(--success)]/20 text-[color:var(--success)]" : (p.lead_score ?? 0) >= 31 ? "bg-[color:var(--warning)]/20 text-[color:var(--warning)]" : "bg-surface-elevated text-muted-foreground"}`}
-                  >
-                    {p.lead_score}
-                  </span>
-                </Td>
-                <Td>{new Date(p.created_at).toLocaleDateString("pt-BR")}</Td>
-              </tr>
+        </CardHeader>
+        <CardContent className="p-5 pt-2">
+          <div className="grid gap-4 xl:grid-cols-3">
+            {data?.plans.map((plan) => (
+              <PlanEditor
+                key={plan.id}
+                plan={plan}
+                saving={updatePlan.isPending}
+                onSave={(id, input) => updatePlan.mutate({ id, input })}
+              />
             ))}
-          </tbody>
-        </table>
-        {total === 0 && <p className="text-sm text-muted-foreground p-4">Nenhum lead ainda.</p>}
-      </div>
+          </div>
+          {updatePlan.isError && (
+            <p className="mt-3 text-xs text-rose-400">
+              {updatePlan.error instanceof Error
+                ? updatePlan.error.message
+                : "Não foi possível salvar o plano. Verifique a conexão e tente novamente."}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Filtros de Oportunidades */}
+      <Card className="rounded-xl border border-border bg-card shadow-xs">
+        <CardHeader className="p-5 pb-3">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-primary" />
+            <div>
+              <CardTitle className="text-base font-semibold tracking-tight text-white">
+                Filtros de Oportunidades
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Encontre contas por plano, nicho, cidade ou data para abordagem assertiva.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-5 pt-2">
+          <div className="grid gap-3 sm:grid-cols-5">
+            <label className="text-xs text-muted-foreground">
+              <span className="font-medium text-white/90">Plano</span>
+              <select
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                value={planFilter}
+                onChange={(event) => setPlanFilter(event.target.value)}
+              >
+                <option value="all">Todos os planos</option>
+                {data?.plans.map((plan) => (
+                  <option key={plan.id} value={plan.slug}>
+                    {plan.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="text-xs text-muted-foreground">
+              <span className="font-medium text-white/90">Nicho</span>
+              <select
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                value={nicheFilter}
+                onChange={(event) => setNicheFilter(event.target.value)}
+              >
+                <option value="all">Todos os nichos</option>
+                {[...new Set(data?.profiles.map((profile) => profile.niche).filter(Boolean))].map(
+                  (niche) => (
+                    <option key={niche} value={niche ?? ""}>
+                      {niche}
+                    </option>
+                  ),
+                )}
+              </select>
+            </label>
+
+            <label className="text-xs text-muted-foreground">
+              <span className="font-medium text-white/90">Cidade</span>
+              <input
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-3 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                value={cityFilter}
+                onChange={(event) => setCityFilter(event.target.value)}
+                placeholder="Ex.: Teixeira de Freitas"
+              />
+            </label>
+
+            <label className="text-xs text-muted-foreground">
+              <span className="font-medium text-white/90">Página</span>
+              <select
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                value={publicationFilter}
+                onChange={(event) => setPublicationFilter(event.target.value)}
+              >
+                <option value="all">Todas</option>
+                <option value="published">Publicada</option>
+                <option value="unpublished">Não publicada</option>
+              </select>
+            </label>
+
+            <label className="text-xs text-muted-foreground">
+              <span className="font-medium text-white/90">Cadastrado a partir de</span>
+              <input
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-3 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                type="date"
+                value={registeredAfter}
+                onChange={(event) => setRegisteredAfter(event.target.value)}
+              />
+            </label>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Assinaturas */}
+      <Card className="rounded-xl border border-border bg-card shadow-xs">
+        <CardHeader className="p-5 pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-primary" />
+            <div>
+              <CardTitle className="text-base font-semibold tracking-tight text-white">
+                Assinaturas e Controle de Acesso
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Altere o plano ou status de cada conta. Atualizações são sincronizadas no banco.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/40 border-b border-border">
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Cliente</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Plano</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Status</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Sincronização</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProfiles.map((profile) => {
+                  const subscription = data?.subscriptions.find((item) => item.user_id === profile.id);
+                  return (
+                    <TableRow key={profile.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                      <TableCell className="py-3.5 px-4 min-w-[220px]">
+                        <p className="font-medium text-white tracking-tight text-sm">{profile.full_name}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{profile.email}</p>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                        <select
+                          className="h-8 min-w-36 rounded-lg border border-border/60 bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
+                          defaultValue={subscription?.plan_id}
+                          aria-label={`Plano de ${profile.full_name}`}
+                          onChange={(event) =>
+                            updateSubscription.mutate({
+                              userId: profile.id,
+                              planId: event.target.value,
+                              status: subscription?.status ?? "active",
+                            })
+                          }
+                        >
+                          {data?.plans.map((plan) => (
+                            <option key={plan.id} value={plan.id}>
+                              {plan.name}
+                            </option>
+                          ))}
+                        </select>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                        <select
+                          className="h-8 min-w-28 rounded-lg border border-border/60 bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
+                          defaultValue={subscription?.status ?? "active"}
+                          aria-label={`Status de ${profile.full_name}`}
+                          onChange={(event) =>
+                            subscription &&
+                            updateSubscription.mutate({
+                              userId: profile.id,
+                              planId: subscription.plan_id,
+                              status: event.target.value,
+                            })
+                          }
+                        >
+                          <option value="active">Ativa</option>
+                          <option value="trialing">Teste</option>
+                          <option value="past_due">Pendente</option>
+                          <option value="cancelled">Cancelada</option>
+                          <option value="expired">Expirada</option>
+                        </select>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {updateSubscription.isPending ? (
+                          <span className="text-primary animate-pulse">Salvando…</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-muted-foreground">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400/80" /> Salvo no banco
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
+          {updateSubscription.isError && (
+            <p className="p-4 text-xs text-rose-400">
+              Não foi possível atualizar a assinatura. Confirme se a migration foi aplicada.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Serviços Profissionais */}
+      <Card className="rounded-xl border border-border bg-card shadow-xs">
+        <CardHeader className="p-5 pb-3">
+          <div className="flex items-center gap-2">
+            <Briefcase className="h-4 w-4 text-primary" />
+            <div>
+              <CardTitle className="text-base font-semibold tracking-tight text-white">
+                Serviços Profissionais
+              </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Ofertas exibidas na área de crescimento. Você pode ativar ou pausar quando quiser.
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-5 pt-2">
+          <div className="grid gap-3 md:grid-cols-2">
+            {data?.services.map((service) => (
+              <ServiceAdminCard
+                key={service.id}
+                service={service}
+                saving={updateService.isPending}
+                onToggle={(id, active) => updateService.mutate({ id, input: { active } })}
+              />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Base de Leads CRM */}
+      <Card className="rounded-xl border border-border bg-card shadow-xs">
+        <CardHeader className="p-5 pb-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              <CardTitle className="text-base font-semibold tracking-tight text-white">
+                Base de Usuários & Leads Cadastrados
+              </CardTitle>
+              <span className="text-xs font-normal text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full border border-border/60">
+                {filteredProfiles.length} {filteredProfiles.length === 1 ? "lead" : "leads"}
+              </span>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader className="bg-muted/40 border-b border-border">
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Nome</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Empresa</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">WhatsApp</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Nicho</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Cidade/UF</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Cadastro</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredProfiles.map((p) => (
+                  <TableRow key={p.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                    <TableCell className="py-3.5 px-4 min-w-[180px]">
+                      <p className="font-medium text-white tracking-tight text-sm">{p.full_name || "—"}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{p.email}</p>
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 text-sm text-white/90">
+                      {p.company_name || "—"}
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 text-xs font-mono text-muted-foreground whitespace-nowrap">
+                      {p.whatsapp || "—"}
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                      {p.niche ? (
+                        <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-muted/60 text-muted-foreground border border-border/40">
+                          {p.niche}
+                        </span>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                      {[p.city, p.state].filter(Boolean).join(" / ") || "—"}
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium tabular-nums ${
+                          (p.lead_score ?? 0) >= 70
+                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                            : (p.lead_score ?? 0) >= 31
+                              ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                              : "bg-muted/60 text-muted-foreground border border-border/40"
+                        }`}
+                      >
+                        {p.lead_score ?? 0}
+                      </span>
+                    </TableCell>
+                    <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                      {p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filteredProfiles.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                      Nenhum lead encontrado com os filtros atuais.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
-function Card({ icon: Icon, label, v }: { icon: React.ElementType; label: string; v: number }) {
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  description,
+  trend,
+  colorClass = "text-primary",
+}: {
+  icon: React.ElementType;
+  label: string;
+  value: number | string;
+  description?: string;
+  trend?: string;
+  colorClass?: string;
+}) {
   return (
-    <div className="card-surface">
-      <div className="flex justify-between">
-        <span className="text-xs text-muted-foreground">{label}</span>
-        <Icon className="h-4 w-4 text-[color:var(--primary)]" />
-      </div>
-      <div className="mt-3 text-3xl font-bold">{v}</div>
-    </div>
+    <Card className="rounded-xl border border-border bg-card shadow-xs">
+      <CardContent className="p-5">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            {label}
+          </span>
+          <div className={`flex h-9 w-9 items-center justify-center rounded-lg border border-border/80 bg-background/50 ${colorClass}`}>
+            <Icon className="h-4 w-4" />
+          </div>
+        </div>
+        <div className="mt-2 text-2xl font-bold tracking-tight text-white tabular-nums">
+          {value}
+        </div>
+        {description && (
+          <p className="mt-1 text-xs text-muted-foreground/80 flex items-center gap-1.5">
+            {trend && <span className="font-medium text-primary">{trend}</span>}
+            <span>{description}</span>
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 }
-const Th = ({ children }: { children: React.ReactNode }) => (
-  <th className="text-left px-3 py-2">{children}</th>
-);
-const Td = ({ children }: { children: React.ReactNode }) => (
-  <td className="px-3 py-3">{children}</td>
-);
 
 function PlanEditor({
   plan,
@@ -472,45 +649,42 @@ function PlanEditor({
       limits,
     });
   return (
-    <article className="rounded-2xl border border-border bg-surface-elevated/30 p-4">
-      <div className="mb-3 flex items-center justify-between gap-2">
+    <article className="rounded-xl border border-border bg-background/50 p-4 space-y-3">
+      <div className="flex items-center justify-between gap-2">
         <input
-          className="input-base font-semibold"
+          className="h-8 rounded-lg border border-border bg-background/60 px-3 text-xs font-semibold text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 transition-colors"
           value={name}
           aria-label="Nome do plano"
           onChange={(event) => setName(event.target.value)}
         />
-        <label className="flex shrink-0 items-center gap-2 text-xs">
+        <label className="flex shrink-0 items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
           <input
             type="checkbox"
             checked={active}
             onChange={(event) => setActive(event.target.checked)}
-          />{" "}
-          Ativo
+            className="rounded border-border text-primary focus:ring-primary/40"
+          />
+          <span>Ativo</span>
         </label>
       </div>
       <label className="block text-xs text-muted-foreground">
-        Descrição exibida na landing page
+        <span className="font-medium text-white/90">Descrição na Landing Page</span>
         <textarea
-          className="input-base mt-1 min-h-20"
+          className="mt-1 w-full rounded-lg border border-border bg-background/60 p-2.5 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors min-h-16 resize-none"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
       </label>
       <label className="block text-xs text-muted-foreground">
-        Valor mensal (R$)
+        <span className="font-medium text-white/90">Valor mensal (R$)</span>
         <input
-          className="input-base mt-1"
+          className="mt-1 w-full h-8 rounded-lg border border-border bg-background/60 px-3 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
           inputMode="decimal"
           value={price}
           onChange={(event) => setPrice(event.target.value)}
         />
       </label>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Este valor aparece nas telas comerciais. A ativação do Pro é feita manualmente pelo Super
-        Admin.
-      </p>
-      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+      <div className="grid grid-cols-2 gap-2 text-xs pt-1">
         <LimitField
           label="BioLinks"
           value={limits.bio_pages}
@@ -532,11 +706,16 @@ function PlanEditor({
           onChange={(value) => setLimits({ ...limits, templates: value })}
         />
       </div>
-      <p className="mt-2 text-xs text-muted-foreground">
-        Use <strong>-1</strong> para ilimitado.
+      <p className="text-[11px] text-muted-foreground">
+        Use <strong>-1</strong> para limites ilimitados.
       </p>
-      <button type="button" className="btn-primary mt-4 w-full" disabled={saving} onClick={save}>
-        {saving ? "Salvando…" : "Salvar plano"}
+      <button
+        type="button"
+        className="w-full rounded-lg bg-primary hover:bg-primary/90 text-white px-3 py-2 text-xs font-medium shadow-sm transition-all disabled:opacity-50"
+        disabled={saving}
+        onClick={save}
+      >
+        {saving ? "Salvando…" : "Salvar Plano"}
       </button>
     </article>
   );
@@ -552,10 +731,10 @@ function LimitField({
   onChange: (value: number) => void;
 }) {
   return (
-    <label>
-      {label}
+    <label className="block text-xs text-muted-foreground">
+      <span>{label}</span>
       <input
-        className="input-base mt-1"
+        className="mt-1 w-full h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
         type="number"
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
@@ -574,21 +753,24 @@ function ServiceAdminCard({
   onToggle: (id: string, active: boolean) => void;
 }) {
   return (
-    <article className="rounded-xl border border-border p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h3 className="font-semibold">{service.title}</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{service.description}</p>
-        </div>
-        <button
-          type="button"
-          className={service.active ? "btn-secondary shrink-0" : "btn-primary shrink-0"}
-          disabled={saving}
-          onClick={() => onToggle(service.id, !service.active)}
-        >
-          {service.active ? "Pausar" : "Ativar"}
-        </button>
+    <article className="rounded-xl border border-border bg-background/50 p-4 flex items-start justify-between gap-3">
+      <div>
+        <h3 className="text-sm font-semibold text-white">{service.title}</h3>
+        <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{service.description}</p>
       </div>
+      <button
+        type="button"
+        className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+          service.active
+            ? "border border-border bg-background/60 text-muted-foreground hover:text-white"
+            : "bg-primary hover:bg-primary/90 text-white shadow-sm"
+        }`}
+        disabled={saving}
+        onClick={() => onToggle(service.id, !service.active)}
+      >
+        {service.active ? "Pausar" : "Ativar"}
+      </button>
     </article>
   );
 }
+

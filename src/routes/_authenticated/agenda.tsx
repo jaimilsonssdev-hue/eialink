@@ -116,51 +116,6 @@ function AgendaPage() {
 
   const page = useMemo(() => pages.data?.find((item) => item.id === pageId), [pageId, pages.data]);
 
-  if (pages.isLoading || access.isLoading) {
-    return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  if (!access.data?.isPro)
-    return (
-      <div className="space-y-6 max-w-3xl mx-auto py-8">
-        <div>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
-            <CalendarClock className="h-3.5 w-3.5" /> Agenda Interativa
-          </span>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground mt-2">
-            Receba Agendamentos pelo seu Biolink
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Serviços, horários disponíveis e confirmações organizadas em um só lugar.
-          </p>
-        </div>
-        <UpgradePrompt
-          title="Agenda incluída no EIA Link PRO"
-          description="Ative sua agenda e permita que clientes escolham um serviço e um horário disponível diretamente no seu site."
-        />
-      </div>
-    );
-  if (!pages.data?.length)
-    return (
-      <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center space-y-4 max-w-lg mx-auto my-12">
-        <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
-          <CalendarDays className="h-6 w-6" />
-        </div>
-        <div>
-          <h2 className="text-lg font-bold text-foreground">Crie sua página primeiro</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Para ativar o sistema de agendamentos, você precisa ter pelo menos um biolink criado.
-          </p>
-        </div>
-        <Link to="/pages" className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white px-5 py-2.5 text-sm font-semibold shadow transition-all">
-          <Plus className="h-4 w-4" /> Criar Minha Primeira Página
-        </Link>
-      </div>
-    );
-
   function applyBusinessHours() {
     setAvailability((current) => {
       return [0, 1, 2, 3, 4, 5, 6].map((weekday) => {
@@ -545,6 +500,54 @@ function AgendaPage() {
     if (!selectedDate) return appointments.data;
     return appointments.data.filter((item) => getLocalDateStr(item.start_at) === selectedDate);
   }, [appointments.data, selectedDate]);
+
+
+
+  if (pages.isLoading || access.isLoading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+  if (!access.data?.isPro)
+    return (
+      <div className="space-y-6 max-w-3xl mx-auto py-8">
+        <div>
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-0.5 text-xs font-semibold text-primary">
+            <CalendarClock className="h-3.5 w-3.5" /> Agenda Interativa
+          </span>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground mt-2">
+            Receba Agendamentos pelo seu Biolink
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Serviços, horários disponíveis e confirmações organizadas em um só lugar.
+          </p>
+        </div>
+        <UpgradePrompt
+          title="Agenda incluída no EIA Link PRO"
+          description="Ative sua agenda e permita que clientes escolham um serviço e um horário disponível diretamente no seu site."
+        />
+      </div>
+    );
+  if (!pages.data?.length)
+    return (
+      <div className="rounded-2xl border border-dashed border-border bg-card/40 p-12 text-center space-y-4 max-w-lg mx-auto my-12">
+        <div className="mx-auto w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+          <CalendarDays className="h-6 w-6" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Crie sua página primeiro</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Para ativar o sistema de agendamentos, você precisa ter pelo menos um biolink criado.
+          </p>
+        </div>
+        <Link to="/pages" className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white px-5 py-2.5 text-sm font-semibold shadow transition-all">
+          <Plus className="h-4 w-4" /> Criar Minha Primeira Página
+        </Link>
+      </div>
+    );
+
 
   return (
     <div className="min-h-screen bg-[#0d0718] text-zinc-100 p-4 md:p-8 space-y-8 max-w-7xl mx-auto">

@@ -13,10 +13,17 @@ import {
   Sparkles,
   ExternalLink,
   Layers,
-  Filter,
   FileSpreadsheet,
   Check,
 } from "lucide-react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { LeadTemperatureBadge } from "./LeadTemperatureBadge";
 import { normalizeName, normalizePhone, buildDedupeKey } from "@/modules/prospecting/scoring";
 import { detectNicheKey } from "@/modules/prospecting/nichePresets";
@@ -65,7 +72,7 @@ interface CnpjLookupCardProps {
 }
 
 export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
-  const [activeTab, setActiveTab] = useState<"single" | "batch">("batch");
+  const [activeTab, setActiveTab] = useState<"batch" | "single">("batch");
 
   // === MODO 1: CONSULTA INDIVIDUAL ===
   const [cnpjInput, setCnpjInput] = useState("");
@@ -78,11 +85,13 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
   // === MODO 2: SCANNER EM LOTE ===
   const [batchRawText, setBatchRawText] = useState("");
   const [selectedCnae, setSelectedCnae] = useState<string>("");
+  const [cityContext, setCityContext] = useState("");
   const [isScanningBatch, setIsScanningBatch] = useState(false);
   const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
   const [batchResults, setBatchResults] = useState<BatchLeadResult[]>([]);
   const [batchFilter, setBatchFilter] = useState<"no_website" | "has_website" | "all">("no_website");
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+  const [addedIndices, setAddedIndices] = useState<Set<number>>(new Set());
   const [isAddingBatch, setIsAddingBatch] = useState(false);
   const [batchAddFeedback, setBatchAddFeedback] = useState<string | null>(null);
 
@@ -228,11 +237,10 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
 
   // === PROCESSAMENTO EM LOTE ===
   const extractCnpjsFromText = (text: string): string[] => {
-    // Procura padrões de CNPJ formatados (00.000.000/0000-00) ou sequências de 14 dígitos
     const formatted = text.match(/\b\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}\b/g) || [];
     const rawDigits = text.match(/\b\d{14}\b/g) || [];
     const all = [...formatted.map((c) => c.replace(/\D/g, "")), ...rawDigits];
-    return Array.from(new Set(all)).slice(0, 30); // Limite de 30 por lote para segurança e velocidade
+    return Array.from(new Set(all)).slice(0, 30);
   };
 
   const detectedCnpjs = extractCnpjsFromText(batchRawText);
@@ -248,6 +256,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     setBatchAddFeedback(null);
     setBatchResults([]);
     setSelectedIndices(new Set());
+    setAddedIndices(new Set());
     setBatchProgress({ current: 0, total: detectedCnpjs.length });
 
     const results: BatchLeadResult[] = [];
@@ -292,7 +301,6 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
         console.warn(`Erro ao consultar CNPJ ${cnpj}:`, e);
       }
 
-      // Pequeno delay entre requisições para evitar rate limit
       if (i < detectedCnpjs.length - 1) {
         await new Promise((r) => setTimeout(r, 250));
       }
@@ -315,6 +323,49 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
     if (batchFilter === "has_website") return r.hasWebsite;
     return true;
   });
+
+  const handleAddSingleFromBatch = async (item: BatchLeadResult, globalIndex: number) => {
+    const notesArr = [
+      `CNPJ: ${item.data.cnpj}`,
+      `CNAE: ${item.data.cnae_fiscal_descricao}`,
+    ];
+    if (item.partners) notesArr.push(`Sócios: ${item.partners}`);
+    if (!item.hasWebsite) notesArr.push("⚡ EMPRESA SEM SITE DETECTADA");
+
+    const draft: ProspectDraft = {
+      name: item.effectiveName,
+      niche: item.detectedNiche,
+      city: item.data.municipio ? normalizeName(item.data.municipio) : null,
+      state: item.data.uf || null,
+      phone: item.rawPhone ? item.rawPhone.replace(/\D/g, "") : null,
+      whatsapp: item.cleanPhone,
+      email: item.data.email ? item.data.email.toLowerCase().trim() : null,
+      instagram: null,
+      website: item.hasWebsite && item.data.email ? `https://${item.data.email.split("@")[1]}` : null,
+      has_website: item.hasWebsite,
+      rating: null,
+      reviews_count: null,
+      source: "Scanner CNAE/CNPJ",
+      score: item.score,
+      priority: item.score >= 80 ? "alta" : "media",
+      status: "novo",
+      notes: notesArr.join(" | "),
+      dedupe_key: buildDedupeKey({
+        name: item.effectiveName,
+        city: item.data.municipio,
+        whatsapp: item.cleanPhone,
+      }),
+    };
+
+    try {
+      const res = await onAddCompany(draft);
+      if (res.success) {
+        setAddedIndices((prev) => new Set(prev).add(globalIndex));
+      }
+    } catch (err) {
+      console.warn("Erro ao inserir item individual do lote:", err);
+    }
+  };
 
   const handleAddBatchToRadar = async () => {
     if (!selectedIndices.size) return;
@@ -368,19 +419,44 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
 
     setIsAddingBatch(false);
     setBatchAddFeedback(`${insertedCount} empresa(s) adicionada(s) ao Radar com sucesso!`);
+    setAddedIndices((prev) => {
+      const next = new Set(prev);
+      selectedIndices.forEach((i) => next.add(i));
+      return next;
+    });
     setSelectedIndices(new Set());
+  };
+
+  const handleOpenExternalSearch = () => {
+    const currentCnae = POPULAR_CNAES.find((c) => c.code === selectedCnae);
+    const cnaeCode = currentCnae ? currentCnae.code : selectedCnae.trim();
+    const cnaeQuery = cnaeCode ? `"${cnaeCode}"` : "CNAE";
+    const cityQuery = cityContext.trim() ? `"${cityContext.trim()}"` : "";
+    const query = `site:cnpj.biz OR site:casadosdados.com.br ${cnaeQuery} ${cityQuery} CNPJ`;
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(query.trim())}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleLoadSampleCnpjs = () => {
+    const samples = [
+      "33.000.167/0001-01", // Petrobras
+      "00.000.000/0001-91", // Banco do Brasil
+      "07.526.557/0001-00", // Ambev
+      "58.119.199/0001-51", // Bradesco Saúde / Odontoprev
+      "47.960.950/0001-21", // Magazine Luiza
+    ];
+    setBatchRawText(samples.join("\n"));
   };
 
   return (
     <div className="space-y-4">
-      {/* Sub-navegação: Consulta Rápida vs Scanner em Lote por CNAE */}
-      <div className="flex items-center gap-1.5 p-1 rounded-lg border border-border/80 bg-background/50 text-xs">
+      {/* Sub-navegação: Scanner em Lote por CNAE vs Consulta Individual */}
+      <div className="flex items-center gap-1.5 p-1 rounded-xl border border-border/80 bg-background/50 text-xs max-w-md">
         <button
           type="button"
           onClick={() => setActiveTab("batch")}
-          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-md font-medium transition-all ${
+          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg font-medium transition-all ${
             activeTab === "batch"
-              ? "bg-primary text-white shadow-xs"
+              ? "bg-primary text-white shadow-xs font-semibold"
               : "text-muted-foreground hover:text-white"
           }`}
         >
@@ -389,9 +465,9 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
         <button
           type="button"
           onClick={() => setActiveTab("single")}
-          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 rounded-md font-medium transition-all ${
+          className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-lg font-medium transition-all ${
             activeTab === "single"
-              ? "bg-primary text-white shadow-xs"
+              ? "bg-primary text-white shadow-xs font-semibold"
               : "text-muted-foreground hover:text-white"
           }`}
         >
@@ -404,39 +480,81 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
         <div className="space-y-4">
           <div className="space-y-1">
             <p className="text-xs text-muted-foreground">
-              Audite múltiplos CNPJs de uma só vez para identificar quais <strong>NÃO TÊM SITE</strong> e já estão prontos para prospecção imediata.
+              Audite múltiplos CNPJs de uma só vez para identificar quais <strong>NÃO TÊM SITE</strong>, descobrir os sócios decisores (QSA) e alimentar seu pipeline com 1 clique.
             </p>
           </div>
 
-          {/* Atalho de Seleção de CNAE Popular */}
-          <div className="space-y-1.5">
-            <label className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between">
-              <span>CNAE Comercial de Referência (Opcional):</span>
-              <span className="text-primary font-mono text-[10px]">Mais lucrativos</span>
-            </label>
-            <select
-              value={selectedCnae}
-              onChange={(e) => setSelectedCnae(e.target.value)}
-              className="w-full rounded-lg border border-border bg-background/70 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary/60 transition-colors"
-            >
-              <option value="">Selecione um CNAE para guiar sua prospecção...</option>
-              {POPULAR_CNAES.map((cnae) => (
-                <option key={cnae.code} value={cnae.code}>
-                  {cnae.code} · {cnae.popularTerm}
-                </option>
-              ))}
-            </select>
+          {/* Grade com CNAE de Referência + Cidade Contextual + Ações de Apoio */}
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+            <div className="md:col-span-6 space-y-1.5">
+              <label className="text-[11px] font-semibold text-muted-foreground flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-primary" /> CNAE Comercial de Referência:
+                </span>
+                <span className="text-primary font-mono text-[10px]">Mais Lucrativos</span>
+              </label>
+              <select
+                value={selectedCnae}
+                onChange={(e) => setSelectedCnae(e.target.value)}
+                className="w-full rounded-lg border border-border bg-background/70 px-3 py-2 text-xs text-white focus:outline-none focus:border-primary/60 transition-colors"
+              >
+                <option value="">Selecione um CNAE para filtrar o nicho...</option>
+                {POPULAR_CNAES.map((cnae) => (
+                  <option key={cnae.code} value={cnae.code}>
+                    {cnae.code} · {cnae.popularTerm}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="md:col-span-3 space-y-1.5">
+              <label className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
+                <MapPin className="h-3 w-3 text-muted-foreground" /> Cidade / Região:
+              </label>
+              <input
+                type="text"
+                value={cityContext}
+                onChange={(e) => setCityContext(e.target.value)}
+                placeholder="Ex: São Paulo, SP"
+                className="w-full rounded-lg border border-border bg-background/70 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors"
+              />
+            </div>
+
+            <div className="md:col-span-3 flex items-end gap-1.5">
+              <button
+                type="button"
+                onClick={handleOpenExternalSearch}
+                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/70 bg-muted/40 hover:bg-muted text-xs font-medium text-white px-2.5 py-2 transition-all"
+                title="Abrir busca no Google formatada para encontrar CNPJs deste CNAE e cidade"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-primary" />
+                <span className="truncate">Buscar CNPJs</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleLoadSampleCnpjs}
+                className="inline-flex items-center justify-center gap-1 rounded-lg border border-primary/30 bg-primary/10 hover:bg-primary/20 text-xs font-medium text-purple-300 px-2.5 py-2 transition-all whitespace-nowrap"
+                title="Carregar CNPJs de exemplo para testar imediatamente"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                <span>Exemplo</span>
+              </button>
+            </div>
           </div>
 
           {/* Área de Colar CNPJs */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between text-xs">
-              <label className="font-semibold text-white/90 flex items-center gap-1">
+              <label className="font-semibold text-white/90 flex items-center gap-1.5">
                 <FileSpreadsheet className="h-3.5 w-3.5 text-primary" /> Cole os CNPJs para Auditar:
               </label>
-              {detectedCnpjs.length > 0 && (
-                <span className="text-emerald-400 font-medium font-mono text-[11px]">
-                  {detectedCnpjs.length} CNPJ(s) detectados
+              {detectedCnpjs.length > 0 ? (
+                <span className="inline-flex items-center gap-1 text-emerald-400 font-medium font-mono text-[11px] bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full">
+                  ✓ {detectedCnpjs.length} CNPJ(s) detectados
+                </span>
+              ) : (
+                <span className="text-muted-foreground text-[11px]">
+                  Cole de qualquer fonte (linhas, vírgulas, espaços)
                 </span>
               )}
             </div>
@@ -444,7 +562,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
               rows={3}
               value={batchRawText}
               onChange={(e) => setBatchRawText(e.target.value)}
-              placeholder="Cole aqui os CNPJs (separados por vírgula, espaço ou linhas) copiados do Portal da Transparência, Casa dos Dados ou planilha..."
+              placeholder="Cole aqui os CNPJs para auditar presença de site e sócios (ex: 00.000.000/0001-91 ou 00000000000191)..."
               className="w-full rounded-lg border border-border bg-background/70 p-3 text-xs text-white font-mono placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 transition-colors resize-y"
               disabled={isScanningBatch}
             />
@@ -456,17 +574,17 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
               type="button"
               onClick={handleStartBatchScan}
               disabled={isScanningBatch || detectedCnpjs.length === 0}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs font-semibold bg-primary hover:bg-primary/90 text-white shadow-sm transition-all disabled:opacity-50"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-xs sm:text-sm font-semibold bg-primary hover:bg-primary/90 text-white shadow-sm transition-all disabled:opacity-50"
             >
               {isScanningBatch ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Auditando Presença Digital ({batchProgress?.current}/{batchProgress?.total})...
+                  Auditando Base da Receita Federal ({batchProgress?.current}/{batchProgress?.total})...
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 text-purple-200" />
-                  Auditar Site de {detectedCnpjs.length > 0 ? detectedCnpjs.length : ""} Empresas
+                  Auditar Presença Digital de {detectedCnpjs.length > 0 ? `${detectedCnpjs.length} Empresas` : "Empresas"}
                 </>
               )}
             </button>
@@ -476,7 +594,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
           {isScanningBatch && batchProgress && (
             <div className="space-y-1.5 rounded-lg border border-border bg-background/50 p-3">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>Cruzando Receita Federal e Domínios...</span>
+                <span>Cruzando Base da Receita Federal e Domínios Corporativos...</span>
                 <span className="font-mono text-white">
                   {Math.round((batchProgress.current / batchProgress.total) * 100)}%
                 </span>
@@ -498,7 +616,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
             </div>
           )}
 
-          {/* Tabela de Resultados do Lote */}
+          {/* Tabela Enterprise de Resultados do Lote */}
           {batchResults.length > 0 && (
             <div className="space-y-3 pt-1">
               {/* Filtro de Visualização: Sem Site vs Com Site */}
@@ -509,7 +627,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
                     onClick={() => setBatchFilter("no_website")}
                     className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
                       batchFilter === "no_website"
-                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                        ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-xs"
                         : "text-muted-foreground hover:text-white"
                     }`}
                   >
@@ -520,7 +638,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
                     onClick={() => setBatchFilter("has_website")}
                     className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
                       batchFilter === "has_website"
-                        ? "bg-muted text-white border border-border"
+                        ? "bg-muted text-white border border-border shadow-xs"
                         : "text-muted-foreground hover:text-white"
                     }`}
                   >
@@ -531,7 +649,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
                     onClick={() => setBatchFilter("all")}
                     className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
                       batchFilter === "all"
-                        ? "bg-muted text-white border border-border"
+                        ? "bg-muted text-white border border-border shadow-xs"
                         : "text-muted-foreground hover:text-white"
                     }`}
                   >
@@ -543,6 +661,26 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
+                    className="text-xs text-muted-foreground hover:text-white underline transition-colors"
+                    onClick={() => {
+                      const displayedIndices = filteredBatchResults.map((r) => batchResults.indexOf(r));
+                      const allSelected = displayedIndices.length > 0 && displayedIndices.every((i) => selectedIndices.has(i));
+                      const next = new Set(selectedIndices);
+                      if (allSelected) {
+                        displayedIndices.forEach((i) => next.delete(i));
+                      } else {
+                        displayedIndices.forEach((i) => next.add(i));
+                      }
+                      setSelectedIndices(next);
+                    }}
+                  >
+                    {filteredBatchResults.length > 0 &&
+                    filteredBatchResults.every((r) => selectedIndices.has(batchResults.indexOf(r)))
+                      ? "Desmarcar visíveis"
+                      : "Selecionar visíveis"}
+                  </button>
+                  <button
+                    type="button"
                     onClick={handleAddBatchToRadar}
                     disabled={isAddingBatch || selectedIndices.size === 0}
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-xs disabled:opacity-40 transition-all"
@@ -552,74 +690,146 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
                     ) : (
                       <Plus className="h-3.5 w-3.5" />
                     )}
-                    Adicionar Selecionadas ({selectedIndices.size})
+                    Adicionar {selectedIndices.size} ao Radar
                   </button>
                 </div>
               </div>
 
-              {/* Lista dos Resultados */}
-              <div className="max-h-72 overflow-auto rounded-xl border border-border bg-background/40 divide-y divide-border/40 text-xs">
-                {filteredBatchResults.map((lead, idx) => {
-                  const globalIndex = batchResults.indexOf(lead);
-                  const isChecked = selectedIndices.has(globalIndex);
+              {/* Tabela com Colunas Profissionais */}
+              <div className="max-h-96 overflow-auto rounded-xl border border-border bg-background/30">
+                <Table>
+                  <TableHeader className="bg-muted/40 sticky top-0 z-10">
+                    <TableRow className="border-border hover:bg-transparent">
+                      <TableHead className="px-3.5 py-2.5 w-8">
+                        <input
+                          type="checkbox"
+                          className="rounded border-border bg-background"
+                          checked={
+                            filteredBatchResults.length > 0 &&
+                            filteredBatchResults.every((r) => selectedIndices.has(batchResults.indexOf(r)))
+                          }
+                          onChange={(e) => {
+                            const displayedIndices = filteredBatchResults.map((r) => batchResults.indexOf(r));
+                            const next = new Set(selectedIndices);
+                            if (e.target.checked) {
+                              displayedIndices.forEach((i) => next.add(i));
+                            } else {
+                              displayedIndices.forEach((i) => next.delete(i));
+                            }
+                            setSelectedIndices(next);
+                          }}
+                        />
+                      </TableHead>
+                      <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Empresa & Atividade</TableHead>
+                      <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Sócios / Decisores (QSA)</TableHead>
+                      <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Contato / WhatsApp</TableHead>
+                      <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Status do Site</TableHead>
+                      <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
+                      <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80 text-right">Ação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border/40">
+                    {filteredBatchResults.map((lead) => {
+                      const globalIndex = batchResults.indexOf(lead);
+                      const isChecked = selectedIndices.has(globalIndex);
+                      const isIndividualAdded = addedIndices.has(globalIndex);
 
-                  return (
-                    <div
-                      key={lead.data.cnpj || idx}
-                      className={`p-3 flex items-start gap-3 transition-colors ${
-                        isChecked ? "bg-primary/10" : "hover:bg-muted/10"
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        className="mt-1 rounded border-border bg-background"
-                        checked={isChecked}
-                        onChange={() => {
-                          const next = new Set(selectedIndices);
-                          if (next.has(globalIndex)) next.delete(globalIndex);
-                          else next.add(globalIndex);
-                          setSelectedIndices(next);
-                        }}
-                      />
-                      <div className="flex-1 space-y-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-bold text-white text-xs tracking-tight truncate">
-                            {lead.effectiveName}
-                          </p>
-                          <LeadTemperatureBadge score={lead.score} showScore={false} />
-                        </div>
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          {[lead.data.municipio, lead.data.uf].filter(Boolean).join(" · ")} · CNPJ: {lead.data.cnpj}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-2 pt-0.5 text-[11px]">
-                          {lead.isOpportunity ? (
-                            <span className="inline-flex items-center gap-1 font-semibold text-amber-400">
-                              <Sparkles className="h-3 w-3" /> Sem Site Detectado
-                            </span>
-                          ) : (
-                            <span className="text-muted-foreground">🌐 Tem domínio oficial</span>
-                          )}
-                          {lead.cleanPhone && (
-                            <span className="text-emerald-400 font-mono">
-                              WhatsApp: {lead.rawPhone}
-                            </span>
-                          )}
-                          {lead.partners && (
-                            <span className="text-purple-300 truncate max-w-[200px]">
-                              Sócio: {lead.partners}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {filteredBatchResults.length === 0 && (
-                  <div className="p-6 text-center text-xs text-muted-foreground">
-                    Nenhuma empresa encontrada com o filtro selecionado.
-                  </div>
-                )}
+                      return (
+                        <TableRow
+                          key={lead.data.cnpj || globalIndex}
+                          className={`transition-colors border-border/40 ${isChecked ? "bg-primary/10" : "hover:bg-muted/20"}`}
+                        >
+                          <TableCell className="px-3.5 py-2.5">
+                            <input
+                              type="checkbox"
+                              className="rounded border-border bg-background"
+                              checked={isChecked}
+                              onChange={() => {
+                                const next = new Set(selectedIndices);
+                                if (next.has(globalIndex)) next.delete(globalIndex);
+                                else next.add(globalIndex);
+                                setSelectedIndices(next);
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="px-3.5 py-2.5">
+                            <p className="font-medium text-white tracking-tight text-xs sm:text-sm">
+                              {lead.effectiveName}
+                            </p>
+                            <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                              <span className="text-[10px] font-mono text-muted-foreground">
+                                CNPJ: {lead.data.cnpj}
+                              </span>
+                              <span className="text-[10px] text-muted-foreground">·</span>
+                              <span className="text-[10px] text-muted-foreground">
+                                {[lead.data.municipio, lead.data.uf].filter(Boolean).join(" - ")}
+                              </span>
+                            </div>
+                            <p className="text-[11px] text-primary/80 truncate max-w-[280px] mt-0.5" title={lead.data.cnae_fiscal_descricao}>
+                              {lead.data.cnae_fiscal_descricao}
+                            </p>
+                          </TableCell>
+                          <TableCell className="px-3.5 py-2.5 text-xs">
+                            {lead.partners ? (
+                              <div className="flex items-center gap-1.5 text-purple-300">
+                                <Users className="h-3.5 w-3.5 shrink-0 text-purple-400" />
+                                <span className="font-medium">{lead.partners}</span>
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground/60">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-3.5 py-2.5 text-xs font-mono">
+                            {lead.cleanPhone ? (
+                              <a
+                                href={`https://wa.me/55${lead.cleanPhone}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 transition-colors"
+                              >
+                                <Phone className="h-3 w-3" />
+                                <span>{lead.rawPhone || lead.cleanPhone}</span>
+                              </a>
+                            ) : lead.rawPhone ? (
+                              <span className="text-muted-foreground">{lead.rawPhone}</span>
+                            ) : (
+                              <span className="text-muted-foreground/60">—</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-3.5 py-2.5 whitespace-nowrap">
+                            {lead.isOpportunity ? (
+                              <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-semibold text-amber-300">
+                                <Sparkles className="h-3 w-3" /> Sem site
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2.5 py-0.5 text-[11px] font-normal text-muted-foreground">
+                                Já tem site
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="px-3.5 py-2.5">
+                            <LeadTemperatureBadge score={lead.score} />
+                          </TableCell>
+                          <TableCell className="px-3.5 py-2.5 text-right">
+                            {isIndividualAdded ? (
+                              <span className="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400">
+                                <Check className="h-3.5 w-3.5" /> No Radar
+                              </span>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleAddSingleFromBatch(lead, globalIndex)}
+                                className="rounded-lg border border-border/70 hover:border-primary/50 bg-background/60 hover:bg-primary/20 px-2.5 py-1 text-[11px] font-medium text-white transition-all shadow-xs"
+                              >
+                                + Radar
+                              </button>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           )}

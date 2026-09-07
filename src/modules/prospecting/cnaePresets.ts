@@ -142,3 +142,4 @@ export function findCnaeByTerm(term: string): CnaeItem[] {
       c.niche.toLowerCase().includes(clean)
   );
 }
+

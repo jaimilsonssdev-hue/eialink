@@ -213,7 +213,8 @@ function ProspectingPage() {
   } | null>(null);
 
 
-  const [entryTab, setEntryTab] = useState<"csv" | "cnpj" | "manual">("csv");
+  const [prospectEngine, setProspectEngine] = useState<"maps" | "cnae" | "utilities">("maps");
+  const [entryTab, setEntryTab] = useState<"csv" | "manual">("csv");
 
   async function handleAddCnpjCompany(draft: Parameters<typeof ProspectingService.create>[0]) {
     try {
@@ -923,336 +924,379 @@ function ProspectingPage() {
         </CardContent>
       </Card>
 
-      {/* Bento Grid: Varredura Automática (Esquerda) + Ferramentas Secundárias em Abas (Direita) */}
-      <section className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        {/* Bloco de Comando Principal: Varredura Automática (Google Maps & Instagram) */}
-        <Card className="lg:col-span-7 xl:col-span-8 border-border bg-card shadow-xs">
-          <CardHeader className="pb-4 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
-            <div>
-              <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                <Globe2 className="h-5 w-5 text-primary" /> Varredura Automática
-              </CardTitle>
-              <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                Google Maps & Instagram em tempo real para encontrar oportunidades sem site.
-              </CardDescription>
-            </div>
-            <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-              ⚡ Tempo Real & Sem Bloqueios
-            </span>
-          </CardHeader>
-
-          <CardContent className="space-y-4">
-            {/* Sugestões Rápidas de CNAE / Nichos */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
-              <span className="text-[11px] text-muted-foreground whitespace-nowrap font-medium flex items-center gap-1">
-                <Sparkles className="h-3 w-3 text-primary" /> CNAEs Quentes:
+      {/* Central de Captação Ativa: Seletor das Duas Ferramentas Principais + Utilitários */}
+      <section className="space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-2 rounded-2xl bg-card border border-border shadow-xs">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setProspectEngine("maps")}
+              className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                prospectEngine === "maps"
+                  ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
+                  : "text-muted-foreground hover:text-white hover:bg-muted/40"
+              }`}
+            >
+              <Globe2 className="h-4 w-4 text-purple-300" />
+              <span>Ferramenta 1: Radar Google Maps & Local</span>
+              <span className="hidden sm:inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-medium">
+                ⚡ Tempo Real
               </span>
-              {POPULAR_CNAES.slice(0, 8).map((item) => (
-                <button
-                  key={item.code}
-                  type="button"
-                  onClick={() => setSearchNiche(item.niche)}
-                  className={`px-2.5 py-1 rounded-full border text-[11px] whitespace-nowrap transition-all ${
-                    searchNiche.toLowerCase().includes(item.niche.toLowerCase())
-                      ? "border-primary bg-primary/20 text-white font-semibold shadow-xs"
-                      : "border-border/70 bg-background/50 text-muted-foreground hover:text-white hover:border-primary/40"
-                  }`}
-                  title={`${item.title} (CNAE ${item.code})`}
-                >
-                  {item.niche} <span className="opacity-60 text-[10px]">[{item.code.split("-")[0]}]</span>
-                </button>
-              ))}
-            </div>
+            </button>
 
-            <form onSubmit={handleLiveSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-              <div className="sm:col-span-5">
-                <input
-                  value={searchNiche}
-                  onChange={(e) => setSearchNiche(e.target.value)}
-                  placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
-                  className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                  disabled={isSearching}
-                  required
-                />
-              </div>
-              <div className="sm:col-span-4">
-                <input
-                  value={searchCity}
-                  onChange={(e) => setSearchCity(e.target.value)}
-                  placeholder="Cidade (ex: São Paulo, SP)"
-                  className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                  disabled={isSearching}
-                  required
-                />
-              </div>
-              <div className="sm:col-span-3">
-                <button
-                  type="submit"
-                  disabled={isSearching}
-                  className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium bg-primary hover:bg-primary/90 text-white transition-all shadow-sm"
-                >
-                  {isSearching ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
-                    </>
-                  ) : (
-                    <>
-                      <Search className="h-4 w-4" /> Varrer
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
+            <button
+              type="button"
+              onClick={() => setProspectEngine("cnae")}
+              className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+                prospectEngine === "cnae"
+                  ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
+                  : "text-muted-foreground hover:text-white hover:bg-muted/40"
+              }`}
+            >
+              <Building2 className="h-4 w-4 text-purple-300" />
+              <span>Ferramenta 2: Radar CNAE & Base CNPJ</span>
+              <span className="hidden sm:inline-flex items-center rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 text-[10px] font-medium">
+                🏛️ Receita Federal
+              </span>
+            </button>
 
-            {isSearching && (
-              <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground animate-pulse">
-                <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
-                <div>
-                  <p className="font-medium text-white text-xs sm:text-sm">Varrendo Google Maps e perfis públicos do Instagram...</p>
-                  <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
+            <button
+              type="button"
+              onClick={() => setProspectEngine("utilities")}
+              className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all ${
+                prospectEngine === "utilities"
+                  ? "bg-muted text-white shadow-xs border border-border"
+                  : "text-muted-foreground hover:text-white hover:bg-muted/40"
+              }`}
+            >
+              <Upload className="h-4 w-4" />
+              <span>Importar CSV / Manual</span>
+            </button>
+          </div>
+
+          <div className="text-[11px] text-muted-foreground px-2 hidden lg:block">
+            {prospectEngine === "maps" && "Varredura local no Google Maps e Instagram com filtro automático de quem tem ou não tem site."}
+            {prospectEngine === "cnae" && "Auditoria de atividades econômicas e CNPJs oficiais com dados de sócios (QSA) e filtro de site."}
+            {prospectEngine === "utilities" && "Importe planilhas externas com deduplicação ou cadastre oportunidades avulsas."}
+          </div>
+        </div>
+
+        {/* FERRAMENTA 1: GOOGLE MAPS & INSTAGRAM (FULL WIDTH) */}
+        {prospectEngine === "maps" && (
+          <Card className="w-full border-border bg-card shadow-xs">
+            <CardHeader className="pb-4 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
+              <div>
+                <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Globe2 className="h-5 w-5 text-primary" /> Ferramenta 1: Radar Google Maps & Local
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                  Varredura em tempo real para encontrar comércios e serviços locais, identificando automaticamente quem já tem site e quem está sem site.
+                </CardDescription>
+              </div>
+              <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
+                ⚡ Tempo Real & Sem Bloqueios
+              </span>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {/* Sugestões Rápidas de CNAE / Nichos */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+                <span className="text-[11px] text-muted-foreground whitespace-nowrap font-medium flex items-center gap-1">
+                  <Sparkles className="h-3 w-3 text-primary" /> CNAEs Quentes:
+                </span>
+                {POPULAR_CNAES.slice(0, 8).map((item) => (
+                  <button
+                    key={item.code}
+                    type="button"
+                    onClick={() => setSearchNiche(item.niche)}
+                    className={`px-2.5 py-1 rounded-full border text-[11px] whitespace-nowrap transition-all ${
+                      searchNiche.toLowerCase().includes(item.niche.toLowerCase())
+                        ? "border-primary bg-primary/20 text-white font-semibold shadow-xs"
+                        : "border-border/70 bg-background/50 text-muted-foreground hover:text-white hover:border-primary/40"
+                    }`}
+                    title={`${item.title} (CNAE ${item.code})`}
+                  >
+                    {item.niche} <span className="opacity-60 text-[10px]">[{item.code.split("-")[0]}]</span>
+                  </button>
+                ))}
+              </div>
+
+              <form onSubmit={handleLiveSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                <div className="sm:col-span-5">
+                  <input
+                    value={searchNiche}
+                    onChange={(e) => setSearchNiche(e.target.value)}
+                    placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
+                    className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                    disabled={isSearching}
+                    required
+                  />
                 </div>
-              </div>
-            )}
+                <div className="sm:col-span-4">
+                  <input
+                    value={searchCity}
+                    onChange={(e) => setSearchCity(e.target.value)}
+                    placeholder="Cidade (ex: São Paulo, SP)"
+                    className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                    disabled={isSearching}
+                    required
+                  />
+                </div>
+                <div className="sm:col-span-3">
+                  <button
+                    type="submit"
+                    disabled={isSearching}
+                    className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium bg-primary hover:bg-primary/90 text-white transition-all shadow-sm"
+                  >
+                    {isSearching ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-4 w-4" /> Varrer Oportunidades
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
 
-            {liveResults && liveResults.length > 0 && (
-              <div className="space-y-3 pt-2">
-                {/* Abas de Filtro de Site na Varredura */}
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2.5">
-                  <div className="flex items-center gap-1 text-xs">
-                    <button
-                      type="button"
-                      onClick={() => setLiveSiteFilter("no_website")}
-                      className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
-                        liveSiteFilter === "no_website"
-                          ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-xs"
-                          : "text-muted-foreground hover:text-white"
-                      }`}
-                    >
-                      🔥 Sem Site ({liveResults.filter((r) => !r.has_website).length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLiveSiteFilter("has_website")}
-                      className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
-                        liveSiteFilter === "has_website"
-                          ? "bg-muted text-white border border-border shadow-xs"
-                          : "text-muted-foreground hover:text-white"
-                      }`}
-                    >
-                      🌐 Com Site ({liveResults.filter((r) => r.has_website).length})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLiveSiteFilter("all")}
-                      className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
-                        liveSiteFilter === "all"
-                          ? "bg-muted text-white border border-border shadow-xs"
-                          : "text-muted-foreground hover:text-white"
-                      }`}
-                    >
-                      Todas ({liveResults.length})
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      className="text-xs text-muted-foreground hover:text-white underline transition-colors"
-                      onClick={() => {
-                        const displayedIndices = displayedLiveResults.map((r) => liveResults.indexOf(r));
-                        const allDisplayedSelected = displayedIndices.length > 0 && displayedIndices.every((i) => selectedLiveIndices.has(i));
-                        const next = new Set(selectedLiveIndices);
-                        if (allDisplayedSelected) {
-                          displayedIndices.forEach((i) => next.delete(i));
-                        } else {
-                          displayedIndices.forEach((i) => next.add(i));
-                        }
-                        setSelectedLiveIndices(next);
-                      }}
-                    >
-                      {displayedLiveResults.length > 0 && displayedLiveResults.every((r) => selectedLiveIndices.has(liveResults.indexOf(r)))
-                        ? "Desmarcar visíveis"
-                        : "Selecionar visíveis"}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleImportLive}
-                      disabled={selectedLiveIndices.size === 0 || importMutation.isPending}
-                      className="rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all disabled:opacity-50 shadow-sm flex items-center gap-1.5"
-                    >
-                      {importMutation.isPending ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Plus className="h-3.5 w-3.5" />
-                      )}
-                      Importar {selectedLiveIndices.size} para o Radar
-                    </button>
+              {isSearching && (
+                <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground animate-pulse">
+                  <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
+                  <div>
+                    <p className="font-medium text-white text-xs sm:text-sm">Varrendo Google Maps e perfis públicos do Instagram...</p>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
                   </div>
                 </div>
+              )}
 
-                <div className="max-h-96 overflow-auto rounded-xl border border-border bg-background/30">
-                  <Table>
-                    <TableHeader className="bg-muted/40 sticky top-0 z-10">
-                      <TableRow className="border-border hover:bg-transparent">
-                        <TableHead className="px-3.5 py-2.5 w-8">
-                          <input
-                            type="checkbox"
-                            className="rounded border-border bg-background"
-                            checked={
-                              displayedLiveResults.length > 0 &&
-                              displayedLiveResults.every((r) => selectedLiveIndices.has(liveResults.indexOf(r)))
-                            }
-                            onChange={(e) => {
-                              const displayedIndices = displayedLiveResults.map((r) => liveResults.indexOf(r));
-                              const next = new Set(selectedLiveIndices);
-                              if (e.target.checked) {
-                                displayedIndices.forEach((i) => next.add(i));
-                              } else {
-                                displayedIndices.forEach((i) => next.delete(i));
+              {liveResults && liveResults.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  {/* Abas de Filtro de Site na Varredura */}
+                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2.5">
+                    <div className="flex items-center gap-1 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setLiveSiteFilter("no_website")}
+                        className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
+                          liveSiteFilter === "no_website"
+                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-xs"
+                            : "text-muted-foreground hover:text-white"
+                        }`}
+                      >
+                        🔥 Sem Site ({liveResults.filter((r) => !r.has_website).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLiveSiteFilter("has_website")}
+                        className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
+                          liveSiteFilter === "has_website"
+                            ? "bg-muted text-white border border-border shadow-xs"
+                            : "text-muted-foreground hover:text-white"
+                        }`}
+                      >
+                        🌐 Com Site ({liveResults.filter((r) => r.has_website).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLiveSiteFilter("all")}
+                        className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
+                          liveSiteFilter === "all"
+                            ? "bg-muted text-white border border-border shadow-xs"
+                            : "text-muted-foreground hover:text-white"
+                        }`}
+                      >
+                        Todas ({liveResults.length})
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        className="text-xs text-muted-foreground hover:text-white underline transition-colors"
+                        onClick={() => {
+                          const displayedIndices = displayedLiveResults.map((r) => liveResults.indexOf(r));
+                          const allDisplayedSelected = displayedIndices.length > 0 && displayedIndices.every((i) => selectedLiveIndices.has(i));
+                          const next = new Set(selectedLiveIndices);
+                          if (allDisplayedSelected) {
+                            displayedIndices.forEach((i) => next.delete(i));
+                          } else {
+                            displayedIndices.forEach((i) => next.add(i));
+                          }
+                          setSelectedLiveIndices(next);
+                        }}
+                      >
+                        {displayedLiveResults.length > 0 && displayedLiveResults.every((r) => selectedLiveIndices.has(liveResults.indexOf(r)))
+                          ? "Desmarcar visíveis"
+                          : "Selecionar visíveis"}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleImportLive}
+                        disabled={selectedLiveIndices.size === 0 || importMutation.isPending}
+                        className="rounded-lg px-3.5 py-1.5 text-xs sm:text-sm font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-all disabled:opacity-50 shadow-sm flex items-center gap-1.5"
+                      >
+                        {importMutation.isPending ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Plus className="h-3.5 w-3.5" />
+                        )}
+                        Importar {selectedLiveIndices.size} para o Radar
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="max-h-96 overflow-auto rounded-xl border border-border bg-background/30">
+                    <Table>
+                      <TableHeader className="bg-muted/40 sticky top-0 z-10">
+                        <TableRow className="border-border hover:bg-transparent">
+                          <TableHead className="px-3.5 py-2.5 w-8">
+                            <input
+                              type="checkbox"
+                              className="rounded border-border bg-background"
+                              checked={
+                                displayedLiveResults.length > 0 &&
+                                displayedLiveResults.every((r) => selectedLiveIndices.has(liveResults.indexOf(r)))
                               }
-                              setSelectedLiveIndices(next);
-                            }}
-                          />
-                        </TableHead>
-                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Empresa</TableHead>
-                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">WhatsApp</TableHead>
-                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Instagram</TableHead>
-                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Status do Site</TableHead>
-                        <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y divide-border/40">
-                      {displayedLiveResults.map((lead) => {
-                        const globalIndex = liveResults.indexOf(lead);
-                        const isSelected = selectedLiveIndices.has(globalIndex);
-                        return (
-                          <TableRow
-                            key={lead.dedupe_key || globalIndex}
-                            className={`transition-colors border-border/40 ${isSelected ? "bg-primary/10" : "hover:bg-muted/20"}`}
-                          >
-                            <TableCell className="px-3.5 py-2.5">
-                              <input
-                                type="checkbox"
-                                className="rounded border-border bg-background"
-                                checked={isSelected}
-                                onChange={() => {
-                                  const next = new Set(selectedLiveIndices);
-                                  if (next.has(globalIndex)) next.delete(globalIndex);
-                                  else next.add(globalIndex);
-                                  setSelectedLiveIndices(next);
-                                }}
-                              />
-                            </TableCell>
-                            <TableCell className="px-3.5 py-2.5">
-                              <p className="font-medium text-white tracking-tight text-xs sm:text-sm">{lead.name}</p>
-                              <p className="text-[11px] font-normal text-muted-foreground/80 mt-0.5">
-                                {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
-                              </p>
-                            </TableCell>
-                            <TableCell className="px-3.5 py-2.5 text-xs font-mono text-muted-foreground">
-                              {lead.whatsapp || "—"}
-                            </TableCell>
-                            <TableCell className="px-3.5 py-2.5 text-xs">
-                              {lead.instagram ? (
-                                <a
-                                  href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1 font-normal text-xs text-muted-foreground hover:text-pink-400 transition-colors"
-                                >
-                                  <Instagram className="h-3 w-3 text-muted-foreground/70" />
-                                  <span>{lead.instagram}</span>
-                                </a>
-                              ) : (
-                                <a
-                                  href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${lead.name}" "${lead.city}"`)}`}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
-                                  title="Buscar Instagram desta empresa"
-                                >
-                                  <Instagram className="h-3 w-3 text-muted-foreground/70" />
-                                  <span>Achar perfil</span>
-                                </a>
-                              )}
-                            </TableCell>
-                            <TableCell className="px-3.5 py-2.5 whitespace-nowrap">
-                              {lead.has_website ? (
-                                <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
-                                  Já tem site
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
-                                  ⭐ Sem site
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="px-3.5 py-2.5">
-                              <span className="font-semibold text-xs sm:text-sm tabular-nums text-white">{lead.score}</span>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
-                    </TableBody>
-                  </Table>
+                              onChange={(e) => {
+                                const displayedIndices = displayedLiveResults.map((r) => liveResults.indexOf(r));
+                                const next = new Set(selectedLiveIndices);
+                                if (e.target.checked) {
+                                  displayedIndices.forEach((i) => next.add(i));
+                                } else {
+                                  displayedIndices.forEach((i) => next.delete(i));
+                                }
+                                setSelectedLiveIndices(next);
+                              }}
+                            />
+                          </TableHead>
+                          <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Empresa</TableHead>
+                          <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">WhatsApp</TableHead>
+                          <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Instagram</TableHead>
+                          <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Status do Site</TableHead>
+                          <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody className="divide-y divide-border/40">
+                        {displayedLiveResults.map((lead) => {
+                          const globalIndex = liveResults.indexOf(lead);
+                          const isSelected = selectedLiveIndices.has(globalIndex);
+                          return (
+                            <TableRow
+                              key={lead.dedupe_key || globalIndex}
+                              className={`transition-colors border-border/40 ${isSelected ? "bg-primary/10" : "hover:bg-muted/20"}`}
+                            >
+                              <TableCell className="px-3.5 py-2.5">
+                                <input
+                                  type="checkbox"
+                                  className="rounded border-border bg-background"
+                                  checked={isSelected}
+                                  onChange={() => {
+                                    const next = new Set(selectedLiveIndices);
+                                    if (next.has(globalIndex)) next.delete(globalIndex);
+                                    else next.add(globalIndex);
+                                    setSelectedLiveIndices(next);
+                                  }}
+                                />
+                              </TableCell>
+                              <TableCell className="px-3.5 py-2.5">
+                                <p className="font-medium text-white tracking-tight text-xs sm:text-sm">{lead.name}</p>
+                                <p className="text-[11px] font-normal text-muted-foreground/80 mt-0.5">
+                                  {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
+                                </p>
+                              </TableCell>
+                              <TableCell className="px-3.5 py-2.5 text-xs font-mono text-muted-foreground">
+                                {lead.whatsapp || "—"}
+                              </TableCell>
+                              <TableCell className="px-3.5 py-2.5 text-xs">
+                                {lead.instagram ? (
+                                  <a
+                                    href={`https://instagram.com/${lead.instagram.replace("@", "")}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 font-normal text-xs text-muted-foreground hover:text-pink-400 transition-colors"
+                                  >
+                                    <Instagram className="h-3 w-3 text-muted-foreground/70" />
+                                    <span>{lead.instagram}</span>
+                                  </a>
+                                ) : (
+                                  <a
+                                    href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${lead.name}" "${lead.city}"`)}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2 py-0.5 text-[11px] font-medium text-muted-foreground hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
+                                    title="Buscar Instagram desta empresa"
+                                  >
+                                    <Instagram className="h-3 w-3 text-muted-foreground/70" />
+                                    <span>Achar perfil</span>
+                                  </a>
+                                )}
+                              </TableCell>
+                              <TableCell className="px-3.5 py-2.5 whitespace-nowrap">
+                                {lead.has_website ? (
+                                  <span className="inline-flex items-center rounded-full border border-border/60 bg-muted/40 px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
+                                    Já tem site
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-medium text-emerald-400">
+                                    ⭐ Sem site
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="px-3.5 py-2.5">
+                                <span className="font-semibold text-xs sm:text-sm tabular-nums text-white">{lead.score}</span>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
                 </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* FERRAMENTA 2: RADAR CNAE & BASE CNPJ (FULL WIDTH) */}
+        {prospectEngine === "cnae" && (
+          <Card className="w-full border-border bg-card shadow-xs">
+            <CardHeader className="pb-4 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
+              <div>
+                <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                  <Building2 className="h-5 w-5 text-primary" /> Ferramenta 2: Radar CNAE & Base CNPJ (Receita Federal)
+                </CardTitle>
+                <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                  Auditoria inteligente por Atividade Econômica (CNAE) e CNPJs: filtre empresas sem site e descubra sócios decisores (QSA).
+                </CardDescription>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-medium text-amber-300">
+                🏛️ Dados Oficiais da Receita
+              </span>
+            </CardHeader>
+            <CardContent>
+              <CnpjLookupCard onAddCompany={handleAddCnpjCompany} />
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Bloco Secundário: Abas de Importação CSV e Cadastro Manual */}
-        <Card className="lg:col-span-5 xl:col-span-4 border-border bg-card shadow-xs">
-          <CardHeader className="pb-3 border-b border-border">
-            <div className="flex items-center gap-1 p-1 rounded-lg border border-border bg-background/60 text-xs">
-              <button
-                type="button"
-                onClick={() => setEntryTab("csv")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium transition-all ${
-                  entryTab === "csv"
-                    ? "bg-muted text-white shadow-xs"
-                    : "text-muted-foreground hover:text-white"
-                }`}
-              >
-                <Upload className="h-3.5 w-3.5" /> Importar CSV
-              </button>
-              <button
-                type="button"
-                onClick={() => setEntryTab("cnpj")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium transition-all ${
-                  entryTab === "cnpj"
-                    ? "bg-primary text-white shadow-xs font-semibold"
-                    : "text-muted-foreground hover:text-white"
-                }`}
-              >
-                <Building2 className="h-3.5 w-3.5" /> Buscar CNPJ 🏢
-              </button>
-              <button
-                type="button"
-                onClick={() => setEntryTab("manual")}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-md font-medium transition-all ${
-                  entryTab === "manual"
-                    ? "bg-muted text-white shadow-xs"
-                    : "text-muted-foreground hover:text-white"
-                }`}
-              >
-                <Plus className="h-3.5 w-3.5" /> Manual
-              </button>
-            </div>
-          </CardHeader>
-
-          <CardContent className="pt-4">
-            {/* Tab 1: Importar CSV */}
-            {entryTab === "csv" && (
-              <div className="space-y-3.5">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">
-                    Suba sua planilha de leads. Reconhece nome, nicho, cidade, telefone, whatsapp, instagram e site.
-                  </p>
-                </div>
-
-                <label className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl border border-dashed border-border/80 hover:border-primary/50 bg-background/40 hover:bg-background/70 cursor-pointer transition-all">
-                  <Upload className="h-6 w-6 text-muted-foreground" />
+        {/* UTILITÁRIOS: IMPORTAR CSV E CADASTRO MANUAL (2 COLUNAS) */}
+        {prospectEngine === "utilities" && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            {/* Card 1: Importar CSV */}
+            <Card className="border-border bg-card shadow-xs">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+                  <Upload className="h-4 w-4 text-primary" /> Importar Lista via CSV
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  Suba sua planilha de leads. Reconhece nome, nicho, cidade, telefone, whatsapp, instagram e site.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4 space-y-3.5">
+                <label className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-dashed border-border/80 hover:border-primary/50 bg-background/40 hover:bg-background/70 cursor-pointer transition-all">
+                  <Upload className="h-7 w-7 text-muted-foreground" />
                   <span className="text-xs text-white font-medium">Clique para selecionar o arquivo .csv</span>
                   <span className="text-[11px] text-muted-foreground/80">Deduplicação e pontuação automáticas</span>
                   <input
@@ -1287,10 +1331,10 @@ function ProspectingPage() {
                         <TableBody className="divide-y divide-border/40">
                           {preview.map((row) => (
                             <TableRow key={row.line} className="hover:bg-muted/20 border-border/40 transition-colors">
-                              <TableCell className="px-3 py-2 font-medium text-white truncate max-w-[120px]">
+                              <TableCell className="px-3 py-2 font-medium text-white truncate max-w-[140px]">
                                 {row.draft?.name ?? `Linha ${row.line}`}
                               </TableCell>
-                              <TableCell className="px-3 py-2 text-muted-foreground truncate max-w-[90px]">
+                              <TableCell className="px-3 py-2 text-muted-foreground truncate max-w-[100px]">
                                 {row.draft?.city ?? "—"}
                               </TableCell>
                               <TableCell className="px-3 py-2">
@@ -1327,63 +1371,78 @@ function ProspectingPage() {
                     </div>
                   </div>
                 )}
-              </div>
-            )}
+              </CardContent>
+            </Card>
 
-            {/* Tab 2: Consultar CNPJ */}
-            {entryTab === "cnpj" && (
-              <CnpjLookupCard onAddCompany={handleAddCnpjCompany} />
-            )}
-
-            {/* Tab 3: Adicionar Manual */}
-            {entryTab === "manual" && (
-              <form onSubmit={handleManualSubmit} className="space-y-2.5">
-                <p className="text-xs text-muted-foreground">
-                  Cadastre um lead diretamente no seu Radar de Prospecção.
-                </p>
-                <div>
-                  <input
-                    name="name"
-                    placeholder="Nome da Empresa *"
-                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    name="niche"
-                    placeholder="Nicho (ex: Dentista)"
-                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                  />
-                  <input
-                    name="city"
-                    placeholder="Cidade"
-                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    name="whatsapp"
-                    placeholder="WhatsApp"
-                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                  />
-                  <input
-                    name="website"
-                    placeholder="Site (opcional)"
-                    className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={createMutation.isPending}
-                  className="w-full rounded-lg border border-border bg-muted/60 hover:bg-muted px-3 py-2 text-xs font-medium text-white transition-all mt-2"
-                >
-                  {createMutation.isPending ? "Salvando..." : "Salvar no Radar"}
-                </button>
-              </form>
-            )}
-          </CardContent>
-        </Card>
+            {/* Card 2: Cadastro Manual */}
+            <Card className="border-border bg-card shadow-xs">
+              <CardHeader className="pb-3 border-b border-border/60">
+                <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+                  <Plus className="h-4 w-4 text-primary" /> Cadastro Manual de Oportunidade
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground">
+                  Cadastre um lead diretamente no seu Radar de Prospecção com cálculo imediato de score.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <form onSubmit={handleManualSubmit} className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Nome da Empresa *</label>
+                    <input
+                      name="name"
+                      placeholder="Ex: Consultório Odontológico Sorrir Mais"
+                      className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                      required
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Nicho</label>
+                      <input
+                        name="niche"
+                        placeholder="Ex: Dentista, Barbearia"
+                        className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Cidade</label>
+                      <input
+                        name="city"
+                        placeholder="Ex: Curitiba, PR"
+                        className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div>
+                      <label className="text-[11px] font-semibold text-muted-foreground block mb-1">WhatsApp / Telefone</label>
+                      <input
+                        name="whatsapp"
+                        placeholder="(41) 99999-9999"
+                        className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Site (se houver)</label>
+                      <input
+                        name="website"
+                        placeholder="Ex: www.clinica.com.br"
+                        className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={createMutation.isPending}
+                    className="w-full rounded-lg bg-primary hover:bg-primary/90 px-4 py-2.5 text-xs font-semibold text-white transition-all shadow-sm mt-2"
+                  >
+                    {createMutation.isPending ? "Salvando..." : "Salvar no Radar"}
+                  </button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </section>
 
       {/* Pipeline */}

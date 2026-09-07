@@ -1,10 +1,13 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+# Diretriz para Adição de Componentes Visuais (shadcn/ui)
+
+Sempre que o usuário solicitar um componente visual (como botões, carrosséis, modais, drawers, tabs, cards, tabelas, efeitos visuais ou animações):
+
+1. **Execução Automática via CLI**: Execute diretamente no terminal o comando nativo:
+   ```bash
+   npx shadcn@latest add <componente> -y
+   ```
+   *(ou `npx shadcn@latest add <url-do-registro> -y` para registries open-source como Magic UI, Aceternity ou 21st.dev)*.
+
+2. **Injeção Direta da Nuvem**: O CLI busca e injeta o código TypeScript/Tailwind automaticamente na pasta `@/components/ui`, instalando dependências necessárias sem exigir que o usuário precise baixar ou copiar nada manualmente.
+
+3. **Integração Imediata**: Utilize o componente importando de `@/components/ui/<nome-do-componente>` no layout ou página indicada.

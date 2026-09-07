@@ -242,4 +242,64 @@ export const BookingService = {
     if (error) throw new Error(error.message);
     return data?.[0] as { appointment_id: string; confirmation_token: string; end_at: string };
   },
+
+  async blockTime(input: {
+    bioPageId: string;
+    date: string;
+    allDay?: boolean;
+    startTime?: string;
+    endTime?: string;
+    reason: string;
+  }): Promise<Appointment> {
+    const { data: services } = await store
+      .from("booking_services")
+      .select("id")
+      .eq("bio_page_id", input.bioPageId)
+      .limit(1);
+
+    if (!services?.length) {
+      throw new Error("Cadastre pelo menos um serviço antes de criar bloqueios de agenda.");
+    }
+    const serviceId = services[0].id;
+
+    let startAt: string;
+    let endAt: string;
+
+    if (input.allDay) {
+      startAt = new Date(`${input.date}T00:00:00`).toISOString();
+      endAt = new Date(`${input.date}T23:59:59`).toISOString();
+    } else {
+      const start = input.startTime || "08:00";
+      const end = input.endTime || "18:00";
+      startAt = new Date(`${input.date}T${start}:00`).toISOString();
+      endAt = new Date(`${input.date}T${end}:00`).toISOString();
+    }
+
+    const { data, error } = await store
+      .from("appointments")
+      .insert({
+        bio_page_id: input.bioPageId,
+        service_id: serviceId,
+        client_name: `[BLOQUEIO] ${input.reason}`,
+        client_phone: "00000000",
+        client_email: null,
+        start_at: startAt,
+        end_at: endAt,
+        status: "confirmed",
+        notes: `Bloqueio de agenda: ${input.reason}`,
+      })
+      .select("*, booking_services(name,duration_minutes)")
+      .single();
+
+    if (error) throw new Error(error.message);
+    return data as Appointment;
+  },
+
+  async unblockTime(appointmentId: string) {
+    const { error } = await store
+      .from("appointments")
+      .update({ status: "cancelled", updated_at: new Date().toISOString() })
+      .eq("id", appointmentId);
+    if (error) throw new Error(error.message);
+  },
 };

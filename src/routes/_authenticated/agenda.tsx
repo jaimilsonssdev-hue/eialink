@@ -73,6 +73,15 @@ function AgendaPage() {
   const [rescheduleStart, setRescheduleStart] = useState("");
   const [loadingReschedule, setLoadingReschedule] = useState(false);
   const [savingReschedule, setSavingReschedule] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState<Date>(() => new Date());
+  const [blockingModalOpen, setBlockingModalOpen] = useState(false);
+  const [blockingDate, setBlockingDate] = useState("");
+  const [blockingAllDay, setBlockingAllDay] = useState(true);
+  const [blockingStartTime, setBlockingStartTime] = useState("08:00");
+  const [blockingEndTime, setBlockingEndTime] = useState("18:00");
+  const [blockingReason, setBlockingReason] = useState("Folga programada");
+  const [savingBlock, setSavingBlock] = useState(false);
 
   useEffect(() => {
     if (!pageId && pages.data?.[0]) setPageId(pages.data[0].id);
@@ -724,9 +733,9 @@ function AgendaPage() {
           {/* KPI Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-[#160d29] border-[#27233a] p-4">
-              <div className="text-xs text-zinc-400 font-medium">Total de Atendimentos</div>
+              <div className="text-xs text-zinc-400 font-medium">Total Ativos</div>
               <div className="text-2xl font-bold text-white mt-1">
-                {appointments.data?.length ?? 0}
+                {appointments.data?.filter((item) => item.status !== "cancelled").length ?? 0}
               </div>
             </Card>
             <Card className="bg-[#160d29] border-[#27233a] p-4">
@@ -735,7 +744,7 @@ function AgendaPage() {
                 <span className="h-2 w-2 rounded-full bg-emerald-400" />
               </div>
               <div className="text-2xl font-bold text-white mt-1">
-                {appointments.data?.filter((item) => item.status === "confirmed").length ?? 0}
+                {appointments.data?.filter((item) => !item.client_name?.startsWith("[BLOQUEIO]") && item.status === "confirmed").length ?? 0}
               </div>
             </Card>
             <Card className="bg-[#160d29] border-[#27233a] p-4">
@@ -748,121 +757,323 @@ function AgendaPage() {
               </div>
             </Card>
             <Card className="bg-[#160d29] border-[#27233a] p-4">
-              <div className="text-xs text-rose-400 font-medium flex items-center justify-between">
-                <span>Cancelados</span>
-                <span className="h-2 w-2 rounded-full bg-rose-400" />
+              <div className="text-xs text-amber-400 font-medium flex items-center justify-between">
+                <span>Folgas & Bloqueios</span>
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
               </div>
               <div className="text-2xl font-bold text-white mt-1">
-                {appointments.data?.filter((item) => item.status === "cancelled").length ?? 0}
+                {appointments.data?.filter((item) => item.client_name?.startsWith("[BLOQUEIO]") && item.status !== "cancelled").length ?? 0}
               </div>
             </Card>
           </div>
 
-          {/* Bookings List Card */}
-          <Card className="bg-[#160d29] border-[#27233a] shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-[#27233a]">
-              <div>
-                <CardTitle className="text-xl text-white">Lista de Agendamentos</CardTitle>
-                <CardDescription className="text-zinc-400 text-xs mt-0.5">
-                  Clique em qualquer atendimento para ver detalhes, gerenciar pelo WhatsApp ou reagendar.
-                </CardDescription>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 sm:p-6">
-              {appointments.isLoading ? (
-                <div className="flex items-center justify-center py-16 text-zinc-400">
-                  <Loader2 className="h-6 w-6 animate-spin text-purple-400 mr-2" />
-                  Carregando agendamentos...
-                </div>
-              ) : appointments.data?.length ? (
-                <div className="space-y-3">
-                  {appointments.data.map((item) => {
-                    const start = new Date(item.start_at);
-                    const dayNum = new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(start);
-                    const monthStr = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(start);
-                    const timeStr = new Intl.DateTimeFormat("pt-BR", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    }).format(start);
-
-                    return (
-                      <div
-                        key={item.id}
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => setSelectedAppointment(item)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") setSelectedAppointment(item);
-                        }}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-[#27233a] bg-[#10081d]/70 hover:bg-[#160d29] hover:border-purple-500/40 transition-all cursor-pointer group"
+          {/* Interactive Calendar & Appointments Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Coluna 1: Calendário Interativo */}
+            <div className="lg:col-span-5 xl:col-span-4 space-y-4">
+              <Card className="bg-[#160d29] border-[#27233a] shadow-lg overflow-hidden">
+                <CardHeader className="pb-3 border-b border-[#27233a] px-4 pt-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base text-white capitalize font-semibold flex items-center gap-2">
+                      <CalendarIcon className="h-4 w-4 text-purple-400" />
+                      {monthName}
+                    </CardTitle>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={prevMonth}
+                        className="h-7 w-7 text-zinc-400 hover:text-white rounded-md"
+                        title="Mês anterior"
                       >
-                        <div className="flex items-center gap-4">
-                          {/* Calendar box */}
-                          <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-purple-950/60 border border-purple-800/40 text-purple-200 shrink-0">
-                            <span className="text-base font-bold leading-none">{dayNum}</span>
-                            <span className="text-[10px] uppercase font-semibold text-purple-300 leading-tight">
-                              {monthStr}
-                            </span>
-                          </div>
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={goToToday}
+                        className="h-7 px-2 text-[11px] text-zinc-300 hover:text-white rounded-md font-medium"
+                      >
+                        Hoje
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={nextMonth}
+                        className="h-7 w-7 text-zinc-400 hover:text-white rounded-md"
+                        title="Próximo mês"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-3 sm:p-4">
+                  {/* Dias da semana */}
+                  <div className="grid grid-cols-7 gap-1 text-center mb-2">
+                    {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
+                      <span key={i} className="text-[11px] font-semibold text-zinc-500 py-1">
+                        {d}
+                      </span>
+                    ))}
+                  </div>
 
-                          {/* Details */}
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-white">
-                                {timeStr} · {item.booking_services?.name || "Atendimento"}
+                  {/* Grade de dias */}
+                  <div className="grid grid-cols-7 gap-1">
+                    {calendarCells.map((cell, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedDate(cell.dateStr === selectedDate ? null : cell.dateStr)}
+                        className={`relative flex flex-col items-center justify-center h-10 rounded-lg text-xs transition-all ${
+                          cell.isSelected
+                            ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-900/50 ring-2 ring-purple-400/60"
+                            : cell.isCurrentMonth
+                              ? "text-zinc-200 hover:bg-[#201538] hover:text-white"
+                              : "text-zinc-600 hover:bg-white/5 opacity-40"
+                        } ${
+                          cell.isToday && !cell.isSelected
+                            ? "border border-purple-500/50 bg-purple-950/30 text-purple-200 font-semibold"
+                            : ""
+                        }`}
+                      >
+                        <span>{cell.day}</span>
+                        {/* Indicadores de bolinhas */}
+                        <div className="flex items-center gap-0.5 mt-0.5">
+                          {cell.hasConfirmed && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" title="Atendimento confirmado" />
+                          )}
+                          {cell.hasBlocked && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" title="Bloqueio / Folga" />
+                          )}
+                          {cell.hasCompleted && !cell.hasConfirmed && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-purple-400" title="Atendimento concluído" />
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Legenda */}
+                  <div className="flex items-center justify-center gap-3 pt-3 mt-3 border-t border-[#27233a] text-[11px] text-zinc-400">
+                    <div className="flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      <span>Confirmado</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-full bg-amber-400" />
+                      <span>Folga/Bloqueio</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="h-2 w-2 rounded-full bg-purple-400" />
+                      <span>Concluído</span>
+                    </div>
+                  </div>
+
+                  {/* Botão de Ação Rápida: Bloquear Folga */}
+                  <div className="pt-3 mt-3 border-t border-[#27233a]">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => openBlockModal(selectedDate)}
+                      className="w-full border-amber-500/30 bg-amber-950/20 hover:bg-amber-900/30 text-amber-300 text-xs flex items-center justify-center gap-1.5 py-2"
+                    >
+                      <Coffee className="h-3.5 w-3.5 text-amber-400" />
+                      + Bloquear Data / Folga
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Coluna 2: Lista Filtrada de Agendamentos */}
+            <div className="lg:col-span-7 xl:col-span-8 space-y-4">
+              <Card className="bg-[#160d29] border-[#27233a] shadow-lg flex flex-col min-h-[420px]">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#27233a]">
+                  <div>
+                    <CardTitle className="text-xl text-white">
+                      {selectedDate
+                        ? `Atendimentos em ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(`${selectedDate}T12:00:00`))}`
+                        : "Todos os Próximos Atendimentos"}
+                    </CardTitle>
+                    <CardDescription className="text-zinc-400 text-xs mt-0.5">
+                      {selectedDate
+                        ? "Exibindo apenas os horários e bloqueios programados para esta data."
+                        : "Clique em qualquer atendimento para ver detalhes, gerenciar pelo WhatsApp ou reagendar."}
+                    </CardDescription>
+                  </div>
+                  {selectedDate && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setSelectedDate(null)}
+                      className="text-xs text-purple-200 border-purple-500/30 bg-purple-950/20 hover:bg-purple-900/30 shrink-0"
+                    >
+                      Ver todos
+                    </Button>
+                  )}
+                </CardHeader>
+                <CardContent className="p-4 sm:p-6 flex-1">
+                  {appointments.isLoading ? (
+                    <div className="flex items-center justify-center py-16 text-zinc-400">
+                      <Loader2 className="h-6 w-6 animate-spin text-purple-400 mr-2" />
+                      Carregando agendamentos...
+                    </div>
+                  ) : filteredAppointments.length ? (
+                    <div className="space-y-3">
+                      {filteredAppointments.map((item) => {
+                        const isBlock = item.client_name?.startsWith("[BLOQUEIO]");
+                        const start = new Date(item.start_at);
+                        const dayNum = new Intl.DateTimeFormat("pt-BR", { day: "2-digit" }).format(start);
+                        const monthStr = new Intl.DateTimeFormat("pt-BR", { month: "short" }).format(start);
+                        const timeStr = new Intl.DateTimeFormat("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }).format(start);
+
+                        if (isBlock) {
+                          const reason = item.client_name.replace("[BLOQUEIO] ", "");
+                          return (
+                            <div
+                              key={item.id}
+                              role="button"
+                              tabIndex={0}
+                              onClick={() => setSelectedAppointment(item)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" || e.key === " ") setSelectedAppointment(item);
+                              }}
+                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-amber-500/30 bg-amber-950/20 hover:bg-amber-950/30 hover:border-amber-500/50 transition-all cursor-pointer group"
+                            >
+                              <div className="flex items-center gap-4">
+                                <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-amber-950/60 border border-amber-800/40 text-amber-200 shrink-0">
+                                  <Coffee className="h-5 w-5 text-amber-400" />
+                                  <span className="text-[10px] font-bold text-amber-300 mt-0.5">{dayNum}</span>
+                                </div>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-semibold text-amber-200">
+                                      Bloqueio: {reason}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2 text-xs text-amber-300/80 mt-1">
+                                    <span>Agenda protegida contra novos agendamentos</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                                <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/40 text-xs">
+                                  Folga / Indisponível
+                                </Badge>
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    void unblockAppointment(item.id);
+                                  }}
+                                  className="border-amber-500/40 text-amber-300 hover:bg-amber-500/20 text-xs h-7"
+                                >
+                                  Desbloquear
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <div
+                            key={item.id}
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setSelectedAppointment(item)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") setSelectedAppointment(item);
+                            }}
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-[#27233a] bg-[#10081d]/70 hover:bg-[#160d29] hover:border-purple-500/40 transition-all cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-purple-950/60 border border-purple-800/40 text-purple-200 shrink-0">
+                                <span className="text-base font-bold leading-none">{dayNum}</span>
+                                <span className="text-[10px] uppercase font-semibold text-purple-300 leading-tight">
+                                  {monthStr}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-white">
+                                    {timeStr} · {item.booking_services?.name || "Atendimento"}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
+                                  <UserRound className="h-3.5 w-3.5 text-zinc-500" />
+                                  <span>{item.client_name}</span>
+                                  <span>·</span>
+                                  <span>{item.client_phone}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                              {item.status === "confirmed" && (
+                                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
+                                  Confirmado
+                                </Badge>
+                              )}
+                              {item.status === "completed" && (
+                                <Badge className="bg-purple-500/10 text-purple-300 border-purple-500/30 text-xs">
+                                  Concluído
+                                </Badge>
+                              )}
+                              {item.status === "cancelled" && (
+                                <Badge variant="outline" className="text-rose-400 border-rose-500/30 text-xs">
+                                  Cancelado
+                                </Badge>
+                              )}
+
+                              <span className="text-xs text-zinc-400 group-hover:text-purple-300 flex items-center gap-1 transition-colors">
+                                <Pencil className="h-3.5 w-3.5" />
+                                Gerenciar
                               </span>
                             </div>
-                            <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
-                              <UserRound className="h-3.5 w-3.5 text-zinc-500" />
-                              <span>{item.client_name}</span>
-                              <span>·</span>
-                              <span>{item.client_phone}</span>
-                            </div>
                           </div>
-                        </div>
-
-                        {/* Right side status and action */}
-                        <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                          {item.status === "confirmed" && (
-                            <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs">
-                              Confirmado
-                            </Badge>
-                          )}
-                          {item.status === "completed" && (
-                            <Badge className="bg-purple-500/10 text-purple-300 border-purple-500/30 text-xs">
-                              Concluído
-                            </Badge>
-                          )}
-                          {item.status === "cancelled" && (
-                            <Badge variant="outline" className="text-rose-400 border-rose-500/30 text-xs">
-                              Cancelado
-                            </Badge>
-                          )}
-
-                          <span className="text-xs text-zinc-400 group-hover:text-purple-300 flex items-center gap-1 transition-colors">
-                            <Pencil className="h-3.5 w-3.5" />
-                            Gerenciar
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-16 px-4 border border-dashed border-[#27233a] rounded-xl bg-[#10081d]/50">
-                  <CalendarDays className="h-10 w-10 text-zinc-500 mx-auto mb-3 opacity-60" />
-                  <p className="text-sm font-medium text-zinc-300">Nenhum agendamento registrado</p>
-                  <p className="text-xs text-zinc-500 mt-1">
-                    Assim que seus clientes agendarem horários pelo seu biolink, eles aparecerão aqui.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="text-center py-16 px-4 border border-dashed border-[#27233a] rounded-xl bg-[#10081d]/50 space-y-3">
+                      <CalendarDays className="h-10 w-10 text-zinc-500 mx-auto opacity-60" />
+                      <p className="text-sm font-medium text-zinc-300">
+                        {selectedDate ? "Nenhum agendamento para esta data" : "Nenhum agendamento registrado"}
+                      </p>
+                      <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                        {selectedDate
+                          ? "Deseja tirar este dia de folga ou bloquear os horários de atendimento?"
+                          : "Assim que seus clientes agendarem horários pelo seu biolink, eles aparecerão aqui."}
+                      </p>
+                      {selectedDate && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openBlockModal(selectedDate)}
+                          className="border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 text-xs mt-2"
+                        >
+                          <Coffee className="h-3.5 w-3.5 mr-1.5" />
+                          Bloquear este dia (Folga)
+                        </Button>
+                      )}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Selected Appointment Modal */}
+      {/* Selected Appointment / Block Modal */}
       {selectedAppointment && (
         <div
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
@@ -880,26 +1091,40 @@ function AgendaPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Badge variant="outline" className="border-purple-500/30 text-purple-300 text-[10px]">
-                    Atendimento
+                    {selectedAppointment.client_name?.startsWith("[BLOQUEIO]") ? "Bloqueio" : "Atendimento"}
                   </Badge>
-                  {selectedAppointment.status === "confirmed" && (
-                    <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]">
-                      Confirmado
+                  {selectedAppointment.client_name?.startsWith("[BLOQUEIO]") ? (
+                    <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-[10px]">
+                      Folga / Indisponível
                     </Badge>
-                  )}
-                  {selectedAppointment.status === "completed" && (
-                    <Badge className="bg-purple-500/10 text-purple-300 border-purple-500/30 text-[10px]">
-                      Concluído
-                    </Badge>
-                  )}
-                  {selectedAppointment.status === "cancelled" && (
-                    <Badge variant="outline" className="text-rose-400 border-rose-500/30 text-[10px]">
-                      Cancelado
-                    </Badge>
+                  ) : (
+                    <>
+                      {selectedAppointment.status === "confirmed" && (
+                        <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]">
+                          Confirmado
+                        </Badge>
+                      )}
+                      {selectedAppointment.status === "completed" && (
+                        <Badge className="bg-purple-500/10 text-purple-300 border-purple-500/30 text-[10px]">
+                          Concluído
+                        </Badge>
+                      )}
+                      {selectedAppointment.status === "cancelled" && (
+                        <Badge variant="outline" className="text-rose-400 border-rose-500/30 text-[10px]">
+                          Cancelado
+                        </Badge>
+                      )}
+                    </>
                   )}
                 </div>
-                <h2 className="text-xl font-bold text-white">{selectedAppointment.client_name}</h2>
-                <p className="text-xs text-zinc-400">{selectedAppointment.client_phone}</p>
+                <h2 className="text-xl font-bold text-white">
+                  {selectedAppointment.client_name?.startsWith("[BLOQUEIO]")
+                    ? selectedAppointment.client_name.replace("[BLOQUEIO] ", "")
+                    : selectedAppointment.client_name}
+                </h2>
+                {!selectedAppointment.client_name?.startsWith("[BLOQUEIO]") && (
+                  <p className="text-xs text-zinc-400">{selectedAppointment.client_phone}</p>
+                )}
               </div>
               <Button
                 variant="ghost"
@@ -914,9 +1139,13 @@ function AgendaPage() {
             {/* Summary Info */}
             <div className="bg-[#10081d] border border-[#27233a] rounded-xl p-4 space-y-3">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-400">Serviço:</span>
+                <span className="text-zinc-400">
+                  {selectedAppointment.client_name?.startsWith("[BLOQUEIO]") ? "Tipo:" : "Serviço:"}
+                </span>
                 <span className="font-semibold text-white">
-                  {selectedAppointment.booking_services?.name || "Atendimento"}
+                  {selectedAppointment.client_name?.startsWith("[BLOQUEIO]")
+                    ? "Bloqueio de Agenda / Folga"
+                    : selectedAppointment.booking_services?.name || "Atendimento"}
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
@@ -927,7 +1156,7 @@ function AgendaPage() {
               </div>
               {selectedAppointment.notes && (
                 <div className="pt-2 border-t border-[#27233a]/60 text-xs">
-                  <span className="text-zinc-400 block mb-1">Observação do Cliente:</span>
+                  <span className="text-zinc-400 block mb-1">Observações:</span>
                   <p className="text-zinc-200 bg-[#160d29] p-2 rounded-lg border border-[#27233a]">
                     {selectedAppointment.notes}
                   </p>
@@ -935,8 +1164,38 @@ function AgendaPage() {
               )}
             </div>
 
-            {/* Actions */}
-            {selectedAppointment.status === "confirmed" ? (
+            {/* Actions for Block vs Normal Appointment */}
+            {selectedAppointment.client_name?.startsWith("[BLOQUEIO]") ? (
+              <div className="space-y-4 pt-2">
+                <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-800/40 space-y-1">
+                  <div className="flex items-center gap-2 text-amber-300 font-medium text-xs">
+                    <Coffee className="h-4 w-4" />
+                    Horário Fechado para Clientes
+                  </div>
+                  <p className="text-[11px] text-zinc-400">
+                    Nenhum cliente consegue agendar compromissos neste intervalo pelo seu Biolink público.
+                  </p>
+                </div>
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#27233a]">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setSelectedAppointment(null)}
+                    className="border-zinc-700 text-zinc-300 text-xs"
+                  >
+                    Fechar
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => void unblockAppointment(selectedAppointment.id)}
+                    className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium"
+                  >
+                    <Check className="h-3.5 w-3.5 mr-1.5" />
+                    Desbloquear e Liberar Horário
+                  </Button>
+                </div>
+              </div>
+            ) : selectedAppointment.status === "confirmed" ? (
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
                   Ações Rápidas & WhatsApp
@@ -1025,6 +1284,162 @@ function AgendaPage() {
           </div>
         </div>
       )}
+
+      {/* Bloquear Data / Folga Modal */}
+      {blockingModalOpen && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
+          role="presentation"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBlockingModalOpen(false);
+          }}
+        >
+          <div
+            className="bg-[#160d29] border border-[#27233a] rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-5 animate-in fade-in zoom-in-95 duration-150"
+            role="dialog"
+            aria-modal="true"
+          >
+            <div className="flex items-start justify-between pb-3 border-b border-[#27233a]">
+              <div>
+                <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold uppercase tracking-wider mb-1">
+                  <Coffee className="h-3.5 w-3.5" />
+                  Indisponibilidade
+                </div>
+                <h2 className="text-xl font-bold text-white">Bloquear Horário / Folga</h2>
+                <p className="text-xs text-zinc-400 mt-0.5">
+                  Tranque horários para que clientes não possam agendar.
+                </p>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setBlockingModalOpen(false)}
+                className="text-zinc-400 hover:text-white rounded-lg h-8 w-8"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+                  Data do Bloqueio:
+                </label>
+                <input
+                  type="date"
+                  min={new Date().toISOString().slice(0, 10)}
+                  value={blockingDate}
+                  onChange={(e) => setBlockingDate(e.target.value)}
+                  className="w-full bg-[#10081d] border border-[#27233a] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+                  Duração do Bloqueio:
+                </label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBlockingAllDay(true)}
+                    className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all ${
+                      blockingAllDay
+                        ? "bg-purple-600 border-purple-400 text-white shadow"
+                        : "bg-[#10081d] border-[#27233a] text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Dia Inteiro (Folga)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBlockingAllDay(false)}
+                    className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all ${
+                      !blockingAllDay
+                        ? "bg-purple-600 border-purple-400 text-white shadow"
+                        : "bg-[#10081d] border-[#27233a] text-zinc-400 hover:text-white"
+                    }`}
+                  >
+                    Horário Específico
+                  </button>
+                </div>
+              </div>
+
+              {!blockingAllDay && (
+                <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#10081d] border border-[#27233a]">
+                  <div>
+                    <label className="text-[11px] font-medium text-zinc-400 mb-1 block">Início</label>
+                    <input
+                      type="time"
+                      value={blockingStartTime}
+                      onChange={(e) => setBlockingStartTime(e.target.value)}
+                      className="w-full bg-[#160d29] border border-[#27233a] rounded-md px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-medium text-zinc-400 mb-1 block">Término</label>
+                    <input
+                      type="time"
+                      value={blockingEndTime}
+                      onChange={(e) => setBlockingEndTime(e.target.value)}
+                      className="w-full bg-[#160d29] border border-[#27233a] rounded-md px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+                  Motivo / Observação:
+                </label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {["Folga programada", "Férias", "Consulta médica", "Compromisso pessoal"].map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setBlockingReason(m)}
+                      className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
+                        blockingReason === m
+                          ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
+                          : "bg-[#10081d] border-[#27233a] text-zinc-400 hover:text-white"
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+                <input
+                  type="text"
+                  placeholder="Ex.: Folga de sexta ou Atestado"
+                  value={blockingReason}
+                  onChange={(e) => setBlockingReason(e.target.value)}
+                  className="w-full bg-[#10081d] border border-[#27233a] rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#27233a]">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setBlockingModalOpen(false)}
+                className="border-zinc-700 text-zinc-300 text-xs"
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                disabled={savingBlock || !blockingDate || !blockingReason}
+                onClick={() => void confirmBlock()}
+                className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium"
+              >
+                {savingBlock ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Coffee className="h-3.5 w-3.5 mr-1.5" />}
+                {savingBlock ? "Bloqueando..." : "Confirmar Bloqueio"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Reschedule Modal */}
       {editing && (

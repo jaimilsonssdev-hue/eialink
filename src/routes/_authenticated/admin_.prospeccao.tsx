@@ -92,6 +92,12 @@ export const Route = createFileRoute("/_authenticated/admin_/prospeccao")({
     if (!roles?.some((r) => r.role === "admin")) throw redirect({ to: "/dashboard" });
   },
 
+  errorComponent: ({ error }: { error: Error }) => (
+    <div className="p-8 max-w-2xl mx-auto my-12 text-rose-400 bg-zinc-950 border border-rose-500/30 rounded-xl font-mono text-xs whitespace-pre-wrap">
+      <p className="font-bold text-sm mb-2 text-rose-300">Erro no Radar de Prospecção:</p>
+      {error?.stack || error?.message || String(error)}
+    </div>
+  ),
 
   component: ProspectingPage,
 });
@@ -221,6 +227,17 @@ function ProspectingPage() {
       invalidate();
     },
     onError: (error: Error) => setFeedback(error.message),
+  });
+
+  const clearRadarMutation = useMutation({
+    mutationFn: async () => {
+      await ProspectingService.clearAll();
+    },
+    onSuccess: () => {
+      setFeedback("Todas as oportunidades foram limpas do radar com sucesso.");
+      invalidate();
+    },
+    onError: (error: Error) => setFeedback(`Erro ao limpar o radar: ${error.message}`),
   });
 
   const filtered = useMemo(() => {

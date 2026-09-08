@@ -570,6 +570,12 @@ function ProspectingPage() {
   }
 
   async function handleInstagramApproach(company: ProspectedCompany) {
+    if (!canRunAction(`direct-${company.id}`)) {
+      setFeedback(
+        `Aguarde ${remainingCooldown(`direct-${company.id}`)}s para abrir o Direct novamente.`,
+      );
+      return;
+    }
     const handle = cleanInstagramHandle(company.instagram);
     if (!handle) {
       // Abre o modal dedicado para digitar o @perfil, visualizar o pitch e enviar
@@ -900,6 +906,14 @@ function ProspectingPage() {
                       href={whatsappLink(company)!}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={(e) => {
+                        if (!canRunAction(`whats-${company.id}`)) {
+                          e.preventDefault();
+                          setFeedback(
+                            `Aguarde ${remainingCooldown(`whats-${company.id}`)}s para enviar novamente para ${company.name}.`,
+                          );
+                        }
+                      }}
                       className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
                         company.status === "contatado"
                           ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
@@ -2058,6 +2072,14 @@ function ProspectingPage() {
                               href={whatsappLink(company)!}
                               target="_blank"
                               rel="noreferrer"
+                              onClick={(e) => {
+                                if (!canRunAction(`whats-${company.id}`)) {
+                                  e.preventDefault();
+                                  setFeedback(
+                                    `Aguarde ${remainingCooldown(`whats-${company.id}`)}s para enviar novamente para ${company.name}.`,
+                                  );
+                                }
+                              }}
                               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
                                 company.status === "contatado"
                                   ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"

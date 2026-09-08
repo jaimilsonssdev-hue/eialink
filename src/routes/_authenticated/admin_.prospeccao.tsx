@@ -863,12 +863,12 @@ function ProspectingPage() {
         <div>
           <Link
             to="/admin"
-            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" /> Super Admin
           </Link>
           <div className="flex items-center gap-3 mt-1.5">
-            <h1 className="font-display text-2xl font-bold flex items-center gap-2 text-white">
+            <h1 className="font-display text-2xl font-bold flex items-center gap-2 text-foreground">
               <Radar className="h-6 w-6 text-primary" /> Radar de Prospecção
             </h1>
             <div className="hidden sm:inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-400 backdrop-blur-md shadow-[0_0_15px_-3px_rgba(16,185,129,0.3)]">
@@ -932,7 +932,7 @@ function ProspectingPage() {
               <CardContent className="p-4 sm:p-5 flex items-center justify-between">
                 <div className="min-w-0">
                   <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{item.label}</p>
-                  <p className="text-xl sm:text-2xl font-bold tracking-tight tabular-nums text-white mt-1">
+                  <p className="text-xl sm:text-2xl font-bold tracking-tight tabular-nums text-foreground mt-1">
                     {item.value}
                   </p>
                   <p className="text-[11px] text-muted-foreground/80 font-normal mt-0.5">{item.sub}</p>
@@ -949,7 +949,7 @@ function ProspectingPage() {
       {/* Ataque de hoje */}
       <Card className="border-border bg-card shadow-xs">
         <CardHeader className="pb-3 sm:pb-4">
-          <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
             <Flame className="h-5 w-5 text-amber-400" /> Ataque de Hoje
           </CardTitle>
           <CardDescription className="text-xs sm:text-sm text-muted-foreground">
@@ -968,7 +968,7 @@ function ProspectingPage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <LeadTemperatureBadge score={company.score} />
-                    <p className="font-medium text-white tracking-tight text-sm truncate">{company.name}</p>
+                    <p className="font-semibold text-foreground tracking-tight text-sm truncate">{company.name}</p>
                   </div>
                   <p className="truncate text-xs font-normal text-muted-foreground mt-1">
                     {[company.niche, company.city].filter(Boolean).join(" · ") || "Sem detalhes"}
@@ -991,16 +991,16 @@ function ProspectingPage() {
                             <span>Ver</span>
                           </a>
                         </HoverCardTrigger>
-                        <HoverCardContent align="end" className="w-80 border-border bg-[#160d29]/95 backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
+                        <HoverCardContent align="end" className="w-80 border-border bg-popover text-popover-foreground backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
                           <div className="flex items-center justify-between border-b border-border/60 pb-2">
                             <div className="flex items-center gap-2">
                               <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                              <span className="text-xs font-semibold text-white">Modelo Demonstrativo</span>
+                              <span className="text-xs font-semibold text-foreground">Modelo Demonstrativo</span>
                             </div>
                             <span className="text-[11px] text-muted-foreground font-mono">EIA Link</span>
                           </div>
                           <div className="rounded-lg border border-border/70 bg-background/80 p-3 space-y-1">
-                            <p className="text-xs font-bold text-white tracking-tight">{company.name}</p>
+                            <p className="text-xs font-bold text-foreground tracking-tight">{company.name}</p>
                             <p className="text-[11px] text-muted-foreground">
                               {[company.niche, company.city].filter(Boolean).join(" · ")}
                             </p>
@@ -1035,13 +1035,13 @@ function ProspectingPage() {
                     </>
                   ) : (
                     <button
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/20 text-white px-3 py-1.5 text-xs font-semibold hover:bg-primary/30 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-3 py-1.5 text-xs font-semibold hover:bg-primary/25 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
                       onClick={() => void handleGenerateDemo(company)}
                       disabled={creatingPageId === company.id}
                       title="Gerar modelo demonstrativo para prospecção"
                     >
                       {creatingPageId === company.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary dark:text-white" />
                       ) : (
                         <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                       )}
@@ -1215,7 +1215,7 @@ function ProspectingPage() {
               className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 prospectEngine === "maps"
                   ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
-                  : "text-muted-foreground hover:text-white hover:bg-muted/40"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
             >
               <Globe2 className="h-4 w-4 text-purple-300" />
@@ -1231,7 +1231,7 @@ function ProspectingPage() {
               className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 prospectEngine === "cnae"
                   ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
-                  : "text-muted-foreground hover:text-white hover:bg-muted/40"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
             >
               <Building2 className="h-4 w-4 text-purple-300" />
@@ -1246,8 +1246,8 @@ function ProspectingPage() {
               onClick={() => setProspectEngine("utilities")}
               className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all ${
                 prospectEngine === "utilities"
-                  ? "bg-muted text-white shadow-xs border border-border"
-                  : "text-muted-foreground hover:text-white hover:bg-muted/40"
+                  ? "bg-muted text-foreground shadow-xs border border-border"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
             >
               <Upload className="h-4 w-4" />
@@ -1260,7 +1260,7 @@ function ProspectingPage() {
               className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 prospectEngine === "demos"
                   ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
-                  : "text-muted-foreground hover:text-white hover:bg-muted/40"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
             >
               <Sparkles className="h-4 w-4 text-purple-300" />
@@ -1284,7 +1284,7 @@ function ProspectingPage() {
           <Card className="w-full border-border bg-card shadow-xs">
             <CardHeader className="pb-4 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
               <div>
-                <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
                   <Globe2 className="h-5 w-5 text-primary" /> Ferramenta 1: Radar Google Maps & Local
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
@@ -1309,8 +1309,8 @@ function ProspectingPage() {
                     onClick={() => setSearchNiche(item.niche)}
                     className={`px-2.5 py-1 rounded-full border text-[11px] whitespace-nowrap transition-all ${
                       searchNiche.toLowerCase().includes(item.niche.toLowerCase())
-                        ? "border-primary bg-primary/20 text-white font-semibold shadow-xs"
-                        : "border-border/70 bg-background/50 text-muted-foreground hover:text-white hover:border-primary/40"
+                        ? "border-primary bg-primary/15 text-primary dark:text-white font-semibold shadow-xs"
+                        : "border-border/70 bg-background/50 text-muted-foreground hover:text-foreground hover:border-primary/40"
                     }`}
                     title={`${item.title} (CNAE ${item.code})`}
                   >
@@ -1325,7 +1325,7 @@ function ProspectingPage() {
                     value={searchNiche}
                     onChange={(e) => setSearchNiche(e.target.value)}
                     placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
-                    className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                    className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                     disabled={isSearching}
                     required
                   />
@@ -1335,7 +1335,7 @@ function ProspectingPage() {
                     value={searchCity}
                     onChange={(e) => setSearchCity(e.target.value)}
                     placeholder="Cidade (ex: São Paulo, SP)"
-                    className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                    className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                     disabled={isSearching}
                     required
                   />
@@ -1363,7 +1363,7 @@ function ProspectingPage() {
                 <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground animate-pulse">
                   <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
                   <div>
-                    <p className="font-medium text-white text-xs sm:text-sm">Varrendo Google Maps e perfis públicos do Instagram...</p>
+                    <p className="font-medium text-foreground text-xs sm:text-sm">Varrendo Google Maps e perfis públicos do Instagram...</p>
                     <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
                   </div>
                 </div>
@@ -1380,7 +1380,7 @@ function ProspectingPage() {
                         className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
                           liveSiteFilter === "no_website"
                             ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-xs"
-                            : "text-muted-foreground hover:text-white"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         🔥 Sem Site ({liveResults.filter((r) => !r.has_website).length})
@@ -1390,8 +1390,8 @@ function ProspectingPage() {
                         onClick={() => setLiveSiteFilter("has_website")}
                         className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
                           liveSiteFilter === "has_website"
-                            ? "bg-muted text-white border border-border shadow-xs"
-                            : "text-muted-foreground hover:text-white"
+                            ? "bg-muted text-foreground border border-border shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         🌐 Com Site ({liveResults.filter((r) => r.has_website).length})
@@ -1401,8 +1401,8 @@ function ProspectingPage() {
                         onClick={() => setLiveSiteFilter("all")}
                         className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
                           liveSiteFilter === "all"
-                            ? "bg-muted text-white border border-border shadow-xs"
-                            : "text-muted-foreground hover:text-white"
+                            ? "bg-muted text-foreground border border-border shadow-xs"
+                            : "text-muted-foreground hover:text-foreground"
                         }`}
                       >
                         Todas ({liveResults.length})
@@ -1412,7 +1412,7 @@ function ProspectingPage() {
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        className="text-xs text-muted-foreground hover:text-white underline transition-colors"
+                        className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"
                         onClick={() => {
                           const displayedIndices = displayedLiveResults.map((r) => liveResults.indexOf(r));
                           const allDisplayedSelected = displayedIndices.length > 0 && displayedIndices.every((i) => selectedLiveIndices.has(i));
@@ -1499,7 +1499,7 @@ function ProspectingPage() {
                                 />
                               </TableCell>
                               <TableCell className="px-3.5 py-2.5">
-                                <p className="font-medium text-white tracking-tight text-xs sm:text-sm">{lead.name}</p>
+                                <p className="font-semibold text-foreground tracking-tight text-xs sm:text-sm">{lead.name}</p>
                                 <p className="text-[11px] font-normal text-muted-foreground/80 mt-0.5">
                                   {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
                                 </p>
@@ -1543,7 +1543,7 @@ function ProspectingPage() {
                                 )}
                               </TableCell>
                               <TableCell className="px-3.5 py-2.5">
-                                <span className="font-semibold text-xs sm:text-sm tabular-nums text-white">{lead.score}</span>
+                                <span className="font-semibold text-xs sm:text-sm tabular-nums text-foreground">{lead.score}</span>
                               </TableCell>
                             </TableRow>
                           );
@@ -1562,7 +1562,7 @@ function ProspectingPage() {
           <Card className="w-full border-border bg-card shadow-xs">
             <CardHeader className="pb-4 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
               <div>
-                <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-primary" /> Ferramenta 2: Radar CNAE & Base CNPJ (Receita Federal)
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
@@ -1585,7 +1585,7 @@ function ProspectingPage() {
             {/* Card 1: Importar CSV */}
             <Card className="border-border bg-card shadow-xs">
               <CardHeader className="pb-3 border-b border-border/60">
-                <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                   <Upload className="h-4 w-4 text-primary" /> Importar Lista via CSV
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
@@ -1595,7 +1595,7 @@ function ProspectingPage() {
               <CardContent className="pt-4 space-y-3.5">
                 <label className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-dashed border-border/80 hover:border-primary/50 bg-background/40 hover:bg-background/70 cursor-pointer transition-all">
                   <Upload className="h-7 w-7 text-muted-foreground" />
-                  <span className="text-xs text-white font-medium">Clique para selecionar o arquivo .csv</span>
+                  <span className="text-xs text-foreground font-medium">Clique para selecionar o arquivo .csv</span>
                   <span className="text-[11px] text-muted-foreground/80">Deduplicação e pontuação automáticas</span>
                   <input
                     type="file"
@@ -1629,7 +1629,7 @@ function ProspectingPage() {
                         <TableBody className="divide-y divide-border/40">
                           {preview.map((row) => (
                             <TableRow key={row.line} className="hover:bg-muted/20 border-border/40 transition-colors">
-                              <TableCell className="px-3 py-2 font-medium text-white truncate max-w-[140px]">
+                              <TableCell className="px-3 py-2 font-medium text-foreground truncate max-w-[140px]">
                                 {row.draft?.name ?? `Linha ${row.line}`}
                               </TableCell>
                               <TableCell className="px-3 py-2 text-muted-foreground truncate max-w-[100px]">
@@ -1661,7 +1661,7 @@ function ProspectingPage() {
                         {importMutation.isPending ? "Importando..." : `Importar ${importable.length} leads`}
                       </button>
                       <button
-                        className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground hover:text-white transition-colors"
+                        className="rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
                         onClick={() => setPreview(null)}
                       >
                         Cancelar
@@ -1675,7 +1675,7 @@ function ProspectingPage() {
             {/* Card 2: Cadastro Manual */}
             <Card className="border-border bg-card shadow-xs">
               <CardHeader className="pb-3 border-b border-border/60">
-                <CardTitle className="text-base font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
                   <Plus className="h-4 w-4 text-primary" /> Cadastro Manual de Oportunidade
                 </CardTitle>
                 <CardDescription className="text-xs text-muted-foreground">
@@ -1689,7 +1689,7 @@ function ProspectingPage() {
                     <input
                       name="name"
                       placeholder="Ex: Consultório Odontológico Sorrir Mais"
-                      className="w-full rounded-lg border border-border bg-background/60 px-3.5 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                      className="w-full rounded-lg border border-border bg-background px-3.5 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                       required
                     />
                   </div>
@@ -1699,7 +1699,7 @@ function ProspectingPage() {
                       <input
                         name="niche"
                         placeholder="Ex: Dentista, Barbearia"
-                        className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                       />
                     </div>
                     <div>
@@ -1707,7 +1707,7 @@ function ProspectingPage() {
                       <input
                         name="city"
                         placeholder="Ex: Curitiba, PR"
-                        className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                       />
                     </div>
                   </div>
@@ -1717,7 +1717,7 @@ function ProspectingPage() {
                       <input
                         name="whatsapp"
                         placeholder="(41) 99999-9999"
-                        className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                       />
                     </div>
                     <div>
@@ -1725,7 +1725,7 @@ function ProspectingPage() {
                       <input
                         name="website"
                         placeholder="Ex: www.clinica.com.br"
-                        className="w-full rounded-lg border border-border bg-background/60 px-3 py-2 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                       />
                     </div>
                   </div>
@@ -1747,7 +1747,7 @@ function ProspectingPage() {
           <Card className="w-full border-border bg-card shadow-xs">
             <CardHeader className="pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-border/60">
               <div>
-                <CardTitle className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+                <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
                   <Sparkles className="h-5 w-5 text-purple-400" /> Central de Demonstrações Ativas
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
@@ -1770,13 +1770,13 @@ function ProspectingPage() {
                     value={demoSearch}
                     onChange={(e) => setDemoSearch(e.target.value)}
                     placeholder="Filtrar por empresa, modelo ou link..."
-                    className="w-full rounded-xl border border-border bg-background/60 pl-9 pr-8 py-2 text-xs sm:text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                    className="w-full rounded-xl border border-border bg-background pl-9 pr-8 py-2 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                   />
                   {demoSearch && (
                     <button
                       type="button"
                       onClick={() => setDemoSearch("")}
-                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-white p-0.5"
+                      className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground p-0.5"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -1794,7 +1794,7 @@ function ProspectingPage() {
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white">Nenhuma página demonstrativa encontrada</h3>
+                    <h3 className="text-sm font-bold text-foreground">Nenhuma página demonstrativa encontrada</h3>
                     <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
                       {demoSearch
                         ? "Nenhum resultado corresponde aos termos da sua pesquisa."
@@ -1846,7 +1846,7 @@ function ProspectingPage() {
                                   </div>
                                 )}
                                 <div className="min-w-0">
-                                  <p className="font-semibold text-white text-xs sm:text-sm truncate max-w-[200px]">
+                                  <p className="font-semibold text-foreground text-xs sm:text-sm truncate max-w-[200px]">
                                     {page.display_name}
                                   </p>
                                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
@@ -1884,7 +1884,7 @@ function ProspectingPage() {
                                 <button
                                   type="button"
                                   onClick={() => handleCopyDemoUrl(page.slug, page.id)}
-                                  className="p-1 text-muted-foreground hover:text-white transition-colors"
+                                  className="p-1 text-muted-foreground hover:text-foreground transition-colors"
                                   title="Copiar link da demonstração"
                                 >
                                   {copiedDemoId === page.id ? (
@@ -1907,7 +1907,7 @@ function ProspectingPage() {
                                   href={publicUrl}
                                   target="_blank"
                                   rel="noreferrer"
-                                  className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-white hover:bg-muted/40 transition-all"
+                                  className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-all"
                                   title="Abrir demonstração em nova aba"
                                 >
                                   <ExternalLink className="h-3.5 w-3.5" />
@@ -1950,7 +1950,7 @@ function ProspectingPage() {
                                   <DropdownMenuTrigger asChild>
                                     <button
                                       type="button"
-                                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-white hover:bg-muted/60 transition-colors"
+                                      className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
                                       title="Mais opções da demo"
                                     >
                                       <MoreHorizontal className="h-4 w-4" />
@@ -2038,7 +2038,7 @@ function ProspectingPage() {
         <CardHeader className="p-5 pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div className="flex items-center gap-2">
-              <CardTitle className="text-base font-semibold tracking-tight text-white flex items-center gap-2">
+              <CardTitle className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
                 Pipeline de Prospecção
                 <span className="text-xs font-normal text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full border border-border/60">
                   {companies.length} {companies.length === 1 ? "lead" : "leads"}
@@ -2061,10 +2061,10 @@ function ProspectingPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Buscar empresa, nicho..."
-                className="h-8 rounded-lg border border-border bg-background/60 px-3 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-48 transition-colors"
+                className="h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-48 transition-colors"
               />
               <select
-                className="h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
+                className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
                 value={statusFilter}
                 onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
               >
@@ -2076,7 +2076,7 @@ function ProspectingPage() {
                 ))}
               </select>
               <select
-                className="h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
+                className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
                 value={priorityFilter}
                 onChange={(event) => setPriorityFilter(event.target.value as typeof priorityFilter)}
               >
@@ -2088,7 +2088,7 @@ function ProspectingPage() {
                 ))}
               </select>
               <select
-                className="h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
+                className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
                 value={siteFilter}
                 onChange={(event) => setSiteFilter(event.target.value as typeof siteFilter)}
               >
@@ -2119,7 +2119,7 @@ function ProspectingPage() {
                   return (
                     <TableRow key={company.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
                       <TableCell className="py-3.5 px-4 min-w-[220px]">
-                        <p className="font-medium text-white tracking-tight text-sm">{company.name}</p>
+                        <p className="font-semibold text-foreground tracking-tight text-sm">{company.name}</p>
                         <div className="text-xs font-normal text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
                           <span>
                             {[company.niche, company.city, company.has_website ? "tem site" : "sem site"]
@@ -2153,7 +2153,7 @@ function ProspectingPage() {
                       </TableCell>
                       <TableCell className="py-3.5 px-4 whitespace-nowrap">
                         <select
-                          className="h-8 px-2.5 py-1 text-xs font-medium rounded-lg border border-border/60 bg-background/60 text-white hover:bg-background focus:ring-1 focus:ring-primary/40 transition-colors"
+                          className="h-8 px-2.5 py-1 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:bg-muted/40 focus:ring-1 focus:ring-primary/40 transition-colors"
                           value={company.status}
                           onChange={(event) =>
                             statusMutation.mutate({
@@ -2191,16 +2191,16 @@ function ProspectingPage() {
                                     <span>Ver</span>
                                   </a>
                                 </HoverCardTrigger>
-                                <HoverCardContent align="end" className="w-80 border-border bg-[#160d29]/95 backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
+                                <HoverCardContent align="end" className="w-80 border-border bg-popover text-popover-foreground backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
                                   <div className="flex items-center justify-between border-b border-border/60 pb-2">
                                     <div className="flex items-center gap-2">
                                       <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                                      <span className="text-xs font-semibold text-white">Modelo Demonstrativo</span>
+                                      <span className="text-xs font-semibold text-foreground">Modelo Demonstrativo</span>
                                     </div>
                                     <span className="text-[11px] text-muted-foreground font-mono">EIA Link</span>
                                   </div>
                                   <div className="rounded-lg border border-border/70 bg-background/80 p-3 space-y-1">
-                                    <p className="text-xs font-bold text-white tracking-tight">{company.name}</p>
+                                    <p className="text-xs font-bold text-foreground tracking-tight">{company.name}</p>
                                     <p className="text-[11px] text-muted-foreground">
                                       {[company.niche, company.city].filter(Boolean).join(" · ")}
                                     </p>
@@ -2235,13 +2235,13 @@ function ProspectingPage() {
                             </>
                           ) : (
                             <button
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/20 text-white px-3 py-1.5 text-xs font-semibold hover:bg-primary/30 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-3 py-1.5 text-xs font-semibold hover:bg-primary/25 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
                               onClick={() => void handleGenerateDemo(company)}
                               disabled={creatingPageId === company.id}
                               title="Gerar modelo demonstrativo para prospecção"
                             >
                               {creatingPageId === company.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary dark:text-white" />
                               ) : (
                                 <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                               )}
@@ -2318,7 +2318,7 @@ function ProspectingPage() {
                             <DropdownMenuTrigger asChild>
                               <button
                                 type="button"
-                                className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-white hover:bg-muted/60 transition-colors"
+                                className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
                                 title="Mais opções"
                               >
                                 <MoreHorizontal className="h-4 w-4 text-muted-foreground/80" />

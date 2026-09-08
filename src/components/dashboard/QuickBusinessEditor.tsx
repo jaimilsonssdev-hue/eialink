@@ -149,7 +149,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
             <span className="p-1.5 rounded-lg bg-primary/15 text-primary">
               <Store className="h-5 w-5" />
             </span>
-            <h3 className="text-lg font-bold text-white tracking-tight">
+            <h3 className="text-lg font-bold text-foreground tracking-tight">
               Configuração Rápida do Seu Negócio
             </h3>
           </div>
@@ -178,7 +178,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Nome da Empresa */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <Store className="h-3.5 w-3.5 text-primary" /> Nome do Seu Negócio
             </label>
             <input
@@ -189,7 +189,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
                 setSaveSuccess(false);
               }}
               placeholder="Ex: Pizzaria Bella, Dra. Amanda Odontologia"
-              className="w-full rounded-lg border border-border bg-background/80 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
               required
             />
           </div>
@@ -197,7 +197,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
           {/* WhatsApp */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
+              <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
                 <MessageCircle className="h-3.5 w-3.5 text-emerald-400" /> WhatsApp Oficial (DDD + Número)
               </label>
               {testWhatsappUrl && (
@@ -216,13 +216,13 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
               value={whatsapp}
               onChange={handleWhatsappChange}
               placeholder="(11) 99999-9999"
-              className="w-full rounded-lg border border-border bg-background/80 px-3.5 py-2.5 text-sm text-white font-mono placeholder:text-muted-foreground focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:border-emerald-500/60 focus:ring-1 focus:ring-emerald-500/40 transition-colors"
             />
           </div>
 
           {/* Slogan / Descrição Curta */}
           <div className="space-y-1.5 md:col-span-2">
-            <label className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Slogan ou Resumo dos Serviços
             </label>
             <input
@@ -233,13 +233,13 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
                 setSaveSuccess(false);
               }}
               placeholder="Ex: Especialistas em massas artesanais e rodízio em São Paulo. Entregas e reservas."
-              className="w-full rounded-lg border border-border bg-background/80 px-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
             />
           </div>
 
           {/* Instagram */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <Instagram className="h-3.5 w-3.5 text-pink-400" /> Perfil no Instagram (@)
             </label>
             <div className="relative">
@@ -254,14 +254,14 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
                   setSaveSuccess(false);
                 }}
                 placeholder="suaempresa"
-                className="w-full rounded-lg border border-border bg-background/80 pl-8 pr-3.5 py-2.5 text-sm text-white placeholder:text-muted-foreground focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/40 transition-colors"
+                className="w-full rounded-lg border border-border bg-background pl-8 pr-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/40 transition-colors"
               />
             </div>
           </div>
 
           {/* Chave Pix */}
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-white/90 flex items-center gap-1.5">
+            <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
               <QrCode className="h-3.5 w-3.5 text-cyan-400" /> Chave Pix (Para receber pagamentos direto na página)
             </label>
             <input
@@ -272,7 +272,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
                 setSaveSuccess(false);
               }}
               placeholder="CNPJ, E-mail, Celular ou Chave Aleatória"
-              className="w-full rounded-lg border border-border bg-background/80 px-3.5 py-2.5 text-sm text-white font-mono placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/40 transition-colors"
+              className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground font-mono placeholder:text-muted-foreground focus:outline-none focus:border-cyan-500/60 focus:ring-1 focus:ring-cyan-500/40 transition-colors"
             />
           </div>
         </div>
@@ -294,14 +294,14 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
               href={publicUrl}
               target="_blank"
               rel="noreferrer"
-              className="font-mono text-white hover:text-primary transition-colors truncate max-w-[200px]"
+              className="font-mono text-foreground hover:text-primary transition-colors truncate max-w-[200px]"
             >
               {publicUrl.replace(/^https?:\/\//, "")}
             </a>
             <button
               type="button"
               onClick={handleCopyLink}
-              className="inline-flex items-center gap-1 text-muted-foreground hover:text-white transition-colors ml-1"
+              className="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors ml-1"
               title="Copiar link do site"
             >
               {copiedLink ? (
@@ -315,7 +315,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
           <div className="flex items-center gap-2.5">
             <Link
               to="/builder"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-border/80 bg-transparent text-xs font-medium text-muted-foreground hover:text-white hover:border-primary/50 transition-all"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-border/80 bg-transparent text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
             >
               <Sliders className="h-3.5 w-3.5" /> Construtor Visual Avançado
             </Link>

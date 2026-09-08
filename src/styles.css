@@ -3119,15 +3119,21 @@
   --secondary: #ebe7f2;
   --secondary-foreground: #211b2b;
   --muted: #eeecf3;
-  --muted-foreground: #686172;
+  --muted-foreground: #4e4659;
   --accent: #8b3fd0;
   --accent-foreground: #ffffff;
-  --border: rgb(29 20 44 / 0.11);
+  --border: rgb(29 20 44 / 0.15);
   --input: #ffffff;
   --ring: #7c3aed;
   --shadow-elegant: 0 12px 28px -15px rgb(113 55 214 / 0.38);
   --shadow-glow: 0 14px 34px -18px rgb(113 55 214 / 0.46);
   --shadow-card: 0 16px 40px -28px rgb(33 24 50 / 0.26);
+}
+
+:root[data-interface-theme="light"] input::placeholder,
+:root[data-interface-theme="light"] textarea::placeholder {
+  color: #6b6377;
+  opacity: 1;
 }
 
 :root[data-interface-theme="light"] body {

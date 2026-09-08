@@ -187,7 +187,7 @@ function AdminPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-white">Super Admin</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Super Admin</h1>
             <Badge variant="outline" className="text-[11px] font-normal border-primary/40 bg-primary/10 text-primary">
               Controle Geral
             </Badge>
@@ -206,7 +206,7 @@ function AdminPage() {
           </Link>
           <button
             onClick={exportCSV}
-            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card hover:bg-muted/40 text-muted-foreground hover:text-white px-3.5 py-2 text-xs font-medium transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card hover:bg-muted/40 text-muted-foreground hover:text-foreground px-3.5 py-2 text-xs font-medium transition-colors"
           >
             <Download className="h-4 w-4" />
             <span>Exportar CSV</span>
@@ -267,7 +267,7 @@ function AdminPage() {
               <p className="text-xs font-semibold uppercase tracking-wider text-primary">
                 Planos da Plataforma
               </p>
-              <CardTitle className="text-base font-semibold tracking-tight text-white mt-0.5">
+              <CardTitle className="text-base font-semibold tracking-tight text-foreground mt-0.5">
                 Limites e Modelos Comerciais
               </CardTitle>
             </div>
@@ -303,7 +303,7 @@ function AdminPage() {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-primary" />
             <div>
-              <CardTitle className="text-base font-semibold tracking-tight text-white">
+              <CardTitle className="text-base font-semibold tracking-tight text-foreground">
                 Filtros de Oportunidades
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground mt-0.5">
@@ -315,9 +315,9 @@ function AdminPage() {
         <CardContent className="p-5 pt-2">
           <div className="grid gap-3 sm:grid-cols-5">
             <label className="text-xs text-muted-foreground">
-              <span className="font-medium text-white/90">Plano</span>
+              <span className="font-medium text-foreground">Plano</span>
               <select
-                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                 value={planFilter}
                 onChange={(event) => setPlanFilter(event.target.value)}
               >
@@ -331,9 +331,9 @@ function AdminPage() {
             </label>
 
             <label className="text-xs text-muted-foreground">
-              <span className="font-medium text-white/90">Nicho</span>
+              <span className="font-medium text-foreground">Nicho</span>
               <select
-                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                 value={nicheFilter}
                 onChange={(event) => setNicheFilter(event.target.value)}
               >
@@ -349,9 +349,9 @@ function AdminPage() {
             </label>
 
             <label className="text-xs text-muted-foreground">
-              <span className="font-medium text-white/90">Cidade</span>
+              <span className="font-medium text-foreground">Cidade</span>
               <input
-                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-3 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                 value={cityFilter}
                 onChange={(event) => setCityFilter(event.target.value)}
                 placeholder="Ex.: Teixeira de Freitas"
@@ -359,9 +359,9 @@ function AdminPage() {
             </label>
 
             <label className="text-xs text-muted-foreground">
-              <span className="font-medium text-white/90">Página</span>
+              <span className="font-medium text-foreground">Página</span>
               <select
-                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                 value={publicationFilter}
                 onChange={(event) => setPublicationFilter(event.target.value)}
               >
@@ -372,9 +372,9 @@ function AdminPage() {
             </label>
 
             <label className="text-xs text-muted-foreground">
-              <span className="font-medium text-white/90">Cadastrado a partir de</span>
+              <span className="font-medium text-foreground">Cadastrado a partir de</span>
               <input
-                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background/60 px-3 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                className="mt-1.5 w-full h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                 type="date"
                 value={registeredAfter}
                 onChange={(event) => setRegisteredAfter(event.target.value)}
@@ -390,7 +390,7 @@ function AdminPage() {
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-4 w-4 text-primary" />
             <div>
-              <CardTitle className="text-base font-semibold tracking-tight text-white">
+              <CardTitle className="text-base font-semibold tracking-tight text-foreground">
                 Assinaturas e Controle de Acesso
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground mt-0.5">
@@ -416,12 +416,12 @@ function AdminPage() {
                   return (
                     <TableRow key={profile.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
                       <TableCell className="py-3.5 px-4 min-w-[220px]">
-                        <p className="font-medium text-white tracking-tight text-sm">{profile.full_name}</p>
+                        <p className="font-semibold text-foreground tracking-tight text-sm">{profile.full_name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{profile.email}</p>
                       </TableCell>
                       <TableCell className="py-3.5 px-4 whitespace-nowrap">
                         <select
-                          className="h-8 min-w-36 rounded-lg border border-border/60 bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
+                          className="h-8 min-w-36 rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
                           defaultValue={subscription?.plan_id}
                           aria-label={`Plano de ${profile.full_name}`}
                           onChange={(event) =>
@@ -441,7 +441,7 @@ function AdminPage() {
                       </TableCell>
                       <TableCell className="py-3.5 px-4 whitespace-nowrap">
                         <select
-                          className="h-8 min-w-28 rounded-lg border border-border/60 bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
+                          className="h-8 min-w-28 rounded-lg border border-border/60 bg-background px-2.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-primary/40 transition-colors"
                           defaultValue={subscription?.status ?? "active"}
                           aria-label={`Status de ${profile.full_name}`}
                           onChange={(event) =>
@@ -489,7 +489,7 @@ function AdminPage() {
           <div className="flex items-center gap-2">
             <Briefcase className="h-4 w-4 text-primary" />
             <div>
-              <CardTitle className="text-base font-semibold tracking-tight text-white">
+              <CardTitle className="text-base font-semibold tracking-tight text-foreground">
                 Serviços Profissionais
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground mt-0.5">
@@ -518,7 +518,7 @@ function AdminPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
-              <CardTitle className="text-base font-semibold tracking-tight text-white">
+              <CardTitle className="text-base font-semibold tracking-tight text-foreground">
                 Base de Usuários & Leads Cadastrados
               </CardTitle>
               <span className="text-xs font-normal text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full border border-border/60">
@@ -545,10 +545,10 @@ function AdminPage() {
                 {filteredProfiles.map((p) => (
                   <TableRow key={p.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
                     <TableCell className="py-3.5 px-4 min-w-[180px]">
-                      <p className="font-medium text-white tracking-tight text-sm">{p.full_name || "—"}</p>
+                      <p className="font-semibold text-foreground tracking-tight text-sm">{p.full_name || "—"}</p>
                       <p className="text-xs text-muted-foreground mt-0.5">{p.email}</p>
                     </TableCell>
-                    <TableCell className="py-3.5 px-4 text-sm text-white/90">
+                    <TableCell className="py-3.5 px-4 text-sm text-foreground">
                       {p.company_name || "—"}
                     </TableCell>
                     <TableCell className="py-3.5 px-4 text-xs font-mono text-muted-foreground whitespace-nowrap">
@@ -616,7 +616,7 @@ function StatCard({
             <Icon className="h-4 w-4" />
           </div>
         </div>
-        <div className="mt-2 text-2xl font-bold tracking-tight text-white tabular-nums">
+        <div className="mt-2 text-2xl font-bold tracking-tight text-foreground tabular-nums">
           {value}
         </div>
         {description && (
@@ -658,7 +658,7 @@ function PlanEditor({
     <article className="rounded-xl border border-border bg-background/50 p-4 space-y-3">
       <div className="flex items-center justify-between gap-2">
         <input
-          className="h-8 rounded-lg border border-border bg-background/60 px-3 text-xs font-semibold text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 transition-colors"
+          className="h-8 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 transition-colors"
           value={name}
           aria-label="Nome do plano"
           onChange={(event) => setName(event.target.value)}
@@ -674,17 +674,17 @@ function PlanEditor({
         </label>
       </div>
       <label className="block text-xs text-muted-foreground">
-        <span className="font-medium text-white/90">Descrição na Landing Page</span>
+        <span className="font-medium text-foreground">Descrição na Landing Page</span>
         <textarea
-          className="mt-1 w-full rounded-lg border border-border bg-background/60 p-2.5 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors min-h-16 resize-none"
+          className="mt-1 w-full rounded-lg border border-border bg-background p-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors min-h-16 resize-none"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
         />
       </label>
       <label className="block text-xs text-muted-foreground">
-        <span className="font-medium text-white/90">Valor mensal (R$)</span>
+        <span className="font-medium text-foreground">Valor mensal (R$)</span>
         <input
-          className="mt-1 w-full h-8 rounded-lg border border-border bg-background/60 px-3 text-xs text-white placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+          className="mt-1 w-full h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
           inputMode="decimal"
           value={price}
           onChange={(event) => setPrice(event.target.value)}
@@ -740,7 +740,7 @@ function LimitField({
     <label className="block text-xs text-muted-foreground">
       <span>{label}</span>
       <input
-        className="mt-1 w-full h-8 rounded-lg border border-border bg-background/60 px-2.5 text-xs text-white focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+        className="mt-1 w-full h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
         type="number"
         value={value}
         onChange={(event) => onChange(Number(event.target.value))}
@@ -761,14 +761,14 @@ function ServiceAdminCard({
   return (
     <article className="rounded-xl border border-border bg-background/50 p-4 flex items-start justify-between gap-3">
       <div>
-        <h3 className="text-sm font-semibold text-white">{service.title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{service.title}</h3>
         <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{service.description}</p>
       </div>
       <button
         type="button"
         className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
           service.active
-            ? "border border-border bg-background/60 text-muted-foreground hover:text-white"
+            ? "border border-border bg-background text-muted-foreground hover:text-foreground"
             : "bg-primary hover:bg-primary/90 text-white shadow-sm"
         }`}
         disabled={saving}

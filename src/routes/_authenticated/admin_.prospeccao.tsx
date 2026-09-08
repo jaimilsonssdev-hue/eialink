@@ -236,6 +236,22 @@ function ProspectingPage() {
   });
   const demoPages = useMemo(() => demoPagesQuery.data ?? [], [demoPagesQuery.data]);
 
+  const demoPagesBySlug = useMemo(() => {
+    const map = new Map<string, OwnedPage>();
+    for (const p of demoPages) {
+      if (p.slug) map.set(p.slug.toLowerCase().trim(), p);
+    }
+    return map;
+  }, [demoPages]);
+
+  const demoPagesByName = useMemo(() => {
+    const map = new Map<string, OwnedPage>();
+    for (const p of demoPages) {
+      if (p.display_name) map.set(p.display_name.toLowerCase().trim(), p);
+    }
+    return map;
+  }, [demoPages]);
+
   const filteredDemos = useMemo(() => {
     const term = demoSearch.trim().toLowerCase();
     if (!term) return demoPages;
@@ -246,6 +262,48 @@ function ProspectingPage() {
       return name.includes(term) || slug.includes(term) || model.includes(term);
     });
   }, [demoPages, demoSearch]);
+
+  // Auto-backfill inteligente: sincroniza notas de empresas antigas vinculando ID e Modelo reais
+  useEffect(() => {
+    if (!companiesQuery.data?.length || !demoPages.length) return;
+
+    let hasUpdates = false;
+    const backfill = async () => {
+      for (const company of companiesQuery.data!) {
+        const notes = company.notes || "";
+        const urlMatch = notes.match(/https?:\/\/[^\s)]+/);
+        const hasId = notes.includes("(id:");
+        if (urlMatch && !hasId) {
+          const url = urlMatch[0];
+          const slugMatch = url.match(/\/p\/([^/?#\s)]+)/);
+          const slug = slugMatch ? slugMatch[1].toLowerCase() : null;
+          const matched = (slug ? demoPagesBySlug.get(slug) : null) || demoPagesByName.get(company.name.toLowerCase().trim());
+          if (matched) {
+            const modelVariant = (matched.social_links as any)?.model_variant || "Design Pro";
+            const clean = notes
+              .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+              .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
+              .replace(/\n\s*\n/g, "\n")
+              .trim();
+            const updatedNotes = clean
+              ? `${clean}\nDemo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`
+              : `Demo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`;
+            try {
+              await ProspectingService.updateNotes(company.id, updatedNotes);
+              hasUpdates = true;
+            } catch (e) {
+              console.warn("Aviso no auto-backfill de demo:", e);
+            }
+          }
+        }
+      }
+      if (hasUpdates) {
+        invalidate();
+      }
+    };
+
+    void backfill();
+  }, [companiesQuery.data, demoPages, demoPagesBySlug, demoPagesByName]);
 
   async function handleDeleteDemo(pageId: string, pageName: string) {
     if (!window.confirm(`Deseja realmente excluir a página demonstrativa de "${pageName}"? Esta ação removerá a demo do ar e não pode ser desfeita.`)) return;
@@ -511,13 +569,12 @@ function ProspectingPage() {
     setRegeneratingPageId(company.id);
     setFeedback(null);
     try {
-      const demoInfo = parseDemoInfo(company.notes);
+      const demoInfo = parseDemoInfo(company);
       const nicheKey = detectNicheKey(company.niche, company.name);
       const variants = NICHE_PRESETS_VARIANTS[nicheKey] || NICHE_PRESETS_VARIANTS.geral;
 
-      // Identifica o modelo atual anotado
-      const currentModelMatch = company.notes?.match(/\[Modelo:\s*([^\]]+)\]/i);
-      const currentModelName = currentModelMatch ? currentModelMatch[1].trim() : null;
+      // Identifica o modelo atual anotado ou da página encontrada
+      const currentModelName = demoInfo.modelName;
       const currentIndex = currentModelName
         ? variants.findIndex((v) => v.modelName.toLowerCase() === currentModelName.toLowerCase())
         : -1;
@@ -527,9 +584,10 @@ function ProspectingPage() {
       const nextVariant = variants[nextIndex];
 
       // Remove a página demo anterior para manter tudo limpo
-      if (demoInfo.pageId) {
+      const oldPageId = demoInfo.pageId || (demoInfo.slug ? demoPagesBySlug.get(demoInfo.slug)?.id : null);
+      if (oldPageId) {
         try {
-          await PageService.deletePage(demoInfo.pageId);
+          await PageService.deletePage(oldPageId);
         } catch (e) {
           console.warn("Aviso ao remover demo anterior:", e);
         }
@@ -548,9 +606,10 @@ function ProspectingPage() {
       const modelVariant = (page.social_links as any)?.model_variant || nextVariant.modelName;
       const url = `https://eialink.com.br/p/${page.slug}`;
 
-      // Limpa a linha anterior de Demo das notas
+      // Limpa qualquer linha anterior de Demo das notas
       const cleanNotes = (company.notes || "")
         .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+        .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
         .replace(/\n\s*\n/g, "\n")
         .trim();
 
@@ -563,6 +622,52 @@ function ProspectingPage() {
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao trocar modelo da página.";
+      setFeedback(message);
+    } finally {
+      setRegeneratingPageId(null);
+    }
+  }
+
+  async function handleRegenerateDemoForPage(page: OwnedPage) {
+    const linkedCompany = companiesQuery.data?.find((c) => {
+      const demo = parseDemoInfo(c);
+      return demo.pageId === page.id || demo.slug === page.slug?.toLowerCase();
+    });
+
+    if (linkedCompany) {
+      await handleRegenerateDemo(linkedCompany);
+      return;
+    }
+
+    setRegeneratingPageId(page.id);
+    setFeedback(null);
+    try {
+      const nicheKey = detectNicheKey(null, page.display_name);
+      const variants = NICHE_PRESETS_VARIANTS[nicheKey] || NICHE_PRESETS_VARIANTS.geral;
+      const currentModel = (page.social_links as any)?.model_variant || "";
+      const currentIndex = variants.findIndex((v) => v.modelName.toLowerCase() === currentModel.toLowerCase());
+      const nextIndex = (currentIndex + 1) % variants.length;
+      const nextVariant = variants[nextIndex];
+
+      try {
+        await PageService.deletePage(page.id);
+      } catch (e) {
+        console.warn("Aviso ao remover demo:", e);
+      }
+
+      const newPage = await PageService.createProspectDemoPage({
+        companyName: page.display_name,
+        whatsapp: page.whatsapp,
+        city: "sua região",
+        instagram: page.instagram,
+        variantIndex: nextIndex,
+      });
+
+      const modelVariant = (newPage.social_links as any)?.model_variant || nextVariant.modelName;
+      setFeedback(`🎨 Modelo de "${page.display_name}" alterado para "${modelVariant}" com sucesso!`);
+      invalidate();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao trocar modelo da demonstração.";
       setFeedback(message);
     } finally {
       setRegeneratingPageId(null);
@@ -597,14 +702,57 @@ function ProspectingPage() {
     window.open(`https://ig.me/m/${handle}`, "_blank", "noopener,noreferrer");
   }
 
-  function parseDemoInfo(notes?: string | null) {
-    if (!notes) return { url: null, pageId: null };
-    const urlMatch = notes.match(/https?:\/\/[^\s)]+/);
+  function parseDemoInfo(input?: ProspectedCompany | string | null) {
+    if (!input) return { url: null, pageId: null, slug: null, modelName: null, page: undefined };
+    const notes = typeof input === "string" ? input : (input.notes || "");
+    const company = typeof input === "object" ? input : null;
+
+    // 1. URL da demo nas notas ou website
+    const urlMatch = notes.match(/https?:\/\/[^\s)]+/) || (company?.website?.includes("/p/") ? [company.website] : null);
+    let url = urlMatch ? urlMatch[0] : null;
+
+    // 2. Extrai slug da URL se existir
+    const slugMatch = url ? url.match(/\/p\/([^/?#\s)]+)/) : null;
+    let slug = slugMatch ? slugMatch[1].toLowerCase().trim() : null;
+
+    // 3. ID da página: a partir de (id:uuid), pelo slug em demoPagesBySlug ou pelo nome da empresa
     const idMatch = notes.match(/\(id:([a-f0-9-]+)\)/i);
+    let pageId = idMatch ? idMatch[1] : null;
+
+    let matchedPage: OwnedPage | undefined;
+    if (pageId) {
+      matchedPage = demoPages.find((p) => p.id === pageId);
+    } else if (slug) {
+      matchedPage = demoPagesBySlug.get(slug);
+      if (matchedPage) pageId = matchedPage.id;
+    }
+
+    if (!pageId && company?.name) {
+      matchedPage = demoPagesByName.get(company.name.toLowerCase().trim());
+      if (matchedPage) {
+        pageId = matchedPage.id;
+        if (!url) url = `https://eialink.com.br/p/${matchedPage.slug}`;
+        if (!slug) slug = matchedPage.slug.toLowerCase().trim();
+      }
+    }
+
+    // 4. Modelo da página
+    const modelMatch = notes.match(/\[Modelo:\s*([^\]]+)\]/i);
+    const modelName = modelMatch
+      ? modelMatch[1].trim()
+      : ((matchedPage?.social_links as any)?.model_variant || null);
+
     return {
-      url: urlMatch ? urlMatch[0] : null,
-      pageId: idMatch ? idMatch[1] : null,
+      url,
+      pageId,
+      slug,
+      modelName,
+      page: matchedPage,
     };
+  }
+
+  function isOfficialCompany(company: ProspectedCompany) {
+    return Boolean(company.notes?.includes("[Página Oficializada]") || company.status === "cliente");
   }
 
   async function handleMakeOfficial(company: ProspectedCompany, pageId: string) {
@@ -811,7 +959,7 @@ function ProspectingPage() {
         <CardContent>
           <ul className="space-y-2">
           {attackList.map((company) => {
-            const demo = parseDemoInfo(company.notes);
+            const demo = parseDemoInfo(company);
             return (
               <li
                 key={company.id}
@@ -977,32 +1125,53 @@ function ProspectingPage() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
-                      {demo.url && demo.pageId && (
+                      {/* Opção Trocar Modelo / Gerar Modelo universal para TODAS as empresas */}
+                      <DropdownMenuItem
+                        onClick={() => void handleRegenerateDemo(company)}
+                        disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                        className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
+                      >
+                        {regeneratingPageId === company.id || creatingPageId === company.id ? (
+                          <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
+                        ) : (
+                          <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                        )}
+                        <span>
+                          {regeneratingPageId === company.id
+                            ? "Trocando modelo..."
+                            : demo.url
+                              ? "Trocar Modelo"
+                              : "Gerar / Escolher Modelo"}
+                        </span>
+                      </DropdownMenuItem>
+
+                      {demo.url && (
                         <>
-                          <DropdownMenuItem
-                            onClick={() => void handleRegenerateDemo(company)}
-                            disabled={regeneratingPageId === company.id}
-                            className="cursor-pointer text-xs"
-                          >
-                            {regeneratingPageId === company.id ? (
-                              <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
-                            ) : (
-                              <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                            )}
-                            <span>{regeneratingPageId === company.id ? "Trocando modelo..." : "Trocar Modelo"}</span>
-                          </DropdownMenuItem>
+                          {demo.pageId && (
+                            <DropdownMenuItem
+                              onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                              disabled={actionLoadingId === demo.pageId || isOfficialCompany(company)}
+                              className="cursor-pointer text-xs"
+                            >
+                              {actionLoadingId === demo.pageId ? (
+                                <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
+                              ) : (
+                                <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficialCompany(company) ? "text-emerald-400" : "text-muted-foreground"}`} />
+                              )}
+                              <span>{isOfficialCompany(company) ? "Página Oficializada" : "Tornar Oficial"}</span>
+                            </DropdownMenuItem>
+                          )}
 
                           <DropdownMenuItem
-                            onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                            onClick={() => handleOpenTransfer(company, demo.pageId || "", demo.url!)}
                             className="cursor-pointer text-xs"
                           >
                             <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                             <span>Entregar / Transferir</span>
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
                         </>
                       )}
-
+                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={() => setActiveCompany(company)}
                         className="cursor-pointer text-xs"
@@ -1789,6 +1958,19 @@ function ProspectingPage() {
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-52">
                                     <DropdownMenuItem
+                                      onClick={() => void handleRegenerateDemoForPage(page)}
+                                      disabled={regeneratingPageId === page.id}
+                                      className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
+                                    >
+                                      {regeneratingPageId === page.id ? (
+                                        <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
+                                      ) : (
+                                        <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                      )}
+                                      <span>Trocar Modelo</span>
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuItem
                                       onClick={() => void handleMakeDemoOfficialDirect(page)}
                                       disabled={makingOfficialDemoId === page.id}
                                       className="cursor-pointer text-xs"
@@ -1932,7 +2114,7 @@ function ProspectingPage() {
               </TableHeader>
               <TableBody>
                 {filtered.map((company) => {
-                  const demo = parseDemoInfo(company.notes);
+                  const demo = parseDemoInfo(company);
                   const isOfficial = company.notes?.includes("[Página Oficializada]") || company.status === "cliente";
                   return (
                     <TableRow key={company.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
@@ -2143,46 +2325,54 @@ function ProspectingPage() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52">
-                              {demo.url && demo.pageId && (
-                                <>
-                                  <DropdownMenuItem
-                                    onClick={() => void handleRegenerateDemo(company)}
-                                    disabled={regeneratingPageId === company.id}
-                                    className="cursor-pointer text-xs"
-                                  >
-                                    {regeneratingPageId === company.id ? (
-                                      <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
-                                    ) : (
-                                      <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                {/* Opção Trocar Modelo / Gerar Modelo universal para TODAS as empresas */}
+                                <DropdownMenuItem
+                                  onClick={() => void handleRegenerateDemo(company)}
+                                  disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                                  className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
+                                >
+                                  {regeneratingPageId === company.id || creatingPageId === company.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
+                                  ) : (
+                                    <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                  )}
+                                  <span>
+                                    {regeneratingPageId === company.id
+                                      ? "Trocando modelo..."
+                                      : demo.url
+                                        ? "Trocar Modelo"
+                                        : "Gerar / Escolher Modelo"}
+                                  </span>
+                                </DropdownMenuItem>
+
+                                {demo.url && (
+                                  <>
+                                    {demo.pageId && (
+                                      <DropdownMenuItem
+                                        onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                                        disabled={actionLoadingId === demo.pageId || isOfficial}
+                                        className="cursor-pointer text-xs"
+                                      >
+                                        {actionLoadingId === demo.pageId ? (
+                                          <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
+                                        ) : (
+                                          <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`} />
+                                        )}
+                                        <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
+                                      </DropdownMenuItem>
                                     )}
-                                    <span>{regeneratingPageId === company.id ? "Trocando modelo..." : "Trocar Modelo"}</span>
-                                  </DropdownMenuItem>
 
-                                  <DropdownMenuItem
-                                    onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                                    disabled={actionLoadingId === demo.pageId || isOfficial}
-                                    className="cursor-pointer text-xs"
-                                  >
-                                    {actionLoadingId === demo.pageId ? (
-                                      <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
-                                    ) : (
-                                      <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`} />
-                                    )}
-                                    <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
-                                    className="cursor-pointer text-xs"
-                                  >
-                                    <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                    <span>Entregar / Transferir</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                </>
-                              )}
-
-                              <DropdownMenuItem
+                                    <DropdownMenuItem
+                                      onClick={() => handleOpenTransfer(company, demo.pageId || "", demo.url!)}
+                                      className="cursor-pointer text-xs"
+                                    >
+                                      <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                      <span>Entregar / Transferir</span>
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem
                                 onClick={() => setActiveCompany(company)}
                                 className="cursor-pointer text-xs"
                               >

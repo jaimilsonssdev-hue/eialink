@@ -201,7 +201,7 @@ export function CnpjLookupCard({ onAddCompany }: CnpjLookupCardProps) {
         score: lead.score,
         isOpportunity: !lead.has_website,
         partners: lead.instagram ? `Instagram: ${lead.instagram}` : "Decisor local",
-        detectedNiche: cnaeItem ? cnaeItem.niche : lead.niche,
+        detectedNiche: cnaeItem ? cnaeItem.niche : (lead.niche ?? "Outros"),
       }));
 
       setBatchResults(results);

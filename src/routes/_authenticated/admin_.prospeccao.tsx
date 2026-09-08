@@ -58,6 +58,8 @@ import {
 } from "@/components/ui/hover-card";
 
 import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
+import { validateProspectingSearch } from "@/modules/prospecting/validation";
+import { useActionCooldown } from "@/hooks/useActionCooldown";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
 import { PageService } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
@@ -185,6 +187,7 @@ function ProspectingPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [activeCompany, setActiveCompany] = useState<ProspectedCompany | null>(null);
   const [copiedInstagramCompanyId, setCopiedInstagramCompanyId] = useState<string | null>(null);
+  const { canRun: canRunAction, remainingSeconds: remainingCooldown } = useActionCooldown(3000);
 
   // Estados da Varredura Automática (Google Maps + Instagram)
   const [searchNiche, setSearchNiche] = useState("Clínica");
@@ -414,19 +417,40 @@ function ProspectingPage() {
 
   async function handleLiveSearch(event: React.FormEvent) {
     event.preventDefault();
-    if (!searchNiche.trim() || !searchCity.trim()) return;
+    if (isSearching) return;
+
+    // Validação estrita dos campos digitados (bloqueia scripts e caracteres suspeitos)
+    const validation = validateProspectingSearch({
+      niche: searchNiche,
+      city: searchCity,
+      limit: 15,
+    });
+    if (!validation.ok) {
+      setFeedback(validation.message);
+      return;
+    }
+
+    // Trava de 3 segundos contra cliques repetidos
+    if (!canRunAction("live-search")) {
+      setFeedback(
+        `Aguarde ${remainingCooldown("live-search")}s antes de disparar uma nova varredura.`,
+      );
+      return;
+    }
+
+    const { niche, city } = validation.data;
     setIsSearching(true);
     setFeedback(null);
     try {
       let results: ProspectDraft[] = [];
       try {
         // Tentativa 1: Execução direta no cliente (super rápida, sem intermediação de servidor)
-        results = await searchGoogleMapsAndInstagram(searchNiche.trim(), searchCity.trim(), 15);
+        results = await searchGoogleMapsAndInstagram(niche, city, 15);
       } catch (clientErr) {
         console.warn("[Prospecção] Execução direta no cliente falhou, tentando via servidor:", clientErr);
         // Tentativa 2: Fallback para RPC do servidor caso o navegador bloqueie por adblocker
         results = await runLiveProspecting({
-          data: { niche: searchNiche.trim(), city: searchCity.trim(), limit: 15 },
+          data: { niche, city, limit: 15 },
         });
       }
 
@@ -546,6 +570,12 @@ function ProspectingPage() {
   }
 
   async function handleInstagramApproach(company: ProspectedCompany) {
+    if (!canRunAction(`direct-${company.id}`)) {
+      setFeedback(
+        `Aguarde ${remainingCooldown(`direct-${company.id}`)}s para abrir o Direct novamente.`,
+      );
+      return;
+    }
     const handle = cleanInstagramHandle(company.instagram);
     if (!handle) {
       // Abre o modal dedicado para digitar o @perfil, visualizar o pitch e enviar
@@ -876,10 +906,18 @@ function ProspectingPage() {
                       href={whatsappLink(company)!}
                       target="_blank"
                       rel="noreferrer"
+                      onClick={(e) => {
+                        if (!canRunAction(`whats-${company.id}`)) {
+                          e.preventDefault();
+                          setFeedback(
+                            `Aguarde ${remainingCooldown(`whats-${company.id}`)}s para enviar novamente para ${company.name}.`,
+                          );
+                        }
+                      }}
                       className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
                         company.status === "contatado"
                           ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
-                          : demo.url && (company.status === "novo" || company.status === "qualificado")
+                          : demo.url && (company.status === "novo")
                             ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                             : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                       }`}
@@ -893,7 +931,7 @@ function ProspectingPage() {
                       type="button"
                       onClick={() => setWhatsModalCompany(company)}
                       className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
-                        demo.url && (company.status === "novo" || company.status === "qualificado")
+                        demo.url && (company.status === "novo")
                           ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                           : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                       }`}
@@ -2034,10 +2072,18 @@ function ProspectingPage() {
                               href={whatsappLink(company)!}
                               target="_blank"
                               rel="noreferrer"
+                              onClick={(e) => {
+                                if (!canRunAction(`whats-${company.id}`)) {
+                                  e.preventDefault();
+                                  setFeedback(
+                                    `Aguarde ${remainingCooldown(`whats-${company.id}`)}s para enviar novamente para ${company.name}.`,
+                                  );
+                                }
+                              }}
                               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
                                 company.status === "contatado"
                                   ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
-                                  : demo.url && (company.status === "novo" || company.status === "qualificado")
+                                  : demo.url && (company.status === "novo")
                                     ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                                     : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                               }`}
@@ -2051,7 +2097,7 @@ function ProspectingPage() {
                               type="button"
                               onClick={() => setWhatsModalCompany(company)}
                               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
-                                demo.url && (company.status === "novo" || company.status === "qualificado")
+                                demo.url && (company.status === "novo")
                                   ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                                   : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                               }`}

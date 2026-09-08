@@ -624,7 +624,7 @@ export const templateManifest: TemplateDefinition[] = [
       typography: { fontFamily: displayFont, headingSize: "1.5rem", bodySize: "0.95rem" },
     },
     layout: "spotlight",
-    components: ["profile", "links", "pix", "footer", "socials"],
+    components: ["profile", "links", "pix", "footer"],
     componentVariants: {
       profile: "business",
       links: "glass",

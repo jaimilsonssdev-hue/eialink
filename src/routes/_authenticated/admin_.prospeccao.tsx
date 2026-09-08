@@ -917,7 +917,7 @@ function ProspectingPage() {
                       className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
                         company.status === "contatado"
                           ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
-                          : demo.url && (company.status === "novo" || company.status === "qualificado")
+                          : demo.url && (company.status === "novo")
                             ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                             : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                       }`}
@@ -931,7 +931,7 @@ function ProspectingPage() {
                       type="button"
                       onClick={() => setWhatsModalCompany(company)}
                       className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
-                        demo.url && (company.status === "novo" || company.status === "qualificado")
+                        demo.url && (company.status === "novo")
                           ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                           : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                       }`}
@@ -2083,7 +2083,7 @@ function ProspectingPage() {
                               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
                                 company.status === "contatado"
                                   ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
-                                  : demo.url && (company.status === "novo" || company.status === "qualificado")
+                                  : demo.url && (company.status === "novo")
                                     ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                                     : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                               }`}
@@ -2097,7 +2097,7 @@ function ProspectingPage() {
                               type="button"
                               onClick={() => setWhatsModalCompany(company)}
                               className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
-                                demo.url && (company.status === "novo" || company.status === "qualificado")
+                                demo.url && (company.status === "novo")
                                   ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                                   : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
                               }`}

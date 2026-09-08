@@ -185,6 +185,7 @@ function ProspectingPage() {
   const [feedback, setFeedback] = useState<string | null>(null);
   const [activeCompany, setActiveCompany] = useState<ProspectedCompany | null>(null);
   const [copiedInstagramCompanyId, setCopiedInstagramCompanyId] = useState<string | null>(null);
+  const { canRun: canRunAction, remainingSeconds: remainingCooldown } = useActionCooldown(3000);
 
   // Estados da Varredura Automática (Google Maps + Instagram)
   const [searchNiche, setSearchNiche] = useState("Clínica");
@@ -414,19 +415,40 @@ function ProspectingPage() {
 
   async function handleLiveSearch(event: React.FormEvent) {
     event.preventDefault();
-    if (!searchNiche.trim() || !searchCity.trim()) return;
+    if (isSearching) return;
+
+    // Validação estrita dos campos digitados (bloqueia scripts e caracteres suspeitos)
+    const validation = validateProspectingSearch({
+      niche: searchNiche,
+      city: searchCity,
+      limit: 15,
+    });
+    if (!validation.ok) {
+      setFeedback(validation.message);
+      return;
+    }
+
+    // Trava de 3 segundos contra cliques repetidos
+    if (!canRunAction("live-search")) {
+      setFeedback(
+        `Aguarde ${remainingCooldown("live-search")}s antes de disparar uma nova varredura.`,
+      );
+      return;
+    }
+
+    const { niche, city } = validation.data;
     setIsSearching(true);
     setFeedback(null);
     try {
       let results: ProspectDraft[] = [];
       try {
         // Tentativa 1: Execução direta no cliente (super rápida, sem intermediação de servidor)
-        results = await searchGoogleMapsAndInstagram(searchNiche.trim(), searchCity.trim(), 15);
+        results = await searchGoogleMapsAndInstagram(niche, city, 15);
       } catch (clientErr) {
         console.warn("[Prospecção] Execução direta no cliente falhou, tentando via servidor:", clientErr);
         // Tentativa 2: Fallback para RPC do servidor caso o navegador bloqueie por adblocker
         results = await runLiveProspecting({
-          data: { niche: searchNiche.trim(), city: searchCity.trim(), limit: 15 },
+          data: { niche, city, limit: 15 },
         });
       }
 

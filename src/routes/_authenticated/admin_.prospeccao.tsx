@@ -263,48 +263,6 @@ function ProspectingPage() {
     });
   }, [demoPages, demoSearch]);
 
-  // Auto-backfill inteligente: sincroniza notas de empresas antigas vinculando ID e Modelo reais
-  useEffect(() => {
-    if (!companiesQuery.data?.length || !demoPages.length) return;
-
-    let hasUpdates = false;
-    const backfill = async () => {
-      for (const company of companiesQuery.data!) {
-        const notes = company.notes || "";
-        const urlMatch = notes.match(/https?:\/\/[^\s)]+/);
-        const hasId = notes.includes("(id:");
-        if (urlMatch && !hasId) {
-          const url = urlMatch[0];
-          const slugMatch = url.match(/\/p\/([^/?#\s)]+)/);
-          const slug = slugMatch ? slugMatch[1].toLowerCase() : null;
-          const matched = (slug ? demoPagesBySlug.get(slug) : null) || demoPagesByName.get(company.name.toLowerCase().trim());
-          if (matched) {
-            const modelVariant = (matched.social_links as any)?.model_variant || "Design Pro";
-            const clean = notes
-              .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
-              .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
-              .replace(/\n\s*\n/g, "\n")
-              .trim();
-            const updatedNotes = clean
-              ? `${clean}\nDemo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`
-              : `Demo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`;
-            try {
-              await ProspectingService.updateNotes(company.id, updatedNotes);
-              hasUpdates = true;
-            } catch (e) {
-              console.warn("Aviso no auto-backfill de demo:", e);
-            }
-          }
-        }
-      }
-      if (hasUpdates) {
-        invalidate();
-      }
-    };
-
-    void backfill();
-  }, [companiesQuery.data, demoPages, demoPagesBySlug, demoPagesByName]);
-
   async function handleDeleteDemo(pageId: string, pageName: string) {
     if (!window.confirm(`Deseja realmente excluir a página demonstrativa de "${pageName}"? Esta ação removerá a demo do ar e não pode ser desfeita.`)) return;
     setDeletingDemoId(pageId);
@@ -463,6 +421,48 @@ function ProspectingPage() {
       return true;
     });
   }, [liveResults, liveSiteFilter]);
+
+  // Auto-backfill inteligente: sincroniza notas de empresas antigas vinculando ID e Modelo reais
+  useEffect(() => {
+    if (!companiesQuery.data?.length || !demoPages.length) return;
+
+    let hasUpdates = false;
+    const backfill = async () => {
+      for (const company of companiesQuery.data!) {
+        const notes = company.notes || "";
+        const urlMatch = notes.match(/https?:\/\/[^\s)]+/);
+        const hasId = notes.includes("(id:");
+        if (urlMatch && !hasId) {
+          const url = urlMatch[0];
+          const slugMatch = url.match(/\/p\/([^/?#\s)]+)/);
+          const slug = slugMatch ? slugMatch[1].toLowerCase() : null;
+          const matched = (slug ? demoPagesBySlug.get(slug) : null) || demoPagesByName.get(company.name.toLowerCase().trim());
+          if (matched) {
+            const modelVariant = (matched.social_links as any)?.model_variant || "Design Pro";
+            const clean = notes
+              .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+              .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
+              .replace(/\n\s*\n/g, "\n")
+              .trim();
+            const updatedNotes = clean
+              ? `${clean}\nDemo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`
+              : `Demo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`;
+            try {
+              await ProspectingService.updateNotes(company.id, updatedNotes);
+              hasUpdates = true;
+            } catch (e) {
+              console.warn("Aviso no auto-backfill de demo:", e);
+            }
+          }
+        }
+      }
+      if (hasUpdates) {
+        invalidate();
+      }
+    };
+
+    void backfill();
+  }, [companiesQuery.data, demoPages, demoPagesBySlug, demoPagesByName]);
 
   async function handleFile(file: File) {
     setFeedback(null);

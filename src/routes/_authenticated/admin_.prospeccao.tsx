@@ -27,6 +27,7 @@ import {
   Copy,
   MoreHorizontal,
   Building2,
+  MessageSquareQuote,
 } from "lucide-react";
 
 import {
@@ -65,6 +66,12 @@ import { PageService } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
 import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";
+import { CopyConfigModal } from "@/components/prospecting/CopyConfigModal";
+import {
+  buildWhatsAppMessage,
+  buildInstagramMessage,
+  COPY_TEMPLATES_UPDATED_EVENT,
+} from "@/modules/prospecting/copyTemplates";
 import { POPULAR_CNAES } from "@/modules/prospecting/cnaePresets";
 import { NICHE_PRESETS_VARIANTS, detectNicheKey } from "@/modules/prospecting/nichePresets";
 
@@ -148,13 +155,7 @@ function isToday(value: string | null) {
 function whatsappLink(company: ProspectedCompany) {
   const phone = company.whatsapp ?? company.phone;
   if (!phone) return null;
-  const matchDemo = company.notes?.match(/https?:\/\/[^\s]+/);
-  const demoUrl = matchDemo ? matchDemo[0] : null;
-
-  const text = demoUrl
-    ? `Olá, ${company.name}! Aqui é da EIA Link. Montei uma sugestão exclusiva de presença digital para vocês no ar: ${demoUrl} . Posso te mostrar como funciona para receber agendamentos direto no WhatsApp?`
-    : `Olá, ${company.name}! Aqui é da EIA Link. Vi que a empresa ainda não tem uma página profissional na internet e preparei uma sugestão gratuita de presença digital para vocês. Posso te mostrar?`;
-
+  const text = buildWhatsAppMessage(company);
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
@@ -169,12 +170,7 @@ function cleanInstagramHandle(ig?: string | null): string | null {
 }
 
 function buildInstagramPitch(company: ProspectedCompany) {
-  const matchDemo = company.notes?.match(/https?:\/\/[^\s]+/);
-  const demoUrl = matchDemo ? matchDemo[0] : null;
-
-  return demoUrl
-    ? `Olá, ${company.name}! 👋 Vi o perfil de vocês no Instagram. Montei uma sugestão exclusiva de presença digital oficial para vocês no ar: ${demoUrl} . Posso te mostrar como funciona para receber agendamentos direto no WhatsApp e no Direct?`
-    : `Olá, ${company.name}! 👋 Vi o perfil de vocês no Instagram. Vi que a empresa ainda não tem um site ou biolink oficial e preparei uma sugestão gratuita de presença digital para vocês. Posso te mostrar?`;
+  return buildInstagramMessage(company);
 }
 
 function ProspectingPage() {
@@ -202,6 +198,18 @@ function ProspectingPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [instaModalCompany, setInstaModalCompany] = useState<ProspectedCompany | null>(null);
   const [whatsModalCompany, setWhatsModalCompany] = useState<ProspectedCompany | null>(null);
+  const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [, setCopyTemplatesVersion] = useState(0);
+
+  useEffect(() => {
+    const handleTemplatesUpdated = () => {
+      setCopyTemplatesVersion((v) => v + 1);
+    };
+    window.addEventListener(COPY_TEMPLATES_UPDATED_EVENT, handleTemplatesUpdated);
+    return () => {
+      window.removeEventListener(COPY_TEMPLATES_UPDATED_EVENT, handleTemplatesUpdated);
+    };
+  }, []);
   const [transferModalData, setTransferModalData] = useState<{
     isOpen: boolean;
     page: {
@@ -300,7 +308,13 @@ function ProspectingPage() {
 
   function handleCopyDemoPitch(page: typeof demoPages[0]) {
     const url = `https://eialink.com.br/p/${page.slug}`;
-    const pitch = `Olá! Aqui é da EIA Link. Montei uma demonstração exclusiva de presença digital para o(a) ${page.display_name}: ${url} . Posso te mostrar como funciona para receber agendamentos direto no seu WhatsApp?`;
+    const pitch = buildWhatsAppMessage({
+      name: page.display_name,
+      notes: `Demo: ${url} [Modelo: ${(page.social_links as any)?.model_variant || ""}]`,
+      rating: (page.social_links as any)?.google_rating,
+      reviews_count: (page.social_links as any)?.reviews_count,
+      whatsapp: page.whatsapp,
+    } as any);
     void navigator.clipboard.writeText(pitch);
     setCopiedPitchDemoId(page.id);
     setTimeout(() => setCopiedPitchDemoId(null), 2000);
@@ -893,6 +907,18 @@ function ProspectingPage() {
           <p className="text-xs text-muted-foreground mt-0.5">
             Motor de demanda ativa: varredura no Google e Instagram, modelos demonstrativos e conversão no WhatsApp.
           </p>
+        </div>
+
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setIsCopyModalOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-card hover:bg-muted/40 text-foreground px-3.5 py-2 text-xs font-semibold shadow-sm transition-all hover:border-primary/40"
+            title="Personalizar mensagens e copys globais de abordagem para WhatsApp e Instagram"
+          >
+            <MessageSquareQuote className="h-4 w-4 text-primary" />
+            <span>Configurar Copys / Mensagens</span>
+          </button>
         </div>
       </header>
 
@@ -2465,6 +2491,11 @@ function ProspectingPage() {
           }}
         />
       )}
+
+      <CopyConfigModal
+        isOpen={isCopyModalOpen}
+        onClose={() => setIsCopyModalOpen(false)}
+      />
     </div>
   );
 }
@@ -2758,13 +2789,7 @@ interface WhatsApproachModalProps {
 function WhatsApproachModal({ company, onClose, onSuccess }: WhatsApproachModalProps) {
   const initialPhone = company.whatsapp || company.phone || "";
   const [phone, setPhone] = useState(initialPhone);
-  const [pitch, setPitch] = useState(() => {
-    const demo = company.notes?.match(/https?:\/\/[^\s]+/);
-    const demoUrl = demo ? demo[0] : null;
-    return demoUrl
-      ? `Olá, ${company.name}! Aqui é da EIA Link. Montei uma sugestão exclusiva de presença digital para vocês no ar: ${demoUrl} . Posso te mostrar como funciona para receber agendamentos direto no WhatsApp?`
-      : `Olá, ${company.name}! Aqui é da EIA Link. Vi que a empresa ainda não tem uma página profissional na internet e preparei uma sugestão de presença digital para vocês. Posso te mostrar?`;
-  });
+  const [pitch, setPitch] = useState(() => buildWhatsAppMessage(company));
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);

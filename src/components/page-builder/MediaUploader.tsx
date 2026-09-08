@@ -18,7 +18,7 @@ export function MediaUploader({
   label: string;
   value?: string | null;
   maxSizeBytes?: number;
-  variant?: "square" | "cover";
+  variant?: "square" | "cover" | "avatar";
   templateId?: string | null;
   niche?: string | null;
   onChange(url: string | null): void;

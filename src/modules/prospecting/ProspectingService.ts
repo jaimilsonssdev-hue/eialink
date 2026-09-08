@@ -124,7 +124,7 @@ export const ProspectingService = {
     if (error) throw new Error(error.message);
   },
 
-  async updateCompany(id: string, updates: Record<string, any>) {
+  async updateCompany(id: string, updates: Record<string, unknown>) {
     const { error } = await supabase
       .from("prospected_companies")
       .update(updates)

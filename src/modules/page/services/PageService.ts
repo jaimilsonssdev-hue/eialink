@@ -314,7 +314,7 @@ export const PageService = {
       if (fetchErr || !page) throw new Error("Página não encontrada ou sem permissão.");
 
       const currentSocial = (page.social_links as Record<string, any>) || {};
-      const updatedSocial = { ...currentSocial, is_demo: false };
+      const updatedSocial: Record<string, any> = { ...currentSocial, is_demo: false };
       delete updatedSocial.claim_token;
 
       let description = page.description || "";
@@ -363,7 +363,7 @@ export const PageService = {
     if (fetchErr || !page) throw new Error("Página não encontrada.");
 
     const currentSocial = (page.social_links as Record<string, any>) || {};
-    const updatedSocial = {
+    const updatedSocial: Record<string, any> = {
       ...currentSocial,
       claim_token: claimToken,
       claim_email: targetEmail?.trim().toLowerCase() || undefined,

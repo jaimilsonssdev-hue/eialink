@@ -36,7 +36,7 @@ export const makePageOfficialFn = createServerFn({ method: "POST" })
     }
 
     const currentSocial = (page.social_links as Record<string, any>) || {};
-    const updatedSocial = {
+    const updatedSocial: Record<string, any> = {
       ...currentSocial,
       is_demo: false,
     };
@@ -148,7 +148,7 @@ export const transferPageOwnershipFn = createServerFn({ method: "POST" })
     if (targetProfile) {
       // Usuário já cadastrado! Transfere diretamente a titularidade
       const currentSocial = (page.social_links as Record<string, any>) || {};
-      const updatedSocial = {
+      const updatedSocial: Record<string, any> = {
         ...currentSocial,
         is_demo: false,
         transferred_at: new Date().toISOString(),
@@ -193,7 +193,7 @@ export const transferPageOwnershipFn = createServerFn({ method: "POST" })
     // Gera token de resgate seguro para que ele crie a conta e assuma o controle
     const claimToken = crypto.randomUUID();
     const currentSocial = (page.social_links as Record<string, any>) || {};
-    const updatedSocial = {
+    const updatedSocial: Record<string, any> = {
       ...currentSocial,
       claim_token: claimToken,
       claim_email: data.targetEmail,
@@ -320,7 +320,7 @@ export const claimPageFn = createServerFn({ method: "POST" })
     }
 
     const social = (page.social_links as Record<string, any>) || {};
-    const updatedSocial = {
+    const updatedSocial: Record<string, any> = {
       ...social,
       is_demo: false,
       claimed_at: new Date().toISOString(),

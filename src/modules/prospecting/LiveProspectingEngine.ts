@@ -23,6 +23,7 @@ interface RawScrapedLead {
   reviews_count?: number | null;
   source: string;
   notes?: string;
+  cid?: string | null;
 }
 
 /**
@@ -62,21 +63,25 @@ async function scrapeGoogleMaps(niche: string, city: string): Promise<RawScraped
 }
 
 function parseGoogleMapsMarkdown(text: string, niche: string, city: string): RawScrapedLead[] {
-  const placePattern = /\[([^\]]+)\]\(https?:\/\/(?:www\.)?(?:google\.[a-z.]+|maps\.google\.[a-z.]+)\/maps\/place\/[^)]+\)/gi;
-  const parts = text.split(placePattern);
+  const placePattern = /\[([^\]]+)\]\((https?:\/\/(?:www\.)?(?:google\.[a-z.]+|maps\.google\.[a-z.]+)\/maps\/place\/[^)]+)\)/gi;
+  const matches = [...text.matchAll(placePattern)];
 
   const leads: RawScrapedLead[] = [];
   const seen = new Set<string>();
 
-  for (let i = 1; i < parts.length; i += 2) {
-    const rawName = parts[i]?.trim();
-    const block = parts[i + 1] ?? "";
+  for (let i = 0; i < matches.length; i++) {
+    const cur = matches[i];
+    const rawName = cur[1]?.trim();
+    const placeUrl = cur[2] ?? "";
+    const startIndex = (cur.index ?? 0) + cur[0].length;
+    const endIndex = i + 1 < matches.length ? (matches[i + 1].index ?? text.length) : text.length;
+    const block = text.slice(startIndex, endIndex);
 
     if (!rawName) continue;
 
     // Limpa sufixos de cidade repetidos no nome (ex: "Clínica Inove - Teixeira de Freitas" -> "Clínica Inove")
     let cleanName = rawName
-      .replace(/\s*-\s*(?:Teixeira de Freitas|BA|Bahia).*/i, "")
+      .replace(/\s*-\s*(?:Teixeira de Freitas|BA|Bahia|São Paulo|SP|Rio de Janeiro|RJ).*/i, "")
       .replace(/\s*\|\s*.*/i, "")
       .trim();
 
@@ -91,31 +96,57 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
     if (seen.has(normalizedKey)) continue;
     seen.add(normalizedKey);
 
-    // Extrai telefone brasileiro com DDD obrigatório (evita capturar números aleatórios de imagens ou parâmetros)
+    // Extrai identificador CID único do Google Maps da URL (!1s0x7354401e6f8b549:0x31dd34ef58886cdb)
+    const cidMatch = placeUrl.match(/!1s([0-9a-fx:]+)/i);
+    const cid = cidMatch ? cidMatch[1] : null;
+
+    // Extrai nota real e contagem de avaliações (ex: 3,8(93) ou 4,7(24) ou 3,9(2.736))
+    let rating: number | null = null;
+    let reviewsCount: number | null = null;
+    const ratingReviewsMatch = block.match(/([1-5][,.][0-9])\s*\(([\d.]+)\)/);
+    if (ratingReviewsMatch) {
+      rating = parseFloat(ratingReviewsMatch[1].replace(",", "."));
+      reviewsCount = parseInt(ratingReviewsMatch[2].replace(/\D/g, ""), 10);
+    } else {
+      const rm = block.match(/\b([1-5][,.][0-9])\b/);
+      if (rm) rating = parseFloat(rm[1].replace(",", "."));
+      const rcm = block.match(/\(([\d.]+)\)/) || block.match(/([\d.]+)\s*(?:avaliações|avaliação|reviews)/i);
+      if (rcm) reviewsCount = parseInt(rcm[1].replace(/\D/g, ""), 10);
+    }
+
+    // Extrai telefone brasileiro com DDD obrigatório
     const phoneMatch = block.match(/(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
-    const rawPhone = phoneMatch ? phoneMatch[0] : null;
+    const rawPhone = phoneMatch ? phoneMatch[0].trim() : null;
 
-    // Extrai nota
-    const ratingMatch = block.match(/\b([1-5][,.][0-9])\b/);
-    const rating = ratingMatch ? parseFloat(ratingMatch[1].replace(",", ".")) : null;
+    // Extrai endereço se houver
+    const addressMatch =
+      block.match(/(?:··|·\s*)((?:Av\.|Avenida|R\.|Rua|Praça|Estr\.|Rodovia)[^\n·]+)/i) ||
+      block.match(/(?:R\.|Rua|Av\.|Avenida|Praça|Travessa|Alameda|Estr\.|Rodovia)[^,\n]+,[^,\n]+(?:-[^,\n]+)?,[^,\n]+/i) ||
+      block.match(/(?:·\s*((?:Av\.|Avenida|R\.|Rua|Praça|Estr\.)[^\n·]+))/i);
+    const address = addressMatch ? (addressMatch[1] || addressMatch[0]).trim() : "";
 
-    // Extrai quantidade de avaliações (tanto no formato (96) quanto 96 avaliações)
-    const reviewsMatch = block.match(/\((\d+)\)/) || block.match(/([\d.]+)\s*(?:avaliações|avaliação|reviews)/i);
-    const reviewsCount = reviewsMatch ? parseInt(reviewsMatch[1].replace(/\D/g, ""), 10) : null;
+    // Horários de funcionamento
+    const hoursMatch = block.match(/(?:Aberto|Fechado)[^\n·]*(?:·\s*Fecha[^\n·]*|·\s*Abre[^\n·]*)?/i);
+    const openingHours = hoursMatch ? hoursMatch[0].trim() : null;
 
     // Detecta se tem website indicado
-    const hasWebsite = /\[?(?:Website|Site|Ver site)\]?/i.test(block) ||
+    const hasWebsite =
+      /\[?(?:Website|Site|Ver site)\]?/i.test(block) ||
       /(?:https?:\/\/(?!www\.google)[a-zA-Z0-9.-]+\.[a-z]{2,})/i.test(block);
 
     // Extrai Instagram se houver menção
     const instaMatch = block.match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
-    const instagram = instaMatch && !["explore", "p", "reel"].includes(instaMatch[1])
-      ? `@${instaMatch[1]}`
-      : null;
+    const instagram =
+      instaMatch && !["explore", "p", "reel"].includes(instaMatch[1])
+        ? `@${instaMatch[1]}`
+        : null;
 
-    // Extrai endereço se houver
-    const addressMatch = block.match(/(?:·\s*((?:Av\.|Avenida|R\.|Rua|Praça|Estr\.)[^\n·]+))/i);
-    const address = addressMatch ? addressMatch[1].trim() : "";
+    const notesParts = [
+      rating ? `⭐ ${rating} (${reviewsCount ?? 0} avaliações)` : null,
+      address ? `Endereço: ${address}` : null,
+      openingHours ? `Horário: ${openingHours}` : null,
+      cid ? `CID: ${cid}` : null,
+    ].filter(Boolean);
 
     leads.push({
       name: cleanName,
@@ -129,10 +160,8 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
       rating,
       reviews_count: reviewsCount,
       source: "google_maps",
-      notes: [
-        rating ? `⭐ ${rating} (${reviewsCount ?? 0} avaliações)` : null,
-        address ? `Endereço: ${address}` : null,
-      ].filter(Boolean).join(" · ") || "Capturado no Google Maps",
+      cid,
+      notes: notesParts.join(" · ") || "Capturado no Google Maps",
     });
   }
 
@@ -306,7 +335,7 @@ export async function lookupBusinessProfile(queryOrUrl: string): Promise<Prospec
         instagram: `@${handle}`,
         website: null,
         has_website: false,
-        rating: 5.0,
+        rating: null,
         reviews_count: null,
         source: "instagram_link",
         status: "novo",
@@ -357,195 +386,302 @@ export interface GoogleMapsPlaceDetails {
 
 /**
  * Consulta a ficha completa do estabelecimento no Google Maps via Jina Reader.
- * Retorna nota real, quantidade de avaliações, fotos reais (lh3), endereço, horários e depoimentos.
+ * Retorna nota real, quantidade de avaliações, fotos reais (lh3 e Street View), endereço, horários e depoimentos.
  */
 export async function fetchGoogleMapsPlaceDetails(
   companyName: string,
   city?: string | null,
+  providedCid?: string | null,
 ): Promise<GoogleMapsPlaceDetails> {
   const cleanName = companyName
     .replace(/clinical\s+innovate/gi, "Clínica Inove")
     .replace(/^clinical\s+/gi, "Clínica ")
+    .replace(/\s*-\s*(?:Teixeira de Freitas|BA|Bahia|São Paulo|SP|Rio de Janeiro|RJ).*/i, "")
+    .replace(/\s*\|\s*.*/i, "")
     .trim();
+
+  let targetCid = providedCid || null;
+  if (!targetCid) {
+    const cidInName = companyName.match(/CID:\s*([0-9a-fx:]+)/i);
+    if (cidInName) targetCid = cidInName[1];
+  }
+
+  let rating: number | null = null;
+  let reviewsCount: number | null = null;
+  let address: string | null = null;
+  let openingHours: string | null = null;
+  let whatsapp: string | null = null;
+  let phone: string | null = null;
+  const photos: string[] = [];
+  const reviews: Array<{ author: string; avatar: string | null; rating: number; text: string }> = [];
+
   const query = [cleanName, city].filter(Boolean).join(" ");
-  const targetUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}?hl=pt-BR&gl=BR`;
-  const jinaUrl = `https://r.jina.ai/${targetUrl}`;
 
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
+  // ETAPA 1: Se não temos o CID, busca a ficha no Google Maps Search
+  if (!targetCid) {
+    try {
+      const mapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(query)}?hl=pt-BR&gl=BR`;
+      const jinaMapsUrl = `https://r.jina.ai/${mapsSearchUrl}`;
 
-    const res = await fetch(jinaUrl, {
-      signal: controller.signal,
-      headers: {
-        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-        "x-locale": "pt-BR",
-      },
-    });
-    clearTimeout(timeout);
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      const res = await fetch(jinaMapsUrl, {
+        signal: controller.signal,
+        headers: {
+          "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+          "x-locale": "pt-BR",
+        },
+      });
+      clearTimeout(timeout);
 
-    if (!res.ok) {
-      console.warn(`[fetchGoogleMapsPlaceDetails] Jina Maps retornou status ${res.status}`);
-      return {
-        rating: null,
-        reviewsCount: null,
-        address: null,
-        openingHours: null,
-        whatsapp: null,
-        phone: null,
-        photos: [],
-        reviews: [],
-      };
-    }
+      if (res.ok) {
+        const text = await res.text();
 
-    const text = await res.text();
-
-    // 1. Nota (ex: 4,8 ou 4.8)
-    let rating: number | null = null;
-    const ratingMatch = text.match(/\b([1-5][,.][0-9])\b/);
-    if (ratingMatch) {
-      rating = parseFloat(ratingMatch[1].replace(",", "."));
-    }
-
-    // 2. Contagem de avaliações (ex: 94 avaliações ou (94))
-    let reviewsCount: number | null = null;
-    const reviewsMatch =
-      text.match(/(\d+)\s*(?:avaliações|avaliação|comentários|classificações|reviews)/i) ||
-      text.match(/\((\d+)\)/);
-    if (reviewsMatch) {
-      reviewsCount = parseInt(reviewsMatch[1].replace(/\D/g, ""), 10);
-    }
-
-    // 3. Endereço
-    let address: string | null = null;
-    const addressMatch =
-      text.match(/(?:R\.|Rua|Av\.|Avenida|Praça|Travessa|Alameda|Estr\.|Rodovia)[^,\n]+,[^,\n]+(?:-[^,\n]+)?,[^,\n]+/i) ||
-      text.match(/(?:·\s*((?:Av\.|Avenida|R\.|Rua|Praça|Estr\.)[^\n·]+))/i);
-    if (addressMatch) {
-      address = (addressMatch[1] || addressMatch[0]).trim();
-    }
-
-    // 4. Horários de funcionamento
-    let openingHours: string | null = null;
-    const hoursMatch =
-      text.match(/(?:Aberto|Fechado)[^\n]*?(?:Fecha|Abre)[^\n]*?(\d{1,2}:\d{2})/i) ||
-      text.match(/(\d{1,2}:\d{2}\s*[-–]\s*\d{1,2}:\d{2})/);
-    if (hoursMatch) {
-      openingHours = hoursMatch[0].trim();
-    }
-
-    // 5. WhatsApp e Telefone
-    let whatsapp: string | null = null;
-    const waMatch = text.match(/(?:api\.whatsapp\.com\/send\?phone=|wa\.me\/)(\d+)/i);
-    if (waMatch) {
-      whatsapp = waMatch[1];
-    }
-
-    let phone: string | null = null;
-    const phoneMatches = text.match(/(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/g);
-    if (phoneMatches) {
-      const cleanPhones = phoneMatches.map((p) => p.trim()).filter((p) => !p.startsWith("51939"));
-      if (cleanPhones.length > 0) phone = cleanPhones[0];
-    }
-
-    // 6. Fotos de alta resolução reais do estabelecimento
-    const photos: string[] = [];
-    const imgRegex = /!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g;
-    let imgMatch: RegExpExecArray | null;
-    while ((imgMatch = imgRegex.exec(text)) !== null) {
-      const url = imgMatch[1];
-      if (url.includes("googleusercontent.com/gps-cs-s/") || url.includes("googleusercontent.com/p/")) {
-        const cleanUrl = url.replace(/=w\d+.*$/, "=w1200");
-        if (!photos.includes(cleanUrl)) {
-          photos.push(cleanUrl);
+        // 1. Detecta CID diretamente da página (inclusive em redirecionamentos e telas de login/localização)
+        const directCidMatch = text.match(/(?:!1s|%211s)([0-9a-fx%:]+)/i);
+        if (directCidMatch) {
+          targetCid = decodeURIComponent(directCidMatch[1]);
         }
-      }
-    }
 
-    // 7. Depoimentos e Avaliações Reais de Clientes
-    const reviews: Array<{ author: string; avatar: string | null; rating: number; text: string }> = [];
-    const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+        // 2. WhatsApp
+        const waMatch = text.match(/(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\d+)/i);
+        if (waMatch) {
+          whatsapp = waMatch[1];
+        }
 
-    for (let i = 0; i < lines.length; i++) {
-      const avMatch = lines[i].match(/!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/a-[^\)]+)\)/);
-      if (avMatch) {
-        const avatar = avMatch[1].replace(/=w\d+.*$/, "=w80-h80");
-        const cand = lines[i + 1];
-        const author =
-          cand && !cand.startsWith("![") && !cand.startsWith("#") && !cand.startsWith("")
-            ? cand
-            : "Cliente no Google";
+        // 3. Horários
+        const hoursMatch = text.match(/(?:Aberto|Fechado)[^\n]*(?:·\s*Fecha[^\n]*|·\s*Abre[^\n]*)?/i);
+        if (hoursMatch) {
+          openingHours = hoursMatch[0].replace(//g, "").trim();
+        }
 
-        // Procura estrelas e texto nas linhas subsequentes
-        for (let j = i + 2; j < Math.min(lines.length, i + 10); j++) {
-          if (/{1,5}/.test(lines[j])) {
-            const stars = (lines[j].match(//g) || []).length;
-            // Busca o texto real da avaliação
-            for (let k = j + 1; k < Math.min(lines.length, j + 5); k++) {
-              const r = lines[k];
-              if (
-                r &&
-                !r.startsWith("") &&
-                !r.startsWith("") &&
-                !r.startsWith("Editado") &&
-                !r.startsWith("Foto ") &&
-                !r.startsWith("![") &&
-                r.length > 5
-              ) {
-                // Inclui apenas avaliações positivas de alta conversão (4 ou 5 estrelas)
-                if (stars >= 4) {
-                  reviews.push({
-                    author,
-                    avatar,
-                    rating: stars,
-                    text: r.replace(/…Mais$/, "").trim(),
-                  });
-                }
-                break;
-              }
+        // 4. Se for lista de resultados, usa parseGoogleMapsMarkdown
+        const leads = parseGoogleMapsMarkdown(text, "geral", city || "");
+        if (leads.length > 0) {
+          const matched =
+            leads.find((l) => l.name.toLowerCase().includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(l.name.toLowerCase())) ||
+            leads[0];
+
+          if (matched) {
+            if (matched.rating) rating = matched.rating;
+            if (matched.reviews_count) reviewsCount = matched.reviews_count;
+            if (matched.phone) {
+              phone = matched.phone;
+              if (!whatsapp) whatsapp = matched.whatsapp || matched.phone;
             }
-            break;
+            if (matched.notes) {
+              const addrM = matched.notes.match(/Endereço:\s*([^·]+)/);
+              if (addrM) address = addrM[1].trim();
+              const hoursM = matched.notes.match(/Horário:\s*([^·]+)/);
+              if (hoursM && !openingHours) openingHours = hoursM[1].trim();
+            }
+            if (matched.cid && !targetCid) {
+              targetCid = matched.cid;
+            }
           }
         }
       }
+    } catch (searchErr) {
+      console.warn("[fetchGoogleMapsPlaceDetails] Aviso na busca do Google Maps:", searchErr);
     }
-
-    // Frases de destaque entre aspas na ficha do Google
-    const quotes = [...text.matchAll(/"([^"\n]{15,180})"/g)].map((m) => m[1]);
-    for (const q of quotes) {
-      if (!reviews.some((r) => r.text.includes(q))) {
-        reviews.push({
-          author: "Cliente Verificado no Google",
-          avatar: null,
-          rating: 5,
-          text: q.trim(),
-        });
-      }
-    }
-
-    return {
-      rating,
-      reviewsCount,
-      address,
-      openingHours,
-      whatsapp,
-      phone,
-      photos: photos.slice(0, 8),
-      reviews: reviews.slice(0, 6),
-    };
-  } catch (err) {
-    console.error("[fetchGoogleMapsPlaceDetails] Erro ao extrair dados do Google Maps:", err);
-    return {
-      rating: null,
-      reviewsCount: null,
-      address: null,
-      openingHours: null,
-      whatsapp: null,
-      phone: null,
-      photos: [],
-      reviews: [],
-    };
   }
+
+  // ETAPA 2: Se temos o CID, consulta diretamente a ficha clássica do Maps para extrair fotos reais e avaliações
+  if (targetCid) {
+    try {
+      const cidUrl = `https://maps.google.com/maps?cid=${targetCid}`;
+      const jinaCidUrl = `https://r.jina.ai/${cidUrl}`;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      const res = await fetch(jinaCidUrl, {
+        signal: controller.signal,
+        headers: {
+          "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+          "x-locale": "pt-BR",
+        },
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        const text = await res.text();
+
+        // 1. Extrai fotos reais do estabelecimento (Google Photos e Street View de fachada)
+        const imgRegex = /!\[[^\]]*\]\((https:\/\/(?:lh[0-9]\.googleusercontent\.com|streetviewpixels-pa\.googleapis\.com)[^\)]+)\)/g;
+        let imgMatch: RegExpExecArray | null;
+        while ((imgMatch = imgRegex.exec(text)) !== null) {
+          const url = imgMatch[1];
+          if (url.includes("googleusercontent.com/gps-cs-s/") || url.includes("googleusercontent.com/p/")) {
+            const cleanUrl = url.replace(/=w\d+.*$/, "=w1200");
+            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+          } else if (url.includes("streetviewpixels-pa.googleapis.com")) {
+            const cleanUrl = url.replace(/&w=\d+&h=\d+/, "&w=1200&h=600");
+            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+          }
+        }
+
+        // 2. Extrai nota caso ainda não tenhamos
+        if (rating === null) {
+          const rm = text.match(/\b([1-5][,.][0-9])\b/);
+          if (rm) rating = parseFloat(rm[1].replace(",", "."));
+        }
+
+        // 3. Extrai contagem de avaliações caso ainda não tenhamos
+        if (reviewsCount === null) {
+          const rcm = text.match(/\((\d+[\d.]*)\)/) || text.match(/([\d.]+)\s*(?:avaliações|avaliação|reviews)/i);
+          if (rcm) reviewsCount = parseInt(rcm[1].replace(/\D/g, ""), 10);
+        }
+
+        // 4. Extrai depoimentos reais de clientes verificados
+        const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
+        for (let i = 0; i < lines.length; i++) {
+          const l = lines[i];
+          const quoteMatch = l.match(/\[\"([^\"]{10,250})\"\]/);
+          if (quoteMatch) {
+            let author = "Cliente no Google";
+            for (let j = i - 1; j >= Math.max(0, i - 4); j--) {
+              const prev = lines[j];
+              const authMatch =
+                prev.match(/Image\s+\d+:\s*([^\]]+)\]/) ||
+                prev.match(/\[([^\]]+)\]\(https:\/\/www\.google\.com\/maps\/contrib/);
+              if (authMatch) {
+                author = authMatch[1].trim();
+                break;
+              }
+            }
+            const revText = quoteMatch[1].trim();
+            // Ignora reclamações ou perguntas irrelevantes em depoimentos de destaque
+            if (!reviews.some((r) => r.text === revText) && !revText.toLowerCase().includes("péssimo") && !revText.toLowerCase().includes("ruim")) {
+              reviews.push({ author, avatar: null, rating: 5, text: revText });
+            }
+          }
+        }
+      }
+    } catch (cidErr) {
+      console.warn("[fetchGoogleMapsPlaceDetails] Aviso ao consultar ficha CID:", cidErr);
+    }
+  }
+
+  // ETAPA 3: Fallback via Google Search Knowledge Panel caso não tenhamos capturado dados
+  if (rating === null || photos.length === 0) {
+    try {
+      const gSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&hl=pt-BR&gl=BR`;
+      const jinaGSearchUrl = `https://r.jina.ai/${gSearchUrl}`;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 20000);
+      const res = await fetch(jinaGSearchUrl, {
+        signal: controller.signal,
+        headers: {
+          "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+          "x-locale": "pt-BR",
+        },
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        const text = await res.text();
+
+        // Nota
+        if (rating === null) {
+          const rm =
+            text.match(/([1-5][,.][0-9])\s*(?:de\s*5|\/5|\*|estrelas?)/i) ||
+            text.match(/Avaliação\s*:\s*([1-5][,.][0-9])/i) ||
+            text.match(/([1-5][,.][0-9])\s*\(\d+\)/) ||
+            text.match(/\b([1-5][,.][0-9])\b/);
+          if (rm) rating = parseFloat(rm[1].replace(",", "."));
+        }
+
+        // Avaliações
+        if (reviewsCount === null) {
+          const rcm =
+            text.match(/(\d+[\d.]*)\s*(?:avaliações|avaliação|comentários|classificações|críticas)/i) ||
+            text.match(/\((\d+[\d.]*)\s*(?:avaliações|comentários)?\)/);
+          if (rcm) reviewsCount = parseInt(rcm[1].replace(/\D/g, ""), 10);
+        }
+
+        // Endereço
+        if (!address) {
+          const addrMatch =
+            text.match(/Endereço\s*:\s*([^\n]+)/i) ||
+            text.match(/(?:R\.|Rua|Av\.|Avenida|Praça|Travessa|Alameda|Estr\.|Rodovia)[^,\n]+,[^,\n]+(?:-[^,\n]+)?,[^,\n]+/i);
+          if (addrMatch) address = (addrMatch[1] || addrMatch[0]).replace(/\[.*?\]/g, "").trim();
+        }
+
+        // Horários
+        if (!openingHours) {
+          const hoursM =
+            text.match(/Horário(?:s)?(?:\s*de\s*funcionamento)?\s*:\s*([^\n]+)/i) ||
+            text.match(/(?:Aberto|Fechado)[^\n]*?(?:Fecha|Abre)[^\n]*?(\d{1,2}(?::\d{2})?)/i);
+          if (hoursM) openingHours = (hoursM[1] || hoursM[0]).replace(/\[.*?\]/g, "").trim();
+        }
+
+        // WhatsApp / Telefone
+        if (!whatsapp) {
+          const waM = text.match(/(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\d+)/i);
+          if (waM) whatsapp = waM[1];
+        }
+        if (!phone) {
+          const phoneM =
+            text.match(/(?:Telefone\s*:\s*([^\n]+))/i) ||
+            text.match(/(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
+          if (phoneM) phone = (phoneM[1] || phoneM[0]).trim();
+        }
+
+        // Fotos no painel do Google
+        const googlePhotos = [...text.matchAll(/!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g)];
+        for (const gp of googlePhotos) {
+          const url = gp[1];
+          if (!url.includes("/a/") && !url.includes("default_user") && !url.includes("loader")) {
+            const cleanUrl = url.replace(/=w\d+.*$/, "=w1200");
+            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+          }
+        }
+
+        // Se encontrou fid ou ludocid no Google Search e ainda não temos fotos, consulta o CID
+        if (photos.length === 0) {
+          const fidM = text.match(/fid\/([0-9a-fx:]+)/i) || text.match(/ludocid=(\d+)/i);
+          if (fidM) {
+            try {
+              const extraCidUrl = `https://maps.google.com/maps?cid=${fidM[1]}`;
+              const cidRes = await fetch(`https://r.jina.ai/${extraCidUrl}`, {
+                headers: { "Accept-Language": "pt-BR,pt;q=0.9", "x-locale": "pt-BR" },
+              });
+              if (cidRes.ok) {
+                const cidText = await cidRes.text();
+                const cidPhotos = [...cidText.matchAll(/!\[[^\]]*\]\((https:\/\/(?:lh[0-9]\.googleusercontent\.com|streetviewpixels-pa\.googleapis\.com)[^\)]+)\)/g)];
+                for (const cp of cidPhotos) {
+                  const url = cp[1];
+                  if (url.includes("googleusercontent.com/gps-cs-s/") || url.includes("googleusercontent.com/p/")) {
+                    const cleanUrl = url.replace(/=w\d+.*$/, "=w1200");
+                    if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+                  } else if (url.includes("streetviewpixels-pa.googleapis.com")) {
+                    const cleanUrl = url.replace(/&w=\d+&h=\d+/, "&w=1200&h=600");
+                    if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+                  }
+                }
+              }
+            } catch (e) {
+              // silencioso
+            }
+          }
+        }
+      }
+    } catch (gErr) {
+      console.warn("[fetchGoogleMapsPlaceDetails] Aviso no Google Search Knowledge Panel:", gErr);
+    }
+  }
+
+  return {
+    rating,
+    reviewsCount,
+    address,
+    openingHours,
+    whatsapp,
+    phone,
+    photos: photos.slice(0, 8),
+    reviews: reviews.slice(0, 6),
+  };
 }
 
 

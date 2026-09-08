@@ -34,7 +34,7 @@ export class BeautyLayout implements TemplateLayoutRenderer {
     const whats = bio.whatsapp?.replace(/\D/g, "");
 
     const socialData = (bio.social_links as Record<string, any>) || {};
-    const rating = socialData.google_rating ?? 5.0;
+    const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;
     const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
     const address = socialData.address;
@@ -80,10 +80,12 @@ export class BeautyLayout implements TemplateLayoutRenderer {
               <span className="niche-beauty-badge">
                 <Sparkles size={13} aria-hidden /> Estética & Bem-estar
               </span>
-              <span className="niche-beauty-badge niche-beauty-badge-star">
-                <Star size={13} className="text-amber-400 fill-amber-400" aria-hidden />
-                {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
-              </span>
+              {rating ? (
+                <span className="niche-beauty-badge niche-beauty-badge-star">
+                  <Star size={13} className="text-amber-400 fill-amber-400" aria-hidden />
+                  {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
+                </span>
+              ) : null}
             </div>
 
             <h1 className="niche-beauty-title">{bio.display_name}</h1>

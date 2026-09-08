@@ -40,7 +40,7 @@ export class SpotlightLayout implements TemplateLayoutRenderer {
     const whats = bio.whatsapp?.replace(/\D/g, "");
 
     const socialData = (bio.social_links as Record<string, any>) || {};
-    const rating = socialData.google_rating ?? 5.0;
+    const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;
     const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
     const address = socialData.address;
@@ -88,10 +88,12 @@ export class SpotlightLayout implements TemplateLayoutRenderer {
               <span className="niche-spotlight-badge niche-spotlight-badge-glow">
                 <Sparkles size={12} aria-hidden /> Atendimento VIP
               </span>
-              <span className="niche-spotlight-badge niche-spotlight-badge-star">
-                <Star size={13} className="text-amber-400 fill-amber-400" aria-hidden />
-                {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
-              </span>
+              {rating ? (
+                <span className="niche-spotlight-badge niche-spotlight-badge-star">
+                  <Star size={13} className="text-amber-400 fill-amber-400" aria-hidden />
+                  {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
+                </span>
+              ) : null}
             </div>
 
             <h1 className="niche-spotlight-title">{bio.display_name}</h1>

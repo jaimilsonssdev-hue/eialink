@@ -21,6 +21,10 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
     const secondary = links.filter((l) => l.active);
     const insta = bio.instagram?.replace("@", "");
     const whats = bio.whatsapp?.replace(/\D/g, "");
+    const socialData = (bio.social_links as Record<string, any>) || {};
+    const rating = socialData.google_rating;
+    const reviewsCount = socialData.reviews_count;
+
     return (
       <div className="niche-restaurant">
         <header className="niche-restaurant-hero">
@@ -47,9 +51,15 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
               <p className="niche-restaurant-lead">{bio.description}</p>
             )}
             <div className="niche-restaurant-meta">
-              <span>
-                <Star size={14} className="text-amber-400 fill-amber-400 inline" aria-hidden /> 5.0 no Google
-              </span>
+              {rating ? (
+                <span>
+                  <Star size={14} className="text-amber-400 fill-amber-400 inline" aria-hidden /> {rating} no Google {reviewsCount ? `(${reviewsCount})` : ""}
+                </span>
+              ) : (
+                <span className="opacity-80">
+                  <Check size={14} aria-hidden className="inline" /> Atendimento Verificado
+                </span>
+              )}
               {insta && (
                 <a
                   href={`https://instagram.com/${insta}`}

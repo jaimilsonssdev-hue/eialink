@@ -542,12 +542,16 @@ function ProspectingPage() {
     setCreatingPageId(company.id);
     setFeedback(null);
     try {
+      const cidMatch = company.notes?.match(/CID:\s*([0-9a-fx:]+)/i);
       const page = await PageService.createProspectDemoPage({
         companyName: company.name,
         whatsapp: company.whatsapp ?? company.phone,
         niche: company.niche,
         city: company.city,
         instagram: company.instagram,
+        rating: company.rating,
+        reviewsCount: company.reviews_count,
+        cid: cidMatch ? cidMatch[1] : null,
       });
       const modelVariant = (page.social_links as any)?.model_variant || "Design Pro";
       const url = `https://eialink.com.br/p/${page.slug}`;
@@ -594,6 +598,7 @@ function ProspectingPage() {
       }
 
       // Gera a nova demonstração com o novo design
+      const cidMatch = company.notes?.match(/CID:\s*([0-9a-fx:]+)/i);
       const page = await PageService.createProspectDemoPage({
         companyName: company.name,
         whatsapp: company.whatsapp ?? company.phone,
@@ -601,6 +606,9 @@ function ProspectingPage() {
         city: company.city,
         instagram: company.instagram,
         variantIndex: nextIndex,
+        rating: company.rating,
+        reviewsCount: company.reviews_count,
+        cid: cidMatch ? cidMatch[1] : null,
       });
 
       const modelVariant = (page.social_links as any)?.model_variant || nextVariant.modelName;
@@ -658,9 +666,12 @@ function ProspectingPage() {
       const newPage = await PageService.createProspectDemoPage({
         companyName: page.display_name,
         whatsapp: page.whatsapp,
-        city: "sua região",
+        city: (page.social_links as any)?.address || "sua região",
         instagram: page.instagram,
         variantIndex: nextIndex,
+        rating: (page.social_links as any)?.google_rating,
+        reviewsCount: (page.social_links as any)?.reviews_count,
+        cid: (page.social_links as any)?.cid || null,
       });
 
       const modelVariant = (newPage.social_links as any)?.model_variant || nextVariant.modelName;

@@ -33,7 +33,7 @@ export class ClinicLayout implements TemplateLayoutRenderer {
     const whats = bio.whatsapp?.replace(/\D/g, "");
 
     const socialData = (bio.social_links as Record<string, any>) || {};
-    const rating = socialData.google_rating ?? 5.0;
+    const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;
     const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
     const address = socialData.address;
@@ -49,10 +49,16 @@ export class ClinicLayout implements TemplateLayoutRenderer {
             <h1 className="niche-clinic-name">{bio.display_name}</h1>
             {bio.description && <p className="niche-clinic-lead">{bio.description}</p>}
             <div className="niche-clinic-trust">
-              <span>
-                <Star size={14} className="text-amber-400 fill-amber-400" aria-hidden />
-                {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
-              </span>
+              {rating ? (
+                <span>
+                  <Star size={14} className="text-amber-400 fill-amber-400" aria-hidden />
+                  {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
+                </span>
+              ) : (
+                <span>
+                  <ShieldCheck size={14} aria-hidden /> Atendimento Verificado
+                </span>
+              )}
               <span>
                 <ShieldCheck size={14} aria-hidden /> Ambiente seguro
               </span>

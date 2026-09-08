@@ -99,6 +99,9 @@ export const PageService = {
     isDemo = true,
     variantIndex,
     placeDetails,
+    rating,
+    reviewsCount,
+    cid,
   }: {
     companyName: string;
     whatsapp?: string | null;
@@ -108,6 +111,9 @@ export const PageService = {
     isDemo?: boolean;
     variantIndex?: number;
     placeDetails?: GoogleMapsPlaceDetails | null;
+    rating?: number | null;
+    reviewsCount?: number | null;
+    cid?: string | null;
   }) {
     const userId = await this.getCurrentUserId();
     const sanitizedCompanyName = companyName
@@ -126,14 +132,14 @@ export const PageService = {
     let realPlace = placeDetails;
     if (!realPlace) {
       try {
-        realPlace = await fetchGoogleMapsPlaceDetails(sanitizedCompanyName, city);
+        realPlace = await fetchGoogleMapsPlaceDetails(sanitizedCompanyName, city, cid);
       } catch (placeErr) {
         console.warn("Aviso ao buscar detalhes reais do Google Maps:", placeErr);
       }
     }
 
-    const realRating = realPlace?.rating ?? 5.0;
-    const realReviewsCount = realPlace?.reviewsCount ?? null;
+    const realRating = realPlace?.rating ?? rating ?? null;
+    const realReviewsCount = realPlace?.reviewsCount ?? reviewsCount ?? null;
     const realCover = realPlace?.photos?.[0] ?? preset.cover_url;
     const realAvatar = (realPlace?.photos && realPlace.photos.length > 1) ? realPlace.photos[1] : preset.avatar_url;
     const finalWhatsapp = whatsapp || realPlace?.whatsapp || null;

@@ -28,7 +28,9 @@ export class LawLayout implements TemplateLayoutRenderer {
           url: item.button_url,
           label: item.button_label,
         }))
-      : starterAreas;
+    const socialData = (bio.social_links as Record<string, any>) || {};
+    const rating = socialData.google_rating;
+    const reviewsCount = socialData.reviews_count;
 
     return (
       <div className="niche-law">
@@ -44,7 +46,11 @@ export class LawLayout implements TemplateLayoutRenderer {
             <h1>{bio.display_name}</h1>
             <p>{bio.description || "Orientação estratégica, clara e responsável para cada decisão."}</p>
             <div className="niche-law-trust">
-              <small><Star size={14} className="text-amber-400 fill-amber-400" aria-hidden /> 5.0 no Google</small>
+              {rating ? (
+                <small><Star size={14} className="text-amber-400 fill-amber-400" aria-hidden /> {rating} no Google {reviewsCount ? `(${reviewsCount})` : ""}</small>
+              ) : (
+                <small><ShieldCheck size={14} aria-hidden /> Atendimento Verificado</small>
+              )}
               <small><ShieldCheck size={14} aria-hidden /> Atendimento reservado</small>
               <small><BriefcaseBusiness size={14} aria-hidden /> Estratégia sob medida</small>
             </div>

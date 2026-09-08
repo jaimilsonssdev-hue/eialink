@@ -39,7 +39,9 @@ export class AcademyLayout implements TemplateLayoutRenderer {
           url: item.button_url,
           label: item.button_label,
         }))
-      : starterPlans;
+    const socialData = (bio.social_links as Record<string, any>) || {};
+    const rating = socialData.google_rating;
+    const reviewsCount = socialData.reviews_count;
 
     return (
       <div className="niche-academy">
@@ -55,7 +57,11 @@ export class AcademyLayout implements TemplateLayoutRenderer {
             <h1>{bio.display_name}</h1>
             <p>{bio.description || "Treinos que respeitam o seu ritmo e levam você mais longe."}</p>
             <div className="niche-academy-proof">
-              <span><Star size={14} className="text-amber-400 fill-amber-400" aria-hidden /> 5.0 no Google</span>
+              {rating ? (
+                <span><Star size={14} className="text-amber-400 fill-amber-400" aria-hidden /> {rating} no Google {reviewsCount ? `(${reviewsCount})` : ""}</span>
+              ) : (
+                <span><Check size={14} aria-hidden /> Atendimento Verificado</span>
+              )}
               <span><Check size={14} aria-hidden /> Treino para todos os níveis</span>
               <span><Check size={14} aria-hidden /> Atendimento próximo</span>
             </div>

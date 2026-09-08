@@ -58,6 +58,8 @@ import {
 } from "@/components/ui/hover-card";
 
 import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
+import { validateProspectingSearch } from "@/modules/prospecting/validation";
+import { useActionCooldown } from "@/hooks/useActionCooldown";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
 import { PageService } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";

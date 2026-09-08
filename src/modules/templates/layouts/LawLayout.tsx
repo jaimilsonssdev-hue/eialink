@@ -28,6 +28,7 @@ export class LawLayout implements TemplateLayoutRenderer {
           url: item.button_url,
           label: item.button_label,
         }))
+      : starterAreas;
     const socialData = (bio.social_links as Record<string, any>) || {};
     const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;

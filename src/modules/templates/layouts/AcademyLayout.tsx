@@ -39,6 +39,7 @@ export class AcademyLayout implements TemplateLayoutRenderer {
           url: item.button_url,
           label: item.button_label,
         }))
+      : starterPlans;
     const socialData = (bio.social_links as Record<string, any>) || {};
     const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;

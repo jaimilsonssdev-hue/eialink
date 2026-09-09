@@ -568,9 +568,9 @@ function AgendaPage() {
             Configure horários e serviços uma única vez. Clientes e pacientes agendam sozinhos diretamente pelo seu biolink.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
           <select
-            className="h-10 rounded-lg bg-card border border-border px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors shadow-xs"
+            className="w-full sm:w-auto h-10 rounded-lg bg-card border border-border px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors shadow-xs"
             value={pageId}
             onChange={(e) => setPageId(e.target.value)}
           >
@@ -581,9 +581,9 @@ function AgendaPage() {
             ))}
           </select>
           {page && (
-            <Button asChild variant="outline" className="border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/20 dark:hover:bg-purple-900/30 dark:text-purple-200 shadow-xs">
+            <Button asChild variant="outline" className="w-full sm:w-auto justify-center border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/20 dark:hover:bg-purple-900/30 dark:text-purple-200 shadow-xs">
               <a href={`/agendar/${page.slug}`} target="_blank" rel="noreferrer">
-                <ExternalLink className="h-4 w-4 mr-2" />
+                <ExternalLink className="h-4 w-4 mr-2 shrink-0" />
                 Ver agenda pública
               </a>
             </Button>
@@ -796,108 +796,118 @@ function AgendaPage() {
                     </div>
                   </div>
                   {/* Presets de Turnos / Períodos */}
-                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
-                    <span className="text-[11px] text-muted-foreground font-medium mr-1">Atalhos de Turno:</span>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => applySchedulePreset("commercial")}
-                      className="border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 dark:text-purple-200 text-xs h-7 px-2.5 flex items-center gap-1 font-medium shadow-xs"
-                    >
-                      <Zap className="h-3 w-3 text-amber-500 dark:text-yellow-400" />
-                      Comercial (08h-18h)
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => applySchedulePreset("morning")}
-                      className="border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 text-xs h-7 px-2.5 flex items-center gap-1 font-medium shadow-xs"
-                    >
-                      <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
-                      Só Manhã (08h-12h)
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => applySchedulePreset("afternoon")}
-                      className="border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:border-blue-500/30 dark:bg-blue-950/30 dark:hover:bg-blue-900/40 dark:text-blue-200 text-xs h-7 px-2.5 flex items-center gap-1 font-medium shadow-xs"
-                    >
-                      <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                      Só Tarde (13h-18h)
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => applySchedulePreset("night")}
-                      className="border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/40 dark:text-indigo-200 text-xs h-7 px-2.5 flex items-center gap-1 font-medium shadow-xs"
-                    >
-                      <Clock className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
-                      Só Noite (18h-22h)
-                    </Button>
+                  <div className="pt-2 border-t border-border space-y-2">
+                    <span className="text-[11px] text-muted-foreground font-medium block">Atalhos Rápidos de Turno:</span>
+                    <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-1.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applySchedulePreset("commercial")}
+                        className="w-full sm:w-auto border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 dark:text-purple-200 text-[11px] sm:text-xs h-8 sm:h-7 px-2 sm:px-2.5 flex items-center justify-center gap-1 font-medium shadow-2xs"
+                      >
+                        <Zap className="h-3 w-3 text-amber-500 dark:text-yellow-400 shrink-0" />
+                        Comercial (08h-18h)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applySchedulePreset("morning")}
+                        className="w-full sm:w-auto border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 text-[11px] sm:text-xs h-8 sm:h-7 px-2 sm:px-2.5 flex items-center justify-center gap-1 font-medium shadow-2xs"
+                      >
+                        <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                        Só Manhã (08h-12h)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applySchedulePreset("afternoon")}
+                        className="w-full sm:w-auto border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:border-blue-500/30 dark:bg-blue-950/30 dark:hover:bg-blue-900/40 dark:text-blue-200 text-[11px] sm:text-xs h-8 sm:h-7 px-2 sm:px-2.5 flex items-center justify-center gap-1 font-medium shadow-2xs"
+                      >
+                        <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400 shrink-0" />
+                        Só Tarde (13h-18h)
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => applySchedulePreset("night")}
+                        className="w-full sm:w-auto border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/40 dark:text-indigo-200 text-[11px] sm:text-xs h-8 sm:h-7 px-2 sm:px-2.5 flex items-center justify-center gap-1 font-medium shadow-2xs"
+                      >
+                        <Clock className="h-3 w-3 text-indigo-600 dark:text-indigo-400 shrink-0" />
+                        Só Noite (18h-22h)
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 sm:p-6 space-y-2.5">
+                <CardContent className="p-3 sm:p-6 space-y-2.5">
                   {DAYS.map((label, weekday) => {
                     const day = availability.find((item) => item.weekday === weekday);
                     const isDayActive = day?.active ?? false;
                     return (
                       <div
                         key={label}
-                        className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
+                        className={`flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-xl border transition-colors ${
                           isDayActive
                             ? "bg-card border-border shadow-xs dark:bg-[#10081d]/80 dark:border-[#27233a]"
                             : "bg-muted/30 border-dashed border-border/70 opacity-60 dark:bg-black/20 dark:border-[#1f192b]"
                         }`}
                       >
-                        <div className="flex items-center gap-3 min-w-[110px]">
-                          <input
-                            type="checkbox"
-                            id={`day-${weekday}`}
-                            checked={isDayActive}
-                            onChange={(e) => updateDay(weekday, { active: e.target.checked })}
-                            className="h-4 w-4 rounded border-border bg-background text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
-                          />
-                          <label
-                            htmlFor={`day-${weekday}`}
-                            className={`text-sm font-semibold cursor-pointer ${
-                              isDayActive ? "text-foreground font-semibold" : "text-muted-foreground"
-                            }`}
-                          >
-                            {label}
-                          </label>
+                        <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
+                          <div className="flex items-center gap-2.5">
+                            <input
+                              type="checkbox"
+                              id={`day-${weekday}`}
+                              checked={isDayActive}
+                              onChange={(e) => updateDay(weekday, { active: e.target.checked })}
+                              className="h-4 w-4 rounded border-border bg-background text-purple-600 focus:ring-purple-500 focus:ring-offset-0 cursor-pointer"
+                            />
+                            <label
+                              htmlFor={`day-${weekday}`}
+                              className={`text-sm font-semibold cursor-pointer ${
+                                isDayActive ? "text-foreground font-semibold" : "text-muted-foreground"
+                              }`}
+                            >
+                              {label}
+                            </label>
+                          </div>
                           {isDayActive ? (
-                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] px-1.5 py-0 font-medium">
+                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] px-2 py-0.5 font-medium">
                               Aberto
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-muted-foreground border-border text-[10px] px-1.5 py-0">
+                            <Badge variant="outline" className="text-muted-foreground border-border text-[10px] px-2 py-0.5">
                               Fechado
                             </Badge>
                           )}
                         </div>
 
                         {isDayActive ? (
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="time"
-                              value={(day?.start_time ?? "08:00").slice(0, 5)}
-                              onChange={(e) => updateDay(weekday, { start_time: e.target.value })}
-                              className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-purple-500"
-                            />
-                            <span className="text-xs text-muted-foreground">até</span>
-                            <input
-                              type="time"
-                              value={(day?.end_time ?? "18:00").slice(0, 5)}
-                              onChange={(e) => updateDay(weekday, { end_time: e.target.value })}
-                              className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-purple-500"
-                            />
+                          <div className="flex items-center justify-between sm:justify-end gap-2 w-full sm:w-auto bg-muted/20 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none border sm:border-0 border-border/60">
+                            <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+                              <span className="text-[11px] text-muted-foreground sm:hidden font-medium">Das:</span>
+                              <input
+                                type="time"
+                                value={(day?.start_time ?? "08:00").slice(0, 5)}
+                                onChange={(e) => updateDay(weekday, { start_time: e.target.value })}
+                                className="w-full sm:w-24 bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-purple-500 text-center font-medium shadow-2xs"
+                              />
+                            </div>
+                            <span className="text-xs text-muted-foreground font-medium px-1">até</span>
+                            <div className="flex items-center gap-1.5 flex-1 sm:flex-initial">
+                              <span className="text-[11px] text-muted-foreground sm:hidden font-medium">Às:</span>
+                              <input
+                                type="time"
+                                value={(day?.end_time ?? "18:00").slice(0, 5)}
+                                onChange={(e) => updateDay(weekday, { end_time: e.target.value })}
+                                className="w-full sm:w-24 bg-background border border-border rounded-lg px-2 py-1.5 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-purple-500 text-center font-medium shadow-2xs"
+                              />
+                            </div>
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground italic">Sem atendimentos</span>
+                          <span className="text-xs text-muted-foreground italic sm:self-center">Sem atendimentos neste dia</span>
                         )}
                       </div>
                     );
@@ -1256,7 +1266,7 @@ function AgendaPage() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                              <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-amber-200/60 dark:border-amber-500/20 shrink-0">
                                 <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40 text-xs">
                                   Folga / Indisponível
                                 </Badge>
@@ -1310,7 +1320,7 @@ function AgendaPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
+                            <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-0 border-border/60 shrink-0">
                               {item.status === "confirmed" && (
                                 <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-medium">
                                   Confirmado
@@ -1471,19 +1481,19 @@ function AgendaPage() {
                     Nenhum cliente consegue agendar compromissos neste intervalo pelo seu Biolink público.
                   </p>
                 </div>
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 pt-3 border-t border-border">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setSelectedAppointment(null)}
-                    className="border-border text-muted-foreground hover:text-foreground text-xs"
+                    className="w-full sm:w-auto justify-center border-border text-muted-foreground hover:text-foreground text-xs"
                   >
                     Fechar
                   </Button>
                   <Button
                     type="button"
                     onClick={() => void unblockAppointment(selectedAppointment.id)}
-                    className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium shadow-xs"
+                    className="w-full sm:w-auto justify-center bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium shadow-xs"
                   >
                     <Check className="h-3.5 w-3.5 mr-1.5" />
                     Desbloquear e Liberar Horário
@@ -1549,13 +1559,13 @@ function AgendaPage() {
                   </Button>
                 </div>
 
-                <div className="pt-3 border-t border-border flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-border flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2.5">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => void updateFromDetails(selectedAppointment, "cancelled")}
-                    className="border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:border-rose-500/30 dark:bg-transparent dark:hover:bg-rose-500/10 dark:text-rose-400 text-xs shadow-xs"
+                    className="w-full sm:w-auto justify-center border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:border-rose-500/30 dark:bg-transparent dark:hover:bg-rose-500/10 dark:text-rose-400 text-xs shadow-xs"
                   >
                     <X className="h-3.5 w-3.5 mr-1.5" />
                     Cancelar Agendamento
@@ -1564,7 +1574,7 @@ function AgendaPage() {
                     type="button"
                     size="sm"
                     onClick={() => void updateFromDetails(selectedAppointment, "completed")}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs shadow-xs"
+                    className="w-full sm:w-auto justify-center bg-emerald-600 hover:bg-emerald-500 text-white text-xs shadow-xs"
                   >
                     <Check className="h-3.5 w-3.5 mr-1.5" />
                     Concluir Atendimento
@@ -1712,12 +1722,12 @@ function AgendaPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setBlockingModalOpen(false)}
-                className="border-border text-muted-foreground hover:text-foreground text-xs"
+                className="w-full sm:w-auto justify-center border-border text-muted-foreground hover:text-foreground text-xs"
               >
                 Cancelar
               </Button>
@@ -1725,7 +1735,7 @@ function AgendaPage() {
                 type="button"
                 disabled={savingBlock || !blockingDate || !blockingReason}
                 onClick={() => void confirmBlock()}
-                className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium shadow-xs"
+                className="w-full sm:w-auto justify-center bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium shadow-xs"
               >
                 {savingBlock ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Coffee className="h-3.5 w-3.5 mr-1.5" />}
                 {savingBlock ? "Bloqueando..." : "Confirmar Bloqueio"}
@@ -1838,12 +1848,12 @@ function AgendaPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-end gap-2.5 pt-4 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setEditing(null)}
-                className="border-border text-muted-foreground hover:text-foreground text-xs"
+                className="w-full sm:w-auto justify-center border-border text-muted-foreground hover:text-foreground text-xs"
               >
                 Manter Atual
               </Button>
@@ -1851,7 +1861,7 @@ function AgendaPage() {
                 type="button"
                 disabled={!rescheduleStart || savingReschedule}
                 onClick={() => void confirmReschedule()}
-                className="bg-purple-600 hover:bg-purple-500 text-white text-xs shadow-xs"
+                className="w-full sm:w-auto justify-center bg-purple-600 hover:bg-purple-500 text-white text-xs shadow-xs"
               >
                 {savingReschedule ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
                 {savingReschedule ? "Remarcando..." : "Confirmar Novo Horário"}

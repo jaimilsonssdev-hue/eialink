@@ -279,7 +279,7 @@ export function CopyConfigModal({
                   <div className="flex items-center gap-2">
                     <Key className="h-4 w-4 text-purple-400" />
                     <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                      Google Gemini 2.0 / 1.5 Flash (100% Gratuito)
+                      Google Gemini 2.5 / 2.0 Flash (100% Gratuito)
                     </h3>
                   </div>
                   <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">

@@ -17,6 +17,7 @@ export interface CompanyAuditResult {
 }
 
 export const GEMINI_KEY_STORAGE = "eialink_gemini_api_key";
+export const GEMINI_ACTIVE_MODEL_STORAGE = "eialink_gemini_active_model";
 export const GEMINI_KEY_UPDATED_EVENT = "eialink:gemini_key_updated";
 
 /**
@@ -41,6 +42,7 @@ export function saveGeminiKey(key: string): void {
     localStorage.setItem(GEMINI_KEY_STORAGE, clean);
   } else {
     localStorage.removeItem(GEMINI_KEY_STORAGE);
+    localStorage.removeItem(GEMINI_ACTIVE_MODEL_STORAGE);
   }
   window.dispatchEvent(new CustomEvent(GEMINI_KEY_UPDATED_EVENT, { detail: { key: clean } }));
 }
@@ -51,13 +53,14 @@ export function saveGeminiKey(key: string): void {
 export function removeGeminiKey(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(GEMINI_KEY_STORAGE);
+  localStorage.removeItem(GEMINI_ACTIVE_MODEL_STORAGE);
   window.dispatchEvent(new CustomEvent(GEMINI_KEY_UPDATED_EVENT, { detail: { key: "" } }));
 }
 
 /**
- * Testa a conexão com a API do Gemini usando uma chamada de verificação leve.
+ * Testa a conexão com o Google AI via ModelService.ListModels e descobre o melhor modelo ativo.
  */
-export async function testGeminiKey(key: string): Promise<{ ok: boolean; message: string }> {
+export async function testGeminiKey(key: string): Promise<{ ok: boolean; message: string; activeModel?: string }> {
   const cleanKey = key.trim();
   if (!cleanKey) {
     return { ok: false, message: "A chave não pode estar em branco." };
@@ -66,27 +69,17 @@ export async function testGeminiKey(key: string): Promise<{ ok: boolean; message
     return { ok: false, message: "Formato inválido. Chaves do Google AI Studio geralmente começam com 'AIzaSy...'." };
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(cleanKey)}`;
-
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10000);
+    const timeout = setTimeout(() => controller.abort(), 12000);
 
-    const response = await fetch(endpoint, {
-      method: "POST",
+    // Consulta os modelos suportados pelo projeto do usuário (ListModels)
+    const listEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`;
+
+    const response = await fetch(listEndpoint, {
+      method: "GET",
       signal: controller.signal,
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: "Responda apenas com a palavra OK." }],
-          },
-        ],
-        generationConfig: {
-          maxOutputTokens: 10,
-          temperature: 0.1,
-        },
-      }),
     });
 
     clearTimeout(timeout);
@@ -100,7 +93,51 @@ export async function testGeminiKey(key: string): Promise<{ ok: boolean; message
       return { ok: false, message: `Falha na verificação: ${errorMsg}` };
     }
 
-    return { ok: true, message: "Conexão com a API do Google Gemini validada com sucesso! 🚀" };
+    const data = await response.json().catch(() => ({}));
+    const rawModels: Array<{ name?: string; supportedGenerationMethods?: string[] }> = data.models || [];
+
+    // Filtra modelos disponíveis que suportam geração de texto
+    const contentModels = rawModels.filter((m) =>
+      Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes("generateContent")
+    );
+
+    // Lista ordenada dos modelos preferidos do ecossistema Gemini
+    const priority = [
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-1.5-flash-latest",
+      "gemini-1.5-flash",
+      "gemini-1.5-pro",
+    ];
+
+    let chosenModel = "gemini-2.5-flash";
+
+    if (contentModels.length > 0) {
+      let found = false;
+      for (const pref of priority) {
+        const match = contentModels.find((m) => (m.name || "").includes(pref));
+        if (match?.name) {
+          chosenModel = match.name.replace(/^models\//, "");
+          found = true;
+          break;
+        }
+      }
+      if (!found && contentModels[0]?.name) {
+        chosenModel = contentModels[0].name.replace(/^models\//, "");
+      }
+    }
+
+    // Salva o modelo descoberto no armazenamento local para uso ágil nas auditorias
+    if (typeof window !== "undefined") {
+      localStorage.setItem(GEMINI_ACTIVE_MODEL_STORAGE, chosenModel);
+    }
+
+    return {
+      ok: true,
+      message: `Conexão validada com sucesso com o Google AI Studio! Modelo ativo: ${chosenModel} 🚀`,
+      activeModel: chosenModel,
+    };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Erro desconhecido de rede.";
     return { ok: false, message: `Não foi possível conectar ao Google AI: ${msg}` };
@@ -232,11 +269,23 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
   "consultativePitch": "Texto completo da mensagem para WhatsApp com quebras de linha"
 }`;
 
-  const models = ["gemini-1.5-flash", "gemini-2.0-flash"];
+  // Modelo ativo pré-descoberto ou candidatos modernos
+  const savedModel = typeof window !== "undefined" ? localStorage.getItem(GEMINI_ACTIVE_MODEL_STORAGE) : null;
+  const candidateModels = [
+    ...(savedModel ? [savedModel] : []),
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash",
+  ];
+
+  const models = [...new Set(candidateModels)];
 
   for (const model of models) {
     try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const cleanModel = model.replace(/^models\//, "");
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${encodeURIComponent(apiKey)}`;
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 12000);
@@ -268,6 +317,11 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
       const jsonStr = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
       const parsed = JSON.parse(jsonStr);
 
+      // Salva o modelo que funcionou
+      if (typeof window !== "undefined") {
+        localStorage.setItem(GEMINI_ACTIVE_MODEL_STORAGE, cleanModel);
+      }
+
       return {
         companyName: company.name,
         niche: company.niche || "Negócio Local",
@@ -285,7 +339,7 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
         executiveSummary: parsed.executiveSummary || `Diagnóstico gerado para ${company.name}.`,
         consultativePitch: parsed.consultativePitch || "",
         source: "gemini",
-        modelUsed: model,
+        modelUsed: cleanModel,
       };
     } catch {
       // continua para o próximo modelo ou fallback

@@ -66,7 +66,8 @@ import { PageService } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
 import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";
-import { CopyConfigModal } from "@/components/prospecting/CopyConfigModal";
+import { CopyConfigModal, type CopyModalTabType } from "@/components/prospecting/CopyConfigModal";
+import { ProspectAuditorModal } from "@/components/prospecting/ProspectAuditorModal";
 import {
   buildWhatsAppMessage,
   buildInstagramMessage,
@@ -200,6 +201,8 @@ function ProspectingPage() {
   const [instaModalCompany, setInstaModalCompany] = useState<ProspectedCompany | null>(null);
   const [whatsModalCompany, setWhatsModalCompany] = useState<ProspectedCompany | null>(null);
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [copyModalInitialTab, setCopyModalInitialTab] = useState<CopyModalTabType>("whatsappWithDemo");
+  const [activeAuditCompany, setActiveAuditCompany] = useState<ProspectedCompany | null>(null);
   const [, setCopyTemplatesVersion] = useState(0);
 
   useEffect(() => {
@@ -921,10 +924,25 @@ function ProspectingPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <button
             type="button"
-            onClick={() => setIsCopyModalOpen(true)}
+            onClick={() => {
+              setCopyModalInitialTab("geminiApiKey");
+              setIsCopyModalOpen(true);
+            }}
+            className="inline-flex items-center gap-2 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 px-3.5 py-2 text-xs font-semibold shadow-xs transition-all"
+            title="Configurar Chave Gratuita da IA Gemini (Google Cloud)"
+          >
+            <Bot className="h-4 w-4 text-purple-400" />
+            <span>Configurar IA Gemini</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setCopyModalInitialTab("whatsappWithDemo");
+              setIsCopyModalOpen(true);
+            }}
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-card hover:bg-muted/40 text-foreground px-3.5 py-2 text-xs font-semibold shadow-sm transition-all hover:border-primary/40"
             title="Personalizar mensagens e copys globais de abordagem para WhatsApp e Instagram"
           >
@@ -1163,6 +1181,16 @@ function ProspectingPage() {
                     </span>
                   </button>
 
+                  <button
+                    type="button"
+                    onClick={() => setActiveAuditCompany(company)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 px-2.5 py-1.5 text-xs font-semibold transition-all shadow-xs"
+                    title={`Auditoria de Presença & Pitch com IA para ${company.name}`}
+                  >
+                    <Bot className="h-3.5 w-3.5" />
+                    <span>Auditoria IA</span>
+                  </button>
+
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
@@ -1174,6 +1202,14 @@ function ProspectingPage() {
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
+                      <DropdownMenuItem
+                        onClick={() => setActiveAuditCompany(company)}
+                        className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
+                      >
+                        <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                        <span>Auditoria com IA</span>
+                      </DropdownMenuItem>
+
                       {/* Opção Trocar Modelo / Gerar Modelo universal para TODAS as empresas */}
                       <DropdownMenuItem
                         onClick={() => void handleRegenerateDemo(company)}
@@ -1996,6 +2032,33 @@ function ProspectingPage() {
                                   )}
                                 </button>
 
+                                {/* Auditoria IA */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const matchedCompany = companies.find(
+                                      (c) => c.name.toLowerCase().trim() === page.display_name.toLowerCase().trim()
+                                    ) || {
+                                      id: page.id,
+                                      name: page.display_name,
+                                      niche: (page.social_links as any)?.niche || "Negócio Local",
+                                      city: (page.social_links as any)?.city || "Brasil",
+                                      rating: (page.social_links as any)?.google_rating ?? null,
+                                      reviews_count: (page.social_links as any)?.reviews_count ?? null,
+                                      has_website: false,
+                                      whatsapp: page.whatsapp,
+                                      phone: page.whatsapp,
+                                      notes: `Demo: ${publicUrl}`,
+                                    };
+                                    setActiveAuditCompany(matchedCompany as ProspectedCompany);
+                                  }}
+                                  className="inline-flex items-center gap-1 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 px-2.5 py-1.5 text-xs font-semibold transition-all"
+                                  title="Abrir Auditoria de Presença & Pitch com IA"
+                                >
+                                  <Bot className="h-3.5 w-3.5" />
+                                  <span className="hidden sm:inline">Auditoria IA</span>
+                                </button>
+
                                 {/* Personalizar no Builder */}
                                 <Link
                                   to="/builder"
@@ -2003,7 +2066,7 @@ function ProspectingPage() {
                                   className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-purple-300 hover:border-purple-500/40 hover:bg-purple-500/10 transition-all"
                                   title="Ajustar dados e fotos no Builder"
                                 >
-                                  <Pencil className="h-3.5 w-3.5" />
+                                  <Sparkles className="h-3.5 w-3.5" />
                                   <span className="hidden md:inline">Editar</span>
                                 </Link>
 
@@ -2019,6 +2082,30 @@ function ProspectingPage() {
                                     </button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-52">
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        const matchedCompany = companies.find(
+                                          (c) => c.name.toLowerCase().trim() === page.display_name.toLowerCase().trim()
+                                        ) || {
+                                          id: page.id,
+                                          name: page.display_name,
+                                          niche: (page.social_links as any)?.niche || "Negócio Local",
+                                          city: (page.social_links as any)?.city || "Brasil",
+                                          rating: (page.social_links as any)?.google_rating ?? null,
+                                          reviews_count: (page.social_links as any)?.reviews_count ?? null,
+                                          has_website: false,
+                                          whatsapp: page.whatsapp,
+                                          phone: page.whatsapp,
+                                          notes: `Demo: ${publicUrl}`,
+                                        };
+                                        setActiveAuditCompany(matchedCompany as ProspectedCompany);
+                                      }}
+                                      className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
+                                    >
+                                      <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                      <span>Auditoria com IA</span>
+                                    </DropdownMenuItem>
+
                                     <DropdownMenuItem
                                       onClick={() => void handleRegenerateDemoForPage(page)}
                                       disabled={regeneratingPageId === page.id}
@@ -2398,6 +2485,16 @@ function ProspectingPage() {
                             </span>
                           </button>
 
+                          <button
+                            type="button"
+                            onClick={() => setActiveAuditCompany(company)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 px-2.5 py-1.5 text-xs font-semibold transition-all shadow-xs"
+                            title={`Auditoria de Presença & Pitch com IA para ${company.name}`}
+                          >
+                            <Bot className="h-3.5 w-3.5" />
+                            <span>Auditoria IA</span>
+                          </button>
+
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <button
@@ -2409,9 +2506,17 @@ function ProspectingPage() {
                               </button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52">
-                                {/* Opção Trocar Modelo / Gerar Modelo universal para TODAS as empresas */}
-                                <DropdownMenuItem
-                                  onClick={() => void handleRegenerateDemo(company)}
+                              <DropdownMenuItem
+                                onClick={() => setActiveAuditCompany(company)}
+                                className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
+                              >
+                                <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                <span>Auditoria com IA</span>
+                              </DropdownMenuItem>
+
+                              {/* Opção Trocar Modelo / Gerar Modelo universal para TODAS as empresas */}
+                              <DropdownMenuItem
+                                onClick={() => void handleRegenerateDemo(company)}
                                   disabled={regeneratingPageId === company.id || creatingPageId === company.id}
                                   className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
                                 >
@@ -2541,7 +2646,22 @@ function ProspectingPage() {
 
       <CopyConfigModal
         isOpen={isCopyModalOpen}
-        onClose={() => setIsCopyModalOpen(false)}
+        initialTab={copyModalInitialTab}
+        onClose={() => {
+          setIsCopyModalOpen(false);
+          setCopyModalInitialTab("whatsappWithDemo");
+        }}
+      />
+
+      <ProspectAuditorModal
+        company={activeAuditCompany}
+        isOpen={Boolean(activeAuditCompany)}
+        onClose={() => setActiveAuditCompany(null)}
+        onOpenConfig={() => {
+          setActiveAuditCompany(null);
+          setCopyModalInitialTab("geminiApiKey");
+          setIsCopyModalOpen(true);
+        }}
       />
     </div>
   );

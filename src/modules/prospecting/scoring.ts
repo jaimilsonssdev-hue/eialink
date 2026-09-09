@@ -58,6 +58,66 @@ export function normalizePhone(value: string | null | undefined) {
   return `55${national}`;
 }
 
+/** Formata telefone para exibição visual limpa: (XX) 9XXXX-XXXX ou (XX) XXXX-XXXX. */
+export function formatPhone(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const digits = value.replace(/\D/g, "");
+  const national = digits.startsWith("55") && digits.length >= 12 ? digits.slice(2) : digits;
+  if (national.length === 11) {
+    return `(${national.slice(0, 2)}) ${national.slice(2, 7)}-${national.slice(7)}`;
+  }
+  if (national.length === 10) {
+    return `(${national.slice(0, 2)}) ${national.slice(2, 6)}-${national.slice(6)}`;
+  }
+  return value;
+}
+
+/** Extrai telefone/WhatsApp brasileiro com DDD de textos variados (Maps, Instagram, links wa.me, etc). */
+export function extractBrazilianPhone(text: string | null | undefined): string | null {
+  if (!text) return null;
+
+  // 1. Links diretos de WhatsApp (wa.me/5573998106161 ou api.whatsapp.com/send?phone=557399810-6161)
+  const waMatch = text.match(/(?:wa\.me\/|api\.whatsapp\.com\/send\?(?:[^&]*&)*phone=)(?:55)?([1-9]{2}[-\s.]?9?[-\s.]?\d{4}[-\s.]?\d{4})/i);
+  if (waMatch) {
+    const digits = waMatch[1].replace(/\D/g, "");
+    if (digits.length >= 10 && digits.length <= 11) {
+      return `55${digits}`;
+    }
+  }
+
+  // 2. Telefone com DDD entre parênteses: (73) 99148-7816 ou (73) 9 9849-0524 ou (73) 3291-4288
+  const parenMatch = text.match(/\(?([1-9]{2})\)\s*(?:9\s*)?(\d{4})[-\s.]?(\d{4})/);
+  if (parenMatch) {
+    const rawMatch = parenMatch[0];
+    const digits = rawMatch.replace(/\D/g, "");
+    if (digits.length >= 10 && digits.length <= 11) {
+      return `55${digits}`;
+    }
+  }
+
+  // 3. Telefone com prefixo internacional: +55 73 99148-7816 ou +55 73 3291-4288
+  const ddiMatch = text.match(/\+55\s*\(?([1-9]{2})\)?\s*(?:9\s*)?(\d{4})[-\s.]?(\d{4})/);
+  if (ddiMatch) {
+    const rawMatch = ddiMatch[0];
+    const digits = rawMatch.replace(/\D/g, "").replace(/^55/, "");
+    if (digits.length >= 10 && digits.length <= 11) {
+      return `55${digits}`;
+    }
+  }
+
+  // 4. Telefone rotulado: Telefone: 73 99148-7816 ou Tel: 73 99148-7816 ou Contato: ...
+  const labeledMatch = text.match(/(?:Telefone|Tel|Fone|WhatsApp|Contato)\s*:\s*(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s.]?(\d{4})/i);
+  if (labeledMatch) {
+    const rawMatch = labeledMatch[0];
+    const digits = rawMatch.replace(/\D/g, "").replace(/^55/, "");
+    if (digits.length >= 10 && digits.length <= 11) {
+      return `55${digits}`;
+    }
+  }
+
+  return null;
+}
+
 export function normalizeInstagram(value: string | null | undefined) {
   const clean = normalizeText(value);
   if (!clean) return null;

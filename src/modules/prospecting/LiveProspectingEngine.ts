@@ -1,5 +1,6 @@
 import {
   buildDedupeKey,
+  extractBrazilianPhone,
   normalizeInstagram,
   normalizeName,
   normalizePhone,
@@ -114,9 +115,8 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
       if (rcm) reviewsCount = parseInt(rcm[1].replace(/\D/g, ""), 10);
     }
 
-    // Extrai telefone brasileiro com DDD obrigatório
-    const phoneMatch = block.match(/(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
-    const rawPhone = phoneMatch ? phoneMatch[0].trim() : null;
+    // Extrai telefone brasileiro com DDD ou link de WhatsApp direto
+    const detectedPhone = extractBrazilianPhone(block);
 
     // Extrai endereço se houver
     const addressMatch =
@@ -129,10 +129,22 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
     const hoursMatch = block.match(/(?:Aberto|Fechado)[^\n·]*(?:·\s*Fecha[^\n·]*|·\s*Abre[^\n·]*)?/i);
     const openingHours = hoursMatch ? hoursMatch[0].trim() : null;
 
-    // Detecta se tem website indicado
-    const hasWebsite =
-      /\[?(?:Website|Site|Ver site)\]?/i.test(block) ||
-      /(?:https?:\/\/(?!www\.google)[a-zA-Z0-9.-]+\.[a-z]{2,})/i.test(block);
+    // Detecta se tem website REAL (ignora wa.me, api.whatsapp.com, instagram, facebook, linktree, booksy)
+    let hasWebsite = false;
+    let websiteUrl: string | null = null;
+    const urlMatches = [...block.matchAll(/https?:\/\/[^\s\)"']+/g)].map((m) => m[0]);
+    for (const url of urlMatches) {
+      if (/google\.[a-z.]+|gstatic\.com|googleusercontent\.com/i.test(url)) continue;
+      // Se for link de WhatsApp ou Instagram, não é website próprio
+      if (/(?:wa\.me|whatsapp\.com|instagram\.com|facebook\.com|linktr\.ee|booksy\.com|tiktok\.com|globo\.com)/i.test(url)) {
+        continue;
+      }
+      if (/\[?(?:Website|Site|Ver site)\]?/i.test(block) || /\.[a-z]{2,}/i.test(url)) {
+        hasWebsite = true;
+        websiteUrl = url;
+        break;
+      }
+    }
 
     // Extrai Instagram se houver menção
     const instaMatch = block.match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
@@ -152,11 +164,11 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
       name: cleanName,
       niche,
       city,
-      phone: rawPhone,
-      whatsapp: rawPhone,
+      phone: detectedPhone,
+      whatsapp: detectedPhone,
       instagram,
       has_website: hasWebsite,
-      website: null,
+      website: websiteUrl,
       rating,
       reviews_count: reviewsCount,
       source: "google_maps",
@@ -213,8 +225,7 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
         .trim();
 
       const snippetRadius = text.slice(Math.max(0, match.index - 200), Math.min(text.length, match.index + 400));
-      const phoneMatch = snippetRadius.match(/(?:wa\.me\/|whatsapp:\s*|tel:\s*)?(?:\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)?(?:9\s*)?(\d{4})[-\s]?(\d{4})/i);
-      const rawPhone = phoneMatch ? phoneMatch[0] : null;
+      const rawPhone = extractBrazilianPhone(snippetRadius);
 
       leads.push({
         name: cleanName || handle,
@@ -532,6 +543,15 @@ export async function fetchGoogleMapsPlaceDetails(
           if (rcm) reviewsCount = parseInt(rcm[1].replace(/\D/g, ""), 10);
         }
 
+        // 4. Extrai telefone/WhatsApp da ficha clássica caso ainda não tenhamos
+        if (!phone) {
+          const detected = extractBrazilianPhone(text);
+          if (detected) {
+            phone = detected;
+            if (!whatsapp) whatsapp = detected;
+          }
+        }
+
         // 4. Extrai depoimentos reais de clientes verificados
         const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
         for (let i = 0; i < lines.length; i++) {
@@ -617,15 +637,12 @@ export async function fetchGoogleMapsPlaceDetails(
         }
 
         // WhatsApp / Telefone
-        if (!whatsapp) {
-          const waM = text.match(/(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\d+)/i);
-          if (waM) whatsapp = waM[1];
-        }
         if (!phone) {
-          const phoneM =
-            text.match(/(?:Telefone\s*:\s*([^\n]+))/i) ||
-            text.match(/(?:\(?([1-9]{2})\)?\s*)(?:9\s*)?(\d{4})[-\s]?(\d{4})/);
-          if (phoneM) phone = (phoneM[1] || phoneM[0]).trim();
+          const detected = extractBrazilianPhone(text);
+          if (detected) {
+            phone = detected;
+            if (!whatsapp) whatsapp = detected;
+          }
         }
 
         // Fotos no painel do Google

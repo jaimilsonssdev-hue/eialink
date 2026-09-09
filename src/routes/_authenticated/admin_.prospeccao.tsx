@@ -80,6 +80,7 @@ import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 import { buildPreview, type CsvRowPreview } from "@/modules/prospecting/csv";
 import {
   buildDedupeKey,
+  formatPhone,
   normalizeName,
   normalizePhone,
   normalizeText,
@@ -572,7 +573,13 @@ function ProspectingPage() {
       const newNotes = company.notes
         ? `${company.notes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
         : `Demo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`;
-      await ProspectingService.updateNotes(company.id, newNotes);
+
+      const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
+      if (page.whatsapp && !company.whatsapp) {
+        companyUpdates.whatsapp = page.whatsapp;
+        companyUpdates.phone = page.whatsapp;
+      }
+      await ProspectingService.updateCompany(company.id, companyUpdates);
       setFeedback(`🎉 Página gerada no modelo "${modelVariant}" para ${company.name}! O link já foi anexado para envio no WhatsApp e no Instagram.`);
       invalidate();
     } catch (err: unknown) {
@@ -639,7 +646,12 @@ function ProspectingPage() {
         ? `${cleanNotes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
         : `Demo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`;
 
-      await ProspectingService.updateNotes(company.id, newNotes);
+      const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
+      if (page.whatsapp && !company.whatsapp) {
+        companyUpdates.whatsapp = page.whatsapp;
+        companyUpdates.phone = page.whatsapp;
+      }
+      await ProspectingService.updateCompany(company.id, companyUpdates);
       setFeedback(`🎨 Modelo alterado para "${modelVariant}" para ${company.name}! O novo link já está pronto.`);
       invalidate();
     } catch (err: unknown) {
@@ -1541,8 +1553,21 @@ function ProspectingPage() {
                                   {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
                                 </p>
                               </TableCell>
-                              <TableCell className="px-3.5 py-2.5 text-xs font-mono text-muted-foreground">
-                                {lead.whatsapp || "—"}
+                              <TableCell className="px-3.5 py-2.5 text-xs font-mono">
+                                {lead.whatsapp ? (
+                                  <a
+                                    href={`https://wa.me/${lead.whatsapp.replace(/\D/g, "")}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="inline-flex items-center gap-1 text-emerald-500 dark:text-emerald-400 font-medium hover:underline"
+                                    title="Abrir WhatsApp no celular ou web"
+                                  >
+                                    <MessageCircle className="h-3 w-3" />
+                                    <span>{formatPhone(lead.whatsapp)}</span>
+                                  </a>
+                                ) : (
+                                  <span className="text-muted-foreground/60">—</span>
+                                )}
                               </TableCell>
                               <TableCell className="px-3.5 py-2.5 text-xs">
                                 {lead.instagram ? (
@@ -2163,6 +2188,28 @@ function ProspectingPage() {
                               .filter(Boolean)
                               .join(" · ")}
                           </span>
+
+                          {(company.whatsapp || company.phone) ? (
+                            <a
+                              href={whatsappLink(company) || `https://wa.me/${(company.whatsapp || company.phone)?.replace(/\D/g, "")}`}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-emerald-500 dark:text-emerald-400 font-mono hover:underline font-medium"
+                              title="Abrir WhatsApp direto no celular ou web"
+                            >
+                              <MessageCircle className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
+                              <span>{formatPhone(company.whatsapp || company.phone)}</span>
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => setWhatsModalCompany(company)}
+                              className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-emerald-400 transition-colors"
+                              title="Definir WhatsApp da empresa"
+                            >
+                              <MessageCircle className="h-2.5 w-2.5" /> + Inserir WhatsApp
+                            </button>
+                          )}
                           {company.instagram ? (
                             <a
                               href={`https://instagram.com/${company.instagram.replace("@", "")}`}

@@ -552,11 +552,11 @@ function AgendaPage() {
   return (
     <div className="min-h-screen bg-background text-foreground p-4 md:p-8 space-y-8 max-w-7xl mx-auto">
       {/* Header & Page Selector */}
-      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-[#27233a]">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-border">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
-            <Badge variant="outline" className="border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs px-2.5 py-0.5 font-medium flex items-center gap-1.5">
-              <Sparkles className="h-3 w-3 text-purple-400" />
+            <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300 text-xs px-2.5 py-0.5 font-medium flex items-center gap-1.5">
+              <Sparkles className="h-3 w-3 text-purple-600 dark:text-purple-400" />
               Eialink Pro
             </Badge>
             <span className="text-xs text-muted-foreground">Gestão de Agendamentos</span>
@@ -564,13 +564,13 @@ function AgendaPage() {
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground flex items-center gap-2">
             Agenda Essencial
           </h1>
-          <p className="text-sm text-zinc-400 mt-1 max-w-xl">
+          <p className="text-sm text-muted-foreground mt-1 max-w-xl">
             Configure horários e serviços uma única vez. Clientes e pacientes agendam sozinhos diretamente pelo seu biolink.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <select
-            className="h-10 rounded-lg bg-card border border-border px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors shadow-sm"
+            className="h-10 rounded-lg bg-card border border-border px-3.5 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-purple-500 transition-colors shadow-xs"
             value={pageId}
             onChange={(e) => setPageId(e.target.value)}
           >
@@ -581,7 +581,7 @@ function AgendaPage() {
             ))}
           </select>
           {page && (
-            <Button asChild variant="outline" className="border-purple-500/30 bg-purple-950/20 hover:bg-purple-900/30 text-purple-200">
+            <Button asChild variant="outline" className="border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/20 dark:hover:bg-purple-900/30 dark:text-purple-200 shadow-xs">
               <a href={`/agendar/${page.slug}`} target="_blank" rel="noreferrer">
                 <ExternalLink className="h-4 w-4 mr-2" />
                 Ver agenda pública
@@ -592,13 +592,13 @@ function AgendaPage() {
       </header>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 p-1 rounded-xl bg-card border border-border w-fit shadow-inner">
+      <div className="flex items-center gap-2 p-1 rounded-xl bg-card border border-border w-fit shadow-xs">
         <button
           type="button"
           onClick={() => setTab("setup")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             tab === "setup"
-              ? "bg-purple-600 text-white shadow-md shadow-purple-950"
+              ? "bg-purple-600 text-white shadow-sm shadow-purple-950/20"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
           }`}
         >
@@ -610,14 +610,14 @@ function AgendaPage() {
           onClick={() => setTab("bookings")}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
             tab === "bookings"
-              ? "bg-purple-600 text-white shadow-md shadow-purple-950"
+              ? "bg-purple-600 text-white shadow-sm shadow-purple-950/20"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
           }`}
         >
           <CalendarDays className="h-4 w-4" />
           <span>Agendamentos Marcados</span>
           {appointments.data && appointments.data.filter((item) => item.status === "confirmed").length > 0 && (
-            <Badge className="ml-1 bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs px-1.5 py-0 h-5 font-semibold">
+            <Badge className="ml-1 bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 text-xs px-1.5 py-0 h-5 font-semibold">
               {appointments.data.filter((item) => item.status === "confirmed").length}
             </Badge>
           )}
@@ -627,29 +627,29 @@ function AgendaPage() {
       {tab === "setup" ? (
         <div className="space-y-6">
           {/* Agenda Pública Switch Card */}
-          <Card className="border-purple-500/30 bg-gradient-to-r from-purple-950/40 via-[#160d29] to-[#120a22] shadow-xl overflow-hidden relative">
+          <Card className="border-purple-200/80 bg-gradient-to-r from-purple-50/90 via-card to-indigo-50/50 shadow-sm dark:border-purple-500/30 dark:bg-gradient-to-r dark:from-purple-950/40 dark:via-[#160d29] dark:to-[#120a22] dark:shadow-xl overflow-hidden relative">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
             <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2.5">
                   <h3 className="font-semibold text-lg text-foreground">Agenda Pública no Biolink</h3>
                   {active ? (
-                    <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs flex items-center gap-1.5 font-medium">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 text-xs flex items-center gap-1.5 font-medium">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                       Ativa no Biolink
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="text-zinc-400 border-zinc-700 text-xs">
+                    <Badge variant="outline" className="text-muted-foreground border-border text-xs">
                       Inativa
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-zinc-400">
+                <p className="text-sm text-muted-foreground">
                   Quando ativada, o botão interativo “Agendar horário” é exibido com destaque na sua página de perfil.
                 </p>
               </div>
               <div className="flex items-center gap-3 self-start sm:self-center">
-                <span className="text-xs font-medium text-zinc-300">
+                <span className="text-xs font-medium text-foreground/80">
                   {active ? "Exibindo na página" : "Oculto na página"}
                 </span>
                 <Switch
@@ -664,15 +664,15 @@ function AgendaPage() {
           {/* Setup Grid: 2 Columns */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Column 1: Serviços Ofertados */}
-            <Card className="lg:col-span-6 bg-card border-border shadow-lg flex flex-col">
-              <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-[#27233a]">
+            <Card className="lg:col-span-6 bg-card border-border shadow-sm flex flex-col">
+              <CardHeader className="flex flex-row items-center justify-between pb-4 border-b border-border">
                 <div>
-                  <div className="flex items-center gap-1.5 text-xs text-purple-400 font-semibold uppercase tracking-wider mb-1">
+                  <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider mb-1">
                     <Settings2 className="h-3.5 w-3.5" />
                     Etapa 1
                   </div>
                   <CardTitle className="text-xl text-foreground">Vitrine de Serviços</CardTitle>
-                  <CardDescription className="text-zinc-400 text-xs mt-0.5">
+                  <CardDescription className="text-muted-foreground text-xs mt-0.5">
                     Cadastre os serviços e durações que seus clientes poderão agendar.
                   </CardDescription>
                 </div>
@@ -681,7 +681,7 @@ function AgendaPage() {
                   variant="outline"
                   size="sm"
                   onClick={addService}
-                  className="border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 flex items-center gap-1.5"
+                  className="border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:border-purple-500/40 dark:bg-purple-500/10 dark:hover:bg-purple-500/20 dark:text-purple-200 flex items-center gap-1.5 shadow-xs"
                 >
                   <Plus className="h-4 w-4" />
                   Novo Serviço
@@ -689,10 +689,10 @@ function AgendaPage() {
               </CardHeader>
               <CardContent className="p-4 sm:p-6 space-y-4 flex-1">
                 {services.length === 0 ? (
-                  <div className="text-center py-12 px-4 border border-dashed border-[#27233a] rounded-xl bg-[#10081d]/50">
-                    <CalendarDays className="h-10 w-10 text-zinc-500 mx-auto mb-3 opacity-60" />
-                    <p className="text-sm font-medium text-zinc-300">Nenhum serviço cadastrado ainda</p>
-                    <p className="text-xs text-zinc-500 mt-1 max-w-sm mx-auto">
+                  <div className="text-center py-12 px-4 border border-dashed border-border rounded-xl bg-muted/30 dark:border-[#27233a] dark:bg-[#10081d]/50">
+                    <CalendarDays className="h-10 w-10 text-muted-foreground mx-auto mb-3 opacity-60" />
+                    <p className="text-sm font-medium text-foreground">Nenhum serviço cadastrado ainda</p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
                       Clique em &quot;Novo Serviço&quot; acima para adicionar opções como Consulta Inicial, Mentoria, etc.
                     </p>
                   </div>
@@ -700,12 +700,12 @@ function AgendaPage() {
                   services.map((service, index) => (
                     <div
                       key={service.id}
-                      className="p-4 rounded-xl border border-[#27233a] bg-[#10081d]/80 hover:border-purple-500/40 transition-all space-y-3.5"
+                      className="p-4 rounded-xl border border-border bg-card shadow-xs hover:border-purple-400 transition-all space-y-3.5 dark:border-[#27233a] dark:bg-[#10081d]/80 dark:hover:border-purple-500/40"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-xs font-mono text-purple-400 bg-purple-950/60 px-2 py-0.5 rounded border border-purple-800/50">
+                            <span className="text-xs font-mono font-semibold text-purple-700 bg-purple-100 border-purple-200 dark:text-purple-400 dark:bg-purple-950/60 dark:border-purple-800/50 px-2 py-0.5 rounded border">
                               #{index + 1}
                             </span>
                             <input
@@ -730,14 +730,14 @@ function AgendaPage() {
                           size="icon"
                           aria-label="Remover serviço"
                           onClick={() => setServices((curr) => curr.filter((item) => item.id !== service.id))}
-                          className="text-zinc-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg shrink-0 h-8 w-8"
+                          className="text-muted-foreground hover:text-rose-600 hover:bg-rose-50 dark:hover:text-rose-400 dark:hover:bg-rose-500/10 rounded-lg shrink-0 h-8 w-8"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-[#27233a]/60">
+                      <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
                         <div>
-                          <label className="text-[11px] font-medium text-zinc-400 mb-1 block">Duração</label>
+                          <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Duração</label>
                           <select
                             value={service.duration_minutes}
                             onChange={(e) => updateService(service.id, { duration_minutes: Number(e.target.value) })}
@@ -751,9 +751,9 @@ function AgendaPage() {
                           </select>
                         </div>
                         <div>
-                          <label className="text-[11px] font-medium text-zinc-400 mb-1 block">Preço (R$)</label>
+                          <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Preço (R$)</label>
                           <div className="relative">
-                            <span className="absolute left-2.5 top-1.5 text-xs text-zinc-500">R$</span>
+                            <span className="absolute left-2.5 top-1.5 text-xs text-muted-foreground">R$</span>
                             <input
                               type="number"
                               min="0"
@@ -779,31 +779,31 @@ function AgendaPage() {
             {/* Column 2: Horários Semanais & Regras */}
             <div className="lg:col-span-6 space-y-6">
               {/* Grade Semanal */}
-              <Card className="bg-card border-border shadow-lg">
-                <CardHeader className="flex flex-col gap-3 pb-4 border-b border-[#27233a]">
+              <Card className="bg-card border-border shadow-sm">
+                <CardHeader className="flex flex-col gap-3 pb-4 border-b border-border">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div>
-                      <div className="flex items-center gap-1.5 text-xs text-purple-400 font-semibold uppercase tracking-wider mb-1">
+                      <div className="flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider mb-1">
                         <Clock className="h-3.5 w-3.5" />
                         Etapa 2
                       </div>
                       <CardTitle className="text-xl text-foreground">Disponibilidade Semanal</CardTitle>
-                      <CardDescription className="text-zinc-400 text-xs mt-0.5">
+                      <CardDescription className="text-muted-foreground text-xs mt-0.5">
                         Configure os dias e turnos de atendimento. Se atender apenas em um período, escolha o turno abaixo.
                       </CardDescription>
                     </div>
                   </div>
                   {/* Presets de Turnos / Períodos */}
-                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-[#27233a]/60">
-                    <span className="text-[11px] text-zinc-400 font-medium mr-1">Atalhos de Turno:</span>
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border">
+                    <span className="text-[11px] text-muted-foreground font-medium mr-1">Atalhos de Turno:</span>
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => applySchedulePreset("commercial")}
-                      className="border-purple-500/30 bg-purple-950/40 hover:bg-purple-900/50 text-purple-200 text-xs h-7 px-2.5 flex items-center gap-1"
+                      className="border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-700 dark:border-purple-500/30 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 dark:text-purple-200 text-xs h-7 px-2.5 flex items-center gap-1 font-medium shadow-xs"
                     >
-                      <Zap className="h-3 w-3 text-yellow-400" />
+                      <Zap className="h-3 w-3 text-amber-500 dark:text-yellow-400" />
                       Comercial (08h-18h)
                     </Button>
                     <Button
@@ -811,9 +811,9 @@ function AgendaPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => applySchedulePreset("morning")}
-                      className="border-amber-500/30 bg-amber-950/30 hover:bg-amber-900/40 text-amber-200 text-xs h-7 px-2.5 flex items-center gap-1"
+                      className="border-amber-200 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/30 dark:hover:bg-amber-900/40 dark:text-amber-200 text-xs h-7 px-2.5 flex items-center gap-1 font-medium shadow-xs"
                     >
-                      <Clock className="h-3 w-3 text-amber-400" />
+                      <Clock className="h-3 w-3 text-amber-600 dark:text-amber-400" />
                       Só Manhã (08h-12h)
                     </Button>
                     <Button
@@ -821,9 +821,9 @@ function AgendaPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => applySchedulePreset("afternoon")}
-                      className="border-blue-500/30 bg-blue-950/30 hover:bg-blue-900/40 text-blue-200 text-xs h-7 px-2.5 flex items-center gap-1"
+                      className="border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:border-blue-500/30 dark:bg-blue-950/30 dark:hover:bg-blue-900/40 dark:text-blue-200 text-xs h-7 px-2.5 flex items-center gap-1 font-medium shadow-xs"
                     >
-                      <Clock className="h-3 w-3 text-blue-400" />
+                      <Clock className="h-3 w-3 text-blue-600 dark:text-blue-400" />
                       Só Tarde (13h-18h)
                     </Button>
                     <Button
@@ -831,9 +831,9 @@ function AgendaPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => applySchedulePreset("night")}
-                      className="border-indigo-500/30 bg-indigo-950/30 hover:bg-indigo-900/40 text-indigo-200 text-xs h-7 px-2.5 flex items-center gap-1"
+                      className="border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/40 dark:text-indigo-200 text-xs h-7 px-2.5 flex items-center gap-1 font-medium shadow-xs"
                     >
-                      <Clock className="h-3 w-3 text-indigo-400" />
+                      <Clock className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
                       Só Noite (18h-22h)
                     </Button>
                   </div>
@@ -847,8 +847,8 @@ function AgendaPage() {
                         key={label}
                         className={`flex items-center justify-between p-3 rounded-lg border transition-colors ${
                           isDayActive
-                            ? "bg-[#10081d]/80 border-[#27233a]"
-                            : "bg-black/20 border-[#1f192b] opacity-60"
+                            ? "bg-card border-border shadow-xs dark:bg-[#10081d]/80 dark:border-[#27233a]"
+                            : "bg-muted/30 border-dashed border-border/70 opacity-60 dark:bg-black/20 dark:border-[#1f192b]"
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-[110px]">
@@ -868,11 +868,11 @@ function AgendaPage() {
                             {label}
                           </label>
                           {isDayActive ? (
-                            <Badge className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] px-1.5 py-0">
+                            <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px] px-1.5 py-0 font-medium">
                               Aberto
                             </Badge>
                           ) : (
-                            <Badge variant="outline" className="text-zinc-500 border-zinc-800 text-[10px] px-1.5 py-0">
+                            <Badge variant="outline" className="text-muted-foreground border-border text-[10px] px-1.5 py-0">
                               Fechado
                             </Badge>
                           )}
@@ -886,7 +886,7 @@ function AgendaPage() {
                               onChange={(e) => updateDay(weekday, { start_time: e.target.value })}
                               className="bg-background border border-border rounded-md px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-purple-500"
                             />
-                            <span className="text-xs text-zinc-500">até</span>
+                            <span className="text-xs text-muted-foreground">até</span>
                             <input
                               type="time"
                               value={(day?.end_time ?? "18:00").slice(0, 5)}
@@ -895,7 +895,7 @@ function AgendaPage() {
                             />
                           </div>
                         ) : (
-                          <span className="text-xs text-zinc-600 italic">Sem atendimentos</span>
+                          <span className="text-xs text-muted-foreground italic">Sem atendimentos</span>
                         )}
                       </div>
                     );
@@ -904,16 +904,16 @@ function AgendaPage() {
               </Card>
 
               {/* Regras de Agendamento */}
-              <Card className="bg-card border-border shadow-lg">
-                <CardHeader className="pb-3 border-b border-[#27233a]">
+              <Card className="bg-card border-border shadow-sm">
+                <CardHeader className="pb-3 border-b border-border">
                   <CardTitle className="text-base text-foreground flex items-center gap-2">
-                    <Settings2 className="h-4 w-4 text-purple-400" />
+                    <Settings2 className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                     Regras de Agendamento
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+                    <label className="text-xs font-medium text-foreground mb-1.5 block">
                       Antecedência mínima
                     </label>
                     <select
@@ -926,10 +926,10 @@ function AgendaPage() {
                       <option value={6}>6 horas de antecedência</option>
                       <option value={24}>24 horas (1 dia antes)</option>
                     </select>
-                    <p className="text-[11px] text-zinc-500 mt-1">Evita clientes agendando em cima da hora.</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">Evita clientes agendando em cima da hora.</p>
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+                    <label className="text-xs font-medium text-foreground mb-1.5 block">
                       Agenda disponível por
                     </label>
                     <select
@@ -941,7 +941,7 @@ function AgendaPage() {
                       <option value={60}>Próximos 60 dias</option>
                       <option value={90}>Próximos 90 dias</option>
                     </select>
-                    <p className="text-[11px] text-zinc-500 mt-1">Limite máximo de dias no calendário futuro.</p>
+                    <p className="text-[11px] text-muted-foreground mt-1">Limite máximo de dias no calendário futuro.</p>
                   </div>
                 </CardContent>
               </Card>
@@ -967,14 +967,14 @@ function AgendaPage() {
         <div className="space-y-6">
           {/* Active Folgas / Bloqueios Card with Cancel Action */}
           {appointments.data?.some(item => item.client_name?.startsWith("[BLOQUEIO]") && item.status !== "cancelled") && (
-            <Card className="border-amber-500/40 bg-gradient-to-r from-amber-950/30 via-[#160d29] to-[#120a22] shadow-lg overflow-hidden">
-              <CardHeader className="pb-3 border-b border-[#27233a] flex flex-row items-center justify-between">
+            <Card className="border-amber-200 bg-gradient-to-r from-amber-50/90 via-card to-amber-50/40 shadow-sm dark:border-amber-500/40 dark:bg-gradient-to-r dark:from-amber-950/30 dark:via-[#160d29] dark:to-[#120a22] dark:shadow-lg overflow-hidden">
+              <CardHeader className="pb-3 border-b border-border flex flex-row items-center justify-between">
                 <div>
-                  <CardTitle className="text-base text-amber-200 flex items-center gap-2 font-semibold">
-                    <Coffee className="h-4 w-4 text-amber-400" />
+                  <CardTitle className="text-base text-amber-900 dark:text-amber-200 flex items-center gap-2 font-semibold">
+                    <Coffee className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     Folgas e Bloqueios de Agenda Ativos
                   </CardTitle>
-                  <CardDescription className="text-zinc-400 text-xs mt-0.5">
+                  <CardDescription className="text-muted-foreground text-xs mt-0.5">
                     Estes períodos estão fechados para agendamentos. Para liberar o horário aos clientes, clique em Cancelar Folga.
                   </CardDescription>
                 </div>
@@ -987,20 +987,20 @@ function AgendaPage() {
                     return (
                       <div
                         key={block.id}
-                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-950/40 hover:bg-amber-950/50 transition-colors"
+                        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl border border-amber-200 bg-amber-50/90 hover:bg-amber-100/80 dark:border-amber-500/30 dark:bg-amber-950/40 dark:hover:bg-amber-950/50 transition-colors"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2 rounded-lg bg-amber-500/20 text-amber-300 shrink-0">
+                          <div className="p-2 rounded-lg bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-300 shrink-0">
                             <Coffee className="h-4 w-4" />
                           </div>
                           <div>
                             <div className="text-sm font-semibold text-foreground flex items-center gap-2">
                               <span>{reason}</span>
-                              <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[10px]">
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/40 text-[10px]">
                                 Folga Ativa
                               </Badge>
                             </div>
-                            <div className="text-xs text-zinc-400 mt-0.5">
+                            <div className="text-xs text-muted-foreground mt-0.5">
                               {appointmentDate(block)}
                             </div>
                           </div>
@@ -1010,7 +1010,7 @@ function AgendaPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => void unblockAppointment(block.id)}
-                          className="border-rose-500/40 bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 text-xs self-end sm:self-center shrink-0"
+                          className="border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-300 text-xs self-end sm:self-center shrink-0"
                         >
                           <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                           Cancelar Folga (Liberar Horário)
@@ -1024,34 +1024,34 @@ function AgendaPage() {
 
           {/* KPI Stats */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-card border-border p-4">
-              <div className="text-xs text-zinc-400 font-medium">Total Ativos</div>
+            <Card className="bg-card border-border p-4 shadow-xs">
+              <div className="text-xs text-muted-foreground font-medium">Total Ativos</div>
               <div className="text-2xl font-bold text-foreground mt-1">
                 {appointments.data?.filter((item) => item.status !== "cancelled").length ?? 0}
               </div>
             </Card>
-            <Card className="bg-card border-border p-4">
-              <div className="text-xs text-emerald-400 font-medium flex items-center justify-between">
+            <Card className="bg-card border-border p-4 shadow-xs">
+              <div className="text-xs text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-between">
                 <span>Confirmados</span>
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
               </div>
               <div className="text-2xl font-bold text-foreground mt-1">
                 {appointments.data?.filter((item) => !item.client_name?.startsWith("[BLOQUEIO]") && item.status === "confirmed").length ?? 0}
               </div>
             </Card>
-            <Card className="bg-card border-border p-4">
-              <div className="text-xs text-purple-400 font-medium flex items-center justify-between">
+            <Card className="bg-card border-border p-4 shadow-xs">
+              <div className="text-xs text-purple-600 dark:text-purple-400 font-medium flex items-center justify-between">
                 <span>Concluídos</span>
-                <span className="h-2 w-2 rounded-full bg-purple-400" />
+                <span className="h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400" />
               </div>
               <div className="text-2xl font-bold text-foreground mt-1">
                 {appointments.data?.filter((item) => item.status === "completed").length ?? 0}
               </div>
             </Card>
-            <Card className="bg-card border-border p-4">
-              <div className="text-xs text-amber-400 font-medium flex items-center justify-between">
+            <Card className="bg-card border-border p-4 shadow-xs">
+              <div className="text-xs text-amber-600 dark:text-amber-400 font-medium flex items-center justify-between">
                 <span>Folgas & Bloqueios</span>
-                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                <span className="h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400" />
               </div>
               <div className="text-2xl font-bold text-foreground mt-1">
                 {appointments.data?.filter((item) => item.client_name?.startsWith("[BLOQUEIO]") && item.status !== "cancelled").length ?? 0}
@@ -1063,11 +1063,11 @@ function AgendaPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Coluna 1: Calendário Interativo */}
             <div className="lg:col-span-5 xl:col-span-4 space-y-4">
-              <Card className="bg-card border-border shadow-lg overflow-hidden">
-                <CardHeader className="pb-3 border-b border-[#27233a] px-4 pt-4">
+              <Card className="bg-card border-border shadow-sm overflow-hidden">
+                <CardHeader className="pb-3 border-b border-border px-4 pt-4">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-base text-foreground capitalize font-semibold flex items-center gap-2">
-                      <CalendarIcon className="h-4 w-4 text-purple-400" />
+                      <CalendarIcon className="h-4 w-4 text-purple-600 dark:text-purple-400" />
                       {monthName}
                     </CardTitle>
                     <div className="flex items-center gap-1">
@@ -1104,7 +1104,7 @@ function AgendaPage() {
                   {/* Dias da semana */}
                   <div className="grid grid-cols-7 gap-1 text-center mb-2">
                     {["D", "S", "T", "Q", "Q", "S", "S"].map((d, i) => (
-                      <span key={i} className="text-[11px] font-semibold text-zinc-500 py-1">
+                      <span key={i} className="text-[11px] font-semibold text-muted-foreground py-1">
                         {d}
                       </span>
                     ))}
@@ -1119,13 +1119,13 @@ function AgendaPage() {
                         onClick={() => setSelectedDate(cell.dateStr === selectedDate ? null : cell.dateStr)}
                         className={`relative flex flex-col items-center justify-center h-10 rounded-lg text-xs transition-all ${
                           cell.isSelected
-                            ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-900/50 ring-2 ring-purple-400/60"
+                            ? "bg-purple-600 text-white font-bold shadow-md shadow-purple-900/40 ring-2 ring-purple-400/60"
                             : cell.isCurrentMonth
                               ? "text-foreground hover:bg-muted/40 hover:text-foreground"
-                              : "text-zinc-600 hover:bg-white/5 opacity-40"
+                              : "text-muted-foreground/40 hover:bg-muted/30 opacity-50"
                         } ${
                           cell.isToday && !cell.isSelected
-                            ? "border border-purple-500/50 bg-purple-950/30 text-purple-200 font-semibold"
+                            ? "border border-purple-300 bg-purple-50 text-purple-800 dark:border-purple-500/50 dark:bg-purple-950/30 dark:text-purple-200 font-semibold"
                             : ""
                         }`}
                       >
@@ -1133,13 +1133,13 @@ function AgendaPage() {
                         {/* Indicadores de bolinhas */}
                         <div className="flex items-center gap-0.5 mt-0.5">
                           {cell.hasConfirmed && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" title="Atendimento confirmado" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400" title="Atendimento confirmado" />
                           )}
                           {cell.hasBlocked && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-amber-400" title="Bloqueio / Folga" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400" title="Bloqueio / Folga" />
                           )}
                           {cell.hasCompleted && !cell.hasConfirmed && (
-                            <span className="h-1.5 w-1.5 rounded-full bg-purple-400" title="Atendimento concluído" />
+                            <span className="h-1.5 w-1.5 rounded-full bg-purple-500 dark:bg-purple-400" title="Atendimento concluído" />
                           )}
                         </div>
                       </button>
@@ -1147,31 +1147,31 @@ function AgendaPage() {
                   </div>
 
                   {/* Legenda */}
-                  <div className="flex items-center justify-center gap-3 pt-3 mt-3 border-t border-[#27233a] text-[11px] text-zinc-400">
+                  <div className="flex items-center justify-center gap-3 pt-3 mt-3 border-t border-border text-[11px] text-muted-foreground">
                     <div className="flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 dark:bg-emerald-400" />
                       <span>Confirmado</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-amber-400" />
+                      <span className="h-2 w-2 rounded-full bg-amber-500 dark:bg-amber-400" />
                       <span>Folga/Bloqueio</span>
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="h-2 w-2 rounded-full bg-purple-400" />
+                      <span className="h-2 w-2 rounded-full bg-purple-500 dark:bg-purple-400" />
                       <span>Concluído</span>
                     </div>
                   </div>
 
                   {/* Botão de Ação Rápida: Bloquear Folga */}
-                  <div className="pt-3 mt-3 border-t border-[#27233a]">
+                  <div className="pt-3 mt-3 border-t border-border">
                     <Button
                       type="button"
                       variant="outline"
                       size="sm"
                       onClick={() => openBlockModal(selectedDate)}
-                      className="w-full border-amber-500/30 bg-amber-950/20 hover:bg-amber-900/30 text-amber-300 text-xs flex items-center justify-center gap-1.5 py-2"
+                      className="w-full border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:border-amber-500/30 dark:bg-amber-950/20 dark:hover:bg-amber-900/30 dark:text-amber-300 text-xs flex items-center justify-center gap-1.5 py-2 font-medium shadow-xs"
                     >
-                      <Coffee className="h-3.5 w-3.5 text-amber-400" />
+                      <Coffee className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                       + Bloquear Data / Folga
                     </Button>
                   </div>
@@ -1181,15 +1181,15 @@ function AgendaPage() {
 
             {/* Coluna 2: Lista Filtrada de Agendamentos */}
             <div className="lg:col-span-7 xl:col-span-8 space-y-4">
-              <Card className="bg-card border-border shadow-lg flex flex-col min-h-[420px]">
-                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[#27233a]">
+              <Card className="bg-card border-border shadow-sm flex flex-col min-h-[420px]">
+                <CardHeader className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border">
                   <div>
                     <CardTitle className="text-xl text-foreground">
                       {selectedDate
                         ? `Atendimentos em ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(`${selectedDate}T12:00:00`))}`
                         : "Todos os Próximos Atendimentos"}
                     </CardTitle>
-                    <CardDescription className="text-zinc-400 text-xs mt-0.5">
+                    <CardDescription className="text-muted-foreground text-xs mt-0.5">
                       {selectedDate
                         ? "Exibindo apenas os horários e bloqueios programados para esta data."
                         : "Clique em qualquer atendimento para ver detalhes, gerenciar pelo WhatsApp ou reagendar."}
@@ -1200,7 +1200,7 @@ function AgendaPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setSelectedDate(null)}
-                      className="text-xs text-purple-200 border-purple-500/30 bg-purple-950/20 hover:bg-purple-900/30 shrink-0"
+                      className="text-xs text-purple-700 border-purple-200 bg-purple-50 hover:bg-purple-100 dark:text-purple-200 dark:border-purple-500/30 dark:bg-purple-950/20 dark:hover:bg-purple-900/30 shrink-0 shadow-xs"
                     >
                       Ver todos
                     </Button>
@@ -1208,8 +1208,8 @@ function AgendaPage() {
                 </CardHeader>
                 <CardContent className="p-4 sm:p-6 flex-1">
                   {appointments.isLoading ? (
-                    <div className="flex items-center justify-center py-16 text-zinc-400">
-                      <Loader2 className="h-6 w-6 animate-spin text-purple-400 mr-2" />
+                    <div className="flex items-center justify-center py-16 text-muted-foreground">
+                      <Loader2 className="h-6 w-6 animate-spin text-purple-600 dark:text-purple-400 mr-2" />
                       Carregando agendamentos...
                     </div>
                   ) : filteredAppointments.length ? (
@@ -1235,26 +1235,26 @@ function AgendaPage() {
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" || e.key === " ") setSelectedAppointment(item);
                               }}
-                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-amber-500/30 bg-amber-950/20 hover:bg-amber-950/30 hover:border-amber-500/50 transition-all cursor-pointer group"
+                              className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-amber-200 bg-amber-50/80 hover:bg-amber-100/80 hover:border-amber-300 dark:border-amber-500/30 dark:bg-amber-950/20 dark:hover:bg-amber-950/30 dark:hover:border-amber-500/50 transition-all cursor-pointer group shadow-xs"
                             >
                               <div className="flex items-center gap-4">
-                                <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-amber-950/60 border border-amber-800/40 text-amber-200 shrink-0">
-                                  <Coffee className="h-5 w-5 text-amber-400" />
-                                  <span className="text-[10px] font-bold text-amber-300 mt-0.5">{dayNum}</span>
+                                <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-amber-100 border border-amber-200 text-amber-800 dark:bg-amber-950/60 dark:border-amber-800/40 dark:text-amber-200 shrink-0">
+                                  <Coffee className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                                  <span className="text-[10px] font-bold text-amber-800 dark:text-amber-300 mt-0.5">{dayNum}</span>
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-amber-200">
+                                    <span className="text-sm font-semibold text-amber-900 dark:text-amber-200">
                                       Bloqueio: {reason}
                                     </span>
                                   </div>
-                                  <div className="flex items-center gap-2 text-xs text-amber-300/80 mt-1">
+                                  <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-300/80 mt-1">
                                     <span>Agenda protegida contra novos agendamentos</span>
                                   </div>
                                 </div>
                               </div>
                               <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
-                                <Badge className="bg-amber-500/15 text-amber-300 border-amber-500/40 text-xs">
+                                <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/15 dark:text-amber-300 dark:border-amber-500/40 text-xs">
                                   Folga / Indisponível
                                 </Badge>
                                 <Button
@@ -1265,7 +1265,7 @@ function AgendaPage() {
                                     e.stopPropagation();
                                     void unblockAppointment(item.id);
                                   }}
-                                  className="border-amber-500/40 text-amber-300 hover:bg-amber-500/20 text-xs h-7"
+                                  className="border-amber-300 text-amber-800 hover:bg-amber-100 dark:border-amber-500/40 dark:text-amber-300 dark:hover:bg-amber-500/20 text-xs h-7"
                                 >
                                   Desbloquear
                                 </Button>
@@ -1283,12 +1283,12 @@ function AgendaPage() {
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") setSelectedAppointment(item);
                             }}
-                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border bg-card/60 hover:bg-card hover:border-purple-500/40 transition-all cursor-pointer group"
+                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted/30 hover:border-purple-300 dark:hover:border-purple-500/40 transition-all cursor-pointer group shadow-xs"
                           >
                             <div className="flex items-center gap-4">
-                              <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-purple-950/60 border border-purple-800/40 text-purple-200 shrink-0">
+                              <div className="flex flex-col items-center justify-center w-12 h-12 rounded-lg bg-purple-100 border border-purple-200 text-purple-800 dark:bg-purple-950/60 dark:border-purple-800/40 dark:text-purple-200 shrink-0">
                                 <span className="text-base font-bold leading-none">{dayNum}</span>
-                                <span className="text-[10px] uppercase font-semibold text-purple-300 leading-tight">
+                                <span className="text-[10px] uppercase font-semibold text-purple-700 dark:text-purple-300 leading-tight">
                                   {monthStr}
                                 </span>
                               </div>
@@ -1298,8 +1298,8 @@ function AgendaPage() {
                                     {timeStr} · {item.booking_services?.name || "Atendimento"}
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-2 text-xs text-zinc-400 mt-1">
-                                  <UserRound className="h-3.5 w-3.5 text-zinc-500" />
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
+                                  <UserRound className="h-3.5 w-3.5 text-muted-foreground" />
                                   <span>{item.client_name}</span>
                                   <span>·</span>
                                   <span>{item.client_phone}</span>
@@ -1309,22 +1309,22 @@ function AgendaPage() {
 
                             <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0">
                               {item.status === "confirmed" && (
-                                <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-xs">
+                                <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 text-xs font-medium">
                                   Confirmado
                                 </Badge>
                               )}
                               {item.status === "completed" && (
-                                <Badge className="bg-purple-500/10 text-purple-300 border-purple-500/30 text-xs">
+                                <Badge className="bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/30 text-xs font-medium">
                                   Concluído
                                 </Badge>
                               )}
                               {item.status === "cancelled" && (
-                                <Badge variant="outline" className="text-rose-400 border-rose-500/30 text-xs">
+                                <Badge variant="outline" className="text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:border-rose-500/30 text-xs font-medium">
                                   Cancelado
                                 </Badge>
                               )}
 
-                              <span className="text-xs text-zinc-400 group-hover:text-purple-300 flex items-center gap-1 transition-colors">
+                              <span className="text-xs text-muted-foreground group-hover:text-purple-600 dark:group-hover:text-purple-300 flex items-center gap-1 transition-colors">
                                 <Pencil className="h-3.5 w-3.5" />
                                 Gerenciar
                               </span>
@@ -1334,12 +1334,12 @@ function AgendaPage() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-16 px-4 border border-dashed border-[#27233a] rounded-xl bg-[#10081d]/50 space-y-3">
-                      <CalendarDays className="h-10 w-10 text-zinc-500 mx-auto opacity-60" />
-                      <p className="text-sm font-medium text-zinc-300">
+                    <div className="text-center py-16 px-4 border border-dashed border-border rounded-xl bg-muted/30 dark:border-[#27233a] dark:bg-[#10081d]/50 space-y-3">
+                      <CalendarDays className="h-10 w-10 text-muted-foreground mx-auto opacity-60" />
+                      <p className="text-sm font-medium text-foreground">
                         {selectedDate ? "Nenhum agendamento para esta data" : "Nenhum agendamento registrado"}
                       </p>
-                      <p className="text-xs text-zinc-500 max-w-sm mx-auto">
+                      <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                         {selectedDate
                           ? "Deseja tirar este dia de folga ou bloquear os horários de atendimento?"
                           : "Assim que seus clientes agendarem horários pelo seu biolink, eles aparecerão aqui."}
@@ -1350,7 +1350,7 @@ function AgendaPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => openBlockModal(selectedDate)}
-                          className="border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-200 text-xs mt-2"
+                          className="border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200 text-xs mt-2 font-medium shadow-xs"
                         >
                           <Coffee className="h-3.5 w-3.5 mr-1.5" />
                           Bloquear este dia (Folga)
@@ -1379,30 +1379,30 @@ function AgendaPage() {
             role="dialog"
             aria-modal="true"
           >
-            <div className="flex items-start justify-between pb-4 border-b border-[#27233a]">
+            <div className="flex items-start justify-between pb-4 border-b border-border">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Badge variant="outline" className="border-purple-500/30 text-purple-300 text-[10px]">
+                  <Badge variant="outline" className="border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-500/30 dark:bg-purple-500/10 dark:text-purple-300 text-[10px]">
                     {selectedAppointment.client_name?.startsWith("[BLOQUEIO]") ? "Bloqueio" : "Atendimento"}
                   </Badge>
                   {selectedAppointment.client_name?.startsWith("[BLOQUEIO]") ? (
-                    <Badge className="bg-amber-500/10 text-amber-400 border-amber-500/30 text-[10px]">
+                    <Badge className="bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/30 text-[10px]">
                       Folga / Indisponível
                     </Badge>
                   ) : (
                     <>
                       {selectedAppointment.status === "confirmed" && (
-                        <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/30 text-[10px]">
+                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30 text-[10px]">
                           Confirmado
                         </Badge>
                       )}
                       {selectedAppointment.status === "completed" && (
-                        <Badge className="bg-purple-500/10 text-purple-300 border-purple-500/30 text-[10px]">
+                        <Badge className="bg-purple-100 text-purple-800 border-purple-300 dark:bg-purple-500/10 dark:text-purple-300 dark:border-purple-500/30 text-[10px]">
                           Concluído
                         </Badge>
                       )}
                       {selectedAppointment.status === "cancelled" && (
-                        <Badge variant="outline" className="text-rose-400 border-rose-500/30 text-[10px]">
+                        <Badge variant="outline" className="text-rose-700 bg-rose-50 border-rose-200 dark:text-rose-400 dark:border-rose-500/30 text-[10px]">
                           Cancelado
                         </Badge>
                       )}
@@ -1415,7 +1415,7 @@ function AgendaPage() {
                     : selectedAppointment.client_name}
                 </h2>
                 {!selectedAppointment.client_name?.startsWith("[BLOQUEIO]") && (
-                  <p className="text-xs text-zinc-400">{selectedAppointment.client_phone}</p>
+                  <p className="text-xs text-muted-foreground">{selectedAppointment.client_phone}</p>
                 )}
               </div>
               <Button
@@ -1429,9 +1429,9 @@ function AgendaPage() {
             </div>
 
             {/* Summary Info */}
-            <div className="bg-[#10081d] border border-[#27233a] rounded-xl p-4 space-y-3">
+            <div className="bg-muted/40 border border-border rounded-xl p-4 space-y-3 dark:bg-[#10081d] dark:border-[#27233a]">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-400">
+                <span className="text-muted-foreground">
                   {selectedAppointment.client_name?.startsWith("[BLOQUEIO]") ? "Tipo:" : "Serviço:"}
                 </span>
                 <span className="font-semibold text-foreground">
@@ -1441,15 +1441,15 @@ function AgendaPage() {
                 </span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-zinc-400">Data e Horário:</span>
-                <span className="font-semibold text-purple-300">
+                <span className="text-muted-foreground">Data e Horário:</span>
+                <span className="font-semibold text-purple-700 dark:text-purple-300">
                   {appointmentDate(selectedAppointment)}
                 </span>
               </div>
               {selectedAppointment.notes && (
-                <div className="pt-2 border-t border-[#27233a]/60 text-xs">
-                  <span className="text-zinc-400 block mb-1">Observações:</span>
-                  <p className="text-foreground bg-muted/40 p-2 rounded-lg border border-border">
+                <div className="pt-2 border-t border-border text-xs">
+                  <span className="text-muted-foreground block mb-1">Observações:</span>
+                  <p className="text-foreground bg-card p-2 rounded-lg border border-border shadow-xs">
                     {selectedAppointment.notes}
                   </p>
                 </div>
@@ -1459,28 +1459,28 @@ function AgendaPage() {
             {/* Actions for Block vs Normal Appointment */}
             {selectedAppointment.client_name?.startsWith("[BLOQUEIO]") ? (
               <div className="space-y-4 pt-2">
-                <div className="p-3.5 rounded-xl bg-amber-950/20 border border-amber-800/40 space-y-1">
-                  <div className="flex items-center gap-2 text-amber-300 font-medium text-xs">
-                    <Coffee className="h-4 w-4" />
+                <div className="p-3.5 rounded-xl bg-amber-50 border border-amber-200 dark:bg-amber-950/20 dark:border-amber-800/40 space-y-1">
+                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-medium text-xs">
+                    <Coffee className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                     Horário Fechado para Clientes
                   </div>
-                  <p className="text-[11px] text-zinc-400">
+                  <p className="text-[11px] text-muted-foreground">
                     Nenhum cliente consegue agendar compromissos neste intervalo pelo seu Biolink público.
                   </p>
                 </div>
-                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#27233a]">
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setSelectedAppointment(null)}
-                    className="border-zinc-700 text-zinc-300 text-xs"
+                    className="border-border text-muted-foreground hover:text-foreground text-xs"
                   >
                     Fechar
                   </Button>
                   <Button
                     type="button"
                     onClick={() => void unblockAppointment(selectedAppointment.id)}
-                    className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium"
+                    className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium shadow-xs"
                   >
                     <Check className="h-3.5 w-3.5 mr-1.5" />
                     Desbloquear e Liberar Horário
@@ -1489,7 +1489,7 @@ function AgendaPage() {
               </div>
             ) : selectedAppointment.status === "confirmed" ? (
               <div className="space-y-2">
-                <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+                <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                   Ações Rápidas & WhatsApp
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1497,12 +1497,12 @@ function AgendaPage() {
                     type="button"
                     variant="outline"
                     onClick={() => openWhatsApp(selectedAppointment, "confirmation")}
-                    className="justify-start border-emerald-500/30 bg-emerald-950/20 hover:bg-emerald-900/30 text-emerald-300 text-xs h-12"
+                    className="justify-start border-emerald-300 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-950/20 dark:hover:bg-emerald-900/30 dark:text-emerald-300 text-xs h-12 shadow-xs transition-colors"
                   >
-                    <MessageCircle className="h-4 w-4 mr-2 text-emerald-400 shrink-0" />
+                    <MessageCircle className="h-4 w-4 mr-2 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     <div className="text-left">
-                      <div className="font-medium">Confirmar no WhatsApp</div>
-                      <div className="text-[10px] opacity-70">Enviar confirmação pronta</div>
+                      <div className="font-semibold">Confirmar no WhatsApp</div>
+                      <div className="text-[10px] text-emerald-700/90 dark:opacity-70 font-normal">Enviar confirmação pronta</div>
                     </div>
                   </Button>
 
@@ -1510,12 +1510,12 @@ function AgendaPage() {
                     type="button"
                     variant="outline"
                     onClick={() => openWhatsApp(selectedAppointment, "reminder")}
-                    className="justify-start border-blue-500/30 bg-blue-950/20 hover:bg-blue-900/30 text-blue-300 text-xs h-12"
+                    className="justify-start border-blue-300 bg-blue-50 hover:bg-blue-100 text-blue-900 dark:border-blue-500/30 dark:bg-blue-950/20 dark:hover:bg-blue-900/30 dark:text-blue-300 text-xs h-12 shadow-xs transition-colors"
                   >
-                    <Bell className="h-4 w-4 mr-2 text-blue-400 shrink-0" />
+                    <Bell className="h-4 w-4 mr-2 text-blue-600 dark:text-blue-400 shrink-0" />
                     <div className="text-left">
-                      <div className="font-medium">Enviar Lembrete</div>
-                      <div className="text-[10px] opacity-70">Relembrar horário</div>
+                      <div className="font-semibold">Enviar Lembrete</div>
+                      <div className="text-[10px] text-blue-700/90 dark:opacity-70 font-normal">Relembrar horário</div>
                     </div>
                   </Button>
 
@@ -1523,12 +1523,12 @@ function AgendaPage() {
                     type="button"
                     variant="outline"
                     onClick={() => openWhatsApp(selectedAppointment, "reschedule")}
-                    className="justify-start border-amber-500/30 bg-amber-950/20 hover:bg-amber-900/30 text-amber-300 text-xs h-12"
+                    className="justify-start border-amber-300 bg-amber-50 hover:bg-amber-100 text-amber-900 dark:border-amber-500/30 dark:bg-amber-950/20 dark:hover:bg-amber-900/30 dark:text-amber-300 text-xs h-12 shadow-xs transition-colors"
                   >
-                    <MessageCircle className="h-4 w-4 mr-2 text-amber-400 shrink-0" />
+                    <MessageCircle className="h-4 w-4 mr-2 text-amber-600 dark:text-amber-400 shrink-0" />
                     <div className="text-left">
-                      <div className="font-medium">Solicitar Mudança</div>
-                      <div className="text-[10px] opacity-70">Combinar novo horário</div>
+                      <div className="font-semibold">Solicitar Mudança</div>
+                      <div className="text-[10px] text-amber-700/90 dark:opacity-70 font-normal">Combinar novo horário</div>
                     </div>
                   </Button>
 
@@ -1536,23 +1536,23 @@ function AgendaPage() {
                     type="button"
                     variant="outline"
                     onClick={() => openReschedule(selectedAppointment)}
-                    className="justify-start border-purple-500/30 bg-purple-950/20 hover:bg-purple-900/30 text-purple-300 text-xs h-12"
+                    className="justify-start border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-900 dark:border-purple-500/30 dark:bg-purple-950/20 dark:hover:bg-purple-900/30 dark:text-purple-300 text-xs h-12 shadow-xs transition-colors"
                   >
-                    <CalendarClock className="h-4 w-4 mr-2 text-purple-400 shrink-0" />
+                    <CalendarClock className="h-4 w-4 mr-2 text-purple-600 dark:text-purple-400 shrink-0" />
                     <div className="text-left">
-                      <div className="font-medium">Reagendar Direto</div>
-                      <div className="text-[10px] opacity-70">Escolher horário livre</div>
+                      <div className="font-semibold">Reagendar Direto</div>
+                      <div className="text-[10px] text-purple-700/90 dark:opacity-70 font-normal">Escolher horário livre</div>
                     </div>
                   </Button>
                 </div>
 
-                <div className="pt-3 border-t border-[#27233a] flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-border flex items-center justify-between gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={() => void updateFromDetails(selectedAppointment, "cancelled")}
-                    className="border-rose-500/30 hover:bg-rose-500/10 text-rose-400 text-xs"
+                    className="border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:border-rose-500/30 dark:bg-transparent dark:hover:bg-rose-500/10 dark:text-rose-400 text-xs shadow-xs"
                   >
                     <X className="h-3.5 w-3.5 mr-1.5" />
                     Cancelar Agendamento
@@ -1561,7 +1561,7 @@ function AgendaPage() {
                     type="button"
                     size="sm"
                     onClick={() => void updateFromDetails(selectedAppointment, "completed")}
-                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs shadow-xs"
                   >
                     <Check className="h-3.5 w-3.5 mr-1.5" />
                     Concluir Atendimento
@@ -1569,7 +1569,7 @@ function AgendaPage() {
                 </div>
               </div>
             ) : (
-              <div className="p-3 rounded-lg bg-[#10081d] border border-[#27233a] text-center text-xs text-zinc-400">
+              <div className="p-3 rounded-lg bg-muted/40 border border-border text-center text-xs text-muted-foreground dark:bg-[#10081d] dark:border-[#27233a]">
                 Este agendamento já está {selectedAppointment.status === "completed" ? "concluído" : "cancelado"}.
               </div>
             )}
@@ -1591,14 +1591,14 @@ function AgendaPage() {
             role="dialog"
             aria-modal="true"
           >
-            <div className="flex items-start justify-between pb-3 border-b border-[#27233a]">
+            <div className="flex items-start justify-between pb-3 border-b border-border">
               <div>
-                <div className="flex items-center gap-1.5 text-xs text-amber-400 font-semibold uppercase tracking-wider mb-1">
+                <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 font-semibold uppercase tracking-wider mb-1">
                   <Coffee className="h-3.5 w-3.5" />
                   Indisponibilidade
                 </div>
                 <h2 className="text-xl font-bold text-foreground">Bloquear Horário / Folga</h2>
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5">
                   Tranque horários para que clientes não possam agendar.
                 </p>
               </div>
@@ -1614,7 +1614,7 @@ function AgendaPage() {
 
             <div className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+                <label className="text-xs font-medium text-foreground mb-1.5 block">
                   Data do Bloqueio:
                 </label>
                 <input
@@ -1627,7 +1627,7 @@ function AgendaPage() {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+                <label className="text-xs font-medium text-foreground mb-1.5 block">
                   Duração do Bloqueio:
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -1636,8 +1636,8 @@ function AgendaPage() {
                     onClick={() => setBlockingAllDay(true)}
                     className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all ${
                       blockingAllDay
-                        ? "bg-purple-600 border-purple-400 text-white shadow"
-                        : "bg-background border-border text-muted-foreground hover:text-foreground"
+                        ? "bg-purple-600 border-purple-500 text-white shadow-xs"
+                        : "bg-card border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Dia Inteiro (Folga)
@@ -1647,8 +1647,8 @@ function AgendaPage() {
                     onClick={() => setBlockingAllDay(false)}
                     className={`py-2 px-3 rounded-lg text-xs font-medium border transition-all ${
                       !blockingAllDay
-                        ? "bg-purple-600 border-purple-400 text-white shadow"
-                        : "bg-background border-border text-muted-foreground hover:text-foreground"
+                        ? "bg-purple-600 border-purple-500 text-white shadow-xs"
+                        : "bg-card border-border text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     Horário Específico
@@ -1657,9 +1657,9 @@ function AgendaPage() {
               </div>
 
               {!blockingAllDay && (
-                <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#10081d] border border-[#27233a]">
+                <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-muted/40 border border-border dark:bg-[#10081d] dark:border-[#27233a]">
                   <div>
-                    <label className="text-[11px] font-medium text-zinc-400 mb-1 block">Início</label>
+                    <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Início</label>
                     <input
                       type="time"
                       value={blockingStartTime}
@@ -1668,7 +1668,7 @@ function AgendaPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-medium text-zinc-400 mb-1 block">Término</label>
+                    <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Término</label>
                     <input
                       type="time"
                       value={blockingEndTime}
@@ -1680,7 +1680,7 @@ function AgendaPage() {
               )}
 
               <div>
-                <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+                <label className="text-xs font-medium text-foreground mb-1.5 block">
                   Motivo / Observação:
                 </label>
                 <div className="flex flex-wrap gap-1.5 mb-2">
@@ -1691,8 +1691,8 @@ function AgendaPage() {
                       onClick={() => setBlockingReason(m)}
                       className={`text-[11px] px-2 py-1 rounded-md border transition-colors ${
                         blockingReason === m
-                          ? "bg-amber-500/20 border-amber-500/50 text-amber-300"
-                          : "bg-background border-border text-muted-foreground hover:text-foreground"
+                          ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/20 dark:border-amber-500/50 dark:text-amber-300 font-medium"
+                          : "bg-card border-border text-muted-foreground hover:text-foreground"
                       }`}
                     >
                       {m}
@@ -1709,12 +1709,12 @@ function AgendaPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#27233a]">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setBlockingModalOpen(false)}
-                className="border-zinc-700 text-zinc-300 text-xs"
+                className="border-border text-muted-foreground hover:text-foreground text-xs"
               >
                 Cancelar
               </Button>
@@ -1722,7 +1722,7 @@ function AgendaPage() {
                 type="button"
                 disabled={savingBlock || !blockingDate || !blockingReason}
                 onClick={() => void confirmBlock()}
-                className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium"
+                className="bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium shadow-xs"
               >
                 {savingBlock ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <Coffee className="h-3.5 w-3.5 mr-1.5" />}
                 {savingBlock ? "Bloqueando..." : "Confirmar Bloqueio"}
@@ -1747,13 +1747,13 @@ function AgendaPage() {
             role="dialog"
             aria-modal="true"
           >
-            <div className="flex items-start justify-between pb-4 border-b border-[#27233a]">
+            <div className="flex items-start justify-between pb-4 border-b border-border">
               <div>
-                <p className="text-xs text-purple-400 font-semibold uppercase tracking-wider mb-1">
+                <p className="text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider mb-1">
                   Reagendar Horário
                 </p>
                 <h2 className="text-xl font-bold text-foreground">{editing.client_name}</h2>
-                <p className="text-xs text-zinc-400">{editing.booking_services?.name}</p>
+                <p className="text-xs text-muted-foreground">{editing.booking_services?.name}</p>
               </div>
               <Button
                 variant="ghost"
@@ -1766,17 +1766,17 @@ function AgendaPage() {
             </div>
 
             {/* Current slot info */}
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-purple-950/30 border border-purple-800/40 text-purple-200">
-              <CalendarClock className="h-5 w-5 text-purple-400 shrink-0" />
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-purple-50 border border-purple-200 text-purple-800 dark:bg-purple-950/30 dark:border-purple-800/40 dark:text-purple-200">
+              <CalendarClock className="h-5 w-5 text-purple-600 dark:text-purple-400 shrink-0" />
               <div>
-                <div className="text-[11px] text-zinc-400">Horário Atual:</div>
+                <div className="text-[11px] text-muted-foreground">Horário Atual:</div>
                 <div className="text-xs font-semibold text-foreground">{appointmentDate(editing)}</div>
               </div>
             </div>
 
             {/* Pick date */}
             <div>
-              <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+              <label className="text-xs font-medium text-foreground mb-1.5 block">
                 Selecione a nova data:
               </label>
               <input
@@ -1790,12 +1790,12 @@ function AgendaPage() {
 
             {/* Slots display */}
             <div>
-              <label className="text-xs font-medium text-zinc-300 mb-1.5 block">
+              <label className="text-xs font-medium text-foreground mb-1.5 block">
                 Horários livres disponíveis:
               </label>
               {loadingReschedule ? (
-                <div className="flex items-center justify-center py-8 text-zinc-400 text-xs">
-                  <Loader2 className="h-4 w-4 animate-spin text-purple-400 mr-2" />
+                <div className="flex items-center justify-center py-8 text-muted-foreground text-xs">
+                  <Loader2 className="h-4 w-4 animate-spin text-purple-600 dark:text-purple-400 mr-2" />
                   Buscando horários disponíveis...
                 </div>
               ) : rescheduleDate && rescheduleSlots.length > 0 ? (
@@ -1814,8 +1814,8 @@ function AgendaPage() {
                         onClick={() => setRescheduleStart(slot.slot_start)}
                         className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all border ${
                           isSelected
-                            ? "bg-purple-600 border-purple-400 text-white shadow-md shadow-purple-900/50"
-                            : "bg-[#10081d] border-[#27233a] text-zinc-300 hover:border-purple-500/50 hover:bg-purple-950/30"
+                            ? "bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-900/40"
+                            : "bg-card border-border text-foreground hover:border-purple-400 hover:bg-purple-50 dark:bg-[#10081d] dark:border-[#27233a] dark:text-zinc-300 dark:hover:bg-purple-950/30"
                         }`}
                       >
                         {label}
@@ -1824,23 +1824,23 @@ function AgendaPage() {
                   })}
                 </div>
               ) : rescheduleDate ? (
-                <p className="text-xs text-rose-400 bg-rose-950/20 border border-rose-800/30 p-3 rounded-lg text-center">
+                <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 dark:text-rose-400 dark:bg-rose-950/20 dark:border-rose-800/30 p-3 rounded-lg text-center font-medium">
                   Não há horários livres nessa data.
                 </p>
               ) : (
-                <p className="text-xs text-zinc-500 text-center py-4">
+                <p className="text-xs text-muted-foreground text-center py-4">
                   Selecione uma data acima para visualizar os horários disponíveis.
                 </p>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#27233a]">
+            <div className="flex items-center justify-end gap-3 pt-4 border-t border-border">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setEditing(null)}
-                className="border-zinc-700 text-zinc-300 text-xs"
+                className="border-border text-muted-foreground hover:text-foreground text-xs"
               >
                 Manter Atual
               </Button>
@@ -1848,7 +1848,7 @@ function AgendaPage() {
                 type="button"
                 disabled={!rescheduleStart || savingReschedule}
                 onClick={() => void confirmReschedule()}
-                className="bg-purple-600 hover:bg-purple-500 text-white text-xs"
+                className="bg-purple-600 hover:bg-purple-500 text-white text-xs shadow-xs"
               >
                 {savingReschedule ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" /> : <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />}
                 {savingReschedule ? "Remarcando..." : "Confirmar Novo Horário"}

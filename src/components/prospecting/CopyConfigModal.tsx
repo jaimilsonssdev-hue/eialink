@@ -469,7 +469,7 @@ export function CopyConfigModal({
                       onClick={() => setSimulateWithReviews(true)}
                       className={`text-[11px] px-2 py-0.5 rounded-full border transition-all ${
                         simulateWithReviews
-                          ? "bg-amber-500/20 text-amber-300 border-amber-500/40 font-semibold"
+                          ? "bg-amber-100 text-amber-800 border-amber-300 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/40 font-semibold"
                           : "bg-muted text-muted-foreground border-border"
                       }`}
                     >
@@ -480,7 +480,7 @@ export function CopyConfigModal({
                       onClick={() => setSimulateWithReviews(false)}
                       className={`text-[11px] px-2 py-0.5 rounded-full border transition-all ${
                         !simulateWithReviews
-                          ? "bg-purple-500/20 text-purple-300 border-purple-500/40 font-semibold"
+                          ? "bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-500/20 dark:text-purple-300 dark:border-purple-500/40 font-semibold"
                           : "bg-muted text-muted-foreground border-border"
                       }`}
                     >
@@ -492,8 +492,8 @@ export function CopyConfigModal({
                 <div
                   className={`rounded-xl p-3 text-xs leading-relaxed border shadow-inner ${
                     isWhatsAppTab
-                      ? "bg-emerald-950/20 border-emerald-500/30 text-emerald-100"
-                      : "bg-pink-950/20 border-pink-500/30 text-pink-100"
+                      ? "bg-emerald-50 text-emerald-900 border-emerald-200 dark:bg-emerald-950/20 dark:border-emerald-500/30 dark:text-emerald-100"
+                      : "bg-pink-50 text-pink-900 border-pink-200 dark:bg-pink-950/20 dark:border-pink-500/30 dark:text-pink-100"
                   }`}
                 >
                   <p className="whitespace-pre-wrap">{currentPreview}</p>

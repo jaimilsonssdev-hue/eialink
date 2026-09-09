@@ -136,6 +136,17 @@ export const NICHE_MODELS: NicheModelConfig[] = [
     isGold: true,
   },
   {
+    id: "psicologia",
+    templateId: "therapy-wellbeing",
+    nicheKey: "psicologia",
+    nicheCategory: "Psicologia e Terapias",
+    title: "Psicologia & Terapia Integrativa",
+    subtitle: "Acolhimento humanizado, saúde emocional e sessões presenciais/online",
+    theme: "forest",
+    icon: Brain,
+    isGold: true,
+  },
+  {
     id: "estetica",
     templateId: "beauty-glow",
     nicheKey: "estetica",
@@ -424,18 +435,24 @@ export function UnifiedPageEditor({
 }) {
   const initialTemplate = useMemo(() => {
     if (initialBio.template_id) return initialBio.template_id;
-    const preset = getPresetForCompany(defaults.niche, defaults.displayName);
+    const socialNiche = (initialBio.social_links as Record<string, any>)?.niche;
+    const targetNiche = socialNiche || defaults.niche;
+    const preset = getPresetForCompany(targetNiche, defaults.displayName);
     return preset.template_id || "clinic-care";
-  }, [initialBio.template_id, defaults.niche, defaults.displayName]);
+  }, [initialBio.template_id, initialBio.social_links, defaults.niche, defaults.displayName]);
 
-  const [bio, setBio] = useState<BioForm>(() => ({
-    ...initialBio,
-    template_id: initialBio.template_id || initialTemplate,
-    theme: initialBio.theme || (getPresetForCompany(defaults.niche, defaults.displayName).theme) || "ocean",
-  }));
+  const [bio, setBio] = useState<BioForm>(() => {
+    const socialNiche = (initialBio.social_links as Record<string, any>)?.niche;
+    const targetNiche = socialNiche || defaults.niche;
+    return {
+      ...initialBio,
+      template_id: initialBio.template_id || initialTemplate,
+      theme: initialBio.theme || (getPresetForCompany(targetNiche, defaults.displayName).theme) || "ocean",
+    };
+  });
   const [links, setLinks] = useState<EditableLink[]>(initialLinks);
   const [products, setProducts] = useState<CatalogItem[]>(initialProducts);
-  const [niche, setNiche] = useState(defaults.niche);
+  const [niche, setNiche] = useState<string>(() => (initialBio.social_links as Record<string, any>)?.niche || defaults.niche || "");
   const [activeTab, setActiveTab] = useState<EditorTab>("visual");
 
   const [draftTemplate, setDraftTemplate] = useState(() => bio.template_id || "clinic-care");
@@ -564,31 +581,31 @@ export function UnifiedPageEditor({
     setLinks((current) => current.filter((link) => link.id !== id));
 
   const activeNicheModel = useMemo(() => {
-    const currentTemplate = bio.template_id || draftTemplate || "clinic-care";
     const socialData = (bio.social_links as Record<string, any>) || {};
-    const savedNiche = socialData.niche || niche;
+    const currentNiche = niche || socialData.niche;
 
-    if (savedNiche) {
-      const byKey = NICHE_MODELS.find((m) => m.nicheKey === savedNiche || m.id === savedNiche);
+    if (currentNiche) {
+      const byKey = NICHE_MODELS.find((m) => m.nicheKey === currentNiche || m.id === currentNiche);
       if (byKey) return byKey;
     }
 
+    const currentTemplate = draftTemplate || bio.template_id || "clinic-care";
     return (
       NICHE_MODELS.find(
         (m) =>
           m.templateId === currentTemplate ||
+          (m.templateId === "therapy-wellbeing" && (currentTemplate.includes("therapy") || currentTemplate.includes("harmony"))) ||
           (m.templateId === "clinic-care" && currentTemplate.includes("clinic")) ||
           (m.templateId === "beauty-glow" && currentTemplate.includes("beauty")) ||
           (m.templateId === "spotlight-neon" && (currentTemplate.includes("spotlight") || currentTemplate.includes("neon"))) ||
           (m.templateId === "law-authority" && currentTemplate.includes("law")) ||
           (m.templateId === "academy-performance" && currentTemplate.includes("academy")) ||
           (m.templateId === "restaurant-menu" && currentTemplate.includes("restaurant")) ||
-          (m.templateId === "therapy-harmony" && currentTemplate.includes("therapy")) ||
           (m.templateId === "portfolio-studio" && currentTemplate.includes("portfolio")) ||
           (m.templateId === "business-modern" && (currentTemplate.includes("business") || currentTemplate.includes("store")))
       ) || NICHE_MODELS[0]
     );
-  }, [bio.template_id, draftTemplate, bio.social_links, niche]);
+  }, [niche, bio.social_links, draftTemplate, bio.template_id]);
 
   const selectNicheModel = (model: NicheModelConfig) => {
     setDraftTemplate(model.templateId);
@@ -831,11 +848,7 @@ export function UnifiedPageEditor({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {NICHE_MODELS.map((model) => {
                       const Icon = model.icon;
-                      const isSelected =
-                        activeNicheModel.id === model.id ||
-                        draftTemplate === model.templateId ||
-                        bio.template_id === model.templateId ||
-                        (model.id === "odontologia" && (draftTemplate.includes("clinic") || bio.template_id?.includes("clinic")));
+                      const isSelected = activeNicheModel.id === model.id;
                       return (
                         <button
                           key={model.id}
@@ -942,7 +955,7 @@ export function UnifiedPageEditor({
                     value={bio.cover_url}
                     variant="cover"
                     templateId={draftTemplate}
-                    niche={niche}
+                    niche={niche || activeNicheModel.nicheKey}
                     onChange={(cover_url) => updateBio({ cover_url })}
                   />
 
@@ -951,7 +964,7 @@ export function UnifiedPageEditor({
                     value={bio.avatar_url}
                     variant="avatar"
                     templateId={draftTemplate}
-                    niche={niche}
+                    niche={niche || activeNicheModel.nicheKey}
                     onChange={(avatar_url) => updateBio({ avatar_url })}
                   />
 

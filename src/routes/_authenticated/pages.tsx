@@ -31,6 +31,7 @@ import {
   Calculator,
   PenTool,
   Glasses,
+  Brain,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +76,14 @@ const NICHE_OPTIONS: NicheQuickOption[] = [
     icon: HeartPulse,
     color: "text-emerald-400",
     bgLight: "bg-emerald-500/10 border-emerald-500/20",
+  },
+  {
+    key: "psicologia",
+    name: "Psicologia & Terapia",
+    description: "Psicólogos, terapeutas, psicanálise e acolhimento emocional",
+    icon: Brain,
+    color: "text-teal-400",
+    bgLight: "bg-teal-500/10 border-teal-500/20",
   },
   {
     key: "estetica",

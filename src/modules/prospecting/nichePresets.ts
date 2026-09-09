@@ -57,6 +57,18 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "clinica-av-2", url: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80", label: "Dra. Médica Clínica" },
     ],
   },
+  psicologia: {
+    covers: [
+      { id: "psi-1", url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=1200&q=80", label: "Consultório & Acolhimento Terapêutico" },
+      { id: "psi-2", url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80", label: "Espaço de Escuta & Conforto" },
+      { id: "psi-3", url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80", label: "Equilíbrio Mental & Mindfulness" },
+      { id: "psi-4", url: "https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=1200&q=80", label: "Apoio Emocional & Diálogo" },
+    ],
+    avatars: [
+      { id: "psi-av-1", url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80", label: "Dra. Psicóloga Clínica" },
+      { id: "psi-av-2", url: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=400&q=80", label: "Dr. Terapeuta & Psicanalista" },
+    ],
+  },
   estetica: {
     covers: [
       { id: "estetica-1", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80", label: "Espaço Estética Glow" },
@@ -451,6 +463,117 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           price: 160,
           duration_minutes: 50,
           image_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  psicologia: [
+    {
+      nicheKey: "psicologia",
+      modelName: "Acolhimento & Psicoterapia Humanizada",
+      template_id: "therapy-wellbeing",
+      theme: "forest",
+      cover_url: NICHE_GALLERIES.psicologia.covers[0].url,
+      avatar_url: NICHE_GALLERIES.psicologia.avatars[0].url,
+      generateHeadline: (company, city) => `Psicologia Clínica & Acolhimento Emocional em ${city}`,
+      generateDescription: (company, city) =>
+        `O ${company} é um espaço seguro e acolhedor em ${city}. Apoio profissional para superar a ansiedade, desenvolver autoconhecimento e recuperar seu bem-estar emocional.`,
+      whatsapp_button_label: "Agendar Primeira Sessão",
+      whatsapp_message: (company) => `Olá! Conheci a página do ${company} e gostaria de agendar uma sessão de psicoterapia.`,
+      services: [
+        {
+          name: "Psicoterapia Individual Humanizada",
+          description: "Sessões focadas no alívio de ansiedade, estresse, luto e fortalecimento da autoestima com escuta atenta.",
+          price: 180,
+          duration_minutes: 50,
+          image_url: NICHE_GALLERIES.psicologia.covers[0].url,
+        },
+        {
+          name: "Terapia de Casal & Relações Saudáveis",
+          description: "Espaço mediado para alinhar comunicação, resolver conflitos e fortalecer laços afetivos.",
+          price: 250,
+          duration_minutes: 60,
+          image_url: NICHE_GALLERIES.psicologia.covers[3].url,
+        },
+        {
+          name: "Atendimento Psicológico Online",
+          description: "Consultas por videoconferência com total sigilo profissional e a mesma presença acolhedora.",
+          price: 160,
+          duration_minutes: 50,
+          image_url: NICHE_GALLERIES.psicologia.covers[1].url,
+        },
+      ],
+    },
+    {
+      nicheKey: "psicologia",
+      modelName: "Saúde Mental & Psicanálise Contemporânea",
+      template_id: "therapy-wellbeing",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.psicologia.covers[1].url,
+      avatar_url: NICHE_GALLERIES.psicologia.avatars[1].url,
+      generateHeadline: (company, city) => `Psicanálise & Desenvolvimento Pessoal em ${city}`,
+      generateDescription: (company, city) =>
+        `Na ${company}, proporcionamos um percurso terapêutico profundo em ${city} para investigar padrões inconscientes, tratar angústias e viver com mais leveza.`,
+      whatsapp_button_label: "Conversar com o Terapeuta",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar uma entrevista inicial com a equipe da ${company}.`,
+      services: [
+        {
+          name: "Sessão de Análise & Investigação Psíquica",
+          description: "Investigação profunda de bloqueios emocionais, medos e padrões de repetição inconscientes.",
+          price: 200,
+          duration_minutes: 50,
+          image_url: NICHE_GALLERIES.psicologia.covers[1].url,
+        },
+        {
+          name: "Acompanhamento em Transições & Luto",
+          description: "Suporte especializado para momentos de mudança, perdas afetivas e crises existenciais.",
+          price: 190,
+          duration_minutes: 50,
+          image_url: NICHE_GALLERIES.psicologia.covers[2].url,
+        },
+        {
+          name: "Entrevista Inicial de Acolhimento",
+          description: "Primeiro encontro para compreender suas demandas e planejar o processo terapêutico.",
+          price: 150,
+          duration_minutes: 45,
+          image_url: NICHE_GALLERIES.psicologia.covers[0].url,
+        },
+      ],
+    },
+    {
+      nicheKey: "psicologia",
+      modelName: "Terapia Integrativa & Bem-Estar Emocional",
+      template_id: "therapy-wellbeing",
+      theme: "sunset",
+      cover_url: NICHE_GALLERIES.psicologia.covers[2].url,
+      avatar_url: NICHE_GALLERIES.psicologia.avatars[0].url,
+      generateHeadline: (company, city) => `Terapia Cognitiva & Regulação Emocional em ${city}`,
+      generateDescription: (company, city) =>
+        `Na ${company}, aliamos abordagens contemporâneas como TCC e mindfulness em ${city} para reestruturar pensamentos e promover clareza mental duradoura.`,
+      whatsapp_button_label: "Agendar Consulta de Bem-Estar",
+      whatsapp_message: (company) => `Olá! Vi a página da ${company} e gostaria de agendar uma consulta terapêutica.`,
+      services: [
+        {
+          name: "Terapia Cognitivo-Comportamental (TCC)",
+          description: "Foco prático na identificação de crenças disfuncionais e desenvolvimento de habilidades emocionais.",
+          price: 190,
+          duration_minutes: 50,
+          image_url: NICHE_GALLERIES.psicologia.covers[2].url,
+        },
+        {
+          name: "Manejo de Estresse & Burnout Laboral",
+          description: "Estratégias para profissionais sob sobrecarga, exaustão mental e crises de pânico.",
+          price: 210,
+          duration_minutes: 50,
+          image_url: NICHE_GALLERIES.psicologia.covers[3].url,
+        },
+        {
+          name: "Orientação e Hábitos de Autocuidado",
+          description: "Construção de rotinas saudáveis, higiene do sono e equilíbrio emocional para o dia a dia.",
+          price: 170,
+          duration_minutes: 50,
+          image_url: NICHE_GALLERIES.psicologia.covers[1].url,
         },
       ],
     },
@@ -2024,6 +2147,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 export const PRESETS: Record<string, NichePreset> = {
   odontologia: NICHE_PRESETS_VARIANTS.odontologia[0],
   clinica: NICHE_PRESETS_VARIANTS.clinica[0],
+  psicologia: NICHE_PRESETS_VARIANTS.psicologia[0],
   estetica: NICHE_PRESETS_VARIANTS.estetica[0],
   salao: NICHE_PRESETS_VARIANTS.salao[0],
   barbearia: NICHE_PRESETS_VARIANTS.barbearia[0],
@@ -2042,7 +2166,7 @@ export const PRESETS: Record<string, NichePreset> = {
 
 /**
  * Detecta a chave do nicho com base no texto do nicho ou nome da empresa.
- * Identifica com precisão 16 nichos comerciais de alta demanda no Brasil.
+ * Identifica com precisão os principais nichos comerciais de alta demanda no Brasil.
  */
 export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string | null): string {
   const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();
@@ -2074,16 +2198,19 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
   // 9. Odontologia e dentistas
   if (/(?:odonto|dent|sorris|oral|dente|protese|implant|ortodont|clareament)/i.test(combined)) return "odontologia";
 
-  // 10. Salão de beleza, cabelos, cachos, estúdios capilares, institutos e centros de beleza
+  // 10. Psicologia, psicoterapeutas, psicanálise, saúde mental e acolhimento emocional
+  if (/(?:psic[oó]l|terap|psican[aá]lis|sa[uú]de\s*mental|terapeuta|acolhiment|psiquiatr|mindfulness|terapia)/i.test(combined)) return "psicologia";
+
+  // 11. Salão de beleza, cabelos, cachos, estúdios capilares, institutos e centros de beleza
   if (/(?:instituto\s+de\s+beleza|espa[çc]o\s+de\s+beleza|studio\s+de\s+beleza|centro\s+de\s+beleza|sal[aã]o|cacho|cabel|hair|pentead|visagism|mecha|liso|alisament|progressiv|escova|megahair|corte\s+feminino|manicure|pedicure|unha|esmalteri)/i.test(combined)) return "salao";
 
-  // 11. Estética facial/corporal, sobrancelha, spa e unhas
-  if (/(?:est[eé]tic|beleza|spa|lash|sobrancelha|pele|make|harmoniz|botox|depila|drenagem|massagem)/i.test(combined)) return "estetica";
+  // 12. Estética facial/corporal, sobrancelha, spa e harmonização
+  if (/(?:est[eé]tic|beleza|\bspa\b|lash|sobrancelha|\bpeles?\b|\bmake(?:up)?\b|harmoniz|botox|depila|drenagem|massagem)/i.test(combined)) return "estetica";
 
-  // 12. Clínicas médicas, odontológicas integradas e saúde
-  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|fisioter|psic[oó]l|terap|laborat[oó]rio|nutri)/i.test(combined)) return "clinica";
+  // 13. Clínicas médicas, saúde geral e consultórios
+  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|fisioter|laborat[oó]rio|nutri)/i.test(combined)) return "clinica";
 
-  // 13. Advocacia e serviços jurídicos
+  // 14. Advocacia e serviços jurídicos
   if (/(?:advoc|advogad|jur[ií]d|direito|lei|oab)/i.test(combined)) return "advocacia";
 
   // 14. Gastronomia, restaurantes, bares e delivery

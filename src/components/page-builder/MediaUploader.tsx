@@ -1,10 +1,30 @@
 import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2 } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PageService } from "@/modules/page/services/PageService";
-import { getGalleryForNiche, type CuratedPhoto } from "@/modules/prospecting/nichePresets";
+import { detectNicheKey, getGalleryForNiche, type CuratedPhoto } from "@/modules/prospecting/nichePresets";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const DEFAULT_MAX_SIZE = 10 * 1024 * 1024; // 10MB
+
+const NICHE_GALLERY_LABELS: Record<string, string> = {
+  odontologia: "Odontologia & Dentes",
+  psicologia: "Psicologia & Terapia",
+  clinica: "Clínica & Saúde",
+  estetica: "Estética & Beleza",
+  salao: "Salão de Cabelo",
+  barbearia: "Barbearia",
+  advocacia: "Advocacia & Jurídico",
+  restaurante: "Gastronomia & Restaurante",
+  academia: "Academia & Treino",
+  petshop: "Pet Shop & Vet",
+  oficina: "Oficina Mecânica & Auto",
+  imobiliaria: "Imobiliária & Imóveis",
+  arquitetura: "Arquitetura & Interiores",
+  contabilidade: "Contabilidade & Finanças",
+  tatuagem: "Tatuagem & Piercing",
+  otica: "Ótica & Visão",
+  geral: "Empresas Gerais",
+};
 
 export function MediaUploader({
   label,
@@ -31,7 +51,16 @@ export function MediaUploader({
   const limitMb = Math.round(maxSizeBytes / 1024 / 1024);
 
   const isCover = variant === "cover";
-  const gallery = getGalleryForNiche(niche || templateId);
+  const initialKey = detectNicheKey(niche || templateId, null);
+  const [activeGalleryNiche, setActiveGalleryNiche] = useState<string>(initialKey);
+
+  useEffect(() => {
+    if (niche || templateId) {
+      setActiveGalleryNiche(detectNicheKey(niche || templateId, null));
+    }
+  }, [niche, templateId]);
+
+  const gallery = getGalleryForNiche(activeGalleryNiche);
   const curatedPhotos = isCover ? gallery.covers : gallery.avatars;
 
   async function validate(file: File) {
@@ -208,14 +237,28 @@ export function MediaUploader({
 
       {/* Galeria Curada Unsplash Padrão Ouro */}
       {curatedPhotos.length > 0 && (
-        <div className="space-y-1.5 pt-1">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-muted-foreground inline-flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-[color:var(--primary)]" />
+        <div className="space-y-2 pt-2 border-t border-border/40">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-[11px] font-semibold text-muted-foreground inline-flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
               <span>Fotos Prontas em Alta Resolução (1 Clique):</span>
             </span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-[10px] uppercase font-bold text-muted-foreground">Nicho:</span>
+              <select
+                value={activeGalleryNiche}
+                onChange={(e) => setActiveGalleryNiche(e.target.value)}
+                className="rounded-lg border border-border bg-card/90 px-2 py-1 text-[11px] font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer shadow-xs"
+              >
+                {Object.entries(NICHE_GALLERY_LABELS).map(([k, labelText]) => (
+                  <option key={k} value={k} className="bg-popover text-popover-foreground">
+                    {labelText}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
-          <div className="grid grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {curatedPhotos.map((photo) => {
               const isSelected = value === photo.url;
               return (
@@ -225,23 +268,23 @@ export function MediaUploader({
                   onClick={() => onChange(photo.url)}
                   className={`group relative overflow-hidden rounded-xl border transition-all ${
                     isSelected
-                      ? "border-[color:var(--primary)] ring-2 ring-[color:var(--primary)]/30 scale-[1.02]"
-                      : "border-border/60 hover:border-border hover:opacity-90"
+                      ? "border-primary ring-2 ring-primary/40 scale-[1.02] shadow-sm"
+                      : "border-border/60 hover:border-primary/40 hover:scale-[1.01]"
                   }`}
                   title={photo.label}
                 >
                   <img
                     src={photo.url}
                     alt={photo.label}
-                    className="h-14 w-full object-cover transition-transform group-hover:scale-105"
+                    className="h-16 w-full object-cover transition-transform group-hover:scale-105"
                     loading="lazy"
                   />
                   {isSelected && (
-                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--primary)] text-white shadow">
+                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow">
                       <Check className="h-2.5 w-2.5 stroke-[3]" />
                     </span>
                   )}
-                  <span className="absolute inset-x-0 bottom-0 bg-black/60 px-1 py-0.5 text-[9px] text-white truncate text-center backdrop-blur-[2px]">
+                  <span className="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5 text-[9px] font-medium text-white truncate text-center backdrop-blur-[2px]">
                     {photo.label}
                   </span>
                 </button>

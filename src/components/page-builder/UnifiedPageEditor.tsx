@@ -28,6 +28,15 @@ import {
   ShoppingBag,
   Plus,
   Trash2,
+  Brain,
+  Sun,
+  Dog,
+  Wrench,
+  Building2,
+  Compass,
+  Calculator,
+  PenTool,
+  Glasses,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
@@ -167,6 +176,116 @@ export const NICHE_MODELS: NicheModelConfig[] = [
     subtitle: "Cardápio apetitoso com fotos e pedidos via WhatsApp",
     theme: "sunset",
     icon: UtensilsCrossed,
+    isGold: true,
+  },
+  {
+    id: "psicologia",
+    templateId: "therapy-harmony",
+    nicheKey: "psicologia",
+    nicheCategory: "Psicologia e Terapia",
+    title: "Psicologia & Terapia Humanizada",
+    subtitle: "Acolhimento humanizado, áreas de atuação e agendamento",
+    theme: "aurora",
+    icon: Brain,
+    isGold: true,
+  },
+  {
+    id: "medicina",
+    templateId: "clinic-care",
+    nicheKey: "medicina",
+    nicheCategory: "Medicina e Consultórios",
+    title: "Consultório Médico & Especialistas",
+    subtitle: "Autoridade médica com corpo clínico e consultas ágeis",
+    theme: "ocean",
+    icon: Stethoscope,
+    isGold: true,
+  },
+  {
+    id: "petshop",
+    templateId: "business-modern",
+    nicheKey: "petshop",
+    nicheCategory: "Pet Shop e Veterinária",
+    title: "Pet Shop & Clínica Veterinária",
+    subtitle: "Banho, tosa, vacinas e cuidados completos para seu pet",
+    theme: "forest",
+    icon: Dog,
+    isGold: true,
+  },
+  {
+    id: "oficina",
+    templateId: "business-modern",
+    nicheKey: "oficina",
+    nicheCategory: "Oficinas Mecânicas",
+    title: "Oficina Mecânica & Auto Center",
+    subtitle: "Revisão preventiva, socorro rápido e diagnóstico veicular",
+    theme: "midnight",
+    icon: Wrench,
+    isGold: true,
+  },
+  {
+    id: "imobiliaria",
+    templateId: "business-modern",
+    nicheKey: "imobiliaria",
+    nicheCategory: "Imobiliárias e Corretores",
+    title: "Imobiliária & Corretores",
+    subtitle: "Imóveis exclusivos, lançamentos e assessoria de compra/venda",
+    theme: "ocean",
+    icon: Building2,
+    isGold: true,
+  },
+  {
+    id: "arquitetura",
+    templateId: "portfolio-studio",
+    nicheKey: "arquitetura",
+    nicheCategory: "Arquitetura e Interiores",
+    title: "Arquitetura & Design de Interiores",
+    subtitle: "Portfólio de projetos, transformações e consultoria",
+    theme: "aurora",
+    icon: Compass,
+    isGold: true,
+  },
+  {
+    id: "contabilidade",
+    templateId: "business-modern",
+    nicheKey: "contabilidade",
+    nicheCategory: "Contabilidade e Fiscal",
+    title: "Contabilidade & Gestão Fiscal",
+    subtitle: "Abertura de empresas, assessoria fiscal e planejamento",
+    theme: "midnight",
+    icon: Calculator,
+    isGold: true,
+  },
+  {
+    id: "solar",
+    templateId: "business-modern",
+    nicheKey: "solar",
+    nicheCategory: "Energia Solar",
+    title: "Energia Solar & Sustentabilidade",
+    subtitle: "Simulação de economia, projetos e instalação rápida",
+    theme: "sunset",
+    icon: Sun,
+    isGold: true,
+  },
+  {
+    id: "tatuagem",
+    templateId: "spotlight-neon",
+    nicheKey: "tatuagem",
+    nicheCategory: "Tatuagem e Piercing",
+    title: "Estúdio de Tatuagem & Body Art",
+    subtitle: "Flash tattoos, orçamentos personalizados e biossegurança",
+    theme: "midnight",
+    icon: PenTool,
+    isGold: true,
+  },
+  {
+    id: "otica",
+    templateId: "business-modern",
+    nicheKey: "otica",
+    nicheCategory: "Óticas e Visão",
+    title: "Ótica & Saúde Visual",
+    subtitle: "Armações de grife, lentes de precisão e exames de vista",
+    theme: "ocean",
+    icon: Glasses,
     isGold: true,
   },
   {
@@ -456,6 +575,14 @@ export function UnifiedPageEditor({
 
   const activeNicheModel = useMemo(() => {
     const currentTemplate = bio.template_id || draftTemplate || "clinic-care";
+    const socialData = (bio.social_links as Record<string, any>) || {};
+    const savedNiche = socialData.niche || niche;
+
+    if (savedNiche) {
+      const byKey = NICHE_MODELS.find((m) => m.nicheKey === savedNiche || m.id === savedNiche);
+      if (byKey) return byKey;
+    }
+
     return (
       NICHE_MODELS.find(
         (m) =>
@@ -466,17 +593,24 @@ export function UnifiedPageEditor({
           (m.templateId === "law-authority" && currentTemplate.includes("law")) ||
           (m.templateId === "academy-performance" && currentTemplate.includes("academy")) ||
           (m.templateId === "restaurant-menu" && currentTemplate.includes("restaurant")) ||
+          (m.templateId === "therapy-harmony" && currentTemplate.includes("therapy")) ||
+          (m.templateId === "portfolio-studio" && currentTemplate.includes("portfolio")) ||
           (m.templateId === "business-modern" && (currentTemplate.includes("business") || currentTemplate.includes("store")))
       ) || NICHE_MODELS[0]
     );
-  }, [bio.template_id, draftTemplate]);
+  }, [bio.template_id, draftTemplate, bio.social_links, niche]);
 
   const selectNicheModel = (model: NicheModelConfig) => {
     setDraftTemplate(model.templateId);
     setNiche(model.nicheCategory);
+    const currentSocial = (bio.social_links as Record<string, any>) || {};
     updateBio({
       template_id: model.templateId,
       theme: model.theme,
+      social_links: {
+        ...currentSocial,
+        niche: model.nicheKey,
+      },
     });
   };
 
@@ -572,7 +706,7 @@ export function UnifiedPageEditor({
   return (
     <div className="premium-builder space-y-5">
       {/* Barra de Ações Superior */}
-      <header className="builder-topbar sticky top-0 z-20 -mx-6 flex flex-wrap items-center justify-between gap-3 px-6 py-4 backdrop-blur md:-mx-10 md:px-10">
+      <header className="builder-topbar sticky top-0 z-20 mx-0 flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 backdrop-blur sm:-mx-6 sm:px-6 md:-mx-10 md:px-10">
         <div className="builder-heading">
           <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
             Minha Página Bio Link
@@ -708,6 +842,7 @@ export function UnifiedPageEditor({
                     {NICHE_MODELS.map((model) => {
                       const Icon = model.icon;
                       const isSelected =
+                        activeNicheModel.id === model.id ||
                         draftTemplate === model.templateId ||
                         bio.template_id === model.templateId ||
                         (model.id === "odontologia" && (draftTemplate.includes("clinic") || bio.template_id?.includes("clinic")));
@@ -718,24 +853,24 @@ export function UnifiedPageEditor({
                           onClick={() => selectNicheModel(model)}
                           className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-150 ${
                             isSelected
-                              ? "border-primary/60 bg-primary/5 shadow-xs ring-1 ring-primary/20"
-                              : "border-[#1f1f23] bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/40"
+                              ? "border-primary/60 bg-primary/10 shadow-xs ring-1 ring-primary/30 text-foreground"
+                              : "border-border bg-card/60 hover:border-primary/40 hover:bg-accent/40 text-card-foreground"
                           }`}
                         >
                           <div
                             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                               isSelected
-                                ? "border-primary/40 bg-primary/10 text-primary"
-                                : "border-[#1f1f23] bg-zinc-900/60 text-zinc-400 group-hover:text-zinc-200 group-hover:border-zinc-700"
+                                ? "border-primary/40 bg-primary/20 text-primary"
+                                : "border-border bg-muted/60 text-muted-foreground group-hover:text-foreground group-hover:border-primary/30"
                             }`}
                           >
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className={`text-xs sm:text-sm font-medium truncate ${isSelected ? "text-foreground font-semibold" : "text-zinc-300 group-hover:text-foreground"}`}>
+                            <p className={`text-xs sm:text-sm font-medium truncate ${isSelected ? "text-foreground font-semibold" : "text-foreground/90 group-hover:text-foreground"}`}>
                               {model.title}
                             </p>
-                            <p className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5 font-normal">
+                            <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 font-normal">
                               {model.subtitle}
                             </p>
                           </div>
@@ -746,13 +881,13 @@ export function UnifiedPageEditor({
 
                   {/* Banner de 1-Clique para Fotos & Serviços Recomendados */}
                   {activeNicheModel.nicheKey !== "geral" && (
-                    <div className="rounded-xl border border-[#1f1f23] bg-zinc-950/40 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="rounded-xl border border-border bg-card/60 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                       <div className="space-y-0.5 min-w-0">
                         <p className="font-medium text-xs sm:text-sm flex items-center gap-1.5 text-foreground">
                           <Sparkles className="h-3.5 w-3.5 text-primary/80" />
                           <span>Fotos e Serviços Recomendados de {activeNicheModel.title}</span>
                         </p>
-                        <p className="text-[11px] text-zinc-400">
+                        <p className="text-[11px] text-muted-foreground">
                           Preencher capa, avatar e catálogo com fotos do Unsplash e tratamentos deste nicho.
                         </p>
                       </div>
@@ -783,8 +918,8 @@ export function UnifiedPageEditor({
                           onClick={() => updateBio({ theme: theme.id })}
                           className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
                             isSelected
-                              ? "border-primary/60 bg-primary/5 text-foreground ring-1 ring-primary/20"
-                              : "border-[#1f1f23] bg-zinc-950/40 hover:border-zinc-700 hover:bg-zinc-900/40 text-muted-foreground hover:text-foreground"
+                              ? "border-primary/60 bg-primary/10 text-foreground ring-1 ring-primary/30"
+                              : "border-border bg-card/60 hover:border-primary/40 hover:bg-accent/40 text-muted-foreground hover:text-foreground"
                           }`}
                         >
                           <span
@@ -793,7 +928,7 @@ export function UnifiedPageEditor({
                           />
                           <div className="min-w-0">
                             <p className="font-medium text-xs truncate">{theme.label}</p>
-                            <p className="text-[10px] text-zinc-400 truncate">{theme.description}</p>
+                            <p className="text-[10px] text-muted-foreground truncate">{theme.description}</p>
                           </div>
                         </button>
                       );

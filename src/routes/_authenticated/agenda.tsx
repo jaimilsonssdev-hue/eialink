@@ -592,32 +592,34 @@ function AgendaPage() {
       </header>
 
       {/* Tabs */}
-      <div className="flex items-center gap-2 p-1 rounded-xl bg-card border border-border w-fit shadow-xs">
+      <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 p-1 rounded-xl bg-card border border-border w-full sm:w-fit shadow-xs">
         <button
           type="button"
           onClick={() => setTab("setup")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`flex items-center justify-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
             tab === "setup"
-              ? "bg-purple-600 text-white shadow-sm shadow-purple-950/20"
+              ? "bg-purple-600 text-white shadow-sm shadow-purple-950/20 font-semibold"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
           }`}
         >
-          <Clock3 className="h-4 w-4" />
-          <span>Configurar Serviços & Horários</span>
+          <Clock3 className="h-4 w-4 shrink-0" />
+          <span className="sm:hidden">Serviços</span>
+          <span className="hidden sm:inline">Configurar Serviços & Horários</span>
         </button>
         <button
           type="button"
           onClick={() => setTab("bookings")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+          className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
             tab === "bookings"
-              ? "bg-purple-600 text-white shadow-sm shadow-purple-950/20"
+              ? "bg-purple-600 text-white shadow-sm shadow-purple-950/20 font-semibold"
               : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
           }`}
         >
-          <CalendarDays className="h-4 w-4" />
-          <span>Agendamentos Marcados</span>
+          <CalendarDays className="h-4 w-4 shrink-0" />
+          <span className="sm:hidden">Agendados</span>
+          <span className="hidden sm:inline">Agendamentos Marcados</span>
           {appointments.data && appointments.data.filter((item) => item.status === "confirmed").length > 0 && (
-            <Badge className="ml-1 bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 text-xs px-1.5 py-0 h-5 font-semibold">
+            <Badge className="ml-1 bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 text-[10px] sm:text-xs px-1.5 py-0 h-4 sm:h-5 font-semibold">
               {appointments.data.filter((item) => item.status === "confirmed").length}
             </Badge>
           )}
@@ -1010,10 +1012,11 @@ function AgendaPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => void unblockAppointment(block.id)}
-                          className="border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-300 text-xs self-end sm:self-center shrink-0"
+                          className="border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 dark:border-rose-500/40 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:text-rose-300 text-xs self-stretch sm:self-center shrink-0 justify-center"
                         >
-                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                          Cancelar Folga (Liberar Horário)
+                          <Trash2 className="h-3.5 w-3.5 mr-1.5 shrink-0" />
+                          <span className="sm:hidden">Liberar Horário</span>
+                          <span className="hidden sm:inline">Cancelar Folga (Liberar Horário)</span>
                         </Button>
                       </div>
                     );
@@ -1334,7 +1337,7 @@ function AgendaPage() {
                       })}
                     </div>
                   ) : (
-                    <div className="text-center py-16 px-4 border border-dashed border-border rounded-xl bg-muted/30 dark:border-[#27233a] dark:bg-[#10081d]/50 space-y-3">
+                    <div className="text-center py-16 px-4 border border-dashed border-border rounded-xl bg-muted/20 space-y-3">
                       <CalendarDays className="h-10 w-10 text-muted-foreground mx-auto opacity-60" />
                       <p className="text-sm font-medium text-foreground">
                         {selectedDate ? "Nenhum agendamento para esta data" : "Nenhum agendamento registrado"}

@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight, BriefcaseBusiness, CalendarCheck, Landmark, MessageCircle, Scale, ShieldCheck, Star } from "lucide-react";
+import { ArrowUpRight, BriefcaseBusiness, CalendarCheck, Clock, Landmark, MapPin, MessageCircle, Scale, ShieldCheck, Star } from "lucide-react";
 import type { PublicLink } from "@/components/public-profile/types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import type { TemplateRenderModel } from "../types";
@@ -32,11 +32,14 @@ export class LawLayout implements TemplateLayoutRenderer {
     const socialData = (bio.social_links as Record<string, any>) || {};
     const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;
+    const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
+    const address = socialData.address;
+    const openingHours = socialData.opening_hours;
 
     return (
       <div className="niche-law">
         <header className="niche-law-hero">
-          <img src={bio.cover_url || "/template-assets/law-office-cover.png"} alt="" loading="eager" />
+          <img src={bio.cover_url || "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80"} alt="" loading="eager" />
           <div className="niche-law-overlay" aria-hidden />
           <div className="niche-law-nav">
             <span><Scale size={16} aria-hidden /> ESCRITÓRIO JURÍDICO</span>
@@ -55,6 +58,22 @@ export class LawLayout implements TemplateLayoutRenderer {
               <small><ShieldCheck size={14} aria-hidden /> Atendimento reservado</small>
               <small><BriefcaseBusiness size={14} aria-hidden /> Estratégia sob medida</small>
             </div>
+            {(address || openingHours) && (
+              <div className="flex flex-wrap items-center gap-3 text-xs text-amber-100/90 mt-2">
+                {address && (
+                  <span className="inline-flex items-center gap-1 max-w-[280px] truncate" title={address}>
+                    <MapPin size={13} className="text-amber-400 flex-shrink-0" />
+                    <span className="truncate">{address}</span>
+                  </span>
+                )}
+                {openingHours && (
+                  <span className="inline-flex items-center gap-1">
+                    <Clock size={13} className="text-amber-400 flex-shrink-0" />
+                    <span>{openingHours}</span>
+                  </span>
+                )}
+              </div>
+            )}
             <div className="flex flex-wrap gap-2.5 mt-4">
               {bookingUrl ? (
                 <a
@@ -138,6 +157,37 @@ export class LawLayout implements TemplateLayoutRenderer {
             ))}
           </div>
         </section>
+
+        {testimonials.length > 0 && (
+          <section className="niche-law-section my-6" aria-label="Avaliações do Google">
+            <p>CONFIANÇA COMPROVADA</p>
+            <h2>Avaliações no Google</h2>
+            <div className="grid gap-3 mt-4">
+              {testimonials.slice(0, 3).map((rev: any, idx: number) => (
+                <div key={idx} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-100 shadow-xs">
+                  <div className="flex items-center gap-3 mb-2">
+                    {rev.avatar ? (
+                      <img src={rev.avatar} alt={rev.author} className="w-8 h-8 rounded-full object-cover border border-amber-400/40" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-xs">
+                        {rev.author.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-100">{rev.author}</h4>
+                      <div className="flex text-amber-400 text-xs">
+                        {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                          <span key={i}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-300 italic">"{rev.text}"</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="niche-law-cta">
           <div>

@@ -3527,8 +3527,16 @@
 .editor-advanced-settings summary { padding: .85rem 1rem; color: var(--foreground); cursor: pointer; font-size: .82rem; font-weight: 700; list-style-position: inside; }
 .editor-advanced-settings > div { padding: 0 1rem 1rem; }
 
+:root[data-interface-theme="light"] .builder-topbar { background: color-mix(in oklab, var(--surface) 95%, transparent); border-bottom-color: var(--border); }
 :root[data-interface-theme="light"] .builder-topbar h1 { color: var(--foreground); }
 :root[data-interface-theme="light"] .builder-topbar .btn-secondary { border-color: var(--border); color: var(--foreground); background: var(--surface); }
+:root[data-interface-theme="light"] .builder-menu,
+:root[data-interface-theme="light"] .builder-inspector { border-color: var(--border); background: var(--surface); }
+:root[data-interface-theme="light"] .builder-menu-item { color: var(--muted-foreground); }
+:root[data-interface-theme="light"] .builder-menu-item:hover { color: var(--foreground); background: var(--surface-elevated); }
+:root[data-interface-theme="light"] .builder-preview-stage { border-color: var(--border); background: var(--surface); }
+:root[data-interface-theme="light"] .builder-inspector .input-base { border-color: var(--border); background: var(--surface-elevated); color: var(--foreground); }
+:root[data-interface-theme="light"] .builder-inspector .btn-secondary { border-color: var(--border); background: var(--surface); color: var(--foreground); }
 :root[data-interface-theme="light"] .media-library > p { color: var(--foreground); }
 :root[data-interface-theme="light"] .media-library-steps { color: #5b2a91; background: rgb(124 58 237 / .08); }
 :root[data-interface-theme="light"] .media-library-grid button { color: var(--foreground); border-color: var(--border); background: var(--surface); }

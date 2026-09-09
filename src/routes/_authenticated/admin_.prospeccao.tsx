@@ -1043,7 +1043,7 @@ function ProspectingPage() {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-1.5 w-full sm:w-auto pt-2 sm:pt-0 border-t sm:border-t-0 border-border/50">
+                <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-1.5 w-full sm:w-auto gap-2 pt-2.5 sm:pt-0 border-t sm:border-t-0 border-border/50">
                   {demo.url ? (
                     <>
                       <HoverCard openDelay={150} closeDelay={150}>
@@ -1052,11 +1052,11 @@ function ProspectingPage() {
                             href={demo.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all w-full sm:w-auto"
                             title="Ver Página Pro no ar"
                           >
                             <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
-                            <span>Ver</span>
+                            <span>Ver Demo</span>
                           </a>
                         </HoverCardTrigger>
                         <HoverCardContent align="end" className="w-80 border-border bg-popover text-popover-foreground backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
@@ -1093,7 +1093,7 @@ function ProspectingPage() {
                         <Link
                           to="/builder"
                           search={{ page: demo.pageId }}
-                          className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all w-full sm:w-auto"
                           title="Editar no Construtor"
                         >
                           <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
@@ -1103,7 +1103,7 @@ function ProspectingPage() {
                     </>
                   ) : (
                     <button
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-3 py-1.5 text-xs font-semibold hover:bg-primary/25 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-3 py-2 sm:py-1.5 text-xs font-semibold hover:bg-primary/25 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all w-full sm:w-auto"
                       onClick={() => void handleGenerateDemo(company)}
                       disabled={creatingPageId === company.id}
                       title="Gerar modelo demonstrativo para prospecção"
@@ -1130,7 +1130,7 @@ function ProspectingPage() {
                           );
                         }
                       }}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 sm:py-1.5 text-xs transition-all w-full sm:w-auto ${
                         company.status === "contatado"
                           ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
                           : demo.url && (company.status === "novo")
@@ -1146,7 +1146,7 @@ function ProspectingPage() {
                     <button
                       type="button"
                       onClick={() => setWhatsModalCompany(company)}
-                      className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
+                      className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-2.5 py-2 sm:py-1.5 text-xs transition-all w-full sm:w-auto ${
                         demo.url && (company.status === "novo")
                           ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
                           : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
@@ -1161,7 +1161,7 @@ function ProspectingPage() {
                   <button
                     type="button"
                     onClick={() => void handleInstagramApproach(company)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all w-full sm:w-auto"
                     title={
                       copiedInstagramCompanyId === company.id
                         ? "Mensagem copiada!"
@@ -1185,7 +1185,7 @@ function ProspectingPage() {
                   <button
                     type="button"
                     onClick={() => setActiveAuditCompany(company)}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 px-2.5 py-1.5 text-xs font-semibold transition-all shadow-xs"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 px-2.5 py-2 sm:py-1.5 text-xs font-semibold transition-all shadow-xs w-full sm:w-auto"
                     title={`Auditoria de Presença & Pitch com IA para ${company.name}`}
                   >
                     <Bot className="h-3.5 w-3.5" />
@@ -1196,10 +1196,11 @@ function ProspectingPage() {
                     <DropdownMenuTrigger asChild>
                       <button
                         type="button"
-                        className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                        className="h-9 sm:h-8 w-full sm:w-8 inline-flex items-center justify-center gap-1 rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors col-span-2 sm:col-span-1"
                         title="Mais opções"
                       >
                         <MoreHorizontal className="h-4 w-4 text-muted-foreground/80" />
+                        <span className="sm:hidden text-xs">Mais opções</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
@@ -1294,18 +1295,19 @@ function ProspectingPage() {
       {/* Central de Captação Ativa: Seletor das Duas Ferramentas Principais + Utilitários */}
       <section className="space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 p-2 rounded-2xl bg-card border border-border shadow-xs">
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 max-w-full">
             <button
               type="button"
               onClick={() => setProspectEngine("maps")}
-              className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 transition-all ${
                 prospectEngine === "maps"
                   ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
             >
-              <Globe2 className="h-4 w-4 text-purple-300" />
-              <span>Ferramenta 1: Radar Google Maps & Local</span>
+              <Globe2 className="h-4 w-4 text-purple-300 shrink-0" />
+              <span className="sm:hidden">1. Google Maps</span>
+              <span className="hidden sm:inline">Ferramenta 1: Radar Google Maps & Local</span>
               <span className="hidden sm:inline-flex items-center rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 text-[10px] font-medium">
                 ⚡ Tempo Real
               </span>
@@ -1314,14 +1316,15 @@ function ProspectingPage() {
             <button
               type="button"
               onClick={() => setProspectEngine("cnae")}
-              className={`inline-flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 transition-all ${
                 prospectEngine === "cnae"
                   ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
             >
-              <Building2 className="h-4 w-4 text-purple-300" />
-              <span>Ferramenta 2: Radar CNAE & Base CNPJ</span>
+              <Building2 className="h-4 w-4 text-purple-300 shrink-0" />
+              <span className="sm:hidden">2. CNAE & CNPJ</span>
+              <span className="hidden sm:inline">Ferramenta 2: Radar CNAE & Base CNPJ</span>
               <span className="hidden sm:inline-flex items-center rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 text-[10px] font-medium">
                 🏛️ Receita Federal
               </span>
@@ -1330,27 +1333,29 @@ function ProspectingPage() {
             <button
               type="button"
               onClick={() => setProspectEngine("utilities")}
-              className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium transition-all ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap shrink-0 transition-all ${
                 prospectEngine === "utilities"
                   ? "bg-muted text-foreground shadow-xs border border-border"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
             >
-              <Upload className="h-4 w-4" />
-              <span>Importar CSV / Manual</span>
+              <Upload className="h-4 w-4 shrink-0" />
+              <span className="sm:hidden">3. CSV / Manual</span>
+              <span className="hidden sm:inline">Importar CSV / Manual</span>
             </button>
 
             <button
               type="button"
               onClick={() => setProspectEngine("demos")}
-              className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
+              className={`inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap shrink-0 transition-all ${
                 prospectEngine === "demos"
                   ? "bg-primary text-white shadow-md shadow-primary/20 border border-primary/40"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
             >
-              <Sparkles className="h-4 w-4 text-purple-300" />
-              <span>Demos de Clientes</span>
+              <Sparkles className="h-4 w-4 text-purple-300 shrink-0" />
+              <span className="sm:hidden">4. Demos</span>
+              <span className="hidden sm:inline">Demos de Clientes</span>
               <span className="inline-flex items-center rounded-full bg-purple-500/20 text-purple-200 border border-purple-500/40 px-2 py-0.5 text-[10px] font-bold">
                 {demoPages.length}
               </span>
@@ -2251,7 +2256,236 @@ function ProspectingPage() {
         </CardHeader>
 
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
+          {/* Visualização Mobile: Cards App-Like (< md) */}
+          <div className="block md:hidden divide-y divide-border/60">
+            {filtered.map((company) => {
+              const demo = parseDemoInfo(company);
+              const isOfficial = company.notes?.includes("[Página Oficializada]") || company.status === "cliente";
+              return (
+                <div key={company.id} className="p-4 space-y-3 bg-card/50 hover:bg-card/90 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <LeadTemperatureBadge score={company.score} />
+                        <h4 className="font-bold text-foreground text-sm tracking-tight">{company.name}</h4>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {[company.niche, company.city, company.has_website ? "tem site" : "sem site"].filter(Boolean).join(" · ")}
+                      </p>
+                    </div>
+                    {/* Seletor de Status compacto */}
+                    <select
+                      className="h-8 px-2 py-1 text-xs font-medium rounded-lg border border-border bg-background text-foreground hover:bg-muted/40 focus:ring-1 focus:ring-primary/40 transition-colors shrink-0"
+                      value={company.status}
+                      onChange={(event) =>
+                        statusMutation.mutate({
+                          id: company.id,
+                          status: event.target.value as ProspectStatus,
+                        })
+                      }
+                    >
+                      {STATUS_OPTIONS.map((status) => (
+                        <option key={status} value={status}>
+                          {STATUS_LABEL[status]}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Linha de Canais (WhatsApp e Instagram) */}
+                  <div className="flex items-center gap-2 text-xs flex-wrap">
+                    {(company.whatsapp || company.phone) ? (
+                      <a
+                        href={whatsappLink(company) || `https://wa.me/${(company.whatsapp || company.phone)?.replace(/\D/g, "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 text-emerald-500 dark:text-emerald-400 font-mono font-semibold bg-emerald-500/10 border border-emerald-500/25 px-2.5 py-1 rounded-md"
+                        title="Abrir WhatsApp direto no celular"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span>{formatPhone(company.whatsapp || company.phone)}</span>
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setWhatsModalCompany(company)}
+                        className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-emerald-400 bg-muted/40 px-2 py-1 rounded-md transition-colors"
+                      >
+                        <MessageCircle className="h-3 w-3" /> + Inserir WhatsApp
+                      </button>
+                    )}
+
+                    {company.instagram ? (
+                      <a
+                        href={`https://instagram.com/${company.instagram.replace("@", "")}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-muted-foreground hover:text-pink-400 bg-muted/40 px-2 py-1 rounded-md transition-colors"
+                      >
+                        <Instagram className="h-3 w-3 text-pink-400" /> {company.instagram}
+                      </a>
+                    ) : (
+                      <a
+                        href={`https://www.google.com/search?q=${encodeURIComponent(`site:instagram.com "${company.name}" "${company.city || ""}"`)}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-pink-400 bg-muted/30 px-2 py-1 rounded-md transition-colors"
+                      >
+                        <Instagram className="h-2.5 w-2.5" /> Achar @IG
+                      </a>
+                    )}
+                  </div>
+
+                  {/* Grid de Ações Touch-Friendly (2 colunas) */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    {demo.url ? (
+                      <a
+                        href={demo.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 transition-all"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        <span>Ver Demo</span>
+                      </a>
+                    ) : (
+                      <button
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-3 py-2 text-xs font-semibold hover:bg-primary/25 shadow-xs transition-all"
+                        onClick={() => void handleGenerateDemo(company)}
+                        disabled={creatingPageId === company.id}
+                      >
+                        {creatingPageId === company.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <Sparkles className="h-3.5 w-3.5 text-purple-300" />
+                        )}
+                        <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo 🪄"}</span>
+                      </button>
+                    )}
+
+                    {whatsappLink(company) ? (
+                      <a
+                        href={whatsappLink(company)!}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                          company.status === "contatado"
+                            ? "border border-amber-500/40 bg-amber-500/15 text-amber-400"
+                            : "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                        }`}
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span>{company.status === "contatado" ? "Follow-up" : "WhatsApp"}</span>
+                      </a>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setWhatsModalCompany(company)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-muted-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400"
+                      >
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span>WhatsApp</span>
+                      </button>
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => void handleInstagramApproach(company)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/20 text-muted-foreground px-3 py-2 text-xs font-medium hover:text-pink-400 transition-all"
+                    >
+                      {copiedInstagramCompanyId === company.id ? (
+                        <Check className="h-3.5 w-3.5 text-emerald-400" />
+                      ) : (
+                        <Instagram className="h-3.5 w-3.5 text-pink-400" />
+                      )}
+                      <span>{copiedInstagramCompanyId === company.id ? "Copiado!" : "Direct IG"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveAuditCompany(company)}
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 px-3 py-2 text-xs font-semibold transition-all"
+                    >
+                      <Bot className="h-3.5 w-3.5" />
+                      <span>Auditoria IA</span>
+                    </button>
+
+                    {/* Botão de Menu Completo */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="col-span-2 h-9 w-full inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-xs"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span>Opções adicionais (Editar, Trocar modelo, etc)</span>
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem
+                          onClick={() => setActiveAuditCompany(company)}
+                          className="cursor-pointer text-xs text-purple-300 font-medium"
+                        >
+                          <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                          <span>Auditoria com IA</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => void handleRegenerateDemo(company)}
+                          disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                          className="cursor-pointer text-xs text-purple-300 font-medium"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                          <span>{demo.url ? "Trocar Modelo" : "Gerar / Escolher Modelo"}</span>
+                        </DropdownMenuItem>
+                        {demo.pageId && (
+                          <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                            <Link to="/builder" search={{ page: demo.pageId }}>
+                              <Pencil className="h-3.5 w-3.5 mr-2 text-blue-400" />
+                              <span>Editar no Construtor</span>
+                            </Link>
+                          </DropdownMenuItem>
+                        )}
+                        {demo.url && demo.pageId && (
+                          <DropdownMenuItem
+                            onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                            disabled={actionLoadingId === demo.pageId || isOfficial}
+                            className="cursor-pointer text-xs"
+                          >
+                            <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`} />
+                            <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => setActiveCompany(company)}
+                          className="cursor-pointer text-xs"
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                          <span>Registrar Abordagem</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteCompany(company)}
+                          className="cursor-pointer text-xs text-rose-400"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
+                          <span>Remover do Radar</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              );
+            })}
+            {!filtered.length && (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                Nenhuma empresa encontrada.
+              </div>
+            )}
+          </div>
+
+          {/* Visualização Desktop: Tabela Completa (hidden md:block) */}
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader className="bg-muted/40 border-b border-border">
                 <TableRow className="border-border hover:bg-transparent">

@@ -160,9 +160,19 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
       cid ? `CID: ${cid}` : null,
     ].filter(Boolean);
 
+    // Tenta extrair a categoria comercial específica indicada no Google Maps (ex: "Clínica Odontológica", "Oficina Mecânica", "Pet Shop")
+    let detectedCategory = niche;
+    const catMatch = block.match(/(?:·\s*)([A-ZÀ-ÿ][a-zà-ÿA-ZÀ-ÿ\s]{2,28})(?:\s*·)/);
+    if (catMatch && catMatch[1]) {
+      const candidate = catMatch[1].trim();
+      if (!/(?:aberto|fechado|avalia|coment|rua|avenida|praça|website|ver site|como chegar|telefone|brasil)/i.test(candidate)) {
+        detectedCategory = candidate;
+      }
+    }
+
     leads.push({
       name: cleanName,
-      niche,
+      niche: detectedCategory || niche,
       city,
       phone: detectedPhone,
       whatsapp: detectedPhone,

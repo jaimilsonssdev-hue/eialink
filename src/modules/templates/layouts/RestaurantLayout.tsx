@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight, CalendarCheck, Instagram, MapPin, MessageCircle, Star, UtensilsCrossed } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, Check, Clock, Instagram, MapPin, MessageCircle, ShieldCheck, Star, UtensilsCrossed } from "lucide-react";
 import type { CatalogItem } from "@/modules/products/types";
 import type { PublicLink } from "@/components/public-profile/types";
 import type { TemplateRenderModel } from "../types";
@@ -24,6 +24,9 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
     const socialData = (bio.social_links as Record<string, any>) || {};
     const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;
+    const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
+    const address = socialData.address;
+    const openingHours = socialData.opening_hours;
 
     return (
       <div className="niche-restaurant">
@@ -31,7 +34,12 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
           {bio.cover_url ? (
             <img src={bio.cover_url} alt="" className="niche-restaurant-hero-img" loading="eager" />
           ) : (
-            <div className="niche-restaurant-hero-fallback" aria-hidden />
+            <img
+              src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80"
+              alt=""
+              className="niche-restaurant-hero-img"
+              loading="eager"
+            />
           )}
           <div className="niche-restaurant-hero-overlay" aria-hidden />
           <button
@@ -70,10 +78,22 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
                   <Instagram size={14} aria-hidden /> @{insta}
                 </a>
               )}
-              <span className="niche-restaurant-meta-dot" aria-hidden />
-              <span className="opacity-80">
-                <MapPin size={14} aria-hidden className="inline" /> Reservas e pedidos
-              </span>
+              {(address || openingHours) && (
+                <div className="flex flex-wrap items-center gap-2.5 text-xs text-amber-200/80 mt-1">
+                  {address && (
+                    <span className="inline-flex items-center gap-1 max-w-[260px] truncate" title={address}>
+                      <MapPin size={12} className="text-amber-400 flex-shrink-0" />
+                      <span className="truncate">{address}</span>
+                    </span>
+                  )}
+                  {openingHours && (
+                    <span className="inline-flex items-center gap-1">
+                      <Clock size={12} className="text-amber-400 flex-shrink-0" />
+                      <span>{openingHours}</span>
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -157,6 +177,41 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
                 </li>
               ))}
             </ul>
+          </section>
+        )}
+
+        {testimonials.length > 0 && (
+          <section className="niche-restaurant-section my-6 px-4 max-w-2xl mx-auto" aria-label="Avaliações do Google">
+            <div className="text-center mb-4">
+              <span className="text-[11px] font-semibold tracking-wider uppercase text-amber-400">Opinião de Quem Frequenta</span>
+              <h2 className="text-xl font-bold text-foreground mt-0.5">Avaliações no Google</h2>
+              <p className="text-xs text-muted-foreground">Depoimentos reais deixados por nossos clientes</p>
+            </div>
+
+            <div className="grid gap-3">
+              {testimonials.slice(0, 3).map((rev: any, idx: number) => (
+                <div key={idx} className="p-4 rounded-2xl bg-card/60 border border-border/80 shadow-xs backdrop-blur-sm">
+                  <div className="flex items-center gap-3 mb-2">
+                    {rev.avatar ? (
+                      <img src={rev.avatar} alt={rev.author} className="w-8 h-8 rounded-full object-cover border border-amber-400/40" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-300 flex items-center justify-center font-bold text-xs">
+                        {rev.author.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-xs font-bold text-foreground">{rev.author}</h4>
+                      <div className="flex text-amber-400 text-xs">
+                        {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                          <span key={i}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground italic">"{rev.text}"</p>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 

@@ -166,6 +166,8 @@ export const PageService = {
           instagram: instagram ?? undefined,
           is_demo: isDemo,
           triage_enabled: true,
+          niche: preset.nicheKey,
+          city: city || null,
           google_rating: realRating,
           reviews_count: realReviewsCount,
           model_variant: preset.modelName,

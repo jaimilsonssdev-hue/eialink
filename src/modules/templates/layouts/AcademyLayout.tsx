@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { ArrowUpRight, CalendarCheck, Check, Dumbbell, Instagram, MapPin, MessageCircle, Sparkles, Star } from "lucide-react";
+import { ArrowUpRight, CalendarCheck, Check, Clock, Dumbbell, Instagram, MapPin, MessageCircle, Sparkles, Star } from "lucide-react";
 import type { PublicLink } from "@/components/public-profile/types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import type { TemplateRenderModel } from "../types";
@@ -43,11 +43,14 @@ export class AcademyLayout implements TemplateLayoutRenderer {
     const socialData = (bio.social_links as Record<string, any>) || {};
     const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;
+    const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
+    const address = socialData.address;
+    const openingHours = socialData.opening_hours;
 
     return (
       <div className="niche-academy">
         <header className="niche-academy-hero">
-          <img src={bio.cover_url || "/template-assets/academy-gym-cover.png"} alt="" loading="eager" />
+          <img src={bio.cover_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80"} alt="" loading="eager" />
           <div className="niche-academy-overlay" aria-hidden />
           <div className="niche-academy-topline">
             <span><Dumbbell size={15} aria-hidden /> PERFORMANCE & BEM-ESTAR</span>
@@ -57,6 +60,20 @@ export class AcademyLayout implements TemplateLayoutRenderer {
             <span className="niche-academy-kicker">ACADEMIA • TREINO • RESULTADOS</span>
             <h1>{bio.display_name}</h1>
             <p>{bio.description || "Treinos que respeitam o seu ritmo e levam você mais longe."}</p>
+            {(address || openingHours) && (
+              <div className="flex flex-wrap gap-2 text-xs text-emerald-200/90 my-2">
+                {address && (
+                  <span className="inline-flex items-center gap-1 bg-black/40 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                    <MapPin size={12} className="text-emerald-400" /> {address}
+                  </span>
+                )}
+                {openingHours && (
+                  <span className="inline-flex items-center gap-1 bg-black/40 px-2.5 py-1 rounded-md border border-emerald-500/20">
+                    <Clock size={12} className="text-emerald-400" /> {openingHours}
+                  </span>
+                )}
+              </div>
+            )}
             <div className="niche-academy-proof">
               {rating ? (
                 <span><Star size={14} className="text-amber-400 fill-amber-400" aria-hidden /> {rating} no Google {reviewsCount ? `(${reviewsCount})` : ""}</span>
@@ -153,6 +170,39 @@ export class AcademyLayout implements TemplateLayoutRenderer {
             ))}
           </div>
         </section>
+
+        {testimonials.length > 0 && (
+          <section className="niche-academy-section my-6" aria-label="Avaliações do Google">
+            <div className="niche-academy-heading">
+              <span>QUEM TREINA, RECOMENDA</span>
+              <h2>Avaliações no Google</h2>
+            </div>
+            <div className="grid gap-3 mt-4">
+              {testimonials.slice(0, 3).map((rev: any, idx: number) => (
+                <div key={idx} className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-slate-100 shadow-xs">
+                  <div className="flex items-center gap-3 mb-2">
+                    {rev.avatar ? (
+                      <img src={rev.avatar} alt={rev.author} className="w-8 h-8 rounded-full object-cover border border-emerald-400/40" />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-300 flex items-center justify-center font-bold text-xs">
+                        {rev.author.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-100">{rev.author}</h4>
+                      <div className="flex text-amber-400 text-xs">
+                        {Array.from({ length: rev.rating || 5 }).map((_, i) => (
+                          <span key={i}>★</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-300 italic">"{rev.text}"</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <section className="niche-academy-section niche-academy-visit" aria-label="Visite a academia">
           <div>

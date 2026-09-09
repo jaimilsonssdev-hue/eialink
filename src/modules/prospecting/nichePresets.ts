@@ -129,6 +129,86 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "acad-av-2", url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=400&q=80", label: "Instrutora" },
     ],
   },
+  petshop: {
+    covers: [
+      { id: "pet-1", url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1200&q=80", label: "Clínica Veterinária & Pet Care" },
+      { id: "pet-2", url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=1200&q=80", label: "Banho & Tosa com Carinho" },
+      { id: "pet-3", url: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=1200&q=80", label: "Consultório Veterinário Moderno" },
+      { id: "pet-4", url: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=1200&q=80", label: "Pet Shop & Bem-estar Animal" },
+    ],
+    avatars: [
+      { id: "pet-av-1", url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=400&q=80", label: "Veterinária" },
+      { id: "pet-av-2", url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=400&q=80", label: "Pet Care" },
+    ],
+  },
+  oficina: {
+    covers: [
+      { id: "auto-1", url: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1200&q=80", label: "Centro Automotivo Moderno" },
+      { id: "auto-2", url: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?auto=format&fit=crop&w=1200&q=80", label: "Estética Automotiva & Detailing" },
+      { id: "auto-3", url: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=80", label: "Mecânica Preventiva de Precisão" },
+      { id: "auto-4", url: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1200&q=80", label: "Alinhamento & Pneus" },
+    ],
+    avatars: [
+      { id: "auto-av-1", url: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=400&q=80", label: "Auto Center" },
+      { id: "auto-av-2", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80", label: "Mecânico Especialista" },
+    ],
+  },
+  imobiliaria: {
+    covers: [
+      { id: "imob-1", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80", label: "Imóveis de Alto Padrão" },
+      { id: "imob-2", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80", label: "Casas & Lançamentos Exclusivos" },
+      { id: "imob-3", url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80", label: "Condomínios & Apartamentos" },
+      { id: "imob-4", url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80", label: "Consultoria Imobiliária" },
+    ],
+    avatars: [
+      { id: "imob-av-1", url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80", label: "Corretor" },
+      { id: "imob-av-2", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80", label: "Corretora" },
+    ],
+  },
+  arquitetura: {
+    covers: [
+      { id: "arq-1", url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=80", label: "Design de Interiores & Elegância" },
+      { id: "arq-2", url: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=1200&q=80", label: "Fachadas Contemporâneas" },
+      { id: "arq-3", url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80", label: "Projetos Arquitetônicos & Reformas" },
+    ],
+    avatars: [
+      { id: "arq-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Arquiteta" },
+      { id: "arq-av-2", url: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80", label: "Arquiteto" },
+    ],
+  },
+  contabilidade: {
+    covers: [
+      { id: "cont-1", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80", label: "Planejamento Tributário & Finanças" },
+      { id: "cont-2", url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80", label: "BPO Financeiro & Gestão" },
+      { id: "cont-3", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", label: "Sede Contábil Corporativa" },
+    ],
+    avatars: [
+      { id: "cont-av-1", url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80", label: "Contador" },
+      { id: "cont-av-2", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80", label: "Contadora" },
+    ],
+  },
+  tatuagem: {
+    covers: [
+      { id: "tat-1", url: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=1200&q=80", label: "Studio Tattoo & Arte na Pele" },
+      { id: "tat-2", url: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?auto=format&fit=crop&w=1200&q=80", label: "Tatuagem Fineline & Realismo" },
+      { id: "tat-3", url: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?auto=format&fit=crop&w=1200&q=80", label: "Body Piercing & Studio Dark" },
+    ],
+    avatars: [
+      { id: "tat-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Tattoo Artist" },
+      { id: "tat-av-2", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80", label: "Tatuador" },
+    ],
+  },
+  otica: {
+    covers: [
+      { id: "oti-1", url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=1200&q=80", label: "Óculos de Grau & Sol Elegantes" },
+      { id: "oti-2", url: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?auto=format&fit=crop&w=1200&q=80", label: "Exame Visual & Consultório Ótico" },
+      { id: "oti-3", url: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=1200&q=80", label: "Armações de Grife & Lentes" },
+    ],
+    avatars: [
+      { id: "oti-av-1", url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=400&q=80", label: "Ótica" },
+      { id: "oti-av-2", url: "https://images.unsplash.com/photo-1594824813581-22e38c92a9c3?auto=format&fit=crop&w=400&q=80", label: "Especialista em Visão" },
+    ],
+  },
   geral: {
     covers: [
       { id: "geral-1", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80", label: "Escritório & Negócios" },
@@ -248,6 +328,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 50,
           image_url: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Lentes de Contato Dental & Facetas",
+          description: "Planejamento digital com laminados cerâmicos ultrarresistentes para harmonia e beleza do sorriso.",
+          price: 1200,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
   ],
@@ -280,6 +367,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 30,
           image_url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Ultrassonografia & Diagnóstico por Imagem",
+          description: "Laudos precisos e rápidos com equipamentos digitais de última geração para acompanhamento completo.",
+          price: 220,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -309,6 +403,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 40,
           image_url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Acompanhamento Cardiológico Preventivo",
+          description: "Eletrocardiograma, teste ergométrico e orientação preventiva para saúde cardiovascular.",
+          price: 350,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -337,6 +438,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           price: 180,
           duration_minutes: 45,
           image_url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Sessão de Psicologia Clínica & Acolhimento",
+          description: "Espaço confidencial para autoconhecimento, manejo de ansiedade e saúde emocional com terapeutas credenciados.",
+          price: 160,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80",
         },
       ],
     },
@@ -370,6 +478,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 60,
           image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Drenagem Linfática Facial & Corporal",
+          description: "Desinchaço imediato, estímulo da circulação e eliminação de toxinas com manobras suaves e revigorantes.",
+          price: 180,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -399,6 +514,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 50,
           image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Depilação a Laser Definitiva (Áreas VIP)",
+          description: "Pele lisa, sem pelos e sem irritação com ponteira resfriada ultraconfortável.",
+          price: 290,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1512290900672-1f5be1c6e1c8?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -425,6 +547,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           name: "Drenagem Linfática Método Exclusivo",
           description: "Eliminação de retenção hídrica, melhora do contorno e sensação de leveza imediata.",
           price: 150,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Revitalização Facial com Máscara de Ouro & LED",
+          description: "Nutrição celular avançada, efeito iluminador instantâneo e renovação do viço da pele.",
+          price: 210,
           duration_minutes: 50,
           image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=600&q=80",
         },
@@ -578,6 +707,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 30,
           image_url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Sobrancelha & Acabamento na Navalha",
+          description: "Limpeza precisa das sobrancelhas e contorno da linha da nuca para acabamento alinhado.",
+          price: 25,
+          duration_minutes: 15,
+          image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -600,6 +736,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 60,
           image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Corte Clássico na Tesoura",
+          description: "Técnica tradicional de corte com tesoura, finalizado com pomada modeladora matte.",
+          price: 50,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Barboterapia Tradicional com Massagem Facial",
+          description: "Espuma densa, navalhete descartável e loção pós-barba refrescante para pele sem irritação.",
+          price: 45,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -621,6 +771,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           price: 50,
           duration_minutes: 40,
           image_url: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Pigmentação de Barba e Cabelo",
+          description: "Preenchimento de falhas e realce de contorno com efeito natural e durabilidade.",
+          price: 40,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Platinado Global / Luzes Masculinas",
+          description: "Descoloração profissional com protetor de fios para tom uniforme e matizado.",
+          price: 120,
+          duration_minutes: 90,
+          image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=600&q=80",
         },
       ],
     },
@@ -654,6 +818,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 60,
           image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Consultoria Tributária & Planejamento Fiscal",
+          description: "Recuperação de créditos, enquadramento societário e redução lícita de carga tributária.",
+          price: 450,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -676,6 +847,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 45,
           image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Contratos Comerciais & Societário",
+          description: "Elaboração, revisão e assessoria para acordos de sócios e parcerias estratégicas.",
+          price: 400,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Assessoria em Licitações & Órgãos Públicos",
+          description: "Impugnações de editais, recursos administrativos e habilitação jurídica para certames.",
+          price: 550,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -697,6 +882,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           price: 350,
           duration_minutes: 50,
           image_url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Inventários Judiciais & Extrajudiciais",
+          description: "Partilha ágil de bens em cartório, com redução de custos e segurança para herdeiros.",
+          price: 500,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Direito do Consumidor & Reparação de Danos",
+          description: "Indenizações por negativação indevida, problemas com voos, seguradoras e planos de saúde.",
+          price: 250,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=600&q=80",
         },
       ],
     },
@@ -730,6 +929,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 25,
           image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Sobremesas Nobres & Carta de Vinhos",
+          description: "Finalização perfeita com doces finos artesanais e rótulos selecionados para harmonização.",
+          price: 32,
+          duration_minutes: 15,
+          image_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -752,6 +958,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 15,
           image_url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Tábua de Frios & Petiscos Especiais",
+          description: "Seleção de queijos artesanais, charcutaria fina, castanhas e geleia da casa.",
+          price: 54,
+          duration_minutes: 20,
+          image_url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Hambúrguer Artesanal na Brasa",
+          description: "Blend de carnes nobres grelhado no fogo forte, queijo derretido e maionese trufada.",
+          price: 42,
+          duration_minutes: 20,
+          image_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -773,6 +993,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           price: 119,
           duration_minutes: 35,
           image_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Porção de Batata Rústica & Molho da Casa",
+          description: "Batatas crocantes com alecrim, sal grosso e maionese temperada artesanal.",
+          price: 28,
+          duration_minutes: 20,
+          image_url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Sobremesa Especial do Dia",
+          description: "Doces artesanais frescos preparados diariamente pelo nosso confeiteiro.",
+          price: 18,
+          duration_minutes: 10,
+          image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=600&q=80",
         },
       ],
     },
@@ -806,6 +1040,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 60,
           image_url: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Avaliação Física com Bioimpedância 3D",
+          description: "Mapeamento completo de percentual de gordura, massa magra e metas com profissional credenciado.",
+          price: 80,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -828,6 +1069,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 45,
           image_url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Pilates em Aparelhos & Postura",
+          description: "Fortalecimento do core, flexibilidade e alívio de dores nas costas com fisioterapeuta.",
+          price: 180,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Treinamento de Lutas & Boxe Funcional",
+          description: "Condicionamento físico de atleta, defesa pessoal e alívio do estresse diário.",
+          price: 130,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -849,6 +1104,797 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           price: 89,
           duration_minutes: 60,
           image_url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Aulas de Dança & Ritmos Cardiorrespiratórios",
+          description: "Gaste energia e se divirta com coreografias empolgantes em turma animada.",
+          price: 110,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Nutricionista Esportivo Acompanhado",
+          description: "Cardápio individualizado para acelerar seus objetivos de definição e massa magra.",
+          price: 160,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  petshop: [
+    {
+      nicheKey: "petshop",
+      modelName: "Clínica & Bem-Estar Animal",
+      template_id: "clinic-care",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.petshop.covers[0].url,
+      avatar_url: NICHE_GALLERIES.petshop.avatars[0].url,
+      generateHeadline: (company, city) => `Referência em Cuidados Veterinários & Pet em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} oferece atendimento veterinário especializado, consultas preventivas, vacinas e todo o carinho que seu pet merece em ${city}. Agende seu horário pelo WhatsApp.`,
+      whatsapp_button_label: "Agendar Consulta Veterinária",
+      whatsapp_message: (company) => `Olá! Conheci a página da ${company} e gostaria de agendar uma consulta para meu pet.`,
+      services: [
+        {
+          name: "Consulta Veterinária Clínica",
+          description: "Avaliação física completa, orientação nutricional e check-up com carinho e dedicação.",
+          price: 150,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Vacinação & Imunização V10 / Antirrábica",
+          description: "Protocolo vacinal completo com vacinas importadas de alta proteção para cães e gatos.",
+          price: 95,
+          duration_minutes: 20,
+          image_url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Banho Terapêutico & Hidratação de Pelagem",
+          description: "Higiene profunda com produtos hipoalergênicos e secagem com temperatura controlada.",
+          price: 80,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "petshop",
+      modelName: "Dark Spotlight Pet VIP",
+      template_id: "spotlight-neon",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.petshop.covers[1].url,
+      avatar_url: NICHE_GALLERIES.petshop.avatars[1].url,
+      generateHeadline: (company, city) => `Estética Pet & Banho e Tosa de Alto Padrão em ${city}`,
+      generateDescription: (company, city) =>
+        `Experiência premium para o seu melhor amigo na ${company}. Banho, tosa na tesoura e cuidados estéticos com conforto e bem-estar em ${city}.`,
+      whatsapp_button_label: "Agendar Banho & Tosa VIP",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar um horário de Banho & Tosa na ${company}.`,
+      services: [
+        {
+          name: "Tosa na Tesoura Especializada",
+          description: "Acabamento artístico e personalizado conforme a raça e preferência do tutor.",
+          price: 130,
+          duration_minutes: 75,
+          image_url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Spa Pet com Hidratação de Ozônio",
+          description: "Tratamento relaxante para pele e pelo brilhante sem nós e com perfume suave.",
+          price: 110,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Corte de Unhas & Limpeza de Ouvidos",
+          description: "Higiene essencial feita por profissionais treinados para evitar estresse.",
+          price: 45,
+          duration_minutes: 20,
+          image_url: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "petshop",
+      modelName: "Vitrine Pet & Acessórios",
+      template_id: "store-showcase",
+      theme: "warm",
+      cover_url: NICHE_GALLERIES.petshop.covers[3].url,
+      avatar_url: NICHE_GALLERIES.petshop.avatars[0].url,
+      generateHeadline: (company, city) => `Tudo para Seu Pet com Amor & Rapidez em ${city}`,
+      generateDescription: (company, city) =>
+        `Rações super premium, brinquedos, medicamentos veterinários e acessórios selecionados na ${company}. Peça pelo WhatsApp e receba em casa.`,
+      whatsapp_button_label: "Pedir pelo WhatsApp / Delivery",
+      whatsapp_message: (company) => `Olá! Gostaria de ver opções de produtos e fazer um pedido na ${company}.`,
+      services: [
+        {
+          name: "Pacote Mensal de Banhos",
+          description: "4 banhos completos com hidratação e tosa higiênica inclusa com desconto especial.",
+          price: 260,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Consulta Preventiva Filhotes",
+          description: "Primeiro check-up, pesagem, protocolo de vermifugação e guia de cuidados.",
+          price: 140,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Hospedagem & Creche Daycare com Monitoramento",
+          description: "Ambiente climatizado, recreação com adestradores e fotos em tempo real no WhatsApp para sua tranquilidade.",
+          price: 90,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  oficina: [
+    {
+      nicheKey: "oficina",
+      modelName: "Centro Automotivo & Manutenção de Precisão",
+      template_id: "clinic-care",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.oficina.covers[0].url,
+      avatar_url: NICHE_GALLERIES.oficina.avatars[0].url,
+      generateHeadline: (company, city) => `Mecânica de Confiança & Diagnóstico Avançado em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} é especialista em revisão preventiva, freios, suspensão, injeção eletrônica e manutenção automotiva em ${city}. Transparência total e orçamento sem compromisso.`,
+      whatsapp_button_label: "Solicitar Orçamento no WhatsApp",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar uma revisão ou pedir orçamento na ${company}.`,
+      services: [
+        {
+          name: "Revisão Preventiva Completa",
+          description: "Checklist com mais de 30 itens: freios, suspensão, fluidos, correias e iluminação.",
+          price: 250,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Troca de Óleo & Filtros de Motor",
+          description: "Óleo 100% sintético homologado pela montadora e filtros de combustível, ar e óleo novos.",
+          price: 190,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Alinhamento 3D & Balanceamento",
+          description: "Geometria computadorizada a laser para maior durabilidade dos pneus e estabilidade na direção.",
+          price: 120,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "oficina",
+      modelName: "Dark Spotlight Auto VIP & Detailing",
+      template_id: "spotlight-neon",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.oficina.covers[1].url,
+      avatar_url: NICHE_GALLERIES.oficina.avatars[1].url,
+      generateHeadline: (company, city) => `Estética Automotiva & Proteção de Pintura em ${city}`,
+      generateDescription: (company, city) =>
+        `Seu carro tratado como obra de arte na ${company}. Vitrificação cerâmica, polimento técnico, lavagem detalhada e higienização interna premium em ${city}.`,
+      whatsapp_button_label: "Agendar Avaliação do Veículo",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar um serviço de estética automotiva na ${company}.`,
+      services: [
+        {
+          name: "Polimento Técnico & Espelhamento",
+          description: "Eliminação de riscos e marcas de lavagem com brilho espelhado de alta profundidade.",
+          price: 450,
+          duration_minutes: 120,
+          image_url: "https://images.unsplash.com/photo-1601362840469-51e4d8d58785?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Vitrificação de Pintura Cerâmica (9H)",
+          description: "Proteção contra raios UV, fezes de pássaros e hidro-repelência extrema com garantia de até 3 anos.",
+          price: 850,
+          duration_minutes: 180,
+          image_url: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Higienização Interna & Oxi-sanitização",
+          description: "Limpeza profunda de bancos, carpetes e eliminação de fungos e ácaros do ar-condicionado.",
+          price: 280,
+          duration_minutes: 90,
+          image_url: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "oficina",
+      modelName: "Oficina Rápida & Socorro Mecânico",
+      template_id: "business-classic",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.oficina.covers[2].url,
+      avatar_url: NICHE_GALLERIES.oficina.avatars[0].url,
+      generateHeadline: (company, city) => `Atendimento Rápido para o Seu Carro em ${city}`,
+      generateDescription: (company, city) =>
+        `Diagnóstico eletrônico com scanner de última geração, freios e embreagem com garantia na ${company}. Conte com quem entende de motor.`,
+      whatsapp_button_label: "Falar com o Mecânico Responsável",
+      whatsapp_message: (company) => `Olá! Meu carro está precisando de revisão e gostaria da ajuda da equipe da ${company}.`,
+      services: [
+        {
+          name: "Diagnóstico Computadorizado via Scanner",
+          description: "Leitura de falhas na injeção, ABS, airbag e sensores em tempo real.",
+          price: 100,
+          duration_minutes: 25,
+          image_url: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Manutenção de Sistema de Freios",
+          description: "Substituição de pastilhas, discos, fluido e sangria com componentes originais.",
+          price: 220,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Higienização & Carga de Gás de Ar-Condicionado",
+          description: "Arrefecimento rápido, eliminação de odores e troca do filtro de cabine antipólen.",
+          price: 180,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  imobiliaria: [
+    {
+      nicheKey: "imobiliaria",
+      modelName: "Imóveis de Prestígio & Alto Padrão",
+      template_id: "law-authority",
+      theme: "sand",
+      cover_url: NICHE_GALLERIES.imobiliaria.covers[0].url,
+      avatar_url: NICHE_GALLERIES.imobiliaria.avatars[0].url,
+      generateHeadline: (company, city) => `Os Melhores Imóveis & Oportunidades Exclusivas em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} conecta você aos melhores lançamentos, casas em condomínio fechado e apartamentos de alto padrão em ${city}. Assessoria jurídica e financeira completa.`,
+      whatsapp_button_label: "Falar com Corretor Especialista",
+      whatsapp_message: (company) => `Olá! Vi os imóveis da ${company} e gostaria de conhecer as opções disponíveis.`,
+      services: [
+        {
+          name: "Consultoria para Compra & Investimento",
+          description: "Análise de perfil, localização estratégica e simulação dos melhores financiamentos bancários.",
+          price: 0,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Avaliação Mercadológica Imobiliária",
+          description: "Parecer técnico de valor de mercado para venda ou locação rápida com segurança.",
+          price: 350,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Gestão Segura de Locação",
+          description: "Garantia de recebimento pontual, vistoria minuciosa e suporte jurídico completo ao proprietário.",
+          price: 0,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "imobiliaria",
+      modelName: "Dark Spotlight Imobiliário VIP",
+      template_id: "spotlight-neon",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.imobiliaria.covers[1].url,
+      avatar_url: NICHE_GALLERIES.imobiliaria.avatars[1].url,
+      generateHeadline: (company, city) => `Lançamentos Residenciais & Condomínios Fechados em ${city}`,
+      generateDescription: (company, city) =>
+        `Encontre o lar perfeito com atendimento personalizado e sigilo absoluto na ${company}. Agende uma visita guiada aos imóveis mais cobiçados de ${city}.`,
+      whatsapp_button_label: "Agendar Visita Exclusiva",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar uma visita a um imóvel anunciado pela ${company}.`,
+      services: [
+        {
+          name: "Visita Guiada a Condomínios Fechados",
+          description: "Tour exclusivo pelas melhores residências com infraestrutura de lazer e segurança.",
+          price: 0,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Assessoria em Financiamento Habitacional",
+          description: "Aprovação rápida de crédito junto aos principais bancos com as menores taxas do mercado.",
+          price: 0,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Consultoria de Investimento em Lançamentos na Planta",
+          description: "Análise de valorização, rentabilidade de aluguel e condições especiais com as melhores construtoras.",
+          price: 0,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "imobiliaria",
+      modelName: "Vitrine Imobiliária & Locação Ágil",
+      template_id: "business-modern",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.imobiliaria.covers[2].url,
+      avatar_url: NICHE_GALLERIES.imobiliaria.avatars[0].url,
+      generateHeadline: (company, city) => `Alugue ou Compre Seu Imóvel sem Burocracia em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} descomplica a locação e a venda do seu imóvel em ${city}. Contratos digitais, sem fiador e com atendimento via WhatsApp.`,
+      whatsapp_button_label: "Ver Imóveis Disponíveis",
+      whatsapp_message: (company) => `Olá! Gostaria de receber a lista de imóveis disponíveis na ${company}.`,
+      services: [
+        {
+          name: "Locação Sem Fiador com Seguro Fiança",
+          description: "Aprovação em até 24 horas para você se mudar sem depender de fiadores.",
+          price: 0,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Anuncie Seu Imóvel com Destaque",
+          description: "Fotos profissionais, tour virtual e anúncio nos principais portais imobiliários do Brasil.",
+          price: 0,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Vistoria Cautelar Imobiliária com Laudo Fotográfico",
+          description: "Documentação minuciosa do estado do imóvel para segurança total de locadores e inquilinos.",
+          price: 250,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  arquitetura: [
+    {
+      nicheKey: "arquitetura",
+      modelName: "Studio de Arquitetura & Design Sensorial",
+      template_id: "therapy-wellbeing",
+      theme: "serenity",
+      cover_url: NICHE_GALLERIES.arquitetura.covers[0].url,
+      avatar_url: NICHE_GALLERIES.arquitetura.avatars[0].url,
+      generateHeadline: (company, city) => `Projetos Arquitetônicos & Design de Interiores em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} cria espaços que inspiram, acolhem e valorizam seu patrimônio em ${city}. Projetos residenciais e comerciais pensados para seu estilo de vida.`,
+      whatsapp_button_label: "Solicitar Reunião de Briefing",
+      whatsapp_message: (company) => `Olá! Conheci os projetos da ${company} e gostaria de conversar sobre meu espaço.`,
+      services: [
+        {
+          name: "Projeto de Interiores Completo",
+          description: "Layout 3D realista, paginação de pisos, iluminação luminotécnica e marcenaria detalhada.",
+          price: 2500,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Projeto Arquitetônico Residencial",
+          description: "Concepção da planta, fachada moderna e aprovação junto aos órgãos da prefeitura.",
+          price: 4500,
+          duration_minutes: 90,
+          image_url: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Consultoria de Decoração Express",
+          description: "Orientação pontual de cores, mobiliário e iluminação para renovar ambientes com agilidade.",
+          price: 600,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "arquitetura",
+      modelName: "Dark Spotlight Design & Obras VIP",
+      template_id: "spotlight-neon",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.arquitetura.covers[1].url,
+      avatar_url: NICHE_GALLERIES.arquitetura.avatars[1].url,
+      generateHeadline: (company, city) => `Arquitetura Contemporânea & Gestão de Obras em ${city}`,
+      generateDescription: (company, city) =>
+        `Projetos autorais com sofisticação estética e rigor técnico na ${company}. Do papel à entrega das chaves com total tranquilidade em ${city}.`,
+      whatsapp_button_label: "Agendar Apresentação de Portfólio",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar uma conversa sobre um projeto com a ${company}.`,
+      services: [
+        {
+          name: "Gerenciamento & Acompanhamento de Obra",
+          description: "Supervisão rigorosa de cronograma, compra de materiais e controle de qualidade dos prestadores.",
+          price: 1800,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Design Comercial & Lojas",
+          description: "Arquitetura estratégica de varejo voltada para experiência do consumidor e aumento de vendas.",
+          price: 3200,
+          duration_minutes: 75,
+          image_url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Projeto Luminotécnico & Automação Residencial",
+          description: "Cenários de iluminação inteligente, fitas LED e valorização estética de cada ambiente.",
+          price: 1200,
+          duration_minutes: 50,
+          image_url: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "arquitetura",
+      modelName: "Engenharia & Reformas Inteligentes",
+      template_id: "business-modern",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.arquitetura.covers[2].url,
+      avatar_url: NICHE_GALLERIES.arquitetura.avatars[1].url,
+      generateHeadline: (company, city) => `Reformas & Construções Sem Estresse em ${city}`,
+      generateDescription: (company, city) =>
+        `Soluções completas de engenharia civil e reformas planejadas na ${company}. Cumprimento de prazos, contrato transparente e acabamento premium.`,
+      whatsapp_button_label: "Pedir Orçamento de Reforma",
+      whatsapp_message: (company) => `Olá! Gostaria de um orçamento para reforma ou obra com a ${company}.`,
+      services: [
+        {
+          name: "Reforma Residencial Completa",
+          description: "Planejamento hidráulico, elétrico e acabamentos com equipe especializada.",
+          price: 3800,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Laudo Estrutural & ART de Reforma",
+          description: "Emissão de responsabilidade técnica e laudos exigidos por condomínios.",
+          price: 650,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Consultoria e Escolha de Revestimentos & Acabamentos",
+          description: "Acompanhamento em lojas de materiais para especificação de porcelanatos, tintas e louças.",
+          price: 450,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  contabilidade: [
+    {
+      nicheKey: "contabilidade",
+      modelName: "Assessoria Contábil & Governança",
+      template_id: "law-authority",
+      theme: "slate",
+      cover_url: NICHE_GALLERIES.contabilidade.covers[0].url,
+      avatar_url: NICHE_GALLERIES.contabilidade.avatars[0].url,
+      generateHeadline: (company, city) => `Contabilidade Estratégica & Planejamento Tributário em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} reduz a carga tributária da sua empresa com segurança jurídica e gestão financeira eficiente em ${city}. Mais lucro e tranquilidade para você focar no seu negócio.`,
+      whatsapp_button_label: "Falar com Contador Especialista",
+      whatsapp_message: (company) => `Olá! Gostaria de conhecer os serviços contábeis e tributários da ${company}.`,
+      services: [
+        {
+          name: "Abertura Grátis de Empresa (CNPJ)",
+          description: "Processo 100% digital, enquadramento no regime tributário mais econômico e alvarás rápidos.",
+          price: 0,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Planejamento Tributário para Empresas",
+          description: "Estudo comparativo entre Simples Nacional, Lucro Presumido e Real para pagar menos impostos dentro da lei.",
+          price: 800,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "BPO Financeiro & Gestão de Caixa",
+          description: "Terceirização das contas a pagar e receber, fluxo de caixa e emissão de notas fiscais.",
+          price: 950,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "contabilidade",
+      modelName: "Dark Spotlight BPO Financeiro VIP",
+      template_id: "spotlight-neon",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.contabilidade.covers[1].url,
+      avatar_url: NICHE_GALLERIES.contabilidade.avatars[1].url,
+      generateHeadline: (company, city) => `Gestão Financeira Digital & Performance para Negócios em ${city}`,
+      generateDescription: (company, city) =>
+        `Contabilidade moderna, relatórios inteligentes e suporte no WhatsApp sem burocracia na ${company}. Suporte consultivo para empresários de ${city}.`,
+      whatsapp_button_label: "Agendar Diagnóstico Tributário",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar um diagnóstico contábil gratuito com a ${company}.`,
+      services: [
+        {
+          name: "Diagnóstico Fiscal & Recuperação de Créditos",
+          description: "Identificação de tributos pagos a mais nos últimos 5 anos com restituição em conta.",
+          price: 0,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Migração de Contador sem Dores de Cabeça",
+          description: "Transferência rápida de contabilidade sem você precisar se preocupar com documentações antigas.",
+          price: 0,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Gestão de Folha de Pagamento & eSocial Trabalhista",
+          description: "Cálculos de admissão, férias, rescisões e cumprimento rigoroso das exigências trabalhistas.",
+          price: 350,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "contabilidade",
+      modelName: "Contabilidade Consultiva & MEI / PME",
+      template_id: "business-classic",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.contabilidade.covers[2].url,
+      avatar_url: NICHE_GALLERIES.contabilidade.avatars[0].url,
+      generateHeadline: (company, city) => `Assessoria Completa para Médicos, Prestadores e Comércio em ${city}`,
+      generateDescription: (company, city) =>
+        `Folha de pagamento, pró-labore, obrigações acessórias e suporte contábil com atendimento humanizado na ${company}.`,
+      whatsapp_button_label: "Falar com Consultor Fiscal",
+      whatsapp_message: (company) => `Olá! Preciso de assessoria para minha empresa com a equipe da ${company}.`,
+      services: [
+        {
+          name: "Contabilidade Mensal para Profissionais PJ",
+          description: "Cálculo de DAS, emissão de certidões negativas e livro caixa digital.",
+          price: 290,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Declaração de IRPF com Blindagem Fiscal",
+          description: "Declaração de Imposto de Renda de pessoa física sem risco de cair na malha fina.",
+          price: 220,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Regularização de Pendências e Certidões (CND)",
+          description: "Desbloqueio de pendências na Receita Federal, Previdência e prefeituras com emissão de certidões limpas.",
+          price: 200,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  tatuagem: [
+    {
+      nicheKey: "tatuagem",
+      modelName: "Studio Tattoo Art & Fineline",
+      template_id: "beauty-glow",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.tatuagem.covers[0].url,
+      avatar_url: NICHE_GALLERIES.tatuagem.avatars[0].url,
+      generateHeadline: (company, city) => `Tatuagens Autorais, Fineline & Realismo em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} transforma suas ideias em arte na pele com biossegurança máxima, agulhas descartáveis e traços delicados em ${city}. Orçamentos via WhatsApp.`,
+      whatsapp_button_label: "Pedir Orçamento de Tattoo",
+      whatsapp_message: (company) => `Olá! Gostaria de pedir um orçamento para uma tatuagem na ${company}.`,
+      services: [
+        {
+          name: "Tatuagem Fineline & Escrita Delicada",
+          description: "Traços ultrafinos com cicatrização suave e alta definição estética.",
+          price: 250,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Tatuagem Realista & Preto e Cinza (Black and Grey)",
+          description: "Sombreamento profundo, retratos e composições complexas com riqueza de detalhes.",
+          price: 800,
+          duration_minutes: 180,
+          image_url: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Aplicação de Body Piercing & Joias em Titânio",
+          description: "Perfuração asséptica com joias de grau implante que não causam alergias.",
+          price: 120,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "tatuagem",
+      modelName: "Dark Spotlight Tattoo VIP",
+      template_id: "spotlight-neon",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.tatuagem.covers[1].url,
+      avatar_url: NICHE_GALLERIES.tatuagem.avatars[1].url,
+      generateHeadline: (company, city) => `Studio Dark VIP de Tatuagem & Body Art em ${city}`,
+      generateDescription: (company, city) =>
+        `Ambiente privativo, profissionais premiados e experiência exclusiva de tatuagem na ${company} em ${city}. Mande sua referência e garanta sua data.`,
+      whatsapp_button_label: "Mandar Referência no WhatsApp",
+      whatsapp_message: (company) => `Olá! Tenho uma ideia de tatuagem e gostaria de enviar minha referência para a equipe da ${company}.`,
+      services: [
+        {
+          name: "Criação de Arte Exclusiva & Personalizada",
+          description: "Desenho autoral sob medida antes da sessão para você aprovar cada traço.",
+          price: 150,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Cobertura de Tatuagem Antiga (Cover-up)",
+          description: "Técnicas especializadas para cobrir ou reformar tatuagens antigas com um resultado impecável.",
+          price: 600,
+          duration_minutes: 120,
+          image_url: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Aplicação de Piercing com Titânio Grau Implante",
+          description: "Perfuração com técnica asséptica e joalheria de topo para cicatrização rápida e sem inflamação.",
+          price: 130,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1611501275019-9b5cda994e8d?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "tatuagem",
+      modelName: "Galeria de Arte Corporal & Flash Tattoos",
+      template_id: "portfolio-studio",
+      theme: "graphite",
+      cover_url: NICHE_GALLERIES.tatuagem.covers[2].url,
+      avatar_url: NICHE_GALLERIES.tatuagem.avatars[0].url,
+      generateHeadline: (company, city) => `Flash Tattoos & Designs Disponíveis em ${city}`,
+      generateDescription: (company, city) =>
+        `Designs autorais prontos para tatuar com valores promocionais na ${company}. Escolha sua arte e agende sua sessão rápida.`,
+      whatsapp_button_label: "Ver Flash Tattoos Disponíveis",
+      whatsapp_message: (company) => `Olá! Gostaria de ver os flashes de tatuagem disponíveis na ${company}.`,
+      services: [
+        {
+          name: "Flash Tattoo Autoral",
+          description: "Desenho exclusivo de tamanho pequeno/médio com aplicação rápida no mesmo dia.",
+          price: 180,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Tatuagem Miniatura & Microrealismo",
+          description: "Traços minuciosos de animais, retratos em miniatura ou paisagens minimalistas na pele.",
+          price: 280,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1562962230-16e4623d36e6?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Retoque & Revitalização de Tatuagens Antigas",
+          description: "Realce de cor, reforço de linhas e recuperação do brilho de artes antigas.",
+          price: 200,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
+
+  otica: [
+    {
+      nicheKey: "otica",
+      modelName: "Ótica Conceito & Especialistas Visuais",
+      template_id: "clinic-care",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.otica.covers[0].url,
+      avatar_url: NICHE_GALLERIES.otica.avatars[0].url,
+      generateHeadline: (company, city) => `Sua Visão em Alta Definição & Armações Exclusivas em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} une tecnologia em lentes oftálmicas, exame de vista computadorizado e as principais marcas de óculos de grau e sol em ${city}.`,
+      whatsapp_button_label: "Agendar Exame de Vista / Orçamento",
+      whatsapp_message: (company) => `Olá! Gostaria de agendar um exame de vista ou fazer orçamento de óculos na ${company}.`,
+      services: [
+        {
+          name: "Exame de Vista Computadorizado",
+          description: "Refração precisa, medição de grau e saúde ocular com equipamentos digitais.",
+          price: 80,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Lentes Multifocais Digitais Antirreflexo",
+          description: "Visão nítida em todas as distâncias com proteção contra luz azul de telas de computador.",
+          price: 490,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Ajuste, Limpeza Ultrassônica & Manutenção",
+          description: "Alinhamento das hastes, troca de plaquetas e higienização profunda das suas armações.",
+          price: 25,
+          duration_minutes: 15,
+          image_url: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "otica",
+      modelName: "Dark Spotlight Óculos & Grifes VIP",
+      template_id: "spotlight-neon",
+      theme: "midnight",
+      cover_url: NICHE_GALLERIES.otica.covers[1].url,
+      avatar_url: NICHE_GALLERIES.otica.avatars[1].url,
+      generateHeadline: (company, city) => `Armações de Grife & Lentes com Filtro Azul em ${city}`,
+      generateDescription: (company, city) =>
+        `Estilo e conforto visual na ${company}. Armações leves de titânio, acetato italiano e lentes solares polarizadas em ${city}.`,
+      whatsapp_button_label: "Consultar Catálogo de Armações",
+      whatsapp_message: (company) => `Olá! Vi as armações da ${company} e gostaria de consultar modelos e valores.`,
+      services: [
+        {
+          name: "Armações em Acetato Premium & Titânio",
+          description: "Modelos modernos que combinam leveza extrema, durabilidade e elegância.",
+          price: 290,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Adaptação de Lentes de Contato",
+          description: "Treinamento de colocação, teste de curvatura e kit higienizador para iniciantes.",
+          price: 150,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Lentes com Proteção BlueFilter para Telas",
+          description: "Alívio imediato da fadiga ocular, ardência nos olhos e melhora na qualidade do sono.",
+          price: 320,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "otica",
+      modelName: "Vitrine Ótica & Ofertas da Semana",
+      template_id: "store-showcase",
+      theme: "warm",
+      cover_url: NICHE_GALLERIES.otica.covers[2].url,
+      avatar_url: NICHE_GALLERIES.otica.avatars[0].url,
+      generateHeadline: (company, city) => `Óculos Completo (Armação + Lentes) com Preço Justo em ${city}`,
+      generateDescription: (company, city) =>
+        `Ofertas imperdíveis com montagem em laboratório próprio na ${company}. Traga sua receita e saia de óculos novo no mesmo dia.`,
+      whatsapp_button_label: "Fazer Orçamento com Minha Receita",
+      whatsapp_message: (company) => `Olá! Gostaria de enviar uma foto da minha receita para orçamento na ${company}.`,
+      services: [
+        {
+          name: "Combo Óculos Completo (Armação + Lente com Grau)",
+          description: "Pacote econômico completo com lentes antirreflexo e armação resistente à sua escolha.",
+          price: 249,
+          duration_minutes: 30,
+          image_url: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Óculos de Sol com Grau Personalizado",
+          description: "Lentes escuras com seu grau exato, filtro UV400 e tratamento antirreflexo traseiro.",
+          price: 390,
+          duration_minutes: 35,
+          image_url: "https://images.unsplash.com/photo-1508296695146-257a814070b4?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Manutenção & Ajuste Grátis de Armações",
+          description: "Reajuste anatômico, troca de plaquetas e higienização em cuba ultrassônica cortesia para clientes.",
+          price: 0,
+          duration_minutes: 15,
+          image_url: "https://images.unsplash.com/photo-1591076482161-42ce6da69f67?auto=format&fit=crop&w=600&q=80",
         },
       ],
     },
@@ -882,6 +1928,13 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 60,
           image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Garantia de Qualidade & Suporte Contínuo",
+          description: "Acompanhamento pós-atendimento com suporte dedicado e garantia total de satisfação.",
+          price: 280,
+          duration_minutes: 45,
+          image_url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
     {
@@ -902,6 +1955,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           description: "Atendimento prioritário com acompanhamento dedicado do início ao fim.",
           price: 500,
           duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Atendimento Express com Hora Marcada",
+          description: "Sem filas de espera, com especialista focado integralmente na sua demanda.",
+          price: 320,
+          duration_minutes: 40,
+          image_url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Diagnóstico e Consultoria Preliminar",
+          description: "Avaliação técnica das necessidades e proposição da melhor solução com excelente custo-benefício.",
+          price: 190,
+          duration_minutes: 30,
           image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
         },
       ],
@@ -926,6 +1993,20 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
           duration_minutes: 40,
           image_url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=600&q=80",
         },
+        {
+          name: "Combo Solução Completa com Desconto",
+          description: "Economize contratando a solução integral para suas necessidades com facilidades de pagamento.",
+          price: 390,
+          duration_minutes: 60,
+          image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Atendimento Personalizado no WhatsApp",
+          description: "Tire dúvidas em tempo real com nossa equipe e receba uma proposta sem compromisso.",
+          price: 0,
+          duration_minutes: 20,
+          image_url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=600&q=80",
+        },
       ],
     },
   ],
@@ -943,11 +2024,19 @@ export const PRESETS: Record<string, NichePreset> = {
   advocacia: NICHE_PRESETS_VARIANTS.advocacia[0],
   restaurante: NICHE_PRESETS_VARIANTS.restaurante[0],
   academia: NICHE_PRESETS_VARIANTS.academia[0],
+  petshop: NICHE_PRESETS_VARIANTS.petshop[0],
+  oficina: NICHE_PRESETS_VARIANTS.oficina[0],
+  imobiliaria: NICHE_PRESETS_VARIANTS.imobiliaria[0],
+  arquitetura: NICHE_PRESETS_VARIANTS.arquitetura[0],
+  contabilidade: NICHE_PRESETS_VARIANTS.contabilidade[0],
+  tatuagem: NICHE_PRESETS_VARIANTS.tatuagem[0],
+  otica: NICHE_PRESETS_VARIANTS.otica[0],
   geral: NICHE_PRESETS_VARIANTS.geral[0],
 };
 
 /**
  * Detecta a chave do nicho com base no texto do nicho ou nome da empresa.
+ * Identifica com precisão 16 nichos comerciais de alta demanda no Brasil.
  */
 export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string | null): string {
   const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();
@@ -955,26 +2044,47 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
   // 1. Barbearia e cortes masculinos (tem precedência sobre "cabelo" para que barbearias não virem salão feminino)
   if (/(?:barbe|barba|barber|fade|navalha|corte\s+masculin)/i.test(combined)) return "barbearia";
 
-  // 2. Salão de beleza, cabelos, cachos, estúdios capilares, institutos e centros de beleza
-  if (/instituto\s+de\s+beleza|espa[çc]o\s+de\s+beleza|studio\s+de\s+beleza|centro\s+de\s+beleza|sal[aã]o|cacho|cabel|hair|pentead|visagism|mecha|liso|alisament|progressiv|escova|megahair|corte\s+feminino|manicure|pedicure/i.test(combined)) return "salao";
+  // 2. Pet shop, clínicas veterinárias, banho e tosa
+  if (/(?:pet\s*shop|veterin[aá]r|\bvet\b|banho\s*e\s*tosa|\btosa\b|canil|\bgat[oa]s?\b|\bcachorr[oa]s?\b|\bra[çc][aã]o\b|\bra[çc][oõ]es\b|cl[ií]nica\s*animal|pet\s*care)/i.test(combined)) return "petshop";
 
-  // 3. Odontologia e dentistas
-  if (/odonto|dent|sorris|oral|dente|protese|implant/i.test(combined)) return "odontologia";
+  // 3. Oficina mecânica, auto center, estética automotiva e reparos
+  if (/(?:oficina|mec[aâ]nic|auto\s*center|detail|est[eé]tica\s*automot|troca\s*de\s*[oó]leo|funilari|pintura\s*auto|pneu|freio|suspens[aã]o|guincho|auto\s*el[eé]tric|revis[aã]o\s*veicular|martelinho)/i.test(combined)) return "oficina";
 
-  // 4. Clínicas médicas, odontológicas integradas e saúde
-  if (/cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|oftalm|fisioter|psic[oó]l|terap/i.test(combined)) return "clinica";
+  // 4. Imobiliária, corretores de imóveis e locações
+  if (/(?:imobili[aá]r|corretor|im[oó]ve|creci|loca[çc][aã]o|aluguel|venda\s*de\s*im[oó]ve|lan[çc]amento\s*residencial|condom[ií]nio|apartamento)/i.test(combined)) return "imobiliaria";
 
-  // 5. Estética facial/corporal, sobrancelha, spa e unhas
-  if (/est[eé]tic|beleza|spa|lash|unha|sobrancelha|pele|make|harmoniz|botox|depila/i.test(combined)) return "estetica";
+  // 5. Arquitetura, design de interiores e engenharia civil
+  if (/(?:arquit|interiores|designer\s*de\s*interiores|engenhar|planta\s*baixa|reforma|constru[çc][aã]o\s*civil|luminot[eé]cnic)/i.test(combined)) return "arquitetura";
 
-  // 6. Advocacia e serviços jurídicos
-  if (/advoc|advogad|jur[ií]d|direito|lei|oab/i.test(combined)) return "advocacia";
+  // 6. Contabilidade, assessoria contábil e tributária
+  if (/(?:contab|contador|escrit[oó]rio\s*cont[aá]bil|fiscal|tribut|bpo\s*financeiro|abertura\s*de\s*empresa|imposto\s*de\s*renda|auditoria\s*cont[aá]bil)/i.test(combined)) return "contabilidade";
 
-  // 7. Gastronomia, restaurantes e lanches
-  if (/pizz|restauran|burger|hamburg|lanche|comida|gastr|caf[eé]|bistr[oô]/i.test(combined)) return "restaurante";
+  // 7. Tatuagem, piercing e arte corporal
+  if (/(?:tattoo|tatuag|pierc|body\s*art|tatuador)/i.test(combined)) return "tatuagem";
 
-  // 8. Fitness e academias
-  if (/academ|fitness|cross|trein|personal|gym/i.test(combined)) return "academia";
+  // 8. Óticas e exames de vista
+  if (/(?:[oó]tica|[oó]ticas|[oó]culos|arma[çc][aã]o|lente\s*de\s*contato|oftalmo|oftalmolog)/i.test(combined)) return "otica";
+
+  // 9. Odontologia e dentistas
+  if (/(?:odonto|dent|sorris|oral|dente|protese|implant|ortodont|clareament)/i.test(combined)) return "odontologia";
+
+  // 10. Salão de beleza, cabelos, cachos, estúdios capilares, institutos e centros de beleza
+  if (/(?:instituto\s+de\s+beleza|espa[çc]o\s+de\s+beleza|studio\s+de\s+beleza|centro\s+de\s+beleza|sal[aã]o|cacho|cabel|hair|pentead|visagism|mecha|liso|alisament|progressiv|escova|megahair|corte\s+feminino|manicure|pedicure|unha|esmalteri)/i.test(combined)) return "salao";
+
+  // 11. Estética facial/corporal, sobrancelha, spa e unhas
+  if (/(?:est[eé]tic|beleza|spa|lash|sobrancelha|pele|make|harmoniz|botox|depila|drenagem|massagem)/i.test(combined)) return "estetica";
+
+  // 12. Clínicas médicas, odontológicas integradas e saúde
+  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|fisioter|psic[oó]l|terap|laborat[oó]rio|nutri)/i.test(combined)) return "clinica";
+
+  // 13. Advocacia e serviços jurídicos
+  if (/(?:advoc|advogad|jur[ií]d|direito|lei|oab)/i.test(combined)) return "advocacia";
+
+  // 14. Gastronomia, restaurantes, bares e delivery
+  if (/(?:pizz|restauran|burger|hamburg|lanche|comida|gastr|caf[eé]|bistr[oô]|churrasc|sushi|a[çc]a[ií]|delivery|choperi|bar\b)/i.test(combined)) return "restaurante";
+
+  // 15. Fitness, academias, studios e treinos
+  if (/(?:academ|fitness|cross|trein|personal|gym|pilates|muscula[çc][aã]o|luta|boxe|jiu)/i.test(combined)) return "academia";
 
   return "geral";
 }

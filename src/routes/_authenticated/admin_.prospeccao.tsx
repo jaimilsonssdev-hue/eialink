@@ -28,6 +28,7 @@ import {
   MoreHorizontal,
   Building2,
   MessageSquareQuote,
+  Bot,
 } from "lucide-react";
 
 import {

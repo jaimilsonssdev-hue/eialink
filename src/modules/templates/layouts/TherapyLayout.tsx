@@ -4,10 +4,13 @@ import {
   Brain,
   CalendarCheck,
   Check,
+  Clock,
   HeartHandshake,
   Instagram,
+  MapPin,
   MessageCircle,
   ShieldCheck,
+  Star,
 } from "lucide-react";
 import type { PublicLink } from "@/components/public-profile/types";
 import { Footer } from "@/components/public-profile/Footer";
@@ -43,6 +46,12 @@ export class TherapyLayout implements TemplateLayoutRenderer {
       ? activeServices.map((item) => [item.name, item.description || "Um atendimento cuidadoso, respeitoso e pensado para você.", item.button_url, item.button_label] as const)
       : starterServices;
 
+    const socialData = (bio.social_links as Record<string, any>) || {};
+    const rating = socialData.google_rating;
+    const reviewsCount = socialData.reviews_count;
+    const address = socialData.address;
+    const openingHours = socialData.opening_hours;
+
     return (
       <div className="niche-therapy">
         <header className="niche-therapy-hero">
@@ -53,12 +62,31 @@ export class TherapyLayout implements TemplateLayoutRenderer {
             <button type="button" onClick={onShare}>Compartilhar</button>
           </div>
           <div className="niche-therapy-hero-copy">
-            <p><Brain size={15} aria-hidden /> TERAPIA • PSICOLOGIA • BEM-ESTAR</p>
-            <h1>{bio.display_name}</h1>
+            <div className="niche-therapy-hero-identity">
+              {bio.avatar_url && (
+                <img
+                  src={bio.avatar_url}
+                  alt={bio.display_name}
+                  className="niche-therapy-hero-avatar"
+                />
+              )}
+              <div className="niche-therapy-hero-titles">
+                <p><Brain size={15} aria-hidden /> TERAPIA • PSICOLOGIA • BEM-ESTAR</p>
+                <h1>{bio.display_name}</h1>
+              </div>
+            </div>
             <span>{bio.description || "Um espaço seguro para você se escutar com mais gentileza."}</span>
             <div className="niche-therapy-trust">
-              <small><ShieldCheck size={14} aria-hidden /> Escuta qualificada</small>
+              {rating ? (
+                <small>
+                  <Star size={13} className="text-amber-300 fill-amber-300" aria-hidden />
+                  {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
+                </small>
+              ) : (
+                <small><ShieldCheck size={14} aria-hidden /> Escuta qualificada</small>
+              )}
               <small><Check size={14} aria-hidden /> Atendimento personalizado</small>
+              <small><HeartHandshake size={14} aria-hidden /> Presencial & Online</small>
             </div>
             {bookingHref && (
               <a
@@ -77,9 +105,46 @@ export class TherapyLayout implements TemplateLayoutRenderer {
         </header>
 
         <section className="niche-therapy-intro" aria-label="Sobre o atendimento">
-          <p>SEU MOMENTO IMPORTA</p>
-          <h2>Um encontro para olhar com mais cuidado para a sua história.</h2>
-          <span>Com acolhimento, ética e respeito ao seu ritmo, cada conversa pode abrir espaço para novos caminhos.</span>
+          <div className="niche-therapy-intro-card">
+            <div className="niche-therapy-intro-avatar-wrap">
+              {bio.avatar_url ? (
+                <img src={bio.avatar_url} alt={bio.display_name} className="niche-therapy-intro-avatar" />
+              ) : (
+                <div className="niche-therapy-intro-avatar-fallback">
+                  <Brain size={32} aria-hidden />
+                </div>
+              )}
+            </div>
+            <div className="niche-therapy-intro-card-body">
+              <span className="niche-therapy-badge">ESPAÇO DE ACOLHIMENTO</span>
+              <h3 className="niche-therapy-intro-name">{bio.display_name}</h3>
+              <p className="niche-therapy-intro-role">Psicologia & Cuidado Emocional</p>
+              <div className="niche-therapy-intro-features">
+                <span><ShieldCheck size={13} aria-hidden /> Sigilo & Ética Profissional</span>
+                <span><Check size={13} aria-hidden /> Atendimento Humanizado</span>
+                {address && <span><MapPin size={13} aria-hidden /> {address}</span>}
+                {openingHours && <span><Clock size={13} aria-hidden /> {openingHours}</span>}
+              </div>
+            </div>
+          </div>
+
+          <div className="niche-therapy-intro-content">
+            <p className="niche-therapy-intro-tag"><HeartHandshake size={14} aria-hidden /> SEU MOMENTO IMPORTA</p>
+            <h2>Um encontro para olhar com mais cuidado para a sua história.</h2>
+            <span className="niche-therapy-intro-desc">
+              Com acolhimento, ética e respeito ao seu ritmo, cada conversa pode abrir espaço para novos caminhos de autoconhecimento, superação de angústias e equilíbrio emocional.
+            </span>
+            <div className="niche-therapy-intro-highlights">
+              <div className="niche-therapy-highlight-item">
+                <strong>Sem julgamentos</strong>
+                <small>Um ambiente seguro para expressar sentimentos</small>
+              </div>
+              <div className="niche-therapy-highlight-item">
+                <strong>No seu tempo</strong>
+                <small>Processo terapêutico respeitoso e singular</small>
+              </div>
+            </div>
+          </div>
         </section>
 
         <section className="niche-therapy-section" aria-label="Formas de cuidado">
@@ -87,10 +152,12 @@ export class TherapyLayout implements TemplateLayoutRenderer {
           <div className="niche-therapy-grid">
             {services.map(([title, description, url, label], index) => (
               <article key={title}>
-                <span className="niche-therapy-service-icon"><Brain size={20} aria-hidden /></span>
-                <small>0{index + 1}</small>
-                <h3>{title}</h3>
-                <p>{description}</p>
+                <div>
+                  <span className="niche-therapy-service-icon"><Brain size={20} aria-hidden /></span>
+                  <small>0{index + 1}</small>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
+                </div>
                 {url ? (
                   <a href={url} target="_blank" rel="noreferrer">{label || "Saiba mais"}<ArrowUpRight size={14} aria-hidden /></a>
                 ) : whatsapp ? (
@@ -111,7 +178,7 @@ export class TherapyLayout implements TemplateLayoutRenderer {
         )}
 
         <section className="niche-therapy-cta" aria-label="Agendamento">
-          <div><p>VAMOS CONVERSAR?</p><h2>O primeiro passo pode ser uma conversa tranquila.</h2><span>Entre em contato para tirar dúvidas e conhecer as possibilidades de atendimento.</span></div>
+          <div><p>VAMOS CONVERSAR?</p><h2>O primeiro passo pode ser uma conversa tranquila.</h2><span>Entre em contato para tirar dúvidas e conhecer as possibilidades de atendimento no seu tempo.</span></div>
           {whatsapp && <a href={whatsappUrl(whatsapp, bio.whatsapp_message || "Olá! Gostaria de agendar uma conversa.")} target="_blank" rel="noreferrer" onClick={() => onTrack("whatsapp_click")}><MessageCircle size={18} aria-hidden /> Falar pelo WhatsApp</a>}
         </section>
 

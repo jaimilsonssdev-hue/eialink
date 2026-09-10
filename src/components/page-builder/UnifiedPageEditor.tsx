@@ -724,76 +724,100 @@ export function UnifiedPageEditor({
 
   return (
     <div className="premium-builder space-y-5">
-      {/* Barra de Ações Superior */}
-      <header className="builder-topbar sticky top-0 z-20 mx-0 flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 backdrop-blur sm:-mx-6 sm:px-6 md:-mx-10 md:px-10">
-        <div className="builder-heading">
-          <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
-            Minha Página Bio Link
-          </p>
-          <h1 className="mt-1 text-2xl font-bold">Edite, confira e publique.</h1>
-        </div>
-        <div className="flex items-center gap-2">
-          {hasPendingChanges && (
-            <span className="hidden text-sm text-muted-foreground sm:inline">
-              Alterações pendentes
-            </span>
-          )}
-          <button
-            type="button"
-            onClick={() => setPreviewOpen(true)}
-            className="btn-secondary xl:hidden"
-          >
-            <Eye className="h-4 w-4" /> Ver prévia
-          </button>
-          <a
-            href={pageUrl}
-            target="_blank"
-            rel="noreferrer"
-            className="btn-secondary hidden sm:inline-flex"
-          >
-            <ExternalLink className="h-4 w-4" /> Ver página
-          </a>
-          {hasPendingChanges || saveState === "error" ? (
+      {/* Barra de Ações e Status Superior Unificada e Proporcional */}
+      <header className="builder-header-unified card-surface rounded-2xl border border-border p-4 sm:p-5 shadow-xs">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide uppercase bg-primary/10 text-primary border border-primary/20">
+                  <Sparkles className="h-3 w-3" />
+                  Página Bio Link
+                </span>
+                <a
+                  href={pageUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors font-medium truncate max-w-[220px] sm:max-w-xs"
+                >
+                  <span>eialink.com.br/p/{bio.slug || "sua-pagina"}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0 opacity-70" />
+                </a>
+              </div>
+              <h1 className="mt-1 text-lg sm:text-xl font-bold text-foreground truncate">
+                {bio.display_name || "Minha Página"}
+              </h1>
+            </div>
+          </div>
+
+          {/* Status de Prontidão Compacto e Ações */}
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            {/* Indicador de Prontidão Compacto */}
+            <div
+              className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold transition-colors ${
+                completedSetupSteps === 3
+                  ? "bg-emerald-500/10 border-emerald-500/25 text-emerald-700 dark:text-emerald-400"
+                  : "bg-amber-500/10 border-amber-500/25 text-amber-700 dark:text-amber-400"
+              }`}
+            >
+              {completedSetupSteps === 3 ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+              ) : (
+                <Circle className="h-4 w-4 shrink-0 text-amber-500" />
+              )}
+              <span>
+                {completedSetupSteps === 3
+                  ? "Pronta para converter"
+                  : `${completedSetupSteps}/3 etapas configuradas`}
+              </span>
+            </div>
+
+            {hasPendingChanges && (
+              <span className="inline-flex items-center gap-1.5 text-xs font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2.5 py-1.5 rounded-lg border border-amber-500/20">
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+                Alterações pendentes
+              </span>
+            )}
+
             <button
               type="button"
-              onClick={() => void save()}
-              disabled={saving}
-              className="btn-primary"
+              onClick={() => setPreviewOpen(true)}
+              className="btn-secondary xl:hidden text-xs py-2 px-3 flex items-center gap-1.5"
             >
-              <Save className="h-4 w-4" />
-              {saving
-                ? "Salvando..."
-                : saveState === "error"
-                  ? "Tentar novamente"
-                  : "Salvar e publicar"}
+              <Eye className="h-4 w-4" /> Prévia
             </button>
-          ) : (
-            <span className="builder-save-status">
-              <CheckCircle2 aria-hidden /> Salvo
-            </span>
-          )}
-        </div>
-      </header>
 
-      {/* Barra de Progresso e Prontidão */}
-      <section className="editor-readiness" aria-label="Progresso da página">
-        <div className="editor-readiness-copy">
-          <span className={completedSetupSteps === 3 ? "is-ready" : ""}>
-            {completedSetupSteps === 3 ? <CheckCircle2 aria-hidden /> : <Circle aria-hidden />}
-          </span>
-          <div>
-            <b>
-              {completedSetupSteps === 3
-                ? "Sua página está pronta para converter clientes"
-                : "Complete os passos para ativar sua página"}
-            </b>
-            <small>{completedSetupSteps}/3 itens essenciais configurados</small>
+            <a
+              href={pageUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-secondary hidden sm:inline-flex text-xs py-2 px-3 items-center gap-1.5"
+            >
+              <ExternalLink className="h-4 w-4" /> Ver página
+            </a>
+
+            {hasPendingChanges || saveState === "error" ? (
+              <button
+                type="button"
+                onClick={() => void save()}
+                disabled={saving}
+                className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm"
+              >
+                <Save className="h-4 w-4" />
+                {saving
+                  ? "Salvando..."
+                  : saveState === "error"
+                    ? "Tentar novamente"
+                    : "Salvar e publicar"}
+              </button>
+            ) : (
+              <span className="builder-save-status text-xs py-1.5 px-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-semibold">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Salvo
+              </span>
+            )}
           </div>
         </div>
-        <div className="editor-readiness-track" aria-hidden="true">
-          <span style={{ width: `${(completedSetupSteps / 3) * 100}%` }} />
-        </div>
-      </section>
+      </header>
 
       {/* Layout Principal: Painel de Controle (4 Abas) + Prévia Celular */}
       <div className="builder-layout">
@@ -868,21 +892,21 @@ export function UnifiedPageEditor({
                           onClick={() => selectNicheModel(model)}
                           className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-150 ${
                             isSelected
-                              ? "border-primary/60 bg-primary/10 shadow-xs ring-1 ring-primary/30 text-foreground"
-                              : "border-border bg-card/60 hover:border-primary/40 hover:bg-accent/40 text-card-foreground"
+                              ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40 text-foreground"
+                              : "border-border bg-card hover:border-primary/50 hover:bg-muted/30 text-foreground shadow-2xs"
                           }`}
                         >
                           <div
                             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
                               isSelected
-                                ? "border-primary/40 bg-primary/20 text-primary"
-                                : "border-border bg-muted/60 text-muted-foreground group-hover:text-foreground group-hover:border-primary/30"
+                                ? "border-primary bg-primary text-primary-foreground shadow-xs"
+                                : "border-border bg-muted/60 text-slate-700 dark:text-muted-foreground group-hover:text-primary group-hover:border-primary/40"
                             }`}
                           >
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className={`text-xs sm:text-sm font-medium truncate ${isSelected ? "text-foreground font-semibold" : "text-foreground/90 group-hover:text-foreground"}`}>
+                            <p className={`text-xs sm:text-sm font-semibold truncate ${isSelected ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
                               {model.title}
                             </p>
                             <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 font-normal">
@@ -896,10 +920,10 @@ export function UnifiedPageEditor({
 
                   {/* Banner de 1-Clique para Fotos & Serviços Recomendados */}
                   {activeNicheModel.nicheKey !== "geral" && (
-                    <div className="rounded-xl border border-border bg-card/60 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
                       <div className="space-y-0.5 min-w-0">
-                        <p className="font-medium text-xs sm:text-sm flex items-center gap-1.5 text-foreground">
-                          <Sparkles className="h-3.5 w-3.5 text-primary/80" />
+                        <p className="font-semibold text-xs sm:text-sm flex items-center gap-1.5 text-foreground">
+                          <Sparkles className="h-3.5 w-3.5 text-primary" />
                           <span>Fotos e Serviços Recomendados de {activeNicheModel.title}</span>
                         </p>
                         <p className="text-[11px] text-muted-foreground">
@@ -909,9 +933,9 @@ export function UnifiedPageEditor({
                       <button
                         type="button"
                         onClick={() => applyNicheDefaults(activeNicheModel.nicheKey)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-border/70 bg-secondary/70 hover:bg-secondary text-foreground text-xs font-medium px-3 py-1.5 transition-colors shrink-0"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-card hover:bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 transition-colors shrink-0 shadow-2xs"
                       >
-                        <Wand2 className="h-3.5 w-3.5 text-muted-foreground" />
+                        <Wand2 className="h-3.5 w-3.5 text-primary" />
                         <span>Aplicar ao Catálogo</span>
                       </button>
                     </div>
@@ -933,17 +957,17 @@ export function UnifiedPageEditor({
                           onClick={() => updateBio({ theme: theme.id })}
                           className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
                             isSelected
-                              ? "border-primary/60 bg-primary/10 text-foreground ring-1 ring-primary/30"
-                              : "border-border bg-card/60 hover:border-primary/40 hover:bg-accent/40 text-muted-foreground hover:text-foreground"
+                              ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/40 shadow-xs"
+                              : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground shadow-2xs"
                           }`}
                         >
                           <span
-                            className="h-5 w-5 shrink-0 rounded-full border border-white/20 shadow-sm"
+                            className="h-5 w-5 shrink-0 rounded-full border border-white/20 shadow-xs"
                             style={{ background: theme.gradientStyle }}
                           />
                           <div className="min-w-0">
-                            <p className="font-medium text-xs truncate">{theme.label}</p>
-                            <p className="text-[10px] text-muted-foreground truncate">{theme.description}</p>
+                            <p className="font-semibold text-xs truncate text-foreground">{theme.label}</p>
+                            <p className="text-[10px] text-muted-foreground truncate font-normal">{theme.description}</p>
                           </div>
                         </button>
                       );
@@ -1479,7 +1503,7 @@ export function UnifiedPageEditor({
                 })()}
 
                 {/* Editor do Catálogo de Produtos e Serviços */}
-                <div className="rounded-xl border border-border bg-surface-elevated/20 p-4">
+                <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-xs">
                   <CatalogEditor
                     items={products}
                     onChange={setProducts}

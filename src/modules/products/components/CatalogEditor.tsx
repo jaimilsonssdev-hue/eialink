@@ -83,15 +83,21 @@ export function CatalogEditor({
                   )}
                   <span className="min-w-0 text-left">
                     <span className="flex items-center gap-1.5 flex-wrap">
-                      <small>{item.type === "product" ? "Produto" : "Serviço"}</small>
+                      <small className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-1.5 py-0.5 rounded">
+                        {item.type === "product" ? "Produto" : "Serviço"}
+                      </small>
                       {item.category && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground font-semibold border border-border">
                           {item.category}
                         </span>
                       )}
                     </span>
-                    <b>{item.name || "Sem nome"}</b>
-                    <em>{priceLabel(item.price)}</em>
+                    <b className="block text-sm font-bold text-foreground mt-1 truncate">
+                      {item.name || "Item sem nome"}
+                    </b>
+                    <em className="block not-italic text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                      {priceLabel(item.price)}
+                    </em>
                   </span>
                 </button>
                 <div className="catalog-item-controls">
@@ -180,17 +186,17 @@ function CatalogFields({ item, onChange }: { item: Omit<CatalogItem, "id" | "pos
               placeholder="Ex.: Vestuário, Calçados, Acessórios..."
             />
           </label>
-          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
-            <span className="text-[11px] text-muted-foreground">Sugestões:</span>
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            <span className="text-[11px] font-semibold text-foreground/80">Sugestões:</span>
             {CATEGORY_SUGGESTIONS.map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => onChange({ category: cat })}
-                className={`text-[11px] px-2 py-0.5 rounded-md border transition-colors ${
+                className={`text-[11px] px-2.5 py-1 rounded-lg border transition-all ${
                   item.category === cat
-                    ? "bg-primary text-primary-foreground border-primary font-medium"
-                    : "bg-surface-elevated/40 border-border hover:border-primary/50 text-muted-foreground"
+                    ? "bg-primary text-primary-foreground border-primary font-semibold shadow-xs"
+                    : "bg-card border-border hover:border-primary/50 text-foreground font-medium shadow-2xs hover:bg-muted/30"
                 }`}
               >
                 {cat}

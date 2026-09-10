@@ -423,12 +423,12 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "store-showcase",
     slug: "store-showcase",
-    name: "Loja online",
-    description: "Pequena loja online com produtos em destaque.",
+    name: "Loja Online & Catálogo",
+    description: "Catálogo completo com categorias, carrinho flutuante e fechamento de pedidos no WhatsApp.",
     category: "store",
     smart: storeSmart,
-    badge: "Novo",
-    bestFor: "lojas, revendedoras e catálogos de produtos",
+    badge: "Popular",
+    bestFor: "lojas, e-commerce, boutiques e catálogos de produtos",
     theme: {
       colors: {
         background: "#fafaf7",

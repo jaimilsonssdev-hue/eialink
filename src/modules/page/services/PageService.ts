@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
+import { formatCatalogDescription } from "@/modules/products/services/ProductService";
 import { fetchGoogleMapsPlaceDetails, type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspectingEngine";
 import {
   makePageOfficialFn,
@@ -183,17 +184,18 @@ export const PageService = {
 
     if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a página demonstrativa.");
 
-    // 1. Cadastra Vitrine de Serviços Premium (catalog_items)
+    // 1. Cadastra Vitrine de Serviços Premium ou Produtos de Loja (catalog_items)
     if (preset.services.length > 0) {
+      const isStore = preset.nicheKey === "loja" || preset.template_id.includes("store");
       const catalogInserts = preset.services.map((srv, idx) => ({
         bio_page_id: data.id,
         name: srv.name,
-        description: srv.description,
+        description: formatCatalogDescription(srv.description, srv.category),
         price: srv.price,
         image_url: srv.image_url,
-        button_label: "Agendar Procedimento",
-        button_url: `/agendar/${data.slug}`,
-        type: "service",
+        button_label: isStore ? "Adicionar" : "Agendar Procedimento",
+        button_url: isStore ? null : `/agendar/${data.slug}`,
+        type: isStore ? "product" : "service",
         position: idx,
         active: true,
       }));

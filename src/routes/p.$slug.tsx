@@ -5,6 +5,7 @@ import { TemplateRenderer } from "@/modules/templates/components/TemplateRendere
 import { BlockRenderer } from "@/components/page-builder/BlockRenderer";
 import type { PageBlock } from "@/components/page-builder/types";
 import type { CatalogItem } from "@/modules/products/types";
+import { parseCatalogItemCategory } from "@/modules/products/services/ProductService";
 import { BrandingProvider } from "@/components/public-profile/BrandingContext";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 import { DemoConversionBanner } from "@/components/public/DemoConversionBanner";
@@ -77,7 +78,10 @@ export const Route = createFileRoute("/p/$slug")({
       bio,
       links: links ?? [],
       blocks: (blocks ?? []) as PageBlock[],
-      products: (products ?? []) as CatalogItem[],
+      products: ((products ?? []) as CatalogItem[]).map((p) => {
+        const { category, description } = parseCatalogItemCategory(p);
+        return { ...p, category, description };
+      }),
       hasProPlan: renderFullPage,
       bookingActive: Boolean(booking),
     };

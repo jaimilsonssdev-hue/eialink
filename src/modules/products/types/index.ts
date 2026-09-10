@@ -5,6 +5,7 @@ export type CatalogItem = {
   bio_page_id?: string;
   type: CatalogItemType;
   name: string;
+  category?: string | null;
   description: string | null;
   price: number | null;
   image_url: string | null;

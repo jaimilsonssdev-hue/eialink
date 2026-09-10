@@ -6,6 +6,7 @@
 
 export interface NicheServicePreset {
   name: string;
+  category?: string;
   description: string;
   price: number;
   duration_minutes: number;
@@ -235,6 +236,18 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
     avatars: [
       { id: "geral-av-1", url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80", label: "Consultor de Negócios" },
       { id: "geral-av-2", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80", label: "Gestora Comercial" },
+    ],
+  },
+  loja: {
+    covers: [
+      { id: "loja-1", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80", label: "Loja & Vitrine Conceito" },
+      { id: "loja-2", url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80", label: "Moda & Compras Fashion" },
+      { id: "loja-3", url: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=1200&q=80", label: "Boutique & Coleção Exclusiva" },
+      { id: "loja-4", url: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=1200&q=80", label: "Vitrine Moderna & Tendências" },
+    ],
+    avatars: [
+      { id: "loja-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Diretora Criativa / Lojista" },
+      { id: "loja-av-2", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80", label: "Gerente de Atendimento & Vendas" },
     ],
   },
 };
@@ -2139,6 +2152,149 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
       ],
     },
   ],
+  loja: [
+    {
+      nicheKey: "loja",
+      modelName: "Boutique Fashion & Tendências",
+      template_id: "store-showcase",
+      theme: "aurora",
+      cover_url: NICHE_GALLERIES.loja.covers[0].url,
+      avatar_url: NICHE_GALLERIES.loja.avatars[0].url,
+      generateHeadline: (company, city) => `Coleção Exclusiva & Moda Feminina em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} traz as últimas tendências em looks, conjuntos e peças selecionadas em ${city}. Faça seu pedido pelo catálogo com entrega rápida ou retirada na loja.`,
+      whatsapp_button_label: "Fazer Pedido / Ver Sacola",
+      whatsapp_message: (company) => `Olá! Vi o catálogo online da ${company} e gostaria de tirar dúvidas sobre as peças.`,
+      services: [
+        {
+          name: "Vestido Midi Fluido Elegance",
+          category: "Vestuário",
+          description: "Tecido premium com caimento leve, decote suave e amarração ajustável.",
+          price: 159.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Conjunto Alfaiataria Chic",
+          category: "Conjuntos",
+          description: "Blazer estruturado e calça reta em tecido nobre, perfeito para eventos ou trabalho.",
+          price: 219.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Cropped Fresh Linho Puro",
+          category: "Vestuário",
+          description: "Conforto térmico com visual despojado e acabamento refinado com botões forrados.",
+          price: 79.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1503342217505-b0a15ec3261c?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Calça Pantalona Prime",
+          category: "Vestuário",
+          description: "Cintura alta com elástico anatômico e bolsos laterais funcionais.",
+          price: 139.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1509631179647-0177331693ae?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "loja",
+      modelName: "Calçados, Bolsas & Acessórios",
+      template_id: "store-showcase",
+      theme: "sunset",
+      cover_url: NICHE_GALLERIES.loja.covers[1].url,
+      avatar_url: NICHE_GALLERIES.loja.avatars[1].url,
+      generateHeadline: (company, city) => `Acessórios, Calçados & Bolsas de Estilo em ${city}`,
+      generateDescription: (company, city) =>
+        `Destaque sua personalidade com os acessórios e calçados exclusivos da ${company} em ${city}. Produtos selecionados a dedo com envio seguro.`,
+      whatsapp_button_label: "Fazer Pedido no WhatsApp",
+      whatsapp_message: (company) => `Olá! Conheci o catálogo da ${company} e quero fazer um pedido.`,
+      services: [
+        {
+          name: "Bolsa Tote Transversal em Couro",
+          category: "Bolsas",
+          description: "Amplo espaço interno com divisórias, alça regulável e acabamento dourado antioxidante.",
+          price: 189.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Sandália Salto Bloco Confort",
+          category: "Calçados",
+          description: "Palmilha acolchoada com salto estável de 6cm, ideal para o dia a dia com elegância.",
+          price: 149.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Tênis Casual Street White",
+          category: "Calçados",
+          description: "Solado leve e flexível em material respirável, combina com qualquer ocasião.",
+          price: 169.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Óculos de Sol Polarizado UV400",
+          category: "Acessórios",
+          description: "Proteção máxima contra raios solares com armação leve e design contemporâneo.",
+          price: 99.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1511499767150-a48a237f0083?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+    {
+      nicheKey: "loja",
+      modelName: "Cosméticos, Skincare & Presentes",
+      template_id: "store-showcase",
+      theme: "ocean",
+      cover_url: NICHE_GALLERIES.loja.covers[2].url,
+      avatar_url: NICHE_GALLERIES.loja.avatars[0].url,
+      generateHeadline: (company, city) => `Cuidados, Fragrâncias & Presentes Especiais em ${city}`,
+      generateDescription: (company, city) =>
+        `A ${company} oferece cosméticos selecionados, perfumes marcantes e kits para presentear com carinho em ${city}. Atendimento direto no WhatsApp.`,
+      whatsapp_button_label: "Fazer Pedido / Chamar Loja",
+      whatsapp_message: (company) => `Olá! Vi os produtos da ${company} e quero encomendar.`,
+      services: [
+        {
+          name: "Sérum Facial Vitamina C Glow",
+          category: "Skincare",
+          description: "Fórmula potente de absorção rápida, uniformiza o tom da pele e combate linhas finas.",
+          price: 89.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Kit Spa Corporal Hidratação Intensa",
+          category: "Corpo & Banho",
+          description: "Esfoliante suave, manteiga corporal de karité e sabonete botânico artesanal.",
+          price: 119.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Perfume Floral Amadeirado 100ml",
+          category: "Perfumaria",
+          description: "Fixação prolongada com notas sofisticadas de bergamota, jasmim e sândalo.",
+          price: 169.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&w=600&q=80",
+        },
+        {
+          name: "Vela Aromática Vanilla & Amber",
+          category: "Casa & Bem-Estar",
+          description: "Cera vegetal 100% natural com pavio de algodão e aroma acolhedor e relaxante.",
+          price: 54.9,
+          duration_minutes: 0,
+          image_url: "https://images.unsplash.com/photo-1603006905003-be475563bc59?auto=format&fit=crop&w=600&q=80",
+        },
+      ],
+    },
+  ],
 };
 
 /**
@@ -2161,6 +2317,7 @@ export const PRESETS: Record<string, NichePreset> = {
   contabilidade: NICHE_PRESETS_VARIANTS.contabilidade[0],
   tatuagem: NICHE_PRESETS_VARIANTS.tatuagem[0],
   otica: NICHE_PRESETS_VARIANTS.otica[0],
+  loja: NICHE_PRESETS_VARIANTS.loja[0],
   geral: NICHE_PRESETS_VARIANTS.geral[0],
 };
 
@@ -2218,6 +2375,9 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
 
   // 15. Fitness, academias, studios e treinos
   if (/(?:academ|fitness|cross|trein|personal|gym|pilates|muscula[çc][aã]o|luta|boxe|jiu)/i.test(combined)) return "academia";
+
+  // 16. Lojas, boutiques, moda, calçados, bolsas, roupas, cosméticos e varejo
+  if (/(?:loja|boutique|moda|vestu[aá]ri|roupa|cal[çc]ad|acess[oó]ri|biju|semijoia|bolsa|e-?commerce|varejo|confec[çc][aã]o|presentes|cosm[eé]tic|perfum|store|shop|vitrine|calcados)/i.test(combined)) return "loja";
 
   return "geral";
 }

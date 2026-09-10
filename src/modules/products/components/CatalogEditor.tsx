@@ -6,10 +6,11 @@ import type { CatalogItem, CatalogItemType } from "../types";
 const blankDraft = (type: CatalogItemType): Omit<CatalogItem, "id" | "position"> => ({
   type,
   name: "",
+  category: null,
   description: null,
   price: null,
   image_url: null,
-  button_label: "Saiba mais",
+  button_label: type === "product" ? "Adicionar" : "Saiba mais",
   button_url: null,
   active: true,
 });
@@ -81,7 +82,14 @@ export function CatalogEditor({
                     <span className="catalog-item-image-fallback"><ImagePlus size={18} /></span>
                   )}
                   <span className="min-w-0 text-left">
-                    <small>{item.type === "product" ? "Produto" : "Serviço"}</small>
+                    <span className="flex items-center gap-1.5 flex-wrap">
+                      <small>{item.type === "product" ? "Produto" : "Serviço"}</small>
+                      {item.category && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary font-medium">
+                          {item.category}
+                        </span>
+                      )}
+                    </span>
                     <b>{item.name || "Sem nome"}</b>
                     <em>{priceLabel(item.price)}</em>
                   </span>
@@ -145,14 +153,54 @@ export function CatalogEditor({
   );
 }
 
+const CATEGORY_SUGGESTIONS = [
+  "Vestuário",
+  "Calçados",
+  "Acessórios",
+  "Novidades",
+  "Ofertas",
+  "Geral",
+];
+
 function CatalogFields({ item, onChange }: { item: Omit<CatalogItem, "id" | "position">; onChange(patch: Partial<CatalogItem>): void }) {
   return (
     <div className="catalog-fields-grid">
       <div className="catalog-fields-main">
-        <label>Nome<input className="input-base mt-1" value={item.name} onChange={(event) => onChange({ name: event.target.value })} placeholder="Ex.: Smash Bacon" /></label>
+        <label>
+          Nome
+          <input className="input-base mt-1" value={item.name} onChange={(event) => onChange({ name: event.target.value })} placeholder="Ex.: Vestido Midi Fluido / Smash Bacon" />
+        </label>
+        <div>
+          <label className="block text-xs font-medium text-foreground">
+            Categoria (opcional)
+            <input
+              className="input-base mt-1"
+              value={item.category ?? ""}
+              onChange={(event) => onChange({ category: event.target.value || null })}
+              placeholder="Ex.: Vestuário, Calçados, Acessórios..."
+            />
+          </label>
+          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+            <span className="text-[11px] text-muted-foreground">Sugestões:</span>
+            {CATEGORY_SUGGESTIONS.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => onChange({ category: cat })}
+                className={`text-[11px] px-2 py-0.5 rounded-md border transition-colors ${
+                  item.category === cat
+                    ? "bg-primary text-primary-foreground border-primary font-medium"
+                    : "bg-surface-elevated/40 border-border hover:border-primary/50 text-muted-foreground"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+        </div>
         <label>Descrição<textarea className="input-base mt-1" value={item.description ?? ""} onChange={(event) => onChange({ description: event.target.value || null })} placeholder="Conte brevemente o que torna este item especial." /></label>
-        <div className="catalog-fields-row"><label>Preço<input className="input-base mt-1" type="number" min="0" step="0.01" value={item.price ?? ""} onChange={(event) => onChange({ price: event.target.value === "" ? null : Number(event.target.value) })} placeholder="Opcional" /></label><label>Texto do botão<input className="input-base mt-1" value={item.button_label} onChange={(event) => onChange({ button_label: event.target.value })} placeholder="Saiba mais" /></label></div>
-        <label>Link do botão<input className="input-base mt-1" value={item.button_url ?? ""} onChange={(event) => onChange({ button_url: event.target.value || null })} placeholder="Opcional" /></label>
+        <div className="catalog-fields-row"><label>Preço<input className="input-base mt-1" type="number" min="0" step="0.01" value={item.price ?? ""} onChange={(event) => onChange({ price: event.target.value === "" ? null : Number(event.target.value) })} placeholder="Opcional" /></label><label>Texto do botão<input className="input-base mt-1" value={item.button_label} onChange={(event) => onChange({ button_label: event.target.value })} placeholder="Adicionar / Comprar" /></label></div>
+        <label>Link do botão<input className="input-base mt-1" value={item.button_url ?? ""} onChange={(event) => onChange({ button_url: event.target.value || null })} placeholder="Opcional (se vazio, usa o carrinho e WhatsApp da loja)" /></label>
       </div>
       <MediaUploader label="Imagem do item" value={item.image_url} maxSizeBytes={3 * 1024 * 1024} onChange={(image_url) => onChange({ image_url })} />
     </div>

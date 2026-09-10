@@ -2248,126 +2248,207 @@
 .niche-clinic-cta-secondary { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; padding: .8rem 1.1rem; border-radius: .9rem; border: 1px solid color-mix(in oklab, var(--template-primary) 35%, transparent); color: var(--template-primary); font-weight: 700; font-size: .88rem; transition: transform .2s ease; }
 .niche-clinic-cta-secondary:hover { transform: translateY(-2px); }
 
-/* ============ STOREFRONT ============ */
-.niche-store { padding-bottom: 3rem; }
-.niche-store-hero {
-  position: relative; overflow: hidden;
-  padding-bottom: 1.4rem;
+/* ============ STOREFRONT (LOJA ONLINE DE ALTA CONVERSÃO) ============ */
+.niche-store {
+  padding-bottom: 6rem;
+  background: var(--template-bg, #fafaf9);
+  color: var(--template-text, #18181b);
 }
-.niche-store-hero-img,
-.niche-store-hero-fallback {
-  width: 100%; height: 220px; object-fit: cover; display: block;
+.niche-store-hero-banner {
+  position: relative;
+  overflow: hidden;
+  height: 220px;
 }
-.niche-store-hero-fallback {
-  background: linear-gradient(120deg, var(--template-primary), color-mix(in oklab, var(--template-primary) 30%, black));
+@media (min-width: 640px) {
+  .niche-store-hero-banner { height: 260px; }
 }
-.niche-store-hero-bar {
-  position: absolute; top: .85rem; left: 0; right: 0;
+.niche-store-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.niche-store-hero-gradient {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.7) 100%);
+}
+.niche-store-top-actions {
+  position: absolute;
+  top: 0.85rem;
+  left: 0;
+  right: 0;
   padding: 0 1rem;
-  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 5;
 }
-.niche-store-avatar {
-  width: 40px; height: 40px; border-radius: .7rem; object-fit: cover;
-  border: 2px solid #fff; box-shadow: 0 4px 12px rgb(0 0 0 / .25);
+.niche-store-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+.niche-store-share-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: background 0.18s ease;
+}
+.niche-store-share-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+.niche-store-profile-card {
+  background: var(--template-surface, #ffffff);
+  border: 1px solid color-mix(in oklab, var(--template-text) 10%, transparent);
+  border-radius: 1.25rem;
+  padding: 1.15rem 1.25rem;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.06), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+.niche-store-avatar-img {
+  width: 58px;
+  height: 58px;
+  border-radius: 1rem;
+  object-fit: cover;
+  border: 3px solid var(--template-surface, #fff);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+  flex-shrink: 0;
 }
 .niche-store-avatar-fallback {
-  display: grid; place-items: center;
-  background: var(--template-primary); color: #fff; font-weight: 700;
+  display: grid;
+  place-items: center;
+  background: var(--template-primary, #111827);
+  color: #fff;
+  font-size: 1.35rem;
+  font-weight: 800;
 }
-.niche-store-hero-bar .min-w-0 { color: #fff; text-shadow: 0 1px 4px rgb(0 0 0 / .5); }
-.niche-store-tag {
-  display: inline-flex; align-items: center; gap: .25rem;
-  font-size: .68rem; opacity: .9; font-weight: 500;
-}
-.niche-store-share {
-  padding: .45rem .85rem; border-radius: 999px;
-  background: rgb(0 0 0 / .35); color: #fff; font-size: .72rem; font-weight: 600;
-  border: 1px solid rgb(255 255 255 / .3); backdrop-filter: blur(10px);
-}
-.niche-store-hero-copy { padding: 1rem 1rem 0; max-width: 44rem; margin: 0 auto; }
-.niche-store-promo {
-  display: inline-block; padding: .3rem .7rem;
-  background: var(--template-primary); color: #fff;
-  border-radius: .4rem; font-size: .7rem; font-weight: 700;
-  letter-spacing: .1em; text-transform: uppercase;
-}
-.niche-store-desc { margin-top: .6rem; color: var(--template-muted); font-size: .9rem; line-height: 1.55; }
-.niche-store-section { max-width: 44rem; margin: 1.75rem auto 0; padding: 0 1rem; }
-.niche-store-section-head {
-  display: flex; align-items: baseline; justify-content: space-between;
-  padding-bottom: .65rem; margin-bottom: 1rem;
-  border-bottom: 2px solid var(--template-text);
-}
-.niche-store-section-head h2 {
-  font-family: "Poppins", "Inter", sans-serif;
-  font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em;
-  text-transform: uppercase;
-}
-.niche-store-count {
-  font-size: .72rem; font-weight: 600; color: var(--template-muted);
-}
-.niche-store-grid {
-  display: grid; gap: .85rem;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-@media (max-width: 359px) { .niche-store-grid { grid-template-columns: 1fr; } }
-@media (min-width: 720px) { .niche-store-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.niche-store-card {
-  display: flex; flex-direction: column;
-  background: var(--template-surface);
-  border-radius: .85rem; overflow: hidden;
+.niche-store-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  background: color-mix(in oklab, var(--template-text) 4%, transparent);
   border: 1px solid color-mix(in oklab, var(--template-text) 8%, transparent);
-  transition: transform .18s ease, box-shadow .18s ease;
+  color: var(--template-text);
 }
-.niche-store-card:hover { transform: translateY(-3px); box-shadow: 0 16px 30px rgb(0 0 0 / .08); }
-.niche-store-card-media {
-  aspect-ratio: 1 / 1; background: color-mix(in oklab, var(--template-primary) 10%, transparent);
-}
-.niche-store-card-media img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.niche-store-card-fallback {
-  display: grid; place-items: center; width: 100%; height: 100%; color: var(--template-primary);
-}
-.niche-store-card-body { padding: .7rem .75rem .85rem; display: flex; flex-direction: column; gap: .3rem; }
-.niche-store-card-name {
-  font-weight: 600; font-size: .85rem; line-height: 1.25;
-  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-}
-.niche-store-card-price {
-  font-weight: 700; color: var(--template-text); font-size: .95rem;
-  font-variant-numeric: tabular-nums;
-}
-.niche-store-card-cta {
-  display: inline-flex; align-items: center; justify-content: center; gap: .25rem;
-  margin-top: .35rem; padding: .5rem .6rem;
-  background: var(--template-text); color: var(--template-bg, #fff);
-  border-radius: .45rem; font-size: .75rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .05em;
-  transition: opacity .18s ease;
-}
-.niche-store-card-cta:hover { opacity: .85; }
-.niche-store-services { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
-.niche-store-services li {
-  display: flex; justify-content: space-between; align-items: center; gap: 1rem;
-  padding: .8rem 1rem; background: var(--template-surface);
-  border: 1px solid color-mix(in oklab, var(--template-text) 8%, transparent);
-  border-radius: .7rem;
-}
-.niche-store-services-price { font-weight: 700; color: var(--template-text); white-space: nowrap; }
-.niche-store-contact { display: flex; flex-wrap: wrap; gap: .5rem; }
-.niche-store-contact-primary {
-  flex: 1; min-width: 12rem;
-  display: inline-flex; align-items: center; justify-content: center; gap: .45rem;
-  padding: .85rem 1rem; border-radius: .65rem;
-  background: #16a34a; color: #fff; font-weight: 700;
-}
-.niche-store-contact-ghost {
-  display: inline-flex; align-items: center; gap: .35rem;
-  padding: .8rem 1rem; border-radius: .65rem;
+.niche-store-cat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--template-surface, #fff);
+  color: var(--template-text);
   border: 1px solid color-mix(in oklab, var(--template-text) 12%, transparent);
-  font-weight: 600; color: var(--template-text); font-size: .85rem;
+  transition: all 0.18s ease;
+  cursor: pointer;
 }
-.niche-store-pix { max-width: 44rem; margin: 1.75rem auto 0; padding: 0 1rem; }
-.niche-store-pix .public-profile-pix { --bio-fg: var(--template-text); --bio-muted: var(--template-muted); --bio-card: var(--template-surface); --bio-border: color-mix(in oklab, var(--template-text) 12%, transparent); }
+.niche-store-cat-pill:hover {
+  border-color: var(--template-primary);
+}
+.niche-store-cat-pill.is-active {
+  background: var(--template-primary, #111827);
+  color: #ffffff;
+  border-color: var(--template-primary, #111827);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+.niche-store-cat-count {
+  font-size: 0.68rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: 9999px;
+  background: color-mix(in oklab, currentColor 15%, transparent);
+  font-weight: 700;
+}
+.niche-store-card {
+  display: flex;
+  flex-direction: column;
+  background: var(--template-surface, #ffffff);
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklab, var(--template-text) 10%, transparent);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.niche-store-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -4px rgba(0, 0, 0, 0.08);
+  border-color: color-mix(in oklab, var(--template-primary) 35%, transparent);
+}
+.niche-store-card-media {
+  aspect-ratio: 1 / 1;
+  background: color-mix(in oklab, var(--template-primary) 8%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+.niche-store-card-fallback {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  color: var(--template-primary);
+}
+.niche-store-btn-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.65rem;
+  background: var(--template-primary, #111827);
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: opacity 0.18s ease, transform 0.12s ease;
+  cursor: pointer;
+  border: none;
+}
+.niche-store-btn-action:hover {
+  opacity: 0.92;
+  transform: scale(0.99);
+}
+.niche-store-btn-action:active {
+  transform: scale(0.97);
+}
+.niche-store-pix {
+  max-width: 42rem;
+  margin: 1.5rem auto 0;
+}
+.niche-store-pix .public-profile-pix {
+  --bio-fg: var(--template-text);
+  --bio-muted: var(--template-muted);
+  --bio-card: var(--template-surface);
+  --bio-border: color-mix(in oklab, var(--template-text) 12%, transparent);
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
 
 /* ============ THUMBNAILS: niche variants ============ */
 .template-thumbnail[data-layout="restaurant"] {

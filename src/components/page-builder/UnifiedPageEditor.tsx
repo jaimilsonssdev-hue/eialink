@@ -213,6 +213,17 @@ export const NICHE_MODELS: NicheModelConfig[] = [
     isGold: true,
   },
   {
+    id: "loja",
+    templateId: "store-showcase",
+    nicheKey: "loja",
+    nicheCategory: "Loja Online e Catálogo",
+    title: "Loja Online & Catálogo de Produtos",
+    subtitle: "Catálogo completo com categorias, carrinho e pedidos organizados no WhatsApp",
+    theme: "aurora",
+    icon: ShoppingBag,
+    isGold: true,
+  },
+  {
     id: "petshop",
     templateId: "business-modern",
     nicheKey: "petshop",
@@ -594,6 +605,7 @@ export function UnifiedPageEditor({
       NICHE_MODELS.find(
         (m) =>
           m.templateId === currentTemplate ||
+          (m.templateId === "store-showcase" && (currentTemplate.includes("store") || currentTemplate.includes("shop") || currentTemplate.includes("loja"))) ||
           (m.templateId === "therapy-wellbeing" && (currentTemplate.includes("therapy") || currentTemplate.includes("harmony"))) ||
           (m.templateId === "clinic-care" && currentTemplate.includes("clinic")) ||
           (m.templateId === "beauty-glow" && currentTemplate.includes("beauty")) ||
@@ -602,7 +614,7 @@ export function UnifiedPageEditor({
           (m.templateId === "academy-performance" && currentTemplate.includes("academy")) ||
           (m.templateId === "restaurant-menu" && currentTemplate.includes("restaurant")) ||
           (m.templateId === "portfolio-studio" && currentTemplate.includes("portfolio")) ||
-          (m.templateId === "business-modern" && (currentTemplate.includes("business") || currentTemplate.includes("store")))
+          (m.templateId === "business-modern" && currentTemplate.includes("business"))
       ) || NICHE_MODELS[0]
     );
   }, [niche, bio.social_links, draftTemplate, bio.template_id]);
@@ -1413,48 +1425,58 @@ export function UnifiedPageEditor({
               </div>
             )}
 
-            {/* ABA 4: SERVIÇOS & PREÇOS */}
+            {/* ABA 4: SERVIÇOS & PREÇOS / PRODUTOS & CATÁLOGO */}
             {activeTab === "catalog" && (
               <div className="space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
-                      Catálogo & Serviços
-                    </p>
-                    <h2 className="mt-1 text-xl font-semibold">Serviços, Preços & Links</h2>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Apresente seus principais serviços com valores e fotos em destaque.
-                    </p>
-                  </div>
-                  {products.length === 0 && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const preset = getPresetForCompany(activeNicheModel.nicheKey, bio.display_name);
-                        if (preset?.services) {
-                          setProducts(
-                            preset.services.map((s, idx) => ({
-                              id: `service-${crypto.randomUUID()}`,
-                              type: "service",
-                              name: s.name,
-                              description: s.description,
-                              price: s.price,
-                              image_url: s.image_url,
-                              button_label: "Agendar",
-                              button_url: null,
-                              position: idx,
-                              active: true,
-                            }))
-                          );
-                        }
-                      }}
-                      className="btn-secondary shrink-0 text-xs py-2 px-3 flex items-center gap-1.5"
-                    >
-                      <Sparkles className="h-3.5 w-3.5 text-[color:var(--primary)]" />
-                      <span>Importar Serviços do Nicho</span>
-                    </button>
-                  )}
-                </div>
+                {(() => {
+                  const isStore = activeNicheModel.nicheKey === "loja" || activeNicheModel.templateId.includes("store");
+                  return (
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
+                          {isStore ? "Catálogo & Vitrine da Loja" : "Catálogo & Serviços"}
+                        </p>
+                        <h2 className="mt-1 text-xl font-semibold">
+                          {isStore ? "Produtos, Categorias & Preços" : "Serviços, Preços & Links"}
+                        </h2>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {isStore
+                            ? "Cadastre os produtos da sua loja com categorias, fotos e valores para venda com carrinho."
+                            : "Apresente seus principais serviços com valores e fotos em destaque."}
+                        </p>
+                      </div>
+                      {products.length === 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const preset = getPresetForCompany(activeNicheModel.nicheKey, bio.display_name);
+                            if (preset?.services) {
+                              setProducts(
+                                preset.services.map((s, idx) => ({
+                                  id: `${isStore ? "product" : "service"}-${crypto.randomUUID()}`,
+                                  type: isStore ? "product" : "service",
+                                  name: s.name,
+                                  category: s.category || (isStore ? "Novidades" : null),
+                                  description: s.description,
+                                  price: s.price,
+                                  image_url: s.image_url,
+                                  button_label: isStore ? "Adicionar" : "Agendar",
+                                  button_url: null,
+                                  position: idx,
+                                  active: true,
+                                }))
+                              );
+                            }
+                          }}
+                          className="btn-secondary shrink-0 text-xs py-2 px-3 flex items-center gap-1.5"
+                        >
+                          <Sparkles className="h-3.5 w-3.5 text-[color:var(--primary)]" />
+                          <span>{isStore ? "Importar Produtos da Loja" : "Importar Serviços do Nicho"}</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Editor do Catálogo de Produtos e Serviços */}
                 <div className="rounded-xl border border-border bg-surface-elevated/20 p-4">

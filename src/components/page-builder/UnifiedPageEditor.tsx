@@ -67,7 +67,7 @@ import {
   subdomainValidationMessage,
 } from "@/lib/public-page-url";
 import type { CatalogItem } from "@/modules/products/types";
-import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
+import { getPresetForCompany, getVariantsForNiche, type NichePreset } from "@/modules/prospecting/nichePresets";
 
 type BioForm = Pick<
   Tables<"bio_pages">,
@@ -619,53 +619,69 @@ export function UnifiedPageEditor({
     );
   }, [niche, bio.social_links, draftTemplate, bio.template_id]);
 
-  const selectNicheModel = (model: NicheModelConfig) => {
-    setDraftTemplate(model.templateId);
-    setNiche(model.nicheKey);
-    const currentSocial = (bio.social_links as Record<string, any>) || {};
-    updateBio({
-      template_id: model.templateId,
-      theme: model.theme,
-      social_links: {
-        ...currentSocial,
-        niche: model.nicheKey,
-      },
-    });
-  };
+  const [autoSyncServices, setAutoSyncServices] = useState<boolean>(true);
 
-  const applyNicheDefaults = (nicheKey: string) => {
-    const preset = getPresetForCompany(nicheKey, bio.display_name);
-    if (!preset) return;
+  const applyPresetVariant = (preset: NichePreset, updateServices = autoSyncServices) => {
+    setDraftTemplate(preset.template_id);
+    setNiche(preset.nicheKey);
+    const currentSocial = (bio.social_links as Record<string, any>) || {};
 
     const patch: Partial<BioForm> = {
-      cover_url: preset.cover_url,
-      avatar_url: preset.avatar_url,
-      whatsapp_button_label: preset.whatsapp_button_label,
+      template_id: preset.template_id,
       theme: preset.theme,
+      whatsapp_button_label: preset.whatsapp_button_label,
+      social_links: {
+        ...currentSocial,
+        niche: preset.nicheKey,
+        model_variant: preset.modelName,
+      },
     };
-    if (!bio.description || bio.description.trim().length === 0 || bio.description === defaults.displayName) {
-      patch.description = preset.generateDescription(bio.display_name || defaults.displayName || "Nossa Empresa", "sua cidade");
+
+    // Atualiza fotos curadas caso não sejam fotos customizadas pelo usuário
+    if (!bio.cover_url || bio.cover_url.includes("template-assets") || bio.cover_url.includes("unsplash.com")) {
+      patch.cover_url = preset.cover_url;
     }
-    if (!bio.whatsapp_message || bio.whatsapp_message.trim().length === 0) {
-      patch.whatsapp_message = preset.whatsapp_message(bio.display_name || defaults.displayName || "Nossa Empresa");
+    if (!bio.avatar_url || bio.avatar_url.includes("unsplash.com")) {
+      patch.avatar_url = preset.avatar_url;
     }
+
+    // Injeta copywriting especializado do modelo
+    patch.description = preset.generateDescription(bio.display_name || defaults.displayName || "Nossa Empresa", "sua cidade");
+    patch.whatsapp_message = preset.whatsapp_message(bio.display_name || defaults.displayName || "Nossa Empresa");
+
     updateBio(patch);
 
-    if (preset.services && preset.services.length > 0) {
+    if (updateServices && preset.services && preset.services.length > 0) {
+      const isStore = preset.template_id === "store-showcase";
       const newProducts: CatalogItem[] = preset.services.map((s, idx) => ({
-        id: `service-${crypto.randomUUID()}`,
-        type: "service",
+        id: `${isStore ? "product" : "service"}-${crypto.randomUUID()}`,
+        type: isStore ? "product" : "service",
         name: s.name,
+        category: s.category || (isStore ? "Novidades" : null),
         description: s.description,
         price: s.price,
         image_url: s.image_url,
-        button_label: "Agendar",
+        button_label: isStore ? "Adicionar" : "Agendar",
         button_url: null,
         position: idx,
         active: true,
       }));
       setProducts(newProducts);
     }
+  };
+
+  const selectNicheModel = (model: NicheModelConfig) => {
+    setDraftTemplate(model.templateId);
+    setNiche(model.nicheKey);
+    const variants = getVariantsForNiche(model.nicheKey);
+    const targetVariant = variants[0] || getPresetForCompany(model.nicheKey, bio.display_name);
+    applyPresetVariant(targetVariant, autoSyncServices);
+  };
+
+  const applyNicheDefaults = (nicheKey: string) => {
+    const preset = getPresetForCompany(nicheKey, bio.display_name);
+    if (!preset) return;
+    applyPresetVariant(preset, true);
   };
 
   async function save() {
@@ -916,6 +932,75 @@ export function UnifiedPageEditor({
                         </button>
                       );
                     })}
+                  </div>
+
+                  {/* 1.1 Seleção dos 3 Modelos Visuais Exclusivos do Nicho */}
+                  <div className="rounded-2xl border border-border/80 bg-surface-elevated/40 p-4 space-y-3 shadow-2xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--primary)] flex items-center gap-1.5">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          Modelos Visuais de {activeNicheModel.title}
+                        </span>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          Cada nicho possui 3 identidades completas com layout, textos e serviços exclusivos.
+                        </p>
+                      </div>
+                      <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none shrink-0">
+                        <input
+                          type="checkbox"
+                          checked={autoSyncServices}
+                          onChange={(e) => setAutoSyncServices(e.target.checked)}
+                          className="h-3.5 w-3.5 rounded border-border text-[color:var(--primary)]"
+                        />
+                        <span>Sincronizar serviços</span>
+                      </label>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      {getVariantsForNiche(activeNicheModel.nicheKey).map((variant, idx) => {
+                        const currentSocial = (bio.social_links as Record<string, any>) || {};
+                        const isVariantSelected =
+                          currentSocial.model_variant === variant.modelName ||
+                          (bio.template_id === variant.template_id && bio.theme === variant.theme);
+                        return (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => applyPresetVariant(variant, autoSyncServices)}
+                            className={`p-3 rounded-xl border text-left transition-all duration-150 relative flex flex-col justify-between ${
+                              isVariantSelected
+                                ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40 text-foreground"
+                                : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground shadow-2xs"
+                            }`}
+                          >
+                            <div>
+                              <div className="flex items-center justify-between gap-1 mb-1.5">
+                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-primary/15 text-primary">
+                                  Modelo {idx + 1}
+                                </span>
+                                <span className="text-[10px] text-muted-foreground capitalize font-medium">
+                                  {variant.theme}
+                                </span>
+                              </div>
+                              <p className="text-xs sm:text-sm font-bold text-foreground line-clamp-1">
+                                {variant.modelName}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">
+                                {variant.generateHeadline(bio.display_name || defaults.displayName || "Sua Empresa", "sua cidade")}
+                              </p>
+                            </div>
+
+                            <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
+                              <span>{variant.services?.length || 3} serviços</span>
+                              <span className={`font-semibold text-[10px] uppercase ${isVariantSelected ? "text-primary font-bold" : "text-muted-foreground"}`}>
+                                {isVariantSelected ? "Ativo ✓" : "Aplicar"}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Banner de 1-Clique para Fotos & Serviços Recomendados */}

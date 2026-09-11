@@ -2412,3 +2412,13 @@ export function getGalleryForNiche(nicheKey?: string | null): { covers: CuratedP
   const key = detectNicheKey(nicheKey, null);
   return NICHE_GALLERIES[key] || NICHE_GALLERIES.geral;
 }
+
+/**
+ * Retorna as 3 variantes de modelos visuais completas configuradas para o nicho.
+ */
+export function getVariantsForNiche(nicheKey?: string | null): NichePreset[] {
+  if (!nicheKey) return NICHE_PRESETS_VARIANTS.geral;
+  const key = detectNicheKey(nicheKey, null);
+  return NICHE_PRESETS_VARIANTS[key] || NICHE_PRESETS_VARIANTS.geral;
+}
+

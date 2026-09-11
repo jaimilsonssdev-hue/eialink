@@ -43,7 +43,7 @@ import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { publicPageUrl } from "@/lib/public-page-url";
 import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
 import { lookupBusinessProfileFn } from "@/modules/prospecting/prospecting.functions";
-import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
+import { getPresetForCompany, getVariantsForNiche } from "@/modules/prospecting/nichePresets";
 import type { ProspectDraft } from "@/modules/prospecting/types";
 
 export const Route = createFileRoute("/_authenticated/pages")({
@@ -204,6 +204,7 @@ function PagesWorkspace() {
   const queryClient = useQueryClient();
   const [isWizardOpen, setIsWizardOpen] = useState(false);
   const [selectedNiche, setSelectedNiche] = useState("odontologia");
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
   const [wizardName, setWizardName] = useState("");
   const [wizardWhatsapp, setWizardWhatsapp] = useState("");
   const [wizardCity, setWizardCity] = useState("");
@@ -337,6 +338,7 @@ function PagesWorkspace() {
         whatsapp: wizardWhatsapp.trim() || null,
         niche: selectedNiche,
         city: wizardCity.trim() || null,
+        variantIndex: selectedVariantIndex,
         isDemo: false, // Página definitiva do cliente
       });
 
@@ -426,6 +428,7 @@ function PagesWorkspace() {
 
   function openWizardWithNiche(nicheKey: string) {
     setSelectedNiche(nicheKey);
+    setSelectedVariantIndex(0);
     setLookupQuery("");
     setLookupResults([]);
     setLookupFeedback(null);
@@ -885,10 +888,54 @@ function PagesWorkspace() {
                 </div>
               </div>
 
+              {/* 2. Seleção do Modelo Visual (3 Variantes) */}
+              <div>
+                <label className="block text-xs font-bold text-foreground mb-1.5 flex items-center justify-between">
+                  <span>2. Identidade & Estilo (3 Modelos do Nicho)</span>
+                  <span className="text-[11px] font-semibold text-[color:var(--primary)]">
+                    Modelo {selectedVariantIndex + 1} de 3
+                  </span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  {getVariantsForNiche(selectedNiche).map((variant, idx) => {
+                    const isSelected = selectedVariantIndex === idx;
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setSelectedVariantIndex(idx)}
+                        className={`p-2.5 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
+                          isSelected
+                            ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 ring-1 ring-[color:var(--primary)]/50 shadow-2xs"
+                            : "border-border bg-surface-elevated/30 hover:border-border/80 hover:bg-muted/30"
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between gap-1 mb-1">
+                            <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[color:var(--primary)]/20 text-[color:var(--primary)]">
+                              Modelo {idx + 1}
+                            </span>
+                            <span className="text-[10px] text-muted-foreground capitalize font-medium">
+                              {variant.theme}
+                            </span>
+                          </div>
+                          <p className="text-xs font-bold text-foreground line-clamp-1">
+                            {variant.modelName}
+                          </p>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground mt-1.5 block">
+                          {variant.services?.length || 3} serviços inclusos
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Nome do Negócio */}
               <div>
                 <label className="block text-xs font-bold text-foreground mb-1.5">
-                  2. Nome da sua Empresa ou Marca
+                  3. Nome da sua Empresa ou Marca
                 </label>
                 <input
                   value={wizardName}
@@ -904,7 +951,7 @@ function PagesWorkspace() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-foreground mb-1.5">
-                    3. WhatsApp de Atendimento
+                    4. WhatsApp de Atendimento
                   </label>
                   <input
                     value={wizardWhatsapp}
@@ -915,7 +962,7 @@ function PagesWorkspace() {
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-foreground mb-1.5">
-                    4. Cidade (opcional)
+                    5. Cidade (opcional)
                   </label>
                   <input
                     value={wizardCity}

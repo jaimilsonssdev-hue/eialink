@@ -405,6 +405,49 @@ export interface GoogleMapsPlaceDetails {
   }>;
 }
 
+const AVATAR_OR_JUNK_PATTERNS = [
+  "/a/",
+  "/a-/",
+  "/al/",
+  "default_user",
+  "default_avatar",
+  "photo.jpg",
+  "contrib",
+  "profile_photos",
+  "result-no-thumbnail",
+  "default_geocode",
+  "mapslogo",
+  "loader",
+  "tactile",
+  "=s32",
+  "=s40",
+  "=s48",
+  "=s64",
+  "=s96",
+  "=s120",
+  "=w36",
+  "=w48",
+  "=w72",
+  "=w96",
+];
+
+export function isAuthenticBusinessPhoto(url: string): boolean {
+  if (!url || typeof url !== "string") return false;
+  if (url.includes("vt/pb=")) return false;
+  return !AVATAR_OR_JUNK_PATTERNS.some((bad) => url.includes(bad));
+}
+
+export function normalizeBusinessPhotoUrl(url: string): string {
+  if (url.includes("streetviewpixels-pa.googleapis.com")) {
+    return url.replace(/&w=\d+&h=\d+/, "&w=1200&h=600");
+  }
+  if (url.includes("googleusercontent.com")) {
+    const clean = url.replace(/=w\d+.*$/, "=w1200-h800-k-no");
+    return clean.includes("=w1200") ? clean : `${clean}=w1200-h800-k-no`;
+  }
+  return url;
+}
+
 /**
  * Consulta a ficha completa do estabelecimento no Google Maps via Jina Reader.
  * Retorna nota real, quantidade de avaliações, fotos reais (lh3 e Street View), endereço, horários e depoimentos.
@@ -417,7 +460,7 @@ export async function fetchGoogleMapsPlaceDetails(
   const cleanName = companyName
     .replace(/clinical\s+innovate/gi, "Clínica Inove")
     .replace(/^clinical\s+/gi, "Clínica ")
-    .replace(/\s*-\s*(?:Teixeira de Freitas|BA|Bahia|São Paulo|SP|Rio de Janeiro|RJ).*/i, "")
+    .replace(/\s*[-–|]\s*(?:Sua Clínica|Especializada|Matriz|Filial|Teixeira de Freitas|BA|Bahia|São Paulo|SP|Rio de Janeiro|RJ).*/i, "")
     .replace(/\s*\|\s*.*/i, "")
     .trim();
 
@@ -532,12 +575,13 @@ export async function fetchGoogleMapsPlaceDetails(
         let imgMatch: RegExpExecArray | null;
         while ((imgMatch = imgRegex.exec(text)) !== null) {
           const url = imgMatch[1];
-          if (url.includes("googleusercontent.com/gps-cs-s/") || url.includes("googleusercontent.com/p/")) {
-            const cleanUrl = url.replace(/=w\d+.*$/, "=w1200");
-            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
-          } else if (url.includes("streetviewpixels-pa.googleapis.com")) {
-            const cleanUrl = url.replace(/&w=\d+&h=\d+/, "&w=1200&h=600");
-            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+          if (isAuthenticBusinessPhoto(url)) {
+            const cleanUrl = normalizeBusinessPhotoUrl(url);
+            if (url.includes("streetviewpixels-pa.googleapis.com")) {
+              if (!photos.includes(cleanUrl)) photos.unshift(cleanUrl);
+            } else {
+              if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+            }
           }
         }
 
@@ -659,9 +703,13 @@ export async function fetchGoogleMapsPlaceDetails(
         const googlePhotos = [...text.matchAll(/!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g)];
         for (const gp of googlePhotos) {
           const url = gp[1];
-          if (!url.includes("/a/") && !url.includes("default_user") && !url.includes("loader")) {
-            const cleanUrl = url.replace(/=w\d+.*$/, "=w1200");
-            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+          if (isAuthenticBusinessPhoto(url)) {
+            const cleanUrl = normalizeBusinessPhotoUrl(url);
+            if (url.includes("streetviewpixels-pa.googleapis.com")) {
+              if (!photos.includes(cleanUrl)) photos.unshift(cleanUrl);
+            } else {
+              if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+            }
           }
         }
 
@@ -679,12 +727,13 @@ export async function fetchGoogleMapsPlaceDetails(
                 const cidPhotos = [...cidText.matchAll(/!\[[^\]]*\]\((https:\/\/(?:lh[0-9]\.googleusercontent\.com|streetviewpixels-pa\.googleapis\.com)[^\)]+)\)/g)];
                 for (const cp of cidPhotos) {
                   const url = cp[1];
-                  if (url.includes("googleusercontent.com/gps-cs-s/") || url.includes("googleusercontent.com/p/")) {
-                    const cleanUrl = url.replace(/=w\d+.*$/, "=w1200");
-                    if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
-                  } else if (url.includes("streetviewpixels-pa.googleapis.com")) {
-                    const cleanUrl = url.replace(/&w=\d+&h=\d+/, "&w=1200&h=600");
-                    if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+                  if (isAuthenticBusinessPhoto(url)) {
+                    const cleanUrl = normalizeBusinessPhotoUrl(url);
+                    if (url.includes("streetviewpixels-pa.googleapis.com")) {
+                      if (!photos.includes(cleanUrl)) photos.unshift(cleanUrl);
+                    } else {
+                      if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
+                    }
                   }
                 }
               }

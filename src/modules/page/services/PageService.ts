@@ -141,8 +141,10 @@ export const PageService = {
 
     const realRating = realPlace?.rating ?? rating ?? null;
     const realReviewsCount = realPlace?.reviewsCount ?? reviewsCount ?? null;
+    // Capa: prioriza foto real autêntica da fachada/instalação do Maps; se ausente, usa capa curada do nicho
     const realCover = realPlace?.photos?.[0] ?? preset.cover_url;
-    const realAvatar = (realPlace?.photos && realPlace.photos.length > 1) ? realPlace.photos[1] : preset.avatar_url;
+    // Avatar: utiliza o avatar profissional curado do nicho para evitar atribuir fotos de salas, fachadas ou fotos aleatórias ao avatar circular
+    const realAvatar = preset.avatar_url;
     const finalWhatsapp = whatsapp || realPlace?.whatsapp || null;
     const realAddress = realPlace?.address || null;
     const realHours = realPlace?.openingHours || null;

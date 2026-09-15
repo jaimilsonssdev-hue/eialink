@@ -65,7 +65,7 @@ import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions"
 import { validateProspectingSearch } from "@/modules/prospecting/validation";
 import { useActionCooldown } from "@/hooks/useActionCooldown";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
-import { PageService } from "@/modules/page/services/PageService";
+import { PageService, type OwnedPage } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
 import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";

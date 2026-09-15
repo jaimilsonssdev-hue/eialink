@@ -11,6 +11,7 @@ import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 import { DemoConversionBanner } from "@/components/public/DemoConversionBanner";
 import { detectNicheKey, isHealthBookingNiche, isProductCatalogNiche } from "@/modules/prospecting/nichePresets";
 import { generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
+import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/WhatsAppTriageModal";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.

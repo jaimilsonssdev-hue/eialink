@@ -80,15 +80,7 @@ export function TemplateRenderer({
   const layout = layoutResolver.resolve(model);
   const fallbackCover = getFallbackCover(model.template.id);
   const renderedBio = bio.cover_url || !fallbackCover ? bio : { ...bio, cover_url: fallbackCover };
-  const smartSupplemental =
-    safeProducts && safeProducts.length > 0 ? (
-      <>
-        <CatalogSection items={safeProducts} whatsapp={bio.whatsapp} />
-        {supplemental}
-      </>
-    ) : (
-      supplemental
-    );
+
   return (
     <main
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}

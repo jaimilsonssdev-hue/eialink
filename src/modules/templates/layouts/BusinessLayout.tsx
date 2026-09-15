@@ -38,7 +38,7 @@ export class BusinessLayout implements TemplateLayoutRenderer {
     const secondaryLinks = links.filter((l) => l.active);
     const insta = bio.instagram?.replace("@", "");
     const whats = bio.whatsapp?.replace(/\D/g, "");
-    const phone = bio.phone?.replace(/\D/g, "");
+    const phone = (bio as any).phone?.replace(/\D/g, "");
 
     const socialData = (bio.social_links as Record<string, any>) || {};
     const rating = socialData.google_rating;

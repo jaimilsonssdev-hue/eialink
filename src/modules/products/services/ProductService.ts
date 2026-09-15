@@ -73,10 +73,12 @@ export const ProductService = {
     const invalid = items.find(
       (item) => !item.name.trim() || !["product", "service"].includes(item.type),
     );
-    if (invalid) throw new Error("Existem itens do catÃ¡logo sem nome ou tipo vÃ¡lido.");
+    if (invalid) throw new Error("Existem itens do catálogo sem nome ou tipo válido.");
     const existing = await ProductService.list(bioPageId);
-    const savedItems = items.filter((item) => !item.id.startsWith("draft-"));
-    const retained = new Set(savedItems.map((item) => item.id));
+    const existingIds = new Set(existing.map((item) => item.id));
+
+    // Somente atualiza itens que realmente existem no banco (possuem UUID persistido)
+    const savedItems = items.filter((item) => existingIds.has(item.id));
     for (const [position, item] of savedItems.entries()) {
       const { error } = await catalogStore
         .from("catalog_items")
@@ -85,7 +87,9 @@ export const ProductService = {
         .eq("bio_page_id", bioPageId);
       if (error) throw new Error(`Falha ao atualizar ${item.name}: ${error.message}`);
     }
-    const newItems = items.filter((item) => item.id.startsWith("draft-"));
+
+    // Qualquer item sem UUID persistido no banco é tratado como inserção
+    const newItems = items.filter((item) => !existingIds.has(item.id));
     if (newItems.length) {
       const { error } = await catalogStore.from("catalog_items").insert(
         newItems.map((item) => ({
@@ -95,6 +99,8 @@ export const ProductService = {
       );
       if (error) throw new Error(`Falha ao criar item: ${error.message}`);
     }
+
+    const retained = new Set(items.map((item) => item.id));
     const removedIds = existing.filter((item) => !retained.has(item.id)).map((item) => item.id);
     if (removedIds.length) {
       const { error } = await catalogStore

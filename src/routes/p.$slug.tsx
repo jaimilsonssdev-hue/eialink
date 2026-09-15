@@ -276,13 +276,15 @@ function PublicBio() {
   const isProduct = isProductCatalogNiche(nicheKey);
   const isHealth = isHealthBookingNiche(nicheKey);
 
+  const isServiceBookingNiche = isHealth || nicheKey === "barbearia" || nicheKey === "beleza";
+
   // Auto-correção dinâmica e isolamento estrito de nichos:
-  // 1. Templates de saúde (clínica/terapia) NUNCA aparecem para nichos que não sejam saúde
+  // 1. Templates de saúde (clínica/terapia) NUNCA aparecem para nichos que não sejam saúde ou beleza
   // 2. Templates jurídicos NUNCA aparecem fora de advocacia
-  // 3. Nichos de produto/food (açaí, delivery, sorveteria, etc.) renderizam cardápio/catálogo
+  // 3. Nichos de produto/food (açaí, delivery, sorveteria, bebidas, etc.) renderizam cardápio/catálogo
   let effectiveTemplateId = bio.template_id;
 
-  if (!isHealth && (effectiveTemplateId === "clinic-care" || effectiveTemplateId === "therapy-wellbeing")) {
+  if (!isHealth && nicheKey !== "beleza" && (effectiveTemplateId === "clinic-care" || effectiveTemplateId === "therapy-wellbeing")) {
     effectiveTemplateId = isProduct ? "cinematic-glass" : "business-modern";
   }
 
@@ -316,7 +318,7 @@ function PublicBio() {
               onTrack={track}
               onShare={share}
               products={products}
-              bookingUrl={isHealth && bookingActive ? `/agendar/${bio.slug}` : undefined}
+              bookingUrl={isServiceBookingNiche && bookingActive ? `/agendar/${bio.slug}` : undefined}
               motionLevel={bio.motion_enabled === false ? "off" : "pro"}
               supplemental={
                 <>

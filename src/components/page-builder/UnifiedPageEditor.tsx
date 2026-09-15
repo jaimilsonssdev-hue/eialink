@@ -40,6 +40,7 @@ import {
   Glasses,
   ShieldCheck,
   Laptop,
+  Wine,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
@@ -157,6 +158,39 @@ export const NICHE_MODELS: NicheModelConfig[] = [
     subtitle: "Gelatos artesanais, taças de sorvete, açaí gourmet e sobremesas geladas",
     theme: "ocean",
     icon: Sun,
+    isGold: true,
+  },
+  {
+    id: "bebidas",
+    templateId: "cinematic-glass",
+    nicheKey: "bebidas",
+    nicheCategory: "Bebidas e Adegas",
+    title: "Adega, Bebidas & Distribuidora",
+    subtitle: "Cervejas trincando, chopp, vinhos, destilados, gelo e delivery com carrinho",
+    theme: "amber",
+    icon: Wine,
+    isGold: true,
+  },
+  {
+    id: "barbearia",
+    templateId: "cinematic-glass",
+    nicheKey: "barbearia",
+    nicheCategory: "Barbearias e Estilo",
+    title: "Barbearia & Barber Shop",
+    subtitle: "Cortes modernos, degradê na navalha, barba terapia e agendamento online",
+    theme: "midnight",
+    icon: Scissors,
+    isGold: true,
+  },
+  {
+    id: "beleza",
+    templateId: "beauty-glam",
+    nicheKey: "beleza",
+    nicheCategory: "Beleza e Estética",
+    title: "Salão de Beleza, Estética & Nails",
+    subtitle: "Unhas em gel, sobrancelhas, escova, hidratação e estética facial",
+    theme: "sunset",
+    icon: Sparkles,
     isGold: true,
   },
   {
@@ -679,7 +713,7 @@ export function UnifiedPageEditor({
     if (updateServices && preset.services && preset.services.length > 0) {
       const isStore = preset.template_id === "store-showcase";
       const newProducts: CatalogItem[] = preset.services.map((s, idx) => ({
-        id: `${isStore ? "product" : "service"}-${crypto.randomUUID()}`,
+        id: `draft-${crypto.randomUUID()}`,
         type: isStore ? "product" : "service",
         name: s.name,
         category: s.category || (isStore ? "Novidades" : null),
@@ -1611,7 +1645,7 @@ export function UnifiedPageEditor({
                             if (preset?.services) {
                               setProducts(
                                 preset.services.map((s, idx) => ({
-                                  id: `${isStore ? "product" : "service"}-${crypto.randomUUID()}`,
+                                  id: `draft-${crypto.randomUUID()}`,
                                   type: isStore ? "product" : "service",
                                   name: s.name,
                                   category: s.category || (isStore ? "Novidades" : null),

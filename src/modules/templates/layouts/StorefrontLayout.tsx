@@ -3,6 +3,7 @@ import {
   ArrowRight,
   ArrowUpRight,
   Check,
+  ChevronRight,
   CreditCard,
   Flame,
   Instagram,
@@ -415,12 +416,17 @@ function StorefrontView({
                 {selectedCategory === "all" ? "Todos os Produtos" : selectedCategory}
               </span>
             </h2>
-            <span className="text-xs text-muted-foreground font-medium">
-              {filteredProducts.length} {filteredProducts.length === 1 ? "item" : "itens"}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="sm:hidden text-[11px] text-muted-foreground font-medium flex items-center gap-0.5">
+                <span>Deslize</span> <ChevronRight size={12} />
+              </span>
+              <span className="text-xs text-muted-foreground font-medium">
+                {filteredProducts.length} {filteredProducts.length === 1 ? "item" : "itens"}
+              </span>
+            </div>
           </div>
 
-          {/* Grade de Produtos Moderna */}
+          {/* Grade de Produtos Moderna (Carrossel Touch no Mobile / Grid no Desktop) */}
           {filteredProducts.length === 0 ? (
             <div className="py-12 text-center rounded-2xl border border-dashed border-border/80 bg-surface-elevated/20 p-6">
               <ShoppingBag size={32} className="mx-auto text-muted-foreground/60 mb-2" />
@@ -430,11 +436,11 @@ function StorefrontView({
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="flex gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:grid sm:grid-cols-2 md:grid-cols-3 pb-3">
               {filteredProducts.map((item) => {
                 const qtyInCart = cart[item.id] ?? 0;
                 return (
-                  <article key={item.id} className="niche-store-card group">
+                  <article key={item.id} className="niche-store-card group shrink-0 w-[230px] sm:w-auto snap-start">
                     {/* Imagem do Produto */}
                     <div className="niche-store-card-media relative">
                       {item.image_url ? (

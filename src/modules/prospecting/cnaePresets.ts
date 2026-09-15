@@ -36,8 +36,16 @@ export const POPULAR_CNAES: CnaeItem[] = [
     code: "9602-5/02",
     cleanCode: "9602502",
     title: "Atividades de estética e outros serviços de cuidados de beleza",
-    niche: "Estética",
-    popularTerm: "Clínica de Estética / Harmonização",
+    niche: "Beleza",
+    popularTerm: "Salão de Beleza / Estética & Nails",
+    conversionRank: 1,
+  },
+  {
+    code: "4723-7/00",
+    cleanCode: "4723700",
+    title: "Comércio varejista de bebidas",
+    niche: "Bebidas",
+    popularTerm: "Adega / Distribuidora de Bebidas",
     conversionRank: 1,
   },
   {

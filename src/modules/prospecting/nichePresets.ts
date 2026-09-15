@@ -85,8 +85,44 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "sorv-4", url: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=1200&q=80", label: "Gelato Italiano Especial" },
     ],
     avatars: [
-      { id: "sorv-av-1", url: "https://images.unsplash.com/photo-1556157382-97eda2d62296?auto=format&fit=crop&w=400&q=80", label: "Gelatiere / Mestre Sorveteiro" },
-      { id: "sorv-av-2", url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80", label: "Atendente de Açaí & Gelatos" },
+      { id: "sorv-av-1", url: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=400&q=80", label: "Emblema Gelato Italiano" },
+      { id: "sorv-av-2", url: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=400&q=80", label: "Emblema Açaí & Sorvetes" },
+    ],
+  },
+  bebidas: {
+    covers: [
+      { id: "beb-1", url: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=80", label: "Adega de Vinhos Selecionados" },
+      { id: "beb-2", url: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=1200&q=80", label: "Chopp Artesanal & Cerveja Gelada" },
+      { id: "beb-3", url: "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=1200&q=80", label: "Destilados & Balcão de Coquetéis" },
+      { id: "beb-4", url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=1200&q=80", label: "Prateleira de Bebidas & Conveniência" },
+    ],
+    avatars: [
+      { id: "beb-av-1", url: "https://images.unsplash.com/photo-1567696911980-2eed69a46042?auto=format&fit=crop&w=400&q=80", label: "Emblema Adega & Cervejas" },
+      { id: "beb-av-2", url: "https://images.unsplash.com/photo-1584225064785-c62a8b43d148?auto=format&fit=crop&w=400&q=80", label: "Emblema Distribuidora Express" },
+    ],
+  },
+  barbearia: {
+    covers: [
+      { id: "barb-1", url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80", label: "Cadeira de Barbearia Vintage" },
+      { id: "barb-2", url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80", label: "Bancada de Navalha & Tesouras" },
+      { id: "barb-3", url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1200&q=80", label: "Ambiente Barber Club Moderno" },
+      { id: "barb-4", url: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1200&q=80", label: "Luminária & Estilo Clássico" },
+    ],
+    avatars: [
+      { id: "barb-av-1", url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=400&q=80", label: "Emblema Barber Shop" },
+      { id: "barb-av-2", url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=400&q=80", label: "Emblema Navalha de Ouro" },
+    ],
+  },
+  beleza: {
+    covers: [
+      { id: "bel-1", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80", label: "Salão de Beleza & Bancada Iluminada" },
+      { id: "bel-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Studio de Estética & Skincare" },
+      { id: "bel-3", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1200&q=80", label: "Nail Studio & Unhas em Gel" },
+      { id: "bel-4", url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80", label: "Spa Relaxante & Cuidados Faciais" },
+    ],
+    avatars: [
+      { id: "bel-av-1", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=400&q=80", label: "Emblema Studio de Beleza" },
+      { id: "bel-av-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80", label: "Emblema Estética & Glow" },
     ],
   },
   oficina: {
@@ -283,7 +319,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
 };
 
-export const PRODUCT_CATALOG_NICHES = new Set(["loja", "delivery", "sorveteria", "restaurante", "petshop", "costura"]);
+export const PRODUCT_CATALOG_NICHES = new Set(["loja", "delivery", "sorveteria", "restaurante", "petshop", "costura", "bebidas"]);
 export const HEALTH_BOOKING_NICHES = new Set(["clinica", "odontologia", "psicologia", "nutricao"]);
 
 export function isProductCatalogNiche(nicheKey?: string | null): boolean {
@@ -297,6 +333,24 @@ export function isHealthBookingNiche(nicheKey?: string | null): boolean {
 }
 
 function getNicheWhatsappConfig(key: string, idx: number) {
+  if (key === "bebidas") {
+    return {
+      label: idx === 0 ? "Pedir Bebidas no WhatsApp" : idx === 1 ? "Ver Catálogo & Preços" : "Delivery Rápido",
+      message: (name: string) => `Olá! Vi o catálogo da ${name} e gostaria de fazer um pedido de bebidas geladas.`,
+    };
+  }
+  if (key === "barbearia") {
+    return {
+      label: idx === 0 ? "Agendar Horário no WhatsApp" : idx === 1 ? "Ver Cortes & Barba" : "Agendar Agora",
+      message: (name: string) => `Olá! Vi a barbearia ${name} e gostaria de agendar um horário para corte/barba.`,
+    };
+  }
+  if (key === "beleza") {
+    return {
+      label: idx === 0 ? "Agendar Procedimento no WhatsApp" : idx === 1 ? "Ver Tabela & Procedimentos" : "Falar com Especialista",
+      message: (name: string) => `Olá! Vi o estúdio ${name} e gostaria de agendar um horário de atendimento.`,
+    };
+  }
   if (key === "sorveteria") {
     return {
       label: idx === 0 ? "Fazer Pedido no WhatsApp" : idx === 1 ? "Pedir Açaí & Gelatos" : "Delivery no WhatsApp",
@@ -559,6 +613,99 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
       ],
       [
         { name: "Picolés Recheados Artesanais", category: "Picolés", description: "Picolés com frutas puras e recheios trufados que derretem na boca.", price: 9.0, duration_minutes: 5, image_url: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
+  bebidas: buildNicheVariants(
+    "bebidas",
+    ["cinematic-glass", "store-showcase", "restaurant-menu"],
+    ["amber", "midnight", "sunset"],
+    ["Adega Cinematográfica & Delivery VIP", "Distribuidora Express & Catálogo", "Bebidas Geladas & Chopp"],
+    [
+      (name, city) => `As melhores cervejas, vinhos finos, destilados e chopp trincando em ${city}`,
+      (name, city) => `Bebidas geladas para sua festa ou churrasco entregues em minutos pela ${name}`,
+      (name, city) => `Variedade incomparável, combos exclusivos e gelo filtrado na ${name}`,
+    ],
+    [
+      (name, city) => `Na ${name} você pede cervejas puro malte, destilados premium, vinhos selecionados, gelo e carvão com entrega ultrarrápida em ${city}. Faça seu pedido pelo WhatsApp.`,
+      (name, city) => `Cervejas geladas, destilados e combos para o seu churrasco na ${name}. Atendimento ágil e entrega na sua porta.`,
+      (name, city) => `A distribuidora e adega de confiança para o seu final de semana em ${city}.`,
+    ],
+    [
+      [
+        { name: "Fardo Cerveja Puro Malte (12x350ml)", category: "Cervejas", description: "Cerveja puro malte geladíssima, perfeita para churrasco e confraternizações.", price: 48.0, duration_minutes: 5, image_url: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=400&q=80" },
+        { name: "Kit Gin Tropical Premium", category: "Destilados", description: "Garrafa de Gin London Dry 750ml acompanhada de 4 tônicas especiais e especiarias.", price: 119.0, duration_minutes: 5, image_url: "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=400&q=80" },
+        { name: "Vinho Tinto Cabernet Sauvignon (750ml)", category: "Vinhos", description: "Vinho fino equilibrado, notas de frutas vermelhas e carvalho tostado.", price: 55.0, duration_minutes: 5, image_url: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Combo Churrasco: Gelo 10kg + Carvão 4kg", category: "Conveniência", description: "Gelo em cubo de água filtrada cristalina e carvão vegetal de queima prolongada.", price: 32.0, duration_minutes: 5, image_url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=400&q=80" },
+        { name: "Barril de Chopp Artesanal 5L", category: "Chopp", description: "Chopp pilsen artesanal com serpentina e pressão integrada, pronto para consumo.", price: 110.0, duration_minutes: 10, image_url: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Pack Vodka Importada + 4 Energéticos", category: "Combos", description: "Vodka destilada de alta pureza 1L com 4 latas de energético tradicional 250ml.", price: 98.0, duration_minutes: 5, image_url: "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
+  barbearia: buildNicheVariants(
+    "barbearia",
+    ["cinematic-glass", "business-modern", "beauty-glam"],
+    ["midnight", "amber", "aurora"],
+    ["Barber Club Cinematográfico", "Barbearia Clássica & Navalha", "Cortes VIP & Estilo Masculino"],
+    [
+      (name, city) => `Cortes de alta precisão, degradê na navalha e barba terapia em ${city}`,
+      (name, city) => `Seu momento de cuidado masculino com toalha quente e estilo na ${name}`,
+      (name, city) => `Excelência em cortes masculinos, alinhamento e pigmentação na ${name}`,
+    ],
+    [
+      (name, city) => `Na ${name} você encontra os melhores profissionais para corte degradê, barba terapia com toalha quente, selagem e cuidados masculinos em ${city}. Agende agora pelo WhatsApp.`,
+      (name, city) => `Ambiente climatizado, cerveja cortesia e atendimento pontual na ${name}. Seu estilo em outro nível.`,
+      (name, city) => `Tradição e modernidade em cortes masculinos e cuidados com a barba na ${name} em ${city}.`,
+    ],
+    [
+      [
+        { name: "Corte Degradê & Social", category: "Cortes", description: "Fade milimétrico na navalha ou tesoura com lavagem refrescante e finalização.", price: 45.0, duration_minutes: 45, image_url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=400&q=80" },
+        { name: "Barba Terapia com Toalha Quente", category: "Barba", description: "Alinhamento com navalhete, óleo hidratante, toalha quente e massagem facial.", price: 35.0, duration_minutes: 30, image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=400&q=80" },
+        { name: "Combo VIP: Corte + Barba + Sobrancelha", category: "Combos", description: "Transformação completa do visual com todos os cuidados integrados.", price: 70.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Pigmentação & Camuflagem de Fios", category: "Tratamentos", description: "Correção de falhas na barba ou cabelo com pigmento natural de longa fixação.", price: 30.0, duration_minutes: 30, image_url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=400&q=80" },
+        { name: "Corte Infantil Estilizado", category: "Cortes", description: "Atendimento paciente e cuidadoso para deixar os pequenos com muito estilo.", price: 40.0, duration_minutes: 35, image_url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Hidratação Profunda & Detox Capilar", category: "Tratamentos", description: "Limpeza profunda do couro cabeludo e hidratação nutritiva dos fios.", price: 50.0, duration_minutes: 40, image_url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
+  beleza: buildNicheVariants(
+    "beleza",
+    ["beauty-glam", "cinematic-glass", "therapy-wellbeing"],
+    ["sunset", "aurora", "ocean"],
+    ["Studio Beauty Glam & Nails", "Estética Facial & Procedimentos VIP", "Espaço de Beleza & Relax"],
+    [
+      (name, city) => `Realce sua beleza natural com procedimentos exclusivos e unhas perfeitas em ${city}`,
+      (name, city) => `Design de sobrancelhas, estética avançada e cuidados capilares na ${name}`,
+      (name, city) => `Seu momento de autocuidado com conforto e excelência na ${name}`,
+    ],
+    [
+      (name, city) => `No ${name} você conta com manicure e pedicure em gel, lash lifting, design de sobrancelhas e tratamentos faciais de alto padrão em ${city}. Agende seu horário pelo WhatsApp.`,
+      (name, city) => `Técnicas modernas para valorizar sua beleza com produtos de alta performance na ${name}.`,
+      (name, city) => `Ambiente acolhedor e atendimento personalizado para transformar sua autoestima na ${name} em ${city}.`,
+    ],
+    [
+      [
+        { name: "Manicure & Alongamento em Gel", category: "Nails", description: "Alongamento com fibra ou gel moldado, cuticulagem russa e esmaltação duradoura.", price: 120.0, duration_minutes: 90, image_url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=400&q=80" },
+        { name: "Design de Sobrancelhas & Lash Lifting", category: "Olhar", description: "Alinhamento com henna ou tintura e curvatura natural dos cílios com hidratação.", price: 85.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Escova Modelada & Hidratação Profunda", category: "Cabelos", description: "Nutrição intensiva com reposição de massa capilar e escovação impecável.", price: 90.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Limpeza de Pele Profunda & Glow Facial", category: "Estética", description: "Extração de impurezas, peeling de diamante e máscara calmante regeneradora.", price: 140.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=400&q=80" },
+        { name: "Drenagem Linfática & Massagem Relaxante", category: "Corpo", description: "Manobras suaves para desinchar o corpo e aliviar tensões musculares.", price: 130.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Mechas Iluminadas & Cronograma Capilar", category: "Cabelos", description: "Clareamento saudável com proteção dos fios e reconstrução profunda imediata.", price: 220.0, duration_minutes: 120, image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80" },
       ],
     ]
   ),
@@ -1063,10 +1210,15 @@ export const PRESETS: Record<string, NichePreset> = {
   costura: NICHE_PRESETS_VARIANTS.costura[0],
   tecnologia: NICHE_PRESETS_VARIANTS.tecnologia[0],
   geral: NICHE_PRESETS_VARIANTS.geral[0],
-  // Mapeamentos legados para evitar quebras em links antigos:
-  estetica: NICHE_PRESETS_VARIANTS.clinica[0],
-  salao: NICHE_PRESETS_VARIANTS.costura[0],
-  barbearia: NICHE_PRESETS_VARIANTS.autonomo[0],
+  bebidas: NICHE_PRESETS_VARIANTS.bebidas[0],
+  barbearia: NICHE_PRESETS_VARIANTS.barbearia[0],
+  beleza: NICHE_PRESETS_VARIANTS.beleza[0],
+  // Mapeamentos complementares para sinônimos e links legados:
+  adega: NICHE_PRESETS_VARIANTS.bebidas[0],
+  distribuidora: NICHE_PRESETS_VARIANTS.bebidas[0],
+  estetica: NICHE_PRESETS_VARIANTS.beleza[0],
+  salao: NICHE_PRESETS_VARIANTS.beleza[0],
+  manicure: NICHE_PRESETS_VARIANTS.beleza[0],
   academia: NICHE_PRESETS_VARIANTS.fitness[0],
   arquitetura: NICHE_PRESETS_VARIANTS.construcao[0],
   contabilidade: NICHE_PRESETS_VARIANTS.advocacia[0],
@@ -1080,12 +1232,27 @@ export const PRESETS: Record<string, NichePreset> = {
 };
 
 // ==========================================
-// 5. DETECÇÃO INTELIGENTE DO NICHO (19 NICHOS)
+// 5. DETECÇÃO INTELIGENTE DO NICHO
 // ==========================================
 export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string | null): string {
   const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();
 
-  // 1. Lojas / E-commerce
+  // 1. Bebidas, Adegas & Distribuidoras
+  if (/(?:distribuidora\s*de\s*bebidas|loja\s*de\s*bebidas|dep[oó]sito\s*de\s*bebidas|adega|emp[oó]rio\s*de\s*bebidas|bebidas|chopp|choperia|cervejaria|cerveja|conveni[eê]ncia|destilados|vinhos)/i.test(combined)) {
+    return "bebidas";
+  }
+
+  // 2. Barbearia & Barber Shop
+  if (/(?:barbearia|barber|barba\b|navalha|corte\s*masculino|degrad[eê]|fade\b|bigode|cabelo\s*masculino)/i.test(combined)) {
+    return "barbearia";
+  }
+
+  // 3. Salão de Beleza, Estética & Manicure
+  if (/(?:sal[aã]o\s*de\s*beleza|est[eé]tica|manicure|pedicure|unhas?\b|nail|lash|alongamento|sobrancelha|cabelereir|cabeleireir|escova|mechas|depila[çc][aã]o|esteticista|spa\b)/i.test(combined)) {
+    return "beleza";
+  }
+
+  // 4. Lojas / E-commerce
   if (/(?:loja|boutique|moda|vestu[aá]ri|roupa|cal[çc]ad|acess[oó]ri|biju|semijoia|bolsa|e-?commerce|varejo|confec[çc][aã]o|presentes|cosm[eé]tic|perfum|store|shop|vitrine)/i.test(combined)) {
     return "loja";
   }

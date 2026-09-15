@@ -96,8 +96,9 @@ export const BookingService = {
 
   async saveServices(bioPageId: string, services: Service[]) {
     const existing = await this.getWorkspace(bioPageId);
+    const existingIds = new Set(existing.services.map((item) => item.id));
     const retained = new Set(
-      services.filter((item) => !item.id.startsWith("draft-")).map((item) => item.id),
+      services.filter((item) => existingIds.has(item.id)).map((item) => item.id),
     );
     const removed = existing.services
       .filter((item) => !retained.has(item.id))
@@ -124,7 +125,8 @@ export const BookingService = {
         position,
         updated_at: new Date().toISOString(),
       };
-      const query = service.id.startsWith("draft-")
+      const isNew = !existingIds.has(service.id);
+      const query = isNew
         ? store.from("booking_services").insert(payload)
         : store
             .from("booking_services")

@@ -375,10 +375,10 @@ export const templateManifest: TemplateDefinition[] = [
     id: "business-modern",
     slug: "business-modern",
     name: "Empresa & Serviços",
-    description: "Visual corporativo moderno para empresas e serviços.",
+    description: "Visual corporativo moderno para empresas, comércio e serviços profissionais.",
     category: "business",
     badge: "Mais usado",
-    bestFor: "empresas, serviços e comércio",
+    bestFor: "empresas, escritórios e prestadores de serviços",
     theme: {
       colors: {
         background: "#f8fafc",

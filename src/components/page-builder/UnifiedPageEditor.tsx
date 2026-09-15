@@ -194,7 +194,7 @@ export const NICHE_MODELS: NicheModelConfig[] = [
   },
   {
     id: "petshop",
-    templateId: "business-modern",
+    templateId: "store-showcase",
     nicheKey: "petshop",
     nicheCategory: "Pet Shop e Ração",
     title: "Pet Shop & Casa de Ração",

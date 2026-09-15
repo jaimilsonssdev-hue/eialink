@@ -284,7 +284,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
 };
 
 export const PRODUCT_CATALOG_NICHES = new Set(["loja", "delivery", "sorveteria", "restaurante", "petshop", "costura"]);
-export const HEALTH_BOOKING_NICHES = new Set(["clinica", "odontologia", "psicologia", "nutricao", "fitness"]);
+export const HEALTH_BOOKING_NICHES = new Set(["clinica", "odontologia", "psicologia", "nutricao"]);
 
 export function isProductCatalogNiche(nicheKey?: string | null): boolean {
   if (!nicheKey) return false;
@@ -435,9 +435,9 @@ function buildNicheVariants(
 export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
   loja: buildNicheVariants(
     "loja",
-    ["store-showcase", "spotlight-neon", "business-modern"],
+    ["store-showcase", "spotlight-neon", "store-showcase"],
     ["aurora", "midnight", "sunset"],
-    ["Catálogo Digital & Carrinho", "Dark Showcase VIP", "Vitrine Executiva Clean"],
+    ["Catálogo Digital & Carrinho", "Dark Showcase VIP", "Boutique & Coleções Exclusivas"],
     [
       (name, city) => `A melhor seleção de moda e produtos exclusivos em ${city}`,
       (name, city) => `Coleção exclusiva e novidades da estação na ${name}`,
@@ -468,9 +468,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   delivery: buildNicheVariants(
     "delivery",
-    ["restaurant-menu", "spotlight-neon", "business-modern"],
+    ["restaurant-menu", "spotlight-neon", "restaurant-menu"],
     ["sunset", "midnight", "amber"],
-    ["Cardápio Delivery Rápido", "Dark Burger & Pizzas", "Delivery Expresso VIP"],
+    ["Cardápio Delivery Rápido", "Dark Burger & Pizzas", "Combos & Lanches Especiais"],
     [
       (name, city) => `O sabor irresistível de ${name} entregue quentinho em ${city}`,
       (name, city) => `Peça pelo WhatsApp e receba em minutos na sua casa`,
@@ -500,9 +500,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   restaurante: buildNicheVariants(
     "restaurante",
-    ["restaurant-menu", "spotlight-neon", "business-modern"],
+    ["restaurant-menu", "spotlight-neon", "restaurant-menu"],
     ["sunset", "midnight", "warm"],
-    ["Cardápio Gastronômico & Reservas", "Bistrô & Alta Culinária", "Menu Executivo Clássico"],
+    ["Cardápio Gastronômico & Reservas", "Bistrô & Alta Culinária", "Menu Executivo & Vinhos"],
     [
       (name, city) => `Experiência gastronômica marcante e pratos autorais na ${name}`,
       (name, city) => `Ambiente sofisticado e cardápio refinado para momentos especiais`,
@@ -562,7 +562,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   oficina: buildNicheVariants(
     "oficina",
-    ["business-modern", "spotlight-neon", "law-authority"],
+    ["business-modern", "spotlight-neon", "business-classic"],
     ["midnight", "amber", "ocean"],
     ["Auto Center & Diagnóstico 3D", "Mecânica Rápida & Revisão", "Especialista em Freios & Suspensão"],
     [
@@ -593,9 +593,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   clinica: buildNicheVariants(
     "clinica",
-    ["clinic-care", "business-modern", "spotlight-neon"],
+    ["clinic-care", "clinic-care", "spotlight-neon"],
     ["ocean", "forest", "midnight"],
-    ["Clínica Médica & Saúde Integrada", "Consultório Especializado Clean", "Centro Clínico de Autoridade"],
+    ["Clínica Médica & Saúde Integrada", "Consultório Especializado Clean", "Centro Clínico de Excelência VIP"],
     [
       (name, city) => `Cuidado humanizado, consultas com especialistas e exames em ${city}`,
       (name, city) => `Sua saúde em primeiro lugar com o corpo clínico da ${name}`,
@@ -623,7 +623,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   psicologia: buildNicheVariants(
     "psicologia",
-    ["therapy-wellbeing", "clinic-care", "business-modern"],
+    ["therapy-wellbeing", "therapy-wellbeing", "therapy-wellbeing"],
     ["forest", "ocean", "warm"],
     ["Psicoterapia & Acolhimento Humanizado", "Espaço Terapêutico & Saúde Emocional", "Terapia Online & Presencial"],
     [
@@ -653,9 +653,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   petshop: buildNicheVariants(
     "petshop",
-    ["store-showcase", "restaurant-menu", "spotlight-neon"],
+    ["store-showcase", "store-showcase", "spotlight-neon"],
     ["forest", "amber", "ocean"],
-    ["Pet Shop, Banho & Tosa com Amor", "Clínica Veterinária & Rações Premium", "Pet Care Completo & Farmácia"],
+    ["Pet Shop, Banho & Tosa com Amor", "Rações Premium & Farmácia Pet", "Pet Care Completo & Acessórios VIP"],
     [
       (name, city) => `Carinho, cuidado e tudo o que seu melhor amigo precisa na ${name} em ${city}`,
       (name, city) => `Banho relaxante, tosa higiênica e saúde preventiva na ${name}`,
@@ -683,9 +683,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   advocacia: buildNicheVariants(
     "advocacia",
-    ["law-authority", "business-modern", "spotlight-neon"],
+    ["law-authority", "law-authority", "spotlight-neon"],
     ["midnight", "ocean", "amber"],
-    ["Advocacia de Autoridade & Estratégia", "Consultoria Jurídica & Direitos", "Escritório Jurídico Corporativo"],
+    ["Advocacia de Autoridade & Estratégia", "Consultoria Jurídica & Direitos", "Escritório Jurídico Corporativo VIP"],
     [
       (name, city) => `Defesa técnica intransigente e segurança jurídica em ${city}`,
       (name, city) => `Assessoria consultiva e contenciosa com a equipe da ${name}`,
@@ -713,9 +713,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   odontologia: buildNicheVariants(
     "odontologia",
-    ["clinic-care", "business-modern", "spotlight-neon"],
+    ["clinic-care", "clinic-care", "spotlight-neon"],
     ["ocean", "forest", "midnight"],
-    ["Odontologia de Alto Padrão & Implantes", "Estética Dental & Clareamento a Laser", "Clínica Odontológica Integrada"],
+    ["Odontologia de Alto Padrão & Implantes", "Estética Dental & Clareamento a Laser", "Studio Odontológico VIP"],
     [
       (name, city) => `Seu sorriso transformado com conforto e tecnologia de ponta em ${city}`,
       (name, city) => `Tratamentos odontológicos modernos e indolores na ${name}`,
@@ -743,9 +743,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   construcao: buildNicheVariants(
     "construcao",
-    ["business-modern", "spotlight-neon", "law-authority"],
+    ["business-modern", "spotlight-neon", "portfolio-studio"],
     ["amber", "midnight", "ocean"],
-    ["Construção Civil, Obras & Reformas", "Engenharia & Acabamentos Finos", "Empreiteira & Gerenciamento"],
+    ["Construção Civil, Obras & Reformas", "Engenharia & Gestão de Obras VIP", "Empreiteira & Acabamentos Finos"],
     [
       (name, city) => `Sua obra entregue no prazo e com padrão de engenharia impecável em ${city}`,
       (name, city) => `Reformas residenciais e comerciais sem dor de cabeça com a ${name}`,
@@ -773,9 +773,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   imobiliaria: buildNicheVariants(
     "imobiliaria",
-    ["business-modern", "spotlight-neon", "law-authority"],
+    ["store-showcase", "spotlight-neon", "business-modern"],
     ["ocean", "midnight", "aurora"],
-    ["Imobiliária & Imóveis Exclusivos", "Corretora de Lançamentos & Condomínios", "Aluguel & Venda sem Burocracia"],
+    ["Catálogo de Imóveis & Lançamentos", "Imobiliária de Alto Padrão VIP", "Assessoria Imobiliária & Locação"],
     [
       (name, city) => `Encontre o imóvel dos seus sonhos em ${city} com a ${name}`,
       (name, city) => `Casas em condomínio, apartamentos e terrenos com documentação 100% segura`,
@@ -803,9 +803,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   seguros: buildNicheVariants(
     "seguros",
-    ["business-modern", "law-authority", "spotlight-neon"],
+    ["business-modern", "spotlight-neon", "business-classic"],
     ["ocean", "midnight", "forest"],
-    ["Corretora de Seguros & Proteção", "Seguro Auto, Residencial & Vida", "Consultoria em Planos de Saúde"],
+    ["Corretora de Seguros & Proteção", "Seguro Auto, Residencial & Vida VIP", "Consultoria em Benefícios & Planos"],
     [
       (name, city) => `Proteja o que mais importa com as melhores seguradoras do país na ${name}`,
       (name, city) => `Tranquilidade para sua família e patrimônio com cotação sob medida em ${city}`,
@@ -835,7 +835,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     "autonomo",
     ["business-modern", "spotlight-neon", "portfolio-studio"],
     ["midnight", "ocean", "aurora"],
-    ["Serviços Técnicos & Profissional Autônomo", "Atendimento Ágil & Reparos de Precisão", "Consultoria Especializada Independente"],
+    ["Serviços Técnicos & Profissional Autônomo", "Atendimento Ágil & Reparos de Precisão", "Portfólio de Obras & Serviços"],
     [
       (name, city) => `Serviço pontual, confiável e com garantia comprovada em ${city}`,
       (name, city) => `Mão de obra especializada com atendimento direto pelo WhatsApp com ${name}`,
@@ -863,9 +863,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   pessoal: buildNicheVariants(
     "pessoal",
-    ["portfolio-studio", "spotlight-neon", "business-modern"],
+    ["portfolio-studio", "spotlight-neon", "creator-bold"],
     ["aurora", "midnight", "minimal"],
-    ["Página Pessoal & Portfólio de Autoridade", "BioLink Profissional & Criador", "Perfil Oficial & Contatos"],
+    ["Página Pessoal & Portfólio de Autoridade", "BioLink Profissional & Criador", "Perfil Oficial, Projetos & Contatos"],
     [
       (name, city) => `Conheça os projetos, conteúdos e parcerias de ${name}`,
       (name, city) => `Conecte-se comigo: links oficiais, consultorias e novidades`,
@@ -893,8 +893,8 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   fitness: buildNicheVariants(
     "fitness",
-    ["academy-performance", "spotlight-neon", "business-modern"],
-    ["forest", "midnight", "flame"],
+    ["academy-performance", "spotlight-neon", "academy-performance"],
+    ["forest", "flame", "midnight"],
     ["Academia & Treinamento de Alta Performance", "Personal Trainer & Consultoria VIP", "Studio Fitness & Treino Funcional"],
     [
       (name, city) => `Transforme seu corpo e conquiste sua melhor versão na ${name} em ${city}`,
@@ -923,9 +923,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   nutricao: buildNicheVariants(
     "nutricao",
-    ["therapy-wellbeing", "clinic-care", "business-modern"],
-    ["forest", "ocean", "sunset"],
-    ["Nutrição Clínica & Emagrecimento Consciente", "Consultório Nutricional & Esportivo", "Plano Alimentar Sem Restrições"],
+    ["therapy-wellbeing", "spotlight-neon", "clinic-care"],
+    ["forest", "midnight", "ocean"],
+    ["Nutrição Clínica & Emagrecimento Consciente", "Consultório Nutricional & Esportivo VIP", "Plano Alimentar & Bioimpedância"],
     [
       (name, city) => `Alcançar seu peso ideal com saúde e sem passar fome com ${name} em ${city}`,
       (name, city) => `Reeducação alimentar personalizada para sua rotina e preferências`,
@@ -953,9 +953,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   costura: buildNicheVariants(
     "costura",
-    ["store-showcase", "portfolio-studio", "business-modern"],
+    ["store-showcase", "portfolio-studio", "spotlight-neon"],
     ["sunset", "aurora", "midnight"],
-    ["Ateliê de Costura & Moda Sob Medida", "Ajustes, Reformas & Alfaiataria Fina", "Vestidos de Festa & Noivas Sob Encomenda"],
+    ["Ateliê de Costura & Moda Sob Medida", "Ajustes, Reformas & Alfaiataria Fina", "Vestidos de Festa & Noivas VIP"],
     [
       (name, city) => `Caimento perfeito e reformas delicadas com acabamento de alfaiataria em ${city}`,
       (name, city) => `Suas roupas favoritas renovadas com precisão e cuidado na ${name}`,
@@ -983,9 +983,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   tecnologia: buildNicheVariants(
     "tecnologia",
-    ["spotlight-neon", "business-modern", "law-authority"],
+    ["spotlight-neon", "business-modern", "spotlight-neon"],
     ["midnight", "ocean", "aurora"],
-    ["Assistência Técnica, PC & Notebooks", "Suporte de TI & Redes para Empresas", "Especialista em Celulares & Placas"],
+    ["Assistência Técnica, PC & Notebooks", "Suporte de TI & Redes para Empresas", "Especialista em Celulares & Placas VIP"],
     [
       (name, city) => `Conserto rápido de computadores, notebooks e celulares com garantia em ${city}`,
       (name, city) => `Suporte técnico em TI e redes sem complicações com a ${name}`,
@@ -1013,9 +1013,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   geral: buildNicheVariants(
     "geral",
-    ["business-modern", "spotlight-neon", "law-authority"],
+    ["business-modern", "spotlight-neon", "business-classic"],
     ["aurora", "midnight", "ocean"],
-    ["Empresa de Autoridade & Negócios", "Dark Showcase VIP", "Apresentação Corporativa Clean"],
+    ["Empresa de Autoridade & Negócios", "Dark Showcase Corporativo VIP", "Apresentação Comercial Clean"],
     [
       (name, city) => `Excelência no atendimento e soluções completas na ${name} em ${city}`,
       (name, city) => `Tradição, pontualidade e satisfação garantida com a ${name}`,

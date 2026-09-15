@@ -275,10 +275,21 @@ function PublicBio() {
   const isProduct = isProductCatalogNiche(nicheKey);
   const isHealth = isHealthBookingNiche(nicheKey);
 
-  // Auto-correção dinâmica: se a página foi criada como demo de produto/food (ex: açaí, sorveteria, delivery)
-  // mas herdou template clínico ('clinic-care' ou 'business-modern') por histórico, renderiza como 'restaurant-menu'!
+  // Auto-correção dinâmica e isolamento estrito de nichos:
+  // 1. Templates de saúde (clínica/terapia) NUNCA aparecem para nichos que não sejam saúde
+  // 2. Templates jurídicos NUNCA aparecem fora de advocacia
+  // 3. Nichos de produto/food (açaí, delivery, sorveteria, etc.) renderizam cardápio/catálogo
   let effectiveTemplateId = bio.template_id;
-  if (isProduct && (effectiveTemplateId === "clinic-care" || effectiveTemplateId === "business-modern" || !effectiveTemplateId)) {
+
+  if (!isHealth && (effectiveTemplateId === "clinic-care" || effectiveTemplateId === "therapy-wellbeing")) {
+    effectiveTemplateId = isProduct ? "restaurant-menu" : "business-modern";
+  }
+
+  if (nicheKey !== "advocacia" && effectiveTemplateId === "law-authority") {
+    effectiveTemplateId = isProduct ? "restaurant-menu" : "business-modern";
+  }
+
+  if (isProduct && (effectiveTemplateId === "business-modern" || !effectiveTemplateId)) {
     effectiveTemplateId = "restaurant-menu";
   }
 

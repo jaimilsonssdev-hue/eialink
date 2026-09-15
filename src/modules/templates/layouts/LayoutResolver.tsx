@@ -12,6 +12,7 @@ import { LawLayout } from "./LawLayout";
 import { TherapyLayout } from "./TherapyLayout";
 import { SpotlightLayout } from "./SpotlightLayout";
 import { BeautyLayout } from "./BeautyLayout";
+import { BusinessLayout } from "./BusinessLayout";
 
 export type LayoutRenderContext = TemplateComponentContext & {
   products?: CatalogItem[];
@@ -81,7 +82,7 @@ export const layoutResolver = new LayoutResolver()
   .register(new OrderedLayout("vertical", ["banner", "profile", "pix", "links", "footer"]))
   .register(new OrderedLayout("minimal", ["profile", "links", "footer"]))
   .register(new OrderedLayout("cards", ["banner", "profile", "links", "pix", "footer"]))
-  .register(new OrderedLayout("business", ["banner", "profile", "links", "pix", "footer"]))
+  .register(new BusinessLayout())
   .register(new OrderedLayout("store", ["banner", "links", "profile", "pix", "footer"]))
   .register(new OrderedLayout("creator", ["profile", "banner", "links", "footer"]))
   .register(new RestaurantLayout())

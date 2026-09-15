@@ -697,7 +697,7 @@ function ProspectingPage() {
     setRegeneratingPageId(page.id);
     setFeedback(null);
     try {
-      const nicheKey = detectNicheKey(null, page.display_name);
+      const nicheKey = detectNicheKey((page.social_links as any)?.niche, page.display_name);
       const variants = NICHE_PRESETS_VARIANTS[nicheKey] || NICHE_PRESETS_VARIANTS.geral;
       const currentModel = (page.social_links as any)?.model_variant || "";
       const currentIndex = variants.findIndex((v) => v.modelName.toLowerCase() === currentModel.toLowerCase());
@@ -713,6 +713,7 @@ function ProspectingPage() {
       const newPage = await PageService.createProspectDemoPage({
         companyName: page.display_name,
         whatsapp: page.whatsapp,
+        niche: (page.social_links as any)?.niche || nicheKey,
         city: (page.social_links as any)?.address || "sua região",
         instagram: page.instagram,
         variantIndex: nextIndex,

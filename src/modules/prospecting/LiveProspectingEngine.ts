@@ -8,6 +8,7 @@ import {
   priorityFromScore,
   scoreCompany,
 } from "./scoring";
+import { detectNicheKey } from "./nichePresets";
 import type { ProspectDraft } from "./types";
 
 interface RawScrapedLead {
@@ -347,7 +348,7 @@ export async function lookupBusinessProfile(queryOrUrl: string): Promise<Prospec
     return [
       {
         name: cleanName,
-        niche: "geral",
+        niche: detectNicheKey(null, cleanName),
         city: "",
         state: null,
         phone: null,

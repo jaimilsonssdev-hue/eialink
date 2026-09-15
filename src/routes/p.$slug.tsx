@@ -279,13 +279,33 @@ function PublicBio() {
   const isServiceBookingNiche = isHealth || nicheKey === "barbearia" || nicheKey === "beleza";
 
   // Auto-correção dinâmica e isolamento estrito de nichos:
-  // 1. Templates de saúde (clínica/terapia) NUNCA aparecem para nichos que não sejam saúde ou beleza
-  // 2. Templates jurídicos NUNCA aparecem fora de advocacia
-  // 3. Nichos de produto/food (açaí, delivery, sorveteria, bebidas, etc.) renderizam cardápio/catálogo
+  // 1. Template de terapia (therapy-wellbeing) é ESTRITAMENTE reservado para psicologia
+  // 2. Template de clínica (clinic-care) é reservado para saúde médica/odontológica/nutrição
+  // 3. Template de beleza (beauty-glam) é exclusivo de salão de beleza e estética
+  // 4. Templates jurídicos NUNCA aparecem fora de advocacia
+  // 5. Nichos de produto/delivery (açaí, sorveteria, bebidas, delivery, etc.) renderizam cinematic-glass ou catálogo
   let effectiveTemplateId = bio.template_id;
 
-  if (!isHealth && nicheKey !== "beleza" && (effectiveTemplateId === "clinic-care" || effectiveTemplateId === "therapy-wellbeing")) {
-    effectiveTemplateId = isProduct ? "cinematic-glass" : "business-modern";
+  if (effectiveTemplateId === "therapy-wellbeing" && nicheKey !== "psicologia") {
+    effectiveTemplateId = isProduct
+      ? "cinematic-glass"
+      : isHealth
+        ? "clinic-care"
+        : nicheKey === "beleza"
+          ? "beauty-glam"
+          : "business-modern";
+  }
+
+  if (effectiveTemplateId === "clinic-care" && !isHealth) {
+    effectiveTemplateId = isProduct
+      ? "cinematic-glass"
+      : nicheKey === "beleza"
+        ? "beauty-glam"
+        : "business-modern";
+  }
+
+  if (effectiveTemplateId === "beauty-glam" && nicheKey !== "beleza") {
+    effectiveTemplateId = isProduct || nicheKey === "barbearia" ? "cinematic-glass" : "business-modern";
   }
 
   if (nicheKey !== "advocacia" && effectiveTemplateId === "law-authority") {

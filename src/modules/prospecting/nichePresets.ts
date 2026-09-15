@@ -650,9 +650,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   barbearia: buildNicheVariants(
     "barbearia",
-    ["cinematic-glass", "business-modern", "beauty-glam"],
+    ["cinematic-glass", "spotlight-neon", "business-modern"],
     ["midnight", "amber", "aurora"],
-    ["Barber Club Cinematográfico", "Barbearia Clássica & Navalha", "Cortes VIP & Estilo Masculino"],
+    ["Barber Club Cinematográfico", "Dark Neon Blade VIP", "Barbearia Clássica & Estilo"],
     [
       (name, city) => `Cortes de alta precisão, degradê na navalha e barba terapia em ${city}`,
       (name, city) => `Seu momento de cuidado masculino com toalha quente e estilo na ${name}`,
@@ -681,9 +681,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   beleza: buildNicheVariants(
     "beleza",
-    ["beauty-glam", "cinematic-glass", "therapy-wellbeing"],
-    ["sunset", "aurora", "ocean"],
-    ["Studio Beauty Glam & Nails", "Estética Facial & Procedimentos VIP", "Espaço de Beleza & Relax"],
+    ["beauty-glam", "cinematic-glass", "spotlight-neon"],
+    ["sunset", "aurora", "midnight"],
+    ["Studio Beauty Glam & Nails", "Estética Facial & Procedimentos VIP", "Dark Showcase Estética & Glamour"],
     [
       (name, city) => `Realce sua beleza natural com procedimentos exclusivos e unhas perfeitas em ${city}`,
       (name, city) => `Design de sobrancelhas, estética avançada e cuidados capilares na ${name}`,
@@ -743,7 +743,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   clinica: buildNicheVariants(
     "clinica",
-    ["clinic-care", "clinic-care", "spotlight-neon"],
+    ["clinic-care", "business-modern", "spotlight-neon"],
     ["ocean", "forest", "midnight"],
     ["Clínica Médica & Saúde Integrada", "Consultório Especializado Clean", "Centro Clínico de Excelência VIP"],
     [
@@ -773,9 +773,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   psicologia: buildNicheVariants(
     "psicologia",
-    ["therapy-wellbeing", "therapy-wellbeing", "therapy-wellbeing"],
-    ["forest", "ocean", "warm"],
-    ["Psicoterapia & Acolhimento Humanizado", "Espaço Terapêutico & Saúde Emocional", "Terapia Online & Presencial"],
+    ["therapy-wellbeing", "business-modern", "spotlight-neon"],
+    ["forest", "ocean", "midnight"],
+    ["Psicoterapia & Acolhimento Humanizado", "Consultório de Psicologia & Saúde Mental", "Espaço Terapêutico VIP Online"],
     [
       (name, city) => `Acolhimento, escuta sensível e equilíbrio emocional com ${name} em ${city}`,
       (name, city) => `Um espaço seguro e livre de julgamentos para seu autoconhecimento`,
@@ -803,7 +803,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   petshop: buildNicheVariants(
     "petshop",
-    ["store-showcase", "store-showcase", "spotlight-neon"],
+    ["store-showcase", "business-modern", "spotlight-neon"],
     ["forest", "amber", "ocean"],
     ["Pet Shop, Banho & Tosa com Amor", "Rações Premium & Farmácia Pet", "Pet Care Completo & Acessórios VIP"],
     [
@@ -833,7 +833,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   advocacia: buildNicheVariants(
     "advocacia",
-    ["law-authority", "law-authority", "spotlight-neon"],
+    ["law-authority", "business-modern", "spotlight-neon"],
     ["midnight", "ocean", "amber"],
     ["Advocacia de Autoridade & Estratégia", "Consultoria Jurídica & Direitos", "Escritório Jurídico Corporativo VIP"],
     [
@@ -863,7 +863,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   odontologia: buildNicheVariants(
     "odontologia",
-    ["clinic-care", "clinic-care", "spotlight-neon"],
+    ["clinic-care", "business-modern", "spotlight-neon"],
     ["ocean", "forest", "midnight"],
     ["Odontologia de Alto Padrão & Implantes", "Estética Dental & Clareamento a Laser", "Studio Odontológico VIP"],
     [
@@ -1073,8 +1073,8 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   nutricao: buildNicheVariants(
     "nutricao",
-    ["therapy-wellbeing", "spotlight-neon", "clinic-care"],
-    ["forest", "midnight", "ocean"],
+    ["clinic-care", "business-modern", "spotlight-neon"],
+    ["forest", "ocean", "midnight"],
     ["Nutrição Clínica & Emagrecimento Consciente", "Consultório Nutricional & Esportivo VIP", "Plano Alimentar & Bioimpedância"],
     [
       (name, city) => `Alcançar seu peso ideal com saúde e sem passar fome com ${name} em ${city}`,
@@ -1243,12 +1243,12 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
   }
 
   // 2. Barbearia & Barber Shop
-  if (/(?:barbearia|barber|barba\b|navalha|corte\s*masculino|degrad[eê]|fade\b|bigode|cabelo\s*masculino)/i.test(combined)) {
+  if (/(?:barbearia|barber|barba\b|navalha|corte\s*masculino|degrad[eê]|fade\b|bigode|cabelo\s*masculino|barbaterapia)/i.test(combined)) {
     return "barbearia";
   }
 
   // 3. Salão de Beleza, Estética & Manicure
-  if (/(?:sal[aã]o\s*de\s*beleza|est[eé]tica|manicure|pedicure|unhas?\b|nail|lash|alongamento|sobrancelha|cabelereir|cabeleireir|escova|mechas|depila[çc][aã]o|esteticista|spa\b)/i.test(combined)) {
+  if (/(?:sal[aã]o\s*de\s*beleza|est[eé]tica|manicure|pedicure|unhas?\b|nail|lash|alongamento|sobrancelha|cabelereir|cabeleireir|escova|mechas|depila[çc][aã]o|esteticista|spa\b|massagem|massoterapia|terapia\s*capilar|ozonioterapia|harmoniza|limpeza\s*de\s*pele)/i.test(combined)) {
     return "beleza";
   }
 
@@ -1278,23 +1278,23 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
   }
 
   // 6. Dentista & Odontologia
-  if (/(?:odonto|dent|sorris|oral|dente|protese|implant|ortodont|clareament)/i.test(combined)) {
+  if (/(?:odonto|dent|sorris|oral|dente|protese|implant|ortodont|clareament|endodont|periodont)/i.test(combined)) {
     return "odontologia";
   }
 
-  // 7. Terapeutas & Psicólogos
-  if (/(?:psic[oó]l|terap|psican[aá]lis|sa[uú]de\s*mental|terapeuta|acolhiment|psiquiatr|mindfulness|terapia|hol[ií]stic|floral)/i.test(combined)) {
+  // 7. Saúde, Medicina & Clínicas (posicionado antes de psicologia para evitar falsos positivos com fisioterapia/terapia)
+  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|fisioter|fisioterapia|fisioterapeuta|laborat[oó]rio|exames|hospital|fonoaudi|terapia\s*ocupacional|oftalmo|dermatol|ginecolog|cardiolog|ortopedi|urologi|ultrassom|raio-?x)/i.test(combined)) {
+    return "clinica";
+  }
+
+  // 8. Terapeutas, Psicólogos & Saúde Mental (estritamente focado em psicoterapia e saúde emocional)
+  if (/(?:psic[oó]log|psicoterap|psican[aá]lis|sa[uú]de\s*mental|terapeuta\b|acolhimento\s*emocional|psiquiatr|mindfulness|\bterapia\s*(?:online|individual|de\s*casal|cognitiv|infantil|familiar|emocional)?\b|floral\s*de\s*bach|terapia\s*hol[ií]stica)/i.test(combined)) {
     return "psicologia";
   }
 
-  // 8. Nutricionista & Dietas
-  if (/(?:nutri|nutri[çc][aã]o|dieta|emagreciment|reeduca[çc][aã]o\s*alimentar|bioimped)/i.test(combined)) {
+  // 9. Nutricionista & Dietas
+  if (/(?:nutri|nutri[çc][aã]o|dieta|emagreciment|reeduca[çc][aã]o\s*alimentar|bioimped|nutr[oó]log)/i.test(combined)) {
     return "nutricao";
-  }
-
-  // 9. Saúde & Clínica Médica
-  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|fisioter|laborat[oó]rio|exames|hospital)/i.test(combined)) {
-    return "clinica";
   }
 
   // 10. PetShop & Casa de Ração

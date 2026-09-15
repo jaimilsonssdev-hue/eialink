@@ -37,6 +37,7 @@ import {
   Sun,
   UserRound,
   Briefcase,
+  Wine,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -66,6 +67,30 @@ interface NicheQuickOption {
 }
 
 const NICHE_OPTIONS: NicheQuickOption[] = [
+  {
+    key: "barbearia",
+    name: "Barbearia",
+    description: "Cortes degradê, barba terapia na toalha quente e agendamento",
+    icon: Scissors,
+    color: "text-amber-400",
+    bgLight: "bg-amber-500/10 border-amber-500/20",
+  },
+  {
+    key: "beleza",
+    name: "Salão & Estética",
+    description: "Unhas em gel, sobrancelhas, escovas, estética facial e agendamento",
+    icon: Sparkles,
+    color: "text-pink-400",
+    bgLight: "bg-pink-500/10 border-pink-500/20",
+  },
+  {
+    key: "bebidas",
+    name: "Adega & Bebidas",
+    description: "Cervejas, chopp, destilados, gelo, carvão e delivery WhatsApp",
+    icon: Wine,
+    color: "text-emerald-400",
+    bgLight: "bg-emerald-500/10 border-emerald-500/20",
+  },
   {
     key: "loja",
     name: "Lojas & E-commerce",

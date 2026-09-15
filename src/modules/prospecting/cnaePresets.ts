@@ -57,6 +57,22 @@ export const POPULAR_CNAES: CnaeItem[] = [
     conversionRank: 2,
   },
   {
+    code: "8650-0/03",
+    cleanCode: "8650003",
+    title: "Atividades de psicologia e psicanálise",
+    niche: "Psicologia",
+    popularTerm: "Psicólogo / Terapeuta",
+    conversionRank: 2,
+  },
+  {
+    code: "8650-0/04",
+    cleanCode: "8650004",
+    title: "Atividades de fisioterapia",
+    niche: "Clínica",
+    popularTerm: "Fisioterapia / Reabilitação",
+    conversionRank: 2,
+  },
+  {
     code: "4520-0/01",
     cleanCode: "4520001",
     title: "Serviços de manutenção e reparação mecânica de veículos automotores",

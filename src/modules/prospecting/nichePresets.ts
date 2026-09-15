@@ -1231,10 +1231,55 @@ export const PRESETS: Record<string, NichePreset> = {
   terapeuta: NICHE_PRESETS_VARIANTS.psicologia[0],
 };
 
+export interface CanonicalNicheMeta {
+  key: string;
+  label: string;
+  icon: string;
+  color: string;
+}
+
+export const CANONICAL_NICHES: CanonicalNicheMeta[] = [
+  { key: "barbearia", label: "Barbearia", icon: "💈", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30" },
+  { key: "beleza", label: "Salão & Estética", icon: "✨", color: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/30" },
+  { key: "bebidas", label: "Bebidas & Distribuidora", icon: "🍷", color: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30" },
+  { key: "odontologia", label: "Odontologia", icon: "🦷", color: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/30" },
+  { key: "clinica", label: "Clínica & Saúde", icon: "🏥", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
+  { key: "psicologia", label: "Psicologia & Mente", icon: "🧠", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/30" },
+  { key: "nutricao", label: "Nutrição & Dieta", icon: "🥗", color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/30" },
+  { key: "restaurante", label: "Restaurante & Gastronomia", icon: "🍽️", color: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/30" },
+  { key: "delivery", label: "Delivery & Lanches", icon: "🍔", color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/30" },
+  { key: "sorveteria", label: "Sorveteria & Açaí", icon: "🍦", color: "bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400 border-fuchsia-500/30" },
+  { key: "loja", label: "Loja & Moda", icon: "🛍️", color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/30" },
+  { key: "petshop", label: "Pet Shop & Veterinária", icon: "🐾", color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/30" },
+  { key: "auto", label: "Oficina & Auto", icon: "🚗", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30" },
+  { key: "advocacia", label: "Advocacia & Jurídico", icon: "⚖️", color: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30" },
+  { key: "construcao", label: "Construção & Reformas", icon: "🏗️", color: "bg-amber-600/10 text-amber-800 dark:text-amber-400 border-amber-600/30" },
+  { key: "imobiliaria", label: "Imobiliária & Corretor", icon: "🏢", color: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/30" },
+  { key: "energia_solar", label: "Energia Solar", icon: "☀️", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30" },
+  { key: "seguros", label: "Seguros & Planos", icon: "🛡️", color: "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/30" },
+  { key: "fitness", label: "Academia & Treino", icon: "💪", color: "bg-lime-600/10 text-lime-800 dark:text-lime-400 border-lime-600/30" },
+  { key: "tecnologia", label: "Tecnologia & TI", icon: "💻", color: "bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/30" },
+  { key: "costura", label: "Costura & Ateliê", icon: "🪡", color: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/30" },
+  { key: "autonomo", label: "Autônomo & Serviços", icon: "🔧", color: "bg-zinc-500/10 text-zinc-700 dark:text-zinc-300 border-zinc-500/30" },
+];
+
+export function getCanonicalNicheMeta(key: string): CanonicalNicheMeta | undefined {
+  return CANONICAL_NICHES.find((item) => item.key === key);
+}
+
 // ==========================================
 // 5. DETECÇÃO INTELIGENTE DO NICHO
 // ==========================================
 export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string | null): string {
+  // 0. Prioridade máxima: se nicheRaw já for uma tag canônica ou alias conhecido, retorna direto (O(1) determinístico)
+  const cleanNiche = (nicheRaw ?? "").trim().toLowerCase();
+  if (cleanNiche && NICHE_PRESETS_VARIANTS[cleanNiche]) {
+    return cleanNiche;
+  }
+  if (cleanNiche && NICHE_ALIASES[cleanNiche]) {
+    return NICHE_ALIASES[cleanNiche].nicheKey;
+  }
+
   const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();
 
   // 1. Bebidas, Adegas & Distribuidoras

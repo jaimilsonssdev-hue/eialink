@@ -141,11 +141,12 @@ export const PageService = {
 
     const realRating = realPlace?.rating ?? rating ?? null;
     const realReviewsCount = realPlace?.reviewsCount ?? reviewsCount ?? null;
-    // Capa: para nichos de alimentação e produtos, prioriza sempre a foto curada de alta qualidade ou HTML/SVG do nicho, evitando fotos de calçadas, árvores ou fotos de baixa resolução de usuários do Maps
-    const isProductOrFood = isProductCatalogNiche(preset.nicheKey);
-    const validMapsPhoto = realPlace?.photos?.find((p) => !p.includes("streetviewpixels") && !p.includes("google.com/maps"));
-    const realCover = isProductOrFood ? preset.cover_url : (validMapsPhoto ?? preset.cover_url);
-    // Avatar: utiliza o avatar profissional curado do nicho para evitar atribuir fotos de salas, fachadas ou fotos aleatórias ao avatar circular
+    // BLINDAGEM VISUAL (Zero Vergonha):
+    // A capa da demonstração sempre utiliza a foto curada em HD do nicho (preset.cover_url)
+    // para garantir apresentação profissional e impecável, evitando fotos aleatórias de calçadas ou papéis do Maps.
+    // As fotos reais do Google Maps são preservadas com segurança em social_links.google_photos.
+    const realCover = preset.cover_url;
+    // Avatar: utiliza o monograma oficial vetorial da empresa ou avatar curado do nicho
     const realAvatar = preset.avatar_url;
     const finalWhatsapp = whatsapp || realPlace?.whatsapp || null;
     const realAddress = realPlace?.address || null;

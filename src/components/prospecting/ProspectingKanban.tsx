@@ -36,6 +36,7 @@ import type {
   ProspectedCompany,
   ProspectStatus,
 } from "@/modules/prospecting/types";
+import { detectNicheKey, getCanonicalNicheMeta } from "@/modules/prospecting/nichePresets";
 
 export interface DemoInfoResult {
   url: string | null;
@@ -331,11 +332,16 @@ export function ProspectingKanban({
                               {company.name}
                             </h4>
                             <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground flex-wrap">
-                              {company.niche && (
-                                <span className="px-2 py-0.5 rounded-md bg-muted/70 text-[11px] font-medium truncate max-w-[140px]">
-                                  {company.niche}
-                                </span>
-                              )}
+                              {(() => {
+                                const nicheKey = detectNicheKey(company.niche, company.name);
+                                const nicheMeta = getCanonicalNicheMeta(nicheKey);
+                                return nicheMeta ? (
+                                  <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${nicheMeta.color} font-semibold shrink-0`}>
+                                    <span>{nicheMeta.icon}</span>
+                                    <span>{nicheMeta.label}</span>
+                                  </span>
+                                ) : null;
+                              })()}
                               {company.city && (
                                 <span className="truncate max-w-[120px] opacity-80 text-[11px]">
                                   {company.city}

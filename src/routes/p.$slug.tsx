@@ -12,6 +12,7 @@ import { DemoConversionBanner } from "@/components/public/DemoConversionBanner";
 import { detectNicheKey, isHealthBookingNiche, isProductCatalogNiche } from "@/modules/prospecting/nichePresets";
 import { generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
 import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/WhatsAppTriageModal";
+import { MobileStickyBar } from "@/components/public-profile/MobileStickyBar";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -327,7 +328,7 @@ function PublicBio() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-16 sm:pb-0">
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
       <div onClickCapture={handleContainerClickCapture} className="flex-1">
         <BrandingProvider show={!hasProPlan && !isDemo}>
@@ -378,6 +379,14 @@ function PublicBio() {
           />
         )}
       </div>
+
+      {/* Barra de Conversão Fixa no Mobile */}
+      <MobileStickyBar
+        bio={bio}
+        bookingUrl={isServiceBookingNiche && bookingActive ? `/agendar/${bio.slug}` : undefined}
+        onTrack={track}
+        onShare={share}
+      />
     </div>
   );
 }

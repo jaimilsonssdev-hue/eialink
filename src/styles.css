@@ -2140,7 +2140,7 @@
 /* ============ BEAUTY & WELLNESS ============ */
 .niche-beauty { padding-bottom: 3.5rem; container-type: inline-size; max-width: 48rem; margin: 0 auto; }
 .niche-beauty-hero { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.niche-beauty-cover-wrapper { position: relative; width: 100%; height: 260px; overflow: hidden; border-radius: 0 0 2rem 2rem; box-shadow: 0 10px 30px -10px rgb(0 0 0 / .3); }
+.niche-beauty-cover-wrapper { position: relative; width: 100%; height: clamp(170px, 38vw, 250px); overflow: hidden; border-radius: 0 0 2rem 2rem; box-shadow: 0 10px 30px -10px rgb(0 0 0 / .3); }
 .niche-beauty-cover { width: 100%; height: 100%; object-fit: cover; }
 .niche-beauty-cover-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 40%, rgb(0 0 0 / .55)); }
 .niche-beauty-share-btn { position: absolute; top: 1rem; right: 1rem; padding: .4rem .85rem; border-radius: 999px; background: rgb(0 0 0 / .45); backdrop-filter: blur(8px); border: 1px solid rgb(255 255 255 / .2); color: #fff; font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .2s ease; }
@@ -2190,7 +2190,7 @@
 /* ============ SPOTLIGHT VIP DARK ============ */
 .niche-spotlight { padding-bottom: 3.5rem; container-type: inline-size; max-width: 48rem; margin: 0 auto; color: #f8fafc; }
 .niche-spotlight-hero { display: flex; flex-direction: column; align-items: center; text-align: center; }
-.niche-spotlight-cover-wrapper { position: relative; width: 100%; height: clamp(220px, 45vw, 300px); overflow: hidden; border-radius: 0 0 2rem 2rem; box-shadow: 0 16px 36px -12px rgb(0 0 0 / .6); }
+.niche-spotlight-cover-wrapper { position: relative; width: 100%; height: clamp(170px, 38vw, 260px); overflow: hidden; border-radius: 0 0 2rem 2rem; box-shadow: 0 16px 36px -12px rgb(0 0 0 / .6); }
 .niche-spotlight-cover { width: 100%; height: 100%; object-fit: cover; }
 .niche-spotlight-cover-overlay { position: absolute; inset: 0; background: linear-gradient(to bottom, transparent 30%, rgb(15 23 42 / .85) 100%); }
 .niche-spotlight-share-btn { position: absolute; top: 1rem; right: 1rem; padding: .4rem .85rem; border-radius: 999px; background: rgb(0 0 0 / .55); backdrop-filter: blur(8px); border: 1px solid rgb(255 255 255 / .2); color: #fff; font-size: .75rem; font-weight: 600; cursor: pointer; transition: all .2s ease; }
@@ -4313,3 +4313,10 @@
     transform: none !important;
   }
 }
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+

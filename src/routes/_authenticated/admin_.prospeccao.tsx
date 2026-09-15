@@ -78,7 +78,7 @@ import {
   COPY_TEMPLATES_UPDATED_EVENT,
 } from "@/modules/prospecting/copyTemplates";
 import { POPULAR_CNAES } from "@/modules/prospecting/cnaePresets";
-import { NICHE_PRESETS_VARIANTS, detectNicheKey } from "@/modules/prospecting/nichePresets";
+import { NICHE_PRESETS_VARIANTS, detectNicheKey, CANONICAL_NICHES, getCanonicalNicheMeta } from "@/modules/prospecting/nichePresets";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -184,6 +184,7 @@ function ProspectingPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | ProspectStatus>("all");
   const [priorityFilter, setPriorityFilter] = useState<"all" | ProspectPriority>("all");
   const [siteFilter, setSiteFilter] = useState<"all" | "no_website" | "has_website">("all");
+  const [nicheFilter, setNicheFilter] = useState<string>("all");
   const [viewMode, setViewMode] = useState<"kanban" | "table">(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("prospecting_view_mode");
@@ -414,14 +415,16 @@ function ProspectingPage() {
       const matchSite =
         siteFilter === "all" ||
         (siteFilter === "no_website" ? !company.has_website : company.has_website);
+      const companyNicheKey = detectNicheKey(company.niche, company.name);
+      const matchNiche = nicheFilter === "all" || companyNicheKey === nicheFilter;
       const matchTerm =
         !term ||
         [company.name, company.niche, company.city, company.whatsapp]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(term));
-      return matchStatus && matchPriority && matchSite && matchTerm;
+      return matchStatus && matchPriority && matchSite && matchNiche && matchTerm;
     });
-  }, [companies, priorityFilter, search, statusFilter, siteFilter]);
+  }, [companies, priorityFilter, search, statusFilter, siteFilter, nicheFilter]);
 
   const metrics = useMemo(() => {
     const untouched = companies.filter((item) => item.status === "novo");
@@ -2299,8 +2302,57 @@ function ProspectingPage() {
                 <option value="no_website">🔥 Apenas Sem Site</option>
                 <option value="has_website">🌐 Apenas Com Site</option>
               </select>
+              <select
+                className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors font-medium"
+                value={nicheFilter}
+                onChange={(event) => setNicheFilter(event.target.value)}
+              >
+                <option value="all">🎯 Todos os nichos</option>
+                {CANONICAL_NICHES.map((niche) => (
+                  <option key={niche.key} value={niche.key}>
+                    {niche.icon} {niche.label}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
+
+          {/* Pílulas de Filtro Rápido por Nicho */}
+          {companies.length > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto pt-2.5 pb-0.5 text-xs border-t border-border/40 mt-3 no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setNicheFilter("all")}
+                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 transition-all ${
+                  nicheFilter === "all"
+                    ? "bg-primary text-white shadow-xs"
+                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                Todos ({companies.length})
+              </button>
+              {CANONICAL_NICHES.filter((n) => companies.some((c) => detectNicheKey(c.niche, c.name) === n.key)).map((niche) => {
+                const count = companies.filter((c) => detectNicheKey(c.niche, c.name) === niche.key).length;
+                const isSelected = nicheFilter === niche.key;
+                return (
+                  <button
+                    key={niche.key}
+                    type="button"
+                    onClick={() => setNicheFilter(isSelected ? "all" : niche.key)}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition-all border ${
+                      isSelected
+                        ? `${niche.color} font-bold ring-2 ring-primary/40`
+                        : "border-border/60 bg-card hover:bg-muted/40 text-foreground"
+                    }`}
+                  >
+                    <span>{niche.icon}</span>
+                    <span>{niche.label}</span>
+                    <span className="text-[10px] opacity-75">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </CardHeader>
 
         <CardContent className="p-0">
@@ -2574,9 +2626,19 @@ function ProspectingPage() {
                     <TableRow key={company.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
                       <TableCell className="py-3.5 px-4 min-w-[220px]">
                         <p className="font-semibold text-foreground tracking-tight text-sm">{company.name}</p>
-                        <div className="text-xs font-normal text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+                        <div className="text-xs font-normal text-muted-foreground mt-1 flex items-center gap-1.5 flex-wrap">
+                          {(() => {
+                            const nicheKey = detectNicheKey(company.niche, company.name);
+                            const nicheMeta = getCanonicalNicheMeta(nicheKey);
+                            return nicheMeta ? (
+                              <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border ${nicheMeta.color} font-semibold shrink-0`}>
+                                <span>{nicheMeta.icon}</span>
+                                <span>{nicheMeta.label}</span>
+                              </span>
+                            ) : null;
+                          })()}
                           <span>
-                            {[company.niche, company.city, company.has_website ? "tem site" : "sem site"]
+                            {[company.city, company.has_website ? "tem site" : "sem site"]
                               .filter(Boolean)
                               .join(" · ")}
                           </span>

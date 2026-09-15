@@ -171,9 +171,13 @@ function parseGoogleMapsMarkdown(text: string, niche: string, city: string): Raw
       }
     }
 
+    const canonicalSearchNiche = detectNicheKey(niche, null);
+    const canonicalLeadNiche = detectNicheKey(detectedCategory || niche, cleanName);
+    const finalNiche = canonicalLeadNiche !== "geral" ? canonicalLeadNiche : canonicalSearchNiche;
+
     leads.push({
       name: cleanName,
-      niche: detectedCategory || niche,
+      niche: finalNiche,
       city,
       phone: detectedPhone,
       whatsapp: detectedPhone,
@@ -238,9 +242,13 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
       const snippetRadius = text.slice(Math.max(0, match.index - 200), Math.min(text.length, match.index + 400));
       const rawPhone = extractBrazilianPhone(snippetRadius);
 
+      const canonicalSearchNiche = detectNicheKey(niche, null);
+      const canonicalInstaNiche = detectNicheKey(niche, cleanName || handle);
+      const finalInstaNiche = canonicalInstaNiche !== "geral" ? canonicalInstaNiche : canonicalSearchNiche;
+
       leads.push({
         name: cleanName || handle,
-        niche,
+        niche: finalInstaNiche,
         city,
         instagram: `@${handle}`,
         phone: rawPhone,

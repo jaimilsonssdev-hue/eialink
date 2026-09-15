@@ -67,16 +67,16 @@ export class ClinicLayout implements TemplateLayoutRenderer {
               </span>
             </div>
             {(address || openingHours) && (
-              <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mt-2">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-foreground/80 mt-2">
                 {address && (
                   <span className="inline-flex items-center gap-1 max-w-[280px] truncate" title={address}>
-                    <MapPin size={13} className="text-teal-600 flex-shrink-0" aria-hidden />
+                    <MapPin size={13} className="text-teal-600 dark:text-teal-400 flex-shrink-0" aria-hidden />
                     <span className="truncate">{address}</span>
                   </span>
                 )}
                 {openingHours && (
                   <span className="inline-flex items-center gap-1">
-                    <Clock size={13} className="text-teal-600 flex-shrink-0" aria-hidden />
+                    <Clock size={13} className="text-teal-600 dark:text-teal-400 flex-shrink-0" aria-hidden />
                     <span>{openingHours}</span>
                   </span>
                 )}
@@ -197,17 +197,17 @@ export class ClinicLayout implements TemplateLayoutRenderer {
 
             <div className="grid gap-3">
               {testimonials.slice(0, 3).map((rev: any, idx: number) => (
-                <div key={idx} className="p-4 rounded-2xl bg-teal-50/50 border border-teal-100/60 shadow-sm">
+                <div key={idx} className="p-4 rounded-2xl bg-card border border-teal-200/50 dark:border-teal-500/20 shadow-sm">
                   <div className="flex items-center gap-3 mb-2">
                     {rev.avatar ? (
                       <img src={rev.avatar} alt={rev.author} className="w-8 h-8 rounded-full object-cover border border-teal-200" />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-teal-200 text-teal-800 flex items-center justify-center font-bold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-teal-100 text-teal-800 dark:bg-teal-950 dark:text-teal-300 flex items-center justify-center font-bold text-xs">
                         {rev.author.charAt(0).toUpperCase()}
                       </div>
                     )}
                     <div>
-                      <h4 className="text-xs font-bold text-gray-900">{rev.author}</h4>
+                      <h4 className="text-xs font-bold text-foreground">{rev.author}</h4>
                       <div className="flex text-amber-400 text-xs">
                         {Array.from({ length: rev.rating || 5 }).map((_, i) => (
                           <span key={i}>★</span>
@@ -215,7 +215,7 @@ export class ClinicLayout implements TemplateLayoutRenderer {
                       </div>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-600 italic">"{rev.text}"</p>
+                  <p className="text-xs text-muted-foreground italic">"{rev.text}"</p>
                 </div>
               ))}
             </div>

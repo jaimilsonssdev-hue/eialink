@@ -1,29 +1,34 @@
-import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2 } from "lucide-react";
+import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2, Wand2, Palette } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PageService } from "@/modules/page/services/PageService";
 import { detectNicheKey, getGalleryForNiche, type CuratedPhoto } from "@/modules/prospecting/nichePresets";
+import { generateSvgCover, generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
+import { generateAiImage, MAX_AI_IMAGES_PER_PAGE } from "@/modules/media/services/AiImageService";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const DEFAULT_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 const NICHE_GALLERY_LABELS: Record<string, string> = {
-  odontologia: "Odontologia & Dentes",
-  psicologia: "Psicologia & Terapia",
-  clinica: "Clínica & Saúde",
-  estetica: "Estética & Beleza",
-  salao: "Salão de Cabelo",
-  barbearia: "Barbearia",
-  advocacia: "Advocacia & Jurídico",
-  restaurante: "Gastronomia & Restaurante",
-  academia: "Academia & Treino",
-  petshop: "Pet Shop & Vet",
+  loja: "Lojas & E-commerce",
+  delivery: "Delivery & Lanches",
+  restaurante: "Restaurantes & Gastronomia",
+  sorveteria: "Sorveteria, Açaí & Gelateria",
   oficina: "Oficina Mecânica & Auto",
-  imobiliaria: "Imobiliária & Imóveis",
-  arquitetura: "Arquitetura & Interiores",
-  contabilidade: "Contabilidade & Finanças",
-  tatuagem: "Tatuagem & Piercing",
-  otica: "Ótica & Visão",
-  geral: "Empresas Gerais",
+  clinica: "Saúde & Clínica Médica",
+  psicologia: "Terapeutas & Psicólogos",
+  petshop: "Pet Shop & Casa de Ração",
+  advocacia: "Advogado & Jurídico",
+  odontologia: "Dentista & Odontologia",
+  construcao: "Construção Civil & Reformas",
+  imobiliaria: "Imobiliária & Corretores",
+  seguros: "Corretora de Seguros",
+  autonomo: "Profissional Autônomo & Serviços",
+  pessoal: "Página Pessoal & Portfólio",
+  fitness: "Fitness & Personal Trainer",
+  nutricao: "Nutricionista & Dietas",
+  costura: "Costureira & Ateliê de Moda",
+  tecnologia: "Tecnologia & Informática",
+  geral: "Empresas & Negócios Gerais",
 };
 
 export function MediaUploader({
@@ -33,6 +38,9 @@ export function MediaUploader({
   variant = "square",
   templateId,
   niche,
+  companyName = "Sua Empresa",
+  aiUsageCount = 0,
+  onAiUsageIncrement,
   onChange,
 }: {
   label: string;
@@ -41,10 +49,13 @@ export function MediaUploader({
   variant?: "square" | "cover" | "avatar";
   templateId?: string | null;
   niche?: string | null;
+  companyName?: string;
+  aiUsageCount?: number;
+  onAiUsageIncrement?: () => void;
   onChange(url: string | null): void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [status, setStatus] = useState<"idle" | "uploading" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "uploading" | "generating_ai" | "success" | "error">("idle");
   const [error, setError] = useState<string>();
   const [customUrl, setCustomUrl] = useState("");
   const [showUrlInput, setShowUrlInput] = useState(false);
@@ -62,6 +73,7 @@ export function MediaUploader({
 
   const gallery = getGalleryForNiche(activeGalleryNiche);
   const curatedPhotos = isCover ? gallery.covers : gallery.avatars;
+  const remainingAiQuota = Math.max(0, MAX_AI_IMAGES_PER_PAGE - aiUsageCount);
 
   async function validate(file: File) {
     if (!ACCEPTED_TYPES.includes(file.type)) {
@@ -78,7 +90,7 @@ export function MediaUploader({
       await validate(file);
     } catch (cause) {
       setStatus("error");
-      setError(cause instanceof Error ? cause.message : "Imagem inválida.");
+      setError(cause instanceof Error ? cause.message : "Arquivo inválido");
       return;
     }
 
@@ -86,28 +98,12 @@ export function MediaUploader({
     setError(undefined);
 
     try {
-      const userId = await PageService.getCurrentUserId();
-      const extension = file.name.split(".").pop() || "jpg";
-      const publicUrl = await PageService.uploadMedia(
-        file,
-        `${userId}/${crypto.randomUUID()}.${extension}`,
-      );
+      const publicUrl = await PageService.uploadAsset(file);
       onChange(publicUrl);
       setStatus("success");
     } catch (cause) {
-      console.warn("Upload no storage falhou, usando FileReader local:", cause);
-      const reader = new FileReader();
-      reader.onload = () => {
-        if (typeof reader.result === "string") {
-          onChange(reader.result);
-          setStatus("success");
-        }
-      };
-      reader.onerror = () => {
-        setStatus("error");
-        setError("Não foi possível carregar esta imagem.");
-      };
-      reader.readAsDataURL(file);
+      setStatus("error");
+      setError(cause instanceof Error ? cause.message : "Falha no upload da imagem");
     }
   }
 
@@ -118,17 +114,51 @@ export function MediaUploader({
     setShowUrlInput(false);
   }
 
+  function handleGenerateHtmlSvg() {
+    if (isCover) {
+      const svgUrl = generateSvgCover(activeGalleryNiche, companyName);
+      onChange(svgUrl);
+    } else {
+      const svgUrl = generateSvgAvatar(companyName, activeGalleryNiche);
+      onChange(svgUrl);
+    }
+  }
+
+  async function handleGenerateAi() {
+    if (remainingAiQuota <= 0) {
+      setError(`Limite de ${MAX_AI_IMAGES_PER_PAGE} fotos por IA atingido para esta página.`);
+      return;
+    }
+
+    setStatus("generating_ai");
+    setError(undefined);
+
+    try {
+      const result = await generateAiImage({
+        niche: activeGalleryNiche,
+        companyName,
+        currentUsageCount: aiUsageCount,
+        type: isCover ? "cover" : "avatar",
+      });
+
+      onChange(result.url);
+      onAiUsageIncrement?.();
+      setStatus("success");
+    } catch (err) {
+      setStatus("error");
+      setError(err instanceof Error ? err.message : "Falha ao gerar imagem com IA");
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-          {label}
-        </span>
+        <label className="text-xs font-semibold text-foreground">{label}</label>
         {value && (
           <button
             type="button"
-            className="inline-flex items-center gap-1 text-[11px] text-red-400 hover:text-red-300 transition-colors"
             onClick={() => onChange(null)}
+            className="text-xs text-rose-400 hover:text-rose-300 inline-flex items-center gap-1 transition-colors"
           >
             <Trash2 className="h-3 w-3" />
             <span>Remover</span>
@@ -136,18 +166,24 @@ export function MediaUploader({
         )}
       </div>
 
-      {/* Prévia e Ação de Enviar */}
       <div className="flex items-center gap-3">
         {value ? (
-          <div className="relative group overflow-hidden rounded-xl border border-border shrink-0">
+          <div
+            className={
+              isCover
+                ? "relative h-20 w-32 overflow-hidden rounded-xl border border-border bg-muted/20 shrink-0 shadow-xs"
+                : "relative h-16 w-16 overflow-hidden rounded-xl border border-border bg-muted/20 shrink-0 shadow-xs"
+            }
+          >
             <img
               src={value}
-              alt="Prévia"
-              className={
-                isCover ? "h-20 w-32 object-cover" : "h-16 w-16 object-cover"
-              }
+              alt=""
+              className="h-full w-full object-cover"
               onError={(e) => {
-                e.currentTarget.src = "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=600&q=80";
+                // Fallback para SVG se quebrar
+                e.currentTarget.src = isCover
+                  ? generateSvgCover(activeGalleryNiche, companyName)
+                  : generateSvgAvatar(companyName, activeGalleryNiche);
               }}
             />
           </div>
@@ -163,25 +199,71 @@ export function MediaUploader({
           </div>
         )}
 
-        <div className="flex-1 space-y-1.5">
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={status === "uploading"}
-            className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-elevated/50 px-3 py-2 text-xs font-semibold text-foreground hover:bg-surface-elevated transition-all shadow-sm w-full sm:w-auto"
-          >
-            {status === "uploading" ? (
-              <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-[color:var(--primary)]" />
-                <span>Enviando foto...</span>
-              </>
-            ) : (
-              <>
-                <ImagePlus className="h-3.5 w-3.5 text-[color:var(--primary)]" />
-                <span>Subir Foto do Celular / PC</span>
-              </>
-            )}
-          </button>
+        <div className="flex-1 space-y-2">
+          <div className="flex flex-wrap items-center gap-1.5">
+            {/* 1. Subir do celular / PC */}
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={status === "uploading" || status === "generating_ai"}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface-elevated/50 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-surface-elevated transition-all shadow-2xs"
+            >
+              {status === "uploading" ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-[color:var(--primary)]" />
+                  <span>Enviando...</span>
+                </>
+              ) : (
+                <>
+                  <ImagePlus className="h-3.5 w-3.5 text-[color:var(--primary)]" />
+                  <span>Subir Foto</span>
+                </>
+              )}
+            </button>
+
+            {/* 2. Gerar Gráfico em HTML/SVG (Zero Custo & Nítido) */}
+            <button
+              type="button"
+              onClick={handleGenerateHtmlSvg}
+              title="Gera visual limpo e profissional sem modelos ou fotos falsas"
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-[color:var(--primary)]/30 bg-[color:var(--primary)]/10 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-[color:var(--primary)]/20 transition-all shadow-2xs"
+            >
+              <Palette className="h-3.5 w-3.5 text-[color:var(--primary)]" />
+              <span>{isCover ? "Design em HTML/SVG" : "Monograma Oficial"}</span>
+            </button>
+
+            {/* 3. Gerar com IA (Limite Estrito de 3) */}
+            <button
+              type="button"
+              onClick={handleGenerateAi}
+              disabled={status === "generating_ai" || status === "uploading" || remainingAiQuota <= 0}
+              title={
+                remainingAiQuota <= 0
+                  ? "Limite de 3 fotos por IA atingido para esta página"
+                  : `Gera foto realista via IA contextualizada no nicho (Restam ${remainingAiQuota} de ${MAX_AI_IMAGES_PER_PAGE})`
+              }
+              className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all shadow-2xs ${
+                remainingAiQuota > 0
+                  ? "border-purple-500/30 bg-purple-500/10 text-foreground hover:bg-purple-500/20"
+                  : "border-border bg-muted/30 text-muted-foreground cursor-not-allowed opacity-60"
+              }`}
+            >
+              {status === "generating_ai" ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-400" />
+                  <span>Gerando com IA...</span>
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-3.5 w-3.5 text-purple-400" />
+                  <span>Gerar IA</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300">
+                    {remainingAiQuota}/3
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
 
           <div className="flex items-center gap-2">
             <button
@@ -190,7 +272,7 @@ export function MediaUploader({
               className="text-[11px] text-[color:var(--primary)] hover:underline font-medium inline-flex items-center gap-1"
             >
               <LinkIcon className="h-3 w-3" />
-              <span>{showUrlInput ? "Ocultar campo de link" : "Colar link de imagem"}</span>
+              <span>{showUrlInput ? "Ocultar link" : "Colar link de imagem"}</span>
             </button>
           </div>
         </div>
@@ -230,34 +312,35 @@ export function MediaUploader({
       )}
 
       {error && (
-        <p role="alert" className="text-xs text-red-400">
+        <p role="alert" className="text-xs text-rose-400 font-medium">
           {error}
         </p>
       )}
 
-      {/* Galeria Curada Unsplash Padrão Ouro */}
+      {/* Galeria Curada de Alta Resolução por Nicho */}
       {curatedPhotos.length > 0 && (
         <div className="space-y-2 pt-2 border-t border-border/40">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="text-[11px] font-semibold text-muted-foreground inline-flex items-center gap-1.5">
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span>Fotos Prontas em Alta Resolução (1 Clique):</span>
+              <span>Fotos Curadas por Nicho (1 Clique):</span>
             </span>
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] uppercase font-bold text-muted-foreground">Nicho:</span>
               <select
                 value={activeGalleryNiche}
                 onChange={(e) => setActiveGalleryNiche(e.target.value)}
-                className="rounded-lg border border-border bg-card/90 px-2 py-1 text-[11px] font-medium text-foreground focus:outline-none focus:ring-1 focus:ring-primary cursor-pointer shadow-xs"
+                className="text-[11px] bg-surface-elevated border border-border rounded-lg px-2 py-1 text-foreground"
               >
-                {Object.entries(NICHE_GALLERY_LABELS).map(([k, labelText]) => (
-                  <option key={k} value={k} className="bg-popover text-popover-foreground">
-                    {labelText}
+                {Object.entries(NICHE_GALLERY_LABELS).map(([k, name]) => (
+                  <option key={k} value={k}>
+                    {name}
                   </option>
                 ))}
               </select>
             </div>
           </div>
+
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {curatedPhotos.map((photo) => {
               const isSelected = value === photo.url;
@@ -266,27 +349,26 @@ export function MediaUploader({
                   key={photo.id}
                   type="button"
                   onClick={() => onChange(photo.url)}
-                  className={`group relative overflow-hidden rounded-xl border transition-all ${
+                  className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
+                    isCover ? "h-20" : "h-16"
+                  } ${
                     isSelected
-                      ? "border-primary ring-2 ring-primary/40 scale-[1.02] shadow-sm"
-                      : "border-border/60 hover:border-primary/40 hover:scale-[1.01]"
+                      ? "border-[color:var(--primary)] ring-2 ring-[color:var(--primary)]/50"
+                      : "border-border/60 hover:border-border hover:opacity-90"
                   }`}
                   title={photo.label}
                 >
-                  <img
-                    src={photo.url}
-                    alt={photo.label}
-                    className="h-16 w-full object-cover transition-transform group-hover:scale-105"
-                    loading="lazy"
-                  />
-                  {isSelected && (
-                    <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-primary-foreground shadow">
-                      <Check className="h-2.5 w-2.5 stroke-[3]" />
+                  <img src={photo.url} alt={photo.label} className="h-full w-full object-cover" loading="lazy" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent p-1.5 flex flex-col justify-end">
+                    <span className="text-[10px] font-medium text-white line-clamp-1 leading-tight">
+                      {photo.label}
                     </span>
+                  </div>
+                  {isSelected && (
+                    <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-[color:var(--primary)] text-white flex items-center justify-center shadow-xs">
+                      <Check className="h-2.5 w-2.5 stroke-[3]" />
+                    </div>
                   )}
-                  <span className="absolute inset-x-0 bottom-0 bg-black/75 px-1.5 py-0.5 text-[9px] font-medium text-white truncate text-center backdrop-blur-[2px]">
-                    {photo.label}
-                  </span>
                 </button>
               );
             })}
@@ -296,4 +378,3 @@ export function MediaUploader({
     </div>
   );
 }
-

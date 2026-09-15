@@ -10,6 +10,7 @@ import { BrandingProvider } from "@/components/public-profile/BrandingContext";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 import { DemoConversionBanner } from "@/components/public/DemoConversionBanner";
 import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/WhatsAppTriageModal";
+import { detectNicheKey, isHealthBookingNiche, isProductCatalogNiche } from "@/modules/prospecting/nichePresets";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -64,9 +65,12 @@ export const Route = createFileRoute("/p/$slug")({
     // database function cannot make the public URL fall back to the Free
     // renderer while the builder preview shows the full mini-site.
     const renderFullPage = Boolean(hasProPlan) || usesPremiumTemplate(bio.template_id);
+    const nicheKey = detectNicheKey((bio.social_links as any)?.niche, bio.display_name);
+    const isHealth = isHealthBookingNiche(nicheKey);
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingStore = supabase as never as { from: (table: "booking_settings") => any };
-    const { data: booking } = renderFullPage
+    const { data: booking } = (renderFullPage && isHealth)
       ? await bookingStore
           .from("booking_settings")
           .select("active")
@@ -267,6 +271,17 @@ function PublicBio() {
   const isFreeTemplate = !bio.template_id || bio.template_id === "default" || bio.template_id.startsWith("free-");
   const shouldUseTemplate = !isFreeTemplate || hasProPlan || isDemo;
 
+  const nicheKey = detectNicheKey((bio.social_links as any)?.niche, bio.display_name);
+  const isProduct = isProductCatalogNiche(nicheKey);
+  const isHealth = isHealthBookingNiche(nicheKey);
+
+  // Auto-correção dinâmica: se a página foi criada como demo de produto/food (ex: açaí, sorveteria, delivery)
+  // mas herdou template clínico ('clinic-care' ou 'business-modern') por histórico, renderiza como 'restaurant-menu'!
+  let effectiveTemplateId = bio.template_id;
+  if (isProduct && (effectiveTemplateId === "clinic-care" || effectiveTemplateId === "business-modern" || !effectiveTemplateId)) {
+    effectiveTemplateId = "restaurant-menu";
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
@@ -274,12 +289,12 @@ function PublicBio() {
         <BrandingProvider show={!hasProPlan && !isDemo}>
           {shouldUseTemplate ? (
             <TemplateRenderer
-              bio={{ ...bio, theme }}
+              bio={{ ...bio, template_id: effectiveTemplateId, theme }}
               links={links}
               onTrack={track}
               onShare={share}
               products={products}
-              bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
+              bookingUrl={isHealth && bookingActive ? `/agendar/${bio.slug}` : undefined}
               motionLevel={bio.motion_enabled === false ? "off" : "pro"}
               supplemental={
                 <>

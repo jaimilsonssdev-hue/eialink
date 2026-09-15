@@ -699,17 +699,13 @@ export async function fetchGoogleMapsPlaceDetails(
           }
         }
 
-        // Fotos no painel do Google
+        // Fotos no painel do Google (exclui fotos de carros Street View que pegam calçadas e árvores)
         const googlePhotos = [...text.matchAll(/!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g)];
         for (const gp of googlePhotos) {
           const url = gp[1];
-          if (isAuthenticBusinessPhoto(url)) {
+          if (isAuthenticBusinessPhoto(url) && !url.includes("streetviewpixels-pa.googleapis.com")) {
             const cleanUrl = normalizeBusinessPhotoUrl(url);
-            if (url.includes("streetviewpixels-pa.googleapis.com")) {
-              if (!photos.includes(cleanUrl)) photos.unshift(cleanUrl);
-            } else {
-              if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
-            }
+            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
           }
         }
 
@@ -724,16 +720,12 @@ export async function fetchGoogleMapsPlaceDetails(
               });
               if (cidRes.ok) {
                 const cidText = await cidRes.text();
-                const cidPhotos = [...cidText.matchAll(/!\[[^\]]*\]\((https:\/\/(?:lh[0-9]\.googleusercontent\.com|streetviewpixels-pa\.googleapis\.com)[^\)]+)\)/g)];
+                const cidPhotos = [...cidText.matchAll(/!\[[^\]]*\]\((https:\/\/(?:lh[0-9]\.googleusercontent\.com)[^\)]+)\)/g)];
                 for (const cp of cidPhotos) {
                   const url = cp[1];
-                  if (isAuthenticBusinessPhoto(url)) {
+                  if (isAuthenticBusinessPhoto(url) && !url.includes("streetviewpixels-pa.googleapis.com")) {
                     const cleanUrl = normalizeBusinessPhotoUrl(url);
-                    if (url.includes("streetviewpixels-pa.googleapis.com")) {
-                      if (!photos.includes(cleanUrl)) photos.unshift(cleanUrl);
-                    } else {
-                      if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
-                    }
+                    if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
                   }
                 }
               }

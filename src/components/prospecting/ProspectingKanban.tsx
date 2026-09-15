@@ -224,7 +224,7 @@ export function ProspectingKanban({
     <div className="space-y-6">
       {/* Quadro Horizontal com as 6 Colunas Ativas do Pipeline */}
       <div className="overflow-x-auto pb-4 no-scrollbar">
-        <div className="flex gap-4 min-w-[1320px] items-start">
+        <div className="flex gap-4 min-w-[1780px] items-start">
           {PIPELINE_COLUMNS.map((col) => {
             const list = columnsMap.get(col.key) ?? [];
             const isDropActive = dragOverCol === col.key;
@@ -235,17 +235,17 @@ export function ProspectingKanban({
                 onDragOver={handleDragOver}
                 onDragEnter={() => handleDragEnter(col.key)}
                 onDrop={(e) => handleDrop(e, col.key)}
-                className={`flex-1 min-w-[210px] max-w-[240px] rounded-2xl border bg-muted/20 flex flex-col transition-all duration-200 ${
+                className={`w-[280px] min-w-[280px] max-w-[290px] shrink-0 rounded-2xl border bg-muted/20 flex flex-col transition-all duration-200 ${
                   isDropActive
                     ? "border-primary ring-2 ring-primary/30 bg-primary/5 shadow-lg scale-[1.01]"
                     : "border-border/60 hover:border-border"
                 }`}
               >
                 {/* Header da Coluna */}
-                <div className="p-3 border-b border-border/50 flex items-center justify-between bg-card/60 rounded-t-2xl">
+                <div className="p-3.5 border-b border-border/50 flex items-center justify-between bg-card/60 rounded-t-2xl">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`h-2.5 w-2.5 rounded-full ${col.dotColor} shrink-0`} />
-                    <h3 className="text-xs font-bold text-foreground truncate tracking-tight" title={col.description}>
+                    <h3 className="text-xs font-bold text-foreground truncate" title={col.description}>
                       {col.label}
                     </h3>
                   </div>
@@ -257,14 +257,14 @@ export function ProspectingKanban({
                 </div>
 
                 {/* Lista de Cards da Coluna */}
-                <div className="p-2 space-y-2.5 flex-1 min-h-[460px] max-h-[720px] overflow-y-auto no-scrollbar">
+                <div className="p-2.5 space-y-3 flex-1 min-h-[460px] max-h-[720px] overflow-y-auto no-scrollbar">
                   {list.length === 0 ? (
                     <div
                       className={`h-32 flex flex-col items-center justify-center border-2 border-dashed rounded-xl text-center p-3 transition-colors ${
                         isDropActive ? "border-primary/50 bg-primary/10 text-primary" : "border-border/40 text-muted-foreground/60"
                       }`}
                     >
-                      <p className="text-[11px]">Arraste oportunidades para esta etapa</p>
+                      <p className="text-xs">Arraste oportunidades para esta etapa</p>
                     </div>
                   ) : (
                     list.map((company) => {
@@ -285,17 +285,17 @@ export function ProspectingKanban({
                           draggable
                           onDragStart={(e) => handleDragStart(e, company.id)}
                           onDragEnd={handleDragEnd}
-                          className={`group relative rounded-xl border bg-card p-3 shadow-xs hover:shadow-md transition-all cursor-grab active:cursor-grabbing select-none ${
+                          className={`group relative rounded-xl border bg-card p-3.5 shadow-xs hover:shadow-md transition-all cursor-grab active:cursor-grabbing select-none ${
                             isBeingDragged
                               ? "opacity-40 border-dashed border-primary"
                               : "border-border/70 hover:border-primary/50"
                           }`}
                         >
                           {/* Topo do Card: Temperatura + Setas Rápidas de Avanço */}
-                          <div className="flex items-center justify-between gap-1 mb-2">
-                            <LeadTemperatureBadge score={company.score} className="scale-90 origin-left" />
+                          <div className="flex items-center justify-between gap-1 mb-2.5">
+                            <LeadTemperatureBadge score={company.score} />
 
-                            <div className="flex items-center gap-0.5 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1">
                               {prevStatus && (
                                 <button
                                   type="button"
@@ -303,7 +303,7 @@ export function ProspectingKanban({
                                     e.stopPropagation();
                                     onStatusChange(company.id, prevStatus);
                                   }}
-                                  className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-colors"
+                                  className="h-6 w-6 inline-flex items-center justify-center rounded-md border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                                   title={`Voltar para: ${prevStatus}`}
                                 >
                                   <ChevronLeft className="h-3.5 w-3.5" />
@@ -316,7 +316,7 @@ export function ProspectingKanban({
                                     e.stopPropagation();
                                     onStatusChange(company.id, nextStatus);
                                   }}
-                                  className="h-6 w-6 inline-flex items-center justify-center rounded-md bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold"
+                                  className="h-6 w-6 inline-flex items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold"
                                   title={`Avançar para: ${nextStatus}`}
                                 >
                                   <ChevronRight className="h-3.5 w-3.5" />
@@ -326,209 +326,211 @@ export function ProspectingKanban({
                           </div>
 
                           {/* Nome da Empresa & Local */}
-                          <div className="mb-2">
-                            <h4 className="text-xs font-bold text-foreground leading-snug line-clamp-2" title={company.name}>
+                          <div className="mb-2.5">
+                            <h4 className="text-[13px] font-bold text-foreground leading-snug line-clamp-2" title={company.name}>
                               {company.name}
                             </h4>
-                            <div className="flex items-center gap-1.5 mt-1 text-[11px] text-muted-foreground flex-wrap">
+                            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground flex-wrap">
                               {company.niche && (
-                                <span className="px-1.5 py-0.5 rounded-md bg-muted/60 text-[10px] font-medium truncate max-w-[120px]">
+                                <span className="px-2 py-0.5 rounded-md bg-muted/70 text-[11px] font-medium truncate max-w-[140px]">
                                   {company.niche}
                                 </span>
                               )}
                               {company.city && (
-                                <span className="truncate max-w-[100px] opacity-80">
+                                <span className="truncate max-w-[120px] opacity-80 text-[11px]">
                                   {company.city}
                                 </span>
                               )}
                             </div>
                           </div>
 
-                          {/* Badge de Site */}
-                          <div className="flex items-center gap-1.5 mb-2.5">
+                          {/* Badges de Presença Web e Modelo */}
+                          <div className="flex items-center gap-1.5 mb-3 flex-wrap">
                             {company.has_website ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded border border-border/40">
-                                <Globe2 className="h-2.5 w-2.5 text-blue-400" /> Tem site
+                              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-md border border-border/40 whitespace-nowrap">
+                                <Globe2 className="h-3 w-3 text-blue-400" /> Tem site
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-500 dark:text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded border border-rose-500/20">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20 whitespace-nowrap">
                                 🔥 Sem site
                               </span>
                             )}
                             {demo.url && (
-                              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded border border-purple-500/20 truncate max-w-[100px]" title={demo.modelName || "Demo Pronta"}>
-                                ✨ {demo.modelName ? demo.modelName.slice(0, 14) : "Demo"}
+                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20 whitespace-nowrap truncate max-w-[130px]" title={demo.modelName || "Demo Pronta"}>
+                                ✨ {demo.modelName ? demo.modelName.slice(0, 14) : "Demo Pronta"}
                               </span>
                             )}
                           </div>
 
-                          {/* Botões de Ação Rápida */}
-                          <div className="grid grid-cols-2 gap-1.5 pt-2 border-t border-border/50">
-                            {/* WhatsApp */}
-                            {waHref ? (
-                              <a
-                                href={waHref}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-[11px] font-semibold transition-all"
-                                title={`WhatsApp: ${formatPhone(phone)}`}
-                              >
-                                <MessageCircle className="h-3 w-3 shrink-0" />
-                                <span className="truncate">Zap</span>
-                              </a>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onSetWhatsApp(company);
-                                }}
-                                className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-muted/40 hover:bg-muted/70 text-muted-foreground text-[10px] font-medium transition-colors"
-                              >
-                                <MessageCircle className="h-3 w-3 shrink-0" />
-                                <span className="truncate">+ Zap</span>
-                              </button>
-                            )}
-
-                            {/* Demo Page */}
-                            {demo.url ? (
-                              <a
-                                href={demo.url}
-                                target="_blank"
-                                rel="noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                                className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/25 text-[11px] font-semibold transition-all"
-                                title="Ver página demonstrativa"
-                              >
-                                <ExternalLink className="h-3 w-3 shrink-0" />
-                                <span className="truncate">Ver Demo</span>
-                              </a>
-                            ) : (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  onGenerateDemo(company);
-                                }}
-                                disabled={creatingPageId === company.id}
-                                className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:text-white border border-primary/25 text-[10px] font-bold transition-all"
-                              >
-                                {creatingPageId === company.id ? (
-                                  <Loader2 className="h-3 w-3 animate-spin shrink-0" />
-                                ) : (
-                                  <Sparkles className="h-3 w-3 shrink-0 text-purple-400" />
-                                )}
-                                <span className="truncate">{creatingPageId === company.id ? "Gerando" : "Gerar"}</span>
-                              </button>
-                            )}
-
-                            {/* Auditoria IA */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onAuditCompany(company);
-                              }}
-                              className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-muted/40 hover:bg-purple-500/15 hover:text-purple-400 text-muted-foreground border border-border/50 text-[10px] font-medium transition-all"
-                              title="Auditoria IA de Presença & Pitch"
-                            >
-                              <Bot className="h-3 w-3 shrink-0 text-purple-400" />
-                              <span className="truncate">Auditar</span>
-                            </button>
-
-                            {/* Menu Dropdown com mais opções */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          {/* Botões de Ação */}
+                          <div className="space-y-1.5 pt-2.5 border-t border-border/50">
+                            {/* Linha 1: WhatsApp + Demo */}
+                            <div className="grid grid-cols-2 gap-1.5">
+                              {waHref ? (
+                                <a
+                                  href={waHref}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-semibold transition-all whitespace-nowrap"
+                                  title={`WhatsApp: ${formatPhone(phone)}`}
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                                  <span>WhatsApp</span>
+                                </a>
+                              ) : (
                                 <button
                                   type="button"
-                                  className="inline-flex items-center justify-center py-1.5 px-2 rounded-lg border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/70 text-[11px] transition-colors"
-                                  title="Mais opções"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onSetWhatsApp(company);
+                                  }}
+                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-muted/40 hover:bg-muted/70 text-muted-foreground text-xs font-medium transition-colors whitespace-nowrap"
                                 >
-                                  <MoreHorizontal className="h-3.5 w-3.5" />
+                                  <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                                  <span>+ WhatsApp</span>
                                 </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-52">
-                                <DropdownMenuItem
-                                  onClick={() => onAuditCompany(company)}
-                                  className="cursor-pointer text-xs text-purple-400 font-medium"
-                                >
-                                  <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
-                                  <span>Auditoria com IA</span>
-                                </DropdownMenuItem>
+                              )}
 
-                                <DropdownMenuItem
-                                  onClick={() => void onInstagramApproach(company)}
-                                  className="cursor-pointer text-xs text-pink-400 font-medium"
+                              {demo.url ? (
+                                <a
+                                  href={demo.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/25 text-xs font-semibold transition-all whitespace-nowrap"
+                                  title="Ver página demonstrativa"
                                 >
-                                  {copiedInstagramCompanyId === company.id ? (
-                                    <Check className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                  <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                                  <span>Ver Demo</span>
+                                </a>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onGenerateDemo(company);
+                                  }}
+                                  disabled={creatingPageId === company.id}
+                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:text-white border border-primary/25 text-xs font-bold transition-all whitespace-nowrap"
+                                >
+                                  {creatingPageId === company.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
                                   ) : (
-                                    <Instagram className="h-3.5 w-3.5 mr-2 text-pink-400" />
+                                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-purple-400" />
                                   )}
-                                  <span>{copiedInstagramCompanyId === company.id ? "Copiado!" : "Direct Instagram"}</span>
-                                </DropdownMenuItem>
+                                  <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo"}</span>
+                                </button>
+                              )}
+                            </div>
 
-                                <DropdownMenuItem
-                                  onClick={() => onRegenerateDemo(company)}
-                                  disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                                  className="cursor-pointer text-xs text-purple-300 font-medium"
-                                >
-                                  <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
-                                  <span>{demo.url ? "Trocar Modelo da Página" : "Gerar Modelo"}</span>
-                                </DropdownMenuItem>
+                            {/* Linha 2: Auditoria IA + Menu Mais Opções */}
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onAuditCompany(company);
+                                }}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-muted/40 hover:bg-purple-500/15 hover:text-purple-400 text-muted-foreground border border-border/50 text-xs font-medium transition-all whitespace-nowrap"
+                                title="Auditoria de Presença & Pitch com IA"
+                              >
+                                <Bot className="h-3.5 w-3.5 shrink-0 text-purple-400" />
+                                <span>Auditoria IA</span>
+                              </button>
 
-                                {demo.pageId && (
-                                  <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                    <Link to="/builder" search={{ page: demo.pageId }}>
-                                      <Pencil className="h-3.5 w-3.5 mr-2 text-blue-400" />
-                                      <span>Editar no Construtor</span>
-                                    </Link>
-                                  </DropdownMenuItem>
-                                )}
-
-                                {demo.url && demo.pageId && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <button
+                                    type="button"
+                                    className="h-7 w-8 inline-flex items-center justify-center rounded-lg border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/70 text-xs transition-colors shrink-0"
+                                    title="Mais opções"
+                                  >
+                                    <MoreHorizontal className="h-3.5 w-3.5" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-52">
                                   <DropdownMenuItem
-                                    onClick={() => onMakeOfficial(company, demo.pageId!)}
-                                    disabled={actionLoadingId === demo.pageId || isOfficial}
+                                    onClick={() => onAuditCompany(company)}
+                                    className="cursor-pointer text-xs text-purple-400 font-medium"
+                                  >
+                                    <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                    <span>Auditoria com IA</span>
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => void onInstagramApproach(company)}
+                                    className="cursor-pointer text-xs text-pink-400 font-medium"
+                                  >
+                                    {copiedInstagramCompanyId === company.id ? (
+                                      <Check className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                    ) : (
+                                      <Instagram className="h-3.5 w-3.5 mr-2 text-pink-400" />
+                                    )}
+                                    <span>{copiedInstagramCompanyId === company.id ? "Copiado!" : "Direct Instagram"}</span>
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => onRegenerateDemo(company)}
+                                    disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                                    className="cursor-pointer text-xs text-purple-300 font-medium"
+                                  >
+                                    <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                    <span>{demo.url ? "Trocar Modelo da Página" : "Gerar Modelo"}</span>
+                                  </DropdownMenuItem>
+
+                                  {demo.pageId && (
+                                    <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                      <Link to="/builder" search={{ page: demo.pageId }}>
+                                        <Pencil className="h-3.5 w-3.5 mr-2 text-blue-400" />
+                                        <span>Editar no Construtor</span>
+                                      </Link>
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  {demo.url && demo.pageId && (
+                                    <DropdownMenuItem
+                                      onClick={() => onMakeOfficial(company, demo.pageId!)}
+                                      disabled={actionLoadingId === demo.pageId || isOfficial}
+                                      className="cursor-pointer text-xs"
+                                    >
+                                      <CheckCircle
+                                        className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`}
+                                      />
+                                      <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
+                                    </DropdownMenuItem>
+                                  )}
+
+                                  <DropdownMenuSeparator />
+
+                                  <DropdownMenuItem
+                                    onClick={() => onRegisterApproach(company)}
                                     className="cursor-pointer text-xs"
                                   >
-                                    <CheckCircle
-                                      className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`}
-                                    />
-                                    <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
+                                    <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                    <span>Registrar Histórico</span>
                                   </DropdownMenuItem>
-                                )}
 
-                                <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => onStatusChange(company.id, "descartado")}
+                                    className="cursor-pointer text-xs text-amber-500"
+                                  >
+                                    <Ban className="h-3.5 w-3.5 mr-2 text-amber-500" />
+                                    <span>Mover para Descartados</span>
+                                  </DropdownMenuItem>
 
-                                <DropdownMenuItem
-                                  onClick={() => onRegisterApproach(company)}
-                                  className="cursor-pointer text-xs"
-                                >
-                                  <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                  <span>Registrar Histórico</span>
-                                </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
 
-                                <DropdownMenuItem
-                                  onClick={() => onStatusChange(company.id, "descartado")}
-                                  className="cursor-pointer text-xs text-amber-500"
-                                >
-                                  <Ban className="h-3.5 w-3.5 mr-2 text-amber-500" />
-                                  <span>Mover para Descartados</span>
-                                </DropdownMenuItem>
-
-                                <DropdownMenuSeparator />
-
-                                <DropdownMenuItem
-                                  onClick={() => onDeleteCompany(company)}
-                                  className="cursor-pointer text-xs text-rose-400"
-                                >
-                                  <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
-                                  <span>Remover do Radar</span>
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                                  <DropdownMenuItem
+                                    onClick={() => onDeleteCompany(company)}
+                                    className="cursor-pointer text-xs text-rose-400"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
+                                    <span>Remover do Radar</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
                           </div>
                         </div>
                       );

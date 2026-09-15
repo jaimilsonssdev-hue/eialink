@@ -141,8 +141,10 @@ export const PageService = {
 
     const realRating = realPlace?.rating ?? rating ?? null;
     const realReviewsCount = realPlace?.reviewsCount ?? reviewsCount ?? null;
-    // Capa: prioriza foto real autêntica da fachada/instalação do Maps; se ausente, usa capa curada do nicho
-    const realCover = realPlace?.photos?.[0] ?? preset.cover_url;
+    // Capa: para nichos de alimentação e produtos, prioriza sempre a foto curada de alta qualidade ou HTML/SVG do nicho, evitando fotos de calçadas, árvores ou fotos de baixa resolução de usuários do Maps
+    const isProductOrFood = isProductCatalogNiche(preset.nicheKey);
+    const validMapsPhoto = realPlace?.photos?.find((p) => !p.includes("streetviewpixels") && !p.includes("google.com/maps"));
+    const realCover = isProductOrFood ? preset.cover_url : (validMapsPhoto ?? preset.cover_url);
     // Avatar: utiliza o avatar profissional curado do nicho para evitar atribuir fotos de salas, fachadas ou fotos aleatórias ao avatar circular
     const realAvatar = preset.avatar_url;
     const finalWhatsapp = whatsapp || realPlace?.whatsapp || null;

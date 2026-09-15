@@ -406,10 +406,13 @@ function buildNicheVariants(
         ? generateSvgCover(key, "Sua Empresa")
         : gallery.covers[idx % gallery.covers.length]?.url || generateSvgCover(key, "Sua Empresa");
 
+    // Negócios comerciais e empresas NUNCA utilizam fotos de modelos/estranhos.
+    // Utilizam sempre o monograma vetorial elegante da marca em SVG de alta fidelidade.
+    const isPersonal = key === "pessoal";
     const avatarUrl =
-      idx === 1
-        ? generateSvgAvatar("Sua Empresa", key)
-        : gallery.avatars[idx % gallery.avatars.length]?.url || generateSvgAvatar("Sua Empresa", key);
+      isPersonal && gallery.avatars.length > 0
+        ? gallery.avatars[idx % gallery.avatars.length]?.url
+        : generateSvgAvatar("Sua Empresa", key);
 
     const waConfig = getNicheWhatsappConfig(key, idx);
 
@@ -468,9 +471,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   delivery: buildNicheVariants(
     "delivery",
-    ["restaurant-menu", "spotlight-neon", "restaurant-menu"],
+    ["cinematic-glass", "restaurant-menu", "spotlight-neon"],
     ["sunset", "midnight", "amber"],
-    ["Cardápio Delivery Rápido", "Dark Burger & Pizzas", "Combos & Lanches Especiais"],
+    ["Cardápio Cinematográfico & Delivery VIP", "Cardápio Express & Lanches", "Combos & Pizzas Artesanais"],
     [
       (name, city) => `O sabor irresistível de ${name} entregue quentinho em ${city}`,
       (name, city) => `Peça pelo WhatsApp e receba em minutos na sua casa`,
@@ -500,9 +503,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   restaurante: buildNicheVariants(
     "restaurante",
-    ["restaurant-menu", "spotlight-neon", "restaurant-menu"],
+    ["cinematic-glass", "restaurant-menu", "spotlight-neon"],
     ["sunset", "midnight", "warm"],
-    ["Cardápio Gastronômico & Reservas", "Bistrô & Alta Culinária", "Menu Executivo & Vinhos"],
+    ["Alta Gastronomia Cinematográfica", "Bistrô & Cardápio Completo", "Menu Executivo & Vinhos"],
     [
       (name, city) => `Experiência gastronômica marcante e pratos autorais na ${name}`,
       (name, city) => `Ambiente sofisticado e cardápio refinado para momentos especiais`,
@@ -531,9 +534,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   sorveteria: buildNicheVariants(
     "sorveteria",
-    ["restaurant-menu", "store-showcase", "spotlight-neon"],
+    ["cinematic-glass", "store-showcase", "restaurant-menu"],
     ["ocean", "midnight", "sunset"],
-    ["Gelateria & Açaí Gourmet", "Taças Geladas & Milkshakes", "Sorvetes Artesanais & Delivery"],
+    ["Gelateria Cinematográfica & Açaí VIP", "Taças Geladas & Vitrine", "Sorvetes Artesanais & Delivery"],
     [
       (name, city) => `Gelatos artesanais, açaí no capricho e sobremesas geladas em ${city}`,
       (name, city) => `Refresque seu dia com as taças e sabores exclusivos da ${name}`,
@@ -1191,12 +1194,24 @@ export function getPresetForCompany(
   const key = detectNicheKey(nicheRaw, companyNameRaw);
   const variants = NICHE_PRESETS_VARIANTS[key] || NICHE_PRESETS_VARIANTS.geral;
 
-  if (typeof variantIndex === "number" && variantIndex >= 0 && variantIndex < variants.length) {
-    return variants[variantIndex];
-  }
+  const targetVariant =
+    typeof variantIndex === "number" && variantIndex >= 0 && variantIndex < variants.length
+      ? variants[variantIndex]
+      : variants[0];
 
-  // Sempre utilizar o Modelo 1 (index 0) por padrão para máxima consistência e qualidade
-  return variants[0];
+  const companyName = companyNameRaw?.trim() || "Sua Empresa";
+  const isPersonal = key === "pessoal";
+
+  // Se não for perfil pessoal e não houver logo customizado, gera o monograma vetorial oficial da empresa
+  const avatar_url =
+    isPersonal && targetVariant.avatar_url && !targetVariant.avatar_url.includes("svg")
+      ? targetVariant.avatar_url
+      : generateSvgAvatar(companyName, key);
+
+  return {
+    ...targetVariant,
+    avatar_url,
+  };
 }
 
 /**

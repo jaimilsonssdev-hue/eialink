@@ -13,6 +13,7 @@ import { TherapyLayout } from "./TherapyLayout";
 import { SpotlightLayout } from "./SpotlightLayout";
 import { BeautyLayout } from "./BeautyLayout";
 import { BusinessLayout } from "./BusinessLayout";
+import { CinematicLayout } from "./CinematicLayout";
 
 export type LayoutRenderContext = TemplateComponentContext & {
   products?: CatalogItem[];
@@ -92,4 +93,5 @@ export const layoutResolver = new LayoutResolver()
   .register(new AcademyLayout())
   .register(new LawLayout())
   .register(new SpotlightLayout())
-  .register(new BeautyLayout());
+  .register(new BeautyLayout())
+  .register(new CinematicLayout());

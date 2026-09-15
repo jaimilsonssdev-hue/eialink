@@ -456,7 +456,6 @@ export const templateManifest: TemplateDefinition[] = [
     name: "Restaurante",
     description: "Cardápio editorial e quente para restaurantes e cafés.",
     category: "restaurant",
-    smart: restaurantSmart,
     badge: "Novo",
     bestFor: "restaurantes, cafés e delivery",
     theme: {
@@ -638,6 +637,35 @@ export const templateManifest: TemplateDefinition[] = [
       footer: "discreet",
     },
     supportedFeatures: ["profile", "links", "socials", "pix", "catalog", "whatsapp"],
+  }),
+  define({
+    id: "cinematic-glass",
+    slug: "cinematic-glass",
+    name: "Cinematográfico Glass VIP",
+    description:
+      "Design imersivo com glassmorphism, ambient glow, carrossel feed touch e botão de alta conversão.",
+    category: "premium",
+    badge: "Premium",
+    bestFor: "restaurantes, gelaterias, cafés, hamburguerias, estética e marcas premium",
+    theme: {
+      colors: {
+        background: "#07080e",
+        surface: "#10131d",
+        text: "#f8fafc",
+        muted: "#94a3b8",
+        primary: "#a855f7",
+      },
+      typography: { fontFamily: displayFont, headingSize: "1.6rem", bodySize: "0.95rem" },
+    },
+    layout: "cinematic",
+    components: ["profile", "links", "pix", "footer"],
+    componentVariants: {
+      profile: "business",
+      links: "glass",
+      pix: "highlighted",
+      footer: "discreet",
+    },
+    supportedFeatures: ["profile", "links", "socials", "pix", "catalog", "whatsapp", "products"],
   }),
 ];
 

@@ -9,8 +9,8 @@ import { parseCatalogItemCategory } from "@/modules/products/services/ProductSer
 import { BrandingProvider } from "@/components/public-profile/BrandingContext";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 import { DemoConversionBanner } from "@/components/public/DemoConversionBanner";
-import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/WhatsAppTriageModal";
 import { detectNicheKey, isHealthBookingNiche, isProductCatalogNiche } from "@/modules/prospecting/nichePresets";
+import { generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -282,15 +282,25 @@ function PublicBio() {
   let effectiveTemplateId = bio.template_id;
 
   if (!isHealth && (effectiveTemplateId === "clinic-care" || effectiveTemplateId === "therapy-wellbeing")) {
-    effectiveTemplateId = isProduct ? "restaurant-menu" : "business-modern";
+    effectiveTemplateId = isProduct ? "cinematic-glass" : "business-modern";
   }
 
   if (nicheKey !== "advocacia" && effectiveTemplateId === "law-authority") {
-    effectiveTemplateId = isProduct ? "restaurant-menu" : "business-modern";
+    effectiveTemplateId = isProduct ? "cinematic-glass" : "business-modern";
   }
 
-  if (isProduct && (effectiveTemplateId === "business-modern" || !effectiveTemplateId)) {
-    effectiveTemplateId = "restaurant-menu";
+  if (isProduct && (effectiveTemplateId === "business-modern" || effectiveTemplateId === "restaurant-menu" || !effectiveTemplateId)) {
+    effectiveTemplateId = "cinematic-glass";
+  }
+
+  // Se o avatar gravado for foto genérica de pessoas do Unsplash e o nicho não for pessoal,
+  // substitui dinamicamente pelo monograma oficial vetorial da empresa (evita fotos de pessoas desconhecidas)
+  let effectiveAvatarUrl = bio.avatar_url;
+  const isGenericPersonPhoto =
+    bio.avatar_url &&
+    (bio.avatar_url.includes("unsplash.com") || bio.avatar_url.includes("template-assets"));
+  if (isGenericPersonPhoto && nicheKey !== "pessoal") {
+    effectiveAvatarUrl = generateSvgAvatar(bio.display_name, nicheKey);
   }
 
   return (
@@ -300,7 +310,7 @@ function PublicBio() {
         <BrandingProvider show={!hasProPlan && !isDemo}>
           {shouldUseTemplate ? (
             <TemplateRenderer
-              bio={{ ...bio, template_id: effectiveTemplateId, theme }}
+              bio={{ ...bio, template_id: effectiveTemplateId, avatar_url: effectiveAvatarUrl, theme }}
               links={links}
               onTrack={track}
               onShare={share}

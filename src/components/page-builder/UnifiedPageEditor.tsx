@@ -128,7 +128,7 @@ export const NICHE_MODELS: NicheModelConfig[] = [
   },
   {
     id: "delivery",
-    templateId: "restaurant-menu",
+    templateId: "cinematic-glass",
     nicheKey: "delivery",
     nicheCategory: "Delivery e Lanches",
     title: "Delivery & Lanches Rápidos",
@@ -139,7 +139,7 @@ export const NICHE_MODELS: NicheModelConfig[] = [
   },
   {
     id: "restaurante",
-    templateId: "restaurant-menu",
+    templateId: "cinematic-glass",
     nicheKey: "restaurante",
     nicheCategory: "Restaurantes e Gastronomia",
     title: "Restaurante & Gastronomia",
@@ -150,7 +150,7 @@ export const NICHE_MODELS: NicheModelConfig[] = [
   },
   {
     id: "sorveteria",
-    templateId: "restaurant-menu",
+    templateId: "cinematic-glass",
     nicheKey: "sorveteria",
     nicheCategory: "Sorveteria e Açaí",
     title: "Sorveteria, Açaí & Gelatos",
@@ -629,6 +629,7 @@ export function UnifiedPageEditor({
       NICHE_MODELS.find(
         (m) =>
           m.templateId === currentTemplate ||
+          (m.templateId === "cinematic-glass" && (currentTemplate.includes("cinematic") || currentTemplate.includes("cinema"))) ||
           (m.templateId === "store-showcase" && (currentTemplate.includes("store") || currentTemplate.includes("shop") || currentTemplate.includes("loja"))) ||
           (m.templateId === "therapy-wellbeing" && (currentTemplate.includes("therapy") || currentTemplate.includes("harmony"))) ||
           (m.templateId === "clinic-care" && currentTemplate.includes("clinic")) ||

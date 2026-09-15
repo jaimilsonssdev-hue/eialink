@@ -6,8 +6,6 @@ import type { CSSProperties, ReactNode } from "react";
 import { layoutResolver } from "../layouts/LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { PublicSocialLinks } from "@/components/public-profile/PublicSocialLinks";
-import { smartTemplateRegistry } from "../smart/SmartTemplateRegistry";
-import { CatalogSection } from "@/modules/products/components/CatalogSection";
 import { safeExternalUrl } from "@/lib/safe-url";
 
 const NICHE_FALLBACK_COVERS: Record<string, string> = {
@@ -112,22 +110,9 @@ export function TemplateRenderer({
         } as CSSProperties
       }
     >
-      {model.template.smart?.niche === "restaurant" ? (
-        smartTemplateRegistry.render(model.template.smart, {
-          bio: renderedBio,
-          links: safeLinks,
-          onTrack,
-          onShare,
-          products: safeProducts,
-          supplemental: smartSupplemental,
-        })
-      ) : (
-        <>
-          {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, bookingUrl, supplemental })}
-          <PublicSocialLinks bio={renderedBio} onTrack={onTrack} />
-          {!model.template.components.includes("footer") && <Footer />}
-        </>
-      )}
+      {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, bookingUrl, supplemental })}
+      <PublicSocialLinks bio={renderedBio} onTrack={onTrack} />
+      {!model.template.components.includes("footer") && <Footer />}
     </main>
   );
 }

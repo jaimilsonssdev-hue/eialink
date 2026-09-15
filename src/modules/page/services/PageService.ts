@@ -330,6 +330,12 @@ export const PageService = {
     return supabase.storage.from("bio-media").getPublicUrl(path).data.publicUrl;
   },
 
+  async uploadAsset(file: File) {
+    const userId = await this.getCurrentUserId();
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    return this.uploadMedia(file, `${userId}/${crypto.randomUUID()}.${extension}`);
+  },
+
   async deletePage(pageId: string) {
     const userId = await this.getCurrentUserId();
 

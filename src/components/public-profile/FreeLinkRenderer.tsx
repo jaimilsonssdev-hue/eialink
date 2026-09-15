@@ -55,9 +55,31 @@ export function FreeLinkRenderer({
     button_url: safeExternalUrl(product.button_url) ?? null,
   }));
 
+  const socialData = (bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links)
+    ? bio.social_links
+    : {}) as Record<string, any>;
+  const customTheme = socialData.custom_theme as { primary?: string; background?: string; mode?: string } | undefined;
+  const customPrimary = customTheme?.primary;
+  const customBg = customTheme?.background;
+  const isLightMode = customTheme?.mode === "light";
+
   return (
     <main
       className={`bio-theme ${bio.theme || "aurora"} free-link-shell free-link-layout-${layout} free-link-typography-${typography} free-link-accent-${accent} free-link-buttons-${buttonShape}`}
+      style={
+        {
+          ...(customPrimary ? { "--free-link-accent": customPrimary, "--template-primary": customPrimary } : {}),
+          ...(customBg ? { "--template-bg": customBg, background: customBg } : {}),
+          ...(isLightMode
+            ? {
+                "--bio-fg": "#0f172a",
+                "--bio-muted": "rgba(15, 23, 42, 0.72)",
+                "--bio-card": "#ffffff",
+                "--bio-border": "rgba(15, 23, 42, 0.12)",
+              }
+            : {}),
+        } as React.CSSProperties
+      }
     >
       <div className="free-link-frame">
         <Banner

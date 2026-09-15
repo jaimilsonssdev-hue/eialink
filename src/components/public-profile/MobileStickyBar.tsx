@@ -40,6 +40,8 @@ export const MobileStickyBar = memo(function MobileStickyBar({
     }
   };
 
+  const ctaPulse = Boolean((bio.social_links as any)?.cta_pulse_glow);
+
   return (
     <aside
       aria-label="Ações rápidas de contato"
@@ -52,6 +54,8 @@ export const MobileStickyBar = memo(function MobileStickyBar({
         rel="noreferrer"
         onClick={handleMainClick}
         className={`relative flex-1 h-12 rounded-xl font-bold flex items-center justify-center gap-2 text-sm shadow-md transition-all active:scale-[0.98] ${
+          ctaPulse ? "cta-pulse-glow ring-2 ring-emerald-400/40" : ""
+        } ${
           bookingUrl
             ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-primary text-white shadow-purple-500/25"
             : "bg-gradient-to-r from-emerald-600 to-green-500 text-white shadow-emerald-600/30"

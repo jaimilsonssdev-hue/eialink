@@ -81,6 +81,14 @@ export function TemplateRenderer({
   const fallbackCover = getFallbackCover(model.template.id);
   const renderedBio = bio.cover_url || !fallbackCover ? bio : { ...bio, cover_url: fallbackCover };
 
+  const socialData = (bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links)
+    ? bio.social_links
+    : {}) as Record<string, any>;
+  const customTheme = socialData.custom_theme as { primary?: string; background?: string; mode?: string } | undefined;
+  const customPrimary = customTheme?.primary;
+  const customBg = customTheme?.background;
+  const isLightMode = customTheme?.mode === "light";
+
   return (
     <main
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}
@@ -94,11 +102,20 @@ export function TemplateRenderer({
       style={
         {
           fontFamily: model.theme.typography.fontFamily,
-          "--template-bg": model.theme.colors.background,
+          "--template-bg": customBg || model.theme.colors.background,
           "--template-surface": model.theme.colors.surface,
-          "--template-text": model.theme.colors.text,
-          "--template-muted": model.theme.colors.muted,
-          "--template-primary": model.theme.colors.primary,
+          "--template-text": isLightMode ? "#0f172a" : model.theme.colors.text,
+          "--template-muted": isLightMode ? "#64748b" : model.theme.colors.muted,
+          "--template-primary": customPrimary || model.theme.colors.primary,
+          ...(customBg ? { background: customBg } : {}),
+          ...(isLightMode
+            ? {
+                "--bio-fg": "#0f172a",
+                "--bio-muted": "rgba(15, 23, 42, 0.72)",
+                "--bio-card": "#ffffff",
+                "--bio-border": "rgba(15, 23, 42, 0.12)",
+              }
+            : {}),
         } as CSSProperties
       }
     >

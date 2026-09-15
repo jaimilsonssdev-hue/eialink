@@ -13,6 +13,7 @@ import { detectNicheKey, isHealthBookingNiche, isProductCatalogNiche } from "@/m
 import { generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
 import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/WhatsAppTriageModal";
 import { MobileStickyBar } from "@/components/public-profile/MobileStickyBar";
+import { ModularSections } from "@/components/public-profile/ModularSections";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -343,6 +344,7 @@ function PublicBio() {
               motionLevel={bio.motion_enabled === false ? "off" : "pro"}
               supplemental={
                 <>
+                  <ModularSections bio={{ ...bio, template_id: effectiveTemplateId }} onTrack={track} />
                   {supplementalBlocks.map((block: PageBlock) => (
                     <BlockRenderer key={block.id} block={block} />
                   ))}
@@ -358,6 +360,7 @@ function PublicBio() {
               products={products}
               supplemental={
                 <>
+                  <ModularSections bio={bio} onTrack={track} />
                   {supplementalBlocks.map((block: PageBlock) => (
                     <BlockRenderer key={block.id} block={block} />
                   ))}

@@ -46,8 +46,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 import type { PublicBio, PublicLink } from "@/components/public-profile/types";
-import type { Tables } from "@/integrations/supabase/types";
 import { MediaUploader } from "./MediaUploader";
+import { ColorPickerControl } from "./ColorPickerControl";
+import { SectionsEditor } from "./SectionsEditor";
+import { ModularSections } from "@/components/public-profile/ModularSections";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
 import { parseSocialLinks } from "@/lib/social-links";
 import {
@@ -99,7 +101,7 @@ type BioForm = Pick<
   | "motion_ambient"
 >;
 
-type EditorTab = "visual" | "profile" | "contact" | "catalog";
+type EditorTab = "visual" | "sections" | "profile" | "contact" | "catalog";
 
 type EditableLink = Pick<PublicLink, "id" | "title" | "url" | "active" | "position">;
 
@@ -393,6 +395,12 @@ const TABS: Array<{
     label: "Visual & Modelo",
     description: "Nicho, fotos e cores",
     icon: Palette,
+  },
+  {
+    id: "sections",
+    label: "Seções & Mídia",
+    description: "Vídeo, depoimentos e história",
+    icon: Layers,
   },
   {
     id: "profile",
@@ -1117,6 +1125,21 @@ export function UnifiedPageEditor({
                       );
                     })}
                   </div>
+
+                  {/* Seletor Livre de Cores Hex */}
+                  <ColorPickerControl
+                    value={(bio.social_links as Record<string, any>)?.custom_theme}
+                    currentThemeId={bio.theme || "aurora"}
+                    onChange={(customTheme) => {
+                      const currentSocial = (bio.social_links as Record<string, any>) || {};
+                      updateBio({
+                        social_links: {
+                          ...currentSocial,
+                          custom_theme: customTheme,
+                        },
+                      });
+                    }}
+                  />
                 </div>
 
                 {/* 3. Fotos e Logotipo do Negócio */}
@@ -1350,6 +1373,16 @@ export function UnifiedPageEditor({
                   </div>
                 )}
               </div>
+            )}
+
+            {/* ABA: SEÇÕES & MÍDIA */}
+            {activeTab === "sections" && (
+              <SectionsEditor
+                nicheKey={niche || activeNicheModel.nicheKey}
+                companyName={bio.display_name || defaults.displayName || "Sua Empresa"}
+                socialLinks={(bio.social_links as Record<string, any>) || {}}
+                onUpdateSocialLinks={(social_links) => updateBio({ social_links })}
+              />
             )}
 
             {/* ABA 2: SOBRE O NEGÓCIO */}
@@ -1797,6 +1830,7 @@ export function UnifiedPageEditor({
                     onTrack={() => undefined}
                     onShare={() => undefined}
                     products={products}
+                    supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} />}
                   />
                 ) : (
                   <TemplateRenderer
@@ -1807,6 +1841,7 @@ export function UnifiedPageEditor({
                     products={products}
                     bookingUrl={`/agendar/${previewBio.slug}`}
                     motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
+                    supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} />}
                   />
                 )}
               </div>

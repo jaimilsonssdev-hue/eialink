@@ -1268,8 +1268,75 @@ export function getCanonicalNicheMeta(key: string): CanonicalNicheMeta | undefin
 }
 
 // ==========================================
-// 5. DETECÇÃO INTELIGENTE DO NICHO
+// 5. MAPEAMENTO DE ALIASES & DETECÇÃO INTELIGENTE
 // ==========================================
+export const NICHE_ALIASES: Record<string, string> = {
+  barber: "barbearia",
+  barbershop: "barbearia",
+  barbeiro: "barbearia",
+  salao: "beleza",
+  estetica: "beleza",
+  manicure: "beleza",
+  nails: "beleza",
+  cabelereiro: "beleza",
+  cabeleireiro: "beleza",
+  odonto: "odontologia",
+  dentista: "odontologia",
+  ortodontia: "odontologia",
+  medica: "clinica",
+  medico: "clinica",
+  consultorio: "clinica",
+  saude: "clinica",
+  psicologo: "psicologia",
+  psicologa: "psicologia",
+  psicoterapia: "psicologia",
+  terapeuta: "terapia",
+  academia: "fitness",
+  crossfit: "fitness",
+  gym: "fitness",
+  treino: "fitness",
+  personal: "fitness",
+  restaurantes: "restaurante",
+  gastronomia: "restaurante",
+  lanchonete: "delivery",
+  pizzaria: "delivery",
+  hamburgueria: "delivery",
+  adega: "bebidas",
+  cervejaria: "bebidas",
+  distribuidora: "bebidas",
+  lojas: "loja",
+  roupas: "loja",
+  moda: "loja",
+  calcados: "loja",
+  acessorios: "loja",
+  advogado: "advocacia",
+  advogada: "advocacia",
+  juridico: "advocacia",
+  direito: "advocacia",
+  mecanica: "oficina",
+  autocenter: "oficina",
+  auto: "oficina",
+  mecanico: "oficina",
+  pet: "petshop",
+  veterinaria: "petshop",
+  veterinario: "petshop",
+  imobiliaria: "imoveis",
+  corretor: "imoveis",
+  corretora: "imoveis",
+  contabil: "contabilidade",
+  contador: "contabilidade",
+  contadora: "contabilidade",
+  otica: "otica",
+  oculos: "otica",
+  solar: "energia_solar",
+  fotovoltaica: "energia_solar",
+  ti: "tecnologia",
+  software: "tecnologia",
+  computadores: "tecnologia",
+  costureira: "costura",
+  atelie: "costura",
+};
+
 export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string | null): string {
   // 0. Prioridade máxima: se nicheRaw já for uma tag canônica ou alias conhecido, retorna direto (O(1) determinístico)
   const cleanNiche = (nicheRaw ?? "").trim().toLowerCase();
@@ -1277,7 +1344,7 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
     return cleanNiche;
   }
   if (cleanNiche && NICHE_ALIASES[cleanNiche]) {
-    return NICHE_ALIASES[cleanNiche].nicheKey;
+    return NICHE_ALIASES[cleanNiche];
   }
 
   const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();

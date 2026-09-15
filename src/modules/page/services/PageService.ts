@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
-import { getPresetForCompany } from "@/modules/prospecting/nichePresets";
+import { getPresetForCompany, isProductCatalogNiche, isHealthBookingNiche } from "@/modules/prospecting/nichePresets";
 import { formatCatalogDescription } from "@/modules/products/services/ProductService";
 import { fetchGoogleMapsPlaceDetails, type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspectingEngine";
 import {
@@ -187,55 +187,79 @@ export const PageService = {
     if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a página demonstrativa.");
 
     // 1. Cadastra Vitrine de Serviços Premium ou Produtos de Loja (catalog_items)
+    const isProduct = isProductCatalogNiche(preset.nicheKey);
+    const isHealth = isHealthBookingNiche(preset.nicheKey);
+
     if (preset.services.length > 0) {
-      const isStore = preset.nicheKey === "loja" || preset.template_id.includes("store");
+      const getProductBtnLabel = (nicheKey: string) => {
+        switch (nicheKey) {
+          case "sorveteria": return "Pedir no WhatsApp";
+          case "delivery": return "Pedir no Delivery";
+          case "restaurante": return "Fazer Pedido";
+          case "loja": return "Comprar no WhatsApp";
+          case "petshop": return "Pedir no WhatsApp";
+          case "costura": return "Encomendar no WhatsApp";
+          default: return "Fazer Pedido";
+        }
+      };
+
+      const defaultBtnLabel = isProduct
+        ? getProductBtnLabel(preset.nicheKey)
+        : isHealth
+          ? "Agendar Procedimento"
+          : "Solicitar Orçamento";
+
+      const defaultBtnUrl = isHealth ? `/agendar/${data.slug}` : null;
+
       const catalogInserts = preset.services.map((srv, idx) => ({
         bio_page_id: data.id,
         name: srv.name,
         description: formatCatalogDescription(srv.description, srv.category),
         price: srv.price,
         image_url: srv.image_url,
-        button_label: isStore ? "Adicionar" : "Agendar Procedimento",
-        button_url: isStore ? null : `/agendar/${data.slug}`,
-        type: isStore ? "product" : "service",
+        button_label: defaultBtnLabel,
+        button_url: defaultBtnUrl,
+        type: isProduct ? "product" : "service",
         position: idx,
         active: true,
       }));
       await supabase.from("catalog_items").insert(catalogInserts);
     }
 
-    // 2. Configura e Ativa o Sistema de Agendamentos / Agenda Interativa
-    try {
-      await supabase.from("booking_settings").insert({
-        bio_page_id: data.id,
-        active: true,
-        timezone: "America/Sao_Paulo",
-        min_notice_hours: 2,
-        max_days_ahead: 30,
-      });
+    // 2. Configura e Ativa o Sistema de Agendamentos SOMENTE para nichos de saúde/clínica
+    if (isHealth) {
+      try {
+        await supabase.from("booking_settings").insert({
+          bio_page_id: data.id,
+          active: true,
+          timezone: "America/Sao_Paulo",
+          min_notice_hours: 2,
+          max_days_ahead: 30,
+        });
 
-      const bookingServicesInserts = preset.services.map((srv, idx) => ({
-        bio_page_id: data.id,
-        name: srv.name,
-        description: srv.description,
-        duration_minutes: srv.duration_minutes,
-        price: srv.price,
-        position: idx,
-        active: true,
-      }));
-      await supabase.from("booking_services").insert(bookingServicesInserts);
+        const bookingServicesInserts = preset.services.map((srv, idx) => ({
+          bio_page_id: data.id,
+          name: srv.name,
+          description: srv.description,
+          duration_minutes: srv.duration_minutes,
+          price: srv.price,
+          position: idx,
+          active: true,
+        }));
+        await supabase.from("booking_services").insert(bookingServicesInserts);
 
-      const weekdays = [1, 2, 3, 4, 5, 6];
-      const availabilityInserts = weekdays.map((day) => ({
-        bio_page_id: data.id,
-        weekday: day,
-        start_time: "08:00",
-        end_time: day === 6 ? "12:00" : "18:00",
-        active: true,
-      }));
-      await supabase.from("booking_availability").insert(availabilityInserts);
-    } catch (bookingErr) {
-      console.warn("Aviso ao inicializar agenda demonstrativa:", bookingErr);
+        const weekdays = [1, 2, 3, 4, 5, 6];
+        const availabilityInserts = weekdays.map((day) => ({
+          bio_page_id: data.id,
+          weekday: day,
+          start_time: "08:00",
+          end_time: day === 6 ? "12:00" : "18:00",
+          active: true,
+        }));
+        await supabase.from("booking_availability").insert(availabilityInserts);
+      } catch (bookingErr) {
+        console.warn("Aviso ao inicializar agenda demonstrativa:", bookingErr);
+      }
     }
 
     // 3. Links de Autoridade e Prova Social (Google Reviews & Maps)
@@ -249,6 +273,30 @@ export const PageService = {
     const locationTitle = realAddress
       ? `📍 ${realAddress}`
       : "📍 Localização & Como Chegar (GPS)";
+
+    const thirdLink = isHealth
+      ? {
+          bio_page_id: data.id,
+          title: "📅 Agendar Horário Online",
+          url: `/agendar/${data.slug}`,
+          position: 2,
+          active: true,
+        }
+      : isProduct
+      ? {
+          bio_page_id: data.id,
+          title: "🛒 Fazer Pedido no WhatsApp",
+          url: `https://wa.me/?text=${encodeURIComponent(preset.whatsapp_message(companyName))}`,
+          position: 2,
+          active: true,
+        }
+      : {
+          bio_page_id: data.id,
+          title: "💬 Solicitar Orçamento no WhatsApp",
+          url: `https://wa.me/?text=${encodeURIComponent(preset.whatsapp_message(companyName))}`,
+          position: 2,
+          active: true,
+        };
 
     await supabase.from("bio_links").insert([
       {
@@ -265,13 +313,7 @@ export const PageService = {
         position: 1,
         active: true,
       },
-      {
-        bio_page_id: data.id,
-        title: "📅 Agendar Horário Online",
-        url: `/agendar/${data.slug}`,
-        position: 2,
-        active: true,
-      },
+      thirdLink,
     ]);
 
     return data;

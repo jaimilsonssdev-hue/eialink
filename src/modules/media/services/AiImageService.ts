@@ -80,3 +80,4 @@ export async function generateAiImage(params: {
     remainingQuota: MAX_AI_IMAGES_PER_PAGE - (params.currentUsageCount + 1),
   };
 }
+

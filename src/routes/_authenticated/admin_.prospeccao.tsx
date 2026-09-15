@@ -29,6 +29,8 @@ import {
   Building2,
   MessageSquareQuote,
   Bot,
+  Kanban,
+  LayoutList,
 } from "lucide-react";
 
 import {
@@ -69,6 +71,7 @@ import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBa
 import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";
 import { CopyConfigModal, type CopyModalTabType } from "@/components/prospecting/CopyConfigModal";
 import { ProspectAuditorModal } from "@/components/prospecting/ProspectAuditorModal";
+import { ProspectingKanban } from "@/components/prospecting/ProspectingKanban";
 import {
   buildWhatsAppMessage,
   buildInstagramMessage,
@@ -181,6 +184,20 @@ function ProspectingPage() {
   const [statusFilter, setStatusFilter] = useState<"all" | ProspectStatus>("all");
   const [priorityFilter, setPriorityFilter] = useState<"all" | ProspectPriority>("all");
   const [siteFilter, setSiteFilter] = useState<"all" | "no_website" | "has_website">("all");
+  const [viewMode, setViewMode] = useState<"kanban" | "table">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("prospecting_view_mode");
+      if (saved === "kanban" || saved === "table") return saved;
+    }
+    return "kanban";
+  });
+
+  const handleToggleViewMode = (mode: "kanban" | "table") => {
+    setViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("prospecting_view_mode", mode);
+    }
+  };
   const [search, setSearch] = useState("");
   const [preview, setPreview] = useState<CsvRowPreview[] | null>(null);
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -2212,6 +2229,36 @@ function ProspectingPage() {
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              {/* Seletor de Modo: Kanban ou Tabela */}
+              <div className="inline-flex items-center rounded-lg border border-border/80 bg-background/80 p-0.5 shadow-xs shrink-0">
+                <button
+                  type="button"
+                  onClick={() => handleToggleViewMode("kanban")}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                    viewMode === "kanban"
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Visualização em Quadro Kanban"
+                >
+                  <Kanban className="h-3.5 w-3.5" />
+                  <span>Kanban</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleViewMode("table")}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
+                    viewMode === "table"
+                      ? "bg-primary text-white shadow-xs"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                  title="Visualização em Lista / Tabela Clássica"
+                >
+                  <LayoutList className="h-3.5 w-3.5" />
+                  <span>Tabela</span>
+                </button>
+              </div>
+
               <input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -2256,6 +2303,28 @@ function ProspectingPage() {
         </CardHeader>
 
         <CardContent className="p-0">
+          {viewMode === "kanban" ? (
+            <div className="p-4 sm:p-5">
+              <ProspectingKanban
+                companies={filtered}
+                onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
+                onGenerateDemo={handleGenerateDemo}
+                creatingPageId={creatingPageId}
+                onRegenerateDemo={handleRegenerateDemo}
+                regeneratingPageId={regeneratingPageId}
+                onMakeOfficial={handleMakeOfficial}
+                actionLoadingId={actionLoadingId}
+                onAuditCompany={setActiveAuditCompany}
+                onRegisterApproach={setActiveCompany}
+                onDeleteCompany={handleDeleteCompany}
+                onSetWhatsApp={setWhatsModalCompany}
+                onInstagramApproach={handleInstagramApproach}
+                parseDemoInfo={parseDemoInfo}
+                copiedInstagramCompanyId={copiedInstagramCompanyId}
+              />
+            </div>
+          ) : (
+            <>
           {/* Visualização Mobile: Cards App-Like (< md) */}
           <div className="block md:hidden divide-y divide-border/60">
             {filtered.map((company) => {
@@ -2830,6 +2899,8 @@ function ProspectingPage() {
               </TableBody>
             </Table>
           </div>
+            </>
+          )}
         </CardContent>
       </Card>
 

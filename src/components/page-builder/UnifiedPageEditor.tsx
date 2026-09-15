@@ -69,7 +69,7 @@ import {
   subdomainValidationMessage,
 } from "@/lib/public-page-url";
 import type { CatalogItem } from "@/modules/products/types";
-import { getPresetForCompany, getVariantsForNiche, type NichePreset } from "@/modules/prospecting/nichePresets";
+import { getPresetForCompany, getVariantsForNiche, isProductCatalogNiche, type NichePreset } from "@/modules/prospecting/nichePresets";
 
 type BioForm = Pick<
   Tables<"bio_pages">,
@@ -473,7 +473,7 @@ export function UnifiedPageEditor({
     const socialNiche = (initialBio.social_links as Record<string, any>)?.niche;
     const targetNiche = socialNiche || defaults.niche;
     const preset = getPresetForCompany(targetNiche, defaults.displayName);
-    return preset.template_id || "clinic-care";
+    return preset.template_id || (isProductCatalogNiche(targetNiche) ? "restaurant-menu" : "business-modern");
   }, [initialBio.template_id, initialBio.social_links, defaults.niche, defaults.displayName]);
 
   const [bio, setBio] = useState<BioForm>(() => {
@@ -490,7 +490,7 @@ export function UnifiedPageEditor({
   const [niche, setNiche] = useState<string>(() => (initialBio.social_links as Record<string, any>)?.niche || defaults.niche || "");
   const [activeTab, setActiveTab] = useState<EditorTab>("visual");
 
-  const [draftTemplate, setDraftTemplate] = useState(() => bio.template_id || "clinic-care");
+  const [draftTemplate, setDraftTemplate] = useState(() => bio.template_id || initialTemplate);
   const [freeTypography, setFreeTypography] = useState<FreeTypography>(() =>
     freeTypographyFromTemplate(bio.template_id),
   );
@@ -624,7 +624,7 @@ export function UnifiedPageEditor({
       if (byKey) return byKey;
     }
 
-    const currentTemplate = draftTemplate || bio.template_id || "clinic-care";
+    const currentTemplate = draftTemplate || bio.template_id || (isProductCatalogNiche(currentNiche) ? "restaurant-menu" : "business-modern");
     return (
       NICHE_MODELS.find(
         (m) =>

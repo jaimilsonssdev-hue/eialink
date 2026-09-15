@@ -283,6 +283,98 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
 };
 
+export const PRODUCT_CATALOG_NICHES = new Set(["loja", "delivery", "sorveteria", "restaurante", "petshop", "costura"]);
+export const HEALTH_BOOKING_NICHES = new Set(["clinica", "odontologia", "psicologia", "nutricao", "fitness"]);
+
+export function isProductCatalogNiche(nicheKey?: string | null): boolean {
+  if (!nicheKey) return false;
+  return PRODUCT_CATALOG_NICHES.has(nicheKey.toLowerCase().trim());
+}
+
+export function isHealthBookingNiche(nicheKey?: string | null): boolean {
+  if (!nicheKey) return false;
+  return HEALTH_BOOKING_NICHES.has(nicheKey.toLowerCase().trim());
+}
+
+function getNicheWhatsappConfig(key: string, idx: number) {
+  if (key === "sorveteria") {
+    return {
+      label: idx === 0 ? "Fazer Pedido no WhatsApp" : idx === 1 ? "Pedir Açaí & Gelatos" : "Delivery no WhatsApp",
+      message: (name: string) => `Olá! Vi o cardápio da ${name} e gostaria de fazer um pedido de sorvetes/açaí.`,
+    };
+  }
+  if (key === "delivery") {
+    return {
+      label: idx === 0 ? "Fazer Pedido no WhatsApp" : idx === 1 ? "Pedir Lanches" : "Cardápio Delivery",
+      message: (name: string) => `Olá! Vi o cardápio da ${name} e gostaria de fazer um pedido para entrega.`,
+    };
+  }
+  if (key === "restaurante") {
+    return {
+      label: idx === 0 ? "Ver Cardápio & Pedir" : idx === 1 ? "Reservar Mesa" : "Fazer Pedido",
+      message: (name: string) => `Olá! Vi o cardápio da ${name} e gostaria de saber mais sobre pratos e reservas.`,
+    };
+  }
+  if (key === "loja") {
+    return {
+      label: idx === 0 ? "Comprar no WhatsApp" : idx === 1 ? "Ver Catálogo" : "Falar com Vendedora",
+      message: (name: string) => `Olá! Vi os produtos da ${name} e gostaria de comprar.`,
+    };
+  }
+  if (key === "petshop") {
+    return {
+      label: idx === 0 ? "Pedir Rações & Produtos" : idx === 1 ? "Agendar Banho e Tosa" : "Falar no WhatsApp",
+      message: (name: string) => `Olá! Vi os produtos e serviços pet da ${name} e gostaria de atendimento.`,
+    };
+  }
+  if (key === "costura") {
+    return {
+      label: idx === 0 ? "Solicitar Ajuste no WhatsApp" : idx === 1 ? "Consultar Sob Medida" : "Falar com Ateliê",
+      message: (name: string) => `Olá! Gostaria de consultar ajustes e confecções na ${name}.`,
+    };
+  }
+  if (key === "clinica") {
+    return {
+      label: idx === 0 ? "Agendar Consulta Médica" : idx === 1 ? "Falar com Especialista" : "Central de Atendimento",
+      message: (name: string) => `Olá! Gostaria de agendar uma consulta na ${name}.`,
+    };
+  }
+  if (key === "odontologia") {
+    return {
+      label: idx === 0 ? "Agendar Avaliação" : idx === 1 ? "Clareamento & Implantes" : "Falar no WhatsApp",
+      message: (name: string) => `Olá! Gostaria de agendar uma avaliação odontológica na ${name}.`,
+    };
+  }
+  if (key === "psicologia") {
+    return {
+      label: idx === 0 ? "Agendar Sessão" : idx === 1 ? "Atendimento Presencial/Online" : "Falar com Terapeuta",
+      message: (name: string) => `Olá! Gostaria de agendar uma sessão terapêutica com ${name}.`,
+    };
+  }
+  if (key === "nutricao") {
+    return {
+      label: idx === 0 ? "Agendar Consulta Nutricional" : idx === 1 ? "Plano de Emagrecimento" : "Falar no WhatsApp",
+      message: (name: string) => `Olá! Gostaria de agendar uma consulta nutricional com ${name}.`,
+    };
+  }
+  if (key === "fitness") {
+    return {
+      label: idx === 0 ? "Agendar Aula Experimental" : idx === 1 ? "Conhecer Planos" : "Falar com Treinador",
+      message: (name: string) => `Olá! Gostaria de informações sobre treinos e planos na ${name}.`,
+    };
+  }
+  if (key === "oficina") {
+    return {
+      label: idx === 0 ? "Solicitar Orçamento no WhatsApp" : idx === 1 ? "Revisão Preventiva" : "Falar com Mecânico",
+      message: (name: string) => `Olá! Gostaria de solicitar um orçamento mecânico na ${name}.`,
+    };
+  }
+  return {
+    label: idx === 0 ? "Solicitar Orçamento no WhatsApp" : idx === 1 ? "Falar com Especialista" : "Chamar no WhatsApp",
+    message: (name: string) => `Olá! Vi o site da ${name} e gostaria de solicitar um orçamento sem compromisso.`,
+  };
+}
+
 // ==========================================
 // 2. HELPER PARA CRIAÇÃO DAS VARIANTES
 // ==========================================
@@ -319,6 +411,8 @@ function buildNicheVariants(
         ? generateSvgAvatar("Sua Empresa", key)
         : gallery.avatars[idx % gallery.avatars.length]?.url || generateSvgAvatar("Sua Empresa", key);
 
+    const waConfig = getNicheWhatsappConfig(key, idx);
+
     return {
       nicheKey: key,
       modelName: titles[idx],
@@ -328,9 +422,8 @@ function buildNicheVariants(
       avatar_url: avatarUrl,
       generateHeadline: headlines[idx],
       generateDescription: descriptions[idx],
-      whatsapp_button_label: idx === 1 ? "Atendimento VIP" : idx === 2 ? "Fazer Pedido" : "Falar no WhatsApp",
-      whatsapp_message: (name: string) =>
-        `Olá, equipe da ${name}! Vi a página oficial de vocês e gostaria de mais informações sobre os produtos e serviços.`,
+      whatsapp_button_label: waConfig.label,
+      whatsapp_message: waConfig.message,
       services: servicesList[idx] || servicesList[0],
     };
   });
@@ -438,7 +531,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   sorveteria: buildNicheVariants(
     "sorveteria",
-    ["restaurant-menu", "spotlight-neon", "business-modern"],
+    ["restaurant-menu", "store-showcase", "spotlight-neon"],
     ["ocean", "midnight", "sunset"],
     ["Gelateria & Açaí Gourmet", "Taças Geladas & Milkshakes", "Sorvetes Artesanais & Delivery"],
     [
@@ -560,7 +653,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   petshop: buildNicheVariants(
     "petshop",
-    ["business-modern", "spotlight-neon", "clinic-care"],
+    ["store-showcase", "restaurant-menu", "spotlight-neon"],
     ["forest", "amber", "ocean"],
     ["Pet Shop, Banho & Tosa com Amor", "Clínica Veterinária & Rações Premium", "Pet Care Completo & Farmácia"],
     [
@@ -860,7 +953,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   costura: buildNicheVariants(
     "costura",
-    ["portfolio-studio", "business-modern", "spotlight-neon"],
+    ["store-showcase", "portfolio-studio", "business-modern"],
     ["sunset", "aurora", "midnight"],
     ["Ateliê de Costura & Moda Sob Medida", "Ajustes, Reformas & Alfaiataria Fina", "Vestidos de Festa & Noivas Sob Encomenda"],
     [
@@ -1102,8 +1195,8 @@ export function getPresetForCompany(
     return variants[variantIndex];
   }
 
-  const randomIndex = Math.floor(Math.random() * variants.length);
-  return variants[randomIndex];
+  // Sempre utilizar o Modelo 1 (index 0) por padrão para máxima consistência e qualidade
+  return variants[0];
 }
 
 /**

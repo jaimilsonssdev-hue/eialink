@@ -1810,42 +1810,56 @@ export function UnifiedPageEditor({
             {/* Sombra de profundidade e brilho ambiente suave para efeito de flutuação */}
             <div className="absolute -inset-4 bg-gradient-to-b from-primary/10 via-purple-600/5 to-transparent rounded-[3.2rem] blur-2xl -z-10 pointer-events-none opacity-60" />
 
-            <div
-              className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} relative w-[285px] sm:w-[310px] xl:w-[330px] h-[min(650px,calc(100vh-10rem))] rounded-[2.8rem] border-[6px] border-[#18181b] bg-background shadow-2xl shadow-black/90 ring-1 ring-white/10 overflow-hidden flex flex-col transition-all`}
-              style={{
-                boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08)",
-              }}
-            >
-              {/* Dynamic Island / Notch minimalista */}
-              <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#111114] border border-white/5 rounded-full z-30 pointer-events-none flex items-center justify-center">
-                <div className="w-2.5 h-2.5 rounded-full bg-zinc-900 border border-white/10 ml-auto mr-2" />
-              </div>
+            {(() => {
+              const previewCustomTheme = (previewBio.social_links as Record<string, any>)?.custom_theme;
+              const previewCustomPrimary = previewCustomTheme?.primary;
+              const previewCustomBg = previewCustomTheme?.background;
+              const previewCustomText = previewCustomTheme?.text;
+              return (
+                <div
+                  className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} relative w-[285px] sm:w-[310px] xl:w-[330px] h-[min(650px,calc(100vh-10rem))] rounded-[2.8rem] border-[6px] border-[#18181b] shadow-2xl shadow-black/90 ring-1 ring-white/10 overflow-hidden flex flex-col transition-all`}
+                  data-custom-primary={Boolean(previewCustomPrimary) ? "true" : undefined}
+                  data-custom-text={Boolean(previewCustomText) ? "true" : undefined}
+                  data-custom-bg={Boolean(previewCustomBg) ? "true" : undefined}
+                  style={{
+                    boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+                    ...(previewCustomPrimary ? { "--template-primary": previewCustomPrimary, "--free-link-accent": previewCustomPrimary } : {}),
+                    ...(previewCustomBg ? { "--template-bg": previewCustomBg, background: previewCustomBg } : {}),
+                    ...(previewCustomText ? { "--template-text": previewCustomText, "--bio-fg": previewCustomText } : {}),
+                  } as React.CSSProperties}
+                >
+                  {/* Dynamic Island / Notch minimalista */}
+                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#111114] border border-white/5 rounded-full z-30 pointer-events-none flex items-center justify-center">
+                    <div className="w-2.5 h-2.5 rounded-full bg-zinc-900 border border-white/10 ml-auto mr-2" />
+                  </div>
 
-              {/* Área rolável interna do smartphone: o conteúdo rola suavemente sem cortar o celular */}
-              <div className="flex-1 w-full overflow-y-auto overflow-x-hidden pt-7 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-                {isFreeTemplate ? (
-                  <FreeLinkRenderer
-                    bio={previewBio}
-                    links={previewLinks.filter((link) => link.active)}
-                    onTrack={() => undefined}
-                    onShare={() => undefined}
-                    products={products}
-                    supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} />}
-                  />
-                ) : (
-                  <TemplateRenderer
-                    bio={previewBio}
-                    links={previewLinks.filter((link) => link.active)}
-                    onTrack={() => undefined}
-                    onShare={() => undefined}
-                    products={products}
-                    bookingUrl={`/agendar/${previewBio.slug}`}
-                    motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
-                    supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} />}
-                  />
-                )}
-              </div>
-            </div>
+                  {/* Área rolável interna do smartphone: o conteúdo rola suavemente sem cortar o celular */}
+                  <div className="flex-1 w-full overflow-y-auto overflow-x-hidden pt-7 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                    {isFreeTemplate ? (
+                      <FreeLinkRenderer
+                        bio={previewBio}
+                        links={previewLinks.filter((link) => link.active)}
+                        onTrack={() => undefined}
+                        onShare={() => undefined}
+                        products={products}
+                        supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} />}
+                      />
+                    ) : (
+                      <TemplateRenderer
+                        bio={previewBio}
+                        links={previewLinks.filter((link) => link.active)}
+                        onTrack={() => undefined}
+                        onShare={() => undefined}
+                        products={products}
+                        bookingUrl={`/agendar/${previewBio.slug}`}
+                        motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
+                        supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} />}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </main>
       </div>

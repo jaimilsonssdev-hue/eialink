@@ -4359,4 +4359,98 @@
   }
 }
 
+/* ============================================================
+   APLICAÇÃO TOTAL E INSTANTÂNEA DE CORES PERSONALIZADAS
+   Garante que botões, anéis, badges e cards mudem imediatamente
+   ============================================================ */
+
+/* 1. BOTÕES PRINCIPAIS, CTAS E AÇÕES DE CONVERSÃO */
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-cta-primary,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-cta-primary,
+.public-profile-shell[data-custom-primary="true"] .niche-clinic-cta-primary,
+.public-profile-shell[data-custom-primary="true"] .niche-restaurant-cta,
+.public-profile-shell[data-custom-primary="true"] .niche-academy-cta,
+.public-profile-shell[data-custom-primary="true"] .niche-law-copy > a,
+.public-profile-shell[data-custom-primary="true"] .niche-therapy-primary-action,
+.public-profile-shell[data-custom-primary="true"] .public-catalog-card a,
+.public-profile-shell[data-custom-primary="true"] .free-link-action-primary,
+.public-profile-shell[data-custom-primary="true"] .free-link-btn-primary,
+.free-link-shell[data-custom-primary="true"] .free-link-action-primary,
+.free-link-shell[data-custom-primary="true"] a.free-link-btn-primary {
+  background: var(--template-primary) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 10px 25px -4px color-mix(in srgb, var(--template-primary) 40%, transparent) !important;
+}
+
+/* 2. ANEL DE AVATAR COM BRILHO */
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-avatar-ring,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-avatar-ring,
+.public-profile-shell[data-custom-primary="true"] .niche-clinic-avatar-ring {
+  background: var(--template-primary) !important;
+  box-shadow: 0 0 25px -2px color-mix(in srgb, var(--template-primary) 50%, transparent) !important;
+}
+
+/* 3. BOTÕES DE SERVIÇOS, PROCEDIMENTOS E CATÁLOGO */
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-service-btn,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-service-btn,
+.public-profile-shell[data-custom-primary="true"] .niche-clinic-cta-secondary {
+  background: color-mix(in srgb, var(--template-primary) 14%, transparent) !important;
+  color: var(--template-primary) !important;
+  border-color: color-mix(in srgb, var(--template-primary) 35%, transparent) !important;
+}
+
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-service-btn:hover,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-service-btn:hover,
+.public-profile-shell[data-custom-primary="true"] .niche-clinic-cta-secondary:hover {
+  background: var(--template-primary) !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+}
+
+/* 4. BADGES, EYEBROWS, PREÇOS E DESTAQUES */
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-badge,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-badge-glow {
+  background: color-mix(in srgb, var(--template-primary) 14%, transparent) !important;
+  border-color: color-mix(in srgb, var(--template-primary) 35%, transparent) !important;
+  color: var(--template-primary) !important;
+}
+
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-eyebrow,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-eyebrow,
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-service-price,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-service-price,
+.public-profile-shell[data-custom-primary="true"] .niche-restaurant-hero-content .niche-eyebrow,
+.public-profile-shell[data-custom-primary="true"] .public-catalog-type {
+  color: var(--template-primary) !important;
+}
+
+/* 5. BORDAS AO PASSAR O MOUSE */
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-service-card:hover,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-service-card:hover,
+.public-profile-shell[data-custom-primary="true"] .niche-beauty-link-item:hover,
+.public-profile-shell[data-custom-primary="true"] .niche-spotlight-link-item:hover {
+  border-color: var(--template-primary) !important;
+}
+
+/* 6. CORES DE TEXTO E TÍTULOS PERSONALIZADOS */
+.public-profile-shell[data-custom-text="true"] h1,
+.public-profile-shell[data-custom-text="true"] h2,
+.public-profile-shell[data-custom-text="true"] h3,
+.public-profile-shell[data-custom-text="true"] .niche-beauty-title,
+.public-profile-shell[data-custom-text="true"] .niche-spotlight-title,
+.public-profile-shell[data-custom-text="true"] .niche-clinic-name,
+.public-profile-shell[data-custom-text="true"] .niche-restaurant-name,
+.free-link-shell[data-custom-text="true"] h1,
+.free-link-shell[data-custom-text="true"] h2 {
+  color: var(--template-text) !important;
+}
+
+/* 7. FUNDO PERSONALIZADO TOTAL */
+.public-profile-shell[data-custom-bg="true"],
+.free-link-shell[data-custom-bg="true"] {
+  background: var(--template-bg) !important;
+}
+
+
 

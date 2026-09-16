@@ -58,21 +58,31 @@ export function FreeLinkRenderer({
   const socialData = (bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links)
     ? bio.social_links
     : {}) as Record<string, any>;
-  const customTheme = socialData.custom_theme as { primary?: string; background?: string; mode?: string } | undefined;
+  const customTheme = socialData.custom_theme as {
+    primary?: string;
+    background?: string;
+    text?: string;
+    mode?: string;
+  } | undefined;
   const customPrimary = customTheme?.primary;
   const customBg = customTheme?.background;
+  const customText = customTheme?.text;
   const isLightMode = customTheme?.mode === "light";
 
   return (
     <main
       className={`bio-theme ${bio.theme || "aurora"} free-link-shell free-link-layout-${layout} free-link-typography-${typography} free-link-accent-${accent} free-link-buttons-${buttonShape}`}
+      data-custom-primary={Boolean(customPrimary) ? "true" : undefined}
+      data-custom-text={Boolean(customText) ? "true" : undefined}
+      data-custom-bg={Boolean(customBg) ? "true" : undefined}
       style={
         {
           ...(customPrimary ? { "--free-link-accent": customPrimary, "--template-primary": customPrimary } : {}),
           ...(customBg ? { "--template-bg": customBg, background: customBg } : {}),
+          ...(customText ? { "--template-text": customText, "--bio-fg": customText } : {}),
           ...(isLightMode
             ? {
-                "--bio-fg": "#0f172a",
+                "--bio-fg": customText || "#0f172a",
                 "--bio-muted": "rgba(15, 23, 42, 0.72)",
                 "--bio-card": "#ffffff",
                 "--bio-border": "rgba(15, 23, 42, 0.12)",

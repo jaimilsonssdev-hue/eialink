@@ -84,9 +84,15 @@ export function TemplateRenderer({
   const socialData = (bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links)
     ? bio.social_links
     : {}) as Record<string, any>;
-  const customTheme = socialData.custom_theme as { primary?: string; background?: string; mode?: string } | undefined;
+  const customTheme = socialData.custom_theme as {
+    primary?: string;
+    background?: string;
+    text?: string;
+    mode?: string;
+  } | undefined;
   const customPrimary = customTheme?.primary;
   const customBg = customTheme?.background;
+  const customText = customTheme?.text;
   const isLightMode = customTheme?.mode === "light";
 
   return (
@@ -95,6 +101,9 @@ export function TemplateRenderer({
       data-template={bio.template_id ?? "default"}
       data-layout={model.template.layout}
       data-template-layout={model.template.layout}
+      data-custom-primary={Boolean(customPrimary) ? "true" : undefined}
+      data-custom-text={Boolean(customText) ? "true" : undefined}
+      data-custom-bg={Boolean(customBg) ? "true" : undefined}
       data-motion={motionLevel}
       data-motion-entrance={bio.motion_enabled === false ? "none" : bio.motion_entrance ?? "gentle"}
       data-motion-cta={bio.motion_enabled === false ? "none" : bio.motion_cta ?? "none"}
@@ -104,13 +113,14 @@ export function TemplateRenderer({
           fontFamily: model.theme.typography.fontFamily,
           "--template-bg": customBg || model.theme.colors.background,
           "--template-surface": model.theme.colors.surface,
-          "--template-text": isLightMode ? "#0f172a" : model.theme.colors.text,
+          "--template-text": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
           "--template-muted": isLightMode ? "#64748b" : model.theme.colors.muted,
           "--template-primary": customPrimary || model.theme.colors.primary,
           ...(customBg ? { background: customBg } : {}),
+          ...(customText ? { "--bio-fg": customText } : {}),
           ...(isLightMode
             ? {
-                "--bio-fg": "#0f172a",
+                "--bio-fg": customText || "#0f172a",
                 "--bio-muted": "rgba(15, 23, 42, 0.72)",
                 "--bio-card": "#ffffff",
                 "--bio-border": "rgba(15, 23, 42, 0.12)",

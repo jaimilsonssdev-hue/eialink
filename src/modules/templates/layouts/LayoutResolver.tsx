@@ -14,6 +14,8 @@ import { SpotlightLayout } from "./SpotlightLayout";
 import { BeautyLayout } from "./BeautyLayout";
 import { BusinessLayout } from "./BusinessLayout";
 import { CinematicLayout } from "./CinematicLayout";
+import { ImpactLayout } from "./ImpactLayout";
+import { AiChatLayout } from "./AiChatLayout";
 
 export type LayoutRenderContext = TemplateComponentContext & {
   products?: CatalogItem[];
@@ -94,4 +96,6 @@ export const layoutResolver = new LayoutResolver()
   .register(new LawLayout())
   .register(new SpotlightLayout())
   .register(new BeautyLayout())
-  .register(new CinematicLayout());
+  .register(new CinematicLayout())
+  .register(new ImpactLayout())
+  .register(new AiChatLayout());

@@ -712,9 +712,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   oficina: buildNicheVariants(
     "oficina",
-    ["business-modern", "spotlight-neon", "business-classic"],
+    ["impact-showcase", "spotlight-neon", "business-modern"],
     ["midnight", "amber", "ocean"],
-    ["Auto Center & Diagnóstico 3D", "Mecânica Rápida & Revisão", "Especialista em Freios & Suspensão"],
+    ["Impacto VIP (Estilo Cremosinho)", "Auto Center & Diagnóstico 3D", "Mecânica Rápida & Revisão"],
     [
       (name, city) => `Mecânica de precisão, peças com garantia e segurança para seu carro em ${city}`,
       (name, city) => `Revisão preventiva completa e socorro rápido com a equipe da ${name}`,
@@ -1163,9 +1163,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 
   geral: buildNicheVariants(
     "geral",
-    ["business-modern", "spotlight-neon", "business-classic"],
-    ["aurora", "midnight", "ocean"],
-    ["Empresa de Autoridade & Negócios", "Dark Showcase Corporativo VIP", "Apresentação Comercial Clean"],
+    ["business-modern", "impact-showcase", "ai-chat-agent"],
+    ["aurora", "ocean", "forest"],
+    ["Empresa de Autoridade & Negócios", "Impacto VIP (Estilo Cremosinho)", "Atendente Virtual (Estilo Marrooia)"],
     [
       (name, city) => `Excelência no atendimento e soluções completas na ${name} em ${city}`,
       (name, city) => `Tradição, pontualidade e satisfação garantida com a ${name}`,

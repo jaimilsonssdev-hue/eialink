@@ -41,6 +41,8 @@ import {
   ShieldCheck,
   Laptop,
   Wine,
+  Bot,
+  Zap,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
@@ -118,6 +120,28 @@ export interface NicheModelConfig {
 }
 
 export const NICHE_MODELS: NicheModelConfig[] = [
+  {
+    id: "impacto",
+    templateId: "impact-showcase",
+    nicheKey: "oficina",
+    nicheCategory: "Impacto VIP & Automotivo",
+    title: "Impacto VIP (Estilo Cremosinho)",
+    subtitle: "Halo luminoso, selo de qualidade, diferenciais em vidro, serviços e rota Google Maps",
+    theme: "ocean",
+    icon: Zap,
+    isGold: true,
+  },
+  {
+    id: "atendente-ia",
+    templateId: "ai-chat-agent",
+    nicheKey: "geral",
+    nicheCategory: "Atendente Virtual Interativo",
+    title: "Atendente Virtual (Estilo Marrooia / Typebot)",
+    subtitle: "Chat interativo completo: perguntas automáticas, triagem de orçamentos e fotos",
+    theme: "forest",
+    icon: Bot,
+    isGold: true,
+  },
   {
     id: "loja",
     templateId: "store-showcase",
@@ -658,30 +682,46 @@ export function UnifiedPageEditor({
     setLinks((current) => current.filter((link) => link.id !== id));
 
   const activeNicheModel = useMemo(() => {
+    const currentTemplate = draftTemplate || bio.template_id;
+    if (currentTemplate) {
+      const byTemplate = NICHE_MODELS.find(
+        (m) =>
+          m.templateId === currentTemplate ||
+          (m.templateId === "impact-showcase" && (currentTemplate.includes("impact") || currentTemplate.includes("cremosinho"))) ||
+          (m.templateId === "ai-chat-agent" && (currentTemplate.includes("chat") || currentTemplate.includes("typebot") || currentTemplate.includes("marrooia"))) ||
+          (m.templateId === "cinematic-glass" && (currentTemplate.includes("cinematic") || currentTemplate.includes("cinema"))) ||
+          (m.templateId === "store-showcase" && (currentTemplate.includes("store") || currentTemplate.includes("shop") || currentTemplate.includes("loja")))
+      );
+      if (byTemplate && (draftTemplate === "impact-showcase" || draftTemplate === "ai-chat-agent" || !niche)) {
+        return byTemplate;
+      }
+    }
+
     const socialData = (bio.social_links as Record<string, any>) || {};
     const currentNiche = niche || socialData.niche;
 
     if (currentNiche) {
       const byKey = NICHE_MODELS.find((m) => m.nicheKey === currentNiche || m.id === currentNiche);
-      if (byKey) return byKey;
+      if (byKey && (!draftTemplate || draftTemplate === byKey.templateId)) return byKey;
     }
 
-    const currentTemplate = draftTemplate || bio.template_id || (isProductCatalogNiche(currentNiche) ? "restaurant-menu" : "business-modern");
     return (
       NICHE_MODELS.find(
         (m) =>
           m.templateId === currentTemplate ||
-          (m.templateId === "cinematic-glass" && (currentTemplate.includes("cinematic") || currentTemplate.includes("cinema"))) ||
-          (m.templateId === "store-showcase" && (currentTemplate.includes("store") || currentTemplate.includes("shop") || currentTemplate.includes("loja"))) ||
-          (m.templateId === "therapy-wellbeing" && (currentTemplate.includes("therapy") || currentTemplate.includes("harmony"))) ||
-          (m.templateId === "clinic-care" && currentTemplate.includes("clinic")) ||
-          (m.templateId === "beauty-glow" && currentTemplate.includes("beauty")) ||
-          (m.templateId === "spotlight-neon" && (currentTemplate.includes("spotlight") || currentTemplate.includes("neon"))) ||
-          (m.templateId === "law-authority" && currentTemplate.includes("law")) ||
-          (m.templateId === "academy-performance" && currentTemplate.includes("academy")) ||
-          (m.templateId === "restaurant-menu" && currentTemplate.includes("restaurant")) ||
-          (m.templateId === "portfolio-studio" && currentTemplate.includes("portfolio")) ||
-          (m.templateId === "business-modern" && currentTemplate.includes("business"))
+          (m.templateId === "impact-showcase" && (currentTemplate?.includes("impact") || currentTemplate?.includes("cremosinho"))) ||
+          (m.templateId === "ai-chat-agent" && (currentTemplate?.includes("chat") || currentTemplate?.includes("typebot") || currentTemplate?.includes("marrooia"))) ||
+          (m.templateId === "cinematic-glass" && (currentTemplate?.includes("cinematic") || currentTemplate?.includes("cinema"))) ||
+          (m.templateId === "store-showcase" && (currentTemplate?.includes("store") || currentTemplate?.includes("shop") || currentTemplate?.includes("loja"))) ||
+          (m.templateId === "therapy-wellbeing" && (currentTemplate?.includes("therapy") || currentTemplate?.includes("harmony"))) ||
+          (m.templateId === "clinic-care" && currentTemplate?.includes("clinic")) ||
+          (m.templateId === "beauty-glow" && currentTemplate?.includes("beauty")) ||
+          (m.templateId === "spotlight-neon" && (currentTemplate?.includes("spotlight") || currentTemplate?.includes("neon"))) ||
+          (m.templateId === "law-authority" && currentTemplate?.includes("law")) ||
+          (m.templateId === "academy-performance" && currentTemplate?.includes("academy")) ||
+          (m.templateId === "restaurant-menu" && currentTemplate?.includes("restaurant")) ||
+          (m.templateId === "portfolio-studio" && currentTemplate?.includes("portfolio")) ||
+          (m.templateId === "business-modern" && currentTemplate?.includes("business"))
       ) || NICHE_MODELS[0]
     );
   }, [niche, bio.social_links, draftTemplate, bio.template_id]);
@@ -700,9 +740,14 @@ export function UnifiedPageEditor({
       social_links: {
         ...currentSocial,
         niche: preset.nicheKey,
-        model_variant: preset.modelName,
       },
     };
+
+    const defaults = getPresetForCompany(preset.nicheKey, bio.display_name);
+    patch.description = preset.generateDescription(bio.display_name || defaults.displayName || "Nossa Empresa", "sua cidade");
+    patch.whatsapp_message = preset.whatsapp_message(bio.display_name || defaults.displayName || "Nossa Empresa");
+
+    updateBio(patch);
 
     // Atualiza fotos curadas caso não sejam fotos customizadas pelo usuário
     if (!bio.cover_url || bio.cover_url.includes("template-assets") || bio.cover_url.includes("unsplash.com")) {
@@ -711,12 +756,6 @@ export function UnifiedPageEditor({
     if (!bio.avatar_url || bio.avatar_url.includes("unsplash.com")) {
       patch.avatar_url = preset.avatar_url;
     }
-
-    // Injeta copywriting especializado do modelo
-    patch.description = preset.generateDescription(bio.display_name || defaults.displayName || "Nossa Empresa", "sua cidade");
-    patch.whatsapp_message = preset.whatsapp_message(bio.display_name || defaults.displayName || "Nossa Empresa");
-
-    updateBio(patch);
 
     if (updateServices && preset.services && preset.services.length > 0) {
       const isStore = preset.template_id === "store-showcase";
@@ -742,7 +781,10 @@ export function UnifiedPageEditor({
     setNiche(model.nicheKey);
     const variants = getVariantsForNiche(model.nicheKey);
     const targetVariant = variants[0] || getPresetForCompany(model.nicheKey, bio.display_name);
-    applyPresetVariant(targetVariant, autoSyncServices);
+    if (targetVariant) {
+      const customVariant = { ...targetVariant, template_id: model.templateId };
+      applyPresetVariant(customVariant, autoSyncServices);
+    }
   };
 
   const applyNicheDefaults = (nicheKey: string) => {
@@ -1593,6 +1635,41 @@ export function UnifiedPageEditor({
                     <div className="space-y-1.5 pt-1 text-xs text-muted-foreground">
                       <p>✅ O cliente seleciona o serviço desejado e o melhor período (manhã/tarde) antes de abrir a conversa.</p>
                       <p>✅ Se escolher agendamento, oferece atalho para a sua agenda online integrada.</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Módulo de Atendente Virtual Interativo (Estilo Typebot / Manychat / Marrooia) */}
+                <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
+                        <Bot className="h-4 w-4 text-sky-400" />
+                        <span>Atendente Virtual Interativo (Chat com IA / Typebot)</span>
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Ativa botão flutuante com atendente virtual que tira dúvidas, apresenta serviços e monta o orçamento passo a passo.
+                      </p>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={Boolean((bio.social_links as Record<string, unknown>)?.ai_chat_enabled)}
+                      onChange={(e) => {
+                        const current = (bio.social_links as Record<string, unknown>) || {};
+                        updateBio({
+                          social_links: {
+                            ...current,
+                            ai_chat_enabled: e.target.checked,
+                          },
+                        });
+                      }}
+                      className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
+                    />
+                  </div>
+                  {Boolean((bio.social_links as Record<string, unknown>)?.ai_chat_enabled) && (
+                    <div className="space-y-1.5 pt-1 text-xs text-muted-foreground">
+                      <p>✅ Atendente oficial com foto, selo verificado e status online em tempo real.</p>
+                      <p>✅ Coleta nome, cidade, necessidade, fotos opcionais e manda o orçamento pronto pro WhatsApp.</p>
                     </div>
                   )}
                 </div>

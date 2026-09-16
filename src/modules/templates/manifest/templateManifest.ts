@@ -667,5 +667,63 @@ export const templateManifest: TemplateDefinition[] = [
     },
     supportedFeatures: ["profile", "links", "socials", "pix", "catalog", "whatsapp", "products"],
   }),
+  define({
+    id: "impact-showcase",
+    slug: "impact-showcase",
+    name: "Impacto VIP Ultra Conversão",
+    description:
+      "Design de alto impacto inspirado em referências líderes: halo luminoso, selo de qualidade, grid de diferenciais, vitrine de serviços e rota Google Maps.",
+    category: "premium",
+    badge: "Premium",
+    bestFor: "estética automotiva, oficinas, barbearias, clínicas, serviços locais e negócios de excelência",
+    theme: {
+      colors: {
+        background: "#080a11",
+        surface: "#101424",
+        text: "#f8fafc",
+        muted: "#94a3b8",
+        primary: "#06b6d4",
+      },
+      typography: { fontFamily: displayFont, headingSize: "1.7rem", bodySize: "0.95rem" },
+    },
+    layout: "impact",
+    components: ["profile", "links", "pix", "footer"],
+    componentVariants: {
+      profile: "business",
+      links: "glass",
+      pix: "highlighted",
+      footer: "discreet",
+    },
+    supportedFeatures: ["profile", "links", "socials", "pix", "catalog", "whatsapp", "products"],
+  }),
+  define({
+    id: "ai-chat-agent",
+    slug: "ai-chat-agent",
+    name: "Atendente Virtual Interativo (Typebot)",
+    description:
+      "Experiência conversacional completa estilo Marrooia / Typebot: triagem de orçamentos, perguntas guiadas, fotos e handoff automático para WhatsApp.",
+    category: "premium",
+    badge: "Novo",
+    bestFor: "empresas de serviços, reformas, orçamentos rápidos e atendimento digital automático",
+    theme: {
+      colors: {
+        background: "#0d0e15",
+        surface: "#171823",
+        text: "#ffffff",
+        muted: "#a1a1aa",
+        primary: "#10b981",
+      },
+      typography: { fontFamily: displayFont, headingSize: "1.5rem", bodySize: "0.95rem" },
+    },
+    layout: "ai-chat",
+    components: ["profile", "links", "pix", "footer"],
+    componentVariants: {
+      profile: "minimal",
+      links: "clean",
+      pix: "compact",
+      footer: "discreet",
+    },
+    supportedFeatures: ["profile", "whatsapp", "catalog"],
+  }),
 ];
 

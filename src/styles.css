@@ -4452,5 +4452,35 @@
   background: var(--template-bg) !important;
 }
 
+/* ============ IMPACT VIP LAYOUT & MARROOIA CHAT ANIMATIONS ============ */
+@keyframes floaty {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+@keyframes soft-pulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 10px 25px -5px color-mix(in oklab, var(--primary, #06b6d4) 50%, transparent);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 16px 36px -5px color-mix(in oklab, var(--primary, #06b6d4) 75%, transparent);
+  }
+}
+
+.soft-pulse {
+  animation: soft-pulse 2.2s ease-in-out infinite;
+}
+
+
 
 

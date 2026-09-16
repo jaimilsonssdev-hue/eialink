@@ -14,6 +14,7 @@ import { generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
 import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/WhatsAppTriageModal";
 import { MobileStickyBar } from "@/components/public-profile/MobileStickyBar";
 import { ModularSections } from "@/components/public-profile/ModularSections";
+import { AiAssistantChat } from "@/components/public/AiAssistantChat";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -213,6 +214,7 @@ function PublicBio() {
   }
 
   const [isTriageOpen, setIsTriageOpen] = useState(false);
+  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
 
   const isDemo = Boolean(
     bio.description?.startsWith("[DEMO]") ||
@@ -222,6 +224,7 @@ function PublicBio() {
 
   const socialConfig = (bio.social_links as Record<string, any>) || {};
   const isTriageActive = Boolean(socialConfig.triage_enabled);
+  const isAiChatActive = Boolean(socialConfig.ai_chat_enabled);
 
   const triageConfig: TriageConfig = {
     enabled: isTriageActive,
@@ -380,6 +383,36 @@ function PublicBio() {
             baseMessage={bio.whatsapp_message}
             bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
           />
+        )}
+
+        {/* Atendente Virtual Interativo (Chat com IA / Typebot) */}
+        {isAiChatActive && effectiveTemplateId !== "ai-chat-agent" && (
+          <>
+            {!isAiChatOpen && (
+              <button
+                type="button"
+                onClick={() => setIsAiChatOpen(true)}
+                className="fixed left-4 bottom-20 sm:bottom-6 z-40 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-card/95 hover:bg-card border border-sky-500/50 text-foreground text-xs font-bold shadow-xl backdrop-blur-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+                aria-label="Falar com Atendente Virtual"
+              >
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500" />
+                </span>
+                <span>💬 Atendente Virtual</span>
+              </button>
+            )}
+
+            {isAiChatOpen && (
+              <AiAssistantChat
+                bio={bio}
+                products={products}
+                isFullPage={false}
+                onClose={() => setIsAiChatOpen(false)}
+                onTrack={track}
+              />
+            )}
+          </>
         )}
       </div>
 

@@ -18,9 +18,11 @@ const NICHE_FALLBACK_COVERS: Record<string, string> = {
   spotlight: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80",
   creator: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80",
   business: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80",
+  impact: "https://images.unsplash.com/photo-1520340356584-f9917d1eea6f?auto=format&fit=crop&w=1200&q=80",
 };
 
 function getFallbackCover(templateId: string) {
+  if (templateId.includes("impact")) return NICHE_FALLBACK_COVERS.impact;
   if (templateId.includes("restaurant")) return NICHE_FALLBACK_COVERS.restaurant;
   if (templateId.includes("clinic")) return NICHE_FALLBACK_COVERS.clinic;
   if (templateId.includes("academy") || templateId.includes("gym")) return NICHE_FALLBACK_COVERS.academy;

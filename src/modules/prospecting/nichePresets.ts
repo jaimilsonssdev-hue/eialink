@@ -1588,12 +1588,13 @@ export const NICHE_ALIASES: Record<string, string> = {
 };
 
 export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string | null): string {
-  // 0. Prioridade máxima: se nicheRaw já for uma tag canônica ou alias conhecido, retorna direto (O(1) determinístico)
+  // 0. Prioridade máxima: se nicheRaw já for uma tag canônica ou alias conhecido (exceto fallbacks genéricos), retorna direto
   const cleanNiche = (nicheRaw ?? "").trim().toLowerCase();
-  if (cleanNiche && NICHE_PRESETS_VARIANTS[cleanNiche]) {
+  const isGenericTag = !cleanNiche || cleanNiche === "geral" || cleanNiche === "outros" || cleanNiche === "default" || cleanNiche === "outro";
+  if (!isGenericTag && NICHE_PRESETS_VARIANTS[cleanNiche]) {
     return cleanNiche;
   }
-  if (cleanNiche && NICHE_ALIASES[cleanNiche]) {
+  if (!isGenericTag && NICHE_ALIASES[cleanNiche]) {
     return NICHE_ALIASES[cleanNiche];
   }
 

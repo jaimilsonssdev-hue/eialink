@@ -428,6 +428,12 @@ function PublicBio() {
   }
   }
 
+  // Se for uma demonstração de prospecção com template default/business-modern, promove automaticamente
+  // para o Site Institucional Máquina de Sites (Landing Page completa)
+  if (isDemo && (!effectiveTemplateId || effectiveTemplateId === "business-modern" || effectiveTemplateId === "default")) {
+    effectiveTemplateId = "site-maquina";
+  }
+
   // Se o avatar gravado for foto genérica de pessoas do Unsplash e o nicho não for pessoal,
   // substitui dinamicamente pelo monograma oficial vetorial da empresa (evita fotos de pessoas desconhecidas)
   let effectiveAvatarUrl = bio.avatar_url;
@@ -438,10 +444,12 @@ function PublicBio() {
     effectiveAvatarUrl = generateSvgAvatar(bio.display_name, nicheKey);
   }
 
+  const isSiteMaquina = effectiveTemplateId === "site-maquina";
+
   return (
-    <div className="min-h-screen flex flex-col pb-16 sm:pb-0">
+    <div className="min-h-screen flex flex-col pb-16 sm:pb-0 w-full overflow-x-hidden">
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
-      <div onClickCapture={handleContainerClickCapture} className="flex-1">
+      <div onClickCapture={handleContainerClickCapture} className="flex-1 w-full overflow-x-hidden">
         <BrandingProvider show={!hasProPlan && !isDemo}>
           {shouldUseTemplate ? (
             <TemplateRenderer
@@ -453,12 +461,14 @@ function PublicBio() {
               bookingUrl={isServiceBookingNiche && bookingActive ? `/agendar/${bio.slug}` : undefined}
               motionLevel={bio.motion_enabled === false ? "off" : "pro"}
               supplemental={
-                <>
-                  <ModularSections bio={{ ...bio, template_id: effectiveTemplateId }} onTrack={track} />
-                  {supplementalBlocks.map((block: PageBlock) => (
-                    <BlockRenderer key={block.id} block={block} />
-                  ))}
-                </>
+                isSiteMaquina ? null : (
+                  <>
+                    <ModularSections bio={{ ...bio, template_id: effectiveTemplateId }} onTrack={track} />
+                    {supplementalBlocks.map((block: PageBlock) => (
+                      <BlockRenderer key={block.id} block={block} />
+                    ))}
+                  </>
+                )
               }
             />
           ) : (

@@ -165,7 +165,7 @@ export const PageService = {
         whatsapp_button_label: preset.whatsapp_button_label,
         whatsapp_message: preset.whatsapp_message(sanitizedCompanyName),
         instagram: instagram ?? null,
-        template_id: preferredTemplateId || preset.template_id,
+        template_id: preferredTemplateId || "site-maquina",
         theme: preset.theme,
         cover_url: realCover,
         avatar_url: realAvatar,
@@ -178,7 +178,10 @@ export const PageService = {
           city: city || null,
           google_rating: realRating,
           reviews_count: realReviewsCount,
-          model_variant: preferredTemplateId === "site-maquina" ? "Site Institucional Máquina de Sites" : preset.modelName,
+          model_variant:
+            preferredTemplateId === "site-maquina" || !preferredTemplateId
+              ? "Site Institucional Máquina de Sites"
+              : preset.modelName,
           address: realAddress,
           opening_hours: realHours,
           testimonials: realReviews,

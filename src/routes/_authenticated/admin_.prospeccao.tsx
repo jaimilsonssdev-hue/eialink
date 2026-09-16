@@ -616,7 +616,7 @@ function ProspectingPage() {
     setLiveResults([]);
   }
 
-  async function handleGenerateDemo(company: ProspectedCompany, asSiteMaquina = false) {
+  async function handleGenerateDemo(company: ProspectedCompany, asSiteMaquina = true) {
     setCreatingPageId(company.id);
     setFeedback(null);
     try {

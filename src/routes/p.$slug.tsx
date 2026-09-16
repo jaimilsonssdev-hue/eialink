@@ -362,7 +362,9 @@ function PublicBio() {
   // 2. Template de clínica (clinic-care) é reservado para saúde médica/odontológica/nutrição
   // 3. Template de beleza (beauty-glam) é exclusivo de salão de beleza e estética
   // 4. Templates jurídicos NUNCA aparecem fora de advocacia
-  // 5. Nichos de produto/delivery (açaí, sorveteria, bebidas, delivery, etc.) renderizam cinematic-glass ou catálogo
+  // 5. Template de academia (academy-performance) é ESTRITAMENTE reservado para fitness/academia
+  // 6. Template de cardápio/restaurante (restaurant-menu) é exclusivo para gastronomia/alimentação
+  // 7. Nichos de produto/delivery (açaí, sorveteria, bebidas, delivery, etc.) renderizam cinematic-glass ou catálogo
   let effectiveTemplateId = bio.template_id;
 
   if (effectiveTemplateId === "therapy-wellbeing" && nicheKey !== "psicologia") {
@@ -372,7 +374,9 @@ function PublicBio() {
         ? "clinic-care"
         : nicheKey === "beleza"
           ? "beauty-glam"
-          : "business-modern";
+          : nicheKey === "advocacia"
+            ? "law-authority"
+            : "business-modern";
   }
 
   if (effectiveTemplateId === "clinic-care" && !isHealth) {
@@ -380,7 +384,9 @@ function PublicBio() {
       ? "cinematic-glass"
       : nicheKey === "beleza"
         ? "beauty-glam"
-        : "business-modern";
+        : nicheKey === "advocacia"
+          ? "law-authority"
+          : "business-modern";
   }
 
   if (effectiveTemplateId === "beauty-glam" && nicheKey !== "beleza") {
@@ -389,6 +395,31 @@ function PublicBio() {
 
   if (nicheKey !== "advocacia" && effectiveTemplateId === "law-authority") {
     effectiveTemplateId = isProduct ? "cinematic-glass" : "business-modern";
+  }
+
+  if (effectiveTemplateId === "academy-performance" && nicheKey !== "fitness") {
+    effectiveTemplateId = isProduct
+      ? "cinematic-glass"
+      : isHealth
+        ? "clinic-care"
+        : nicheKey === "beleza"
+          ? "beauty-glam"
+          : nicheKey === "advocacia"
+            ? "law-authority"
+            : "business-modern";
+  }
+
+  const isGastronomyNiche = isProduct || ["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nicheKey);
+  if (effectiveTemplateId === "restaurant-menu" && !isGastronomyNiche) {
+    effectiveTemplateId = isHealth
+      ? "clinic-care"
+      : nicheKey === "beleza"
+        ? "beauty-glam"
+        : nicheKey === "advocacia"
+          ? "law-authority"
+          : nicheKey === "fitness"
+            ? "academy-performance"
+            : "business-modern";
   }
 
   if (isProduct && (effectiveTemplateId === "business-modern" || effectiveTemplateId === "restaurant-menu" || !effectiveTemplateId)) {

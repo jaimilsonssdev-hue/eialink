@@ -40,6 +40,7 @@ import {
   Glasses,
   ShieldCheck,
   Laptop,
+  Megaphone,
   Wine,
   Bot,
   Zap,
@@ -143,6 +144,17 @@ export const NICHE_MODELS: NicheModelConfig[] = [
     subtitle: "Chat interativo estilo Typebot: perguntas e respostas personalizáveis, triagem e fotos",
     theme: "forest",
     icon: Bot,
+    isGold: true,
+  },
+  {
+    id: "marketing",
+    templateId: "cinematic-glass",
+    nicheKey: "marketing",
+    nicheCategory: "Marketing & Tráfego",
+    title: "Marketing Digital & Tráfego",
+    subtitle: "Agências, gestores de tráfego, social media, lançamentos e negócios digitais",
+    theme: "midnight",
+    icon: Megaphone,
     isGold: true,
   },
   {
@@ -278,6 +290,17 @@ export const NICHE_MODELS: NicheModelConfig[] = [
     isGold: true,
   },
   {
+    id: "contabilidade",
+    templateId: "business-modern",
+    nicheKey: "contabilidade",
+    nicheCategory: "Contabilidade & Finanças",
+    title: "Contabilidade & Consultoria Financeira",
+    subtitle: "Abertura de empresas, BPO financeiro, planejamento tributário e assessoria contábil",
+    theme: "forest",
+    icon: Calculator,
+    isGold: true,
+  },
+  {
     id: "odontologia",
     templateId: "clinic-care",
     nicheKey: "odontologia",
@@ -286,6 +309,17 @@ export const NICHE_MODELS: NicheModelConfig[] = [
     subtitle: "Estrutura moderna, estética dental, implantes e agendamento",
     theme: "ocean",
     icon: Stethoscope,
+    isGold: true,
+  },
+  {
+    id: "energia_solar",
+    templateId: "business-modern",
+    nicheKey: "energia_solar",
+    nicheCategory: "Energia Solar",
+    title: "Energia Solar & Sustentabilidade",
+    subtitle: "Projetos fotovoltaicos, economia de até 95%, homologação e instalação rápida",
+    theme: "amber",
+    icon: Sun,
     isGold: true,
   },
   {
@@ -768,12 +802,27 @@ export function UnifiedPageEditor({
     const currentSocial = (bio.social_links as Record<string, any>) || {};
     const themeMeta = THEMES.find((t) => t.id === preset.theme) || THEMES[0];
 
+    // Isolamento estrito de nichos com Pure State Reset:
+    // Se o nicho selecionado for diferente do nicho anterior gravado em social_links,
+    // eliminamos o cache de diferenciais, badges e avaliações do nicho anterior
+    // para impedir qualquer vazamento de textos (ex: textos de academia vazando para marketing).
+    const previousNiche = currentSocial.niche || niche;
+    const isDifferentNiche = Boolean(previousNiche && previousNiche !== preset.nicheKey);
+
+    const cleanedSocial: Record<string, any> = { ...currentSocial };
+    if (isDifferentNiche) {
+      delete cleanedSocial.differentials;
+      delete cleanedSocial.vip_badge;
+      delete cleanedSocial.differentials_title;
+      delete cleanedSocial.testimonials;
+    }
+
     const patch: Partial<BioForm> = {
       template_id: preset.template_id,
       theme: preset.theme,
       whatsapp_button_label: preset.whatsapp_button_label,
       social_links: {
-        ...currentSocial,
+        ...cleanedSocial,
         niche: preset.nicheKey,
         model_variant: preset.modelName,
         // Sincroniza cores e design tokens diretamente com o tema do novo modelo
@@ -818,11 +867,11 @@ export function UnifiedPageEditor({
     patch.description = preset.generateDescription(companyDisplayName, "sua cidade");
     patch.whatsapp_message = preset.whatsapp_message(companyDisplayName);
 
-    // Atualiza fotos curadas caso não sejam fotos customizadas pelo usuário
-    if (!bio.cover_url || bio.cover_url.includes("template-assets") || bio.cover_url.includes("unsplash.com")) {
+    // Atualiza fotos curadas caso não sejam fotos customizadas pelo usuário ou caso o nicho tenha mudado
+    if (!bio.cover_url || bio.cover_url.includes("template-assets") || bio.cover_url.includes("unsplash.com") || isDifferentNiche) {
       patch.cover_url = preset.cover_url;
     }
-    if (!bio.avatar_url || bio.avatar_url.includes("unsplash.com")) {
+    if (!bio.avatar_url || bio.avatar_url.includes("unsplash.com") || isDifferentNiche) {
       patch.avatar_url = preset.avatar_url;
     }
 
@@ -2123,6 +2172,7 @@ export function UnifiedPageEditor({
                       />
                     ) : (
                       <TemplateRenderer
+                        key={simulatorKey}
                         bio={previewBio}
                         links={previewLinks.filter((link) => link.active)}
                         onTrack={() => undefined}

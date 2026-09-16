@@ -305,6 +305,42 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "tec-av-2", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80", label: "Consultor de TI & Infraestrutura" },
     ],
   },
+  marketing: {
+    covers: [
+      { id: "mkt-1", url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80", label: "Dashboard de Performance & Analytics" },
+      { id: "mkt-2", url: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80", label: "Equipe de Estratégia Digital" },
+      { id: "mkt-3", url: "https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=1200&q=80", label: "Campanhas de Tráfego & Conversão" },
+      { id: "mkt-4", url: "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=1200&q=80", label: "Design, Branding & Social Media" },
+    ],
+    avatars: [
+      { id: "mkt-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Estrategista de Marketing Digital" },
+      { id: "mkt-av-2", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80", label: "Gestor de Tráfego Pago & Growth" },
+    ],
+  },
+  contabilidade: {
+    covers: [
+      { id: "cnt-1", url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80", label: "Análise Financeira & Balanço" },
+      { id: "cnt-2", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80", label: "Planejamento Tributário & Consultoria" },
+      { id: "cnt-3", url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80", label: "Escritório Contábil Executivo" },
+      { id: "cnt-4", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", label: "Gestão Empresarial & BPO" },
+    ],
+    avatars: [
+      { id: "cnt-av-1", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80", label: "Contadora Consultiva" },
+      { id: "cnt-av-2", url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80", label: "Perito Contábil & Tributário" },
+    ],
+  },
+  energia_solar: {
+    covers: [
+      { id: "sol-1", url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=80", label: "Painéis Solares Fotovoltaicos" },
+      { id: "sol-2", url: "https://images.unsplash.com/photo-1508873696983-2df57046475a?auto=format&fit=crop&w=1200&q=80", label: "Instalação Solar no Telhado" },
+      { id: "sol-3", url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=1200&q=80", label: "Usina Solar & Sustentabilidade" },
+      { id: "sol-4", url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1200&q=80", label: "Tecnologia e Inversores Solares" },
+    ],
+    avatars: [
+      { id: "sol-av-1", url: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=400&q=80", label: "Engenheiro de Energia Solar" },
+      { id: "sol-av-2", url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80", label: "Consultor de Projetos Solares" },
+    ],
+  },
   geral: {
     covers: [
       { id: "ger-1", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80", label: "Fachada Comercial & Recepção" },
@@ -421,6 +457,24 @@ function getNicheWhatsappConfig(key: string, idx: number) {
     return {
       label: idx === 0 ? "Solicitar Orçamento no WhatsApp" : idx === 1 ? "Revisão Preventiva" : "Falar com Mecânico",
       message: (name: string) => `Olá! Gostaria de solicitar um orçamento mecânico na ${name}.`,
+    };
+  }
+  if (key === "marketing") {
+    return {
+      label: idx === 0 ? "Falar com Especialista em Tráfego" : idx === 1 ? "Solicitar Proposta Digital" : "Chamar no WhatsApp",
+      message: (name: string) => `Olá! Vi o perfil da ${name} e gostaria de acelerar o marketing e as vendas do meu negócio.`,
+    };
+  }
+  if (key === "contabilidade") {
+    return {
+      label: idx === 0 ? "Falar com um Contador" : idx === 1 ? "Abrir Empresa ou Migrar" : "Solicitar Proposta Contábil",
+      message: (name: string) => `Olá! Vi o escritório contábil ${name} e gostaria de consultoria contábil/fiscal.`,
+    };
+  }
+  if (key === "energia_solar") {
+    return {
+      label: idx === 0 ? "Simular Economia Solar" : idx === 1 ? "Solicitar Orçamento Fotovoltaico" : "Falar no WhatsApp",
+      message: (name: string) => `Olá! Gostaria de simular a economia de energia solar para meu imóvel com a ${name}.`,
     };
   }
   return {
@@ -1161,6 +1215,108 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     ]
   ),
 
+  marketing: buildNicheVariants(
+    "marketing",
+    ["cinematic-glass", "impact-showcase", "business-modern"],
+    ["midnight", "ocean", "aurora"],
+    ["Agência Digital & Performance", "Modelo VIP", "Consultoria & Tráfego Pago"],
+    [
+      (name, city) => `Acelere as vendas e o posicionamento da sua empresa em ${city}`,
+      (name, city) => `Tráfego pago, funis de conversão e branding de alto impacto com a ${name}`,
+      (name, city) => `Mais leads qualificados e receita previsível para o seu negócio`,
+    ],
+    [
+      (name, city) => `A ${name} desenvolve estratégias completas de tráfego pago, páginas de alta conversão e presença digital para empresas em ${city}.`,
+      (name, city) => `Design estratégico, campanhas no Meta/Google Ads e atendimento focado em ROI na ${name}.`,
+      (name, city) => `Consultoria sob medida e execução de campanhas digitais de alta performance com a ${name} em ${city}.`,
+    ],
+    [
+      [
+        { name: "Gestão de Tráfego Pago (Meta & Google)", category: "Tráfego", description: "Campanhas otimizadas com foco em gerar mensagens e vendas diárias no WhatsApp.", price: 1200.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80" },
+        { name: "Criação de Páginas de Alta Conversão", category: "Web Design", description: "Landing pages e biolinks rápidos, responsivos e prontos para converter visitantes em clientes.", price: 890.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=400&q=80" },
+        { name: "Gestão de Redes Sociais & Branding", category: "Social Media", description: "Planejamento editorial, identidade visual e posicionamento de autoridade no Instagram.", price: 950.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Consultoria Estratégica de Crescimento", category: "Consultoria", description: "Diagnóstico comercial e plano de ação em 30 dias para escalar faturamento.", price: 1500.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=400&q=80" },
+        { name: "Configuração de Automações & CRM", category: "Automação", description: "Disparos automáticos, triagem inteligente de leads e integração com WhatsApp.", price: 650.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80" },
+        { name: "Assessoria Completa de Vendas Online", category: "Assessoria", description: "Acompanhamento semanal de métricas de conversão e custo por aquisição (CPA).", price: 2200.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Setup Inicial de Anúncios Online", category: "Tráfego", description: "Instalação de Pixel, validação de domínio e estruturação de públicos compradores.", price: 500.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=400&q=80" },
+        { name: "Otimização de Perfil & Bio Profissional", category: "Branding", description: "Reestruturação estratégica de bio, destaques e link na bio para vendas.", price: 350.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=400&q=80" },
+        { name: "Produção de Criativos de Alta Conversão", category: "Criativos", description: "Copywriting e design de anúncios estáticos e em carrossel para campanhas.", price: 450.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
+  contabilidade: buildNicheVariants(
+    "contabilidade",
+    ["business-modern", "impact-showcase", "spotlight-neon"],
+    ["midnight", "ocean", "amber"],
+    ["Escritório Contábil & Gestão Fiscal", "Modelo VIP", "BPO Financeiro & Planejamento"],
+    [
+      (name, city) => `Assessoria contábil moderna, segura e sem burocracia em ${city}`,
+      (name, city) => `Economia tributária, conformidade fiscal e crescimento seguro para sua empresa`,
+      (name, city) => `Abra ou migre sua empresa com especialistas dedicados ao seu sucesso`,
+    ],
+    [
+      (name, city) => `A ${name} cuida da gestão contábil, fiscal e trabalhista da sua empresa com tecnologia ágil e atendimento humano em ${city}.`,
+      (name, city) => `Segurança fiscal absoluta e planejamento tributário inteligente com a equipe da ${name}.`,
+      (name, city) => `Concentre-se em vender enquanto a ${name} descomplica suas obrigações fiscais e financeiras em ${city}.`,
+    ],
+    [
+      [
+        { name: "Abertura & Regularização de Empresas", category: "Legalização", description: "Processo 100% digital, rápido e sem complicações para você começar a faturar.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80" },
+        { name: "Assessoria Contábil & Fiscal Mensal", category: "Contábil", description: "Emissão de guias, balancetes, folha de pagamento e apuração com precisão.", price: 299.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" },
+        { name: "Planejamento Tributário para Redução de Impostos", category: "Tributário", description: "Enquadramento no melhor regime para economizar impostos de forma 100% legal.", price: 600.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "BPO Financeiro & Gestão de Contas", category: "Financeiro", description: "Terceirização de contas a pagar, receber, conciliação e relatórios de fluxo de caixa.", price: 850.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80" },
+        { name: "Migração de MEI para ME", category: "Transição", description: "Assessoria para empresas em expansão que ultrapassaram o teto do MEI.", price: 350.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80" },
+        { name: "Declaração de Imposto de Renda (IRPF)", category: "Pessoa Física", description: "Declaração segura, restituição otimizada e blindagem contra malha fina.", price: 180.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Consultoria Contábil para Prestadores de Serviço", category: "Consultoria", description: "Solução sob medida para médicos, advogados, profissionais de TI e consultores.", price: 320.0, duration_minutes: 30, image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Certidões Negativas & Conformidade Legal", category: "Conformidade", description: "Monitoramento e emissão de certidões da Receita Federal, FGTS e Prefeitura.", price: 120.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80" },
+        { name: "Recuperação de Créditos Tributários", category: "Recuperação", description: "Auditoria fiscal para reaver tributos pagos a mais nos últimos 5 anos.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
+  energia_solar: buildNicheVariants(
+    "energia_solar",
+    ["business-modern", "impact-showcase", "spotlight-neon"],
+    ["amber", "ocean", "forest"],
+    ["Engenharia Solar & Projetos Fotovoltaicos", "Modelo VIP", "Economia Sustentável na Conta de Luz"],
+    [
+      (name, city) => `Economize até 95% na sua conta de energia em ${city}`,
+      (name, city) => `Engenharia de precisão e usinas solares com garantia de 25 anos na ${name}`,
+      (name, city) => `Sua própria fonte de energia limpa, valorização do imóvel e retorno garantido`,
+    ],
+    [
+      (name, city) => `A ${name} projeta, homologa e instala sistemas solares de alto rendimento para residências, comércios e indústrias em ${city}.`,
+      (name, city) => `Tecnologia fotovoltaica de ponta com monitoramento no celular e homologação completa pela ${name}.`,
+      (name, city) => `Livre-se dos aumentos constantes na conta de luz com a energia solar da ${name} em ${city}.`,
+    ],
+    [
+      [
+        { name: "Instalação Solar Residencial Completa", category: "Residencial", description: "Projeto sob medida, painéis de alta eficiência e redução imediata na fatura.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=400&q=80" },
+        { name: "Usinas Solares Comerciais & Rurais", category: "Empresarial", description: "Diminua os custos operacionais da sua empresa ou fazenda com energia sustentável.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1508873696983-2df57046475a?auto=format&fit=crop&w=400&q=80" },
+        { name: "Homologação & Projeto de Engenharia", category: "Engenharia", description: "Aprovação rápida junto à concessionária de energia local sem burocracia.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Simulação de Economia Gratuita", category: "Simulação", description: "Cálculo detalhado de geração mensal, tempo de retorno (payback) e economia prevista.", price: 0.0, duration_minutes: 15, image_url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=400&q=80" },
+        { name: "Limpeza & Manutenção de Painéis Solares", category: "Manutenção", description: "Higienização técnica para restaurar a eficiência máxima de captação solar.", price: 250.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Instalação de Inversores com Monitoramento Wi-Fi", category: "Equipamentos", description: "Acompanhe a geração de energia em tempo real pelo aplicativo no seu celular.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1508873696983-2df57046475a?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Consultoria para Financiamento Solar", category: "Financiamento", description: "Parcelamento com economia onde a parcela é paga com o valor que você economiza.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=400&q=80" },
+        { name: "Ampliação de Sistema Solar Existente", category: "Ampliação", description: "Adição de módulos para suprir novo consumo (ar-condicionado, piscina, etc.).", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=400&q=80" },
+        { name: "Seguro & Monitoramento de Usinas", category: "Segurança", description: "Proteção contra descargas elétricas, vendavais e roubo de componentes.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
   geral: buildNicheVariants(
     "geral",
     ["business-modern", "impact-showcase", "ai-chat-agent"],
@@ -1190,6 +1346,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
 // 4. MAPEAMENTO DE COMPATIBILIDADE (PRESETS)
 // ==========================================
 export const PRESETS: Record<string, NichePreset> = {
+  marketing: NICHE_PRESETS_VARIANTS.marketing[0],
+  contabilidade: NICHE_PRESETS_VARIANTS.contabilidade[0],
+  energia_solar: NICHE_PRESETS_VARIANTS.energia_solar[0],
   loja: NICHE_PRESETS_VARIANTS.loja[0],
   delivery: NICHE_PRESETS_VARIANTS.delivery[0],
   restaurante: NICHE_PRESETS_VARIANTS.restaurante[0],
@@ -1221,7 +1380,6 @@ export const PRESETS: Record<string, NichePreset> = {
   manicure: NICHE_PRESETS_VARIANTS.beleza[0],
   academia: NICHE_PRESETS_VARIANTS.fitness[0],
   arquitetura: NICHE_PRESETS_VARIANTS.construcao[0],
-  contabilidade: NICHE_PRESETS_VARIANTS.advocacia[0],
   tatuagem: NICHE_PRESETS_VARIANTS.autonomo[0],
   otica: NICHE_PRESETS_VARIANTS.loja[0],
   ecommerce: NICHE_PRESETS_VARIANTS.loja[0],
@@ -1239,6 +1397,7 @@ export interface CanonicalNicheMeta {
 }
 
 export const CANONICAL_NICHES: CanonicalNicheMeta[] = [
+  { key: "marketing", label: "Marketing Digital & Tráfego", icon: "📢", color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/30" },
   { key: "barbearia", label: "Barbearia", icon: "💈", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30" },
   { key: "beleza", label: "Salão & Estética", icon: "✨", color: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/30" },
   { key: "bebidas", label: "Bebidas & Distribuidora", icon: "🍷", color: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30" },
@@ -1253,6 +1412,7 @@ export const CANONICAL_NICHES: CanonicalNicheMeta[] = [
   { key: "petshop", label: "Pet Shop & Veterinária", icon: "🐾", color: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-500/30" },
   { key: "auto", label: "Oficina & Auto", icon: "🚗", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/30" },
   { key: "advocacia", label: "Advocacia & Jurídico", icon: "⚖️", color: "bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30" },
+  { key: "contabilidade", label: "Contabilidade & Finanças", icon: "🧮", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
   { key: "construcao", label: "Construção & Reformas", icon: "🏗️", color: "bg-amber-600/10 text-amber-800 dark:text-amber-400 border-amber-600/30" },
   { key: "imobiliaria", label: "Imobiliária & Corretor", icon: "🏢", color: "bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/30" },
   { key: "energia_solar", label: "Energia Solar", icon: "☀️", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30" },
@@ -1271,6 +1431,13 @@ export function getCanonicalNicheMeta(key: string): CanonicalNicheMeta | undefin
 // 5. MAPEAMENTO DE ALIASES & DETECÇÃO INTELIGENTE
 // ==========================================
 export const NICHE_ALIASES: Record<string, string> = {
+  marketing: "marketing",
+  mkt: "marketing",
+  trafego: "marketing",
+  socialmedia: "marketing",
+  agencia: "marketing",
+  copywriting: "marketing",
+  anuncios: "marketing",
   barber: "barbearia",
   barbershop: "barbearia",
   barbeiro: "barbearia",
@@ -1290,7 +1457,7 @@ export const NICHE_ALIASES: Record<string, string> = {
   psicologo: "psicologia",
   psicologa: "psicologia",
   psicoterapia: "psicologia",
-  terapeuta: "terapia",
+  terapeuta: "psicologia",
   academia: "fitness",
   crossfit: "fitness",
   gym: "fitness",
@@ -1326,10 +1493,15 @@ export const NICHE_ALIASES: Record<string, string> = {
   contabil: "contabilidade",
   contador: "contabilidade",
   contadora: "contabilidade",
+  contabilidade: "contabilidade",
+  fiscal: "contabilidade",
+  tributario: "contabilidade",
   otica: "otica",
   oculos: "otica",
   solar: "energia_solar",
   fotovoltaica: "energia_solar",
+  energia: "energia_solar",
+  energia_solar: "energia_solar",
   ti: "tecnologia",
   software: "tecnologia",
   computadores: "tecnologia",
@@ -1349,112 +1521,127 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
 
   const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();
 
-  // 1. Bebidas, Adegas & Distribuidoras
+  // 1. Marketing Digital, Tráfego Pago & Social Media
+  if (/(?:marketing|tr[aá]fego|social\s*media|an[uú]ncios|gest[aã]o\s*de\s*tr[aá]fego|copywriting|ag[eê]ncia\s*(?:digital|de\s*marketing|web)?|m[ií]dia\s*social|google\s*ads|meta\s*ads|branding)/i.test(combined)) {
+    return "marketing";
+  }
+
+  // 2. Contabilidade, Finanças & BPO
+  if (/(?:contab|contador|contadora|escrit[oó]rio\s*cont[aá]bil|fiscal|tribut[aá]r|abertura\s*de\s*empresa|bpo\s*financeiro|irpf|balan[çc]o)/i.test(combined)) {
+    return "contabilidade";
+  }
+
+  // 3. Energia Solar & Projetos Fotovoltaicos
+  if (/(?:energia\s*solar|fotovoltaic|placa\s*solar|painel\s*solar|usina\s*solar|inversor\s*solar)/i.test(combined)) {
+    return "energia_solar";
+  }
+
+  // 4. Bebidas, Adegas & Distribuidoras
   if (/(?:distribuidora\s*de\s*bebidas|loja\s*de\s*bebidas|dep[oó]sito\s*de\s*bebidas|adega|emp[oó]rio\s*de\s*bebidas|bebidas|chopp|choperia|cervejaria|cerveja|conveni[eê]ncia|destilados|vinhos)/i.test(combined)) {
     return "bebidas";
   }
 
-  // 2. Barbearia & Barber Shop
+  // 5. Barbearia & Barber Shop
   if (/(?:barbearia|barber|barba\b|navalha|corte\s*masculino|degrad[eê]|fade\b|bigode|cabelo\s*masculino|barbaterapia)/i.test(combined)) {
     return "barbearia";
   }
 
-  // 3. Salão de Beleza, Estética & Manicure
+  // 6. Salão de Beleza, Estética & Manicure
   if (/(?:sal[aã]o\s*de\s*beleza|est[eé]tica|manicure|pedicure|unhas?\b|nail|lash|alongamento|sobrancelha|cabelereir|cabeleireir|escova|mechas|depila[çc][aã]o|esteticista|spa\b|massagem|massoterapia|terapia\s*capilar|ozonioterapia|harmoniza|limpeza\s*de\s*pele)/i.test(combined)) {
     return "beleza";
   }
 
-  // 4. Lojas / E-commerce
+  // 7. Lojas / E-commerce
   if (/(?:loja|boutique|moda|vestu[aá]ri|roupa|cal[çc]ad|acess[oó]ri|biju|semijoia|bolsa|e-?commerce|varejo|confec[çc][aã]o|presentes|cosm[eé]tic|perfum|store|shop|vitrine)/i.test(combined)) {
     return "loja";
   }
 
-  // 2. Delivery & Lanches rápidos
+  // 8. Delivery & Lanches rápidos
   if (/(?:delivery|lanche|burger|hamburg|pizza|pizzaria|marmitex|pastel|disk|fast\s*food|hot\s*dog|batata\s*frita)/i.test(combined)) {
     return "delivery";
   }
 
-  // 3. Sorveteria & Açaí
+  // 9. Sorveteria & Açaí
   if (/(?:sorvet|gelat|a[çc]a[ií]|paleta|picol[eé]|gelateria|doceri)/i.test(combined)) {
     return "sorveteria";
   }
 
-  // 4. Restaurantes & Gastronomia
+  // 10. Restaurantes & Gastronomia
   if (/(?:restauran|gastr|bistr[oô]|churrasc|sushi|comida|buffet|jantar|almo[çc]o|choperi|bar\b)/i.test(combined)) {
     return "restaurante";
   }
 
-  // 5. Oficina mecânica & Auto center
+  // 11. Oficina mecânica & Auto center
   if (/(?:oficina|mec[aâ]nic|auto\s*center|detail|est[eé]tica\s*automot|troca\s*de\s*[oó]leo|funilari|pintura\s*auto|pneu|freio|suspens[aã]o|guincho|auto\s*el[eé]tric|revis[aã]o\s*veicular|martelinho)/i.test(combined)) {
     return "oficina";
   }
 
-  // 6. Dentista & Odontologia
+  // 12. Dentista & Odontologia
   if (/(?:odonto|dent|sorris|oral|dente|protese|implant|ortodont|clareament|endodont|periodont)/i.test(combined)) {
     return "odontologia";
   }
 
-  // 7. Saúde, Medicina & Clínicas (posicionado antes de psicologia para evitar falsos positivos com fisioterapia/terapia)
-  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|fisioter|fisioterapia|fisioterapeuta|laborat[oó]rio|exames|hospital|fonoaudi|terapia\s*ocupacional|oftalmo|dermatol|ginecolog|cardiolog|ortopedi|urologi|ultrassom|raio-?x)/i.test(combined)) {
-    return "clinica";
-  }
-
-  // 8. Terapeutas, Psicólogos & Saúde Mental (estritamente focado em psicoterapia e saúde emocional)
+  // 13. Terapeutas, Psicólogos & Saúde Mental (estritamente focado em psicoterapia e saúde emocional)
   if (/(?:psic[oó]log|psicoterap|psican[aá]lis|sa[uú]de\s*mental|terapeuta\b|acolhimento\s*emocional|psiquiatr|mindfulness|\bterapia\s*(?:online|individual|de\s*casal|cognitiv|infantil|familiar|emocional)?\b|floral\s*de\s*bach|terapia\s*hol[ií]stica)/i.test(combined)) {
     return "psicologia";
   }
 
-  // 9. Nutricionista & Dietas
+  // 14. Saúde, Medicina & Clínicas
+  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|fisioter|fisioterapia|fisioterapeuta|laborat[oó]rio|exames|hospital|fonoaudi|terapia\s*ocupacional|oftalmo|dermatol|ginecolog|cardiolog|ortopedi|urologi|ultrassom|raio-?x)/i.test(combined)) {
+    return "clinica";
+  }
+
+  // 15. Nutricionista & Dietas
   if (/(?:nutri|nutri[çc][aã]o|dieta|emagreciment|reeduca[çc][aã]o\s*alimentar|bioimped|nutr[oó]log)/i.test(combined)) {
     return "nutricao";
   }
 
-  // 10. PetShop & Casa de Ração
+  // 16. PetShop & Casa de Ração
   if (/(?:pet\s*shop|veterin[aá]r|\bvet\b|banho\s*e\s*tosa|\btosa\b|canil|\bgat[oa]s?\b|\bcachorr[oa]s?\b|\bra[çc][aã]o\b|\bra[çc][oõ]es\b|cl[ií]nica\s*animal|pet\s*care)/i.test(combined)) {
     return "petshop";
   }
 
-  // 11. Advogado & Escritório Jurídico
+  // 17. Advogado & Escritório Jurídico
   if (/(?:advoc|advogad|jur[ií]d|direito|lei|oab|processo|trabalhista|previdenci[aá]r)/i.test(combined)) {
     return "advocacia";
   }
 
-  // 12. Construção Civil & Reformas
+  // 18. Construção Civil & Reformas
   if (/(?:constru[çc]|obra|reforma|engenhar|empreiteir|pedreir|alvenari|acabament|pintor|eletricista\s*predial)/i.test(combined)) {
     return "construcao";
   }
 
-  // 13. Imobiliária & Corretores
+  // 19. Imobiliária & Corretores
   if (/(?:imobili[aá]r|corretor|im[oó]ve|creci|loca[çc][aã]o|aluguel|venda\s*de\s*im[oó]ve|lan[çc]amento\s*residencial|condom[ií]nio|apartamento)/i.test(combined)) {
     return "imobiliaria";
   }
 
-  // 14. Seguros & Corretoras
+  // 20. Seguros & Corretoras
   if (/(?:seguro|corretora\s*de\s*seguro|sinistro|ap[oó]lice|plano\s*de\s*sa[uú]de|previd[eê]ncia)/i.test(combined)) {
     return "seguros";
   }
 
-  // 15. Costureira & Ateliê de Moda
+  // 21. Costureira & Ateliê de Moda
   if (/(?:costur|atelie|ateli[eê]|alfaiat|ajuste\s*de\s*roupa|vestido\s*sob\s*medida|bainha|alta\s*costura)/i.test(combined)) {
     return "costura";
   }
 
-  // 16. Tecnologia & Informática
+  // 22. Tecnologia & Informática
   if (/(?:tecnolog|inform[aá]tic|computad|notebook|conserto\s*de\s*celular|suporte\s*ti|placa|redes|software|programador)/i.test(combined)) {
     return "tecnologia";
   }
 
-  // 17. Fitness & Personal Trainer
-  if (/(?:academ|fitness|cross|trein|personal|gym|pilates|muscula[çc][aã]o|funcional)/i.test(combined)) {
+  // 23. Fitness, Academia & Treino (Blindado: apenas termos reais de fitness para não capturar treinamentos corporativos)
+  if (/(?:academ|fitness|crossfit|muscula[çc][aã]o|personal\s*trainer|\bgym\b|studio\s*fitness|treino\s*funcional|pilates|luta|boxe)/i.test(combined)) {
     return "fitness";
   }
 
-  // 18. Profissional Autônomo & Serviços Gerais
+  // 24. Profissional Autônomo & Serviços Gerais
   if (/(?:aut[oô]nomo|prestador|marido\s*de\s*aluguel|t[eé]cnico|manuten[çc][aã]o|reparo|encanador|eletricista)/i.test(combined)) {
     return "autonomo";
   }
 
-  // 19. Página Pessoal & Portfólio
+  // 25. Página Pessoal & Portfólio
   if (/(?:pessoal|portf[oó]lio|portfolio|criador|influencer|palestrante|perfil\s*pessoal|autoridade\s*pessoal)/i.test(combined)) {
     return "pessoal";
   }

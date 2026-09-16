@@ -2,23 +2,33 @@ import type { ReactNode } from "react";
 import {
   ArrowUpRight,
   BadgeCheck,
+  Building2,
+  Calculator,
   CalendarCheck,
   CheckCircle2,
   Clock,
+  Compass,
+  Dog,
   Dumbbell,
   Gem,
   HeartHandshake,
   Instagram,
+  Laptop,
   MapPin,
+  Megaphone,
   MessageCircle,
   Phone,
+  Scale,
+  Scissors,
   Search,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Star,
   Stethoscope,
+  Sun,
   UtensilsCrossed,
+  Wine,
   Wrench,
 } from "lucide-react";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
@@ -44,13 +54,36 @@ import { detectNicheKey } from "@/modules/prospecting/nichePresets";
  */
 function renderNicheFallbackIcon(nicheKey: string) {
   switch (nicheKey) {
+    case "marketing":
+      return <Megaphone className="h-5 w-5" />;
+    case "contabilidade":
+      return <Calculator className="h-5 w-5" />;
+    case "energia_solar":
+      return <Sun className="h-5 w-5" />;
+    case "advocacia":
+      return <Scale className="h-5 w-5" />;
+    case "construcao":
+      return <Building2 className="h-5 w-5" />;
+    case "imobiliaria":
+      return <Compass className="h-5 w-5" />;
+    case "seguros":
+      return <ShieldCheck className="h-5 w-5" />;
+    case "tecnologia":
+      return <Laptop className="h-5 w-5" />;
     case "loja":
       return <ShoppingBag className="h-5 w-5" />;
     case "beleza":
       return <Sparkles className="h-5 w-5" />;
+    case "barbearia":
+    case "costura":
+      return <Scissors className="h-5 w-5" />;
     case "delivery":
     case "restaurante":
       return <UtensilsCrossed className="h-5 w-5" />;
+    case "sorveteria":
+      return <Sparkles className="h-5 w-5" />;
+    case "bebidas":
+      return <Wine className="h-5 w-5" />;
     case "clinica":
     case "odontologia":
       return <Stethoscope className="h-5 w-5" />;
@@ -58,9 +91,15 @@ function renderNicheFallbackIcon(nicheKey: string) {
       return <Dumbbell className="h-5 w-5" />;
     case "psicologia":
       return <HeartHandshake className="h-5 w-5" />;
+    case "nutricao":
+      return <Sparkles className="h-5 w-5" />;
+    case "petshop":
+      return <Dog className="h-5 w-5" />;
     case "oficina":
     case "auto":
       return <Wrench className="h-5 w-5" />;
+    case "autonomo":
+      return <Briefcase className="h-5 w-5" />;
     default:
       return <Sparkles className="h-5 w-5" />;
   }
@@ -89,6 +128,62 @@ function renderDiffIcon(iconName?: string) {
 
 function getDefaultDifferentials(nicheKey: string) {
   switch (nicheKey) {
+    case "marketing":
+      return [
+        { title: "Estratégia Orientada a Dados", desc: "Foco em ROI e geração contínua de novos clientes qualificados", icon: "badge" },
+        { title: "Criativos de Alta Conversão", desc: "Copywriting persuasivo e anúncios audiovisuais envolventes", icon: "sparkles" },
+        { title: "Gestão Ativa de Tráfego", desc: "Otimização diária no Google, Meta Ads e TikTok", icon: "shield" },
+        { title: "Relatórios Transparentes", desc: "Acompanhamento claro das principais métricas do seu negócio", icon: "check" },
+      ];
+    case "contabilidade":
+      return [
+        { title: "Planejamento Tributário", desc: "Redução legal de impostos para você faturar com tranquilidade", icon: "shield" },
+        { title: "Abertura e Regularização Ágil", desc: "Processo 100% digital, sem burocracia e com rapidez", icon: "check" },
+        { title: "Atendimento Consultivo", desc: "Tire dúvidas direto com contadores especialistas pelo WhatsApp", icon: "heart" },
+        { title: "Tecnologia e Zero Papel", desc: "Gestão financeira moderna integrada à nuvem", icon: "badge" },
+      ];
+    case "energia_solar":
+      return [
+        { title: "Economia de até 95% na Conta", desc: "Gere sua própria energia limpa e livre-se dos aumentos", icon: "sparkles" },
+        { title: "Equipamentos de Primeira Linha", desc: "Painéis e inversores de alta eficiência certificados pelo Inmetro", icon: "shield" },
+        { title: "Instalação Homologada", desc: "Engenharia especializada com aprovação rápida na concessionária", icon: "badge" },
+        { title: "Garantia de Longo Prazo", desc: "Até 25 anos de eficiência garantida e suporte pós-venda", icon: "check" },
+      ];
+    case "advocacia":
+      return [
+        { title: "Atuação Especializada", desc: "Foco em soluções jurídicas assertivas e preventivas", icon: "badge" },
+        { title: "Sigilo e Confidencialidade", desc: "Rigor ético absoluto e proteção total dos seus interesses", icon: "shield" },
+        { title: "Comunicação Clara e Direta", desc: "Acompanhe seu processo sem juridiquês e com transparência", icon: "heart" },
+        { title: "Compromisso com o Seu Direito", desc: "Dedicação integral para alcançar o melhor resultado jurídico", icon: "check" },
+      ];
+    case "construcao":
+      return [
+        { title: "Projetos com Rigor Técnico", desc: "Engenharia de precisão com cumprimento integral de normas", icon: "shield" },
+        { title: "Gestão de Prazos e Custos", desc: "Planejamento detalhado para sua obra sem atrasos ou surpresas", icon: "badge" },
+        { title: "Mão de Obra Qualificada", desc: "Profissionais experientes em reformas e construções civis", icon: "check" },
+        { title: "Acabamento de Alto Padrão", desc: "Cuidado milimétrico em cada detalhe construtivo", icon: "sparkles" },
+      ];
+    case "imobiliaria":
+      return [
+        { title: "Carteira Exclusiva de Imóveis", desc: "Lançamentos, residenciais e oportunidades de alto potencial", icon: "badge" },
+        { title: "Avaliação Precisa de Mercado", desc: "Segurança para comprar, vender ou alugar no valor ideal", icon: "shield" },
+        { title: "Assessoria Jurídica Completa", desc: "Análise documental rigorosa para uma negociação 100% segura", icon: "check" },
+        { title: "Atendimento Personalizado", desc: "Consultores dedicados a entender exatamente o que você busca", icon: "heart" },
+      ];
+    case "seguros":
+      return [
+        { title: "Consultoria Especializada", desc: "Análise precisa do seu perfil para escolher a melhor apólice", icon: "shield" },
+        { title: "As Maiores Seguradoras", desc: "Parceria com as principais companhias do mercado nacional", icon: "badge" },
+        { title: "Suporte Total em Sinistros", desc: "Atendimento rápido e descomplicado na hora que você mais precisa", icon: "heart" },
+        { title: "Planos Sob Medida", desc: "Coberturas personalizadas para sua vida, família ou patrimônio", icon: "check" },
+      ];
+    case "tecnologia":
+      return [
+        { title: "Diagnóstico Rápido e Preciso", desc: "Análise técnica aprofundada para resolver na raiz do problema", icon: "shield" },
+        { title: "Técnicos Certificados", desc: "Equipe capacitada em hardware, sistemas, redes e segurança", icon: "badge" },
+        { title: "Peças de Primeira Linha", desc: "Garantia comprovada de procedência e durabilidade", icon: "check" },
+        { title: "Garantia e Suporte Ágil", desc: "Segurança e atendimento contínuo para você e sua empresa", icon: "heart" },
+      ];
     case "loja":
       return [
         { title: "Envio Seguro", desc: "Entrega ágil com rastreio garantido", icon: "shield" },
@@ -103,6 +198,13 @@ function getDefaultDifferentials(nicheKey: string) {
         { title: "Ambiente Acolhedor", desc: "Espaço climatizado e confortável", icon: "badge" },
         { title: "Especialistas no Assunto", desc: "Técnicas atualizadas e visagismo sob medida", icon: "heart" },
       ];
+    case "barbearia":
+      return [
+        { title: "Visagismo Masculino", desc: "Cortes e barba alinhados ao formato do seu rosto e estilo", icon: "sparkles" },
+        { title: "Barba Terapia Completa", desc: "Relaxamento com toalha quente, óleos essenciais e hidratação", icon: "heart" },
+        { title: "Ambiente Clássico e Exclusivo", desc: "Espaço climatizado com café, cerveja e boa conversa", icon: "badge" },
+        { title: "Hora Marcada sem Espera", desc: "Agendamento rápido e respeito absoluto ao seu tempo", icon: "clock" },
+      ];
     case "delivery":
     case "restaurante":
       return [
@@ -111,6 +213,20 @@ function getDefaultDifferentials(nicheKey: string) {
         { title: "Sabor Incomparável", desc: "Receitas exclusivas e aprovadas pelos clientes", icon: "sparkles" },
         { title: "Higiene Impecável", desc: "Rigor absoluto em todas as etapas", icon: "check" },
       ];
+    case "sorveteria":
+      return [
+        { title: "Receitas Artesanais", desc: "Preparo diário com ingredientes nobres e frutas selecionadas", icon: "badge" },
+        { title: "Açaí Puro e Cremoso", desc: "Sabor incomparável com dezenas de opções de toppings frescos", icon: "sparkles" },
+        { title: "Opções Especiais", desc: "Delícias sem açúcar e sem lactose para todos aproveitarem", icon: "check" },
+        { title: "Ambiente para a Família", desc: "Espaço acolhedor e refrescante para momentos especiais", icon: "heart" },
+      ];
+    case "bebidas":
+      return [
+        { title: "Bebidas Trincando de Geladas", desc: "Cervejas, chopps e refrigerantes na temperatura ideal", icon: "badge" },
+        { title: "Adega e Rótulos Especiais", desc: "Vinhos, destilados e drinks para qualquer celebração", icon: "sparkles" },
+        { title: "Entrega Expressa e Segura", desc: "Seu pedido chega rápido para sua festa nunca parar", icon: "shield" },
+        { title: "Preço Justo e Promoções", desc: "Economia garantida para festas, eventos e finais de semana", icon: "check" },
+      ];
     case "clinica":
     case "odontologia":
       return [
@@ -118,6 +234,13 @@ function getDefaultDifferentials(nicheKey: string) {
         { title: "Tecnologia & Precisão", desc: "Equipamentos modernos para diagnósticos", icon: "shield" },
         { title: "Ambiente Sanitizado", desc: "Biossegurança rigorosa e total conforto", icon: "check" },
         { title: "Cuidado Humanizado", desc: "Atenção individualizada a cada paciente", icon: "heart" },
+      ];
+    case "nutricao":
+      return [
+        { title: "Plano Individualizado", desc: "Dieta sob medida sem extremismos, respeitando sua rotina", icon: "badge" },
+        { title: "Avaliação Bioimpedância", desc: "Análise completa de composição corporal e métricas", icon: "shield" },
+        { title: "Acompanhamento Contínuo", desc: "Tire dúvidas direto pelo WhatsApp durante seu processo", icon: "heart" },
+        { title: "Foco em Saúde e Longevidade", desc: "Metodologia científica para resultados duradouros", icon: "sparkles" },
       ];
     case "fitness":
       return [
@@ -133,6 +256,13 @@ function getDefaultDifferentials(nicheKey: string) {
         { title: "Online e Presencial", desc: "Flexibilidade para atendimento de onde preferir", icon: "check" },
         { title: "Abordagem Personalizada", desc: "Terapia focada nas suas demandas e evolução", icon: "sparkles" },
       ];
+    case "petshop":
+      return [
+        { title: "Carinho e Cuidado Animal", desc: "Tratamento humanizado com amor, paciência e respeito", icon: "heart" },
+        { title: "Produtos e Rações Premium", desc: "As melhores marcas e linhas terapêuticas do mercado", icon: "bag" },
+        { title: "Ambiente Seguro e Limpo", desc: "Espaço higienizado para banho, tosa e bem-estar pet", icon: "shield" },
+        { title: "Equipe Apaixonada por Pets", desc: "Profissionais dedicados ao conforto do seu melhor amigo", icon: "badge" },
+      ];
     case "oficina":
     case "auto":
       return [
@@ -140,6 +270,20 @@ function getDefaultDifferentials(nicheKey: string) {
         { title: "Peças de Primeira Linha", desc: "Garantia e durabilidade para sua segurança", icon: "badge" },
         { title: "Mecânicos Qualificados", desc: "Experiência comprovada em revisões e reparos", icon: "check" },
         { title: "Orçamento Transparente", desc: "Sem surpresas na hora de retirar seu carro", icon: "heart" },
+      ];
+    case "costura":
+      return [
+        { title: "Ajustes com Acabamento Perfeito", desc: "Costuras invisíveis e caimento impecável nas suas roupas", icon: "badge" },
+        { title: "Alta Costura e Sob Medida", desc: "Vestidos de festa, ternos e peças exclusivas", icon: "sparkles" },
+        { title: "Atendimento Cuidadoso", desc: "Prova detalhada de peças para valorizar seu estilo", icon: "heart" },
+        { title: "Pontualidade na Entrega", desc: "Seu look pronto no prazo prometido, sem atrasos", icon: "clock" },
+      ];
+    case "autonomo":
+      return [
+        { title: "Serviço com Garantia e Rapidez", desc: "Execução profissional com responsabilidade e precisão", icon: "shield" },
+        { title: "Orçamento Transparente", desc: "Preço justo e sem cobranças indevidas ou surpresas", icon: "check" },
+        { title: "Pontualidade e Compromisso", desc: "Atendimento ágil cumprindo estritamente o combinado", icon: "clock" },
+        { title: "Materiais de Primeira Linha", desc: "Durabilidade e acabamento que valorizam seu patrimônio", icon: "badge" },
       ];
     default:
       return [
@@ -153,6 +297,36 @@ function getDefaultDifferentials(nicheKey: string) {
 
 function getDefaultBadge(nicheKey: string) {
   switch (nicheKey) {
+    case "marketing":
+      return "Alta Performance em Vendas & Tráfego";
+    case "contabilidade":
+      return "Contabilidade Estratégica & Finanças";
+    case "energia_solar":
+      return "Energia Solar Inteligente & Sustentável";
+    case "advocacia":
+      return "Excelência & Segurança Jurídica";
+    case "construcao":
+      return "Engenharia, Reformas & Construção Civil";
+    case "imobiliaria":
+      return "Imóveis Selecionados & Assessoria VIP";
+    case "seguros":
+      return "Proteção Completa & Tranquilidade Familiar";
+    case "tecnologia":
+      return "Soluções em TI & Assistência Especializada";
+    case "nutricao":
+      return "Nutrição Clínica & Estilo de Vida Saudável";
+    case "petshop":
+      return "Amor, Cuidado & Saúde Para Seu Pet";
+    case "barbearia":
+      return "Estilo Masculino & Barbearia Premium";
+    case "sorveteria":
+      return "Gelatos Artesanais & O Melhor Açaí";
+    case "bebidas":
+      return "Distribuidora & Adega Selecionada";
+    case "costura":
+      return "Alta Costura, Ajustes & Ateliê Sob Medida";
+    case "autonomo":
+      return "Serviços Especializados & Confiança";
     case "loja":
       return "Coleção Exclusiva & Pronta Entrega";
     case "beleza":
@@ -162,8 +336,9 @@ function getDefaultBadge(nicheKey: string) {
     case "restaurante":
       return "Gastronomia & Experiência de Alto Padrão";
     case "clinica":
-    case "odontologia":
       return "Saúde & Cuidado com Excelência";
+    case "odontologia":
+      return "Odontologia Moderna & Humanizada";
     case "fitness":
       return "Treinos & Alta Performance";
     case "psicologia":

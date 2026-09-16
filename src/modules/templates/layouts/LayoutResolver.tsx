@@ -17,6 +17,7 @@ import { CinematicLayout } from "./CinematicLayout";
 import { ImpactLayout } from "./ImpactLayout";
 import { AiChatLayout } from "./AiChatLayout";
 import { BioLinkView, buildBioLinkConfig } from "@/pages/BioLinkView";
+import { SiteMaquinaLayout } from "./SiteMaquinaLayout";
 
 export type LayoutRenderContext = TemplateComponentContext & {
   products?: CatalogItem[];
@@ -124,4 +125,5 @@ export const layoutResolver = new LayoutResolver()
   .register(new CinematicLayout())
   .register(new ImpactLayout())
   .register(new AiChatLayout())
-  .register(new BioLinkLayout());
+  .register(new BioLinkLayout())
+  .register(new SiteMaquinaLayout());

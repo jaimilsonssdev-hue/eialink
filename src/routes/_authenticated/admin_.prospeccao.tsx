@@ -616,7 +616,7 @@ function ProspectingPage() {
     setLiveResults([]);
   }
 
-  async function handleGenerateDemo(company: ProspectedCompany) {
+  async function handleGenerateDemo(company: ProspectedCompany, asSiteMaquina = false) {
     setCreatingPageId(company.id);
     setFeedback(null);
     try {
@@ -630,8 +630,9 @@ function ProspectingPage() {
         rating: company.rating,
         reviewsCount: company.reviews_count,
         cid: cidMatch ? cidMatch[1] : null,
+        preferredTemplateId: asSiteMaquina ? "site-maquina" : undefined,
       });
-      const modelVariant = (page.social_links as any)?.model_variant || "Design Pro";
+      const modelVariant = (page.social_links as any)?.model_variant || (asSiteMaquina ? "Site Institucional Máquina de Sites" : "Design Pro");
       const url = `https://eialink.com.br/p/${page.slug}`;
       const newNotes = company.notes
         ? `${company.notes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
@@ -643,7 +644,7 @@ function ProspectingPage() {
         companyUpdates.phone = page.whatsapp;
       }
       await ProspectingService.updateCompany(company.id, companyUpdates);
-      setFeedback(`🎉 Página gerada no modelo "${modelVariant}" para ${company.name}! O link já foi anexado para envio no WhatsApp e no Instagram.`);
+      setFeedback(`🎉 ${asSiteMaquina ? "Site Institucional" : "Página"} gerada no modelo "${modelVariant}" para ${company.name}! O link já foi anexado para envio no WhatsApp e no Instagram.`);
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao gerar página de demonstração.";
@@ -651,6 +652,10 @@ function ProspectingPage() {
     } finally {
       setCreatingPageId(null);
     }
+  }
+
+  async function handleGenerateSiteMaquina(company: ProspectedCompany) {
+    await handleGenerateDemo(company, true);
   }
 
   async function handleRegenerateDemo(company: ProspectedCompany) {
@@ -2639,6 +2644,14 @@ function ProspectingPage() {
                           <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
                           <span>{demo.url ? "Trocar Modelo" : "Gerar / Escolher Modelo"}</span>
                         </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => void handleGenerateSiteMaquina(company)}
+                          disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                          className="cursor-pointer text-xs text-sky-400 font-medium"
+                        >
+                          <Globe2 className="h-3.5 w-3.5 mr-2 text-sky-400" />
+                          <span>Gerar Site Máquina (Completo)</span>
+                        </DropdownMenuItem>
                         {demo.pageId && (
                           <DropdownMenuItem asChild className="cursor-pointer text-xs">
                             <Link to="/builder" search={{ page: demo.pageId }}>
@@ -2979,6 +2992,19 @@ function ProspectingPage() {
                                         ? "Trocar Modelo"
                                         : "Gerar / Escolher Modelo"}
                                   </span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onClick={() => void handleGenerateSiteMaquina(company)}
+                                  disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                                  className="cursor-pointer text-xs text-sky-400 hover:text-sky-300 focus:text-sky-300 focus:bg-sky-500/10 font-medium"
+                                >
+                                  {creatingPageId === company.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-sky-400" />
+                                  ) : (
+                                    <Globe2 className="h-3.5 w-3.5 mr-2 text-sky-400" />
+                                  )}
+                                  <span>Gerar Site Máquina (Completo)</span>
                                 </DropdownMenuItem>
 
                                 {demo.url && (

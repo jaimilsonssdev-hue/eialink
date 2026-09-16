@@ -110,7 +110,8 @@ export type TemplateDefinition = {
     | "cinematic"
     | "impact"
     | "ai-chat"
-    | "biolink";
+    | "biolink"
+    | "site-maquina";
   components: TemplateComponentType[];
   componentVariants: ComponentVariants;
   smart?: SmartTemplateDefinition;

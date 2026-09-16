@@ -126,6 +126,17 @@ export interface NicheModelConfig {
 
 export const NICHE_MODELS: NicheModelConfig[] = [
   {
+    id: "site-maquina",
+    templateId: "site-maquina",
+    nicheKey: "geral",
+    nicheCategory: "Site Institucional",
+    title: "Site Institucional Máquina de Sites",
+    subtitle: "Landing Page completa: Parallax, Glassmorphism, barra utilitária, 5 heroes assinadas, vitrine bento grid, diferenciais de bairro e Google Maps embed",
+    theme: "ocean",
+    icon: Globe2,
+    isGold: true,
+  },
+  {
     id: "impacto",
     templateId: "impact-showcase",
     nicheKey: "geral",

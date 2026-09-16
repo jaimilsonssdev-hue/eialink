@@ -753,5 +753,34 @@ export const templateManifest: TemplateDefinition[] = [
     },
     supportedFeatures: ["profile", "links", "socials", "whatsapp", "products"],
   }),
+  define({
+    id: "site-maquina",
+    slug: "site-maquina",
+    name: "Site Institucional Máquina de Sites",
+    description:
+      "Landing Page completa de altíssima conversão: Parallax sutil, Glassmorphism, barra superior utilitária, 5 arquiteturas de hero, faixa de credibilidade, passo a passo, vitrine bento grid, diferenciais de bairro, prova social Google Maps, FAQ e mapa interativo.",
+    category: "premium",
+    badge: "Popular",
+    bestFor: "empresas locais, clínicas, escritórios, lojas e prestadores de serviços que buscam um site profissional completo e de alta autoridade",
+    theme: {
+      colors: {
+        background: "#ffffff",
+        surface: "#f8fafc",
+        text: "#1d1d1f",
+        muted: "#64748b",
+        primary: "#0ea5e9",
+      },
+      typography: { fontFamily: displayFont, headingSize: "2.2rem", bodySize: "1rem" },
+    },
+    layout: "site-maquina",
+    components: ["banner", "profile", "links", "footer"],
+    componentVariants: {
+      banner: "default",
+      profile: "editorial",
+      links: "cards",
+      footer: "refined",
+    },
+    supportedFeatures: ["profile", "links", "socials", "whatsapp", "products", "catalog", "faq"],
+  }),
 ];
 

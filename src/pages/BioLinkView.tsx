@@ -22,6 +22,8 @@ export interface LinkItem {
   url: string;
   icone?: string;
   destacado?: boolean;
+  tamanho_bento?: "col-span-1" | "col-span-2";
+  subtitulo?: string;
 }
 
 export interface ConteudoPerfil {
@@ -49,6 +51,7 @@ export interface EstiloBotoes {
 
 export interface TokensDesign {
   layout_esqueleto: "list_vertical_premium" | "bento_grid";
+  estilo_layout?: "bento" | "glassmorphism" | "minimal";
   tipo_fundo: "mesh_gradient" | "imagem_url" | "solido";
   fundo_valores: FundoValores;
   estilo_botoes: EstiloBotoes;
@@ -332,7 +335,9 @@ export function BioLinkView({
           /* MÁSCARA BENTO GRID ASSIMÉTRICO (MODERNO) */
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 w-full mb-8">
             {conteudo_perfil.links.map((link, idx) => {
-              const isColSpan2 = link.destacado || idx === 0;
+              const isColSpan2 = link.tamanho_bento
+                ? link.tamanho_bento === "col-span-2"
+                : (link.destacado || idx === 0);
               return (
                 <a
                   key={idx}
@@ -375,6 +380,11 @@ export function BioLinkView({
                     <h3 className="font-bold text-sm sm:text-base leading-snug">
                       {link.titulo}
                     </h3>
+                    {link.subtitulo && (
+                      <p className="text-xs opacity-75 mt-0.5 font-normal line-clamp-2">
+                        {link.subtitulo}
+                      </p>
+                    )}
                     {link.destacado && (
                       <span
                         className="inline-flex items-center gap-1 text-[11px] font-bold mt-1 uppercase tracking-wider"
@@ -419,9 +429,16 @@ export function BioLinkView({
                   <span className="text-xl shrink-0 filter drop-shadow-sm">
                     {link.icone || "🔗"}
                   </span>
-                  <span className="font-semibold text-sm sm:text-base truncate">
-                    {link.titulo}
-                  </span>
+                  <div className="min-w-0 flex flex-col">
+                    <span className="font-semibold text-sm sm:text-base truncate">
+                      {link.titulo}
+                    </span>
+                    {link.subtitulo && (
+                      <span className="text-xs opacity-75 truncate font-normal">
+                        {link.subtitulo}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div
@@ -746,4 +763,6 @@ export function buildBioLinkConfig(
 }
 
 export default BioLinkView;
+
+export { enrichAndParseScrapedData } from "@/modules/prospecting/enrichAndParseScrapedData";
 

@@ -214,7 +214,7 @@ export class CinematicLayout implements TemplateLayoutRenderer {
 
         {/* VITRINE EM CARROSSEL / FEED HORIZONTAL TOUCH */}
         {products && products.length > 0 && (
-          <CatalogSection items={products} whatsapp={bio.whatsapp} />
+          <CatalogSection items={products} whatsapp={bio.whatsapp} niche={(bio.social_links as any)?.niche} />
         )}
 
         {/* AVALIAÇÕES DE CLIENTES DO GOOGLE MAPS EM CARDS DE VIDRO */}

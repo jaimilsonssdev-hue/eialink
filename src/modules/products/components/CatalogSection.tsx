@@ -3,10 +3,55 @@ import { ArrowUpRight, ImageOff, PackageOpen, ShoppingCart, Minus, Plus, X, Spar
 import type { CatalogItem } from "../types";
 import { safeExternalUrl } from "@/lib/safe-url";
 
-export function CatalogSection({ items, whatsapp }: { items: CatalogItem[]; whatsapp?: string | null }) {
+export function CatalogSection({
+  items,
+  whatsapp,
+  title,
+  badge,
+  niche,
+}: {
+  items: CatalogItem[];
+  whatsapp?: string | null;
+  title?: string;
+  badge?: string;
+  niche?: string;
+}) {
   const [cart, setCart] = useState<Record<string, number>>({});
   const activeItems = items.filter((item) => item.active);
   if (!activeItems.length) return null;
+
+  // Determina rótulos dinâmicos de acordo com o nicho e tipo de itens (sem vazar temas entre nichos)
+  const hasProducts = activeItems.some((it) => it.type === "product");
+  const normalizedNiche = (niche ?? "").toLowerCase();
+
+  const isFood = /delivery|restaurante|burguer|burger|pizza|sorvet|lanche|comida|gastronom|bebidas|adega/i.test(normalizedNiche);
+  const isBeauty = /beleza|estetica|salao|manicure|spa|sobrancelha|cabelo/i.test(normalizedNiche);
+  const isHealth = /clinica|odonto|saude|psicolog|nutri|fisioter/i.test(normalizedNiche);
+  const isLaw = /advoc|jurid|direito|contabil|imobiliaria/i.test(normalizedNiche);
+  const isStore = /loja|moda|store|shop|roupa/i.test(normalizedNiche);
+
+  let displayBadge = badge;
+  let displayTitle = title;
+
+  if (!displayBadge) {
+    if (isFood) displayBadge = "Cardápio & Destaques";
+    else if (isBeauty) displayBadge = "Procedimentos & Cuidados";
+    else if (isHealth) displayBadge = "Especialidades Clínicas";
+    else if (isLaw) displayBadge = "Áreas de Atuação";
+    else if (isStore) displayBadge = "Coleção & Vitrine";
+    else if (hasProducts) displayBadge = "Produtos em Destaque";
+    else displayBadge = "Serviços & Especialidades";
+  }
+
+  if (!displayTitle) {
+    if (isFood) displayTitle = "Nossos Sabores & Cardápio";
+    else if (isBeauty) displayTitle = "Serviços & Procedimentos";
+    else if (isHealth) displayTitle = "Atendimentos & Especialidades";
+    else if (isLaw) displayTitle = "Serviços & Consultoria";
+    else if (isStore) displayTitle = "Nossa Vitrine de Produtos";
+    else if (hasProducts) displayTitle = "Nossos Produtos";
+    else displayTitle = "Nossos Serviços";
+  }
 
   const cartItems = activeItems.filter((item) => (cart[item.id] ?? 0) > 0);
   const totalItemsCount = cartItems.reduce((sum, item) => sum + (cart[item.id] ?? 0), 0);
@@ -27,15 +72,15 @@ export function CatalogSection({ items, whatsapp }: { items: CatalogItem[]; what
   };
 
   return (
-    <section className="my-6 space-y-3.5" aria-label="Produtos e Cardápio">
+    <section className="my-6 space-y-3.5" aria-label={displayTitle}>
       {/* Cabeçalho da Seção com Dica de Rolagem Lateral */}
       <div className="flex items-end justify-between px-1">
         <div>
           <span className="inline-flex items-center gap-1 text-[11px] font-extrabold uppercase tracking-wider text-primary">
-            <Sparkles size={12} className="text-primary" /> Destaques & Cardápio
+            <Sparkles size={12} className="text-primary" /> {displayBadge}
           </span>
           <h2 className="text-lg sm:text-xl font-extrabold text-foreground tracking-tight">
-            Nossos Produtos & Sabores
+            {displayTitle}
           </h2>
         </div>
 

@@ -62,7 +62,11 @@ class OrderedLayout implements TemplateLayoutRenderer {
         <div className="public-profile-content template-layout-content">
           {content.map(renderComponent)}
           {context.products && context.products.length > 0 && (
-            <CatalogSection items={context.products} />
+            <CatalogSection
+              items={context.products}
+              whatsapp={context.bio.whatsapp}
+              niche={(context.bio.social_links as any)?.niche}
+            />
           )}
           {context.supplemental}
         </div>

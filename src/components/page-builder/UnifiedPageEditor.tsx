@@ -461,36 +461,66 @@ const THEMES = [
     label: "Oceano",
     description: "Azul profissional & Turquesa",
     gradientStyle: "linear-gradient(135deg, #0ea5e9, #10b981, #0369a1)",
+    primary: "#0ea5e9",
+    background: "#070f1e",
+    text: "#f8fafc",
+    card_bg: "rgba(15, 23, 42, 0.65)",
+    border_color: "rgba(14, 165, 233, 0.25)",
   },
   {
     id: "sunset",
     label: "Pôr do Sol",
     description: "Dourado quente, Beleza & Rosa",
     gradientStyle: "linear-gradient(135deg, #ff6a3d, #ffcf3d, #d13a76)",
+    primary: "#f97316",
+    background: "#0c0a09",
+    text: "#fffbeb",
+    card_bg: "rgba(28, 25, 23, 0.70)",
+    border_color: "rgba(249, 115, 22, 0.25)",
   },
   {
     id: "midnight",
     label: "Noite Dark",
     description: "Dark sofisticado & Grafite",
     gradientStyle: "linear-gradient(135deg, #1e293b, #334155, #050810)",
+    primary: "#6366f1",
+    background: "#0a0a0c",
+    text: "#ffffff",
+    card_bg: "rgba(18, 18, 20, 0.75)",
+    border_color: "rgba(255, 255, 255, 0.12)",
   },
   {
     id: "aurora",
     label: "Aurora",
     description: "Ciano vibrante & Violeta",
     gradientStyle: "linear-gradient(135deg, #6b3fff, #00d4ff, #ff4d9d)",
+    primary: "#8b5cf6",
+    background: "#09080f",
+    text: "#f8fafc",
+    card_bg: "rgba(22, 17, 36, 0.70)",
+    border_color: "rgba(139, 92, 246, 0.25)",
   },
   {
     id: "forest",
     label: "Floresta",
     description: "Verde esmeralda & Saúde",
     gradientStyle: "linear-gradient(135deg, #16a34a, #65a30d, #04140a)",
+    primary: "#10b981",
+    background: "#06130b",
+    text: "#f0fdf4",
+    card_bg: "rgba(6, 25, 14, 0.70)",
+    border_color: "rgba(16, 185, 129, 0.25)",
   },
   {
     id: "mono",
     label: "Claro Minimal",
     description: "Fundo claro limpo & Elegante",
     gradientStyle: "linear-gradient(135deg, #f6f5f2, #e2e8f0, #cbd5e1)",
+    primary: "#0f172a",
+    background: "#f8fafc",
+    text: "#0f172a",
+    card_bg: "#ffffff",
+    border_color: "rgba(15, 23, 42, 0.15)",
   },
 ];
 
@@ -563,6 +593,13 @@ export function UnifiedPageEditor({
   const [links, setLinks] = useState<EditableLink[]>(initialLinks);
   const [products, setProducts] = useState<CatalogItem[]>(initialProducts);
   const [niche, setNiche] = useState<string>(() => (initialBio.social_links as Record<string, any>)?.niche || defaults.niche || "");
+  const [selectedNicheId, setSelectedNicheId] = useState<string>(() => {
+    const socialData = (initialBio.social_links as Record<string, any>) || {};
+    const currentNiche = socialData.niche || defaults.niche || "";
+    const match = NICHE_MODELS.find((m) => m.nicheKey === currentNiche || m.id === currentNiche);
+    return match?.id || (isProductCatalogNiche(currentNiche) ? "delivery" : "beleza");
+  });
+  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
   const [activeTab, setActiveTab] = useState<EditorTab>("visual");
 
   const [draftTemplate, setDraftTemplate] = useState(() => bio.template_id || initialTemplate);
@@ -691,56 +728,45 @@ export function UnifiedPageEditor({
     setLinks((current) => current.filter((link) => link.id !== id));
 
   const activeNicheModel = useMemo(() => {
+    // 1. Prioridade máxima: ID explícito do modelo de nicho selecionado
+    if (selectedNicheId) {
+      const byId = NICHE_MODELS.find((m) => m.id === selectedNicheId);
+      if (byId) return byId;
+    }
+
+    // 2. Prioridade secundária: nicho canônico configurado
+    const socialData = (bio.social_links as Record<string, any>) || {};
+    const currentNicheKey = niche || socialData.niche || defaults.niche;
+    if (currentNicheKey) {
+      const byKey = NICHE_MODELS.find((m) => m.nicheKey === currentNicheKey);
+      if (byKey) return byKey;
+    }
+
+    // 3. Fallback por template apenas se não houver nicho explícito
     const currentTemplate = draftTemplate || bio.template_id;
     if (currentTemplate) {
-      const byTemplate = NICHE_MODELS.find(
-        (m) =>
-          m.templateId === currentTemplate ||
-          (m.templateId === "impact-showcase" && (currentTemplate.includes("impact") || currentTemplate.includes("vip"))) ||
-          (m.templateId === "ai-chat-agent" && (currentTemplate.includes("chat") || currentTemplate.includes("typebot") || currentTemplate.includes("atendente"))) ||
-          (m.templateId === "cinematic-glass" && (currentTemplate.includes("cinematic") || currentTemplate.includes("cinema"))) ||
-          (m.templateId === "store-showcase" && (currentTemplate.includes("store") || currentTemplate.includes("shop") || currentTemplate.includes("loja")))
-      );
-      if (byTemplate && (draftTemplate === "impact-showcase" || draftTemplate === "ai-chat-agent" || !niche)) {
-        return byTemplate;
-      }
+      const byTemplate = NICHE_MODELS.find((m) => m.templateId === currentTemplate);
+      if (byTemplate) return byTemplate;
     }
 
-    const socialData = (bio.social_links as Record<string, any>) || {};
-    const currentNiche = niche || socialData.niche;
-
-    if (currentNiche) {
-      const byKey = NICHE_MODELS.find((m) => m.nicheKey === currentNiche || m.id === currentNiche);
-      if (byKey && (!draftTemplate || draftTemplate === byKey.templateId)) return byKey;
-    }
-
-    return (
-      NICHE_MODELS.find(
-        (m) =>
-          m.templateId === currentTemplate ||
-          (m.templateId === "impact-showcase" && (currentTemplate?.includes("impact") || currentTemplate?.includes("vip"))) ||
-          (m.templateId === "ai-chat-agent" && (currentTemplate?.includes("chat") || currentTemplate?.includes("typebot") || currentTemplate?.includes("atendente"))) ||
-          (m.templateId === "cinematic-glass" && (currentTemplate?.includes("cinematic") || currentTemplate?.includes("cinema"))) ||
-          (m.templateId === "store-showcase" && (currentTemplate?.includes("store") || currentTemplate?.includes("shop") || currentTemplate?.includes("loja"))) ||
-          (m.templateId === "therapy-wellbeing" && (currentTemplate?.includes("therapy") || currentTemplate?.includes("harmony"))) ||
-          (m.templateId === "clinic-care" && currentTemplate?.includes("clinic")) ||
-          (m.templateId === "beauty-glow" && currentTemplate?.includes("beauty")) ||
-          (m.templateId === "spotlight-neon" && (currentTemplate?.includes("spotlight") || currentTemplate?.includes("neon"))) ||
-          (m.templateId === "law-authority" && currentTemplate?.includes("law")) ||
-          (m.templateId === "academy-performance" && currentTemplate?.includes("academy")) ||
-          (m.templateId === "restaurant-menu" && currentTemplate?.includes("restaurant")) ||
-          (m.templateId === "portfolio-studio" && currentTemplate?.includes("portfolio")) ||
-          (m.templateId === "business-modern" && currentTemplate?.includes("business"))
-      ) || NICHE_MODELS[0]
-    );
-  }, [niche, bio.social_links, draftTemplate, bio.template_id]);
+    return NICHE_MODELS.find((m) => m.id === "beleza") || NICHE_MODELS[0];
+  }, [selectedNicheId, niche, bio.social_links, defaults.niche, draftTemplate, bio.template_id]);
 
   const [autoSyncServices, setAutoSyncServices] = useState<boolean>(true);
 
-  const applyPresetVariant = (preset: NichePreset, updateServices = autoSyncServices) => {
+  const applyPresetVariant = (
+    preset: NichePreset,
+    updateServices = autoSyncServices,
+    variantIndex?: number
+  ) => {
+    if (variantIndex !== undefined) {
+      setSelectedVariantIndex(variantIndex);
+    }
     setDraftTemplate(preset.template_id);
     setNiche(preset.nicheKey);
+
     const currentSocial = (bio.social_links as Record<string, any>) || {};
+    const themeMeta = THEMES.find((t) => t.id === preset.theme) || THEMES[0];
 
     const patch: Partial<BioForm> = {
       template_id: preset.template_id,
@@ -749,14 +775,48 @@ export function UnifiedPageEditor({
       social_links: {
         ...currentSocial,
         niche: preset.nicheKey,
+        model_variant: preset.modelName,
+        // Sincroniza cores e design tokens diretamente com o tema do novo modelo
+        custom_theme: {
+          primary: themeMeta.primary,
+          background: themeMeta.background,
+          text: themeMeta.text,
+          card_bg: themeMeta.card_bg,
+          border_color: themeMeta.border_color,
+          mode: themeMeta.id === "mono" ? "light" : "dark",
+        },
+        tokens_design: {
+          layout_esqueleto:
+            preset.template_id === "restaurant-menu" || preset.template_id.includes("store")
+              ? "bento_grid"
+              : "list_vertical_premium",
+          estilo_layout:
+            preset.nicheKey === "loja" || preset.nicheKey === "delivery" || preset.nicheKey === "restaurante"
+              ? "bento"
+              : preset.nicheKey === "advocacia" || preset.nicheKey === "contabilidade"
+                ? "minimal"
+                : "glassmorphism",
+          tipo_fundo: "mesh_gradient",
+          fundo_valores: {
+            cor_gradiente_1: themeMeta.background,
+            cor_gradiente_2: themeMeta.primary,
+            blur_sobreposicao: "8px",
+            imagem_url: preset.cover_url,
+          },
+          estilo_botoes: {
+            cor_fundo_card: themeMeta.card_bg,
+            cor_borda: themeMeta.border_color,
+            cor_texto: themeMeta.text,
+            cor_destaque: themeMeta.primary,
+            raio_borda: "16px",
+          },
+        },
       },
     };
 
-    const defaults = getPresetForCompany(preset.nicheKey, bio.display_name);
-    patch.description = preset.generateDescription(bio.display_name || defaults.displayName || "Nossa Empresa", "sua cidade");
-    patch.whatsapp_message = preset.whatsapp_message(bio.display_name || defaults.displayName || "Nossa Empresa");
-
-    updateBio(patch);
+    const companyDisplayName = bio.display_name || defaults.displayName || "Sua Empresa";
+    patch.description = preset.generateDescription(companyDisplayName, "sua cidade");
+    patch.whatsapp_message = preset.whatsapp_message(companyDisplayName);
 
     // Atualiza fotos curadas caso não sejam fotos customizadas pelo usuário
     if (!bio.cover_url || bio.cover_url.includes("template-assets") || bio.cover_url.includes("unsplash.com")) {
@@ -766,9 +826,16 @@ export function UnifiedPageEditor({
       patch.avatar_url = preset.avatar_url;
     }
 
-    if (updateServices && preset.services && preset.services.length > 0) {
-      const isStore = preset.template_id === "store-showcase";
-      const newProducts: CatalogItem[] = preset.services.map((s, idx) => ({
+    updateBio(patch);
+
+    if (updateServices) {
+      const isStore = preset.template_id === "store-showcase" || preset.nicheKey === "loja";
+      const servicesList =
+        preset.services && preset.services.length > 0
+          ? preset.services
+          : (getPresetForCompany(preset.nicheKey, companyDisplayName).services || []);
+
+      const newProducts: CatalogItem[] = servicesList.map((s, idx) => ({
         id: `draft-${crypto.randomUUID()}`,
         type: isStore ? "product" : "service",
         name: s.name,
@@ -786,13 +853,15 @@ export function UnifiedPageEditor({
   };
 
   const selectNicheModel = (model: NicheModelConfig) => {
-    setDraftTemplate(model.templateId);
+    setSelectedNicheId(model.id);
     setNiche(model.nicheKey);
+    setDraftTemplate(model.templateId);
+    setSelectedVariantIndex(0);
+
     const variants = getVariantsForNiche(model.nicheKey);
     const targetVariant = variants[0] || getPresetForCompany(model.nicheKey, bio.display_name);
     if (targetVariant) {
-      const customVariant = { ...targetVariant, template_id: model.templateId };
-      applyPresetVariant(customVariant, autoSyncServices);
+      applyPresetVariant(targetVariant, true, 0);
     }
   };
 
@@ -1079,13 +1148,14 @@ export function UnifiedPageEditor({
                       {getVariantsForNiche(activeNicheModel.nicheKey).map((variant, idx) => {
                         const currentSocial = (bio.social_links as Record<string, any>) || {};
                         const isVariantSelected =
+                          selectedVariantIndex === idx ||
                           currentSocial.model_variant === variant.modelName ||
                           (bio.template_id === variant.template_id && bio.theme === variant.theme);
                         return (
                           <button
                             key={idx}
                             type="button"
-                            onClick={() => applyPresetVariant(variant, autoSyncServices)}
+                            onClick={() => applyPresetVariant(variant, autoSyncServices, idx)}
                             className={`p-3 rounded-xl border text-left transition-all duration-150 relative flex flex-col justify-between ${
                               isVariantSelected
                                 ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40 text-foreground"
@@ -1157,7 +1227,38 @@ export function UnifiedPageEditor({
                         <button
                           key={theme.id}
                           type="button"
-                          onClick={() => updateBio({ theme: theme.id })}
+                          onClick={() => {
+                            const currentSocial = (bio.social_links as Record<string, any>) || {};
+                            updateBio({
+                              theme: theme.id,
+                              social_links: {
+                                ...currentSocial,
+                                custom_theme: {
+                                  primary: theme.primary,
+                                  background: theme.background,
+                                  text: theme.text,
+                                  card_bg: theme.card_bg,
+                                  border_color: theme.border_color,
+                                  mode: theme.id === "mono" ? "light" : "dark",
+                                },
+                                tokens_design: {
+                                  ...(currentSocial.tokens_design || {}),
+                                  fundo_valores: {
+                                    ...(currentSocial.tokens_design?.fundo_valores || {}),
+                                    cor_gradiente_1: theme.background,
+                                    cor_gradiente_2: theme.primary,
+                                  },
+                                  estilo_botoes: {
+                                    ...(currentSocial.tokens_design?.estilo_botoes || {}),
+                                    cor_destaque: theme.primary,
+                                    cor_texto: theme.text,
+                                    cor_fundo_card: theme.card_bg,
+                                    cor_borda: theme.border_color,
+                                  },
+                                },
+                              },
+                            });
+                          }}
                           className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
                             isSelected
                               ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/40 shadow-xs"
@@ -1958,16 +2059,22 @@ export function UnifiedPageEditor({
               const previewSocial = (previewBio.social_links as Record<string, any>) || {};
               const previewCustomTheme = previewSocial?.custom_theme;
               const previewTokens = previewSocial?.tokens_design;
-              const previewCustomPrimary = previewTokens?.estilo_botoes?.cor_destaque || previewCustomTheme?.primary;
-              const previewCustomBg = previewTokens?.fundo_valores?.cor_gradiente_1 || previewCustomTheme?.background;
-              const previewCustomText = previewTokens?.estilo_botoes?.cor_texto || previewCustomTheme?.text;
-              const previewCustomCard = previewTokens?.estilo_botoes?.cor_fundo_card || previewCustomTheme?.card_bg;
-              const previewCustomBorder = previewTokens?.estilo_botoes?.cor_borda || previewCustomTheme?.border_color;
-              const previewCustomRadius = previewTokens?.estilo_botoes?.raio_borda || previewCustomTheme?.border_radius;
-              const isPreviewLight = previewCustomTheme?.mode === "light";
+              const activeThemeMeta = THEMES.find((t) => t.id === (previewBio.theme || "aurora")) || THEMES[0];
+
+              const previewCustomPrimary = previewTokens?.estilo_botoes?.cor_destaque || previewCustomTheme?.primary || activeThemeMeta.primary;
+              const previewCustomBg = previewTokens?.fundo_valores?.cor_gradiente_1 || previewCustomTheme?.background || activeThemeMeta.background;
+              const previewCustomText = previewTokens?.estilo_botoes?.cor_texto || previewCustomTheme?.text || activeThemeMeta.text;
+              const previewCustomCard = previewTokens?.estilo_botoes?.cor_fundo_card || previewCustomTheme?.card_bg || activeThemeMeta.card_bg;
+              const previewCustomBorder = previewTokens?.estilo_botoes?.cor_borda || previewCustomTheme?.border_color || activeThemeMeta.border_color;
+              const previewCustomRadius = previewTokens?.estilo_botoes?.raio_borda || previewCustomTheme?.border_radius || "16px";
+              const isPreviewLight = previewCustomTheme?.mode === "light" || previewBio.theme === "mono";
+
+              // Chave de remontagem única para Pure State Reset (elimina lixo de memória e vazamento entre nichos/modelos)
+              const simulatorKey = `${activeNicheModel.id}-var${selectedVariantIndex}-${previewBio.template_id}-${previewBio.theme}`;
 
               return (
                 <div
+                  key={simulatorKey}
                   className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} relative w-[285px] sm:w-[310px] xl:w-[330px] h-[min(650px,calc(100vh-10rem))] rounded-[2.8rem] border-[6px] border-[#18181b] shadow-2xl shadow-black/90 ring-1 ring-white/10 overflow-hidden flex flex-col transition-all`}
                   data-custom-primary={Boolean(previewCustomPrimary) ? "true" : undefined}
                   data-custom-text={Boolean(previewCustomText) ? "true" : undefined}

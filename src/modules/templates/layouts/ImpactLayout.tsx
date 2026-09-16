@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import {
   ArrowUpRight,
   BadgeCheck,
+  Briefcase,
   Building2,
   Calculator,
   CalendarCheck,
@@ -747,7 +748,7 @@ export class ImpactLayout implements TemplateLayoutRenderer {
             {socialData.tokens_design?.layout_esqueleto === "bento_grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-w-2xl mx-auto">
                 {secondaryLinks.map((link: PublicLink, idx: number) => {
-                  const isColSpan2 = link.highlighted || idx === 0;
+                  const isColSpan2 = (link as any).highlighted || idx === 0;
                   return (
                     <a
                       key={link.id}
@@ -767,7 +768,7 @@ export class ImpactLayout implements TemplateLayoutRenderer {
                       </div>
                       <div>
                         <span className="text-xs sm:text-sm font-bold block">{link.title}</span>
-                        {link.highlighted && (
+                        {(link as any).highlighted && (
                           <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1 block">
                             Destaque VIP
                           </span>

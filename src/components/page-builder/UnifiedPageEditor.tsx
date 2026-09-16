@@ -79,6 +79,7 @@ import {
 } from "@/lib/public-page-url";
 import type { CatalogItem } from "@/modules/products/types";
 import { getPresetForCompany, getVariantsForNiche, isProductCatalogNiche, type NichePreset } from "@/modules/prospecting/nichePresets";
+import type { Tables } from "@/integrations/supabase/types";
 
 type BioForm = Pick<
   Tables<"bio_pages">,
@@ -1358,7 +1359,7 @@ export function UnifiedPageEditor({
                           ...currentSocial,
                           custom_theme: customTheme,
                           tokens_design: tokensDesign,
-                        },
+                        } as any,
                       });
                     }}
                   />
@@ -1860,7 +1861,7 @@ export function UnifiedPageEditor({
                             social_links: {
                               ...current,
                               chat_flow: newFlow,
-                            },
+                            } as any,
                           });
                         }}
                         companyName={bio.display_name || defaults.displayName || "Sua Empresa"}
@@ -2056,7 +2057,7 @@ export function UnifiedPageEditor({
                     social_links: {
                       ...current,
                       seo: newSeo,
-                    },
+                    } as any,
                   });
                 }}
                 companyName={bio.display_name || defaults.displayName || "Sua Empresa"}

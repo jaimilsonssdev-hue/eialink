@@ -732,7 +732,7 @@ export const templateManifest: TemplateDefinition[] = [
     description:
       "Bio Link cinematográfico ultra-fluido: gerenciamento via tokens CSS nativos, fundo mesh animado via GPU, lista vertical ou bento grid, agenda e atendente virtual integrados.",
     category: "premium",
-    badge: "VIP",
+    badge: "Premium",
     bestFor: "profissionais, especialistas, criadores e negócios que exigem design cinematográfico e total liberdade de cores",
     theme: {
       colors: {

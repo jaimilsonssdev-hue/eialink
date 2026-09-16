@@ -115,8 +115,11 @@ export function SeoEditor({
     const defaultTypes = getRecommendedBusinessType(nicheKey);
 
     let nicheDisplay = "Serviços Especializados";
-    if (nicheKey && CANONICAL_NICHES[nicheKey as keyof typeof CANONICAL_NICHES]) {
-      nicheDisplay = CANONICAL_NICHES[nicheKey as keyof typeof CANONICAL_NICHES].title;
+    if (nicheKey) {
+      const nicheMeta = CANONICAL_NICHES.find((n) => n.key === nicheKey);
+      if (nicheMeta) {
+        nicheDisplay = nicheMeta.label;
+      }
     }
 
     const generatedTitle = `${cleanName} | ${nicheDisplay} em ${cleanCity}`;

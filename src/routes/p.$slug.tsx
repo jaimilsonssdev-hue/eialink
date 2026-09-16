@@ -170,7 +170,7 @@ export const Route = createFileRoute("/p/$slug")({
                     position: idx + 1,
                     itemOffered: {
                       "@type": "Service",
-                      name: p.title || p.name,
+                      name: (p as any).title || p.name,
                       description: p.description || undefined,
                       ...(p.image_url ? { image: p.image_url } : {}),
                     },

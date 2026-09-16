@@ -6,6 +6,7 @@ import {
   ChevronRight,
   CreditCard,
   Flame,
+  Heart,
   Instagram,
   MapPin,
   MessageCircle,

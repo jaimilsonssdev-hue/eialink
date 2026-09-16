@@ -132,7 +132,7 @@ export const Route = createFileRoute("/_authenticated/admin_/prospeccao")({
     if (!roles?.some((r) => r.role === "admin")) throw redirect({ to: "/dashboard" });
   },
 
-  errorComponent: ({ error }: { error: Error }) => (
+  errorComponent: ({ error }: { error: any }) => (
     <div className="p-8 max-w-2xl mx-auto my-12 text-rose-400 bg-zinc-950 border border-rose-500/30 rounded-xl font-mono text-xs whitespace-pre-wrap">
       <p className="font-bold text-sm mb-2 text-rose-300">Erro no Radar de Prospecção:</p>
       {error?.stack || error?.message || String(error)}

@@ -725,5 +725,33 @@ export const templateManifest: TemplateDefinition[] = [
     },
     supportedFeatures: ["profile", "whatsapp", "catalog"],
   }),
+  define({
+    id: "biolink-tokens",
+    slug: "biolink-tokens",
+    name: "Bio Link Dinâmico AAA",
+    description:
+      "Bio Link cinematográfico ultra-fluido: gerenciamento via tokens CSS nativos, fundo mesh animado via GPU, lista vertical ou bento grid, agenda e atendente virtual integrados.",
+    category: "premium",
+    badge: "VIP",
+    bestFor: "profissionais, especialistas, criadores e negócios que exigem design cinematográfico e total liberdade de cores",
+    theme: {
+      colors: {
+        background: "#0b0c10",
+        surface: "rgba(255, 255, 255, 0.04)",
+        text: "#ffffff",
+        muted: "#94a3b8",
+        primary: "#6366f1",
+      },
+      typography: { fontFamily: displayFont, headingSize: "1.7rem", bodySize: "0.95rem" },
+    },
+    layout: "biolink",
+    components: ["profile", "links", "footer"],
+    componentVariants: {
+      profile: "minimal",
+      links: "glass",
+      footer: "discreet",
+    },
+    supportedFeatures: ["profile", "links", "socials", "whatsapp", "products"],
+  }),
 ];
 

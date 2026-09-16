@@ -563,27 +563,62 @@ export class ImpactLayout implements TemplateLayoutRenderer {
           </section>
         )}
 
-        {/* LINKS SECUNDÁRIOS */}
+        {/* LINKS SECUNDÁRIOS / SERVIÇOS ADICIONAIS (LISTA VERTICAL OU BENTO GRID) */}
         {secondaryLinks.length > 0 && (
-          <section className="relative border-t border-border/50 px-4 sm:px-6 py-8 max-w-md mx-auto">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground text-center mb-3">
-              Links Rápidos
+          <section className="relative border-t border-border/50 px-4 sm:px-6 py-10 sm:py-14 max-w-4xl mx-auto">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-primary mb-4 text-center">
+              {socialData.tokens_design?.layout_esqueleto === "bento_grid" ? "Destaques & Links" : "Links Rápidos"}
             </h3>
-            <div className="space-y-2">
-              {secondaryLinks.map((link: PublicLink) => (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={() => onTrack("link_click", link.id)}
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-border/80 bg-card/75 backdrop-blur-md hover:border-primary/50 text-foreground text-xs sm:text-sm font-semibold transition-all hover:bg-card"
-                >
-                  <span className="truncate">{link.title}</span>
-                  <ArrowUpRight className="h-4 w-4 text-muted-foreground shrink-0" />
-                </a>
-              ))}
-            </div>
+            {socialData.tokens_design?.layout_esqueleto === "bento_grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 max-w-2xl mx-auto">
+                {secondaryLinks.map((link: PublicLink, idx: number) => {
+                  const isColSpan2 = link.highlighted || idx === 0;
+                  return (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={() => onTrack("link_click", link.id)}
+                      className={`group relative p-4 sm:p-5 rounded-2xl border border-border/80 bg-card/85 backdrop-blur-md hover:border-primary/70 text-foreground transition-all duration-300 hover:scale-[1.02] active:scale-95 flex flex-col justify-between shadow-lg overflow-hidden cursor-pointer ${
+                        isColSpan2 ? "sm:col-span-2 min-h-[105px]" : "min-h-[120px]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-2">
+                        <span className="text-xl">✨</span>
+                        <span className="grid h-7 w-7 place-items-center rounded-full bg-primary/10 text-primary transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5">
+                          <ArrowUpRight className="h-4 w-4" />
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-xs sm:text-sm font-bold block">{link.title}</span>
+                        {link.highlighted && (
+                          <span className="text-[10px] font-bold text-primary uppercase tracking-wider mt-1 block">
+                            Destaque VIP
+                          </span>
+                        )}
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="space-y-2.5 max-w-2xl mx-auto">
+                {secondaryLinks.map((link: PublicLink) => (
+                  <a
+                    key={link.id}
+                    href={link.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={() => onTrack("link_click", link.id)}
+                    className="flex items-center justify-between p-4 rounded-xl border border-border/80 bg-card/80 backdrop-blur-md hover:border-primary/70 text-foreground text-xs sm:text-sm font-semibold transition-all duration-300 hover:scale-[1.015] active:scale-95 shadow-xs"
+                  >
+                    <span className="truncate">{link.title}</span>
+                    <ArrowUpRight className="h-4 w-4 text-primary shrink-0 transition-transform group-hover:translate-x-0.5" />
+                  </a>
+                ))}
+              </div>
+            )}
           </section>
         )}
 

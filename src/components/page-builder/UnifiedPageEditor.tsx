@@ -1177,16 +1177,37 @@ export function UnifiedPageEditor({
                     })}
                   </div>
 
-                  {/* Seletor Livre de Cores Hex */}
+                  {/* Seletor Livre de Cores Hex & Design Tokens */}
                   <ColorPickerControl
                     value={(bio.social_links as Record<string, any>)?.custom_theme}
                     currentThemeId={bio.theme || "aurora"}
                     onChange={(customTheme) => {
                       const currentSocial = (bio.social_links as Record<string, any>) || {};
+                      const tokensDesign = customTheme
+                        ? {
+                            layout_esqueleto: customTheme.layout_esqueleto || "list_vertical_premium",
+                            tipo_fundo: customTheme.gradient_1 ? "mesh_gradient" : customTheme.mode === "light" ? "solido" : "mesh_gradient",
+                            fundo_valores: {
+                              cor_gradiente_1: customTheme.gradient_1 || customTheme.background || "#0b0c10",
+                              cor_gradiente_2: customTheme.gradient_2 || customTheme.primary || "#1f2937",
+                              blur_sobreposicao: "8px",
+                              imagem_url: bio.cover_url || "",
+                            },
+                            estilo_botoes: {
+                              cor_fundo_card: customTheme.card_bg || "rgba(255, 255, 255, 0.04)",
+                              cor_borda: customTheme.border_color || "rgba(255, 255, 255, 0.12)",
+                              cor_texto: customTheme.text || "#ffffff",
+                              cor_destaque: customTheme.primary || "#6366f1",
+                              raio_borda: customTheme.border_radius || "16px",
+                            },
+                          }
+                        : undefined;
+
                       updateBio({
                         social_links: {
                           ...currentSocial,
                           custom_theme: customTheme,
+                          tokens_design: tokensDesign,
                         },
                       });
                     }}
@@ -1934,10 +1955,17 @@ export function UnifiedPageEditor({
             <div className="absolute -inset-4 bg-gradient-to-b from-primary/10 via-purple-600/5 to-transparent rounded-[3.2rem] blur-2xl -z-10 pointer-events-none opacity-60" />
 
             {(() => {
-              const previewCustomTheme = (previewBio.social_links as Record<string, any>)?.custom_theme;
-              const previewCustomPrimary = previewCustomTheme?.primary;
-              const previewCustomBg = previewCustomTheme?.background;
-              const previewCustomText = previewCustomTheme?.text;
+              const previewSocial = (previewBio.social_links as Record<string, any>) || {};
+              const previewCustomTheme = previewSocial?.custom_theme;
+              const previewTokens = previewSocial?.tokens_design;
+              const previewCustomPrimary = previewTokens?.estilo_botoes?.cor_destaque || previewCustomTheme?.primary;
+              const previewCustomBg = previewTokens?.fundo_valores?.cor_gradiente_1 || previewCustomTheme?.background;
+              const previewCustomText = previewTokens?.estilo_botoes?.cor_texto || previewCustomTheme?.text;
+              const previewCustomCard = previewTokens?.estilo_botoes?.cor_fundo_card || previewCustomTheme?.card_bg;
+              const previewCustomBorder = previewTokens?.estilo_botoes?.cor_borda || previewCustomTheme?.border_color;
+              const previewCustomRadius = previewTokens?.estilo_botoes?.raio_borda || previewCustomTheme?.border_radius;
+              const isPreviewLight = previewCustomTheme?.mode === "light";
+
               return (
                 <div
                   className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} relative w-[285px] sm:w-[310px] xl:w-[330px] h-[min(650px,calc(100vh-10rem))] rounded-[2.8rem] border-[6px] border-[#18181b] shadow-2xl shadow-black/90 ring-1 ring-white/10 overflow-hidden flex flex-col transition-all`}
@@ -1946,6 +1974,25 @@ export function UnifiedPageEditor({
                   data-custom-bg={Boolean(previewCustomBg) ? "true" : undefined}
                   style={{
                     boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08)",
+                    // Tailwind v4 Tokens Bridge
+                    "--primary": previewCustomPrimary,
+                    "--primary-foreground": "#ffffff",
+                    "--primary-glow": previewCustomPrimary,
+                    "--foreground": previewCustomText,
+                    "--card": previewCustomCard || (isPreviewLight ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
+                    "--card-foreground": previewCustomText,
+                    "--border": previewCustomBorder || (isPreviewLight ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.1)"),
+                    "--radius": previewCustomRadius || "16px",
+                    color: previewCustomText,
+
+                    // Tokens Nativos
+                    "--cor-destaque": previewCustomPrimary,
+                    "--cor-principal": previewCustomPrimary,
+                    "--cor-texto": previewCustomText,
+                    "--cor-fundo-card": previewCustomCard || "rgba(255, 255, 255, 0.04)",
+                    "--cor-borda": previewCustomBorder || "rgba(255, 255, 255, 0.1)",
+                    "--raio-borda": previewCustomRadius || "16px",
+
                     ...(previewCustomPrimary ? { "--template-primary": previewCustomPrimary, "--free-link-accent": previewCustomPrimary } : {}),
                     ...(previewCustomBg ? { "--template-bg": previewCustomBg, background: previewCustomBg } : {}),
                     ...(previewCustomText ? { "--template-text": previewCustomText, "--bio-fg": previewCustomText } : {}),

@@ -16,6 +16,7 @@ import { BusinessLayout } from "./BusinessLayout";
 import { CinematicLayout } from "./CinematicLayout";
 import { ImpactLayout } from "./ImpactLayout";
 import { AiChatLayout } from "./AiChatLayout";
+import { BioLinkView, buildBioLinkConfig } from "@/pages/BioLinkView";
 
 export type LayoutRenderContext = TemplateComponentContext & {
   products?: CatalogItem[];
@@ -70,6 +71,26 @@ class OrderedLayout implements TemplateLayoutRenderer {
   }
 }
 
+export class BioLinkLayout implements TemplateLayoutRenderer {
+  layoutId() {
+    return "biolink" as const;
+  }
+  supports(model: TemplateRenderModel) {
+    return model.template.layout === "biolink";
+  }
+  render(_model: TemplateRenderModel, context: LayoutRenderContext) {
+    const config = buildBioLinkConfig(context.bio, context.links, context.products);
+    return (
+      <BioLinkView
+        config={config}
+        onLinkClick={(url) => context.onTrack("link_click", url)}
+        onBookingClick={() => context.onTrack("booking_click")}
+        onTypebotOpen={() => context.onTrack("ai_chat_open" as any)}
+      />
+    );
+  }
+}
+
 export class LayoutResolver {
   private readonly values = new Map<string, TemplateLayoutRenderer>();
   register(layout: TemplateLayoutRenderer) {
@@ -98,4 +119,5 @@ export const layoutResolver = new LayoutResolver()
   .register(new BeautyLayout())
   .register(new CinematicLayout())
   .register(new ImpactLayout())
-  .register(new AiChatLayout());
+  .register(new AiChatLayout())
+  .register(new BioLinkLayout());

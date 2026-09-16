@@ -109,7 +109,8 @@ export type TemplateDefinition = {
     | "beauty"
     | "cinematic"
     | "impact"
-    | "ai-chat";
+    | "ai-chat"
+    | "biolink";
   components: TemplateComponentType[];
   componentVariants: ComponentVariants;
   smart?: SmartTemplateDefinition;

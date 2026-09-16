@@ -77,6 +77,21 @@ export function FreeLinkRenderer({
       data-custom-bg={Boolean(customBg) ? "true" : undefined}
       style={
         {
+          // Tailwind v4 Design Tokens Bridge
+          "--primary": customPrimary || undefined,
+          "--primary-foreground": "#ffffff",
+          "--primary-glow": customPrimary || undefined,
+          "--foreground": customText || (isLightMode ? "#0f172a" : undefined),
+          "--card": isLightMode ? "#ffffff" : undefined,
+          "--card-foreground": customText || (isLightMode ? "#0f172a" : undefined),
+          "--border": isLightMode ? "rgba(15, 23, 42, 0.12)" : undefined,
+          color: customText || (isLightMode ? "#0f172a" : undefined),
+
+          // Tokens Nativos
+          "--cor-destaque": customPrimary || undefined,
+          "--cor-principal": customPrimary || undefined,
+          "--cor-texto": customText || (isLightMode ? "#0f172a" : undefined),
+
           ...(customPrimary ? { "--free-link-accent": customPrimary, "--template-primary": customPrimary } : {}),
           ...(customBg ? { "--template-bg": customBg, background: customBg } : {}),
           ...(customText ? { "--template-text": customText, "--bio-fg": customText } : {}),

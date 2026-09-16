@@ -86,15 +86,26 @@ export function TemplateRenderer({
   const socialData = (bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links)
     ? bio.social_links
     : {}) as Record<string, any>;
+  const tokensDesign = socialData.tokens_design;
   const customTheme = socialData.custom_theme as {
     primary?: string;
     background?: string;
     text?: string;
     mode?: string;
+    card_bg?: string;
+    border_color?: string;
+    border_radius?: string;
+    gradient_1?: string;
+    gradient_2?: string;
+    layout_esqueleto?: string;
   } | undefined;
-  const customPrimary = customTheme?.primary;
-  const customBg = customTheme?.background;
-  const customText = customTheme?.text;
+
+  const customPrimary = tokensDesign?.estilo_botoes?.cor_destaque || customTheme?.primary;
+  const customText = tokensDesign?.estilo_botoes?.cor_texto || customTheme?.text;
+  const customBg = tokensDesign?.fundo_valores?.cor_gradiente_1 || customTheme?.background;
+  const customCard = tokensDesign?.estilo_botoes?.cor_fundo_card || customTheme?.card_bg;
+  const customBorder = tokensDesign?.estilo_botoes?.cor_borda || customTheme?.border_color;
+  const customRadius = tokensDesign?.estilo_botoes?.raio_borda || customTheme?.border_radius;
   const isLightMode = customTheme?.mode === "light";
 
   return (
@@ -113,8 +124,32 @@ export function TemplateRenderer({
       style={
         {
           fontFamily: model.theme.typography.fontFamily,
+          // Tailwind v4 Design Tokens Bridge
+          "--primary": customPrimary || model.theme.colors.primary,
+          "--primary-foreground": "#ffffff",
+          "--primary-glow": customPrimary || model.theme.colors.primary,
+          "--foreground": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
+          "--card": customCard || (isLightMode ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
+          "--card-foreground": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
+          "--border": customBorder || (isLightMode ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.1)"),
+          "--muted-foreground": isLightMode
+            ? "#64748b"
+            : customText
+              ? `color-mix(in srgb, ${customText} 65%, transparent)`
+              : model.theme.colors.muted,
+          "--radius": customRadius || "16px",
+          color: customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
+
+          // Tokens Nativos
+          "--cor-destaque": customPrimary || model.theme.colors.primary,
+          "--cor-principal": customPrimary || model.theme.colors.primary,
+          "--cor-texto": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
+          "--cor-fundo-card": customCard || "rgba(255, 255, 255, 0.04)",
+          "--cor-borda": customBorder || "rgba(255, 255, 255, 0.1)",
+          "--raio-borda": customRadius || "16px",
+
           "--template-bg": customBg || model.theme.colors.background,
-          "--template-surface": model.theme.colors.surface,
+          "--template-surface": customCard || model.theme.colors.surface,
           "--template-text": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
           "--template-muted": isLightMode ? "#64748b" : model.theme.colors.muted,
           "--template-primary": customPrimary || model.theme.colors.primary,

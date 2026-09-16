@@ -1,9 +1,15 @@
 import { useState } from "react";
 import {
+  Award,
+  BadgeCheck,
   CheckCircle2,
+  Clock,
+  HeartHandshake,
   Layers,
   MessageSquareHeart,
   Plus,
+  ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Star,
   Trash2,
@@ -19,6 +25,12 @@ interface SectionsEditorProps {
   companyName: string;
   socialLinks: Record<string, any>;
   onUpdateSocialLinks: (updated: Record<string, any>) => void;
+}
+
+export interface DifferentialItem {
+  title: string;
+  desc: string;
+  icon: string;
 }
 
 const NICHE_SAMPLE_REVIEWS: Record<string, TestimonialItem[]> = {
@@ -209,6 +221,109 @@ const DEFAULT_REVIEWS: TestimonialItem[] = [
   },
 ];
 
+const NICHE_SAMPLE_DIFFERENTIALS: Record<string, { badge: string; title: string; items: DifferentialItem[] }> = {
+  loja: {
+    badge: "Coleção Exclusiva & Pronta Entrega",
+    title: "Diferenciais da Nossa Loja",
+    items: [
+      { title: "Envio Rápido & Seguro", desc: "Entrega garantida para todo o Brasil com código de rastreamento", icon: "shield" },
+      { title: "Produtos Selecionados", desc: "Peças originais, alta durabilidade e procedência certificada", icon: "bag" },
+      { title: "Compra 100% Segura", desc: "Pagamentos facilitados via Pix e cartões em ambiente protegido", icon: "check" },
+      { title: "Atendimento Humanizado", desc: "Tire dúvidas de medidas e pedidos direto pelo WhatsApp", icon: "heart" },
+    ],
+  },
+  beleza: {
+    badge: "Excelência em Beleza & Estética VIP",
+    title: "Nosso Padrão de Cuidado",
+    items: [
+      { title: "Hora Marcada", desc: "Pontualidade, sem filas e com respeito total ao seu tempo", icon: "clock" },
+      { title: "Cosméticos de Ponta", desc: "Tratamentos com marcas consagradas de alta performance", icon: "sparkles" },
+      { title: "Ambiente Acolhedor", desc: "Espaço exclusivo, climatizado e pensado para o seu relaxamento", icon: "badge" },
+      { title: "Especialistas em Visagismo", desc: "Procedimentos personalizados que valorizam sua beleza natural", icon: "heart" },
+    ],
+  },
+  delivery: {
+    badge: "Sabor Artesanal & Entrega Rápida",
+    title: "Nosso Padrão de Qualidade",
+    items: [
+      { title: "Ingredientes Frescos", desc: "Receitas artesanais preparadas na hora com rigor e carinho", icon: "badge" },
+      { title: "Entrega Quentinha", desc: "Embalagens térmicas especiais que conservam a crocância e o sabor", icon: "shield" },
+      { title: "Sabor Incomparável", desc: "Tempero exclusivo e ponto perfeito aprovado pelos clientes", icon: "sparkles" },
+      { title: "Higiene Impecável", desc: "Cozinha com rigor absoluto em normas de segurança alimentar", icon: "check" },
+    ],
+  },
+  restaurante: {
+    badge: "Gastronomia & Experiência de Alto Padrão",
+    title: "Nossos Diferenciais Gastronômicos",
+    items: [
+      { title: "Culinária Autoral", desc: "Pratos elaborados pelo chef com ingredientes selecionados", icon: "badge" },
+      { title: "Carta Selecionada", desc: "Harmonização de bebidas, vinhos e drinks artesanais", icon: "sparkles" },
+      { title: "Ambiente Sofisticado", desc: "Espaço intimista ideal para comemorações e momentos especiais", icon: "heart" },
+      { title: "Atendimento de Excelência", desc: "Equipe treinada para proporcionar uma experiência memorável", icon: "check" },
+    ],
+  },
+  clinica: {
+    badge: "Saúde & Cuidado com Excelência",
+    title: "Por Que Escolher Nossa Clínica",
+    items: [
+      { title: "Especialistas Certificados", desc: "Corpo médico altamente qualificado e em constante atualização", icon: "badge" },
+      { title: "Tecnologia e Precisão", desc: "Equipamentos modernos para diagnósticos rápidos e assertivos", icon: "shield" },
+      { title: "Biossegurança Total", desc: "Protocolos rigorosos de higienização e esterilização", icon: "check" },
+      { title: "Atendimento Humanizado", desc: "Escuta atenta e plano de saúde individualizado", icon: "heart" },
+    ],
+  },
+  odontologia: {
+    badge: "Odontologia Moderna & Humanizada",
+    title: "Seu Sorriso em Boas Mãos",
+    items: [
+      { title: "Tratamentos Confortáveis", desc: "Técnicas e anestesias modernas para o seu conforto total", icon: "shield" },
+      { title: "Estética & Função", desc: "Alinhamento, clareamento e implantes com precisão milimétrica", icon: "sparkles" },
+      { title: "Equipamentos Digitais", desc: "Planejamento virtual do sorriso e radiografia digital", icon: "badge" },
+      { title: "Facilidade de Pagamento", desc: "Condições acessíveis para você realizar seu tratamento", icon: "check" },
+    ],
+  },
+  fitness: {
+    badge: "Treinos & Alta Performance",
+    title: "Estrutura para Seus Resultados",
+    items: [
+      { title: "Maquinário de Ponta", desc: "Equipamentos ergonômicos e biomecânica avançada", icon: "shield" },
+      { title: "Orientação Técnica", desc: "Acompanhamento de instrutores para treinar com segurança", icon: "badge" },
+      { title: "Espaço Climatizado", desc: "Ambiente amplo, energizante e focado na sua evolução", icon: "sparkles" },
+      { title: "Planos Flexíveis", desc: "Liberdade para treinar no seu ritmo com planos sob medida", icon: "check" },
+    ],
+  },
+  psicologia: {
+    badge: "Espaço Seguro de Acolhimento & Saúde Mental",
+    title: "Pilares do Nosso Atendimento",
+    items: [
+      { title: "Sigilo & Ética (CRP)", desc: "Ambiente seguro e confidencialidade assegurada por lei", icon: "shield" },
+      { title: "Atendimento Acolhedor", desc: "Escuta empática, sem julgamentos e focada no seu bem-estar", icon: "heart" },
+      { title: "Presencial & Online", desc: "Flexibilidade para realizar sua sessão onde preferir", icon: "check" },
+      { title: "Abordagem Científica", desc: "Técnicas baseadas em evidências para o seu desenvolvimento", icon: "sparkles" },
+    ],
+  },
+  oficina: {
+    badge: "Centro Automotivo & Revisão de Precisão",
+    title: "Por Que Confiar Seu Veículo Aqui",
+    items: [
+      { title: "Diagnóstico Computadorizado", desc: "Scanner automotivo de última geração para precisão máxima", icon: "shield" },
+      { title: "Peças de Primeira Linha", desc: "Componentes com garantia de procedência e durabilidade", icon: "badge" },
+      { title: "Mecânicos Especialistas", desc: "Equipe capacitada em revisões preventivas e reparos avançados", icon: "check" },
+      { title: "Orçamento Transparente", desc: "Aprovação prévia detalhada sem serviços desnecessários", icon: "heart" },
+    ],
+  },
+  geral: {
+    badge: "Qualidade Premium Garantida",
+    title: "Nosso Padrão de Atendimento",
+    items: [
+      { title: "Atendimento de Confiança", desc: "Compromisso com pontualidade, seriedade e respeito", icon: "badge" },
+      { title: "Qualidade Comprovada", desc: "Serviço executado com esmero e materiais de primeira linha", icon: "shield" },
+      { title: "Cuidado no Detalhe", desc: "Atenção máxima às suas reais necessidades", icon: "sparkles" },
+      { title: "Garantia e Satisfação", desc: "Suporte dedicado antes, durante e depois da entrega", icon: "heart" },
+    ],
+  },
+};
+
 export function SectionsEditor({
   nicheKey,
   companyName,
@@ -235,6 +350,12 @@ export function SectionsEditor({
   };
 
   const ctaPulse: boolean = Boolean(socialLinks.cta_pulse_glow);
+
+  const vipBadge: string = socialLinks.vip_badge || "";
+  const differentialsTitle: string = socialLinks.differentials_title || "";
+  const differentials: DifferentialItem[] = Array.isArray(socialLinks.differentials) && socialLinks.differentials.length > 0
+    ? socialLinks.differentials
+    : (NICHE_SAMPLE_DIFFERENTIALS[nicheKey] || NICHE_SAMPLE_DIFFERENTIALS.geral).items;
 
   // Updates
   const updateVideo = (partial: Partial<VideoConfig>) => {
@@ -263,6 +384,39 @@ export function SectionsEditor({
     onUpdateSocialLinks({
       ...socialLinks,
       cta_pulse_glow: !ctaPulse,
+    });
+  };
+
+  const updateVipBadge = (badge: string) => {
+    onUpdateSocialLinks({
+      ...socialLinks,
+      vip_badge: badge,
+    });
+  };
+
+  const updateDifferentialsTitle = (title: string) => {
+    onUpdateSocialLinks({
+      ...socialLinks,
+      differentials_title: title,
+    });
+  };
+
+  const updateDifferentialItem = (index: number, field: keyof DifferentialItem, value: string) => {
+    const next = [...differentials];
+    next[index] = { ...next[index], [field]: value };
+    onUpdateSocialLinks({
+      ...socialLinks,
+      differentials: next,
+    });
+  };
+
+  const handleGenerateSampleDifferentials = () => {
+    const preset = NICHE_SAMPLE_DIFFERENTIALS[nicheKey] || NICHE_SAMPLE_DIFFERENTIALS.geral;
+    onUpdateSocialLinks({
+      ...socialLinks,
+      vip_badge: preset.badge,
+      differentials_title: preset.title,
+      differentials: preset.items,
     });
   };
 
@@ -570,7 +724,115 @@ export function SectionsEditor({
         )}
       </div>
 
-      {/* 4. MICRO-ANIMAÇÕES & BOTÃO PULSANTE */}
+      {/* 4. DIFERENCIAIS DA EMPRESA & SELO DE DESTAQUE VIP */}
+      <div className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <Award className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Diferenciais da Empresa & Selo VIP</h3>
+              <p className="text-[11px] text-muted-foreground">
+                Personalize os 4 cards de diferenciais e o selo de garantia do topo
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={handleGenerateSampleDifferentials}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 hover:bg-primary/20 px-2.5 py-1 rounded-lg transition-colors"
+            title="Preencher diferenciais perfeitos para este nicho"
+          >
+            <Wand2 className="h-3 w-3" />
+            Auto-Preencher ({nicheKey})
+          </button>
+        </div>
+
+        <div className="space-y-4 pt-2 border-t border-border/50">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label className="text-xs font-medium text-foreground block mb-1">
+                Selo de Destaque Superior (Hero Badge)
+              </label>
+              <input
+                type="text"
+                value={vipBadge}
+                onChange={(e) => updateVipBadge(e.target.value)}
+                placeholder="Ex: Qualidade Premium Garantida"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-medium text-foreground block mb-1">
+                Título da Seção de Diferenciais
+              </label>
+              <input
+                type="text"
+                value={differentialsTitle}
+                onChange={(e) => updateDifferentialsTitle(e.target.value)}
+                placeholder="Ex: Nosso Padrão de Atendimento"
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-xs text-foreground focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="text-xs font-medium text-foreground block mb-2">
+              4 Cards de Diferenciais Competitivos
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[0, 1, 2, 3].map((idx) => {
+                const item = differentials[idx] || { title: "", desc: "", icon: "badge" };
+                return (
+                  <div
+                    key={idx}
+                    className="rounded-lg border border-border bg-background/70 p-3 space-y-2 text-xs"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-bold text-[11px] text-muted-foreground">
+                        Card #{idx + 1}
+                      </span>
+                      <select
+                        value={item.icon || "badge"}
+                        onChange={(e) => updateDifferentialItem(idx, "icon", e.target.value)}
+                        className="bg-background border border-border rounded text-[11px] px-1.5 py-0.5 text-foreground font-medium"
+                      >
+                        <option value="badge">Selo / Qualidade</option>
+                        <option value="shield">Escudo / Segurança</option>
+                        <option value="clock">Relógio / Pontualidade</option>
+                        <option value="sparkles">Brilho / Excelência</option>
+                        <option value="heart">Coração / Atendimento</option>
+                        <option value="bag">Sacola / Compras</option>
+                        <option value="check">Check / Confiança</option>
+                      </select>
+                    </div>
+
+                    <input
+                      type="text"
+                      value={item.title}
+                      onChange={(e) => updateDifferentialItem(idx, "title", e.target.value)}
+                      placeholder={`Título do Diferencial ${idx + 1}`}
+                      className="w-full font-semibold text-foreground bg-transparent border-b border-border/70 focus:border-primary focus:outline-none px-1 py-1 text-xs"
+                    />
+
+                    <input
+                      type="text"
+                      value={item.desc}
+                      onChange={(e) => updateDifferentialItem(idx, "desc", e.target.value)}
+                      placeholder="Descrição curta (ex: Atendimento no horário)"
+                      className="w-full text-muted-foreground bg-transparent border-b border-border/70 focus:border-primary focus:outline-none px-1 py-1 text-[11px]"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 5. MICRO-ANIMAÇÕES & BOTÃO PULSANTE */}
       <div className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">

@@ -31,6 +31,7 @@ import {
   Bot,
   Kanban,
   LayoutList,
+  Tag,
 } from "lucide-react";
 
 import {
@@ -407,6 +408,29 @@ function ProspectingPage() {
     onError: (error: Error) => setFeedback(`Erro ao limpar o radar: ${error.message}`),
   });
 
+  const autoTagMutation = useMutation({
+    mutationFn: async () => {
+      let count = 0;
+      for (const comp of companies) {
+        const detected = detectNicheKey(comp.niche, comp.name);
+        if (detected && detected !== "geral" && comp.niche !== detected) {
+          await ProspectingService.updateCompany(comp.id, { niche: detected });
+          count++;
+        }
+      }
+      return count;
+    },
+    onSuccess: (count) => {
+      if (count > 0) {
+        setFeedback(`🏷️ ${count} empresa(s) tiveram sua tag de nicho atualizada automaticamente.`);
+      } else {
+        setFeedback("Todas as empresas prospectadas já possuem tags de nicho atualizadas.");
+      }
+      invalidate();
+    },
+    onError: (error: Error) => setFeedback(`Erro ao atualizar tags: ${error.message}`),
+  });
+
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return companies.filter((company) => {
@@ -494,6 +518,17 @@ function ProspectingPage() {
             }
           }
         }
+
+        // Sincroniza tag de nicho se vazia ou genérica e uma tag específica for detectada
+        const detectedNiche = detectNicheKey(company.niche, company.name);
+        if (detectedNiche && detectedNiche !== "geral" && (!company.niche || company.niche === "geral")) {
+          try {
+            await ProspectingService.updateCompany(company.id, { niche: detectedNiche });
+            hasUpdates = true;
+          } catch (e) {
+            console.warn("Aviso no auto-tag de nicho:", e);
+          }
+        }
       }
       if (hasUpdates) {
         invalidate();
@@ -573,7 +608,11 @@ function ProspectingPage() {
     if (!liveResults || !liveResults.length) return;
     const selected = liveResults.filter((_, i) => selectedLiveIndices.has(i));
     if (!selected.length) return;
-    importMutation.mutate(selected);
+    const enriched = selected.map((item) => ({
+      ...item,
+      niche: detectNicheKey(item.niche, item.name),
+    }));
+    importMutation.mutate(enriched);
     setLiveResults([]);
   }
 
@@ -1611,7 +1650,19 @@ function ProspectingPage() {
                                 />
                               </TableCell>
                               <TableCell className="px-3.5 py-2.5">
-                                <p className="font-semibold text-foreground tracking-tight text-xs sm:text-sm">{lead.name}</p>
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <p className="font-semibold text-foreground tracking-tight text-xs sm:text-sm">{lead.name}</p>
+                                  {(() => {
+                                    const nicheKey = detectNicheKey(lead.niche, lead.name);
+                                    const nicheMeta = getCanonicalNicheMeta(nicheKey);
+                                    return nicheMeta ? (
+                                      <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${nicheMeta.color} font-medium shrink-0`}>
+                                        <span>{nicheMeta.icon}</span>
+                                        <span>{nicheMeta.label}</span>
+                                      </span>
+                                    ) : null;
+                                  })()}
+                                </div>
                                 <p className="text-[11px] font-normal text-muted-foreground/80 mt-0.5">
                                   {lead.rating ? `⭐ ${lead.rating} (${lead.reviews_count ?? 0} avaliações)` : lead.source}
                                 </p>
@@ -1942,6 +1993,7 @@ function ProspectingPage() {
                     <TableHeader className="bg-muted/40">
                       <TableRow className="border-border hover:bg-transparent">
                         <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Empresa & Slug</TableHead>
+                        <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nicho</TableHead>
                         <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modelo Visual</TableHead>
                         <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Link Demonstrativo</TableHead>
                         <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Criação</TableHead>
@@ -1986,6 +2038,21 @@ function ProspectingPage() {
                                   </div>
                                 </div>
                               </div>
+                            </TableCell>
+
+                            <TableCell className="px-4 py-3 whitespace-nowrap">
+                              {(() => {
+                                const nicheKey = detectNicheKey((page.social_links as any)?.niche, page.display_name);
+                                const nicheMeta = getCanonicalNicheMeta(nicheKey);
+                                return nicheMeta ? (
+                                  <span className={`inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${nicheMeta.color}`}>
+                                    <span>{nicheMeta.icon}</span>
+                                    <span>{nicheMeta.label}</span>
+                                  </span>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">-</span>
+                                );
+                              })()}
                             </TableCell>
 
                             <TableCell className="px-4 py-3 whitespace-nowrap">
@@ -2221,15 +2288,28 @@ function ProspectingPage() {
                 </span>
               </CardTitle>
               {companies.length > 0 && (
-                <button
-                  onClick={handleClearAllRadar}
-                  disabled={clearRadarMutation.isPending}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-2.5 py-1 text-xs font-medium transition-colors"
-                  title="Limpar toda a lista de prospecção"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                  {clearRadarMutation.isPending ? "Limpando..." : "Limpar Radar"}
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => autoTagMutation.mutate()}
+                    disabled={autoTagMutation.isPending}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 px-2.5 py-1 text-xs font-medium transition-colors"
+                    title="Identificar e etiquetar automaticamente os nichos de todas as empresas prospectadas"
+                  >
+                    <Tag className="h-3.5 w-3.5" />
+                    {autoTagMutation.isPending ? "Etiquetando..." : "Etiquetar Nichos"}
+                  </button>
+
+                  <button
+                    onClick={handleClearAllRadar}
+                    disabled={clearRadarMutation.isPending}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-2.5 py-1 text-xs font-medium transition-colors"
+                    title="Limpar toda a lista de prospecção"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                    {clearRadarMutation.isPending ? "Limpando..." : "Limpar Radar"}
+                  </button>
+                </>
               )}
             </div>
             <div className="flex flex-wrap items-center gap-2">

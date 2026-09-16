@@ -235,23 +235,38 @@ function StorefrontView({
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  const storeDifferentials = Array.isArray(socialData.differentials) && socialData.differentials.length > 0
+    ? socialData.differentials
+    : [
+        { title: "Envio Seguro", desc: "Entrega ágil com código de rastreamento", icon: "truck" },
+        { title: "Produtos Selecionados", desc: "Qualidade garantida e procedência certificada", icon: "bag" },
+        { title: "Compra 100% Segura", desc: "Pagamento facilitado no Pix e cartões", icon: "shield" },
+        { title: "Atendimento Rápido", desc: "Tire dúvidas de medidas pelo WhatsApp", icon: "heart" },
+      ];
+
   return (
     <div className="niche-store relative min-h-screen pb-28">
+      {/* 0. Top Bar de Anúncios / Vantagens da Loja */}
+      <div className="bg-primary text-primary-foreground py-2 px-4 text-center text-xs font-semibold tracking-wide flex items-center justify-center gap-2">
+        <Sparkles className="h-3.5 w-3.5" />
+        <span>Envio Rápido &middot; Pagamento Facilitado no Pix &middot; Compre Direto pelo WhatsApp</span>
+      </div>
+
       {/* 1. Header / Hero da Loja */}
       <header className="niche-store-hero">
-        <div className="niche-store-hero-banner relative">
+        <div className="niche-store-hero-banner relative max-w-5xl mx-auto rounded-b-3xl sm:rounded-3xl overflow-hidden mt-0 sm:mt-2">
           {bio.cover_url ? (
             <img
               src={bio.cover_url}
               alt={`Capa da ${bio.display_name}`}
-              className="niche-store-hero-img"
+              className="niche-store-hero-img h-48 sm:h-64 object-cover w-full"
               loading="eager"
             />
           ) : (
             <img
               src="/template-assets/store-demo-cover.png"
               alt=""
-              className="niche-store-hero-img"
+              className="niche-store-hero-img h-48 sm:h-64 object-cover w-full"
               loading="eager"
             />
           )}
@@ -276,54 +291,54 @@ function StorefrontView({
         </div>
 
         {/* Perfil & Identidade da Loja */}
-        <div className="niche-store-profile-wrap max-w-2xl mx-auto px-4 -mt-12 relative z-10">
-          <div className="niche-store-profile-card">
-            <div className="flex items-start gap-3.5">
+        <div className="niche-store-profile-wrap max-w-5xl mx-auto px-4 -mt-12 relative z-10">
+          <div className="niche-store-profile-card shadow-xl rounded-3xl border border-border/80 bg-card/90 backdrop-blur-xl p-5 sm:p-6">
+            <div className="flex items-start gap-4">
               {bio.avatar_url ? (
                 <img
                   src={bio.avatar_url}
                   alt={bio.display_name}
-                  className="niche-store-avatar-img"
+                  className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-cover border-2 border-primary/30 shadow-md shrink-0"
                 />
               ) : (
-                <div className="niche-store-avatar-img niche-store-avatar-fallback">
+                <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-card border-2 border-primary/30 shadow-md flex items-center justify-center font-bold text-2xl text-primary shrink-0">
                   {bio.display_name.charAt(0).toUpperCase()}
                 </div>
               )}
               <div className="min-w-0 flex-1 pt-1">
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  <h1 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
                     {bio.display_name}
                   </h1>
                   <span
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"
                     title="Loja com atendimento verificado"
                   >
-                    <ShieldCheck size={12} /> Verificada
+                    <ShieldCheck size={13} /> Loja Verificada
                   </span>
                 </div>
-                <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5 font-medium">
-                  <Tag size={12} className="text-primary" /> Catálogo & Loja Online
+                <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-1 font-medium">
+                  <Tag size={13} className="text-primary" /> Catálogo Oficial &amp; Compras Online
                 </p>
               </div>
             </div>
 
             {bio.description && (
-              <p className="mt-3 text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p className="mt-3.5 text-xs sm:text-sm text-muted-foreground leading-relaxed">
                 {bio.description}
               </p>
             )}
 
             {/* Badges de Destaque & Confiança */}
-            <div className="niche-store-badges mt-3.5 pt-3 border-t border-border/60 flex flex-wrap items-center gap-2">
-              <span className="niche-store-badge">
-                <Truck size={13} className="text-primary" /> Envio Rápido & Seguro
+            <div className="mt-4 pt-3.5 border-t border-border/60 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted/50 border border-border">
+                <Truck size={13} className="text-primary" /> Envio para Todo o Brasil
               </span>
-              <span className="niche-store-badge">
-                <MessageCircle size={13} className="text-emerald-500" /> Pedidos via WhatsApp
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-muted/50 border border-border">
+                <MessageCircle size={13} className="text-emerald-500" /> Pedidos no WhatsApp
               </span>
               {googleRating && (
-                <span className="niche-store-badge">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-500 border border-amber-500/30">
                   <Star size={13} className="text-amber-400 fill-amber-400" /> {googleRating}{" "}
                   {reviewsCount ? `(${reviewsCount})` : ""}
                 </span>
@@ -334,7 +349,7 @@ function StorefrontView({
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => onTrack("instagram_click")}
-                  className="niche-store-badge hover:border-primary/50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-pink-500/10 text-pink-500 border border-pink-500/30 hover:border-pink-500/60 transition-colors"
                 >
                   <Instagram size={13} className="text-pink-500" /> @{insta}
                 </a>
@@ -344,10 +359,36 @@ function StorefrontView({
         </div>
       </header>
 
+      {/* Grid de 4 Diferenciais da Loja */}
+      <section className="max-w-5xl mx-auto px-4 mt-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {storeDifferentials.slice(0, 4).map((diff: any, idx: number) => (
+            <div
+              key={idx}
+              className="rounded-2xl border border-border/80 bg-card/75 backdrop-blur-md p-3.5 text-center flex flex-col items-center justify-center gap-1.5 shadow-2xs hover:border-primary/40 transition-all"
+            >
+              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+                {diff.icon === "shield" ? (
+                  <ShieldCheck className="h-4.5 w-4.5" />
+                ) : diff.icon === "bag" ? (
+                  <ShoppingBag className="h-4.5 w-4.5" />
+                ) : diff.icon === "heart" ? (
+                  <Heart className="h-4.5 w-4.5" />
+                ) : (
+                  <Truck className="h-4.5 w-4.5" />
+                )}
+              </span>
+              <span className="text-xs font-bold text-foreground">{diff.title}</span>
+              <span className="text-[11px] text-muted-foreground line-clamp-1">{diff.desc}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* 2. Barra de Busca e Navegação por Categorias */}
       {parsedProducts.length > 0 && (
         <section
-          className="niche-store-catalog max-w-2xl mx-auto px-4 mt-6"
+          className="niche-store-catalog max-w-5xl mx-auto px-4 mt-6"
           aria-label="Catálogo de produtos"
         >
           {/* Campo de Busca Rápida */}
@@ -426,7 +467,7 @@ function StorefrontView({
             </div>
           </div>
 
-          {/* Grade de Produtos Moderna (Carrossel Touch no Mobile / Grid no Desktop) */}
+          {/* Grade de Produtos Moderna (Grid Responsivo de E-commerce) */}
           {filteredProducts.length === 0 ? (
             <div className="py-12 text-center rounded-2xl border border-dashed border-border/80 bg-surface-elevated/20 p-6">
               <ShoppingBag size={32} className="mx-auto text-muted-foreground/60 mb-2" />
@@ -436,11 +477,11 @@ function StorefrontView({
               </p>
             </div>
           ) : (
-            <div className="flex gap-3.5 sm:gap-4 overflow-x-auto no-scrollbar snap-x snap-mandatory sm:grid sm:grid-cols-2 md:grid-cols-3 pb-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-3">
               {filteredProducts.map((item) => {
                 const qtyInCart = cart[item.id] ?? 0;
                 return (
-                  <article key={item.id} className="niche-store-card group shrink-0 w-[230px] sm:w-auto snap-start">
+                  <article key={item.id} className="niche-store-card group w-full flex flex-col justify-between">
                     {/* Imagem do Produto */}
                     <div className="niche-store-card-media relative">
                       {item.image_url ? (
@@ -561,7 +602,7 @@ function StorefrontView({
       {/* 3. Seção de Serviços e Procedimentos Adicionais (se houver) */}
       {serviceItems.length > 0 && (
         <section
-          className="niche-store-services-wrap max-w-2xl mx-auto px-4 mt-8"
+          className="niche-store-services-wrap max-w-5xl mx-auto px-4 mt-8"
           aria-label="Serviços"
         >
           <div className="flex items-center justify-between mb-3 px-1">
@@ -624,7 +665,7 @@ function StorefrontView({
       {/* 4. Avaliações de Clientes / Prova Social (se houver) */}
       {testimonials.length > 0 && (
         <section
-          className="max-w-2xl mx-auto px-4 mt-8"
+          className="max-w-5xl mx-auto px-4 mt-8"
           aria-label="Depoimentos de clientes"
         >
           <div className="text-center mb-3.5">
@@ -633,7 +674,7 @@ function StorefrontView({
             </span>
             <h2 className="text-base font-bold text-foreground">Depoimentos de Clientes</h2>
           </div>
-          <div className="grid gap-2.5">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {testimonials.slice(0, 3).map((rev: any, idx: number) => (
               <div
                 key={idx}
@@ -660,7 +701,7 @@ function StorefrontView({
       )}
 
       {/* 5. Contato, Links Adicionais & Pix */}
-      <section className="max-w-2xl mx-auto px-4 mt-8 space-y-4" aria-label="Contato e Links">
+      <section className="max-w-5xl mx-auto px-4 mt-8 space-y-4" aria-label="Contato e Links">
         {(secondaryLinks.length > 0 || whats || insta || address) && (
           <div className="space-y-2">
             <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">

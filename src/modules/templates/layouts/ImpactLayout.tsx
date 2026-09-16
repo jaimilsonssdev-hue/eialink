@@ -3,7 +3,10 @@ import {
   ArrowUpRight,
   BadgeCheck,
   CalendarCheck,
+  CheckCircle2,
   Clock,
+  Dumbbell,
+  Gem,
   HeartHandshake,
   Instagram,
   MapPin,
@@ -11,8 +14,11 @@ import {
   Phone,
   Search,
   ShieldCheck,
+  ShoppingBag,
   Sparkles,
   Star,
+  Stethoscope,
+  UtensilsCrossed,
   Wrench,
 } from "lucide-react";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
@@ -21,6 +27,7 @@ import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
 import { whatsappUrl } from "@/lib/whatsapp";
 import type { PublicLink } from "@/components/public-profile/types";
+import { detectNicheKey } from "@/modules/prospecting/nichePresets";
 
 /**
  * ImpactLayout: Modelo VIP de Altíssimo Impacto Visual e Máxima Conversão.
@@ -35,6 +42,140 @@ import type { PublicLink } from "@/components/public-profile/types";
  * - Card de localização geográfica com rota para Google Maps
  * - Botão flutuante suave com pulso
  */
+function renderNicheFallbackIcon(nicheKey: string) {
+  switch (nicheKey) {
+    case "loja":
+      return <ShoppingBag className="h-5 w-5" />;
+    case "beleza":
+      return <Sparkles className="h-5 w-5" />;
+    case "delivery":
+    case "restaurante":
+      return <UtensilsCrossed className="h-5 w-5" />;
+    case "clinica":
+    case "odontologia":
+      return <Stethoscope className="h-5 w-5" />;
+    case "fitness":
+      return <Dumbbell className="h-5 w-5" />;
+    case "psicologia":
+      return <HeartHandshake className="h-5 w-5" />;
+    case "oficina":
+    case "auto":
+      return <Wrench className="h-5 w-5" />;
+    default:
+      return <Sparkles className="h-5 w-5" />;
+  }
+}
+
+function renderDiffIcon(iconName?: string) {
+  switch (iconName) {
+    case "shield":
+      return <ShieldCheck className="h-5 w-5" />;
+    case "heart":
+      return <HeartHandshake className="h-5 w-5" />;
+    case "clock":
+      return <Clock className="h-5 w-5" />;
+    case "check":
+      return <CheckCircle2 className="h-5 w-5" />;
+    case "sparkles":
+      return <Sparkles className="h-5 w-5" />;
+    case "star":
+      return <Star className="h-5 w-5" />;
+    case "bag":
+      return <ShoppingBag className="h-5 w-5" />;
+    default:
+      return <BadgeCheck className="h-5 w-5" />;
+  }
+}
+
+function getDefaultDifferentials(nicheKey: string) {
+  switch (nicheKey) {
+    case "loja":
+      return [
+        { title: "Envio Seguro", desc: "Entrega ágil com rastreio garantido", icon: "shield" },
+        { title: "Produtos Selecionados", desc: "Qualidade de alto padrão e procedência", icon: "bag" },
+        { title: "Compra 100% Segura", desc: "Pagamentos facilitados via Pix e cartões", icon: "check" },
+        { title: "Atendimento Humanizado", desc: "Suporte dedicado pelo WhatsApp", icon: "heart" },
+      ];
+    case "beleza":
+      return [
+        { title: "Hora Marcada", desc: "Pontualidade e respeito total ao seu tempo", icon: "clock" },
+        { title: "Produtos Premium", desc: "Cosméticos e linhas de tratamento de ponta", icon: "sparkles" },
+        { title: "Ambiente Acolhedor", desc: "Espaço climatizado e confortável", icon: "badge" },
+        { title: "Especialistas no Assunto", desc: "Técnicas atualizadas e visagismo sob medida", icon: "heart" },
+      ];
+    case "delivery":
+    case "restaurante":
+      return [
+        { title: "Ingredientes Selecionados", desc: "Preparo artesanal com frescor diário", icon: "badge" },
+        { title: "Entrega Quentinha", desc: "Embalagens térmicas que preservam o sabor", icon: "shield" },
+        { title: "Sabor Incomparável", desc: "Receitas exclusivas e aprovadas pelos clientes", icon: "sparkles" },
+        { title: "Higiene Impecável", desc: "Rigor absoluto em todas as etapas", icon: "check" },
+      ];
+    case "clinica":
+    case "odontologia":
+      return [
+        { title: "Corpo Clínico Especializado", desc: "Profissionais certificados e atualizados", icon: "badge" },
+        { title: "Tecnologia & Precisão", desc: "Equipamentos modernos para diagnósticos", icon: "shield" },
+        { title: "Ambiente Sanitizado", desc: "Biossegurança rigorosa e total conforto", icon: "check" },
+        { title: "Cuidado Humanizado", desc: "Atenção individualizada a cada paciente", icon: "heart" },
+      ];
+    case "fitness":
+      return [
+        { title: "Equipamentos Modernos", desc: "Aparelhos ergonômicos de última geração", icon: "shield" },
+        { title: "Acompanhamento Técnico", desc: "Instrutores preparados para orientar seu treino", icon: "badge" },
+        { title: "Ambiente Motivador", desc: "Espaço amplo, climatizado e dinâmico", icon: "sparkles" },
+        { title: "Planos Flexíveis", desc: "Condições transparentes sem pegadinhas", icon: "check" },
+      ];
+    case "psicologia":
+      return [
+        { title: "Sigilo & Ética Profissional", desc: "Espaço confidencial em conformidade com o CRP", icon: "shield" },
+        { title: "Escuta Acolhedora", desc: "Atendimento humanizado e livre de julgamentos", icon: "heart" },
+        { title: "Online e Presencial", desc: "Flexibilidade para atendimento de onde preferir", icon: "check" },
+        { title: "Abordagem Personalizada", desc: "Terapia focada nas suas demandas e evolução", icon: "sparkles" },
+      ];
+    case "oficina":
+    case "auto":
+      return [
+        { title: "Diagnóstico Computadorizado", desc: "Precisão na avaliação do seu veículo", icon: "shield" },
+        { title: "Peças de Primeira Linha", desc: "Garantia e durabilidade para sua segurança", icon: "badge" },
+        { title: "Mecânicos Qualificados", desc: "Experiência comprovada em revisões e reparos", icon: "check" },
+        { title: "Orçamento Transparente", desc: "Sem surpresas na hora de retirar seu carro", icon: "heart" },
+      ];
+    default:
+      return [
+        { title: "Atendimento de Confiança", desc: "Compromisso com pontualidade e respeito", icon: "badge" },
+        { title: "Qualidade Garantida", desc: "Dedicação e materiais de primeira linha", icon: "shield" },
+        { title: "Cuidado no Detalhe", desc: "Foco nas suas reais necessidades", icon: "sparkles" },
+        { title: "Acabamento Profissional", desc: "Satisfação assegurada em cada entrega", icon: "heart" },
+      ];
+  }
+}
+
+function getDefaultBadge(nicheKey: string) {
+  switch (nicheKey) {
+    case "loja":
+      return "Coleção Exclusiva & Pronta Entrega";
+    case "beleza":
+      return "Excelência em Beleza & Estética VIP";
+    case "delivery":
+      return "Sabor Artesanal & Entrega Rápida";
+    case "restaurante":
+      return "Gastronomia & Experiência de Alto Padrão";
+    case "clinica":
+    case "odontologia":
+      return "Saúde & Cuidado com Excelência";
+    case "fitness":
+      return "Treinos & Alta Performance";
+    case "psicologia":
+      return "Espaço Seguro de Acolhimento & Saúde Mental";
+    case "oficina":
+    case "auto":
+      return "Centro Automotivo & Revisão de Precisão";
+    default:
+      return "Qualidade Premium Garantida";
+  }
+}
+
 export class ImpactLayout implements TemplateLayoutRenderer {
   layoutId() {
     return "impact" as const;
@@ -53,6 +194,13 @@ export class ImpactLayout implements TemplateLayoutRenderer {
     const phone = (bio as any).phone?.replace(/\D/g, "");
 
     const socialData = (bio.social_links as Record<string, any>) || {};
+    const nicheKey = detectNicheKey((bio.social_links as any)?.niche, bio.display_name);
+    const vipBadge = socialData.vip_badge || getDefaultBadge(nicheKey);
+    const differentials = Array.isArray(socialData.differentials) && socialData.differentials.length > 0
+      ? socialData.differentials
+      : getDefaultDifferentials(nicheKey);
+    const differentialsTitle = socialData.differentials_title || "Nosso Padrão de Atendimento";
+
     const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;
     const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
@@ -125,7 +273,7 @@ export class ImpactLayout implements TemplateLayoutRenderer {
           <div className="flex flex-wrap items-center justify-center gap-2 mb-4">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 px-3.5 py-1 text-xs font-bold tracking-wide text-foreground uppercase shadow-xs">
               <BadgeCheck className="h-4 w-4 text-primary" />
-              <span>Qualidade Premium Garantida</span>
+              <span>{vipBadge}</span>
             </span>
             {rating && (
               <span className="inline-flex items-center gap-1 rounded-full border border-amber-500/40 bg-amber-500/10 px-3.5 py-1 text-xs font-bold text-amber-500 shadow-xs">
@@ -205,47 +353,30 @@ export class ImpactLayout implements TemplateLayoutRenderer {
         <section className="relative border-t border-border/50 px-4 sm:px-6 py-10 sm:py-14 max-w-4xl mx-auto">
           <div className="text-center max-w-xl mx-auto mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-bold uppercase tracking-tight">
-              Nosso Padrão de Atendimento
+              {differentialsTitle}
             </h2>
             <div className="mx-auto mt-2 h-1 w-12 rounded-full bg-primary" />
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-4">
-            <div className="rounded-2xl border border-border/80 bg-card/70 backdrop-blur-md p-3.5 sm:p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-primary/50 transition-all hover:-translate-y-0.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
-                <BadgeCheck className="h-5 w-5" />
-              </span>
-              <span className="text-xs sm:text-sm font-semibold text-foreground">
-                Atendimento de Confiança
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-border/80 bg-card/70 backdrop-blur-md p-3.5 sm:p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-primary/50 transition-all hover:-translate-y-0.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
-                <ShieldCheck className="h-5 w-5" />
-              </span>
-              <span className="text-xs sm:text-sm font-semibold text-foreground">
-                Produtos Selecionados
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-border/80 bg-card/70 backdrop-blur-md p-3.5 sm:p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-primary/50 transition-all hover:-translate-y-0.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
-                <Sparkles className="h-5 w-5" />
-              </span>
-              <span className="text-xs sm:text-sm font-semibold text-foreground">
-                Cuidado no Detalhe
-              </span>
-            </div>
-
-            <div className="rounded-2xl border border-border/80 bg-card/70 backdrop-blur-md p-3.5 sm:p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-primary/50 transition-all hover:-translate-y-0.5">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
-                <HeartHandshake className="h-5 w-5" />
-              </span>
-              <span className="text-xs sm:text-sm font-semibold text-foreground">
-                Acabamento Profissional
-              </span>
-            </div>
+            {differentials.slice(0, 4).map((diff: any, idx: number) => (
+              <div
+                key={idx}
+                className="rounded-2xl border border-border/80 bg-card/70 backdrop-blur-md p-3.5 sm:p-4 text-center flex flex-col items-center justify-center gap-2 hover:border-primary/50 transition-all hover:-translate-y-0.5"
+              >
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-primary/10 text-primary">
+                  {renderDiffIcon(diff.icon)}
+                </span>
+                <span className="text-xs sm:text-sm font-semibold text-foreground">
+                  {diff.title}
+                </span>
+                {diff.desc && (
+                  <p className="text-[11px] text-muted-foreground leading-tight line-clamp-2">
+                    {diff.desc}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         </section>
 
@@ -280,7 +411,7 @@ export class ImpactLayout implements TemplateLayoutRenderer {
                       </div>
                     ) : (
                       <div className="inline-flex rounded-xl bg-primary/15 p-3 text-primary mb-3.5 transition-transform group-hover:scale-110 duration-300">
-                        <Wrench className="h-5 w-5" />
+                        {renderNicheFallbackIcon(nicheKey)}
                       </div>
                     )}
 
@@ -325,57 +456,37 @@ export class ImpactLayout implements TemplateLayoutRenderer {
           </section>
         )}
 
-        {/* SEÇÃO "POR QUE ESCOLHER NOSSO TRABALHO?" */}
-        <section className="relative border-t border-border/50 px-4 sm:px-6 py-10 sm:py-14 max-w-4xl mx-auto">
-          <div className="text-center max-w-xl mx-auto mb-8">
-            <h2 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight">
-              Por que escolher nosso trabalho?
-            </h2>
-            <div className="mx-auto mt-2 h-1 w-16 rounded-full bg-primary" />
-          </div>
+        {/* SEÇÕES COMPLEMENTARES (VÍDEO EM DESTAQUE, HISTÓRIA / SOBRE NÓS) */}
+        {supplemental}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
-            <div className="flex items-center gap-3.5 rounded-xl border border-border/80 bg-card/75 backdrop-blur-md px-4 py-3.5">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/10 text-primary">
-                <Search className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-bold text-foreground">Cuidado nos mínimos detalhes</h4>
-                <p className="text-[11px] text-muted-foreground">Cada trabalho executado com precisão e esmero.</p>
-              </div>
+        {/* SEÇÃO DE DIFERENCIAIS DA EMPRESA */}
+        {differentials.length > 0 && (
+          <section className="relative border-t border-border/50 px-4 sm:px-6 py-10 sm:py-14 max-w-4xl mx-auto">
+            <div className="text-center max-w-xl mx-auto mb-8">
+              <h2 className="text-2xl sm:text-3xl font-extrabold uppercase tracking-tight">
+                {differentialsTitle}
+              </h2>
+              <div className="mx-auto mt-2 h-1 w-16 rounded-full bg-primary" />
             </div>
 
-            <div className="flex items-center gap-3.5 rounded-xl border border-border/80 bg-card/75 backdrop-blur-md px-4 py-3.5">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/10 text-primary">
-                <ShieldCheck className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-bold text-foreground">Procedimentos seguros</h4>
-                <p className="text-[11px] text-muted-foreground">Garantia de proteção e confiabilidade total.</p>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl mx-auto">
+              {differentials.map((diff: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="flex items-center gap-3.5 rounded-xl border border-border/80 bg-card/75 backdrop-blur-md px-4 py-3.5"
+                >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/10 text-primary">
+                    {renderDiffIcon(diff.icon)}
+                  </span>
+                  <div className="min-w-0">
+                    <h4 className="text-xs sm:text-sm font-bold text-foreground">{diff.title}</h4>
+                    <p className="text-[11px] text-muted-foreground">{diff.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-
-            <div className="flex items-center gap-3.5 rounded-xl border border-border/80 bg-card/75 backdrop-blur-md px-4 py-3.5">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/10 text-primary">
-                <HeartHandshake className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-bold text-foreground">Atendimento personalizado</h4>
-                <p className="text-[11px] text-muted-foreground">Foco nas suas reais necessidades e expectativas.</p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3.5 rounded-xl border border-border/80 bg-card/75 backdrop-blur-md px-4 py-3.5">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg border border-primary/40 bg-primary/10 text-primary">
-                <BadgeCheck className="h-5 w-5" />
-              </span>
-              <div className="min-w-0">
-                <h4 className="text-xs sm:text-sm font-bold text-foreground">Qualidade garantida</h4>
-                <p className="text-[11px] text-muted-foreground">Satisfação assegurada por quem entende do assunto.</p>
-              </div>
-            </div>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* CARD DE LOCALIZAÇÃO GEOGRÁFICA COM GOOGLE MAPS */}
         {(address || openingHours) && (
@@ -482,9 +593,6 @@ export class ImpactLayout implements TemplateLayoutRenderer {
             <PixCard pixKey={bio.pix_key} onTrack={onTrack} />
           </div>
         )}
-
-        {/* SEÇÕES COMPLEMENTARES */}
-        {supplemental}
 
         {/* BANNER FINAL DE CONVERSÃO */}
         <section className="relative mt-8 px-4 sm:px-6 py-12 text-center rounded-3xl max-w-4xl mx-auto overflow-hidden bg-gradient-to-b from-card to-background border border-border/80 shadow-2xl">

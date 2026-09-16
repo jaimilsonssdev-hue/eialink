@@ -2,14 +2,19 @@ import type { ReactNode } from "react";
 import {
   ArrowUpRight,
   Award,
+  BadgeCheck,
   Building2,
   CheckCircle2,
   Clock,
+  HeartHandshake,
   Instagram,
   MapPin,
   MessageCircle,
   Phone,
+  Search,
   ShieldCheck,
+  ShoppingBag,
+  Sparkles,
   Star,
 } from "lucide-react";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
@@ -17,6 +22,50 @@ import type { TemplateRenderModel } from "../types";
 import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
 import { whatsappUrl } from "@/lib/whatsapp";
+import { detectNicheKey } from "@/modules/prospecting/nichePresets";
+
+function renderDiffIcon(iconName?: string) {
+  switch (iconName) {
+    case "shield":
+      return <ShieldCheck className="h-5 w-5" />;
+    case "heart":
+      return <HeartHandshake className="h-5 w-5" />;
+    case "clock":
+      return <Clock className="h-5 w-5" />;
+    case "check":
+      return <CheckCircle2 className="h-5 w-5" />;
+    case "sparkles":
+      return <Sparkles className="h-5 w-5" />;
+    case "star":
+      return <Star className="h-5 w-5" />;
+    case "bag":
+      return <ShoppingBag className="h-5 w-5" />;
+    case "search":
+      return <Search className="h-5 w-5" />;
+    default:
+      return <BadgeCheck className="h-5 w-5" />;
+  }
+}
+
+function getDefaultDifferentials(nicheKey: string) {
+  switch (nicheKey) {
+    case "oficina":
+    case "auto":
+      return [
+        { title: "Diagnóstico Computadorizado", desc: "Precisão na avaliação do seu veículo", icon: "shield" },
+        { title: "Peças de Primeira Linha", desc: "Garantia e durabilidade para sua segurança", icon: "badge" },
+        { title: "Mecânicos Qualificados", desc: "Experiência comprovada em revisões e reparos", icon: "check" },
+        { title: "Orçamento Transparente", desc: "Sem surpresas na hora de retirar seu veículo", icon: "heart" },
+      ];
+    default:
+      return [
+        { title: "Atendimento de Confiança", desc: "Compromisso com pontualidade e respeito", icon: "badge" },
+        { title: "Qualidade Garantida", desc: "Dedicação e materiais de primeira linha", icon: "shield" },
+        { title: "Cuidado no Detalhe", desc: "Foco nas suas reais necessidades", icon: "sparkles" },
+        { title: "Acabamento Profissional", desc: "Satisfação assegurada em cada entrega", icon: "heart" },
+      ];
+  }
+}
 
 /**
  * BusinessLayout: Layout Corporativo & Serviços de Alta Conversão.
@@ -41,6 +90,13 @@ export class BusinessLayout implements TemplateLayoutRenderer {
     const phone = (bio as any).phone?.replace(/\D/g, "");
 
     const socialData = (bio.social_links as Record<string, any>) || {};
+    const nicheKey = detectNicheKey((bio.social_links as any)?.niche, bio.display_name);
+    const vipBadge = socialData.vip_badge || "Empresa & Serviços";
+    const differentials = Array.isArray(socialData.differentials) && socialData.differentials.length > 0
+      ? socialData.differentials
+      : getDefaultDifferentials(nicheKey);
+    const differentialsTitle = socialData.differentials_title || "Nossos Diferenciais";
+
     const rating = socialData.google_rating;
     const reviewsCount = socialData.reviews_count;
     const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
@@ -71,7 +127,7 @@ export class BusinessLayout implements TemplateLayoutRenderer {
             <div className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-4 flex items-center justify-between z-10">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-black/60 backdrop-blur-md text-white border border-white/15">
                 <Building2 className="h-3.5 w-3.5 text-primary" />
-                <span>Empresa & Serviços</span>
+                <span>{vipBadge}</span>
               </span>
               <button
                 type="button"
@@ -276,6 +332,37 @@ export class BusinessLayout implements TemplateLayoutRenderer {
                   </div>
                 );
               })}
+            </div>
+          </section>
+        )}
+
+        {/* DIFERENCIAIS DA EMPRESA */}
+        {differentials.length > 0 && (
+          <section className="space-y-3.5" aria-label="Diferenciais da Empresa">
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-primary">
+                Por que nos escolher
+              </p>
+              <h2 className="text-lg sm:text-xl font-bold text-foreground">
+                {differentialsTitle}
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              {differentials.map((diff: any, idx: number) => (
+                <div
+                  key={idx}
+                  className="p-4 rounded-2xl border border-border/60 bg-card/60 hover:border-primary/40 transition-all flex items-start gap-3.5"
+                >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-primary/30 bg-primary/10 text-primary">
+                    {renderDiffIcon(diff.icon)}
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="text-xs sm:text-sm font-bold text-foreground">{diff.title}</h3>
+                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{diff.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         )}

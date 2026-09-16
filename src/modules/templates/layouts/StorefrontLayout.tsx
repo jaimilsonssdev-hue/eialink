@@ -17,6 +17,7 @@ import {
   Share2,
   ShieldCheck,
   ShoppingBag,
+  Sparkles,
   Star,
   Tag,
   Trash2,

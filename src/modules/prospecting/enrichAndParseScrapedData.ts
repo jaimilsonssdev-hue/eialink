@@ -20,7 +20,7 @@ import type {
   TokensDesign,
   ConfiguracoesIntegracao,
 } from "@/pages/BioLinkView";
-import { detectNicheKey, getPresetForCompany, NICHE_GALLERIES } from "./nichePresets";
+import { detectNicheKey, getPresetForCompany, getSignatureHeroArchitectureForNiche, NICHE_GALLERIES } from "./nichePresets";
 import { extractBrazilianPhone, normalizeName, normalizePhone, stripAccents } from "./scoring";
 
 export interface GoogleRawDataInput {
@@ -472,6 +472,7 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
     tokens_design: {
       layout_esqueleto: layoutEsqueleto,
       estilo_layout: estiloLayout,
+      hero_architecture: getSignatureHeroArchitectureForNiche(canonicalNiche),
       tipo_fundo: tipoFundo,
       fundo_valores: {
         cor_gradiente_1: corGrad1,
@@ -489,9 +490,16 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
     },
     conteudo_perfil: {
       avatar_url: avatarUrl,
+      hero_image_url: imagemFundo || avatarUrl,
       titulo: cleanCompanyName,
       subtitulo: subtituloPerfil,
       bio_curta: bioCurta,
+      categoria: raw.category || raw.categoria || "Excelência & Qualidade",
+      cidade: city,
+      nota_google: rating ? rating.toFixed(1) : "5.0",
+      total_avaliacoes: reviewsCount ? `${reviewsCount}+` : "50+",
+      whatsapp_url: whatsappUrl,
+      whatsapp_label: "Falar no WhatsApp",
       links,
     },
   };

@@ -22,6 +22,7 @@ export interface NichePreset {
   modelName: string; // Ex: "Autoridade Especialista", "Dark Spotlight VIP", "Vitrine Executiva Clean"
   template_id: string;
   theme: string;
+  hero_architecture?: "immersive" | "asymmetric" | "split" | "centered" | "typographic";
   cover_url: string;
   avatar_url: string;
   generateHeadline: (companyName: string, city: string) => string;
@@ -38,7 +39,7 @@ export interface CuratedPhoto {
 }
 
 // ==========================================
-// 1. GALERIAS DE FOTOS CURADAS (19 NICHOS)
+// 1. GALERIAS DE FOTOS CURADAS (26 NICHOS COM 5 FOTOS HD AUTÊNTICAS CADA)
 // ==========================================
 export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: CuratedPhoto[] }> = {
   loja: {
@@ -47,6 +48,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "loja-2", url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80", label: "Moda & Compras Fashion" },
       { id: "loja-3", url: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=1200&q=80", label: "Boutique & Coleção Exclusiva" },
       { id: "loja-4", url: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=1200&q=80", label: "Vitrine Moderna & Tendências" },
+      { id: "loja-5", url: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200&q=80", label: "Interior de Loja & Exposição" },
     ],
     avatars: [
       { id: "loja-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Lojista / Diretora Criativa" },
@@ -59,6 +61,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "del-2", url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80", label: "Pizza Saindo do Forno" },
       { id: "del-3", url: "https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=1200&q=80", label: "Embalagem Delivery Rápido" },
       { id: "del-4", url: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80", label: "Combo de Lanches & Batata" },
+      { id: "del-5", url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=80", label: "Pizza Artesanal & Forno a Lenha" },
     ],
     avatars: [
       { id: "del-av-1", url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=400&q=80", label: "Mestre Chapeiro / Chef" },
@@ -71,6 +74,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "rest-2", url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80", label: "Prato Gourmet À La Carte" },
       { id: "rest-3", url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80", label: "Mesa Posta & Bistrô" },
       { id: "rest-4", url: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=1200&q=80", label: "Cozinha Contemporânea" },
+      { id: "rest-5", url: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=80", label: "Ambiente Gastronômico Sofisticado" },
     ],
     avatars: [
       { id: "rest-av-1", url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=400&q=80", label: "Chef Executivo" },
@@ -83,6 +87,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "sorv-2", url: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=1200&q=80", label: "Taça de Sorvete Cremoso" },
       { id: "sorv-3", url: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=1200&q=80", label: "Tigela de Açaí com Frutas" },
       { id: "sorv-4", url: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=1200&q=80", label: "Gelato Italiano Especial" },
+      { id: "sorv-5", url: "https://images.unsplash.com/photo-1576506295286-5cda18df43e7?auto=format&fit=crop&w=1200&q=80", label: "Taça de Sorvete e Sobremesas Geladas" },
     ],
     avatars: [
       { id: "sorv-av-1", url: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=400&q=80", label: "Emblema Gelato Italiano" },
@@ -95,6 +100,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "beb-2", url: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=1200&q=80", label: "Chopp Artesanal & Cerveja Gelada" },
       { id: "beb-3", url: "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=1200&q=80", label: "Destilados & Balcão de Coquetéis" },
       { id: "beb-4", url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=1200&q=80", label: "Prateleira de Bebidas & Conveniência" },
+      { id: "beb-5", url: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80", label: "Bar, Balcão & Distribuidora de Bebidas" },
     ],
     avatars: [
       { id: "beb-av-1", url: "https://images.unsplash.com/photo-1567696911980-2eed69a46042?auto=format&fit=crop&w=400&q=80", label: "Emblema Adega & Cervejas" },
@@ -107,6 +113,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "barb-2", url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80", label: "Bancada de Navalha & Tesouras" },
       { id: "barb-3", url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1200&q=80", label: "Ambiente Barber Club Moderno" },
       { id: "barb-4", url: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1200&q=80", label: "Luminária & Estilo Clássico" },
+      { id: "barb-5", url: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=1200&q=80", label: "Corte & Barbaterapia Profissional" },
     ],
     avatars: [
       { id: "barb-av-1", url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=400&q=80", label: "Emblema Barber Shop" },
@@ -119,6 +126,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "bel-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Studio de Estética & Skincare" },
       { id: "bel-3", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1200&q=80", label: "Nail Studio & Unhas em Gel" },
       { id: "bel-4", url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80", label: "Spa Relaxante & Cuidados Faciais" },
+      { id: "bel-5", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80", label: "Clínica Estética & Procedimentos Faciais" },
     ],
     avatars: [
       { id: "bel-av-1", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=400&q=80", label: "Emblema Studio de Beleza" },
@@ -131,6 +139,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "ofic-2", url: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=80", label: "Mecânica & Motor de Precisão" },
       { id: "ofic-3", url: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1200&q=80", label: "Pneus, Alinhamento & Rodas" },
       { id: "ofic-4", url: "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&fit=crop&w=1200&q=80", label: "Diagnóstico Computadorizado" },
+      { id: "ofic-5", url: "https://images.unsplash.com/photo-1613214149922-f1809c99b414?auto=format&fit=crop&w=1200&q=80", label: "Revisão & Mecânica de Alta Performance" },
     ],
     avatars: [
       { id: "ofic-av-1", url: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80", label: "Mecânico Chefe Especialista" },
@@ -143,6 +152,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "clin-2", url: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80", label: "Consultório & Estetoscópio" },
       { id: "clin-3", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80", label: "Exame Clínico de Precisão" },
       { id: "clin-4", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80", label: "Estrutura Médica Integrada" },
+      { id: "clin-5", url: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1200&q=80", label: "Centro Médico & Consultório Clínico" },
     ],
     avatars: [
       { id: "clin-av-1", url: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=400&q=80", label: "Dr. Médico Especialista" },
@@ -155,6 +165,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "psi-2", url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80", label: "Espaço Tranquilo & Luz Natural" },
       { id: "psi-3", url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80", label: "Mindfulness & Equilíbrio Mental" },
       { id: "psi-4", url: "https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=1200&q=80", label: "Apoio Emocional & Escuta Ativa" },
+      { id: "psi-5", url: "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1200&q=80", label: "Sessão de Psicoterapia & Bem-Estar" },
     ],
     avatars: [
       { id: "psi-av-1", url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80", label: "Dra. Psicóloga Clínica" },
@@ -167,6 +178,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "pet-2", url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1200&q=80", label: "Rações Premium & Loja Pet" },
       { id: "pet-3", url: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=1200&q=80", label: "Consultório Veterinário" },
       { id: "pet-4", url: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=1200&q=80", label: "Espaço Pet Care & Carinho" },
+      { id: "pet-5", url: "https://images.unsplash.com/photo-1535294435445-d7249524ef2e?auto=format&fit=crop&w=1200&q=80", label: "Veterinária & Pet Care Especializado" },
     ],
     avatars: [
       { id: "pet-av-1", url: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80", label: "Dra. Médica Veterinária" },
@@ -179,6 +191,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "adv-2", url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80", label: "Balança da Justiça & Direito" },
       { id: "adv-3", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80", label: "Escritório Corporativo Moderno" },
       { id: "adv-4", url: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1200&q=80", label: "Biblioteca & Jurisprudência" },
+      { id: "adv-5", url: "https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?auto=format&fit=crop&w=1200&q=80", label: "Tribunal, Livros de Direito & Jurisprudência" },
     ],
     avatars: [
       { id: "adv-av-1", url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80", label: "Dr. Advogado Sênior" },
@@ -191,6 +204,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "odo-2", url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80", label: "Sorriso & Estética Dental" },
       { id: "odo-3", url: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1200&q=80", label: "Escaneamento & Tecnologia 3D" },
       { id: "odo-4", url: "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=1200&q=80", label: "Recepção Odontológica Clean" },
+      { id: "odo-5", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80", label: "Equipamentos Odontológicos Avançados" },
     ],
     avatars: [
       { id: "odo-av-1", url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80", label: "Dr. Cirurgião-Dentista" },
@@ -203,6 +217,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "cons-2", url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80", label: "Planta Executiva & Engenharia" },
       { id: "cons-3", url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80", label: "Reforma & Acabamento de Alto Padrão" },
       { id: "cons-4", url: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=1200&q=80", label: "Construção Civil & Ferramentas" },
+      { id: "cons-5", url: "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1200&q=80", label: "Estrutura Arquitetônica & Concreto" },
     ],
     avatars: [
       { id: "cons-av-1", url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80", label: "Engenheiro Civil Responsável" },
@@ -215,6 +230,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "imob-2", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80", label: "Apartamentos Decorados Exclusivos" },
       { id: "imob-3", url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80", label: "Condomínios & Mansões" },
       { id: "imob-4", url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80", label: "Consultoria Imobiliária" },
+      { id: "imob-5", url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80", label: "Mansão Contemporânea com Piscina" },
     ],
     avatars: [
       { id: "imob-av-1", url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80", label: "Corretor de Imóveis CRECI" },
@@ -227,6 +243,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "seg-2", url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80", label: "Apólice Segura & Confiança" },
       { id: "seg-3", url: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=80", label: "Seguro Auto & Viagem Segura" },
       { id: "seg-4", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80", label: "Planejamento Patrimonial" },
+      { id: "seg-5", url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80", label: "Aperto de Mão Corporativo & Segurança" },
     ],
     avatars: [
       { id: "seg-av-1", url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80", label: "Corretor de Seguros Especialista" },
@@ -239,6 +256,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "aut-2", url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80", label: "Manutenção Especializada" },
       { id: "aut-3", url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80", label: "Atendimento Pontual ao Cliente" },
       { id: "aut-4", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80", label: "Planejamento & Orçamento" },
+      { id: "aut-5", url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1200&q=80", label: "Serviços de Reparo e Instalação" },
     ],
     avatars: [
       { id: "aut-av-1", url: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80", label: "Especialista Técnico Autônomo" },
@@ -251,6 +269,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "pes-2", url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80", label: "Café, Laptop & Criação" },
       { id: "pes-3", url: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80", label: "Networking & Autoridade Digital" },
       { id: "pes-4", url: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80", label: "Portfólio & Projetos Autorais" },
+      { id: "pes-5", url: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80", label: "Workshop, Apresentação & Presença" },
     ],
     avatars: [
       { id: "pes-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Criador(a) de Conteúdo" },
@@ -263,6 +282,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "fit-2", url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80", label: "Treino Funcional de Alta Intensidade" },
       { id: "fit-3", url: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80", label: "Musculação & Aparelhos Modernos" },
       { id: "fit-4", url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=80", label: "Performance Esportiva" },
+      { id: "fit-5", url: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80", label: "Área de Musculação & Treinamento Pesado" },
     ],
     avatars: [
       { id: "fit-av-1", url: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?auto=format&fit=crop&w=400&q=80", label: "Personal Trainer Certificado" },
@@ -275,6 +295,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "nut-2", url: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80", label: "Consulta Nutricional & Fita Métrica" },
       { id: "nut-3", url: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80", label: "Frutas Frescas & Detox" },
       { id: "nut-4", url: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=1200&q=80", label: "Planejamento Alimentar Individual" },
+      { id: "nut-5", url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80", label: "Prato Nutricional Balanceado & Salada Viva" },
     ],
     avatars: [
       { id: "nut-av-1", url: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80", label: "Dra. Nutricionista Clínica" },
@@ -287,6 +308,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "cos-2", url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80", label: "Ateliê & Vestido em Confecção" },
       { id: "cos-3", url: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?auto=format&fit=crop&w=1200&q=80", label: "Tecidos Nobres & Tesoura de Alfaiate" },
       { id: "cos-4", url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=80", label: "Ajuste & Acabamento Sob Medida" },
+      { id: "cos-5", url: "https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?auto=format&fit=crop&w=1200&q=80", label: "Corte e Costura em Tecido de Linho" },
     ],
     avatars: [
       { id: "cos-av-1", url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80", label: "Estilista & Mestre de Alta Costura" },
@@ -299,6 +321,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "tec-2", url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80", label: "Setup Tecnológico de TI" },
       { id: "tec-3", url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80", label: "Servidores & Infraestrutura" },
       { id: "tec-4", url: "https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=1200&q=80", label: "Suporte em Notebooks & Redes" },
+      { id: "tec-5", url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80", label: "Segurança Digital, Cibersegurança & Servidores" },
     ],
     avatars: [
       { id: "tec-av-1", url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80", label: "Técnico Especialista em Hardware" },
@@ -311,6 +334,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "mkt-2", url: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80", label: "Equipe de Estratégia Digital" },
       { id: "mkt-3", url: "https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=1200&q=80", label: "Campanhas de Tráfego & Conversão" },
       { id: "mkt-4", url: "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=1200&q=80", label: "Design, Branding & Social Media" },
+      { id: "mkt-5", url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80", label: "Estratégia de Campanhas & Performance Digital" },
     ],
     avatars: [
       { id: "mkt-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Estrategista de Marketing Digital" },
@@ -323,6 +347,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "cnt-2", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80", label: "Planejamento Tributário & Consultoria" },
       { id: "cnt-3", url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80", label: "Escritório Contábil Executivo" },
       { id: "cnt-4", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", label: "Gestão Empresarial & BPO" },
+      { id: "cnt-5", url: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80", label: "Auditoria Contábil e Documentação Fiscal" },
     ],
     avatars: [
       { id: "cnt-av-1", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80", label: "Contadora Consultiva" },
@@ -335,6 +360,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "sol-2", url: "https://images.unsplash.com/photo-1508873696983-2df57046475a?auto=format&fit=crop&w=1200&q=80", label: "Instalação Solar no Telhado" },
       { id: "sol-3", url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=1200&q=80", label: "Usina Solar & Sustentabilidade" },
       { id: "sol-4", url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1200&q=80", label: "Tecnologia e Inversores Solares" },
+      { id: "sol-5", url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80", label: "Energia Limpa Sustentável Fotovoltaica" },
     ],
     avatars: [
       { id: "sol-av-1", url: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=400&q=80", label: "Engenheiro de Energia Solar" },
@@ -347,6 +373,7 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
       { id: "ger-2", url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80", label: "Equipe em Atendimento" },
       { id: "ger-3", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", label: "Sede Corporativa" },
       { id: "ger-4", url: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80", label: "Balcão Contemporâneo" },
+      { id: "ger-5", url: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80", label: "Sede Executiva & Coworking" },
     ],
     avatars: [
       { id: "ger-av-1", url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80", label: "Consultor Executivo" },
@@ -482,6 +509,55 @@ function getNicheWhatsappConfig(key: string, idx: number) {
     message: (name: string) => `Olá! Vi o site da ${name} e gostaria de solicitar um orçamento sem compromisso.`,
   };
 }
+/**
+ * Retorna a arquitetura de hero assinada para o nicho específico.
+ */
+export function getSignatureHeroArchitectureForNiche(
+  nicheKey: string,
+  variantIndex = 0
+): "immersive" | "asymmetric" | "split" | "centered" | "typographic" {
+  if (variantIndex === 1) {
+    return "immersive"; // Modelo VIP / Spotlight sempre tem experiência imersiva
+  }
+
+  switch (nicheKey) {
+    case "clinica":
+    case "odontologia":
+    case "psicologia":
+    case "nutricao":
+      return "immersive";
+
+    case "fitness":
+    case "beleza":
+    case "barbearia":
+    case "oficina":
+      return "asymmetric";
+
+    case "loja":
+    case "delivery":
+    case "restaurante":
+    case "sorveteria":
+    case "bebidas":
+      return "centered";
+
+    case "advocacia":
+    case "contabilidade":
+    case "seguros":
+    case "tecnologia":
+      return "typographic";
+
+    case "imobiliaria":
+    case "construcao":
+    case "petshop":
+    case "energia_solar":
+    case "autonomo":
+    case "costura":
+    case "marketing":
+    case "pessoal":
+    default:
+      return "split";
+  }
+}
 
 // ==========================================
 // 2. HELPER PARA CRIAÇÃO DAS VARIANTES
@@ -527,6 +603,7 @@ function buildNicheVariants(
     return {
       nicheKey: key,
       modelName: titles[idx],
+      hero_architecture: getSignatureHeroArchitectureForNiche(key, idx),
       template_id: templates[idx],
       theme: themes[idx],
       cover_url: coverUrl,
@@ -1487,9 +1564,10 @@ export const NICHE_ALIASES: Record<string, string> = {
   pet: "petshop",
   veterinaria: "petshop",
   veterinario: "petshop",
-  imobiliaria: "imoveis",
-  corretor: "imoveis",
-  corretora: "imoveis",
+  imobiliaria: "imobiliaria",
+  imoveis: "imobiliaria",
+  corretor: "imobiliaria",
+  corretora: "imobiliaria",
   contabil: "contabilidade",
   contador: "contabilidade",
   contadora: "contabilidade",
@@ -1587,7 +1665,7 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
   }
 
   // 14. Saúde, Medicina & Clínicas
-  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|doutor|dra?\b|pediatr|fisioter|fisioterapia|fisioterapeuta|laborat[oó]rio|exames|hospital|fonoaudi|terapia\s*ocupacional|oftalmo|dermatol|ginecolog|cardiolog|ortopedi|urologi|ultrassom|raio-?x)/i.test(combined)) {
+  if (/(?:cl[ií]nic|m[eé]dic|sa[uú]de|\bdoutor[a-z]*\b|\bdra?\.?\b|pediatr|fisioter|fisioterapia|fisioterapeuta|laborat[oó]rio|exames|hospital|fonoaudi|terapia\s*ocupacional|oftalmo|dermatol|ginecolog|cardiolog|ortopedi|urologi|ultrassom|raio-?x)/i.test(combined)) {
     return "clinica";
   }
 
@@ -1705,6 +1783,7 @@ export function getVariantsForNiche(nicheKey?: string | null): NichePreset[] {
       modelName: "Modelo VIP",
       template_id: "impact-showcase",
       theme: "ocean",
+      hero_architecture: "immersive",
     };
     return [primary, vipVariant, baseVariants[1] || baseVariants[0]];
   }

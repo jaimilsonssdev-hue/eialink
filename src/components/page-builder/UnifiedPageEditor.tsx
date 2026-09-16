@@ -43,6 +43,7 @@ import {
   Wine,
   Bot,
   Zap,
+  Search,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
@@ -53,6 +54,8 @@ import { ColorPickerControl } from "./ColorPickerControl";
 import { SectionsEditor } from "./SectionsEditor";
 import { ModularSections } from "@/components/public-profile/ModularSections";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
+import { ChatFlowEditor } from "./ChatFlowEditor";
+import { SeoEditor } from "./SeoEditor";
 import { parseSocialLinks } from "@/lib/social-links";
 import {
   freeTemplateBase,
@@ -103,7 +106,7 @@ type BioForm = Pick<
   | "motion_ambient"
 >;
 
-type EditorTab = "visual" | "sections" | "profile" | "contact" | "catalog";
+type EditorTab = "visual" | "sections" | "profile" | "contact" | "catalog" | "seo";
 
 type EditableLink = Pick<PublicLink, "id" | "title" | "url" | "active" | "position">;
 
@@ -123,10 +126,10 @@ export const NICHE_MODELS: NicheModelConfig[] = [
   {
     id: "impacto",
     templateId: "impact-showcase",
-    nicheKey: "oficina",
-    nicheCategory: "Impacto VIP & Automotivo",
-    title: "Impacto VIP (Estilo Cremosinho)",
-    subtitle: "Halo luminoso, selo de qualidade, diferenciais em vidro, serviços e rota Google Maps",
+    nicheKey: "geral",
+    nicheCategory: "Modelo VIP",
+    title: "Modelo VIP",
+    subtitle: "Halo luminoso, selo de qualidade, diferenciais em vidro, vitrine de serviços e rota Google Maps",
     theme: "ocean",
     icon: Zap,
     isGold: true,
@@ -135,9 +138,9 @@ export const NICHE_MODELS: NicheModelConfig[] = [
     id: "atendente-ia",
     templateId: "ai-chat-agent",
     nicheKey: "geral",
-    nicheCategory: "Atendente Virtual Interativo",
-    title: "Atendente Virtual (Estilo Marrooia / Typebot)",
-    subtitle: "Chat interativo completo: perguntas automáticas, triagem de orçamentos e fotos",
+    nicheCategory: "Atendente Virtual",
+    title: "Atendente Virtual",
+    subtitle: "Chat interativo estilo Typebot: perguntas e respostas personalizáveis, triagem e fotos",
     theme: "forest",
     icon: Bot,
     isGold: true,
@@ -444,6 +447,12 @@ const TABS: Array<{
     description: "Catálogo e links extras",
     icon: ShoppingBag,
   },
+  {
+    id: "seo",
+    label: "Google & SEO",
+    description: "Indexação e Rich Snippets",
+    icon: Search,
+  },
 ];
 
 const THEMES = [
@@ -687,8 +696,8 @@ export function UnifiedPageEditor({
       const byTemplate = NICHE_MODELS.find(
         (m) =>
           m.templateId === currentTemplate ||
-          (m.templateId === "impact-showcase" && (currentTemplate.includes("impact") || currentTemplate.includes("cremosinho"))) ||
-          (m.templateId === "ai-chat-agent" && (currentTemplate.includes("chat") || currentTemplate.includes("typebot") || currentTemplate.includes("marrooia"))) ||
+          (m.templateId === "impact-showcase" && (currentTemplate.includes("impact") || currentTemplate.includes("vip"))) ||
+          (m.templateId === "ai-chat-agent" && (currentTemplate.includes("chat") || currentTemplate.includes("typebot") || currentTemplate.includes("atendente"))) ||
           (m.templateId === "cinematic-glass" && (currentTemplate.includes("cinematic") || currentTemplate.includes("cinema"))) ||
           (m.templateId === "store-showcase" && (currentTemplate.includes("store") || currentTemplate.includes("shop") || currentTemplate.includes("loja")))
       );
@@ -709,8 +718,8 @@ export function UnifiedPageEditor({
       NICHE_MODELS.find(
         (m) =>
           m.templateId === currentTemplate ||
-          (m.templateId === "impact-showcase" && (currentTemplate?.includes("impact") || currentTemplate?.includes("cremosinho"))) ||
-          (m.templateId === "ai-chat-agent" && (currentTemplate?.includes("chat") || currentTemplate?.includes("typebot") || currentTemplate?.includes("marrooia"))) ||
+          (m.templateId === "impact-showcase" && (currentTemplate?.includes("impact") || currentTemplate?.includes("vip"))) ||
+          (m.templateId === "ai-chat-agent" && (currentTemplate?.includes("chat") || currentTemplate?.includes("typebot") || currentTemplate?.includes("atendente"))) ||
           (m.templateId === "cinematic-glass" && (currentTemplate?.includes("cinematic") || currentTemplate?.includes("cinema"))) ||
           (m.templateId === "store-showcase" && (currentTemplate?.includes("store") || currentTemplate?.includes("shop") || currentTemplate?.includes("loja"))) ||
           (m.templateId === "therapy-wellbeing" && (currentTemplate?.includes("therapy") || currentTemplate?.includes("harmony"))) ||
@@ -1639,37 +1648,52 @@ export function UnifiedPageEditor({
                   )}
                 </div>
 
-                {/* Módulo de Atendente Virtual Interativo (Estilo Typebot / Manychat / Marrooia) */}
-                <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-4 space-y-3">
+                {/* Módulo de Atendente Virtual Interativo (Typebot Simplificado) */}
+                <div className="rounded-xl border border-sky-500/30 bg-sky-500/5 p-4 space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="font-bold text-sm text-foreground flex items-center gap-1.5">
                         <Bot className="h-4 w-4 text-sky-400" />
-                        <span>Atendente Virtual Interativo (Chat com IA / Typebot)</span>
+                        <span>Atendente Virtual (Typebot Simplificado)</span>
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        Ativa botão flutuante com atendente virtual que tira dúvidas, apresenta serviços e monta o orçamento passo a passo.
+                        {bio.template_id === "ai-chat-agent"
+                          ? "Sua página está no modelo Atendente Virtual. Personalize o fluxo de atendimento, botões e respostas automáticas:"
+                          : "Ativa um botão flutuante com atendente virtual que tira dúvidas, apresenta serviços e monta o orçamento passo a passo."}
                       </p>
                     </div>
-                    <input
-                      type="checkbox"
-                      checked={Boolean((bio.social_links as Record<string, unknown>)?.ai_chat_enabled)}
-                      onChange={(e) => {
-                        const current = (bio.social_links as Record<string, unknown>) || {};
-                        updateBio({
-                          social_links: {
-                            ...current,
-                            ai_chat_enabled: e.target.checked,
-                          },
-                        });
-                      }}
-                      className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
-                    />
+                    {bio.template_id !== "ai-chat-agent" && (
+                      <input
+                        type="checkbox"
+                        checked={Boolean((bio.social_links as Record<string, unknown>)?.ai_chat_enabled)}
+                        onChange={(e) => {
+                          const current = (bio.social_links as Record<string, unknown>) || {};
+                          updateBio({
+                            social_links: {
+                              ...current,
+                              ai_chat_enabled: e.target.checked,
+                            },
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
+                      />
+                    )}
                   </div>
-                  {Boolean((bio.social_links as Record<string, unknown>)?.ai_chat_enabled) && (
-                    <div className="space-y-1.5 pt-1 text-xs text-muted-foreground">
-                      <p>✅ Atendente oficial com foto, selo verificado e status online em tempo real.</p>
-                      <p>✅ Coleta nome, cidade, necessidade, fotos opcionais e manda o orçamento pronto pro WhatsApp.</p>
+                  {(Boolean((bio.social_links as Record<string, unknown>)?.ai_chat_enabled) || bio.template_id === "ai-chat-agent") && (
+                    <div className="pt-2">
+                      <ChatFlowEditor
+                        value={(bio.social_links as Record<string, any>)?.chat_flow}
+                        onChange={(newFlow) => {
+                          const current = (bio.social_links as Record<string, any>) || {};
+                          updateBio({
+                            social_links: {
+                              ...current,
+                              chat_flow: newFlow,
+                            },
+                          });
+                        }}
+                        companyName={bio.display_name || defaults.displayName || "Sua Empresa"}
+                      />
                     </div>
                   )}
                 </div>
@@ -1849,6 +1873,28 @@ export function UnifiedPageEditor({
                   </div>
                 </div>
               </div>
+            )}
+
+            {/* ABA 6: GOOGLE & SEO */}
+            {activeTab === "seo" && (
+              <SeoEditor
+                value={(bio.social_links as Record<string, any>)?.seo}
+                onChange={(newSeo) => {
+                  const current = (bio.social_links as Record<string, any>) || {};
+                  updateBio({
+                    social_links: {
+                      ...current,
+                      seo: newSeo,
+                    },
+                  });
+                }}
+                companyName={bio.display_name || defaults.displayName || "Sua Empresa"}
+                nicheKey={niche || (bio.social_links as any)?.niche}
+                city={(bio.social_links as any)?.address}
+                slug={bio.slug || "minha-pagina"}
+                rating={(bio.social_links as any)?.google_rating}
+                reviewsCount={(bio.social_links as any)?.reviews_count}
+              />
             )}
 
             {saveState === "error" && (

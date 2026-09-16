@@ -4,9 +4,9 @@ import type { TemplateRenderModel } from "../types";
 import { AiAssistantChat } from "@/components/public/AiAssistantChat";
 
 /**
- * AiChatLayout: Modelo de Atendimento Conversacional Interativo estilo Marrooia.
- * Transforma a bio page em um chat interativo de alta conversão com fluxo guiado
- * (estilo Typebot / Manychat), triagem de orçamentos e disparo formatado para WhatsApp.
+ * AiChatLayout: Modelo de Atendimento Conversacional Interativo (Atendente Virtual).
+ * Transforma a bio page em um chat interativo de alta conversão estilo Typebot,
+ * com triagem de orçamentos e disparo formatado para WhatsApp.
  */
 export class AiChatLayout implements TemplateLayoutRenderer {
   layoutId() {

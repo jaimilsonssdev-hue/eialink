@@ -101,18 +101,99 @@ export const Route = createFileRoute("/p/$slug")({
         meta: [{ title: "Página não encontrada" }, { name: "robots", content: "noindex" }],
       };
     }
-    const { bio } = loaderData;
-    const description = bio.description ?? `Página profissional de ${bio.display_name}.`;
+    const { bio, products } = loaderData;
+    const socialData = (bio.social_links && typeof bio.social_links === "object" ? bio.social_links : {}) as Record<string, any>;
+    const seoConfig = socialData.seo || {};
+
+    const pageTitle = seoConfig.title?.trim() || `${bio.display_name} — Atendimento Oficial`;
+    const description = seoConfig.description?.trim() || bio.description || `Página profissional oficial de ${bio.display_name}. Confira nossos serviços e fale conosco pelo WhatsApp.`;
     const image = bio.cover_url ?? bio.avatar_url ?? null;
+    const isIndexable = seoConfig.indexable !== false;
+    const robotsContent = isIndexable
+      ? "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+      : "noindex, nofollow";
+
+    const businessType = seoConfig.businessType || "LocalBusiness";
+    const address = socialData.address || null;
+    const rating = socialData.google_rating ? Number(socialData.google_rating) : null;
+    const reviewsCount = socialData.reviews_count ? Number(socialData.reviews_count) : null;
+    const priceRange = seoConfig.priceRange || "$$";
+
+    // Dados estruturados JSON-LD ricos com suporte a estrelas e catálogo de ofertas
+    const structuredData = {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "ProfilePage",
+          "@id": `${url}#profile`,
+          name: bio.display_name,
+          description,
+          url,
+          ...(image ? { image } : {}),
+        },
+        {
+          "@type": businessType,
+          "@id": `${url}#business`,
+          name: bio.display_name,
+          description,
+          url,
+          ...(bio.whatsapp ? { telephone: bio.whatsapp } : {}),
+          ...(image ? { image: [image] } : {}),
+          ...(address
+            ? {
+                address: {
+                  "@type": "PostalAddress",
+                  streetAddress: address,
+                  addressCountry: "BR",
+                },
+              }
+            : {}),
+          ...(rating
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: rating,
+                  reviewCount: reviewsCount || 35,
+                  bestRating: "5",
+                  worstRating: "1",
+                },
+              }
+            : {}),
+          priceRange,
+          ...(products && products.length > 0
+            ? {
+                hasOfferCatalog: {
+                  "@type": "OfferCatalog",
+                  name: "Serviços e Tratamentos",
+                  itemListElement: products.slice(0, 10).map((p, idx) => ({
+                    "@type": "Offer",
+                    position: idx + 1,
+                    itemOffered: {
+                      "@type": "Service",
+                      name: p.title || p.name,
+                      description: p.description || undefined,
+                      ...(p.image_url ? { image: p.image_url } : {}),
+                    },
+                    ...(p.price ? { price: Number(p.price), priceCurrency: "BRL" } : {}),
+                  })),
+                },
+              }
+            : {}),
+        },
+      ],
+    };
+
     return {
       meta: [
-        { title: `${bio.display_name} — EIA Link` },
+        { title: pageTitle },
         { name: "description", content: description },
-        { property: "og:title", content: bio.display_name },
+        { name: "robots", content: robotsContent },
+        ...(seoConfig.keywords ? [{ name: "keywords", content: seoConfig.keywords }] : []),
+        { property: "og:title", content: pageTitle },
         { property: "og:description", content: description },
-        { property: "og:type", content: "profile" },
+        { property: "og:type", content: "business.business" },
         { property: "og:url", content: url },
-        { name: "twitter:title", content: bio.display_name },
+        { name: "twitter:title", content: pageTitle },
         { name: "twitter:description", content: description },
         ...(image && image.startsWith("https://")
           ? [
@@ -125,14 +206,7 @@ export const Route = createFileRoute("/p/$slug")({
       scripts: [
         {
           type: "application/ld+json",
-          children: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "ProfilePage",
-            name: bio.display_name,
-            description,
-            url,
-            ...(image ? { image } : {}),
-          }),
+          children: JSON.stringify(structuredData),
         },
       ],
     };

@@ -670,12 +670,12 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "impact-showcase",
     slug: "impact-showcase",
-    name: "Impacto VIP Ultra Conversão",
+    name: "Modelo VIP",
     description:
-      "Design de alto impacto inspirado em referências líderes: halo luminoso, selo de qualidade, grid de diferenciais, vitrine de serviços e rota Google Maps.",
+      "Design de alto impacto e máxima conversão: halo luminoso, selo de qualidade, grid de diferenciais, vitrine de serviços e card com rota no Google Maps.",
     category: "premium",
     badge: "Premium",
-    bestFor: "estética automotiva, oficinas, barbearias, clínicas, serviços locais e negócios de excelência",
+    bestFor: "estabelecimentos e profissionais que buscam autoridade visual e alto padrão de atendimento",
     theme: {
       colors: {
         background: "#080a11",
@@ -699,12 +699,12 @@ export const templateManifest: TemplateDefinition[] = [
   define({
     id: "ai-chat-agent",
     slug: "ai-chat-agent",
-    name: "Atendente Virtual Interativo (Typebot)",
+    name: "Atendente Virtual",
     description:
-      "Experiência conversacional completa estilo Marrooia / Typebot: triagem de orçamentos, perguntas guiadas, fotos e handoff automático para WhatsApp.",
+      "Central de atendimento interativo via chat: perguntas e respostas personalizáveis, triagem de orçamento, fotos e envio automático para o WhatsApp.",
     category: "premium",
     badge: "Novo",
-    bestFor: "empresas de serviços, reformas, orçamentos rápidos e atendimento digital automático",
+    bestFor: "empresas e prestadores que desejam qualificar clientes e orçamentos automaticamente",
     theme: {
       colors: {
         background: "#0d0e15",

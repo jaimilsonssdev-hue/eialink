@@ -78,7 +78,7 @@ import {
   COPY_TEMPLATES_UPDATED_EVENT,
 } from "@/modules/prospecting/copyTemplates";
 import { POPULAR_CNAES } from "@/modules/prospecting/cnaePresets";
-import { NICHE_PRESETS_VARIANTS, detectNicheKey, CANONICAL_NICHES, getCanonicalNicheMeta } from "@/modules/prospecting/nichePresets";
+import { NICHE_PRESETS_VARIANTS, detectNicheKey, CANONICAL_NICHES, getCanonicalNicheMeta, getVariantsForNiche } from "@/modules/prospecting/nichePresets";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -620,7 +620,7 @@ function ProspectingPage() {
     try {
       const demoInfo = parseDemoInfo(company);
       const nicheKey = detectNicheKey(company.niche, company.name);
-      const variants = NICHE_PRESETS_VARIANTS[nicheKey] || NICHE_PRESETS_VARIANTS.geral;
+      const variants = getVariantsForNiche(nicheKey);
 
       // Identifica o modelo atual anotado ou da página encontrada
       const currentModelName = demoInfo.modelName;
@@ -701,7 +701,7 @@ function ProspectingPage() {
     setFeedback(null);
     try {
       const nicheKey = detectNicheKey((page.social_links as any)?.niche, page.display_name);
-      const variants = NICHE_PRESETS_VARIANTS[nicheKey] || NICHE_PRESETS_VARIANTS.geral;
+      const variants = getVariantsForNiche(nicheKey);
       const currentModel = (page.social_links as any)?.model_variant || "";
       const currentIndex = variants.findIndex((v) => v.modelName.toLowerCase() === currentModel.toLowerCase());
       const nextIndex = (currentIndex + 1) % variants.length;

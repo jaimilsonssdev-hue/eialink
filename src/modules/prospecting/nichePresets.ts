@@ -714,7 +714,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     "oficina",
     ["impact-showcase", "spotlight-neon", "business-modern"],
     ["midnight", "amber", "ocean"],
-    ["Impacto VIP (Estilo Cremosinho)", "Auto Center & Diagnóstico 3D", "Mecânica Rápida & Revisão"],
+    ["Modelo VIP", "Auto Center & Diagnóstico 3D", "Mecânica Rápida & Revisão"],
     [
       (name, city) => `Mecânica de precisão, peças com garantia e segurança para seu carro em ${city}`,
       (name, city) => `Revisão preventiva completa e socorro rápido com a equipe da ${name}`,
@@ -1165,7 +1165,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     "geral",
     ["business-modern", "impact-showcase", "ai-chat-agent"],
     ["aurora", "ocean", "forest"],
-    ["Empresa de Autoridade & Negócios", "Impacto VIP (Estilo Cremosinho)", "Atendente Virtual (Estilo Marrooia)"],
+    ["Empresa de Autoridade & Negócios", "Modelo VIP", "Atendente Virtual"],
     [
       (name, city) => `Excelência no atendimento e soluções completas na ${name} em ${city}`,
       (name, city) => `Tradição, pontualidade e satisfação garantida com a ${name}`,
@@ -1471,7 +1471,7 @@ export function getPresetForCompany(
   variantIndex?: number
 ): NichePreset {
   const key = detectNicheKey(nicheRaw, companyNameRaw);
-  const variants = NICHE_PRESETS_VARIANTS[key] || NICHE_PRESETS_VARIANTS.geral;
+  const variants = getVariantsForNiche(key);
 
   const targetVariant =
     typeof variantIndex === "number" && variantIndex >= 0 && variantIndex < variants.length
@@ -1503,10 +1503,24 @@ export function getGalleryForNiche(nicheKey?: string | null): { covers: CuratedP
 }
 
 /**
- * Retorna as 3 variantes de modelos visuais completas configuradas para o nicho.
+ * Retorna as variantes de modelos visuais configuradas para o nicho,
+ * garantindo que TODO nicho tenha obrigatoriamente a opção do Modelo VIP.
  */
 export function getVariantsForNiche(nicheKey?: string | null): NichePreset[] {
-  if (!nicheKey) return NICHE_PRESETS_VARIANTS.geral;
-  const key = detectNicheKey(nicheKey, null);
-  return NICHE_PRESETS_VARIANTS[key] || NICHE_PRESETS_VARIANTS.geral;
+  const key = detectNicheKey(nicheKey, null) || "geral";
+  const baseVariants = NICHE_PRESETS_VARIANTS[key] || NICHE_PRESETS_VARIANTS.geral;
+
+  const hasVip = baseVariants.some((v) => v.template_id === "impact-showcase");
+  if (!hasVip && baseVariants.length > 0) {
+    const primary = baseVariants[0];
+    const vipVariant: NichePreset = {
+      ...primary,
+      modelName: "Modelo VIP",
+      template_id: "impact-showcase",
+      theme: "ocean",
+    };
+    return [primary, vipVariant, baseVariants[1] || baseVariants[0]];
+  }
+
+  return baseVariants;
 }

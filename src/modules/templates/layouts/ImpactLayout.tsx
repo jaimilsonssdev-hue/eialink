@@ -23,8 +23,7 @@ import { whatsappUrl } from "@/lib/whatsapp";
 import type { PublicLink } from "@/components/public-profile/types";
 
 /**
- * ImpactLayout: Modelo de Altíssimo Impacto Visual inspirado em landing pages
- * premium de estética e serviços de ponta (como Lavajato Cremosinho).
+ * ImpactLayout: Modelo VIP de Altíssimo Impacto Visual e Máxima Conversão.
  * 
  * Destaques:
  * - Ambient radial glow com iluminação da cor primária

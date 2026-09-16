@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { CatalogItem } from "@/modules/products/types";
 import { whatsappUrl } from "@/lib/whatsapp";
+import { DEFAULT_CHAT_FLOW, type ChatFlowConfig } from "@/components/page-builder/ChatFlowEditor";
 
 export interface ChatMessage {
   id: string;
@@ -82,6 +83,22 @@ export function AiAssistantChat({
   const address = socialData.address;
   const openingHours = socialData.opening_hours;
 
+  const chatFlow: ChatFlowConfig = {
+    ...DEFAULT_CHAT_FLOW,
+    ...(socialData.chat_flow || {}),
+    options:
+      socialData.chat_flow?.options && socialData.chat_flow.options.length > 0
+        ? socialData.chat_flow.options
+        : DEFAULT_CHAT_FLOW.options,
+  };
+
+  const formattedOptions = chatFlow.options.map((opt) => ({
+    label: opt.label,
+    action: opt.actionType === "text" ? `custom_text_${opt.id}` : opt.actionType,
+    icon: opt.icon,
+    payload: opt.replyText,
+  }));
+
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState<boolean>(false);
   const [userInput, setUserInput] = useState<string>("");
@@ -100,22 +117,20 @@ export function AiAssistantChat({
     scrollToBottom();
   }, [messages, isTyping]);
 
-  // Mensagem inicial de boas-vindas
+  // Mensagem inicial de boas-vindas com dados do Typebot simplificado
   useEffect(() => {
     setIsTyping(true);
     const timer = setTimeout(() => {
       setIsTyping(false);
+      const welcomeText =
+        chatFlow.welcomeMessage ||
+        `Olá! Bem-vindo(a) ao atendimento oficial de *${bio.display_name}*! 👋✨\n\nSou o assistente virtual da empresa. Como posso te ajudar hoje? Escolha uma opção abaixo:`;
       const welcomeMessage: ChatMessage = {
         id: "welcome-1",
         sender: "bot",
-        text: `Olá! Bem-vindo(a) ao atendimento oficial de *${bio.display_name}*! 👋✨\n\nSou o assistente virtual da empresa. Como posso te ajudar hoje? Escolha uma opção abaixo:`,
+        text: welcomeText,
         timestamp: getTimeString(),
-        options: [
-          { label: "Ver Serviços", action: "servicos", icon: "🎨" },
-          { label: "Pedir Orçamento", action: "orcamento", icon: "💰" },
-          { label: "Endereço e Horários", action: "localizacao", icon: "📍" },
-          { label: "Falar no WhatsApp", action: "whatsapp_direto", icon: "📱" },
-        ],
+        options: formattedOptions,
       };
       setMessages([welcomeMessage]);
     }, 600);
@@ -376,12 +391,8 @@ Poderiam me informar valores e disponibilidade para atendimento? Aguardo retorno
       handleOptionClick({ label: "Solicitar Orçamento", action: "orcamento" });
     } else {
       botReply(
-        "Entendi sua mensagem! Para agilizar seu atendimento, como prefere continuar?",
-        [
-          { label: "Pedir Orçamento", action: "orcamento", icon: "💰" },
-          { label: "Ver Serviços", action: "servicos", icon: "🎨" },
-          { label: "Conversar no WhatsApp", action: "whatsapp_direto", icon: "📱" },
-        ]
+        "Entendi sua mensagem! Para agilizar seu atendimento, escolha uma das opções:",
+        formattedOptions
       );
     }
   };
@@ -394,7 +405,7 @@ Poderiam me informar valores e disponibilidade para atendimento? Aguardo retorno
           : "fixed inset-0 z-50 sm:inset-auto sm:right-5 sm:bottom-5 sm:w-[420px] sm:h-[680px] sm:rounded-3xl border border-border shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200"
       }`}
     >
-      {/* HEADER DO CHAT ESTILO MARROOIA */}
+      {/* HEADER DO ATENDENTE VIRTUAL */}
       <header className="sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-card/95 backdrop-blur-xl border-b border-border shadow-sm shrink-0">
         <div className="flex items-center gap-3 min-w-0">
           <div className="relative shrink-0">
@@ -414,7 +425,9 @@ Poderiam me informar valores e disponibilidade para atendimento? Aguardo retorno
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
-              <h2 className="text-sm font-bold truncate leading-tight">{bio.display_name}</h2>
+              <h2 className="text-sm font-bold truncate leading-tight">
+                {chatFlow.assistantName || bio.display_name}
+              </h2>
               <span className="shrink-0 text-sky-500" title="Verificado Oficial">
                 <BadgeCheck className="w-4 h-4 fill-sky-500 text-white" />
               </span>
@@ -423,9 +436,9 @@ Poderiam me informar valores e disponibilidade para atendimento? Aguardo retorno
               {isTyping ? (
                 <span className="text-primary font-medium animate-pulse">digitando...</span>
               ) : (
-                <span className="text-emerald-500 font-medium flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Atendimento online
+                <span className="text-emerald-500 font-medium flex items-center gap-1 truncate">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span>{chatFlow.assistantName ? `${bio.display_name} • Online` : "Atendimento online"}</span>
                 </span>
               )}
             </div>

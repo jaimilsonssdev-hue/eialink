@@ -5,6 +5,8 @@ export interface AiCopilotResult {
   display_name?: string;
   description?: string;
   whatsapp_message?: string;
+  avatar_url?: string | null;
+  cover_url?: string | null;
   custom_theme?: {
     primary: string;
     background: string;
@@ -35,28 +37,53 @@ export interface AiCopilotResult {
     name: string;
     description: string;
     price?: number;
+    image_url?: string | null;
   }>;
+  video_embed?: {
+    enabled: boolean;
+    url: string;
+    title: string;
+    caption?: string;
+  };
 }
 
-const copilotInputSchema = z.object({
-  briefing: z.string().min(3, "Briefing deve conter pelo menos 3 caracteres.").max(10000),
-  currentContext: z
-    .object({
-      displayName: z.string().optional(),
-      niche: z.string().optional(),
-      city: z.string().optional(),
-      servicesCount: z.number().optional(),
-    })
-    .optional(),
-  overrideApiKey: z.string().optional(),
+const copilotFileInputSchema = z.object({
+  name: z.string(),
+  mimeType: z.string(),
+  base64: z.string(),
+  publicUrl: z.string().optional(),
 });
+
+const copilotInputSchema = z
+  .object({
+    briefing: z.string().max(20000).optional().default(""),
+    files: z.array(copilotFileInputSchema).optional().default([]),
+    videoUrl: z.string().optional(),
+    currentContext: z
+      .object({
+        displayName: z.string().optional(),
+        niche: z.string().optional(),
+        city: z.string().optional(),
+        servicesCount: z.number().optional(),
+      })
+      .optional(),
+    overrideApiKey: z.string().optional(),
+  })
+  .refine(
+    (data) =>
+      (data.briefing && data.briefing.trim().length >= 3) ||
+      (data.files && data.files.length > 0) ||
+      (data.videoUrl && data.videoUrl.trim().length > 0),
+    {
+      message:
+        "Forneça ao menos um briefing em texto, fotos/documentos anexos ou um link de vídeo.",
+    }
+  );
 
 export const generateCopilotSiteFn = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
   .handler(async ({ data }): Promise<AiCopilotResult> => {
     // RESOLUÇÃO SEGURA DA CHAVE NO SERVIDOR:
-    // 1. Prioridade máxima: Variável de ambiente do servidor (NUNCA exposta ao bundle client-side)
-    // 2. Chave opcional informada pelo usuário/admin na sessão caso o servidor não possua a variável
     const serverKey =
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_AI_STUDIO_KEY ||
@@ -66,40 +93,81 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
 
     if (!resolvedKey) {
       throw new Error(
-        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave segura no campo do Copiloto."
+        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto."
       );
     }
 
-    const systemPrompt = `Você é o Diretor de Arte, Especialista em UX e Redator Publicitário da plataforma "Máquina de Sites".
-Sua tarefa é receber um briefing bruto com informações de um negócio (posts do Instagram, biografia, serviços, fotos, preferências de cor ou histórico da empresa) e gerar uma estrutura de dados de altíssima conversão.
+    const systemPrompt = `Você é o Diretor de Arte, Especialista em UX, Copywriter e Estrategista Comercial da plataforma "Máquina de Sites".
+Sua tarefa é analisar o briefing, as imagens e/ou os documentos em anexo (como fotos do estabelecimento, cardápios em PDF, tabelas de serviços e folders) e gerar uma estrutura de dados completa de altíssima conversão para a landing page do cliente.
 
-REGRAS ESTRITAS DE ARQUITETURA E DESIGN:
-1. JAMAIS altere ou invente propriedades de layout estrutural (como template_id ou layout). Você deve alterar APENAS dados de texto, cores harmônicas, diferenciais, depoimentos e catálogo.
-2. TEXTOS PERSUASIVOS (Copywriting): A 'description' deve ter entre 120 e 240 caracteres, ser magnética, direta e sem clichês corporativos vazios.
-3. CORES INTELIGENTES:
-   - 'primary': Cor vibrante de destaque para botões e detalhes (em HEX, ex: #0ea5e9, #10b981, #f97316).
-   - 'background': Fundo cinematográfico escuro (#070a12, #0b0c10) ou claro limpo (#ffffff, #fafafa).
-   - 'text': Contraste impecável com o fundo (#f8fafc para escuro ou #0f172a para claro).
-   - 'card_bg': Fundo translúcido para os cards de links e vitrines (ex: "rgba(255, 255, 255, 0.04)" ou "#ffffff").
-   - 'border_color': Contorno sutil e elegante (ex: "rgba(255, 255, 255, 0.12)" ou "rgba(14, 165, 233, 0.25)").
-   - 'mode': "dark" ou "light".
-4. DIFERENCIAIS: Gere exatamente 3 ou 4 diferenciais que passem confiança e autoridade real.
-5. DEPOIMENTOS: Crie de 2 a 3 depoimentos que soem como clientes reais e satisfeitos, com notas 5 estrelas.
-6. SERVIÇOS: Se o briefing mencionar serviços ou cardápio, extraia ou formate os 3 a 6 principais com nome e descrição apetitosa/técnica.
+DIRETRIZES MULTIMODAIS E DE DESIGN:
+1. ARQUITETURA INTOCÁVEL: JAMAIS altere o template_id ou estruture propriedades fora do schema. Você altera estritamente textos, cores, distribuição de fotos, serviços e diferenciais.
+2. DISTRIBUIÇÃO INTELIGENTE DE FOTOS:
+   - Se fotos forem anexadas e incluírem URLs públicas nos metadados:
+     * 'avatar_url': Escolha a URL da foto que melhor representa o logotipo nítido da empresa ou o retrato do profissional/proprietário.
+     * 'cover_url': Escolha a URL da foto que melhor retrata a fachada, ambiente da clínica/loja ou banner amplo.
+     * 'suggested_services[i].image_url': Se houver fotos específicas de pratos (ex: hambúrguer, pizza), produtos ou procedimentos estéticos/médicos, atribua a respectiva URL pública diretamente ao item correspondente do catálogo!
+3. EXTRAÇÃO SEMÂNTICA DE PDFS (Cardápios, Catálogos e Tabelas de Preço):
+   - Se houver documento PDF anexado, examine atentamente todo o texto e tabelas.
+   - Extraia os produtos/serviços reais com seus nomes exatos, descrições detalhadas e preços numéricos em reais (R$) para 'suggested_services'.
+   - Identifique horários de atendimento, regras de agendamento e diferenciais presentes no PDF para compor os 'differentials' e o FAQ.
+4. VÍDEO INSTITUCIONAL:
+   - Se o campo videoUrl foi preenchido ou mencionado, configure 'video_embed' com enabled=true, a url indicada, um título magnético (ex: "Conheça por Dentro Nossa Estrutura") e uma legenda convidativa.
+5. PALETA DE CORES DA MARCA (custom_theme):
+   - Extraia as cores predominantes das fotos ou logotipo e construa um tema equilibrado ('primary', 'background', 'text', 'card_bg', 'border_color', 'mode').
+6. COPYWRITING:
+   - 'description': Headline magnética de alta conversão (120 a 240 caracteres).
+   - 'whatsapp_message': Mensagem persuasiva de abertura para o WhatsApp comercial.
+   - 'differentials': Exatamente 3 a 4 diferenciais de autoridade.
+   - 'testimonials': 2 a 3 depoimentos convincentes com notas 5 estrelas.
 
 RETORNE RIGOROSAMENTE UM OBJETO JSON VÁLIDO SEM NENHUM TEXTO OU MARKDOWN ADICIONAL FORA DO JSON.`;
+
+    const fileDescriptions = (data.files || [])
+      .map((f, idx) => {
+        return `- Arquivo #${idx + 1}: "${f.name}" (${f.mimeType})${
+          f.publicUrl ? ` [URL Pública já salva: "${f.publicUrl}"]` : ""
+        }`;
+      })
+      .join("\n");
 
     const userPrompt = `DADOS ATUAIS DO SITE:
 Nome Atual: ${data.currentContext?.displayName || "Empresa Local"}
 Nicho: ${data.currentContext?.niche || "Geral"}
 Cidade / Região: ${data.currentContext?.city || "Brasil"}
 
-BRIEFING BRUTO ENVIADO PELO USUÁRIO:
-"""
-${data.briefing}
-"""
+${data.videoUrl ? `LINK DE VÍDEO INFORMADO: ${data.videoUrl}\n` : ""}
+${
+  fileDescriptions
+    ? `ARQUIVOS MULTIMODAIS ANEXADOS (${data.files?.length} arquivo(s)):\n${fileDescriptions}\n`
+    : ""
+}
+${
+  data.briefing?.trim()
+    ? `BRIEFING / INFORMAÇÕES ADICIONAIS:\n"""\n${data.briefing}\n"""\n`
+    : ""
+}
+Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos ('avatar_url', 'cover_url', 'image_url' de serviços), extraia todos os itens e preços de eventuais PDFs e gere a estrutura JSON completa.`;
 
-Gere a estrutura JSON completa para transformar este site em uma referência comercial de alto padrão.`;
+    // Monta o payload multimodal com as partes inline_data dos arquivos + prompt de texto
+    const promptParts: Array<{
+      text?: string;
+      inline_data?: { mime_type: string; data: string };
+    }> = [];
+
+    if (data.files && data.files.length > 0) {
+      for (const file of data.files) {
+        const cleanBase64 = file.base64.replace(/^data:[^;]+;base64,/, "").trim();
+        promptParts.push({
+          inline_data: {
+            mime_type: file.mimeType,
+            data: cleanBase64,
+          },
+        });
+      }
+    }
+
+    promptParts.push({ text: userPrompt });
 
     const candidateModels = [
       "gemini-1.5-flash",
@@ -128,7 +196,7 @@ Gere a estrutura JSON completa para transformar este site em uma referência com
               contents: [
                 {
                   role: "user",
-                  parts: [{ text: userPrompt }],
+                  parts: promptParts,
                 },
               ],
               generationConfig: {

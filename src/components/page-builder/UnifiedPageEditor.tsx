@@ -799,11 +799,16 @@ export function UnifiedPageEditor({
     if (result.about_section) {
       updatedSocial.about_section = result.about_section;
     }
+    if (result.video_embed) {
+      updatedSocial.video_embed = result.video_embed;
+    }
 
     const patch: Partial<BioForm> = {
       display_name: result.display_name || bio.display_name,
       description: result.description || bio.description,
       whatsapp_message: result.whatsapp_message || bio.whatsapp_message,
+      avatar_url: result.avatar_url || bio.avatar_url,
+      cover_url: result.cover_url || bio.cover_url,
       social_links: updatedSocial as any,
     };
 
@@ -813,16 +818,16 @@ export function UnifiedPageEditor({
       const newItems: CatalogItem[] = result.suggested_services.map((svc, idx) => ({
         id: crypto.randomUUID(),
         bio_page_id: bio.id || "preview",
-        type: "service",
         name: svc.name,
         description: svc.description,
         price: svc.price ? Number(svc.price) : null,
-        image_url: null,
-        button_label: "Saiba mais",
-        button_url: null,
+        promotional_price: null,
+        image_url: svc.image_url || null,
         category: "Destaques",
         active: true,
         position: idx,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }));
       setProducts(newItems);
     }

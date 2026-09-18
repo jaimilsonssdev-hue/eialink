@@ -108,7 +108,7 @@ type BioForm = Pick<
   | "motion_entrance"
   | "motion_cta"
   | "motion_ambient"
->;
+> & { id?: string };
 
 type EditorTab = "visual" | "sections" | "profile" | "contact" | "catalog" | "seo";
 
@@ -813,16 +813,16 @@ export function UnifiedPageEditor({
       const newItems: CatalogItem[] = result.suggested_services.map((svc, idx) => ({
         id: crypto.randomUUID(),
         bio_page_id: bio.id || "preview",
+        type: "service",
         name: svc.name,
         description: svc.description,
         price: svc.price ? Number(svc.price) : null,
-        promotional_price: null,
         image_url: null,
+        button_label: "Saiba mais",
+        button_url: null,
         category: "Destaques",
         active: true,
         position: idx,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
       }));
       setProducts(newItems);
     }

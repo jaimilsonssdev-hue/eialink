@@ -101,48 +101,72 @@ ${data.briefing}
 
 Gere a estrutura JSON completa para transformar este site em uma referência comercial de alto padrão.`;
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(
-        resolvedKey
-      )}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          system_instruction: {
-            parts: [{ text: systemPrompt }],
-          },
-          contents: [
-            {
-              role: "user",
-              parts: [{ text: userPrompt }],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: "application/json",
-            temperature: 0.7,
-          },
-        }),
-      }
-    );
+    const candidateModels = [
+      "gemini-1.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash-latest",
+      "gemini-2.5-flash",
+      "gemini-1.5-pro",
+    ];
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      let parsedError = errorText;
+    let lastError = "";
+    let rawContent: string | null = null;
+
+    for (const modelName of candidateModels) {
       try {
-        const errorJson = JSON.parse(errorText);
-        parsedError = errorJson.error?.message || errorText;
-      } catch {
-        // use raw text
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
+            resolvedKey
+          )}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemPrompt }],
+              },
+              contents: [
+                {
+                  role: "user",
+                  parts: [{ text: userPrompt }],
+                },
+              ],
+              generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.7,
+              },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          let parsedError = errorText;
+          try {
+            const errorJson = JSON.parse(errorText);
+            parsedError = errorJson.error?.message || errorText;
+          } catch {
+            // raw text
+          }
+          lastError = `Modelo ${modelName} (${response.status}): ${parsedError}`;
+          continue;
+        }
+
+        const payload = await response.json();
+        const text = payload.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (text) {
+          rawContent = text;
+          break;
+        }
+      } catch (err: any) {
+        lastError = err?.message || String(err);
       }
-      throw new Error(`Erro na API do Google AI Studio (${response.status}): ${parsedError}`);
     }
 
-    const payload = await response.json();
-    const rawContent = payload.candidates?.[0]?.content?.parts?.[0]?.text;
-
     if (!rawContent) {
-      throw new Error("A IA do Google AI Studio não retornou conteúdo válido.");
+      throw new Error(
+        `Não foi possível gerar com a API do Google AI Studio. Detalhe: ${lastError}. Certifique-se de que sua chave de API está ativa no console do Google AI Studio.`
+      );
     }
 
     try {

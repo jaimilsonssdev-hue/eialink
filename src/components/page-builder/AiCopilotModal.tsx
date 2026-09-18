@@ -140,7 +140,7 @@ export function AiCopilotModal({
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-bold uppercase tracking-wider">
             <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
-            <span>Google AI Studio · Gemini 2.5 Flash</span>
+            <span>Google AI Studio · Gemini Flash</span>
           </div>
 
           <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">

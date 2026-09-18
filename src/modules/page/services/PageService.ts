@@ -9,6 +9,7 @@ import {
   getClaimPageInfoFn,
   claimPageFn,
 } from "@/modules/page/page.functions";
+import { resolveBioMediaUrl } from "@/lib/bio-media";
 
 export type OwnedPage = Tables<"bio_pages">;
 
@@ -333,7 +334,11 @@ export const PageService = {
       .from("bio-media")
       .upload(path, file, { upsert: false, contentType: file.type });
     if (error) throw error;
-    return supabase.storage.from("bio-media").getPublicUrl(path).data.publicUrl;
+    const signedUrl = await resolveBioMediaUrl(
+      supabase.storage.from("bio-media").getPublicUrl(path).data.publicUrl,
+    );
+    if (!signedUrl) throw new Error("Não foi possível proteger a imagem enviada.");
+    return signedUrl;
   },
 
   async uploadAsset(file: File) {

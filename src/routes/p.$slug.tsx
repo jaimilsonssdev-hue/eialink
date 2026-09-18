@@ -15,6 +15,7 @@ import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/What
 import { MobileStickyBar } from "@/components/public-profile/MobileStickyBar";
 import { ModularSections } from "@/components/public-profile/ModularSections";
 import { AiAssistantChat } from "@/components/public/AiAssistantChat";
+import { resolveBioMediaUrl } from "@/lib/bio-media";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -82,11 +83,21 @@ export const Route = createFileRoute("/p/$slug")({
           .eq("active", true)
           .maybeSingle()
       : { data: null };
+    const [avatarUrl, coverUrl, productImageUrls] = await Promise.all([
+      resolveBioMediaUrl(bio.avatar_url),
+      resolveBioMediaUrl(bio.cover_url),
+      Promise.all((products ?? []).map((product: { image_url?: string | null }) => resolveBioMediaUrl(product.image_url))),
+    ]);
+    const protectedBio = { ...bio, avatar_url: avatarUrl, cover_url: coverUrl };
+    const protectedProducts = (products ?? []).map((product: CatalogItem, index: number) => ({
+      ...product,
+      image_url: productImageUrls[index] ?? null,
+    }));
     return {
-      bio,
+      bio: protectedBio,
       links: links ?? [],
       blocks: (blocks ?? []) as PageBlock[],
-      products: ((products ?? []) as CatalogItem[]).map((p) => {
+      products: protectedProducts.map((p: CatalogItem) => {
         const { category, description } = parseCatalogItemCategory(p);
         return { ...p, category, description };
       }),
@@ -165,7 +176,7 @@ export const Route = createFileRoute("/p/$slug")({
                 hasOfferCatalog: {
                   "@type": "OfferCatalog",
                   name: "Serviços e Tratamentos",
-                  itemListElement: products.slice(0, 10).map((p, idx) => ({
+                  itemListElement: products.slice(0, 10).map((p: CatalogItem, idx: number) => ({
                     "@type": "Offer",
                     position: idx + 1,
                     itemOffered: {

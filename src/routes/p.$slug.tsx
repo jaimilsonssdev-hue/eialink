@@ -97,7 +97,7 @@ export const Route = createFileRoute("/p/$slug")({
       bio: protectedBio,
       links: links ?? [],
       blocks: (blocks ?? []) as PageBlock[],
-      products: protectedProducts.map((p) => {
+      products: protectedProducts.map((p: CatalogItem) => {
         const { category, description } = parseCatalogItemCategory(p);
         return { ...p, category, description };
       }),
@@ -176,7 +176,7 @@ export const Route = createFileRoute("/p/$slug")({
                 hasOfferCatalog: {
                   "@type": "OfferCatalog",
                   name: "Serviços e Tratamentos",
-                  itemListElement: products.slice(0, 10).map((p, idx) => ({
+                  itemListElement: products.slice(0, 10).map((p: CatalogItem, idx: number) => ({
                     "@type": "Offer",
                     position: idx + 1,
                     itemOffered: {

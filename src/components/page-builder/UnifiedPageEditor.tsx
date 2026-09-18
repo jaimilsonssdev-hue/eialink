@@ -57,6 +57,8 @@ import { ModularSections } from "@/components/public-profile/ModularSections";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
 import { ChatFlowEditor } from "./ChatFlowEditor";
 import { SeoEditor } from "./SeoEditor";
+import { AiCopilotModal } from "./AiCopilotModal";
+import type { AiCopilotResult } from "@/modules/ai/copilot.functions";
 import { parseSocialLinks } from "@/lib/social-links";
 import {
   freeTemplateBase,
@@ -663,6 +665,7 @@ export function UnifiedPageEditor({
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [validationMessage, setValidationMessage] = useState<string>();
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
     JSON.stringify({
       bio,
@@ -746,6 +749,84 @@ export function UnifiedPageEditor({
   }, [hasPendingChanges]);
 
   const updateBio = (patch: Partial<BioForm>) => setBio((current) => ({ ...current, ...patch }));
+
+  const handleApplyCopilotResult = (result: AiCopilotResult) => {
+    const currentSocial = (bio.social_links as Record<string, any>) || {};
+
+    const customTheme = result.custom_theme
+      ? {
+          primary: result.custom_theme.primary,
+          background: result.custom_theme.background,
+          text: result.custom_theme.text,
+          card_bg: result.custom_theme.card_bg,
+          border_color: result.custom_theme.border_color,
+          mode: result.custom_theme.mode,
+        }
+      : currentSocial.custom_theme;
+
+    const tokensDesign = customTheme
+      ? {
+          ...(currentSocial.tokens_design || {}),
+          fundo_valores: {
+            cor_gradiente_1: customTheme.background || "#0b0c10",
+            cor_gradiente_2: customTheme.primary || "#1f2937",
+            blur_sobreposicao: "8px",
+            imagem_url: bio.cover_url || "",
+          },
+          estilo_botoes: {
+            cor_fundo_card: customTheme.card_bg || "rgba(255, 255, 255, 0.04)",
+            cor_borda: customTheme.border_color || "rgba(255, 255, 255, 0.12)",
+            cor_texto: customTheme.text || "#ffffff",
+            cor_destaque: customTheme.primary || "#6366f1",
+            raio_borda: currentSocial.tokens_design?.estilo_botoes?.raio_borda || "16px",
+          },
+        }
+      : currentSocial.tokens_design;
+
+    const updatedSocial: Record<string, any> = {
+      ...currentSocial,
+      custom_theme: customTheme,
+      tokens_design: tokensDesign,
+    };
+
+    if (result.differentials && result.differentials.length > 0) {
+      updatedSocial.differentials = result.differentials;
+    }
+    if (result.testimonials && result.testimonials.length > 0) {
+      updatedSocial.testimonials = result.testimonials;
+      updatedSocial.show_testimonials = true;
+    }
+    if (result.about_section) {
+      updatedSocial.about_section = result.about_section;
+    }
+
+    const patch: Partial<BioForm> = {
+      display_name: result.display_name || bio.display_name,
+      description: result.description || bio.description,
+      whatsapp_message: result.whatsapp_message || bio.whatsapp_message,
+      social_links: updatedSocial as any,
+    };
+
+    updateBio(patch);
+
+    if (result.suggested_services && result.suggested_services.length > 0) {
+      const newItems: CatalogItem[] = result.suggested_services.map((svc, idx) => ({
+        id: crypto.randomUUID(),
+        bio_page_id: bio.id || "preview",
+        name: svc.name,
+        description: svc.description,
+        price: svc.price ? Number(svc.price) : null,
+        promotional_price: null,
+        image_url: null,
+        category: "Destaques",
+        active: true,
+        position: idx,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }));
+      setProducts(newItems);
+    }
+  };
 
   const addLink = () => {
     if ((planAccess?.limits.links ?? 4) !== -1 && links.length >= (planAccess?.limits.links ?? 4)) {
@@ -1049,6 +1130,16 @@ export function UnifiedPageEditor({
               className="btn-secondary xl:hidden text-xs py-2 px-3 flex items-center gap-1.5"
             >
               <Eye className="h-4 w-4" /> Prévia
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsCopilotOpen(true)}
+              className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
+              title="Ajustar cores, textos, diferenciais e serviços com Inteligência Artificial"
+            >
+              <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
+              <span>Copiloto IA</span>
             </button>
 
             <a
@@ -2231,6 +2322,17 @@ export function UnifiedPageEditor({
           </div>
         </section>
       )}
+
+      <AiCopilotModal
+        isOpen={isCopilotOpen}
+        onClose={() => setIsCopilotOpen(false)}
+        currentContext={{
+          displayName: bio.display_name,
+          niche: niche || activeNicheModel.nicheKey,
+          city: (bio.social_links as any)?.address || (bio.social_links as any)?.city,
+        }}
+        onApply={handleApplyCopilotResult}
+      />
     </div>
   );
 }

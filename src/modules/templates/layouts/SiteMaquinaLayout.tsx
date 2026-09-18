@@ -896,6 +896,29 @@ function SiteMaquinaView({
               </div>
             </div>
 
+            {/* Depoimentos reais e personalizados configurados */}
+            {Array.isArray(socialData.testimonials) && socialData.testimonials.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left my-8">
+                {socialData.testimonials.map((t: any) => (
+                  <div key={t.id || t.author} className="p-5 rounded-2xl bg-gray-50/80 border border-gray-100 shadow-xs flex flex-col justify-between">
+                    <p className="text-gray-700 text-sm italic mb-4 leading-relaxed line-clamp-4">"{t.text}"</p>
+                    <div className="flex items-center gap-3 border-t border-gray-200/60 pt-3 mt-auto">
+                      <div className="w-8 h-8 rounded-full bg-[var(--color-100)] text-[var(--color-600)] flex items-center justify-center font-bold text-xs shrink-0">
+                        {(t.author || "C").charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-heading font-bold text-xs text-gray-900 truncate">{t.author}</div>
+                        <div className="text-[10px] text-gray-400 truncate">{t.role || "Cliente Verificado"}</div>
+                      </div>
+                      <div className="flex text-amber-400 text-xs shrink-0">
+                        {"★".repeat(Math.min(5, Math.max(1, t.rating || 5)))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <a
                 href={mapsLink}
@@ -925,6 +948,15 @@ function SiteMaquinaView({
           </div>
         </div>
       </section>
+
+      {/* SEÇÕES MODULARES EXTRAS (VÍDEO / SOBRE / BLOCOS ADICIONAIS) */}
+      {supplemental && (
+        <section className="py-10 bg-gray-50/50 border-b border-gray-100">
+          <div className="max-w-4xl mx-auto px-4">
+            {supplemental}
+          </div>
+        </section>
+      )}
 
       {/* 9. PERGUNTAS FREQUENTES (FAQ ACCORDION INTERATIVO) */}
       <section id="faq" className="py-16 sm:py-20 bg-white border-b border-gray-100">

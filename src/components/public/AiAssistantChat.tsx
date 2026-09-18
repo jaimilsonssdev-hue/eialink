@@ -177,7 +177,7 @@ export function AiAssistantChat({
 
     onTrack?.("chat_option_click", { action: option.action });
 
-    if (option.action === "servicos") {
+    if (option.action === "servicos" || option.action === "services") {
       const activeProducts = products.filter((p) => p.active);
       if (activeProducts.length > 0) {
         botReply(
@@ -190,8 +190,8 @@ export function AiAssistantChat({
         botReply(
           `Trabalhamos com serviços especializados em *${bio.display_name}* com total dedicação e garantia de qualidade. Deseja solicitar um orçamento personalizado?`,
           [
-            { label: "Sim, pedir orçamento", action: "orcamento", icon: "💰" },
-            { label: "Falar no WhatsApp", action: "whatsapp_direto", icon: "📱" },
+            { label: "Sim, pedir orçamento", action: "budget", icon: "💰" },
+            { label: "Falar no WhatsApp", action: "whatsapp", icon: "📱" },
           ]
         );
       }
@@ -204,14 +204,14 @@ export function AiAssistantChat({
         "budget_step_name"
       );
       setActiveStep("name");
-    } else if (option.action === "orcamento") {
+    } else if (option.action === "orcamento" || option.action === "budget") {
       botReply(
         "Perfeito! Vou te fazer algumas perguntas rápidas para montar seu orçamento sem compromisso. Para começar, qual é o seu **nome completo**?",
         undefined,
         "budget_step_name"
       );
       setActiveStep("name");
-    } else if (option.action === "localizacao") {
+    } else if (option.action === "localizacao" || option.action === "location") {
       let infoText = `📍 *Localização e Funcionamento:*\n\n`;
       if (address) infoText += `🏠 *Endereço:* ${address}\n`;
       if (openingHours) infoText += `⏰ *Horário:* ${openingHours}\n`;
@@ -219,23 +219,28 @@ export function AiAssistantChat({
         infoText += `Nosso atendimento está disponível através do WhatsApp oficial.`;
       }
       botReply(infoText, [
-        { label: "Pedir Orçamento", action: "orcamento", icon: "💰" },
-        { label: "Falar no WhatsApp", action: "whatsapp_direto", icon: "📱" },
+        { label: "Pedir Orçamento", action: "budget", icon: "💰" },
+        { label: "Falar no WhatsApp", action: "whatsapp", icon: "📱" },
       ], "info_card", { address, openingHours });
-    } else if (option.action === "whatsapp_direto") {
+    } else if (option.action === "whatsapp_direto" || option.action === "whatsapp") {
       botReply(
         "Clique no botão abaixo para conversar agora mesmo com nossa equipe no WhatsApp:",
         undefined,
         "whatsapp_cards"
       );
-    } else if (option.action === "reiniciar") {
+    } else if (option.action === "reiniciar" || option.action === "restart") {
       botReply(
         "Como mais posso te ajudar?",
+        formattedOptions
+      );
+    } else if (option.action.startsWith("custom_text_") || option.payload) {
+      const customReply = option.payload || "Como podemos te ajudar mais a respeito?";
+      botReply(
+        customReply,
         [
-          { label: "Ver Serviços", action: "servicos", icon: "🎨" },
-          { label: "Pedir Orçamento", action: "orcamento", icon: "💰" },
-          { label: "Endereço e Horários", action: "localizacao", icon: "📍" },
-          { label: "Falar no WhatsApp", action: "whatsapp_direto", icon: "📱" },
+          { label: "Pedir Orçamento", action: "budget", icon: "💰" },
+          { label: "Falar no WhatsApp", action: "whatsapp", icon: "📱" },
+          { label: "Outras opções", action: "reiniciar", icon: "🔄" },
         ]
       );
     }

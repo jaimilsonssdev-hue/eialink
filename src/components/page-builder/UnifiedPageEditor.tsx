@@ -182,18 +182,18 @@ export const NICHE_MODELS: NicheModelConfig[] = [
   },
   {
     id: "delivery",
-    templateId: "cinematic-glass",
+    templateId: "store-showcase",
     nicheKey: "delivery",
     nicheCategory: "Delivery e Lanches",
     title: "Delivery & Lanches Rápidos",
-    subtitle: "Pizzas, hambúrgueres artesanais, combos e pedidos expressos",
+    subtitle: "Pizzas, hambúrgueres artesanais, combos, carrinho interativo e pedidos no WhatsApp estilo iFood",
     theme: "sunset",
     icon: UtensilsCrossed,
     isGold: true,
   },
   {
     id: "restaurante",
-    templateId: "cinematic-glass",
+    templateId: "restaurant-menu",
     nicheKey: "restaurante",
     nicheCategory: "Restaurantes e Gastronomia",
     title: "Restaurante & Gastronomia",
@@ -2130,8 +2130,8 @@ export function UnifiedPageEditor({
               const previewCustomRadius = previewTokens?.estilo_botoes?.raio_borda || previewCustomTheme?.border_radius || "16px";
               const isPreviewLight = previewCustomTheme?.mode === "light" || previewBio.theme === "mono";
 
-              // Chave de remontagem única para Pure State Reset (elimina lixo de memória e vazamento entre nichos/modelos)
-              const simulatorKey = `${activeNicheModel.id}-var${selectedVariantIndex}-${previewBio.template_id}-${previewBio.theme}`;
+              // Chave de remontagem dinâmica para Pure State Reset e atualização em tempo real
+              const simulatorKey = `${activeNicheModel.id}-var${selectedVariantIndex}-${previewBio.template_id}-${previewBio.theme}-${previewBio.display_name}-${previewBio.avatar_url || ""}-${previewBio.cover_url || ""}-${hasPendingChanges ? "p" : "s"}-${snapshot.length}`;
 
               return (
                 <div

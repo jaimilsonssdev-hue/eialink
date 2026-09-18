@@ -67,6 +67,8 @@ export function ColorPickerControl({
   const [grad1Hex, setGrad1Hex] = useState(value?.gradient_1 || "#0B0C10");
   const [grad2Hex, setGrad2Hex] = useState(value?.gradient_2 || "#1F2937");
   const [borderRadius, setBorderRadius] = useState(value?.border_radius || "16px");
+  const [cardBg, setCardBg] = useState(value?.card_bg || "");
+  const [borderColor, setBorderColor] = useState(value?.border_color || "");
   const [layoutEsqueleto, setLayoutEsqueleto] = useState<"list_vertical_premium" | "bento_grid">(
     value?.layout_esqueleto || "list_vertical_premium"
   );
@@ -75,6 +77,8 @@ export function ColorPickerControl({
     value?.primary ||
       value?.background ||
       value?.text ||
+      value?.card_bg ||
+      value?.border_color ||
       value?.mode ||
       value?.gradient_1 ||
       value?.layout_esqueleto
@@ -89,6 +93,14 @@ export function ColorPickerControl({
   }, [value?.text]);
 
   useEffect(() => {
+    if (value?.card_bg !== undefined) setCardBg(value.card_bg);
+  }, [value?.card_bg]);
+
+  useEffect(() => {
+    if (value?.border_color !== undefined) setBorderColor(value.border_color);
+  }, [value?.border_color]);
+
+  useEffect(() => {
     if (value?.layout_esqueleto) setLayoutEsqueleto(value.layout_esqueleto);
   }, [value?.layout_esqueleto]);
 
@@ -98,6 +110,8 @@ export function ColorPickerControl({
       primary: primaryHex,
       text: textHex,
       background: bgHex,
+      card_bg: cardBg,
+      border_color: borderColor,
       gradient_1: grad1Hex,
       gradient_2: grad2Hex,
       border_radius: borderRadius,
@@ -115,6 +129,16 @@ export function ColorPickerControl({
   const applyTextColor = (hex: string) => {
     setTextHex(hex);
     updateConfig({ text: hex });
+  };
+
+  const applyCardBg = (val: string) => {
+    setCardBg(val);
+    updateConfig({ card_bg: val });
+  };
+
+  const applyBorderColor = (val: string) => {
+    setBorderColor(val);
+    updateConfig({ border_color: val });
   };
 
   const applyBackgroundMode = (
@@ -487,6 +511,70 @@ export function ColorPickerControl({
               </button>
             );
           })}
+        </div>
+      </div>
+
+      {/* 6. COR DOS CARDS E BLOCOS DE INFORMAÇÃO */}
+      <div className="space-y-2.5 pt-4 border-t border-border/50">
+        <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+          <Square className="h-3.5 w-3.5 text-primary" />
+          6. Cor dos Cards e Blocos de Informações
+        </label>
+        <p className="text-[11px] text-muted-foreground">
+          Escolha o tom de fundo e o contorno das caixas, links e vitrines do seu BioLink.
+        </p>
+
+        {/* Presets Rápidos de Fundo de Cards */}
+        <div className="grid grid-cols-3 gap-2">
+          {[
+            { label: "Vidro Fumê", val: "rgba(255, 255, 255, 0.04)" },
+            { label: "Branco Puro", val: "#ffffff" },
+            { label: "Preto Profundo", val: "#121216" },
+            { label: "Vidro Escuro", val: "rgba(0, 0, 0, 0.50)" },
+            { label: "Azul Noturno", val: "rgba(15, 23, 42, 0.75)" },
+            { label: "Transparente", val: "transparent" },
+          ].map((preset) => {
+            const isSelected = (cardBg || "rgba(255, 255, 255, 0.04)") === preset.val;
+            return (
+              <button
+                key={preset.val}
+                type="button"
+                onClick={() => applyCardBg(preset.val)}
+                className={`py-1.5 px-2 rounded-xl border text-[11px] font-medium transition-all cursor-pointer ${
+                  isSelected
+                    ? "border-primary bg-primary/15 text-primary font-bold ring-1 ring-primary/40"
+                    : "border-border bg-card/60 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {preset.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Seletores Livres de Cor do Card e Borda */}
+        <div className="grid grid-cols-2 gap-2 pt-1">
+          <div className="flex items-center gap-2 p-2 rounded-xl bg-background/50 border border-border/60">
+            <input
+              type="color"
+              value={cardBg.startsWith("#") ? cardBg : "#1e293b"}
+              onChange={(e) => applyCardBg(e.target.value)}
+              className="h-7 w-7 cursor-pointer rounded-lg border border-border bg-transparent p-0.5 shrink-0"
+              title="Cor livre para o fundo dos cards"
+            />
+            <span className="text-[11px] text-muted-foreground truncate">Fundo Card</span>
+          </div>
+
+          <div className="flex items-center gap-2 p-2 rounded-xl bg-background/50 border border-border/60">
+            <input
+              type="color"
+              value={borderColor.startsWith("#") ? borderColor : "#334155"}
+              onChange={(e) => applyBorderColor(e.target.value)}
+              className="h-7 w-7 cursor-pointer rounded-lg border border-border bg-transparent p-0.5 shrink-0"
+              title="Cor livre para a borda dos cards"
+            />
+            <span className="text-[11px] text-muted-foreground truncate">Borda Card</span>
+          </div>
         </div>
       </div>
     </div>

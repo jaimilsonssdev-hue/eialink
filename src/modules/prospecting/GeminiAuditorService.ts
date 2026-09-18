@@ -103,15 +103,15 @@ export async function testGeminiKey(key: string): Promise<{ ok: boolean; message
 
     // Lista ordenada dos modelos preferidos do ecossistema Gemini
     const priority = [
-      "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-1.5-flash-latest",
+      "gemini-3.6-flash",
+      "gemini-3.7-flash",
+      "gemini-3.5-flash",
+      "gemini-3.8-flash",
       "gemini-1.5-flash",
-      "gemini-1.5-pro",
+      "gemini-2.0-flash",
     ];
 
-    let chosenModel = "gemini-2.5-flash";
+    let chosenModel = "gemini-3.6-flash";
 
     if (contentModels.length > 0) {
       let found = false;
@@ -272,12 +272,13 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
   // Modelo ativo pré-descoberto ou candidatos modernos
   const savedModel = typeof window !== "undefined" ? localStorage.getItem(GEMINI_ACTIVE_MODEL_STORAGE) : null;
   const candidateModels = [
-    ...(savedModel ? [savedModel] : []),
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-1.5-flash-latest",
+    ...(savedModel && !savedModel.includes("2.5") ? [savedModel] : []),
+    "gemini-3.6-flash",
+    "gemini-3.7-flash",
+    "gemini-3.5-flash",
+    "gemini-3.8-flash",
     "gemini-1.5-flash",
+    "gemini-2.0-flash",
   ];
 
   const models = [...new Set(candidateModels)];

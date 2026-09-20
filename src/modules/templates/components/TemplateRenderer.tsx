@@ -100,13 +100,13 @@ export function TemplateRenderer({
     layout_esqueleto?: string;
   } | undefined;
 
-  const customPrimary = tokensDesign?.estilo_botoes?.cor_destaque || customTheme?.primary;
-  const customText = tokensDesign?.estilo_botoes?.cor_texto || customTheme?.text;
-  const customBg = tokensDesign?.fundo_valores?.cor_gradiente_1 || customTheme?.background;
-  const customCard = tokensDesign?.estilo_botoes?.cor_fundo_card || customTheme?.card_bg;
-  const customBorder = tokensDesign?.estilo_botoes?.cor_borda || customTheme?.border_color;
-  const customRadius = tokensDesign?.estilo_botoes?.raio_borda || customTheme?.border_radius;
-  const isLightMode = customTheme?.mode === "light";
+  const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
+  const customText = customTheme?.text || tokensDesign?.estilo_botoes?.cor_texto;
+  const customBg = customTheme?.background || tokensDesign?.fundo_valores?.cor_gradiente_1;
+  const customCard = customTheme?.card_bg || tokensDesign?.estilo_botoes?.cor_fundo_card;
+  const customBorder = customTheme?.border_color || tokensDesign?.estilo_botoes?.cor_borda;
+  const customRadius = customTheme?.border_radius || tokensDesign?.estilo_botoes?.raio_borda;
+  const isLightMode = customTheme?.mode === "light" || bio.theme === "mono";
 
   return (
     <main
@@ -117,6 +117,8 @@ export function TemplateRenderer({
       data-custom-primary={Boolean(customPrimary) ? "true" : undefined}
       data-custom-text={Boolean(customText) ? "true" : undefined}
       data-custom-bg={Boolean(customBg) ? "true" : undefined}
+      data-custom-card={Boolean(customCard) ? "true" : undefined}
+      data-custom-border={Boolean(customBorder) ? "true" : undefined}
       data-motion={motionLevel}
       data-motion-entrance={bio.motion_enabled === false ? "none" : bio.motion_entrance ?? "gentle"}
       data-motion-cta={bio.motion_enabled === false ? "none" : bio.motion_cta ?? "none"}
@@ -144,9 +146,18 @@ export function TemplateRenderer({
           "--cor-destaque": customPrimary || model.theme.colors.primary,
           "--cor-principal": customPrimary || model.theme.colors.primary,
           "--cor-texto": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
-          "--cor-fundo-card": customCard || "rgba(255, 255, 255, 0.04)",
-          "--cor-borda": customBorder || "rgba(255, 255, 255, 0.1)",
+          "--cor-fundo-card": customCard || (isLightMode ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
+          "--cor-borda": customBorder || (isLightMode ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.1)"),
           "--raio-borda": customRadius || "16px",
+
+          "--bio-fg": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
+          "--bio-muted": isLightMode
+            ? "#64748b"
+            : customText
+              ? `color-mix(in srgb, ${customText} 65%, transparent)`
+              : model.theme.colors.muted,
+          "--bio-card": customCard || (isLightMode ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
+          "--bio-border": customBorder || (isLightMode ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.1)"),
 
           "--template-bg": customBg || model.theme.colors.background,
           "--template-surface": customCard || model.theme.colors.surface,
@@ -155,14 +166,6 @@ export function TemplateRenderer({
           "--template-primary": customPrimary || model.theme.colors.primary,
           ...(customBg ? { background: customBg } : {}),
           ...(customText ? { "--bio-fg": customText } : {}),
-          ...(isLightMode
-            ? {
-                "--bio-fg": customText || "#0f172a",
-                "--bio-muted": "rgba(15, 23, 42, 0.72)",
-                "--bio-card": "#ffffff",
-                "--bio-border": "rgba(15, 23, 42, 0.12)",
-              }
-            : {}),
         } as CSSProperties
       }
     >

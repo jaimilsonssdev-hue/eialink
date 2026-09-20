@@ -92,6 +92,32 @@ function getNicheHue(nicheKey: string): number {
   }
 }
 
+function hexToHue(hex?: string): number | null {
+  if (!hex || !hex.startsWith("#")) return null;
+  const clean = hex.replace("#", "");
+  if (clean.length !== 6) return null;
+  const r = parseInt(clean.substring(0, 2), 16) / 255;
+  const g = parseInt(clean.substring(2, 4), 16) / 255;
+  const b = parseInt(clean.substring(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  if (max === min) return 0;
+  const d = max - min;
+  switch (max) {
+    case r:
+      h = (g - b) / d + (g < b ? 6 : 0);
+      break;
+    case g:
+      h = (b - r) / d + 2;
+      break;
+    case b:
+      h = (r - g) / d + 4;
+      break;
+  }
+  return Math.round(h * 60);
+}
+
 const NICHE_LABELS: Record<string, string> = {
   clinica: "Clínica Médica",
   odontologia: "Clínica Odontológica",
@@ -146,7 +172,7 @@ function SiteMaquinaView({
   const reviewsCount = Number(socialData.reviews_count || 73);
 
   const customTheme = socialData.custom_theme || {};
-  const hue = customTheme.hue || getNicheHue(nicheKey);
+  const hue = customTheme.hue || (customTheme.primary ? hexToHue(customTheme.primary) : null) || getNicheHue(nicheKey);
 
   // Arquitetura da Hero
   const heroArchitecture =

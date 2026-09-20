@@ -63,11 +63,33 @@ export function FreeLinkRenderer({
     background?: string;
     text?: string;
     mode?: string;
+    card_bg?: string;
+    border_color?: string;
+    border_radius?: string;
+    gradient_1?: string;
+    gradient_2?: string;
   } | undefined;
-  const customPrimary = customTheme?.primary;
-  const customBg = customTheme?.background;
-  const customText = customTheme?.text;
-  const isLightMode = customTheme?.mode === "light";
+  const tokensDesign = socialData.tokens_design as {
+    estilo_botoes?: {
+      cor_destaque?: string;
+      cor_texto?: string;
+      cor_fundo_card?: string;
+      cor_borda?: string;
+      raio_borda?: string;
+    };
+    fundo_valores?: {
+      cor_gradiente_1?: string;
+      cor_gradiente_2?: string;
+    };
+  } | undefined;
+
+  const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
+  const customText = customTheme?.text || tokensDesign?.estilo_botoes?.cor_texto;
+  const customBg = customTheme?.background || tokensDesign?.fundo_valores?.cor_gradiente_1;
+  const customCard = customTheme?.card_bg || tokensDesign?.estilo_botoes?.cor_fundo_card;
+  const customBorder = customTheme?.border_color || tokensDesign?.estilo_botoes?.cor_borda;
+  const customRadius = customTheme?.border_radius || tokensDesign?.estilo_botoes?.raio_borda;
+  const isLightMode = customTheme?.mode === "light" || bio.theme === "mono";
 
   return (
     <main
@@ -75,6 +97,8 @@ export function FreeLinkRenderer({
       data-custom-primary={Boolean(customPrimary) ? "true" : undefined}
       data-custom-text={Boolean(customText) ? "true" : undefined}
       data-custom-bg={Boolean(customBg) ? "true" : undefined}
+      data-custom-card={Boolean(customCard) ? "true" : undefined}
+      data-custom-border={Boolean(customBorder) ? "true" : undefined}
       style={
         {
           // Tailwind v4 Design Tokens Bridge
@@ -82,27 +106,32 @@ export function FreeLinkRenderer({
           "--primary-foreground": "#ffffff",
           "--primary-glow": customPrimary || undefined,
           "--foreground": customText || (isLightMode ? "#0f172a" : undefined),
-          "--card": isLightMode ? "#ffffff" : undefined,
+          "--card": customCard || (isLightMode ? "#ffffff" : undefined),
           "--card-foreground": customText || (isLightMode ? "#0f172a" : undefined),
-          "--border": isLightMode ? "rgba(15, 23, 42, 0.12)" : undefined,
+          "--border": customBorder || (isLightMode ? "rgba(15, 23, 42, 0.12)" : undefined),
+          "--radius": customRadius || undefined,
           color: customText || (isLightMode ? "#0f172a" : undefined),
 
           // Tokens Nativos
           "--cor-destaque": customPrimary || undefined,
           "--cor-principal": customPrimary || undefined,
           "--cor-texto": customText || (isLightMode ? "#0f172a" : undefined),
+          "--cor-fundo-card": customCard || (isLightMode ? "#ffffff" : undefined),
+          "--cor-borda": customBorder || (isLightMode ? "rgba(15, 23, 42, 0.12)" : undefined),
+          "--raio-borda": customRadius || undefined,
+
+          "--bio-fg": customText || (isLightMode ? "#0f172a" : undefined),
+          "--bio-muted": isLightMode
+            ? "rgba(15, 23, 42, 0.72)"
+            : customText
+            ? `color-mix(in srgb, ${customText} 70%, transparent)`
+            : undefined,
+          "--bio-card": customCard || (isLightMode ? "#ffffff" : undefined),
+          "--bio-border": customBorder || (isLightMode ? "rgba(15, 23, 42, 0.12)" : undefined),
 
           ...(customPrimary ? { "--free-link-accent": customPrimary, "--template-primary": customPrimary } : {}),
           ...(customBg ? { "--template-bg": customBg, background: customBg } : {}),
-          ...(customText ? { "--template-text": customText, "--bio-fg": customText } : {}),
-          ...(isLightMode
-            ? {
-                "--bio-fg": customText || "#0f172a",
-                "--bio-muted": "rgba(15, 23, 42, 0.72)",
-                "--bio-card": "#ffffff",
-                "--bio-border": "rgba(15, 23, 42, 0.12)",
-              }
-            : {}),
+          ...(customText ? { "--template-text": customText } : {}),
         } as React.CSSProperties
       }
     >

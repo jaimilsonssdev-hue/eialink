@@ -93,6 +93,22 @@ export function ColorPickerControl({
   }, [value?.text]);
 
   useEffect(() => {
+    if (value?.background) setBgHex(value.background);
+  }, [value?.background]);
+
+  useEffect(() => {
+    if (value?.gradient_1) setGrad1Hex(value.gradient_1);
+  }, [value?.gradient_1]);
+
+  useEffect(() => {
+    if (value?.gradient_2) setGrad2Hex(value.gradient_2);
+  }, [value?.gradient_2]);
+
+  useEffect(() => {
+    if (value?.border_radius) setBorderRadius(value.border_radius);
+  }, [value?.border_radius]);
+
+  useEffect(() => {
     if (value?.card_bg !== undefined) setCardBg(value.card_bg);
   }, [value?.card_bg]);
 
@@ -107,15 +123,16 @@ export function ColorPickerControl({
   const updateConfig = (updates: Partial<CustomThemeConfig>) => {
     const updated: CustomThemeConfig = {
       ...value,
-      primary: primaryHex,
-      text: textHex,
-      background: bgHex,
-      card_bg: cardBg,
-      border_color: borderColor,
-      gradient_1: grad1Hex,
-      gradient_2: grad2Hex,
-      border_radius: borderRadius,
-      layout_esqueleto: layoutEsqueleto,
+      primary: updates.primary !== undefined ? updates.primary : primaryHex,
+      text: updates.text !== undefined ? updates.text : textHex,
+      background: updates.background !== undefined ? updates.background : bgHex,
+      card_bg: updates.card_bg !== undefined ? updates.card_bg : cardBg,
+      border_color: updates.border_color !== undefined ? updates.border_color : borderColor,
+      gradient_1: updates.gradient_1 !== undefined ? updates.gradient_1 : grad1Hex,
+      gradient_2: updates.gradient_2 !== undefined ? updates.gradient_2 : grad2Hex,
+      border_radius: updates.border_radius !== undefined ? updates.border_radius : borderRadius,
+      layout_esqueleto: updates.layout_esqueleto !== undefined ? updates.layout_esqueleto : layoutEsqueleto,
+      mode: updates.mode !== undefined ? updates.mode : (value?.mode || "dark"),
       ...updates,
     };
     onChange(updated);
@@ -145,34 +162,50 @@ export function ColorPickerControl({
     mode: "default" | "dark" | "light" | "gradient" | "custom",
     customBg?: string
   ) => {
-    let bg: string | undefined = undefined;
+    let bg = bgHex;
     let text = textHex;
     let g1 = grad1Hex;
     let g2 = grad2Hex;
+    let card = cardBg;
+    let border = borderColor;
 
     if (mode === "dark") {
       bg = "#080a11";
       text = "#ffffff";
+      g1 = "#080a11";
+      g2 = primaryHex || "#6366f1";
+      card = cardBg || "rgba(255, 255, 255, 0.04)";
+      border = borderColor || "rgba(255, 255, 255, 0.12)";
     } else if (mode === "light") {
       bg = "#ffffff";
       text = "#0f172a";
+      g1 = "#ffffff";
+      g2 = "#f1f5f9";
+      card = !cardBg || cardBg === "rgba(255, 255, 255, 0.04)" ? "#ffffff" : cardBg;
+      border = !borderColor || borderColor === "rgba(255, 255, 255, 0.12)" ? "rgba(15, 23, 42, 0.12)" : borderColor;
     } else if (mode === "gradient") {
-      g1 = "#0b0c10";
-      g2 = primaryHex;
-      bg = `radial-gradient(ellipse at 50% 0%, ${primaryHex}40 0%, #0b0c10 75%)`;
+      g1 = grad1Hex || "#0b0c10";
+      g2 = primaryHex || "#6366f1";
+      bg = `radial-gradient(ellipse at 50% 0%, ${g2}40 0%, ${g1} 75%)`;
       text = "#ffffff";
     } else if (mode === "custom") {
-      bg = customBg || bgHex;
+      bg = customBg || (bgHex.startsWith("#") ? bgHex : "#080a11");
     }
 
-    setBgHex(bg || "#080a11");
+    setBgHex(bg);
     setTextHex(text);
+    setGrad1Hex(g1);
+    setGrad2Hex(g2);
+    setCardBg(card);
+    setBorderColor(border);
     updateConfig({
       mode,
       background: bg,
       text,
       gradient_1: g1,
       gradient_2: g2,
+      card_bg: card,
+      border_color: border,
     });
   };
 
@@ -472,6 +505,37 @@ export function ColorPickerControl({
               <span className="text-[11px] font-mono text-muted-foreground">Luz Mesh</span>
             </div>
           </div>
+        </div>
+
+        {/* Seletor Livre de Cor Sólida de Fundo */}
+        <div className="flex items-center gap-2 pt-1">
+          <div className="relative shrink-0">
+            <input
+              type="color"
+              value={bgHex.startsWith("#") ? bgHex : "#080a11"}
+              onChange={(e) => applyBackgroundMode("custom", e.target.value)}
+              className="h-8 w-8 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
+              aria-label="Escolher cor sólida personalizada para o fundo"
+            />
+          </div>
+          <div className="relative flex items-center flex-1">
+            <span className="absolute left-2.5 text-xs text-muted-foreground font-mono">#</span>
+            <input
+              type="text"
+              value={bgHex.startsWith("#") ? bgHex.replace(/^#/, "") : "080A11"}
+              onChange={(e) => {
+                const clean = `#${e.target.value.trim().replace(/^#/, "")}`;
+                setBgHex(clean);
+                if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+                  applyBackgroundMode("custom", clean);
+                }
+              }}
+              placeholder="080A11"
+              maxLength={6}
+              className="w-full rounded-lg border border-border bg-background py-1.5 pl-6 pr-3 text-xs font-mono font-semibold text-foreground focus:border-primary focus:outline-none uppercase"
+            />
+          </div>
+          <span className="text-[11px] text-muted-foreground shrink-0">Fundo Sólido Livre</span>
         </div>
       </div>
 

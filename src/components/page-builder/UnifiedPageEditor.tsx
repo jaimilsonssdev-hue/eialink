@@ -1515,17 +1515,17 @@ export function UnifiedPageEditor({
                       const tokensDesign = customTheme
                         ? {
                             layout_esqueleto: customTheme.layout_esqueleto || "list_vertical_premium",
-                            tipo_fundo: customTheme.gradient_1 ? "mesh_gradient" : customTheme.mode === "light" ? "solido" : "mesh_gradient",
+                            tipo_fundo: customTheme.mode === "gradient" ? "mesh_gradient" : customTheme.mode === "light" ? "solido" : "mesh_gradient",
                             fundo_valores: {
-                              cor_gradiente_1: customTheme.gradient_1 || customTheme.background || "#0b0c10",
+                              cor_gradiente_1: customTheme.background || customTheme.gradient_1 || "#0b0c10",
                               cor_gradiente_2: customTheme.gradient_2 || customTheme.primary || "#1f2937",
                               blur_sobreposicao: "8px",
                               imagem_url: bio.cover_url || "",
                             },
                             estilo_botoes: {
-                              cor_fundo_card: customTheme.card_bg || "rgba(255, 255, 255, 0.04)",
-                              cor_borda: customTheme.border_color || "rgba(255, 255, 255, 0.12)",
-                              cor_texto: customTheme.text || "#ffffff",
+                              cor_fundo_card: customTheme.card_bg || (customTheme.mode === "light" ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
+                              cor_borda: customTheme.border_color || (customTheme.mode === "light" ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.12)"),
+                              cor_texto: customTheme.text || (customTheme.mode === "light" ? "#0f172a" : "#ffffff"),
                               cor_destaque: customTheme.primary || "#6366f1",
                               raio_borda: customTheme.border_radius || "16px",
                             },
@@ -2289,16 +2289,16 @@ export function UnifiedPageEditor({
               const previewTokens = previewSocial?.tokens_design;
               const activeThemeMeta = THEMES.find((t) => t.id === (previewBio.theme || "aurora")) || THEMES[0];
 
-              const previewCustomPrimary = previewTokens?.estilo_botoes?.cor_destaque || previewCustomTheme?.primary || activeThemeMeta.primary;
-              const previewCustomBg = previewTokens?.fundo_valores?.cor_gradiente_1 || previewCustomTheme?.background || activeThemeMeta.background;
-              const previewCustomText = previewTokens?.estilo_botoes?.cor_texto || previewCustomTheme?.text || activeThemeMeta.text;
-              const previewCustomCard = previewTokens?.estilo_botoes?.cor_fundo_card || previewCustomTheme?.card_bg || activeThemeMeta.card_bg;
-              const previewCustomBorder = previewTokens?.estilo_botoes?.cor_borda || previewCustomTheme?.border_color || activeThemeMeta.border_color;
-              const previewCustomRadius = previewTokens?.estilo_botoes?.raio_borda || previewCustomTheme?.border_radius || "16px";
+              const previewCustomPrimary = previewCustomTheme?.primary || previewTokens?.estilo_botoes?.cor_destaque || activeThemeMeta.primary;
+              const previewCustomBg = previewCustomTheme?.background || previewTokens?.fundo_valores?.cor_gradiente_1 || activeThemeMeta.background;
+              const previewCustomText = previewCustomTheme?.text || previewTokens?.estilo_botoes?.cor_texto || activeThemeMeta.text;
+              const previewCustomCard = previewCustomTheme?.card_bg || previewTokens?.estilo_botoes?.cor_fundo_card || activeThemeMeta.card_bg;
+              const previewCustomBorder = previewCustomTheme?.border_color || previewTokens?.estilo_botoes?.cor_borda || activeThemeMeta.border_color;
+              const previewCustomRadius = previewCustomTheme?.border_radius || previewTokens?.estilo_botoes?.raio_borda || "16px";
               const isPreviewLight = previewCustomTheme?.mode === "light" || previewBio.theme === "mono";
 
               // Chave de remontagem dinâmica para Pure State Reset e atualização em tempo real
-              const simulatorKey = `${activeNicheModel.id}-var${selectedVariantIndex}-${previewBio.template_id}-${previewBio.theme}-${previewBio.display_name}-${previewBio.avatar_url || ""}-${previewBio.cover_url || ""}-${hasPendingChanges ? "p" : "s"}-${snapshot.length}`;
+              const simulatorKey = `${activeNicheModel.id}-var${selectedVariantIndex}-${previewBio.template_id}-${previewBio.theme}-${previewCustomPrimary}-${previewCustomBg}-${previewCustomCard}-${previewCustomText}-${previewBio.display_name}-${previewBio.avatar_url || ""}-${previewBio.cover_url || ""}-${hasPendingChanges ? "p" : "s"}-${snapshot.length}`;
 
               return (
                 <div
@@ -2307,6 +2307,8 @@ export function UnifiedPageEditor({
                   data-custom-primary={Boolean(previewCustomPrimary) ? "true" : undefined}
                   data-custom-text={Boolean(previewCustomText) ? "true" : undefined}
                   data-custom-bg={Boolean(previewCustomBg) ? "true" : undefined}
+                  data-custom-card={Boolean(previewCustomCard) ? "true" : undefined}
+                  data-custom-border={Boolean(previewCustomBorder) ? "true" : undefined}
                   style={{
                     boxShadow: "0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.08)",
                     // Tailwind v4 Tokens Bridge
@@ -2324,13 +2326,18 @@ export function UnifiedPageEditor({
                     "--cor-destaque": previewCustomPrimary,
                     "--cor-principal": previewCustomPrimary,
                     "--cor-texto": previewCustomText,
-                    "--cor-fundo-card": previewCustomCard || "rgba(255, 255, 255, 0.04)",
-                    "--cor-borda": previewCustomBorder || "rgba(255, 255, 255, 0.1)",
+                    "--cor-fundo-card": previewCustomCard || (isPreviewLight ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
+                    "--cor-borda": previewCustomBorder || (isPreviewLight ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.1)"),
                     "--raio-borda": previewCustomRadius || "16px",
+
+                    "--bio-fg": previewCustomText,
+                    "--bio-muted": isPreviewLight ? "rgba(15, 23, 42, 0.72)" : `color-mix(in srgb, ${previewCustomText} 70%, transparent)`,
+                    "--bio-card": previewCustomCard || (isPreviewLight ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
+                    "--bio-border": previewCustomBorder || (isPreviewLight ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.1)"),
 
                     ...(previewCustomPrimary ? { "--template-primary": previewCustomPrimary, "--free-link-accent": previewCustomPrimary } : {}),
                     ...(previewCustomBg ? { "--template-bg": previewCustomBg, background: previewCustomBg } : {}),
-                    ...(previewCustomText ? { "--template-text": previewCustomText, "--bio-fg": previewCustomText } : {}),
+                    ...(previewCustomText ? { "--template-text": previewCustomText } : {}),
                   } as React.CSSProperties}
                 >
                   {/* Dynamic Island / Notch minimalista (Apenas Desktop) */}

@@ -1228,23 +1228,40 @@ export function buildBioLinkConfig(
   const nicheKey = detectNicheKey(socialLinks.niche || bio?.niche, bio?.display_name);
 
   const corDestaque =
-    tokensDesignRaw.estilo_botoes?.cor_destaque ||
     customTheme.primary ||
+    tokensDesignRaw.estilo_botoes?.cor_destaque ||
     "#6366f1";
 
   const corTexto =
-    tokensDesignRaw.estilo_botoes?.cor_texto ||
     customTheme.text ||
-    "#ffffff";
+    tokensDesignRaw.estilo_botoes?.cor_texto ||
+    (customTheme.mode === "light" ? "#0f172a" : "#ffffff");
 
   const corGrad1 =
-    tokensDesignRaw.fundo_valores?.cor_gradiente_1 ||
     customTheme.background ||
+    tokensDesignRaw.fundo_valores?.cor_gradiente_1 ||
     "#0b0c10";
 
   const corGrad2 =
+    customTheme.gradient_2 ||
     tokensDesignRaw.fundo_valores?.cor_gradiente_2 ||
+    customTheme.primary ||
     "#1f2937";
+
+  const corCard =
+    customTheme.card_bg ||
+    tokensDesignRaw.estilo_botoes?.cor_fundo_card ||
+    (customTheme.mode === "light" ? "#ffffff" : "rgba(255, 255, 255, 0.04)");
+
+  const corBorda =
+    customTheme.border_color ||
+    tokensDesignRaw.estilo_botoes?.cor_borda ||
+    (customTheme.mode === "light" ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.12)");
+
+  const raioBorda =
+    customTheme.border_radius ||
+    tokensDesignRaw.estilo_botoes?.raio_borda ||
+    "16px";
 
   const heroArchitecture =
     tokensDesignRaw.hero_architecture ||
@@ -1273,10 +1290,10 @@ export function buildBioLinkConfig(
       typebot_id: socialLinks.typebot_id || "atendente-default",
     },
     tokens_design: {
-      layout_esqueleto: tokensDesignRaw.layout_esqueleto || "list_vertical_premium",
+      layout_esqueleto: customTheme.layout_esqueleto || tokensDesignRaw.layout_esqueleto || "list_vertical_premium",
       estilo_layout: tokensDesignRaw.estilo_layout || (heroArchitecture === "centered" ? "bento" : heroArchitecture === "typographic" ? "minimal" : "glassmorphism"),
       hero_architecture: heroArchitecture,
-      tipo_fundo: tokensDesignRaw.tipo_fundo || (defaultHeroImage ? "imagem_url" : "mesh_gradient"),
+      tipo_fundo: customTheme.mode === "gradient" ? "mesh_gradient" : customTheme.mode === "light" ? "solido" : (tokensDesignRaw.tipo_fundo || (defaultHeroImage ? "imagem_url" : "mesh_gradient")),
       fundo_valores: {
         cor_gradiente_1: corGrad1,
         cor_gradiente_2: corGrad2,
@@ -1284,11 +1301,11 @@ export function buildBioLinkConfig(
         imagem_url: defaultHeroImage || "",
       },
       estilo_botoes: {
-        cor_fundo_card: tokensDesignRaw.estilo_botoes?.cor_fundo_card || "rgba(255, 255, 255, 0.04)",
-        cor_borda: tokensDesignRaw.estilo_botoes?.cor_borda || "rgba(255, 255, 255, 0.12)",
+        cor_fundo_card: corCard,
+        cor_borda: corBorda,
         cor_texto: corTexto,
         cor_destaque: corDestaque,
-        raio_borda: tokensDesignRaw.estilo_botoes?.raio_borda || "16px",
+        raio_borda: raioBorda,
       },
     },
     conteudo_perfil: {

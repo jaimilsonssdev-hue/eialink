@@ -496,9 +496,9 @@
   width: min(calc(100% - 2rem), 38rem);
   margin: -3.25rem auto 0;
   padding: 0 1.15rem 1.25rem;
-  border: 1px solid var(--bio-border);
-  border-radius: 1.6rem;
-  background: linear-gradient(180deg, rgb(22 16 34 / 0.96), rgb(11 8 18 / 0.985));
+  border: 1px solid var(--bio-border, rgba(255, 255, 255, 0.18));
+  border-radius: var(--radius, var(--raio-borda, 1.6rem));
+  background: var(--bio-card, var(--card, linear-gradient(180deg, rgb(22 16 34 / 0.96), rgb(11 8 18 / 0.985))));
   box-shadow: 0 24px 64px rgb(0 0 0 / 0.36);
 }
 .free-link-shell .public-profile-header {
@@ -526,9 +526,10 @@
 .free-link-shell .public-profile-action {
   min-height: 3.65rem;
   padding: 0.72rem 1rem;
-  border-radius: 1rem;
-  background: color-mix(in oklab, var(--card, #141721) 90%, transparent);
-  border: 1px solid var(--border, rgb(255 255 255 / 0.12));
+  border-radius: var(--radius, var(--raio-borda, 1rem));
+  background: var(--bio-card, var(--card, color-mix(in oklab, var(--card, #141721) 90%, transparent)));
+  border: 1px solid var(--bio-border, var(--border, rgb(255 255 255 / 0.12)));
+  color: var(--bio-fg, inherit);
   box-shadow: 0 4px 14px rgb(0 0 0 / 0.16);
 }
 .free-link-shell .public-profile-action-whatsapp {
@@ -785,10 +786,10 @@
   gap: 0.85rem;
   min-height: 4.5rem;
   padding: 0.8rem 0.95rem;
-  border: 1px solid var(--bio-border);
-  border-radius: 1.15rem;
-  color: var(--bio-fg);
-  background: color-mix(in srgb, var(--bio-card) 95%, transparent);
+  border: 1px solid var(--bio-border, var(--border, rgba(255, 255, 255, 0.18)));
+  border-radius: var(--radius, var(--raio-borda, 1.15rem));
+  color: var(--bio-fg, inherit);
+  background: var(--bio-card, var(--card, color-mix(in srgb, var(--bio-card, #141721) 95%, transparent)));
   box-shadow: 0 10px 28px rgb(0 0 0 / 0.1);
   backdrop-filter: blur(14px);
   transition:
@@ -798,8 +799,33 @@
 }
 .public-profile-action:hover {
   transform: translateY(-2px);
-  background: color-mix(in srgb, var(--bio-card) 75%, white 12%);
+  background: color-mix(in srgb, var(--bio-card, var(--card, #141721)) 80%, white 15%);
   box-shadow: 0 16px 32px rgb(0 0 0 / 0.18);
+}
+
+.free-link-shell[data-custom-card="true"] .free-link-card,
+.free-link-shell[data-custom-card="true"] .public-profile-action,
+.free-link-shell[data-custom-card="true"] .public-catalog-card,
+.public-profile-shell[data-custom-card="true"] .public-profile-action,
+.editor-phone-preview[data-custom-card="true"] .free-link-card,
+.editor-phone-preview[data-custom-card="true"] .public-profile-action {
+  background: var(--bio-card) !important;
+}
+
+.free-link-shell[data-custom-border="true"] .free-link-card,
+.free-link-shell[data-custom-border="true"] .public-profile-action,
+.free-link-shell[data-custom-border="true"] .public-catalog-card,
+.public-profile-shell[data-custom-border="true"] .public-profile-action,
+.editor-phone-preview[data-custom-border="true"] .free-link-card,
+.editor-phone-preview[data-custom-border="true"] .public-profile-action {
+  border-color: var(--bio-border) !important;
+}
+
+.free-link-shell[data-custom-primary="true"] .public-profile-action-whatsapp,
+.public-profile-shell[data-custom-primary="true"] .public-profile-action-whatsapp,
+.editor-phone-preview[data-custom-primary="true"] .public-profile-action-whatsapp {
+  background: var(--primary) !important;
+  border-color: var(--primary) !important;
 }
 .public-profile-action:active,
 .public-profile-copy-pix:active {

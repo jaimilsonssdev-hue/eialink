@@ -169,17 +169,78 @@ Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos (
 
     promptParts.push({ text: userPrompt });
 
-    const candidateModels = [
-      "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-      "gemini-2.5-flash-lite",
-    ];
-
     let lastError = "";
     let rawContent: string | null = null;
 
-    for (const modelName of candidateModels) {
+    // 1. Descoberta dinâmica dos modelos disponíveis para a chave informada
+    let activeModels: string[] = [];
+    try {
+      const listRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(resolvedKey)}`
+      );
+      if (listRes.ok) {
+        const listData = await listRes.json();
+        if (Array.isArray(listData.models)) {
+          activeModels = listData.models
+            .filter(
+              (m: any) =>
+                Array.isArray(m.supportedGenerationMethods) &&
+                m.supportedGenerationMethods.includes("generateContent")
+            )
+            .map((m: any) => (m.name || "").replace(/^models\//, ""))
+            .filter((m: string) => !m.includes("2.5-flash-lite"));
+        }
+      } else {
+        const errText = await listRes.text();
+        try {
+          const errObj = JSON.parse(errText);
+          if (listRes.status === 400 || listRes.status === 403) {
+            throw new Error(
+              `Chave do Google AI Studio inválida ou sem permissão (${listRes.status}): ${errObj.error?.message || errText}`
+            );
+          }
+        } catch (e: any) {
+          if (e.message?.startsWith("Chave do Google")) throw e;
+        }
+      }
+    } catch (e: any) {
+      if (e.message?.startsWith("Chave do Google")) throw e;
+      // segue para os candidatos recomendados se a listagem falhar por CORS/rede
+    }
+
+    const preferredPriority = [
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+      "gemini-3.7-flash",
+      "gemini-3.1-flash-lite",
+      "gemini-flash-latest",
+      "gemini-flash-lite-latest",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+    ];
+
+    const candidateModels = [
+      ...preferredPriority.filter((m) => activeModels.includes(m)),
+      ...activeModels.filter((m) => !preferredPriority.includes(m)),
+    ];
+
+    const finalModelsToTry =
+      candidateModels.length > 0
+        ? candidateModels
+        : [
+            "gemini-3.6-flash",
+            "gemini-3.5-flash",
+            "gemini-3.7-flash",
+            "gemini-3.1-flash-lite",
+            "gemini-flash-latest",
+            "gemini-2.5-flash",
+            "gemini-2.0-flash",
+            "gemini-1.5-flash",
+          ];
+
+    // 2. Tenta a API generateContent nos modelos suportados
+    for (const modelName of finalModelsToTry) {
       try {
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
@@ -187,7 +248,10 @@ Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos (
           )}`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": resolvedKey,
+            },
             body: JSON.stringify({
               system_instruction: {
                 parts: [{ text: systemPrompt }],
@@ -227,6 +291,77 @@ Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos (
         }
       } catch (err: any) {
         lastError = err?.message || String(err);
+      }
+    }
+
+    // 3. Fallback: Interactions API recomendada pela Google para novas contas
+    if (!rawContent) {
+      const interactionModels = [
+        "gemini-3.5-flash",
+        "gemini-3.6-flash",
+        "gemini-3.7-flash",
+        "gemini-3.1-flash-lite",
+        "gemini-flash-latest",
+      ];
+      for (const modelName of interactionModels) {
+        try {
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/interactions?key=${encodeURIComponent(
+              resolvedKey
+            )}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-goog-api-key": resolvedKey,
+                "api-revision": "2026-05-20",
+              },
+              body: JSON.stringify({
+                model: modelName,
+                system_instruction: systemPrompt,
+                input: userPrompt,
+                response_mime_type: "application/json",
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errText = await response.text();
+            let parsedErr = errText;
+            try {
+              const errObj = JSON.parse(errText);
+              parsedErr = errObj.error?.message || errText;
+            } catch {
+              // raw
+            }
+            lastError = `Interactions API (${modelName} - ${response.status}): ${parsedErr}`;
+            continue;
+          }
+
+          const payload = await response.json();
+          let text = payload.output_text;
+          if (!text && Array.isArray(payload.steps)) {
+            for (let i = payload.steps.length - 1; i >= 0; i--) {
+              const step = payload.steps[i];
+              if (step?.content && Array.isArray(step.content)) {
+                for (const part of step.content) {
+                  if (part.type === "text" && part.text) {
+                    text = part.text;
+                    break;
+                  }
+                }
+              }
+              if (text) break;
+            }
+          }
+
+          if (text) {
+            rawContent = text;
+            break;
+          }
+        } catch (err: any) {
+          lastError = err?.message || String(err);
+        }
       }
     }
 

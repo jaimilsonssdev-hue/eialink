@@ -2280,14 +2280,11 @@
   padding-bottom: 6rem;
   background: var(--template-bg, #fafaf9);
   color: var(--template-text, #18181b);
+  overflow-x: hidden;
 }
 .niche-store-hero-banner {
   position: relative;
   overflow: hidden;
-  height: 220px;
-}
-@media (min-width: 640px) {
-  .niche-store-hero-banner { height: 260px; }
 }
 .niche-store-hero-img {
   width: 100%;

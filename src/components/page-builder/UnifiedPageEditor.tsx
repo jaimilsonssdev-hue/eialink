@@ -1241,7 +1241,11 @@ export function UnifiedPageEditor({
                       <span>Formato da Presença Comercial</span>
                     </label>
                     <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                      {bio.template_id === "site-maquina" ? "Site Institucional Completo" : bio.template_id === "storefront" ? "Loja / Delivery App" : "BioLink de Bolso"}
+                      {bio.template_id === "site-maquina"
+                        ? "Site Institucional Completo"
+                        : bio.template_id === "storefront" || bio.template_id === "store-showcase"
+                        ? "Loja / Delivery App"
+                        : "BioLink de Bolso"}
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground">
@@ -1272,7 +1276,9 @@ export function UnifiedPageEditor({
                         toast.success("Formato alterado para: BioLink de Alta Conversão");
                       }}
                       className={`p-3 rounded-xl border text-left transition-all ${
-                        bio.template_id !== "site-maquina" && bio.template_id !== "storefront"
+                        bio.template_id !== "site-maquina" &&
+                        bio.template_id !== "storefront" &&
+                        bio.template_id !== "store-showcase"
                           ? "border-primary bg-primary text-primary-foreground shadow-md font-bold"
                           : "border-border bg-card hover:border-primary/50 text-foreground"
                       }`}
@@ -1285,11 +1291,11 @@ export function UnifiedPageEditor({
                     <button
                       type="button"
                       onClick={() => {
-                        updateBio({ template_id: "storefront" });
+                        updateBio({ template_id: "store-showcase" });
                         toast.success("Formato alterado para: Delivery & Loja Virtual (App / PWA)");
                       }}
                       className={`p-3 rounded-xl border text-left transition-all ${
-                        bio.template_id === "storefront"
+                        bio.template_id === "storefront" || bio.template_id === "store-showcase"
                           ? "border-primary bg-primary text-primary-foreground shadow-md font-bold"
                           : "border-border bg-card hover:border-primary/50 text-foreground"
                       }`}

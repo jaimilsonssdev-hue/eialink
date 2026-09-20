@@ -378,7 +378,11 @@ function PublicBio() {
   // 7. Nichos de produto/delivery (açaí, sorveteria, bebidas, delivery, etc.) renderizam cinematic-glass ou catálogo
   let effectiveTemplateId = bio.template_id;
 
-  if (effectiveTemplateId !== "site-maquina" && effectiveTemplateId !== "storefront") {
+  if (
+    effectiveTemplateId !== "site-maquina" &&
+    effectiveTemplateId !== "storefront" &&
+    effectiveTemplateId !== "store-showcase"
+  ) {
   if (effectiveTemplateId === "therapy-wellbeing" && nicheKey !== "psicologia") {
     effectiveTemplateId = isProduct
       ? "cinematic-glass"
@@ -437,6 +441,10 @@ function PublicBio() {
   if (isProduct && (effectiveTemplateId === "business-modern" || effectiveTemplateId === "restaurant-menu" || !effectiveTemplateId)) {
     effectiveTemplateId = "cinematic-glass";
   }
+  }
+
+  if (effectiveTemplateId === "storefront") {
+    effectiveTemplateId = "store-showcase";
   }
 
   // Se for uma demonstração de prospecção com template default/business-modern, promove automaticamente

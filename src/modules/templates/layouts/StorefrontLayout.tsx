@@ -55,6 +55,15 @@ interface ParsedProduct extends CatalogItem {
   cleanDesc: string | null;
 }
 
+function readableTextColor(background?: string) {
+  if (!background || !/^#[0-9a-f]{6}$/i.test(background)) return undefined;
+  const red = Number.parseInt(background.slice(1, 3), 16);
+  const green = Number.parseInt(background.slice(3, 5), 16);
+  const blue = Number.parseInt(background.slice(5, 7), 16);
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
+  return luminance > 150 ? "#111827" : "#ffffff";
+}
+
 function StorefrontView({
   model: _model,
   ctx,
@@ -63,6 +72,9 @@ function StorefrontView({
   ctx: LayoutRenderContext;
 }) {
   const { bio, links, onTrack, onShare, products = [], supplemental } = ctx;
+  const socialData = (bio.social_links as Record<string, any>) || {};
+  const navigationBg = socialData.custom_theme?.navigation_bg as string | undefined;
+  const infoBadgeBg = socialData.custom_theme?.info_badge_bg as string | undefined;
 
   const companyName = bio.display_name.trim();
   const avatarImage = bio.avatar_url;
@@ -379,7 +391,10 @@ function StorefrontView({
                     )}
                   </span>
 
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-foreground border border-border">
+                  <span
+                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-foreground border border-border"
+                    style={infoBadgeBg ? { backgroundColor: infoBadgeBg, color: readableTextColor(infoBadgeBg) } : undefined}
+                  >
                     {isDelivery ? (
                       <>
                         <Bike size={12} /> Entrega &amp; Retirada
@@ -486,7 +501,10 @@ function StorefrontView({
 
           {/* Categorias Horizontais Sticky Estilo iFood */}
           {categories.length > 0 && (
-            <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md pt-2 pb-2.5 -mx-3 px-3 sm:-mx-4 sm:px-4 border-b border-border/40 shadow-xs mb-3">
+            <div
+              className="sticky top-0 z-30 bg-background/95 backdrop-blur-md pt-2 pb-2.5 -mx-3 px-3 sm:-mx-4 sm:px-4 border-b border-border/40 shadow-xs mb-3"
+              style={navigationBg ? { backgroundColor: navigationBg } : undefined}
+            >
               <div className="no-scrollbar flex items-center gap-1.5 overflow-x-auto scroll-smooth">
                 <button
                   type="button"

@@ -23,6 +23,8 @@ export interface CustomThemeConfig {
   gradient_1?: string;
   gradient_2?: string;
   layout_esqueleto?: "list_vertical_premium" | "bento_grid";
+  navigation_bg?: string;
+  info_badge_bg?: string;
 }
 
 interface ColorPickerControlProps {
@@ -69,6 +71,8 @@ export function ColorPickerControl({
   const [borderRadius, setBorderRadius] = useState(value?.border_radius || "16px");
   const [cardBg, setCardBg] = useState(value?.card_bg || "");
   const [borderColor, setBorderColor] = useState(value?.border_color || "");
+  const [navigationBg, setNavigationBg] = useState(value?.navigation_bg || "");
+  const [infoBadgeBg, setInfoBadgeBg] = useState(value?.info_badge_bg || "");
   const [layoutEsqueleto, setLayoutEsqueleto] = useState<"list_vertical_premium" | "bento_grid">(
     value?.layout_esqueleto || "list_vertical_premium"
   );
@@ -81,7 +85,9 @@ export function ColorPickerControl({
       value?.border_color ||
       value?.mode ||
       value?.gradient_1 ||
-      value?.layout_esqueleto
+      value?.layout_esqueleto ||
+      value?.navigation_bg ||
+      value?.info_badge_bg
   );
 
   useEffect(() => {
@@ -117,6 +123,14 @@ export function ColorPickerControl({
   }, [value?.border_color]);
 
   useEffect(() => {
+    if (value?.navigation_bg !== undefined) setNavigationBg(value.navigation_bg);
+  }, [value?.navigation_bg]);
+
+  useEffect(() => {
+    if (value?.info_badge_bg !== undefined) setInfoBadgeBg(value.info_badge_bg);
+  }, [value?.info_badge_bg]);
+
+  useEffect(() => {
     if (value?.layout_esqueleto) setLayoutEsqueleto(value.layout_esqueleto);
   }, [value?.layout_esqueleto]);
 
@@ -132,6 +146,8 @@ export function ColorPickerControl({
       gradient_2: updates.gradient_2 !== undefined ? updates.gradient_2 : grad2Hex,
       border_radius: updates.border_radius !== undefined ? updates.border_radius : borderRadius,
       layout_esqueleto: updates.layout_esqueleto !== undefined ? updates.layout_esqueleto : layoutEsqueleto,
+      navigation_bg: updates.navigation_bg !== undefined ? updates.navigation_bg : navigationBg,
+      info_badge_bg: updates.info_badge_bg !== undefined ? updates.info_badge_bg : infoBadgeBg,
       mode: updates.mode !== undefined ? updates.mode : (value?.mode || "dark"),
       ...updates,
     };
@@ -156,6 +172,16 @@ export function ColorPickerControl({
   const applyBorderColor = (val: string) => {
     setBorderColor(val);
     updateConfig({ border_color: val });
+  };
+
+  const applyNavigationBg = (val: string) => {
+    setNavigationBg(val);
+    updateConfig({ navigation_bg: val });
+  };
+
+  const applyInfoBadgeBg = (val: string) => {
+    setInfoBadgeBg(val);
+    updateConfig({ info_badge_bg: val });
   };
 
   const applyBackgroundMode = (
@@ -639,6 +665,53 @@ export function ColorPickerControl({
             />
             <span className="text-[11px] text-muted-foreground truncate">Borda Card</span>
           </div>
+        </div>
+      </div>
+
+      {/* 7. CORES ESPECÍFICAS DE APPS / PWA */}
+      <div className="space-y-3 pt-4 border-t border-border/50">
+        <div>
+          <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+            <Palette className="h-3.5 w-3.5 text-primary" />
+            7. Cores do App / PWA
+          </label>
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Personalize áreas próprias dos modelos de loja, cardápio e delivery.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/50 p-2.5">
+            <input
+              type="color"
+              value={navigationBg.startsWith("#") ? navigationBg : "#10081D"}
+              onChange={(event) => applyNavigationBg(event.target.value)}
+              className="h-8 w-8 shrink-0 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
+              aria-label="Cor da barra de categorias"
+            />
+            <span className="min-w-0">
+              <span className="block text-[11px] font-semibold text-foreground">Barra de categorias</span>
+              <span className="block truncate text-[10px] font-mono text-muted-foreground">
+                {navigationBg || "Padrão do tema"}
+              </span>
+            </span>
+          </label>
+
+          <label className="flex items-center gap-2 rounded-xl border border-border/60 bg-background/50 p-2.5">
+            <input
+              type="color"
+              value={infoBadgeBg.startsWith("#") ? infoBadgeBg : "#F1F5F9"}
+              onChange={(event) => applyInfoBadgeBg(event.target.value)}
+              className="h-8 w-8 shrink-0 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
+              aria-label="Cor do card de entrega e retirada"
+            />
+            <span className="min-w-0">
+              <span className="block text-[11px] font-semibold text-foreground">Card Delivery</span>
+              <span className="block truncate text-[10px] font-mono text-muted-foreground">
+                {infoBadgeBg || "Padrão do tema"}
+              </span>
+            </span>
+          </label>
         </div>
       </div>
     </div>

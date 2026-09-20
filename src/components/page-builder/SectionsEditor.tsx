@@ -7,6 +7,7 @@ import {
   HeartHandshake,
   Layers,
   MessageSquareHeart,
+  Palette,
   Plus,
   ShieldCheck,
   ShoppingBag,
@@ -1023,6 +1024,28 @@ export function SectionsEditor({
 
   const parsedVideo = videoConfig.url ? parseVideoEmbedUrl(videoConfig.url) : null;
 
+  const customTheme = socialLinks.custom_theme || {};
+  const sectionColors = customTheme.sections || {
+    bg: customTheme.card_bg || "",
+    text: customTheme.text || "",
+    accent: customTheme.primary || "",
+    border: customTheme.border_color || "",
+  };
+
+  const updateSectionColors = (patch: Partial<typeof sectionColors>) => {
+    const nextSections = { ...sectionColors, ...patch };
+    const nextTheme = {
+      ...customTheme,
+      sections: nextSections,
+      card_bg: nextSections.bg || customTheme.card_bg,
+      border_color: nextSections.border || customTheme.border_color,
+    };
+    onUpdateSocialLinks({
+      ...socialLinks,
+      custom_theme: nextTheme,
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -1033,8 +1056,177 @@ export function SectionsEditor({
           Seções Modulares de Conversão
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Adicione vídeos de apresentação, depoimentos com estrelas e história da empresa para aumentar o valor percebido do seu BioLink.
+          Adicione vídeos de apresentação, depoimentos com estrelas, história da empresa e personalize as cores dos blocos.
         </p>
+      </div>
+
+      {/* 🎨 SELETOR DE CORES E ESTILO DAS SEÇÕES */}
+      <div className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+              <Palette className="h-4 w-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Cores & Estilos Visuais das Seções</h3>
+              <p className="text-[11px] text-muted-foreground">
+                Personalize o fundo dos cards, textos, detalhes e bordas das seções
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Presets Rápidos */}
+        <div className="space-y-1.5">
+          <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            Temas Rápidos para Seções:
+          </span>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                updateSectionColors({
+                  bg: "#18181b",
+                  text: "#ffffff",
+                  accent: "#6366f1",
+                  border: "rgba(255,255,255,0.12)",
+                })
+              }
+              className="px-2.5 py-1.5 rounded-lg border border-border/80 bg-zinc-900 text-white text-xs font-semibold hover:border-primary transition-all text-left flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="h-3 w-3 rounded-full bg-zinc-950 border border-zinc-700 shrink-0" />
+              <span className="truncate">Dark Grafite</span>
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                updateSectionColors({
+                  bg: "#ffffff",
+                  text: "#0f172a",
+                  accent: "#2563eb",
+                  border: "#e2e8f0",
+                })
+              }
+              className="px-2.5 py-1.5 rounded-lg border border-border/80 bg-white text-zinc-900 text-xs font-semibold hover:border-primary transition-all text-left flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="h-3 w-3 rounded-full bg-white border border-zinc-300 shrink-0" />
+              <span className="truncate">Clean / Claro</span>
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                updateSectionColors({
+                  bg: "#0b0c10",
+                  text: "#fef08a",
+                  accent: "#d4af37",
+                  border: "rgba(212,175,55,0.3)",
+                })
+              }
+              className="px-2.5 py-1.5 rounded-lg border border-border/80 bg-black text-amber-300 text-xs font-semibold hover:border-amber-400 transition-all text-left flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="h-3 w-3 rounded-full bg-amber-400 shrink-0" />
+              <span className="truncate">Ouro & Luxo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                updateSectionColors({
+                  bg: "rgba(255,255,255,0.05)",
+                  text: "#ffffff",
+                  accent: "#10b981",
+                  border: "rgba(255,255,255,0.15)",
+                })
+              }
+              className="px-2.5 py-1.5 rounded-lg border border-border/80 bg-white/5 text-emerald-400 text-xs font-semibold hover:border-emerald-400 transition-all text-left flex items-center gap-1.5 cursor-pointer"
+            >
+              <span className="h-3 w-3 rounded-full bg-emerald-500 shrink-0" />
+              <span className="truncate">Glassmorphism</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Inputs de Cor */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
+          {/* Cor de Fundo */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-foreground">Fundo dos Cards/Seções</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={sectionColors.bg?.startsWith("#") ? sectionColors.bg : "#18181b"}
+                onChange={(e) => updateSectionColors({ bg: e.target.value })}
+                className="h-8 w-9 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <input
+                type="text"
+                value={sectionColors.bg || ""}
+                onChange={(e) => updateSectionColors({ bg: e.target.value })}
+                placeholder="#18181b"
+                className="flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Cor do Texto */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-foreground">Texto das Seções</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={sectionColors.text?.startsWith("#") ? sectionColors.text : "#ffffff"}
+                onChange={(e) => updateSectionColors({ text: e.target.value })}
+                className="h-8 w-9 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <input
+                type="text"
+                value={sectionColors.text || ""}
+                onChange={(e) => updateSectionColors({ text: e.target.value })}
+                placeholder="#ffffff"
+                className="flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Cor de Destaque */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-foreground">Destaque & Ícones</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={sectionColors.accent?.startsWith("#") ? sectionColors.accent : "#6366f1"}
+                onChange={(e) => updateSectionColors({ accent: e.target.value })}
+                className="h-8 w-9 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <input
+                type="text"
+                value={sectionColors.accent || ""}
+                onChange={(e) => updateSectionColors({ accent: e.target.value })}
+                placeholder="#6366f1"
+                className="flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+
+          {/* Cor da Borda */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-foreground">Borda das Seções</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={sectionColors.border?.startsWith("#") ? sectionColors.border : "#27272a"}
+                onChange={(e) => updateSectionColors({ border: e.target.value })}
+                className="h-8 w-9 rounded border border-border cursor-pointer bg-transparent"
+              />
+              <input
+                type="text"
+                value={sectionColors.border || ""}
+                onChange={(e) => updateSectionColors({ border: e.target.value })}
+                placeholder="#27272a"
+                className="flex-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs text-foreground font-mono focus:border-primary focus:outline-none"
+              />
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* 1. SEÇÃO DE VÍDEO */}

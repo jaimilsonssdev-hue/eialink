@@ -76,6 +76,13 @@ export const ModularSections = memo(function ModularSections({
   const aboutConfig = socialData.about_section as AboutConfig | undefined;
   const showTestimonials = socialData.show_testimonials !== false;
 
+  const sectionColors = socialData.custom_theme?.sections || {
+    bg: socialData.custom_theme?.card_bg,
+    text: socialData.custom_theme?.text,
+    accent: socialData.custom_theme?.primary,
+    border: socialData.custom_theme?.border_color,
+  };
+
   const videoParsed = videoConfig?.enabled && videoConfig.url ? parseVideoEmbedUrl(videoConfig.url) : null;
   const hasAbout = aboutConfig?.enabled && (aboutConfig.text || (aboutConfig.highlights && aboutConfig.highlights.length > 0));
   const hasTestimonials = showTestimonials && testimonials.length > 0 && !hideTestimonialsIfInLayout;
@@ -91,13 +98,24 @@ export const ModularSections = memo(function ModularSections({
         <section className="space-y-2.5 animate-fade-in-up" aria-label="Vídeo em Destaque">
           {videoConfig?.title && (
             <div className="flex items-center gap-2 px-1">
-              <Video className="w-4 h-4 text-[color:var(--template-primary,#22c55e)]" />
-              <h3 className="text-sm font-bold text-[color:var(--bio-fg,#fff)] tracking-tight">
+              <Video
+                style={{ color: sectionColors.accent || undefined }}
+                className="w-4 h-4 text-[color:var(--template-primary,#22c55e)]"
+              />
+              <h3
+                style={{ color: sectionColors.text || undefined }}
+                className="text-sm font-bold text-[color:var(--bio-fg,#fff)] tracking-tight"
+              >
                 {videoConfig.title}
               </h3>
             </div>
           )}
-          <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-lg ring-1 ring-white/5">
+          <div
+            style={{
+              borderColor: sectionColors.border || undefined,
+            }}
+            className="relative aspect-video w-full rounded-2xl overflow-hidden bg-black/40 border border-white/10 shadow-lg ring-1 ring-white/5"
+          >
             {videoParsed.type === "mp4" ? (
               <video
                 src={videoParsed.embedUrl}
@@ -127,12 +145,26 @@ export const ModularSections = memo(function ModularSections({
 
       {/* 2. SEÇÃO SOBRE NÓS & DIFERENCIAIS */}
       {hasAbout && (
-        <section className="rounded-2xl p-5 bg-card/80 border border-border/80 backdrop-blur-md shadow-sm space-y-3.5 animate-fade-in-up" aria-label="Sobre Nós">
+        <section
+          style={{
+            backgroundColor: sectionColors.bg || undefined,
+            color: sectionColors.text || undefined,
+            borderColor: sectionColors.border || undefined,
+          }}
+          className="rounded-2xl p-5 bg-card/80 border border-border/80 backdrop-blur-md shadow-sm space-y-3.5 animate-fade-in-up"
+          aria-label="Sobre Nós"
+        >
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--template-primary,#22c55e)]">
+            <span
+              style={{ color: sectionColors.accent || undefined }}
+              className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--template-primary,#22c55e)]"
+            >
               Conheça Nossa Empresa
             </span>
-            <h3 className="text-base font-bold text-foreground">
+            <h3
+              style={{ color: sectionColors.text || undefined }}
+              className="text-base font-bold text-foreground"
+            >
               {aboutConfig?.title || "Sobre Nós"}
             </h3>
           </div>
@@ -145,8 +177,11 @@ export const ModularSections = memo(function ModularSections({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border/50">
               {aboutConfig.highlights.filter(Boolean).map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2 text-xs font-medium text-foreground">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[color:var(--template-primary,#22c55e)] shrink-0" />
-                  <span>{item}</span>
+                  <CheckCircle2
+                    style={{ color: sectionColors.accent || undefined }}
+                    className="w-3.5 h-3.5 text-[color:var(--template-primary,#22c55e)] shrink-0"
+                  />
+                  <span style={{ color: sectionColors.text || undefined }}>{item}</span>
                 </div>
               ))}
             </div>
@@ -159,10 +194,16 @@ export const ModularSections = memo(function ModularSections({
         <section className="space-y-3 animate-fade-in-up" aria-label="Depoimentos de Clientes">
           <div className="flex items-center justify-between px-1">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--template-primary,#22c55e)]">
+              <span
+                style={{ color: sectionColors.accent || undefined }}
+                className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--template-primary,#22c55e)]"
+              >
                 Opinião de Clientes
               </span>
-              <h3 className="text-sm font-bold text-[color:var(--bio-fg,#fff)]">
+              <h3
+                style={{ color: sectionColors.text || undefined }}
+                className="text-sm font-bold text-[color:var(--bio-fg,#fff)]"
+              >
                 Avaliações & Recomendações
               </h3>
             </div>
@@ -176,7 +217,12 @@ export const ModularSections = memo(function ModularSections({
             {testimonials.slice(0, 4).map((t, idx) => (
               <div
                 key={t.id || idx}
-                className="relative rounded-2xl p-4 bg-card/70 border border-border/70 backdrop-blur-md shadow-xs space-y-2.5 transition-all hover:border-[color:var(--template-primary,#22c55e)]/40"
+                style={{
+                  backgroundColor: sectionColors.bg || undefined,
+                  color: sectionColors.text || undefined,
+                  borderColor: sectionColors.border || undefined,
+                }}
+                className="relative rounded-2xl p-4 bg-card/70 border border-border/70 backdrop-blur-md shadow-xs space-y-2.5 transition-all"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -187,12 +233,24 @@ export const ModularSections = memo(function ModularSections({
                         className="w-8 h-8 rounded-full object-cover border border-white/20 shrink-0"
                       />
                     ) : (
-                      <div className="w-8 h-8 rounded-full bg-[color:var(--template-primary,#22c55e)]/20 text-[color:var(--template-primary,#22c55e)] flex items-center justify-center font-bold text-xs shrink-0 border border-[color:var(--template-primary,#22c55e)]/30">
+                      <div
+                        style={{
+                          backgroundColor: sectionColors.accent ? `${sectionColors.accent}20` : undefined,
+                          color: sectionColors.accent || undefined,
+                          borderColor: sectionColors.accent ? `${sectionColors.accent}40` : undefined,
+                        }}
+                        className="w-8 h-8 rounded-full bg-[color:var(--template-primary,#22c55e)]/20 text-[color:var(--template-primary,#22c55e)] flex items-center justify-center font-bold text-xs shrink-0 border border-[color:var(--template-primary,#22c55e)]/30"
+                      >
                         {t.author ? t.author.charAt(0).toUpperCase() : "C"}
                       </div>
                     )}
                     <div className="min-w-0">
-                      <p className="text-xs font-bold text-foreground truncate">{t.author}</p>
+                      <p
+                        style={{ color: sectionColors.text || undefined }}
+                        className="text-xs font-bold text-foreground truncate"
+                      >
+                        {t.author}
+                      </p>
                       {t.role && (
                         <p className="text-[10px] text-muted-foreground truncate">{t.role}</p>
                       )}
@@ -205,7 +263,12 @@ export const ModularSections = memo(function ModularSections({
                   </div>
                 </div>
 
-                <p className="text-xs text-muted-foreground italic line-clamp-4 relative pl-3 border-l-2 border-[color:var(--template-primary,#22c55e)]/40">
+                <p
+                  style={{
+                    borderLeftColor: sectionColors.accent || undefined,
+                  }}
+                  className="text-xs text-muted-foreground italic line-clamp-4 relative pl-3 border-l-2 border-[color:var(--template-primary,#22c55e)]/40"
+                >
                   "{t.text}"
                 </p>
               </div>
@@ -216,4 +279,5 @@ export const ModularSections = memo(function ModularSections({
     </div>
   );
 });
+
 

@@ -52,6 +52,7 @@ const copilotFileInputSchema = z.object({
   mimeType: z.string(),
   base64: z.string(),
   publicUrl: z.string().optional(),
+  role: z.enum(["logo", "cover", "product", "general"]).optional(),
 });
 
 const copilotInputSchema = z
@@ -102,14 +103,14 @@ Sua tarefa é analisar o briefing, as imagens e/ou os documentos em anexo (como 
 
 DIRETRIZES MULTIMODAIS E DE DESIGN:
 1. ARQUITETURA INTOCÁVEL: JAMAIS altere o template_id ou estruture propriedades fora do schema. Você altera estritamente textos, cores, distribuição de fotos, serviços e diferenciais.
-2. DISTRIBUIÇÃO INTELIGENTE DE FOTOS:
-   - Se fotos forem anexadas e incluírem URLs públicas nos metadados:
-     * 'avatar_url': Escolha a URL da foto que melhor representa o logotipo nítido da empresa ou o retrato do profissional/proprietário.
-     * 'cover_url': Escolha a URL da foto que melhor retrata a fachada, ambiente da clínica/loja ou banner amplo.
-     * 'suggested_services[i].image_url': Se houver fotos específicas de pratos (ex: hambúrguer, pizza), produtos ou procedimentos estéticos/médicos, atribua a respectiva URL pública diretamente ao item correspondente do catálogo!
+2. DISTRIBUIÇÃO INTELIGENTE DE FOTOS E RECORTE DE LOGOS:
+   - Se houver fotos ou imagens anexadas (ou extraídas de PDF) com URLs públicas:
+     * 'avatar_url': Atribua OBRIGATORIAMENTE a URL da imagem com tag/papel de Logotipo ('logo') ou o melhor recorte de logo/rosto.
+     * 'cover_url': Atribua OBRIGATORIAMENTE a URL da foto de Capa/Banner ('cover') ou banner principal da empresa.
+     * 'suggested_services[i].image_url': Se houver fotos específicas de pratos (ex: hambúrguer, pizza), produtos ou procedimentos estéticos/médicos ('product'), atribua a respectiva URL pública diretamente ao item correspondente do catálogo!
 3. EXTRAÇÃO SEMÂNTICA DE PDFS (Cardápios, Catálogos e Tabelas de Preço):
-   - Se houver documento PDF anexado, examine atentamente todo o texto e tabelas.
-   - Extraia os produtos/serviços reais com seus nomes exatos, descrições detalhadas e preços numéricos em reais (R$) para 'suggested_services'.
+   - Se houver documento PDF anexado, examine atentamente todo o texto, tabelas, pratos e valores.
+   - Extraia TODOS os produtos/serviços reais com seus nomes exatos, descrições detalhadas e preços numéricos em reais (R$) para 'suggested_services'.
    - Identifique horários de atendimento, regras de agendamento e diferenciais presentes no PDF para compor os 'differentials' e o FAQ.
 4. VÍDEO INSTITUCIONAL:
    - Se o campo videoUrl foi preenchido ou mencionado, configure 'video_embed' com enabled=true, a url indicada, um título magnético (ex: "Conheça por Dentro Nossa Estrutura") e uma legenda convidativa.
@@ -125,9 +126,17 @@ RETORNE RIGOROSAMENTE UM OBJETO JSON VÁLIDO SEM NENHUM TEXTO OU MARKDOWN ADICIO
 
     const fileDescriptions = (data.files || [])
       .map((f, idx) => {
+        let roleHint = "";
+        if (f.role === "logo" || f.name.toLowerCase().includes("logo")) {
+          roleHint = ` [IMPORTANTE: Logotipo da Empresa -> Atribua esta URL pública a 'avatar_url']`;
+        } else if (f.role === "cover" || f.name.toLowerCase().includes("capa") || f.name.toLowerCase().includes("banner")) {
+          roleHint = ` [IMPORTANTE: Banner/Capa Principal -> Atribua esta URL pública a 'cover_url']`;
+        } else if (f.role === "product" || f.name.toLowerCase().includes("prato") || f.name.toLowerCase().includes("pagina")) {
+          roleHint = ` [IMPORTANTE: Foto de Prato/Serviço -> Atribua esta URL ao respectivo item em 'suggested_services[i].image_url']`;
+        }
         return `- Arquivo #${idx + 1}: "${f.name}" (${f.mimeType})${
-          f.publicUrl ? ` [URL Pública já salva: "${f.publicUrl}"]` : ""
-        }`;
+          f.publicUrl ? ` [URL Pública: "${f.publicUrl}"]` : ""
+        }${roleHint}`;
       })
       .join("\n");
 

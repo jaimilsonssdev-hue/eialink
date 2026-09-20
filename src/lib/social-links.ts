@@ -18,7 +18,7 @@ const socialLinkValue = z
   .string()
   .trim()
   .max(500, "Cada link social pode ter no máximo 500 caracteres.")
-  .refine((value) => Boolean(safeExternalUrl(value)), "Use um endereço iniciado por https://.");
+  .refine((value) => !value || Boolean(safeExternalUrl(value)), "Use um endereço iniciado por https://.");
 
 export const socialLinksSchema = z
   .object({
@@ -27,7 +27,7 @@ export const socialLinksSchema = z
       .trim()
       .max(500)
       .refine(
-        (value) => instagramHandle.test(value) || Boolean(safeExternalUrl(value)),
+        (value) => !value || instagramHandle.test(value) || Boolean(safeExternalUrl(value)),
         "Informe um @usuário do Instagram ou um endereço iniciado por https://.",
       )
       .optional(),

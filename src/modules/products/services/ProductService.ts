@@ -39,15 +39,15 @@ export function formatCatalogDescription(
 }
 
 const toPayload = (item: CatalogItem, position: number) => ({
-  type: item.type,
-  name: item.name.trim(),
+  type: item.type || "service",
+  name: (item.name || "").trim(),
   description: formatCatalogDescription(item.description, item.category),
   price: item.price,
   image_url: item.image_url || null,
-  button_label: item.button_label.trim() || "Saiba mais",
+  button_label: (item.button_label || "Saiba mais").trim(),
   button_url: item.button_url || null,
   position,
-  active: item.active,
+  active: item.active !== false,
 });
 
 export const ProductService = {

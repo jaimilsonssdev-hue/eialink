@@ -160,6 +160,7 @@ function BuilderPage() {
         if (profileError) throw new Error(profileError.message);
 
         const payload = { ...form, user_id: userId };
+        delete (payload as any).id;
         let bioPageId = bio?.id;
         if (bioPageId) {
           const { error } = await supabase.from("bio_pages").update(payload).eq("id", bioPageId);

@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { generateCopilotSiteFn, type AiCopilotResult } from "@/modules/ai/copilot.functions";
 import { PageService } from "@/modules/page/services/PageService";
+import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
+import { toast } from "sonner";
 
 interface AiCopilotModalProps {
   isOpen: boolean;
@@ -41,6 +43,8 @@ interface UploadedMediaItem {
   isPdf: boolean;
   publicUrl?: string;
   base64?: string;
+  role?: "logo" | "cover" | "product" | "general";
+  tag?: string;
 }
 
 const SAMPLE_BRIEFINGS = [
@@ -97,6 +101,7 @@ export function AiCopilotModal({
   const [mediaItems, setMediaItems] = useState<UploadedMediaItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const [overrideKey, setOverrideKey] = useState(() => {
     try {
@@ -120,6 +125,17 @@ export function AiCopilotModal({
       }
     }
   }, [overrideKey]);
+
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+    setLoadingStep("");
+    setError(null);
+    onClose();
+  };
 
   if (!isOpen) return null;
 
@@ -158,7 +174,68 @@ export function AiCopilotModal({
         type: isPdf ? "application/pdf" : file.type,
         previewUrl,
         isPdf,
+        role: isPdf ? "general" : (mediaItems.length === 0 ? "cover" : "general"),
       });
+
+      if (isPdf) {
+        // Extrai imagens e logotipo do PDF automaticamente em alta resolução
+        setLoadingStep("Recortando logotipo e imagens do PDF...");
+        extractAssetsFromPdf(file)
+          .then((assets) => {
+            const extractedItems: UploadedMediaItem[] = [];
+            if (assets.logoFile) {
+              extractedItems.push({
+                id: crypto.randomUUID(),
+                file: assets.logoFile,
+                name: `Logo - ${file.name.replace(/\.[^.]+$/, "")}`,
+                size: assets.logoFile.size,
+                type: "image/png",
+                previewUrl: assets.logoPreview || "",
+                isPdf: false,
+                role: "logo",
+                tag: "🏷️ Logotipo do PDF",
+              });
+            }
+            if (assets.coverFile) {
+              extractedItems.push({
+                id: crypto.randomUUID(),
+                file: assets.coverFile,
+                name: `Capa - ${file.name.replace(/\.[^.]+$/, "")}`,
+                size: assets.coverFile.size,
+                type: "image/png",
+                previewUrl: assets.coverPreview || "",
+                isPdf: false,
+                role: "cover",
+                tag: "🌄 Capa do PDF",
+              });
+            }
+            if (assets.pageImages && assets.pageImages.length > 1) {
+              for (const pg of assets.pageImages.slice(1)) {
+                extractedItems.push({
+                  id: crypto.randomUUID(),
+                  file: pg.file,
+                  name: `Pág ${pg.pageNumber} - ${file.name.replace(/\.[^.]+$/, "")}`,
+                  size: pg.file.size,
+                  type: "image/png",
+                  previewUrl: pg.previewUrl,
+                  isPdf: false,
+                  role: "product",
+                  tag: `🍽️ Pratos / Pág ${pg.pageNumber}`,
+                });
+              }
+            }
+            if (extractedItems.length > 0) {
+              setMediaItems((curr) => [...curr, ...extractedItems]);
+              toast.success(`✨ Logotipo e imagens do PDF "${file.name}" recortados e preparados!`);
+            }
+          })
+          .catch((err) => {
+            console.warn("Aviso ao extrair imagens do PDF:", err);
+          })
+          .finally(() => {
+            setLoadingStep("");
+          });
+      }
     }
 
     setMediaItems((curr) => [...curr, ...acceptedItems]);
@@ -178,6 +255,24 @@ export function AiCopilotModal({
     });
   }
 
+  function handleSetRole(id: string, role: "logo" | "cover" | "product" | "general") {
+    setMediaItems((curr) =>
+      curr.map((item) => {
+        if (item.id === id) {
+          return { ...item, role };
+        }
+        if (role === "logo" && item.role === "logo") {
+          return { ...item, role: "general" };
+        }
+        if (role === "cover" && item.role === "cover") {
+          return { ...item, role: "general" };
+        }
+        return item;
+      })
+    );
+  }
+
+
   async function handleGenerate() {
     const hasText = briefing.trim().length >= 3;
     const hasFiles = mediaItems.length > 0;
@@ -187,6 +282,9 @@ export function AiCopilotModal({
       setError("Por favor, digite um briefing, anexe fotos/PDFs ou informe um link de vídeo.");
       return;
     }
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     setError(null);
     setLoading(true);
@@ -200,9 +298,12 @@ export function AiCopilotModal({
         mimeType: string;
         base64: string;
         publicUrl?: string;
+        role?: "logo" | "cover" | "product" | "general";
       }> = [];
 
       for (const item of mediaItems) {
+        if (abortController.signal.aborted) return;
+
         // Gera base64 para envio ao Gemini
         const base64Data = await fileToBase64(item.file);
         let publicUrl = item.publicUrl;
@@ -221,8 +322,11 @@ export function AiCopilotModal({
           mimeType: item.type,
           base64: base64Data,
           publicUrl,
+          role: item.role,
         });
       }
+
+      if (abortController.signal.aborted) return;
 
       // 2. Chama a IA Multimodal
       setLoadingStep("Analisando documentos, fotos e extraindo catálogo com Gemini...");
@@ -240,13 +344,18 @@ export function AiCopilotModal({
         },
       });
 
+      if (abortController.signal.aborted) return;
       setGeneratedResult(result);
     } catch (err: any) {
+      if (abortController.signal.aborted || err?.name === "AbortError") {
+        return;
+      }
       console.error("Erro no Copiloto IA Multimodal:", err);
       setError(
         err?.message || "Ocorreu um erro ao comunicar com a IA do Google AI Studio. Verifique os dados e tente novamente."
       );
     } finally {
+      abortControllerRef.current = null;
       setLoading(false);
       setLoadingStep("");
     }
@@ -259,12 +368,17 @@ export function AiCopilotModal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in overflow-y-auto">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget) handleCancel();
+      }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in overflow-y-auto"
+    >
       <div className="relative w-full max-w-3xl rounded-3xl border border-border/80 bg-zinc-950 p-6 sm:p-8 shadow-2xl shadow-purple-950/40 text-foreground space-y-6 my-8 max-h-[90vh] overflow-y-auto">
         {/* Botão Fechar */}
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleCancel}
           className="absolute top-5 right-5 p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
           aria-label="Fechar"
         >
@@ -359,45 +473,95 @@ export function AiCopilotModal({
 
           {/* Grade de Arquivos Selecionados */}
           {mediaItems.length > 0 && (
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 pt-1">
               {mediaItems.map((item) => (
                 <div
                   key={item.id}
-                  className="relative group rounded-xl border border-zinc-800 bg-zinc-900/80 p-2 flex items-center gap-2.5 overflow-hidden text-xs"
+                  className="relative group rounded-xl border border-zinc-800 bg-zinc-900/80 p-2.5 flex flex-col gap-2 overflow-hidden text-xs"
                 >
-                  {item.isPdf ? (
-                    <div className="h-11 w-11 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex flex-col items-center justify-center shrink-0">
-                      <FileText className="h-5 w-5" />
-                      <span className="text-[8px] font-black uppercase">PDF</span>
-                    </div>
-                  ) : (
-                    <div className="h-11 w-11 rounded-lg bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700 relative">
-                      <img
-                        src={item.previewUrl}
-                        alt={item.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
+                  <div className="flex items-center gap-2.5">
+                    {item.isPdf ? (
+                      <div className="h-11 w-11 rounded-lg bg-rose-500/10 border border-rose-500/20 text-rose-400 flex flex-col items-center justify-center shrink-0">
+                        <FileText className="h-5 w-5" />
+                        <span className="text-[8px] font-black uppercase">PDF</span>
+                      </div>
+                    ) : (
+                      <div className="h-11 w-11 rounded-lg bg-zinc-800 overflow-hidden shrink-0 border border-zinc-700 relative">
+                        <img
+                          src={item.previewUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
 
-                  <div className="flex-1 min-w-0 pr-6">
-                    <p className="text-white font-medium truncate text-[11px]" title={item.name}>
-                      {item.name}
-                    </p>
-                    <p className="text-zinc-500 text-[10px]">{formatFileSize(item.size)}</p>
+                    <div className="flex-1 min-w-0 pr-6">
+                      <p className="text-white font-medium truncate text-[11px]" title={item.name}>
+                        {item.name}
+                      </p>
+                      <p className="text-zinc-500 text-[10px]">{formatFileSize(item.size)}</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveMediaItem(item.id);
+                      }}
+                      className="absolute top-2 right-2 p-1 rounded-md text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                      title="Remover arquivo"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveMediaItem(item.id);
-                    }}
-                    className="absolute top-2 right-2 p-1 rounded-md text-zinc-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                    title="Remover arquivo"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
+                  {/* Badges e seletor de destinação do arquivo */}
+                  {!item.isPdf ? (
+                    <div className="flex items-center gap-1.5 pt-1 border-t border-zinc-800/60">
+                      <span className="text-[10px] text-zinc-500 shrink-0 font-medium">Usar como:</span>
+                      <div className="flex items-center gap-1 overflow-x-auto">
+                        <button
+                          type="button"
+                          onClick={() => handleSetRole(item.id, "logo")}
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-semibold transition-colors cursor-pointer ${
+                            item.role === "logo"
+                              ? "bg-purple-600 text-white font-bold"
+                              : "bg-zinc-800 text-zinc-400 hover:text-white"
+                          }`}
+                        >
+                          🏷️ Logo
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetRole(item.id, "cover")}
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-semibold transition-colors cursor-pointer ${
+                            item.role === "cover"
+                              ? "bg-indigo-600 text-white font-bold"
+                              : "bg-zinc-800 text-zinc-400 hover:text-white"
+                          }`}
+                        >
+                          🌄 Capa
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleSetRole(item.id, "product")}
+                          className={`px-1.5 py-0.5 rounded text-[9px] font-semibold transition-colors cursor-pointer ${
+                            item.role === "product"
+                              ? "bg-emerald-600 text-white font-bold"
+                              : "bg-zinc-800 text-zinc-400 hover:text-white"
+                          }`}
+                        >
+                          🍽️ Item
+                        </button>
+                      </div>
+                    </div>
+                  ) : item.tag ? (
+                    <div className="pt-0.5 border-t border-zinc-800/60">
+                      <span className="inline-block px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[9px]">
+                        {item.tag}
+                      </span>
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -623,7 +787,7 @@ export function AiCopilotModal({
         <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCancel}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all cursor-pointer"
           >
             Cancelar

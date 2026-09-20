@@ -47,6 +47,7 @@ import {
   Search,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
 import type { PublicBio, PublicLink } from "@/components/public-profile/types";
@@ -831,6 +832,8 @@ export function UnifiedPageEditor({
       }));
       setProducts(newItems);
     }
+
+    toast.success("Alterações do Copiloto IA aplicadas com sucesso! Clique em 'Salvar' para publicar.");
   };
 
   const addLink = () => {
@@ -1228,6 +1231,74 @@ export function UnifiedPageEditor({
                   <p className="text-xs text-muted-foreground mt-1">
                     Selecione o nicho do seu negócio. Todos os nichos utilizam o Padrão Ouro completo com serviços, avaliações e agendamento.
                   </p>
+                </div>
+
+                {/* 0. Seletor de Formato da Página: Site Institucional vs BioLink vs Loja */}
+                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                      <Globe2 className="h-4 w-4 text-primary" />
+                      <span>Formato da Presença Comercial</span>
+                    </label>
+                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/20 text-primary">
+                      {bio.template_id === "site-maquina" ? "Site Institucional Completo" : bio.template_id === "storefront" ? "Loja / Delivery App" : "BioLink de Bolso"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Escolha o objetivo principal desta página. O motor do Máquina de Sites oferece presença completa, enquanto o BioLink foca em conversão rápida.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateBio({ template_id: "site-maquina" });
+                        toast.success("Formato alterado para: Site Institucional (Padrão Máquina de Sites)");
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        bio.template_id === "site-maquina"
+                          ? "border-primary bg-primary text-primary-foreground shadow-md font-bold"
+                          : "border-border bg-card hover:border-primary/50 text-foreground"
+                      }`}
+                    >
+                      <div className="text-base mb-1">🖥️</div>
+                      <div className="text-xs font-bold">Site / Landing Page</div>
+                      <div className="text-[10px] opacity-80 mt-0.5">Padrão Máquina de Sites: Hero, Prova Social, FAQ e Mapa</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateBio({ template_id: "default" });
+                        toast.success("Formato alterado para: BioLink de Alta Conversão");
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        bio.template_id !== "site-maquina" && bio.template_id !== "storefront"
+                          ? "border-primary bg-primary text-primary-foreground shadow-md font-bold"
+                          : "border-border bg-card hover:border-primary/50 text-foreground"
+                      }`}
+                    >
+                      <div className="text-base mb-1">📱</div>
+                      <div className="text-xs font-bold">BioLink de Bolso</div>
+                      <div className="text-[10px] opacity-80 mt-0.5">Compacto, direto para o Instagram e WhatsApp em 1 clique</div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateBio({ template_id: "storefront" });
+                        toast.success("Formato alterado para: Delivery & Loja Virtual (App / PWA)");
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        bio.template_id === "storefront"
+                          ? "border-primary bg-primary text-primary-foreground shadow-md font-bold"
+                          : "border-border bg-card hover:border-primary/50 text-foreground"
+                      }`}
+                    >
+                      <div className="text-base mb-1">🛍️</div>
+                      <div className="text-xs font-bold">Delivery / Loja App</div>
+                      <div className="text-[10px] opacity-80 mt-0.5">Sensação de iFood com sacola flutuante e instalação PWA</div>
+                    </button>
+                  </div>
                 </div>
 
                 {/* 1. Grade de Nichos / Modelos */}
@@ -2207,10 +2278,10 @@ export function UnifiedPageEditor({
             <span>Prévia em Tempo Real</span>
           </div>
 
-          {/* Mockup do smartphone: centralizado verticalmente, sem cortes, com sombra projetada shadow-2xl */}
-          <div className="relative flex items-center justify-center w-full my-auto py-1">
+          {/* Mockup do smartphone: no mobile exibe 100% tela cheia nativa; no desktop exibe o mockup do iPhone */}
+          <div className="editor-phone-preview-wrapper relative flex items-center justify-center w-full h-full my-auto py-0 lg:py-1">
             {/* Sombra de profundidade e brilho ambiente suave para efeito de flutuação */}
-            <div className="absolute -inset-4 bg-gradient-to-b from-primary/10 via-purple-600/5 to-transparent rounded-[3.2rem] blur-2xl -z-10 pointer-events-none opacity-60" />
+            <div className="hidden lg:block absolute -inset-4 bg-gradient-to-b from-primary/10 via-purple-600/5 to-transparent rounded-[3.2rem] blur-2xl -z-10 pointer-events-none opacity-60" />
 
             {(() => {
               const previewSocial = (previewBio.social_links as Record<string, any>) || {};
@@ -2232,7 +2303,7 @@ export function UnifiedPageEditor({
               return (
                 <div
                   key={simulatorKey}
-                  className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} relative w-[285px] sm:w-[310px] xl:w-[330px] h-[min(650px,calc(100vh-10rem))] rounded-[2.8rem] border-[6px] border-[#18181b] shadow-2xl shadow-black/90 ring-1 ring-white/10 overflow-hidden flex flex-col transition-all`}
+                  className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} relative w-full lg:w-[310px] xl:w-[330px] h-full lg:h-[min(650px,calc(100vh-10rem))] rounded-none lg:rounded-[2.8rem] border-0 lg:border-[6px] border-[#18181b] shadow-none lg:shadow-2xl shadow-black/90 ring-0 lg:ring-1 ring-white/10 overflow-hidden flex flex-col transition-all`}
                   data-custom-primary={Boolean(previewCustomPrimary) ? "true" : undefined}
                   data-custom-text={Boolean(previewCustomText) ? "true" : undefined}
                   data-custom-bg={Boolean(previewCustomBg) ? "true" : undefined}
@@ -2262,13 +2333,13 @@ export function UnifiedPageEditor({
                     ...(previewCustomText ? { "--template-text": previewCustomText, "--bio-fg": previewCustomText } : {}),
                   } as React.CSSProperties}
                 >
-                  {/* Dynamic Island / Notch minimalista */}
-                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#111114] border border-white/5 rounded-full z-30 pointer-events-none flex items-center justify-center">
+                  {/* Dynamic Island / Notch minimalista (Apenas Desktop) */}
+                  <div className="dynamic-island hidden lg:flex absolute top-2.5 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#111114] border border-white/5 rounded-full z-30 pointer-events-none items-center justify-center">
                     <div className="w-2.5 h-2.5 rounded-full bg-zinc-900 border border-white/10 ml-auto mr-2" />
                   </div>
 
-                  {/* Área rolável interna do smartphone: o conteúdo rola suavemente sem cortar o celular */}
-                  <div className="flex-1 w-full overflow-y-auto overflow-x-hidden pt-7 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  {/* Área rolável: no mobile rola fluidamente tela cheia, sem travar o toque */}
+                  <div className="flex-1 w-full overflow-y-auto overflow-x-hidden pt-2 lg:pt-7 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden overscroll-contain">
                     {isFreeTemplate ? (
                       <FreeLinkRenderer
                         bio={previewBio}

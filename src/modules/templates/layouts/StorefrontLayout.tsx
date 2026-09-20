@@ -34,6 +34,8 @@ import { whatsappUrl } from "@/lib/whatsapp";
 import { parseCatalogItemCategory } from "@/modules/products/services/ProductService";
 import type { CatalogItem } from "@/modules/products/types";
 
+import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
+
 export class StorefrontLayout implements TemplateLayoutRenderer {
   layoutId() {
     return "storefront" as const;
@@ -361,8 +363,11 @@ function StorefrontView({
         </div>
       </header>
 
+      {/* Banner de Instalação do Aplicativo PWA */}
+      <PwaInstallBanner companyName={companyName} avatarUrl={avatarImage} />
+
       {/* Grid de 4 Diferenciais da Loja */}
-      <section className="max-w-5xl mx-auto px-4 mt-6">
+      <section className="max-w-5xl mx-auto px-4 mt-4">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {storeDifferentials.slice(0, 4).map((diff: any, idx: number) => (
             <div
@@ -418,9 +423,9 @@ function StorefrontView({
             )}
           </div>
 
-          {/* Tabs / Pílulas de Categorias */}
+          {/* Tabs / Pílulas de Categorias com Navegação Sticky Estilo iFood */}
           {categories.length > 0 && (
-            <div className="niche-store-category-bar no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-2">
+            <div className="niche-store-category-bar no-scrollbar flex items-center gap-1.5 overflow-x-auto pb-2.5 sticky top-0 z-30 bg-background/95 backdrop-blur-md pt-2 -mx-4 px-4 border-b border-border/40 shadow-xs">
               <button
                 type="button"
                 onClick={() => setSelectedCategory("all")}

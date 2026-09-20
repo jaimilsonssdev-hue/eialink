@@ -170,12 +170,10 @@ Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos (
     promptParts.push({ text: userPrompt });
 
     const candidateModels = [
-      "gemini-3.6-flash",
-      "gemini-3.7-flash",
-      "gemini-3.5-flash",
-      "gemini-3.8-flash",
-      "gemini-1.5-flash",
+      "gemini-2.5-flash",
       "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-2.5-flash-lite",
     ];
 
     let lastError = "";
@@ -239,7 +237,12 @@ Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos (
     }
 
     try {
-      const parsed: AiCopilotResult = JSON.parse(rawContent);
+      const cleanJson = rawContent
+        .replace(/^```json\s*/i, "")
+        .replace(/^```\s*/i, "")
+        .replace(/\s*```$/i, "")
+        .trim();
+      const parsed: AiCopilotResult = JSON.parse(cleanJson);
       return parsed;
     } catch {
       throw new Error("Não foi possível decodificar o JSON estruturado gerado pelo Gemini.");

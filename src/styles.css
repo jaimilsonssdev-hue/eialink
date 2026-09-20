@@ -525,10 +525,11 @@
 }
 .free-link-shell .public-profile-action {
   min-height: 3.65rem;
-  padding: 0.62rem 0.72rem;
+  padding: 0.72rem 1rem;
   border-radius: 1rem;
-  background: rgb(255 255 255 / 0.055);
-  box-shadow: none;
+  background: color-mix(in oklab, var(--card, #141721) 90%, transparent);
+  border: 1px solid var(--border, rgb(255 255 255 / 0.12));
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.16);
 }
 .free-link-shell .public-profile-action-whatsapp {
   border-color: rgb(134 239 172 / 0.32);
@@ -3876,14 +3877,51 @@
 
 @media (max-width: 900px) {
   .builder-preview-stage { display: none; }
-  .builder-preview-stage.is-mobile-open { position: fixed !important; z-index: 80; inset: 0; display: block; width: 100%; min-height: 100dvh; overflow-y: auto; padding: 4.6rem .75rem 2rem; border: 0; border-radius: 0; background: var(--background); }
+  .builder-preview-stage.is-mobile-open {
+    position: fixed !important;
+    z-index: 100 !important;
+    inset: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100vw !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: var(--background) !important;
+  }
   .builder-preview-stage.is-mobile-open .builder-preview-label { display: none; }
-  .builder-preview-mobile-header { position: fixed; z-index: 82; top: 0; left: 0; right: 0; display: flex; min-height: 4rem; align-items: center; justify-content: space-between; gap: 1rem; padding: .65rem 1rem; border-bottom: 1px solid var(--border); background: color-mix(in oklab, var(--surface) 94%, transparent); backdrop-filter: blur(16px); }
+  .builder-preview-mobile-header {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 110;
+    flex-shrink: 0;
+    display: flex;
+    min-height: 3.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: .65rem 1rem;
+    border-bottom: 1px solid var(--border);
+    background: color-mix(in oklab, var(--surface, #0d0f14) 95%, transparent);
+    backdrop-filter: blur(16px);
+  }
   .builder-preview-mobile-header b, .builder-preview-mobile-header small { display: block; }
   .builder-preview-mobile-header b { font-size: .88rem; }
   .builder-preview-mobile-header small { margin-top: .1rem; color: var(--muted-foreground); font-size: .68rem; }
-  .builder-preview-mobile-header button { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface-elevated); }
+  .builder-preview-mobile-header button { display: grid; width: 2.5rem; height: 2.5rem; place-items: center; border: 1px solid var(--border); border-radius: 50%; background: var(--surface-elevated); cursor: pointer; }
   .builder-preview-mobile-header svg { width: 1.1rem; height: 1.1rem; }
+  .builder-preview-stage.is-mobile-open .editor-phone-preview-wrapper {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+  }
 }
 
 @media (max-width: 767px) {

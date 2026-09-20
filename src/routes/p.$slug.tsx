@@ -464,9 +464,11 @@ function PublicBio() {
   }
 
   const isSiteMaquina = effectiveTemplateId === "site-maquina";
+  const isStore = effectiveTemplateId === "store-showcase" || effectiveTemplateId === "storefront";
+  const shouldShowMobileSticky = !isSiteMaquina && !isStore;
 
   return (
-    <div className="min-h-screen flex flex-col pb-16 sm:pb-0 w-full overflow-x-hidden">
+    <div className={`min-h-screen flex flex-col w-full overflow-x-hidden ${shouldShowMobileSticky ? "pb-16 sm:pb-0" : ""}`}>
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
       <div onClickCapture={handleContainerClickCapture} className="flex-1 w-full overflow-x-hidden">
         <BrandingProvider show={!hasProPlan && !isDemo}>
@@ -552,13 +554,15 @@ function PublicBio() {
         )}
       </div>
 
-      {/* Barra de Conversão Fixa no Mobile */}
-      <MobileStickyBar
-        bio={bio}
-        bookingUrl={isServiceBookingNiche && bookingActive ? `/agendar/${bio.slug}` : undefined}
-        onTrack={track}
-        onShare={share}
-      />
+      {/* Barra de Conversão Fixa no Mobile (Apenas para BioLinks, sem poluir Lojas ou Site Completo) */}
+      {shouldShowMobileSticky && (
+        <MobileStickyBar
+          bio={bio}
+          bookingUrl={isServiceBookingNiche && bookingActive ? `/agendar/${bio.slug}` : undefined}
+          onTrack={track}
+          onShare={share}
+        />
+      )}
     </div>
   );
 }

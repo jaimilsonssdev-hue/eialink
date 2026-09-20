@@ -305,8 +305,8 @@ function StorefrontView({
 
       {/* 1. Header do Delivery / Loja (Responsivo & Estilo App) */}
       <header className="niche-store-hero w-full">
-        {/* Capa com altura controlada para celular e desktop */}
-        <div className="niche-store-hero-banner relative w-full h-32 sm:h-44 md:h-52 overflow-hidden bg-muted">
+        {/* Capa com altura nobre e imponente idêntica no mobile e desktop */}
+        <div className="niche-store-hero-banner relative w-full h-44 sm:h-56 md:h-64 overflow-hidden bg-muted">
           {bio.cover_url ? (
             <img
               src={bio.cover_url}
@@ -317,9 +317,9 @@ function StorefrontView({
           ) : (
             <div className="w-full h-full bg-linear-to-r from-primary/30 via-primary/10 to-primary/20 flex items-center justify-center">
               {isDelivery ? (
-                <Utensils className="h-10 w-10 text-primary/40" />
+                <Utensils className="h-12 w-12 text-primary/40" />
               ) : (
-                <ShoppingBag className="h-10 w-10 text-primary/40" />
+                <ShoppingBag className="h-12 w-12 text-primary/40" />
               )}
             </div>
           )}
@@ -327,18 +327,18 @@ function StorefrontView({
 
           {/* Botões do Topo da Capa */}
           <div className="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-semibold border border-white/20 shadow-xs">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-semibold border border-white/20 shadow-xs">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
               <span>{isDelivery ? "Recebendo Pedidos" : "Loja Aberta"}</span>
             </span>
             <button
               type="button"
               onClick={onShare}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-semibold border border-white/20 shadow-xs hover:bg-black/80 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-semibold border border-white/20 shadow-xs hover:bg-black/80 transition-colors"
               aria-label="Compartilhar"
             >
               <Share2 size={13} />
-              <span className="hidden sm:inline">Compartilhar</span>
+              <span>Compartilhar</span>
             </button>
           </div>
         </div>
@@ -564,231 +564,123 @@ function StorefrontView({
               </p>
             </div>
           ) : (
-            <div>
-              {/* VISUALIZAÇÃO MOBILE (Estilo Aplicativo Delivery iFood) */}
-              <div className="space-y-2.5 sm:hidden">
-                {filteredProducts.map((item) => {
-                  const qtyInCart = cart[item.id] ?? 0;
-                  return (
-                    <article
-                      key={item.id}
-                      className="p-3 rounded-2xl bg-card border border-border/80 shadow-xs flex items-center justify-between gap-3 active:scale-[0.99] transition-all"
-                    >
-                      {/* Lado Esquerdo: Textos e Preço */}
-                      <div className="min-w-0 flex-1">
-                        {item.cleanCategory && (
-                          <span className="text-[10px] font-bold text-primary/80 uppercase tracking-wider block mb-0.5">
-                            {item.cleanCategory}
-                          </span>
-                        )}
-                        <h3 className="font-bold text-sm text-foreground leading-snug">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filteredProducts.map((item) => {
+                const qtyInCart = cart[item.id] ?? 0;
+                return (
+                  <article
+                    key={item.id}
+                    className="niche-store-card group w-full flex flex-col justify-between bg-card rounded-2xl sm:rounded-3xl border border-border/80 overflow-hidden shadow-xs hover:shadow-md transition-all active:scale-[0.99]"
+                  >
+                    {/* Imagem Nobre do Produto/Prato */}
+                    <div className="niche-store-card-media relative aspect-4/3 bg-muted overflow-hidden">
+                      {item.image_url ? (
+                        <img
+                          src={item.image_url}
+                          alt={item.name}
+                          loading="lazy"
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground/60 bg-linear-to-br from-primary/10 to-primary/5">
+                          {isDelivery ? <Utensils size={36} /> : <ShoppingBag size={36} />}
+                        </div>
+                      )}
+
+                      {item.cleanCategory && (
+                        <span className="absolute top-2.5 left-2.5 text-[11px] font-bold px-2.5 py-1 rounded-lg bg-black/65 backdrop-blur-md text-white shadow-xs">
+                          {item.cleanCategory}
+                        </span>
+                      )}
+
+                      {qtyInCart > 0 && (
+                        <span className="absolute top-2.5 right-2.5 text-[11px] font-black px-2.5 py-1 rounded-full bg-primary text-primary-foreground shadow-md">
+                          {qtyInCart} na sacola
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Informações do Produto */}
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h3 className="font-bold text-base text-foreground line-clamp-2 leading-snug">
                           {item.name}
                         </h3>
                         {item.cleanDesc && (
-                          <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                          <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                             {item.cleanDesc}
                           </p>
                         )}
-                        <div className="mt-2 flex items-baseline gap-2">
+                      </div>
+
+                      <div className="mt-4 pt-3 border-t border-border/60">
+                        <div className="flex items-baseline justify-between mb-2.5">
                           {item.price !== null ? (
-                            <span className="text-sm font-black text-foreground">
-                              R$ {item.price.toFixed(2).replace(".", ",")}
-                            </span>
+                            <div>
+                              <p className="text-lg font-black text-foreground">
+                                R$ {item.price.toFixed(2).replace(".", ",")}
+                              </p>
+                              {item.price >= 30 && (
+                                <p className="text-[10px] text-muted-foreground">
+                                  ou até 3x de R$ {(item.price / 3).toFixed(2).replace(".", ",")}
+                                </p>
+                              )}
+                            </div>
                           ) : (
-                            <span className="text-xs font-semibold text-muted-foreground">
+                            <p className="text-xs font-semibold text-muted-foreground">
                               Sob consulta
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Lado Direito: Foto + Botão de Ação Rápida */}
-                      <div className="relative shrink-0 flex flex-col items-center">
-                        <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted border border-border/60 relative">
-                          {item.image_url ? (
-                            <img
-                              src={item.image_url}
-                              alt={item.name}
-                              loading="lazy"
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-muted-foreground/60 bg-linear-to-br from-primary/10 to-primary/5">
-                              {isDelivery ? <Utensils size={24} /> : <ShoppingBag size={24} />}
-                            </div>
-                          )}
-
-                          {qtyInCart > 0 && (
-                            <span className="absolute top-1 right-1 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground font-black text-[10px] flex items-center justify-center shadow-md">
-                              {qtyInCart}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Botão Rápido de Adicionar / Stepper */}
-                        <div className="mt-1.5 w-full">
-                          {item.button_url ? (
-                            <a
-                              href={item.button_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="w-full py-1 px-2 rounded-lg bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center gap-1 shadow-xs"
-                            >
-                              <span>{item.button_label || "Pedir"}</span>
-                              <ArrowUpRight size={11} />
-                            </a>
-                          ) : qtyInCart === 0 ? (
-                            <button
-                              type="button"
-                              onClick={() => updateQuantity(item.id, 1)}
-                              className="w-full py-1 px-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 text-xs font-bold flex items-center justify-center gap-1 transition-colors"
-                              aria-label={`Adicionar ${item.name} à sacola`}
-                            >
-                              <Plus size={13} />
-                              <span>Adicionar</span>
-                            </button>
-                          ) : (
-                            <div className="flex items-center justify-between bg-primary text-primary-foreground rounded-lg p-0.5 text-xs shadow-xs">
-                              <button
-                                type="button"
-                                onClick={() => updateQuantity(item.id, -1)}
-                                className="p-1 hover:opacity-80 rounded"
-                                aria-label="Diminuir"
-                              >
-                                <Minus size={11} />
-                              </button>
-                              <span className="font-black text-xs px-1.5">
-                                {qtyInCart}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => updateQuantity(item.id, 1)}
-                                className="p-1 hover:opacity-80 rounded"
-                                aria-label="Aumentar"
-                              >
-                                <Plus size={11} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-
-              {/* VISUALIZAÇÃO TABLET / DESKTOP (Grid Espaçoso e Elegante) */}
-              <div className="hidden sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
-                {filteredProducts.map((item) => {
-                  const qtyInCart = cart[item.id] ?? 0;
-                  return (
-                    <article
-                      key={item.id}
-                      className="niche-store-card group w-full flex flex-col justify-between bg-card rounded-2xl border border-border/80 overflow-hidden shadow-xs hover:shadow-md transition-all"
-                    >
-                      {/* Imagem do Produto */}
-                      <div className="niche-store-card-media relative aspect-4/3 bg-muted overflow-hidden">
-                        {item.image_url ? (
-                          <img
-                            src={item.image_url}
-                            alt={item.name}
-                            loading="lazy"
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground/60 bg-linear-to-br from-primary/10 to-primary/5">
-                            {isDelivery ? <Utensils size={32} /> : <ShoppingBag size={32} />}
-                          </div>
-                        )}
-
-                        {item.cleanCategory && (
-                          <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-md text-white">
-                            {item.cleanCategory}
-                          </span>
-                        )}
-
-                        {qtyInCart > 0 && (
-                          <span className="absolute top-2 right-2 text-[10px] font-black px-2 py-0.5 rounded-full bg-primary text-primary-foreground shadow-sm">
-                            {qtyInCart} na sacola
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Informações */}
-                      <div className="p-3.5 flex-1 flex flex-col justify-between">
-                        <div>
-                          <h3 className="font-bold text-sm text-foreground line-clamp-1">
-                            {item.name}
-                          </h3>
-                          {item.cleanDesc && (
-                            <p className="mt-1 text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                              {item.cleanDesc}
                             </p>
                           )}
                         </div>
 
-                        <div className="mt-3 pt-2.5 border-t border-border/60">
-                          <div className="flex items-baseline justify-between mb-2">
-                            {item.price !== null ? (
-                              <p className="text-base font-black text-foreground">
-                                R$ {item.price.toFixed(2).replace(".", ",")}
-                              </p>
-                            ) : (
-                              <p className="text-xs font-semibold text-muted-foreground">
-                                Sob consulta
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Ações */}
-                          {item.button_url ? (
-                            <a
-                              href={item.button_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="niche-store-btn-action w-full flex items-center justify-center gap-1.5 py-2"
+                        {/* Ações */}
+                        {item.button_url ? (
+                          <a
+                            href={item.button_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="niche-store-btn-action w-full flex items-center justify-center gap-1.5 py-2.5"
+                          >
+                            <span>{item.button_label || (isDelivery ? "Pedir Agora" : "Comprar")}</span>
+                            <ArrowUpRight size={14} />
+                          </a>
+                        ) : qtyInCart === 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.id, 1)}
+                            className="niche-store-btn-action w-full flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold"
+                          >
+                            <Plus size={15} />
+                            <span>{isDelivery ? "Adicionar ao Pedido" : "Adicionar à Sacola"}</span>
+                          </button>
+                        ) : (
+                          <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-xl p-1 text-xs">
+                            <button
+                              type="button"
+                              onClick={() => updateQuantity(item.id, -1)}
+                              className="p-1.5 rounded-lg hover:bg-primary/20 text-primary font-bold transition-colors"
+                              aria-label="Diminuir"
                             >
-                              <span>{item.button_label || "Comprar"}</span>
-                              <ArrowUpRight size={13} />
-                            </a>
-                          ) : qtyInCart === 0 ? (
+                              <Minus size={14} />
+                            </button>
+                            <span className="font-black text-primary px-3 text-xs">
+                              {qtyInCart} na sacola
+                            </span>
                             <button
                               type="button"
                               onClick={() => updateQuantity(item.id, 1)}
-                              className="niche-store-btn-action w-full flex items-center justify-center gap-1.5 py-2"
+                              className="p-1.5 rounded-lg hover:bg-primary/20 text-primary font-bold transition-colors"
+                              aria-label="Aumentar"
                             >
                               <Plus size={14} />
-                              <span>Adicionar à Sacola</span>
                             </button>
-                          ) : (
-                            <div className="flex items-center justify-between bg-primary/10 border border-primary/30 rounded-xl p-1 text-xs">
-                              <button
-                                type="button"
-                                onClick={() => updateQuantity(item.id, -1)}
-                                className="p-1 rounded hover:bg-primary/20 text-primary font-bold transition-colors"
-                                aria-label="Diminuir"
-                              >
-                                <Minus size={13} />
-                              </button>
-                              <span className="font-black text-primary px-2">
-                                {qtyInCart} na sacola
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => updateQuantity(item.id, 1)}
-                                className="p-1 rounded hover:bg-primary/20 text-primary font-bold transition-colors"
-                                aria-label="Aumentar"
-                              >
-                                <Plus size={13} />
-                              </button>
-                            </div>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
-                    </article>
-                  );
-                })}
-              </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
           )}
         </section>

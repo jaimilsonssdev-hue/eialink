@@ -32,6 +32,7 @@ import { Route as AuthenticatedPagesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedRequestsRouteImport } from './routes/_authenticated/requests'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AgendarSlugRouteImport } from './routes/agendar.$slug'
+import { Route as ApiManifestRouteImport } from './routes/api/manifest'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as AuthenticatedAdminProspeccaoRouteImport } from './routes/_authenticated/admin_.prospeccao'
@@ -151,6 +152,11 @@ const AgendarSlugRoute = AgendarSlugRouteImport.update({
   path: '/agendar/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiManifestRoute = ApiManifestRouteImport.update({
+  id: '/api/manifest',
+  path: '/api/manifest',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   id: '/checkout/return',
   path: '/checkout/return',
@@ -197,6 +203,7 @@ export interface FileRoutesByFullPath {
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/agendar/$slug': typeof AgendarSlugRoute
+  '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/p/$slug': typeof PSlugRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/agendar/$slug': typeof AgendarSlugRoute
+  '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/p/$slug': typeof PSlugRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
@@ -255,6 +263,7 @@ export interface FileRoutesById {
   '/_authenticated/requests': typeof AuthenticatedRequestsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/agendar/$slug': typeof AgendarSlugRoute
+  '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
   '/p/$slug': typeof PSlugRoute
   '/_authenticated/admin_/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
@@ -285,6 +294,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/settings'
     | '/agendar/$slug'
+    | '/api/manifest'
     | '/checkout/return'
     | '/p/$slug'
     | '/admin/prospeccao'
@@ -313,6 +323,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/settings'
     | '/agendar/$slug'
+    | '/api/manifest'
     | '/checkout/return'
     | '/p/$slug'
     | '/admin/prospeccao'
@@ -342,6 +353,7 @@ export interface FileRouteTypes {
     | '/_authenticated/requests'
     | '/_authenticated/settings'
     | '/agendar/$slug'
+    | '/api/manifest'
     | '/checkout/return'
     | '/p/$slug'
     | '/_authenticated/admin_/prospeccao'
@@ -358,6 +370,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   AgendarSlugRoute: typeof AgendarSlugRoute
+  ApiManifestRoute: typeof ApiManifestRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
   PSlugRoute: typeof PSlugRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
@@ -526,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AgendarSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/manifest': {
+      id: '/api/manifest'
+      path: '/api/manifest'
+      fullPath: '/api/manifest'
+      preLoaderRoute: typeof ApiManifestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/checkout/return': {
       id: '/checkout/return'
       path: '/checkout/return'
@@ -606,6 +626,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   AgendarSlugRoute: AgendarSlugRoute,
+  ApiManifestRoute: ApiManifestRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
   PSlugRoute: PSlugRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,

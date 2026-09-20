@@ -16,6 +16,7 @@ import { MobileStickyBar } from "@/components/public-profile/MobileStickyBar";
 import { ModularSections } from "@/components/public-profile/ModularSections";
 import { AiAssistantChat } from "@/components/public/AiAssistantChat";
 import { resolveBioMediaUrl } from "@/lib/bio-media";
+import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -194,11 +195,22 @@ export const Route = createFileRoute("/p/$slug")({
       ],
     };
 
+    const companyLogo = bio.avatar_url || bio.cover_url || null;
+    const themePrimaryColor =
+      socialData.theme_colors?.primary ||
+      socialData.custom_theme?.primary ||
+      "#10081d";
+
     return {
       meta: [
         { title: pageTitle },
         { name: "description", content: description },
         { name: "robots", content: robotsContent },
+        { name: "apple-mobile-web-app-title", content: bio.display_name },
+        { name: "application-name", content: bio.display_name },
+        { name: "apple-mobile-web-app-capable", content: "yes" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+        { name: "theme-color", content: themePrimaryColor },
         ...(seoConfig.keywords ? [{ name: "keywords", content: seoConfig.keywords }] : []),
         { property: "og:title", content: pageTitle },
         { property: "og:description", content: description },
@@ -213,7 +225,22 @@ export const Route = createFileRoute("/p/$slug")({
             ]
           : []),
       ],
-      links: [{ rel: "canonical", href: url }],
+      links: [
+        { rel: "canonical", href: url },
+        {
+          rel: "manifest",
+          href: `/api/manifest?slug=${encodeURIComponent(bio.slug)}`,
+          key: "pwa-manifest",
+        },
+        ...(companyLogo
+          ? [
+              { rel: "apple-touch-icon", href: companyLogo, key: "apple-touch-icon" },
+              { rel: "icon", href: companyLogo, key: "favicon" },
+            ]
+          : [
+              { rel: "apple-touch-icon", href: "/icons/eia-link-icon.svg", key: "apple-touch-icon" },
+            ]),
+      ],
       scripts: [
         {
           type: "application/ld+json",
@@ -244,6 +271,51 @@ function PublicBio() {
   const supplementalBlocks = blocks.filter((block: PageBlock) =>
     ["contact", "divider", "spacer"].includes(block.type),
   );
+
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    // Sincroniza dinamicamente o Web App Manifest e ícones para que o app seja baixado com nome e logo da empresa
+    const manifestUrl = `/api/manifest?slug=${encodeURIComponent(bio.slug)}`;
+    let manifestEl = document.querySelector('link[rel="manifest"]');
+    if (!manifestEl) {
+      manifestEl = document.createElement("link");
+      manifestEl.setAttribute("rel", "manifest");
+      document.head.appendChild(manifestEl);
+    }
+    manifestEl.setAttribute("href", manifestUrl);
+
+    const logo = bio.avatar_url || bio.cover_url;
+    if (logo) {
+      let appleIconEl = document.querySelector('link[rel="apple-touch-icon"]');
+      if (!appleIconEl) {
+        appleIconEl = document.createElement("link");
+        appleIconEl.setAttribute("rel", "apple-touch-icon");
+        document.head.appendChild(appleIconEl);
+      }
+      appleIconEl.setAttribute("href", logo);
+
+      let faviconEl = document.querySelector('link[rel="icon"]');
+      if (faviconEl) {
+        faviconEl.setAttribute("href", logo);
+      }
+    }
+
+    let appleTitleEl = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!appleTitleEl) {
+      appleTitleEl = document.createElement("meta");
+      appleTitleEl.setAttribute("name", "apple-mobile-web-app-title");
+      document.head.appendChild(appleTitleEl);
+    }
+    appleTitleEl.setAttribute("content", bio.display_name);
+
+    let appNameEl = document.querySelector('meta[name="application-name"]');
+    if (!appNameEl) {
+      appNameEl = document.createElement("meta");
+      appNameEl.setAttribute("name", "application-name");
+      document.head.appendChild(appNameEl);
+    }
+    appNameEl.setAttribute("content", bio.display_name);
+  }, [bio.slug, bio.avatar_url, bio.cover_url, bio.display_name]);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -470,6 +542,11 @@ function PublicBio() {
   return (
     <div className={`min-h-screen flex flex-col w-full overflow-x-hidden ${shouldShowMobileSticky ? "pb-16 sm:pb-0" : ""}`}>
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
+      {!isStore && (
+        <div className="w-full max-w-2xl mx-auto px-3 pt-2">
+          <PwaInstallBanner companyName={bio.display_name} avatarUrl={effectiveAvatarUrl || bio.avatar_url} />
+        </div>
+      )}
       <div onClickCapture={handleContainerClickCapture} className="flex-1 w-full overflow-x-hidden">
         <BrandingProvider show={!hasProPlan && !isDemo}>
           {shouldUseTemplate ? (

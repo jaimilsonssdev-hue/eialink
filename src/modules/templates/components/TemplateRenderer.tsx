@@ -98,6 +98,8 @@ export function TemplateRenderer({
     gradient_1?: string;
     gradient_2?: string;
     layout_esqueleto?: string;
+    navigation_bg?: string;
+    info_badge_bg?: string;
   } | undefined;
 
   const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;

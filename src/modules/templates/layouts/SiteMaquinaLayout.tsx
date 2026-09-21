@@ -153,6 +153,14 @@ const NICHE_LABELS: Record<string, string> = {
   geral: "Empresa & Atendimento",
 };
 
+function hexLuminance(hex?: string): number {
+  if (!hex || !hex.startsWith("#") || hex.length < 7) return 100;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000;
+}
+
 function SiteMaquinaView({
   model: _model,
   ctx,
@@ -171,7 +179,12 @@ function SiteMaquinaView({
   const rating = Number(socialData.google_rating || socialData.rating || 4.9);
   const reviewsCount = Number(socialData.reviews_count || 73);
 
-  const customTheme = socialData.custom_theme || {};
+  const customTheme = (socialData.custom_theme as Record<string, any>) || {};
+  const customPrimary = customTheme.primary;
+  const customBg = customTheme.background;
+  const isLightMode = customTheme.mode === "light" || (!customTheme.mode && !customBg) || (customBg && hexLuminance(customBg) > 140);
+  const customTitle = customTheme.title || (isLightMode ? "#111827" : "#ffffff");
+  const customText = customTheme.text || (isLightMode ? "#374151" : "#e2e8f0");
   const hue = customTheme.hue || (customTheme.primary ? hexToHue(customTheme.primary) : null) || getNicheHue(nicheKey);
 
   // Arquitetura da Hero
@@ -336,11 +349,16 @@ function SiteMaquinaView({
 
   return (
     <div
-      className="site-maquina-root relative min-h-screen bg-white text-gray-900 font-sans selection:bg-emerald-500/20 selection:text-emerald-900 scroll-smooth pb-20 sm:pb-0 w-full overflow-x-hidden"
+      className="site-maquina-root relative min-h-screen font-sans selection:bg-emerald-500/20 selection:text-emerald-900 scroll-smooth pb-20 sm:pb-0 w-full overflow-x-hidden"
       style={
         {
           fontFamily: "'Inter', sans-serif",
+          backgroundColor: customBg || (isLightMode ? "#ffffff" : "#080a11"),
+          color: customText,
           "--hue": hue,
+          "--primary-exact": customPrimary || `hsl(${hue}, 75%, 45%)`,
+          "--site-title": customTitle,
+          "--site-text": customText,
           "--color-900": `hsl(${hue}, 75%, 15%)`,
           "--color-800": `hsl(${hue}, 75%, 25%)`,
           "--color-700": `hsl(${hue}, 75%, 35%)`,
@@ -394,7 +412,13 @@ function SiteMaquinaView({
       </div>
 
       {/* 2. NAVBAR PRINCIPAL STICKY COM GLASSMORPHISM */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-xs transition-all duration-300">
+      <header
+        className="sticky top-0 z-40 backdrop-blur-xl border-b shadow-xs transition-all duration-300"
+        style={{
+          backgroundColor: isLightMode ? "rgba(255, 255, 255, 0.94)" : "rgba(10, 12, 18, 0.94)",
+          borderColor: isLightMode ? "rgba(243, 244, 246, 1)" : "rgba(255, 255, 255, 0.1)",
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             {avatarImage ? (
@@ -404,21 +428,30 @@ function SiteMaquinaView({
                 className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-sm border border-gray-200 shrink-0"
               />
             ) : (
-              <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-[var(--color-600)] text-white flex items-center justify-center font-black text-base sm:text-xl shadow-sm shrink-0">
+              <div
+                className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl text-white flex items-center justify-center font-black text-base sm:text-xl shadow-sm shrink-0"
+                style={{ backgroundColor: customPrimary || "var(--color-600)" }}
+              >
                 {companyName.slice(0, 1)}
               </div>
             )}
             <div className="min-w-0">
-              <span className="font-heading font-black text-base sm:text-xl tracking-tight text-gray-900 block leading-tight truncate max-w-[170px] sm:max-w-none">
+              <span
+                className="font-heading font-black text-base sm:text-xl tracking-tight block leading-tight truncate max-w-[170px] sm:max-w-none"
+                style={{ color: customTitle }}
+              >
                 {companyName}
               </span>
-              <span className="text-[10px] sm:text-xs text-[var(--color-600)] font-semibold tracking-wide uppercase block truncate">
+              <span
+                className="text-[10px] sm:text-xs font-semibold tracking-wide uppercase block truncate"
+                style={{ color: customPrimary || "var(--color-600)" }}
+              >
                 {nicheLabel} · {city}
               </span>
             </div>
           </div>
 
-          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-semibold text-gray-600">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 text-sm font-semibold opacity-85">
             {displayServices.length > 0 && (
               <a href="#servicos" className="hover:text-[var(--color-600)] transition-colors">
                 Serviços
@@ -444,6 +477,7 @@ function SiteMaquinaView({
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => onTrack("whatsapp_click")}
+              style={{ backgroundColor: customPrimary || undefined }}
               className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 py-2 sm:px-5 sm:py-2.5 rounded-xl bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all duration-200 transform hover:-translate-y-0.5 active:scale-95 shrink-0"
             >
               <MessageCircle className="h-4 w-4 text-emerald-300" />
@@ -465,10 +499,16 @@ function SiteMaquinaView({
                   <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
                   <span>Atendimento Ativo Hoje em {city}</span>
                 </div>
-                <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-tight">
+                <h1
+                  className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight"
+                  style={{ color: customTitle }}
+                >
                   {companyName}
                 </h1>
-                <p className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-xl mx-auto lg:mx-0">
+                <p
+                  className="text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0"
+                  style={{ color: customText }}
+                >
                   {bio.description ||
                     `Excelência comprovada, agendamento ágil e compromisso inegociável com a sua satisfação em ${city}.`}
                 </p>
@@ -478,6 +518,7 @@ function SiteMaquinaView({
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => onTrack("whatsapp_click")}
+                    style={{ backgroundColor: customPrimary || undefined }}
                     className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
                   >
                     <MessageCircle className="h-5 w-5 text-emerald-300" />
@@ -516,24 +557,30 @@ function SiteMaquinaView({
             </div>
           </div>
         ) : heroArchitecture === "immersive" ? (
-          /* Hero Immersive: Full-bleed com Overlay Dark e Destaque */
-          <div className="relative min-h-[480px] sm:min-h-[580px] flex items-center justify-center text-center text-white px-4 sm:px-6 py-16 sm:py-20">
-            <div className="absolute inset-0 -z-10">
+          /* Hero Immersive: Full-bleed com Overlay Dark Garantido e Alto Contraste */
+          <div className="relative isolate min-h-[480px] sm:min-h-[580px] flex items-center justify-center text-center px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
+            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
               <img src={heroCover} alt={companyName} className="w-full h-full object-cover scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/75 to-gray-950/50 backdrop-blur-[2px]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/85 to-gray-950/60 backdrop-blur-[1px]" />
             </div>
 
-            <div className="max-w-3xl mx-auto space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold uppercase tracking-wider">
+            <div className="relative z-10 max-w-3xl mx-auto space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
                 <Sparkles className="h-3.5 w-3.5 text-amber-300" />
                 <span>Referência de Atendimento em {city}</span>
               </div>
 
-              <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight">
+              <h1
+                className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-white drop-shadow-md"
+                style={{ color: customTheme.title || "#ffffff" }}
+              >
                 {companyName}
               </h1>
 
-              <p className="text-base sm:text-xl text-gray-200 font-light max-w-2xl mx-auto leading-relaxed">
+              <p
+                className="text-base sm:text-xl font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm"
+                style={{ color: customTheme.text || "#f1f5f9" }}
+              >
                 {bio.description ||
                   `Atendimento humanizado e infraestrutura completa em ${city}. Experiência diferenciada para quem valoriza pontualidade e excelência.`}
               </p>
@@ -544,6 +591,7 @@ function SiteMaquinaView({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onTrack("whatsapp_click")}
+                  style={{ backgroundColor: customPrimary || undefined }}
                   className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
                 >
                   <MessageCircle className="h-5 w-5 text-emerald-300" />
@@ -551,7 +599,7 @@ function SiteMaquinaView({
                 </a>
                 <a
                   href="#servicos"
-                  className="w-full sm:w-auto px-7 py-4 rounded-xl bg-white/15 hover:bg-white/25 text-white font-bold text-base backdrop-blur-md border border-white/30 transition-all flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-7 py-4 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-base backdrop-blur-md border border-white/40 shadow-sm transition-all flex items-center justify-center gap-2"
                 >
                   <span>Conhecer Serviços</span>
                   <ChevronDown className="h-4 w-4" />
@@ -567,10 +615,16 @@ function SiteMaquinaView({
                 <Sparkles className="h-3.5 w-3.5" />
                 <span>Autoridade em {nicheLabel} em {city}</span>
               </div>
-              <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black text-gray-900 tracking-tight leading-tight">
+              <h1
+                className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight"
+                style={{ color: customTitle }}
+              >
                 {companyName}
               </h1>
-              <p className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+              <p
+                className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed"
+                style={{ color: customText }}
+              >
                 {bio.description ||
                   `Atendimento personalizado e estrutura completa no bairro ${address.split("-")[0] || city}. Entre em contato direto e experimente a diferença.`}
               </p>
@@ -580,6 +634,7 @@ function SiteMaquinaView({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={() => onTrack("whatsapp_click")}
+                  style={{ backgroundColor: customPrimary || undefined }}
                   className="w-full sm:w-auto px-8 py-4 rounded-full bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95"
                 >
                   <MessageCircle className="h-5 w-5 text-emerald-300" />
@@ -1178,10 +1233,21 @@ function SiteMaquinaView({
       </a>
 
       {/* 13. MOBILE ACTION DOCK (BARRA FIXA INFERIOR NO CELULAR) */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-white/95 backdrop-blur-md border-t border-gray-200 px-4 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.08)] flex items-center justify-between gap-3">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 sm:hidden backdrop-blur-md border-t px-4 py-2.5 shadow-[0_-4px_20px_rgba(0,0,0,0.12)] flex items-center justify-between gap-3"
+        style={{
+          backgroundColor: isLightMode ? "rgba(255, 255, 255, 0.95)" : "rgba(12, 14, 22, 0.95)",
+          borderColor: isLightMode ? "#e5e7eb" : "rgba(255, 255, 255, 0.12)",
+        }}
+      >
         <div className="flex flex-col min-w-0 flex-1">
-          <span className="font-heading font-black text-xs text-gray-900 truncate">{companyName}</span>
-          <span className="text-[11px] text-gray-500 flex items-center gap-1">
+          <span
+            className="font-heading font-black text-xs truncate"
+            style={{ color: customTitle }}
+          >
+            {companyName}
+          </span>
+          <span className="text-[11px] flex items-center gap-1 opacity-75">
             <span className="text-amber-500 font-bold">★ {rating.toFixed(1)}</span>
             <span className="truncate">· {address.split("-")[0] || city}</span>
           </span>
@@ -1191,6 +1257,7 @@ function SiteMaquinaView({
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => onTrack("whatsapp_click")}
+          style={{ backgroundColor: customPrimary || undefined }}
           className="shrink-0 bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center gap-1.5 active:scale-95 transition-all"
         >
           <MessageCircle className="h-4 w-4" />

@@ -91,6 +91,7 @@ export function TemplateRenderer({
     primary?: string;
     background?: string;
     text?: string;
+    title?: string;
     mode?: string;
     card_bg?: string;
     border_color?: string;
@@ -104,11 +105,12 @@ export function TemplateRenderer({
 
   const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
   const customText = customTheme?.text || tokensDesign?.estilo_botoes?.cor_texto;
+  const isLightMode = customTheme?.mode === "light" || bio.theme === "mono";
+  const customTitle = customTheme?.title || tokensDesign?.estilo_botoes?.cor_titulo || (isLightMode ? "#0f172a" : "#ffffff");
   const customBg = customTheme?.background || tokensDesign?.fundo_valores?.cor_gradiente_1;
   const customCard = customTheme?.card_bg || tokensDesign?.estilo_botoes?.cor_fundo_card;
   const customBorder = customTheme?.border_color || tokensDesign?.estilo_botoes?.cor_borda;
   const customRadius = customTheme?.border_radius || tokensDesign?.estilo_botoes?.raio_borda;
-  const isLightMode = customTheme?.mode === "light" || bio.theme === "mono";
 
   return (
     <main
@@ -118,6 +120,7 @@ export function TemplateRenderer({
       data-template-layout={model.template.layout}
       data-custom-primary={Boolean(customPrimary) ? "true" : undefined}
       data-custom-text={Boolean(customText) ? "true" : undefined}
+      data-custom-title={Boolean(customTitle) ? "true" : undefined}
       data-custom-bg={Boolean(customBg) ? "true" : undefined}
       data-custom-card={Boolean(customCard) ? "true" : undefined}
       data-custom-border={Boolean(customBorder) ? "true" : undefined}
@@ -148,11 +151,14 @@ export function TemplateRenderer({
           "--cor-destaque": customPrimary || model.theme.colors.primary,
           "--cor-principal": customPrimary || model.theme.colors.primary,
           "--cor-texto": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
+          "--cor-titulo": customTitle,
+          "--title-color": customTitle,
           "--cor-fundo-card": customCard || (isLightMode ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
           "--cor-borda": customBorder || (isLightMode ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.1)"),
           "--raio-borda": customRadius || "16px",
 
           "--bio-fg": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
+          "--bio-title": customTitle,
           "--bio-muted": isLightMode
             ? "#64748b"
             : customText
@@ -164,6 +170,7 @@ export function TemplateRenderer({
           "--template-bg": customBg || model.theme.colors.background,
           "--template-surface": customCard || model.theme.colors.surface,
           "--template-text": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
+          "--template-title": customTitle,
           "--template-muted": isLightMode ? "#64748b" : model.theme.colors.muted,
           "--template-primary": customPrimary || model.theme.colors.primary,
           ...(customBg ? { background: customBg } : {}),
@@ -177,4 +184,3 @@ export function TemplateRenderer({
     </main>
   );
 }
-

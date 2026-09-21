@@ -16,6 +16,7 @@ export interface CustomThemeConfig {
   primary?: string;
   background?: string;
   text?: string;
+  title?: string;
   mode?: "default" | "dark" | "light" | "gradient" | "custom";
   card_bg?: string;
   border_color?: string;
@@ -47,14 +48,31 @@ const PRIMARY_PRESETS = [
   { hex: "#18181B", label: "Preto Carbono" },
 ];
 
-const TEXT_PRESETS = [
+const TITLE_PRESETS = [
+  { hex: "#111827", label: "Preto Titânio" },
+  { hex: "#0F172A", label: "Azul Slate" },
   { hex: "#FFFFFF", label: "Branco Puro" },
-  { hex: "#F8FAFC", label: "Off-White Gelo" },
-  { hex: "#FEF08A", label: "Dourado Champanhe" },
-  { hex: "#CBD5E1", label: "Cinza Platina" },
-  { hex: "#38BDF8", label: "Azul Céu" },
-  { hex: "#0F172A", label: "Escuro Carbono" },
+  { hex: "#F8FAFC", label: "Gelo Off-White" },
+  { hex: "#D4AF37", label: "Dourado Nobre" },
+  { hex: "#6366F1", label: "Índigo VIP" },
 ];
+
+const TEXT_PRESETS = [
+  { hex: "#374151", label: "Chumbo Escuro" },
+  { hex: "#111827", label: "Preto Titânio" },
+  { hex: "#64748B", label: "Cinza Slate" },
+  { hex: "#FFFFFF", label: "Branco Puro" },
+  { hex: "#E2E8F0", label: "Gelo Claro" },
+  { hex: "#CBD5E1", label: "Cinza Platina" },
+];
+
+function calcLuminance(hex?: string): number {
+  if (!hex || !hex.startsWith("#") || hex.length < 7) return 100;
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return (r * 299 + g * 587 + b * 114) / 1000;
+}
 
 export function ColorPickerControl({
   value,
@@ -62,7 +80,12 @@ export function ColorPickerControl({
 }: ColorPickerControlProps) {
   const currentPrimary = value?.primary || "#6366F1";
   const [primaryHex, setPrimaryHex] = useState(currentPrimary);
-  const [textHex, setTextHex] = useState(value?.text || "#FFFFFF");
+  const [titleHex, setTitleHex] = useState(
+    value?.title || (value?.mode === "light" ? "#111827" : "#FFFFFF")
+  );
+  const [textHex, setTextHex] = useState(
+    value?.text || (value?.mode === "light" ? "#374151" : "#FFFFFF")
+  );
   const [bgHex, setBgHex] = useState(
     value?.background?.startsWith("#") ? value.background : "#0B0C10"
   );
@@ -80,6 +103,7 @@ export function ColorPickerControl({
   const hasAnyCustom = Boolean(
     value?.primary ||
       value?.background ||
+      value?.title ||
       value?.text ||
       value?.card_bg ||
       value?.border_color ||
@@ -93,6 +117,10 @@ export function ColorPickerControl({
   useEffect(() => {
     if (value?.primary) setPrimaryHex(value.primary);
   }, [value?.primary]);
+
+  useEffect(() => {
+    if (value?.title) setTitleHex(value.title);
+  }, [value?.title]);
 
   useEffect(() => {
     if (value?.text) setTextHex(value.text);
@@ -138,6 +166,7 @@ export function ColorPickerControl({
     const updated: CustomThemeConfig = {
       ...value,
       primary: updates.primary !== undefined ? updates.primary : primaryHex,
+      title: updates.title !== undefined ? updates.title : titleHex,
       text: updates.text !== undefined ? updates.text : textHex,
       background: updates.background !== undefined ? updates.background : bgHex,
       card_bg: updates.card_bg !== undefined ? updates.card_bg : cardBg,
@@ -157,6 +186,11 @@ export function ColorPickerControl({
   const applyPrimaryColor = (hex: string) => {
     setPrimaryHex(hex);
     updateConfig({ primary: hex });
+  };
+
+  const applyTitleColor = (hex: string) => {
+    setTitleHex(hex);
+    updateConfig({ title: hex });
   };
 
   const applyTextColor = (hex: string) => {
@@ -184,11 +218,34 @@ export function ColorPickerControl({
     updateConfig({ info_badge_bg: val });
   };
 
+  const applyAutoContrast = () => {
+    const lum = calcLuminance(bgHex.startsWith("#") ? bgHex : "#0B0C10");
+    const isLight = lum > 140;
+    const newTitle = isLight ? "#111827" : "#FFFFFF";
+    const newText = isLight ? "#374151" : "#E2E8F0";
+    const newCard = isLight ? "#FFFFFF" : "rgba(255, 255, 255, 0.04)";
+    const newBorder = isLight ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.12)";
+
+    setTitleHex(newTitle);
+    setTextHex(newText);
+    setCardBg(newCard);
+    setBorderColor(newBorder);
+
+    updateConfig({
+      mode: isLight ? "light" : "dark",
+      title: newTitle,
+      text: newText,
+      card_bg: newCard,
+      border_color: newBorder,
+    });
+  };
+
   const applyBackgroundMode = (
     mode: "default" | "dark" | "light" | "gradient" | "custom",
     customBg?: string
   ) => {
     let bg = bgHex;
+    let title = titleHex;
     let text = textHex;
     let g1 = grad1Hex;
     let g2 = grad2Hex;
@@ -197,14 +254,16 @@ export function ColorPickerControl({
 
     if (mode === "dark") {
       bg = "#080a11";
-      text = "#ffffff";
+      title = "#ffffff";
+      text = "#e2e8f0";
       g1 = "#080a11";
       g2 = primaryHex || "#6366f1";
       card = cardBg || "rgba(255, 255, 255, 0.04)";
       border = borderColor || "rgba(255, 255, 255, 0.12)";
     } else if (mode === "light") {
       bg = "#ffffff";
-      text = "#0f172a";
+      title = "#0f172a";
+      text = "#374151";
       g1 = "#ffffff";
       g2 = "#f1f5f9";
       card = !cardBg || cardBg === "rgba(255, 255, 255, 0.04)" ? "#ffffff" : cardBg;
@@ -213,12 +272,22 @@ export function ColorPickerControl({
       g1 = grad1Hex || "#0b0c10";
       g2 = primaryHex || "#6366f1";
       bg = `radial-gradient(ellipse at 50% 0%, ${g2}40 0%, ${g1} 75%)`;
-      text = "#ffffff";
+      title = "#ffffff";
+      text = "#e2e8f0";
     } else if (mode === "custom") {
       bg = customBg || (bgHex.startsWith("#") ? bgHex : "#080a11");
+      const lum = calcLuminance(bg);
+      if (lum > 140) {
+        title = "#111827";
+        text = "#374151";
+      } else {
+        title = "#ffffff";
+        text = "#e2e8f0";
+      }
     }
 
     setBgHex(bg);
+    setTitleHex(title);
     setTextHex(text);
     setGrad1Hex(g1);
     setGrad2Hex(g2);
@@ -227,6 +296,7 @@ export function ColorPickerControl({
     updateConfig({
       mode,
       background: bg,
+      title,
       text,
       gradient_1: g1,
       gradient_2: g2,
@@ -284,6 +354,48 @@ export function ColorPickerControl({
             Restaurar
           </button>
         )}
+      </div>
+
+      {/* AÇÕES RÁPIDAS DE CONTRASTE & HARMONIA (1 CLIQUE) */}
+      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-[11px] font-bold text-foreground flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            Contraste Rápido Garantido (Desktop & Mobile)
+          </span>
+          <span className="text-[10px] text-muted-foreground font-medium">1 Clique</span>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          <button
+            type="button"
+            onClick={() => applyBackgroundMode("light")}
+            className="py-1.5 px-2 rounded-lg border border-border bg-background hover:bg-muted/40 text-[11px] font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+            title="Fundo branco, títulos pretos e textos escuros de máxima legibilidade"
+          >
+            <Sun className="h-3.5 w-3.5 text-amber-500" />
+            <span>Modo Claro</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => applyBackgroundMode("dark")}
+            className="py-1.5 px-2 rounded-lg border border-border bg-background hover:bg-muted/40 text-[11px] font-semibold text-foreground flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+            title="Fundo escuro, títulos e textos brancos de alto contraste"
+          >
+            <Moon className="h-3.5 w-3.5 text-indigo-400" />
+            <span>Modo Escuro</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={applyAutoContrast}
+            className="py-1.5 px-2 rounded-lg border border-primary/30 bg-primary/10 hover:bg-primary/20 text-[11px] font-bold text-primary flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+            title="Detecta o fundo atual e ajusta títulos e textos para contraste AAA"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span>Auto Contraste</span>
+          </button>
+        </div>
       </div>
 
       {/* 1. ESTRUTURA / MÁSCARA DO LAYOUT */}
@@ -403,12 +515,81 @@ export function ColorPickerControl({
         </div>
       </div>
 
-      {/* 3. COR DOS TEXTOS & TÍTULOS */}
+      {/* 3. COR DOS TÍTULOS & CABEÇALHOS */}
       <div className="space-y-2.5 pt-4 border-t border-border/50">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
             <Type className="h-3.5 w-3.5 text-primary" />
-            3. Cor dos Textos & Títulos da Página
+            3. Cor dos Títulos & Cabeçalhos da Página
+          </label>
+          <span className="text-[11px] font-mono font-bold text-foreground">
+            {titleHex.toUpperCase()}
+          </span>
+        </div>
+
+        {/* Swatches Rápidos de Título */}
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {TITLE_PRESETS.map((t) => {
+            const isSelected = titleHex.toLowerCase() === t.hex.toLowerCase();
+            return (
+              <button
+                key={t.hex}
+                type="button"
+                onClick={() => applyTitleColor(t.hex)}
+                className={`py-1.5 px-2 rounded-xl border text-[11px] font-medium flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
+                  isSelected
+                    ? "border-primary bg-primary/15 text-primary font-bold ring-1 ring-primary/40 shadow-2xs"
+                    : "border-border bg-card/60 text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full border border-black/20 shrink-0"
+                  style={{ backgroundColor: t.hex }}
+                />
+                <span className="truncate">{t.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Seletor Livre de Cor de Título */}
+        <div className="flex items-center gap-2 pt-1">
+          <div className="relative shrink-0">
+            <input
+              type="color"
+              value={/^#[0-9A-Fa-f]{6}$/.test(titleHex) ? titleHex : "#111827"}
+              onChange={(e) => applyTitleColor(e.target.value)}
+              className="h-8 w-8 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
+              aria-label="Escolher cor personalizada para títulos"
+            />
+          </div>
+          <div className="relative flex items-center flex-1">
+            <span className="absolute left-2.5 text-xs text-muted-foreground font-mono">#</span>
+            <input
+              type="text"
+              value={titleHex.replace(/^#/, "")}
+              onChange={(e) => {
+                const clean = `#${e.target.value.trim().replace(/^#/, "")}`;
+                setTitleHex(clean);
+                if (/^#[0-9A-Fa-f]{6}$/.test(clean)) {
+                  applyTitleColor(clean);
+                }
+              }}
+              placeholder="111827"
+              maxLength={6}
+              className="w-full rounded-lg border border-border bg-background py-1.5 pl-6 pr-3 text-xs font-mono font-semibold text-foreground focus:border-primary focus:outline-none uppercase"
+            />
+          </div>
+          <span className="text-[11px] text-muted-foreground shrink-0">Cor Livre Título</span>
+        </div>
+      </div>
+
+      {/* 4. COR DOS TEXTOS, SUBTÍTULOS & DESCRIÇÕES */}
+      <div className="space-y-2.5 pt-4 border-t border-border/50">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
+            <Type className="h-3.5 w-3.5 text-primary" />
+            4. Cor dos Textos, Subtítulos & Descrições
           </label>
           <span className="text-[11px] font-mono font-bold text-foreground">
             {textHex.toUpperCase()}
@@ -434,7 +615,7 @@ export function ColorPickerControl({
                   className="h-2.5 w-2.5 rounded-full border border-black/20 shrink-0"
                   style={{ backgroundColor: t.hex }}
                 />
-                <span className="truncate">{t.label.split(" ")[0]}</span>
+                <span className="truncate">{t.label}</span>
               </button>
             );
           })}
@@ -445,7 +626,7 @@ export function ColorPickerControl({
           <div className="relative shrink-0">
             <input
               type="color"
-              value={/^#[0-9A-Fa-f]{6}$/.test(textHex) ? textHex : "#FFFFFF"}
+              value={/^#[0-9A-Fa-f]{6}$/.test(textHex) ? textHex : "#374151"}
               onChange={(e) => applyTextColor(e.target.value)}
               className="h-8 w-8 cursor-pointer rounded-lg border border-border bg-transparent p-0.5"
               aria-label="Escolher cor personalizada para textos"
@@ -463,7 +644,7 @@ export function ColorPickerControl({
                   applyTextColor(clean);
                 }
               }}
-              placeholder="FFFFFF"
+              placeholder="374151"
               maxLength={6}
               className="w-full rounded-lg border border-border bg-background py-1.5 pl-6 pr-3 text-xs font-mono font-semibold text-foreground focus:border-primary focus:outline-none uppercase"
             />
@@ -472,10 +653,10 @@ export function ColorPickerControl({
         </div>
       </div>
 
-      {/* 4. ESTILO DE FUNDO & GRADIENTE MESH */}
+      {/* 5. ESTILO DE FUNDO & GRADIENTE MESH */}
       <div className="space-y-2.5 pt-4 border-t border-border/50">
         <label className="text-xs font-bold text-foreground block">
-          4. Estilo de Fundo & Gradientes Mesh
+          5. Estilo de Fundo & Gradientes Mesh
         </label>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
@@ -565,12 +746,12 @@ export function ColorPickerControl({
         </div>
       </div>
 
-      {/* 5. ARREDONDAMENTO DAS BORDAS (RAIO) */}
+      {/* 6. ARREDONDAMENTO DAS BORDAS (RAIO) */}
       <div className="space-y-2.5 pt-4 border-t border-border/50">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
             <Square className="h-3.5 w-3.5 text-primary" />
-            5. Formato dos Botões e Cards
+            6. Formato dos Botões e Cards
           </label>
           <span className="text-[11px] font-mono text-muted-foreground">{borderRadius}</span>
         </div>
@@ -604,11 +785,11 @@ export function ColorPickerControl({
         </div>
       </div>
 
-      {/* 6. COR DOS CARDS E BLOCOS DE INFORMAÇÃO */}
+      {/* 7. COR DOS CARDS E BLOCOS DE INFORMAÇÃO */}
       <div className="space-y-2.5 pt-4 border-t border-border/50">
         <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
           <Square className="h-3.5 w-3.5 text-primary" />
-          6. Cor dos Cards e Blocos de Informações
+          7. Cor dos Cards e Blocos de Informações
         </label>
         <p className="text-[11px] text-muted-foreground">
           Escolha o tom de fundo e o contorno das caixas, links e vitrines do seu BioLink.
@@ -668,12 +849,12 @@ export function ColorPickerControl({
         </div>
       </div>
 
-      {/* 7. CORES ESPECÍFICAS DE APPS / PWA */}
+      {/* 8. CORES ESPECÍFICAS DE APPS / PWA */}
       <div className="space-y-3 pt-4 border-t border-border/50">
         <div>
           <label className="text-xs font-bold text-foreground flex items-center gap-1.5">
             <Palette className="h-3.5 w-3.5 text-primary" />
-            7. Cores do App / PWA
+            8. Cores do App / PWA
           </label>
           <p className="mt-1 text-[11px] text-muted-foreground">
             Personalize áreas próprias dos modelos de loja, cardápio e delivery.
@@ -713,6 +894,12 @@ export function ColorPickerControl({
             </span>
           </label>
         </div>
+      </div>
+
+      {/* NOTA DE SINCRONIZAÇÃO RESPONSIVA */}
+      <div className="pt-3 border-t border-border/40 flex items-center gap-2 text-[11px] text-muted-foreground">
+        <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
+        <span>Sincronização Ativa: As cores e contrastes aplicados aqui são 100% idênticos no Mobile e Desktop.</span>
       </div>
     </div>
   );

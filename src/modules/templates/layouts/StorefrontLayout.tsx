@@ -150,7 +150,6 @@ function StorefrontView({
   const whats = bio.whatsapp?.replace(/\D/g, "") || "";
   const insta = bio.instagram?.replace("@", "") || "";
 
-  const socialData = (bio.social_links as Record<string, any>) || {};
   const googleRating = socialData.google_rating || "4.9";
   const reviewsCount = socialData.reviews_count || "120+";
   const address = socialData.address;

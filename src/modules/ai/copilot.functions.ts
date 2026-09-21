@@ -11,6 +11,7 @@ export interface AiCopilotResult {
     primary: string;
     background: string;
     text: string;
+    title?: string;
     card_bg: string;
     border_color: string;
     mode: "dark" | "light";
@@ -103,19 +104,34 @@ Sua tarefa é analisar o briefing, as imagens e/ou os documentos em anexo (como 
 
 DIRETRIZES MULTIMODAIS E DE DESIGN:
 1. ARQUITETURA INTOCÁVEL: JAMAIS altere o template_id ou estruture propriedades fora do schema. Você altera estritamente textos, cores, distribuição de fotos, serviços e diferenciais.
-2. DISTRIBUIÇÃO INTELIGENTE DE FOTOS E RECORTE DE LOGOS:
+2. REGRAS INEGOCIÁVEIS DE CONTRASTE & HARMONIA (WCAG):
+   - 'custom_theme.mode': Defina "light" (padrão elegante e limpo) ou "dark" (moderno e imersivo).
+   - 'custom_theme.primary': Cor marcante da identidade visual da empresa (ex: verde médico #059669, azul royal #1d4ed8, dourado #d97706, etc.).
+   - Se 'mode' === 'light':
+     * 'background': "#ffffff" (ou tom ultra-suave como "#f8fafc").
+     * 'title': OBRIGATORIAMENTE tom escuro de alta autoridade ("#0f172a", "#111827", "#020617").
+     * 'text': OBRIGATORIAMENTE cinza escuro legível ("#334155" ou "#475569").
+     * 'card_bg': "#ffffff".
+     * 'border_color': "#e2e8f0".
+   - Se 'mode' === 'dark':
+     * 'background': "#0b0f19" (ou "#090d16").
+     * 'title': OBRIGATORIAMENTE tom claro ("#ffffff" ou "#f8fafc").
+     * 'text': OBRIGATORIAMENTE tom cinza claro legível ("#cbd5e1" ou "#e2e8f0").
+     * 'card_bg': "#131b2e".
+     * 'border_color': "#1e293b".
+   - CRÍTICO: NUNCA gere 'title' escuro com 'background' escuro, nem 'title' claro com 'background' claro! Garanta legibilidade cristalina em todas as telas.
+3. DISTRIBUIÇÃO INTELIGENTE DE FOTOS E RECORTE DE LOGOS:
    - Se houver fotos ou imagens anexadas (ou extraídas de PDF) com URLs públicas:
      * 'avatar_url': Atribua OBRIGATORIAMENTE a URL da imagem com tag/papel de Logotipo ('logo') ou o melhor recorte de logo/rosto.
      * 'cover_url': Atribua OBRIGATORIAMENTE a URL da foto de Capa/Banner ('cover') ou banner principal da empresa.
-     * 'suggested_services[i].image_url': Se houver fotos específicas de pratos (ex: hambúrguer, pizza), produtos ou procedimentos estéticos/médicos ('product'), atribua a respectiva URL pública diretamente ao item correspondente do catálogo!
-3. EXTRAÇÃO SEMÂNTICA DE PDFS (Cardápios, Catálogos e Tabelas de Preço):
-   - Se houver documento PDF anexado, examine atentamente todo o texto, tabelas, pratos e valores.
-   - Extraia TODOS os produtos/serviços reais com seus nomes exatos, descrições detalhadas e preços numéricos em reais (R$) para 'suggested_services'.
-   - Identifique horários de atendimento, regras de agendamento e diferenciais presentes no PDF para compor os 'differentials' e o FAQ.
-4. VÍDEO INSTITUCIONAL:
+     * 'suggested_services[i].image_url': Se houver fotos específicas de pratos (ex: hambúrguer, açaí, pizza), produtos ou procedimentos estéticos/médicos ('product'), atribua a respectiva URL pública diretamente ao item correspondente do catálogo!
+4. EXTRAÇÃO SEMÂNTICA PROFUNDA DE PDFS (Cardápios, Catálogos e Tabelas de Preço):
+   - Se houver texto extraído do PDF (ou imagens do documento):
+     * Mapeie TODOS os pratos/serviços reais encontrados: nomes exatos, descrições fiéis com ingredientes e preços numéricos em reais (R$).
+     * Não resuma nem invente pratos se o PDF já fornecer os produtos reais da empresa.
+     * Extraia telefones, WhatsApp, endereço, horário de atendimento e diferenciais presentes no PDF para 'differentials' e 'about_section'.
+5. VÍDEO INSTITUCIONAL:
    - Se o campo videoUrl foi preenchido ou mencionado, configure 'video_embed' com enabled=true, a url indicada, um título magnético (ex: "Conheça por Dentro Nossa Estrutura") e uma legenda convidativa.
-5. PALETA DE CORES DA MARCA (custom_theme):
-   - Extraia as cores predominantes das fotos ou logotipo e construa um tema equilibrado ('primary', 'background', 'text', 'card_bg', 'border_color', 'mode').
 6. COPYWRITING:
    - 'description': Headline magnética de alta conversão (120 a 240 caracteres).
    - 'whatsapp_message': Mensagem persuasiva de abertura para o WhatsApp comercial.
@@ -387,6 +403,37 @@ Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos (
         .replace(/\s*```$/i, "")
         .trim();
       const parsed: AiCopilotResult = JSON.parse(cleanJson);
+
+      // Blindagem matemática WCAG de contraste do tema gerado pela IA
+      if (parsed.custom_theme) {
+        const calcLum = (hex?: string) => {
+          if (!hex || !hex.startsWith("#") || hex.length < 7) return 150;
+          const r = parseInt(hex.slice(1, 3), 16);
+          const g = parseInt(hex.slice(3, 5), 16);
+          const b = parseInt(hex.slice(5, 7), 16);
+          return (r * 299 + g * 587 + b * 114) / 1000;
+        };
+
+        const bgLum = calcLum(parsed.custom_theme.background);
+        const isDark = parsed.custom_theme.mode === "dark" || bgLum < 128;
+
+        parsed.custom_theme = {
+          ...parsed.custom_theme,
+          mode: isDark ? "dark" : "light",
+          background: isDark
+            ? (bgLum < 128 ? parsed.custom_theme.background : "#0b0f19")
+            : (bgLum >= 128 ? parsed.custom_theme.background : "#ffffff"),
+          title: isDark
+            ? (calcLum(parsed.custom_theme.title) > 130 ? parsed.custom_theme.title : "#ffffff")
+            : (calcLum(parsed.custom_theme.title) < 130 ? parsed.custom_theme.title : "#0f172a"),
+          text: isDark
+            ? (calcLum(parsed.custom_theme.text) > 130 ? parsed.custom_theme.text : "#cbd5e1")
+            : (calcLum(parsed.custom_theme.text) < 130 ? parsed.custom_theme.text : "#334155"),
+          card_bg: isDark ? (parsed.custom_theme.card_bg || "#131b2e") : (parsed.custom_theme.card_bg || "#ffffff"),
+          border_color: isDark ? (parsed.custom_theme.border_color || "#1e293b") : (parsed.custom_theme.border_color || "#e2e8f0"),
+        };
+      }
+
       return parsed;
     } catch {
       throw new Error("Não foi possível decodificar o JSON estruturado gerado pelo Gemini.");

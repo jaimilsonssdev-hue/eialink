@@ -187,6 +187,53 @@ function SiteMaquinaView({
   const customText = customTheme.text || (isLightMode ? "#374151" : "#e2e8f0");
   const hue = customTheme.hue || (customTheme.primary ? hexToHue(customTheme.primary) : null) || getNicheHue(nicheKey);
 
+  // Customizações individuais por seção e reordenação
+  const sectionStyles = (socialData.section_styles as Record<string, any>) || {};
+  const DEFAULT_SECTIONS_ORDER = useMemo(
+    () => ["hero", "credibility", "steps", "servicos", "diferenciais", "avaliacoes", "faq", "contato"],
+    []
+  );
+
+  const sectionsOrder: string[] = useMemo(() => {
+    if (Array.isArray(socialData.sections_order) && socialData.sections_order.length > 0) {
+      const order = [...socialData.sections_order];
+      for (const def of DEFAULT_SECTIONS_ORDER) {
+        if (!order.includes(def)) order.push(def);
+      }
+      return order;
+    }
+    return DEFAULT_SECTIONS_ORDER;
+  }, [socialData.sections_order, DEFAULT_SECTIONS_ORDER]);
+
+  const getSectionConfig = (key: string, defaultTitleColor?: string, defaultTextColor?: string) => {
+    const s = sectionStyles[key] || {};
+    return {
+      title: s.title as string | undefined,
+      subtitle: s.subtitle as string | undefined,
+      titleColor: s.title_color || defaultTitleColor,
+      textColor: s.text_color || defaultTextColor,
+      bgColor: s.bg_color as string | undefined,
+      fontFamily: s.font_family as string | undefined,
+      fontSize: s.font_size as "sm" | "base" | "lg" | "xl" | undefined,
+      visible: s.visible !== false,
+    };
+  };
+
+  const getHeadingSizeClass = (size?: string, defaultClass = "text-2xl sm:text-3xl lg:text-4xl") => {
+    switch (size) {
+      case "sm":
+        return "text-xl sm:text-2xl lg:text-3xl";
+      case "base":
+        return "text-2xl sm:text-3xl lg:text-4xl";
+      case "lg":
+        return "text-3xl sm:text-4xl lg:text-5xl";
+      case "xl":
+        return "text-4xl sm:text-5xl lg:text-6xl";
+      default:
+        return defaultClass;
+    }
+  };
+
   // Arquitetura da Hero
   const heroArchitecture =
     socialData.tokens_design?.hero_architecture ||
@@ -347,6 +394,872 @@ function SiteMaquinaView({
     ];
   }, [products, bio.id, heroCover, secondaryImage]);
 
+  const renderSection = (sectionKey: string): ReactNode => {
+    switch (sectionKey) {
+      case "hero": {
+        const heroCfg = sectionStyles.hero || {};
+        const heroTitle = heroCfg.title || companyName;
+        const heroSubtitle =
+          heroCfg.subtitle ||
+          bio.description ||
+          `Atendimento humanizado e infraestrutura completa em ${city}. Experiência diferenciada para quem valoriza pontualidade e excelência.`;
+        const heroFont = heroCfg.font_family || undefined;
+
+        return (
+          <section
+            id="hero"
+            className="relative overflow-hidden border-b border-gray-100"
+            style={{ backgroundColor: heroCfg.bg_color || undefined }}
+          >
+            {heroArchitecture === "asymmetric" ? (
+              /* Hero Asymmetric: 2 colunas com diagonal e foto */
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-24">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+                  <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center lg:text-left">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--color-100)] text-[var(--color-600)] text-xs font-bold uppercase tracking-wider">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
+                      <span>Atendimento Ativo Hoje em {city}</span>
+                    </div>
+                    <h1
+                      className={`font-heading font-black tracking-tight leading-tight ${getHeadingSizeClass(
+                        heroCfg.font_size,
+                        "text-3xl sm:text-5xl lg:text-6xl"
+                      )}`}
+                      style={{ color: heroCfg.title_color || customTitle, fontFamily: heroFont }}
+                    >
+                      {heroTitle}
+                    </h1>
+                    <p
+                      className="text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0"
+                      style={{ color: heroCfg.text_color || customText, fontFamily: heroFont }}
+                    >
+                      {heroSubtitle}
+                    </p>
+                    <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-2">
+                      <a
+                        href={whatsappHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => onTrack("whatsapp_click")}
+                        style={{ backgroundColor: customPrimary || undefined }}
+                        className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
+                      >
+                        <MessageCircle className="h-5 w-5 text-emerald-300" />
+                        <span>Iniciar Conversa no WhatsApp</span>
+                      </a>
+                      <a
+                        href={mapsLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="w-full sm:w-auto px-6 py-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm transition-all flex items-center justify-center gap-2"
+                      >
+                        <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
+                        <span>★ {rating.toFixed(1)} no Google</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  <div className="lg:col-span-5 relative">
+                    <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100">
+                      <img src={heroCover} alt={companyName} className="w-full h-72 sm:h-96 object-cover" />
+                    </div>
+                    <div className="absolute -bottom-4 left-4 sm:-bottom-6 sm:-left-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-3 max-w-[calc(100%-2rem)]">
+                      <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center font-black text-lg shrink-0">
+                        ★
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-heading font-black text-lg text-gray-900 leading-tight">
+                          {rating.toFixed(1)} / 5.0
+                        </div>
+                        <div className="text-[11px] text-gray-500 truncate">
+                          {reviewsCount} avaliações reais no Google
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : heroArchitecture === "immersive" ? (
+              /* Hero Immersive: Full-bleed com Overlay Dark Garantido e Alto Contraste */
+              <div className="relative isolate min-h-[480px] sm:min-h-[580px] flex items-center justify-center text-center px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
+                <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+                  <img src={heroCover} alt={companyName} className="w-full h-full object-cover scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/85 to-gray-950/60 backdrop-blur-[1px]" />
+                </div>
+
+                <div className="relative z-10 max-w-3xl mx-auto space-y-6">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                    <span>Referência de Atendimento em {city}</span>
+                  </div>
+
+                  <h1
+                    className={`font-heading font-black tracking-tight leading-tight text-white drop-shadow-md ${getHeadingSizeClass(
+                      heroCfg.font_size,
+                      "text-3xl sm:text-5xl lg:text-6xl"
+                    )}`}
+                    style={{
+                      color: (heroCfg.title_color && hexLuminance(heroCfg.title_color) > 130)
+                        ? heroCfg.title_color
+                        : "#ffffff",
+                      fontFamily: heroFont,
+                    }}
+                  >
+                    {heroTitle}
+                  </h1>
+
+                  <p
+                    className="text-base sm:text-xl font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm text-white/90"
+                    style={{
+                      color: (heroCfg.text_color && hexLuminance(heroCfg.text_color) > 120)
+                        ? heroCfg.text_color
+                        : "rgba(255, 255, 255, 0.9)",
+                      fontFamily: heroFont,
+                    }}
+                  >
+                    {heroSubtitle}
+                  </p>
+
+                  <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onTrack("whatsapp_click")}
+                      style={{ backgroundColor: customPrimary || undefined }}
+                      className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
+                    >
+                      <MessageCircle className="h-5 w-5 text-emerald-300" />
+                      <span>Falar com Atendente Agora</span>
+                    </a>
+                    <a
+                      href="#servicos"
+                      className="w-full sm:w-auto px-7 py-4 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-base backdrop-blur-md border border-white/40 shadow-sm transition-all flex items-center justify-center gap-2"
+                    >
+                      <span>Conhecer Serviços</span>
+                      <ChevronDown className="h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              /* Hero Centered (Padrão de policlinica-rmed/index.html & template_base.html) */
+              <div className="bg-gradient-to-b from-gray-50 to-white py-14 sm:py-20 lg:py-28 text-center">
+                <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-100)] text-[var(--color-600)] text-xs font-bold uppercase tracking-wider mb-6">
+                    <Sparkles className="h-3.5 w-3.5" />
+                    <span>Autoridade em {nicheLabel} em {city}</span>
+                  </div>
+                  <h1
+                    className={`font-heading font-black tracking-tight leading-tight ${getHeadingSizeClass(
+                      heroCfg.font_size,
+                      "text-3xl sm:text-5xl lg:text-6xl"
+                    )}`}
+                    style={{ color: heroCfg.title_color || customTitle, fontFamily: heroFont }}
+                  >
+                    {heroTitle}
+                  </h1>
+                  <p
+                    className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed"
+                    style={{ color: heroCfg.text_color || customText, fontFamily: heroFont }}
+                  >
+                    {heroSubtitle}
+                  </p>
+                  <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onTrack("whatsapp_click")}
+                      style={{ backgroundColor: customPrimary || undefined }}
+                      className="w-full sm:w-auto px-8 py-4 rounded-full bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95"
+                    >
+                      <MessageCircle className="h-5 w-5 text-emerald-300" />
+                      <span>Solicitar Informações no WhatsApp</span>
+                    </a>
+                  </div>
+                  <div className="mt-10 sm:mt-12 rounded-3xl overflow-hidden shadow-2xl max-w-3xl mx-auto border-4 border-white bg-gray-100">
+                    <img src={heroCover} alt={companyName} className="w-full h-64 sm:h-80 lg:h-96 object-cover" />
+                  </div>
+                </div>
+              </div>
+            )}
+          </section>
+        );
+      }
+
+      case "credibility": {
+        const credCfg = sectionStyles.credibility || {};
+        return (
+          <section
+            id="credibilidade"
+            className="bg-gray-900 text-white py-6 sm:py-8 border-y border-gray-800"
+            style={{ backgroundColor: credCfg.bg_color || undefined }}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center sm:text-left">
+                <div className="flex items-center gap-3 justify-center sm:justify-start">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[var(--color-300)] text-lg shrink-0">
+                    <Award className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-bold text-xs sm:text-sm text-white">Excelência no Atendimento</div>
+                    <div className="text-[11px] sm:text-xs text-gray-400">Padrão humanizado e ético</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 justify-center sm:justify-start">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-amber-400 text-lg shrink-0">
+                    <Star className="h-5 w-5 fill-amber-400" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-bold text-xs sm:text-sm text-white">{rating.toFixed(1)} no Google Maps</div>
+                    <div className="text-[11px] sm:text-xs text-gray-400">Reputação verificada</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 justify-center sm:justify-start">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-400 text-lg shrink-0">
+                    <MessageCircle className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-bold text-xs sm:text-sm text-white">Confirmação Rápida</div>
+                    <div className="text-[11px] sm:text-xs text-gray-400">Direto via WhatsApp</div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 justify-center sm:justify-start">
+                  <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[var(--color-300)] text-lg shrink-0">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <div className="font-heading font-bold text-xs sm:text-sm text-white">Fácil Acesso</div>
+                    <div className="text-[11px] sm:text-xs text-gray-400 truncate max-w-[140px] sm:max-w-none">{address.split("-")[0] || city}</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      case "steps": {
+        const stepsCfg = sectionStyles.steps || {};
+        return (
+          <section
+            id="como-funciona"
+            className="py-16 sm:py-20 border-b border-gray-100"
+            style={{ backgroundColor: stepsCfg.bg_color || (isLightMode ? "#ffffff" : "#0d1117") }}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
+                  Passo a Passo
+                </span>
+                <h2
+                  className={`font-heading font-black mt-3 ${getHeadingSizeClass(stepsCfg.font_size)}`}
+                  style={{
+                    color: stepsCfg.title_color || (isLightMode ? "#111827" : "#ffffff"),
+                    fontFamily: stepsCfg.font_family || undefined,
+                  }}
+                >
+                  {stepsCfg.title || "Como funciona o atendimento"}
+                </h2>
+                <p
+                  className="mt-2 text-sm sm:text-base"
+                  style={{
+                    color: stepsCfg.text_color || (isLightMode ? "#4b5563" : "#cbd5e1"),
+                    fontFamily: stepsCfg.font_family || undefined,
+                  }}
+                >
+                  {stepsCfg.subtitle || `Do primeiro contato no WhatsApp até a entrega com excelência em ${city}.`}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {steps.map((step, idx) => {
+                  const IconComponent = step.icon;
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:border-[var(--color-400)] transition-all group hover:shadow-md relative flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="text-3xl font-black text-gray-200 group-hover:text-[var(--color-200)] transition-colors mb-3">
+                          {step.num}
+                        </div>
+                        <div className="w-12 h-12 rounded-xl bg-white shadow-xs flex items-center justify-center text-[var(--color-600)] text-xl mb-4 border border-gray-100">
+                          <IconComponent className="h-6 w-6" />
+                        </div>
+                        <h3 className="font-heading font-bold text-gray-900 text-lg mb-2">{step.title}</h3>
+                        <p className="text-gray-600 text-sm leading-relaxed">{step.desc}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      case "servicos": {
+        if (displayServices.length === 0) return null;
+        const servCfg = sectionStyles.servicos || {};
+        return (
+          <section
+            id="servicos"
+            className="py-16 sm:py-20 border-b border-gray-100"
+            style={{ backgroundColor: servCfg.bg_color || (isLightMode ? "#f9fafb" : "#0b0f19") }}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
+                  Especialidades & Soluções
+                </span>
+                <h2
+                  className={`font-heading font-black mt-3 ${getHeadingSizeClass(servCfg.font_size)}`}
+                  style={{
+                    color: servCfg.title_color || (isLightMode ? "#111827" : "#ffffff"),
+                    fontFamily: servCfg.font_family || undefined,
+                  }}
+                >
+                  {servCfg.title || `Soluções da ${companyName}`}
+                </h2>
+                <p
+                  className="mt-2 text-sm sm:text-base"
+                  style={{
+                    color: servCfg.text_color || (isLightMode ? "#4b5563" : "#cbd5e1"),
+                    fontFamily: servCfg.font_family || undefined,
+                  }}
+                >
+                  {servCfg.subtitle || `Conheça as principais áreas e solicite atendimento rápido no WhatsApp em ${city}.`}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Card 1: Destaque Principal (Bento Grid Span 2) */}
+                {displayServices[0] && (
+                  <div className="md:col-span-2 bg-gradient-to-br from-white to-gray-50/80 p-6 sm:p-10 rounded-3xl border-2 border-[var(--color-300)] shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
+                    <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--color-100)] rounded-full blur-3xl opacity-60 pointer-events-none" />
+
+                    <div>
+                      <div className="flex items-center justify-between gap-4 mb-6">
+                        <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[var(--color-600)] text-white flex items-center justify-center text-xl sm:text-2xl shadow-md">
+                          <Sparkles className="h-6 w-6" />
+                        </div>
+                        <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3.5 py-1.5 rounded-full border border-[var(--color-200)]">
+                          ⭐ Serviço em Alta
+                        </span>
+                      </div>
+
+                      <h3 className="font-heading font-black text-xl sm:text-3xl text-gray-900 mb-3">
+                        {displayServices[0].name}
+                      </h3>
+                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-6">
+                        {displayServices[0].description?.replace(/^\[.*?\]\s*/, "") ||
+                          "Avaliação completa com corpo profissional qualificado, diagnóstico assertivo e ambiente acolhedor."}
+                      </p>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span>Equipe dedicada e atenciosa</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span>Estrutura moderna e confortável</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
+                          <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                          <span>Garantia e acompanhamento</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
+                      <a
+                        href={whatsappUrl(
+                          phone,
+                          `Olá! Gostaria de agendar ou saber mais sobre o serviço: *${displayServices[0].name}* que vi no site.`
+                        )}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => onTrack("service_click", displayServices[0].id)}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm font-bold text-white bg-[var(--color-600)] hover:bg-[var(--color-700)] px-6 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95"
+                      >
+                        <MessageCircle className="h-4 w-4 text-emerald-300" />
+                        <span>Agendar este Procedimento</span>
+                      </a>
+                      <span className="text-xs text-gray-500 font-medium">Atendimento com hora marcada</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cards Secundários (Bento Grid Col 1) */}
+                {displayServices.slice(1, 3).map((item, idx) => (
+                  <div
+                    key={item.id || idx}
+                    className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="w-12 h-12 rounded-2xl bg-[var(--color-100)] text-[var(--color-600)] flex items-center justify-center text-xl mb-6 shadow-inner">
+                        {idx === 0 ? <HeartPulse className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6" />}
+                      </div>
+                      <h3 className="font-heading font-black text-lg sm:text-xl text-gray-900 mb-3">
+                        {item.name}
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                        {item.description?.replace(/^\[.*?\]\s*/, "") ||
+                          "Agilidade na realização de procedimentos para você iniciar seus cuidados sem esperas desnecessárias."}
+                      </p>
+                    </div>
+                    <div className="pt-4 border-t border-gray-100">
+                      <a
+                        href={whatsappUrl(phone, `Olá! Gostaria de mais informações sobre: *${item.name}*.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => onTrack("service_click", item.id)}
+                        className="text-[var(--color-600)] font-bold text-sm inline-flex items-center gap-2 hover:gap-3 transition-all"
+                      >
+                        <span>Tirar dúvidas pelo WhatsApp</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Demais serviços se houver mais de 3 */}
+              {displayServices.length > 3 && (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+                  {displayServices.slice(3).map((item) => (
+                    <div
+                      key={item.id}
+                      className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between"
+                    >
+                      <div>
+                        <h4 className="font-heading font-bold text-base text-gray-900 mb-2">{item.name}</h4>
+                        <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-4">
+                          {item.description?.replace(/^\[.*?\]\s*/, "")}
+                        </p>
+                      </div>
+                      <a
+                        href={whatsappUrl(phone, `Olá! Vi o serviço *${item.name}* no site e gostaria de agendar.`)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => onTrack("service_click", item.id)}
+                        className="text-xs font-bold text-[var(--color-600)] flex items-center gap-1.5 hover:underline"
+                      >
+                        <span>Consultar no WhatsApp</span>
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      }
+
+      case "diferenciais": {
+        const diffCfg = sectionStyles.diferenciais || {};
+        return (
+          <section
+            id="diferenciais"
+            className="py-16 sm:py-20 border-b border-gray-100"
+            style={{ backgroundColor: diffCfg.bg_color || (isLightMode ? "#ffffff" : "#0d1117") }}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
+                    Diferenciais
+                  </span>
+                  <h2
+                    className={`font-heading font-black mt-4 leading-tight ${getHeadingSizeClass(diffCfg.font_size)}`}
+                    style={{
+                      color: diffCfg.title_color || (isLightMode ? "#111827" : "#ffffff"),
+                      fontFamily: diffCfg.font_family || undefined,
+                    }}
+                  >
+                    {diffCfg.title || `Por que a ${companyName} se destaca em ${address.split("-")[0] || city}`}
+                  </h2>
+                  <p
+                    className="mt-4 text-base leading-relaxed"
+                    style={{
+                      color: diffCfg.text_color || (isLightMode ? "#4b5563" : "#cbd5e1"),
+                      fontFamily: diffCfg.font_family || undefined,
+                    }}
+                  >
+                    {diffCfg.subtitle || `Nosso compromisso é entregar excelência com foco na satisfação, segurança e conforto de quem nos procura em ${city}.`}
+                  </p>
+
+                  <div className="mt-8 space-y-4">
+                    {differentials.map((diff: any, idx: number) => (
+                      <div key={idx} className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
+                        <div className="w-10 h-10 rounded-lg bg-[var(--color-600)] text-white flex items-center justify-center shrink-0">
+                          {diff.icon === "shield" ? (
+                            <ShieldCheck className="h-5 w-5" />
+                          ) : diff.icon === "heart" ? (
+                            <HeartPulse className="h-5 w-5" />
+                          ) : (
+                            <Award className="h-5 w-5" />
+                          )}
+                        </div>
+                        <div>
+                          <h4 className="font-heading font-bold text-gray-900 text-base">{diff.title}</h4>
+                          <p className="text-gray-600 text-sm mt-1">{diff.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="relative">
+                  <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100">
+                    <img src={secondaryImage} alt={companyName} className="w-full h-72 sm:h-[420px] lg:h-[450px] object-cover" />
+                  </div>
+                  <div className="absolute -bottom-4 left-4 sm:-bottom-6 sm:-left-6 bg-white p-4 sm:p-5 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-4 max-w-[calc(100%-2rem)]">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-xl sm:text-2xl font-bold shrink-0">
+                      ★
+                    </div>
+                    <div className="min-w-0">
+                      <div className="font-heading font-black text-xl sm:text-2xl text-gray-900 leading-tight">
+                        {rating.toFixed(1)} / 5.0
+                      </div>
+                      <div className="text-xs text-gray-500 truncate">Nota oficial no Google Maps</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      case "avaliacoes": {
+        const avalCfg = sectionStyles.avaliacoes || {};
+        return (
+          <section
+            id="avaliacoes"
+            className="py-16 sm:py-20 border-b border-gray-100"
+            style={{ backgroundColor: avalCfg.bg_color || (isLightMode ? "#f9fafb" : "#0b0f19") }}
+          >
+            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-white rounded-3xl p-6 sm:p-12 border border-gray-100 shadow-xl text-center relative overflow-hidden">
+                <div className="absolute -top-12 -right-12 w-48 h-48 bg-[var(--color-100)] rounded-full blur-3xl opacity-50 pointer-events-none" />
+
+                <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6">
+                  <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
+                  <span>Perfil Verificado no Google Maps</span>
+                </div>
+
+                <h2
+                  className={`font-heading font-black leading-tight ${getHeadingSizeClass(avalCfg.font_size)}`}
+                  style={{
+                    color: avalCfg.title_color || (isLightMode ? "#111827" : "#ffffff"),
+                    fontFamily: avalCfg.font_family || undefined,
+                  }}
+                >
+                  {avalCfg.title || `Avaliação Pública de ${companyName}`}
+                </h2>
+                <p
+                  className="mt-3 max-w-xl mx-auto text-sm sm:text-base"
+                  style={{
+                    color: avalCfg.text_color || (isLightMode ? "#4b5563" : "#cbd5e1"),
+                    fontFamily: avalCfg.font_family || undefined,
+                  }}
+                >
+                  {avalCfg.subtitle || `Transparência total com a reputação de quem frequenta nosso espaço no bairro ${address.split("-")[0] || city} e em toda a região de ${city}.`}
+                </p>
+
+                <div className="my-8 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 py-6 px-6 sm:px-8 rounded-2xl bg-gray-50 border border-gray-100 max-w-2xl mx-auto">
+                  <div className="text-center">
+                    <div className="font-heading font-black text-4xl sm:text-5xl text-gray-900 tracking-tight">
+                      {rating.toFixed(1)}
+                    </div>
+                    <div className="flex items-center justify-center gap-1 text-amber-400 text-lg mt-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
+                      ))}
+                    </div>
+                    <span className="text-xs text-gray-500 mt-1 block">Escala de 1 a 5 estrelas</span>
+                  </div>
+
+                  <div className="w-px h-16 bg-gray-200 hidden sm:block" />
+
+                  <div className="text-center sm:text-left">
+                    <div className="font-heading font-bold text-base sm:text-lg text-gray-900 flex items-center gap-2 justify-center sm:justify-start">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
+                      <span>{reviewsCount} Avaliações Verificadas</span>
+                    </div>
+                    <p className="text-gray-600 text-xs sm:text-sm mt-1">
+                      Comentários e notas registradas diretamente por usuários na ficha oficial do Google Maps.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Depoimentos reais e personalizados configurados */}
+                {Array.isArray(socialData.testimonials) && socialData.testimonials.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left my-8">
+                    {socialData.testimonials.map((t: any) => (
+                      <div key={t.id || t.author} className="p-5 rounded-2xl bg-gray-50/80 border border-gray-100 shadow-xs flex flex-col justify-between">
+                        <p className="text-gray-700 text-sm italic mb-4 leading-relaxed line-clamp-4">"{t.text}"</p>
+                        <div className="flex items-center gap-3 border-t border-gray-200/60 pt-3 mt-auto">
+                          <div className="w-8 h-8 rounded-full bg-[var(--color-100)] text-[var(--color-600)] flex items-center justify-center font-bold text-xs shrink-0">
+                            {(t.author || "C").charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-heading font-bold text-xs text-gray-900 truncate">{t.author}</div>
+                            <div className="text-[10px] text-gray-400 truncate">{t.role || "Cliente Verificado"}</div>
+                          </div>
+                          <div className="flex text-amber-400 text-xs shrink-0">
+                            {"★".repeat(Math.min(5, Math.max(1, t.rating || 5)))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <a
+                    href={mapsLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-gray-800 border-2 border-gray-200 hover:border-gray-900 px-6 sm:px-7 py-3.5 rounded-xl font-bold text-sm transition-all shadow-xs hover:shadow"
+                  >
+                    <ExternalLink className="h-4 w-4 text-red-500" />
+                    <span>Conferir Avaliações no Google Maps</span>
+                  </a>
+
+                  <a
+                    href={whatsappHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => onTrack("whatsapp_click")}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white px-6 sm:px-7 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    <span>Agendar Atendimento</span>
+                  </a>
+                </div>
+
+                <p className="text-xs text-gray-400 mt-6">
+                  * Dados sincronizados diretamente com a ficha de localização da {companyName}.
+                </p>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      case "faq": {
+        const faqCfg = sectionStyles.faq || {};
+        return (
+          <section
+            id="faq"
+            className="py-16 sm:py-20 border-b border-gray-100"
+            style={{ backgroundColor: faqCfg.bg_color || (isLightMode ? "#ffffff" : "#0d1117") }}
+          >
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14">
+                <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
+                  Dúvidas Comuns
+                </span>
+                <h2
+                  className={`font-heading font-black mt-3 ${getHeadingSizeClass(faqCfg.font_size)}`}
+                  style={{
+                    color: faqCfg.title_color || (isLightMode ? "#111827" : "#ffffff"),
+                    fontFamily: faqCfg.font_family || undefined,
+                  }}
+                >
+                  {faqCfg.title || `Perguntas Frequentes sobre ${companyName}`}
+                </h2>
+                <p
+                  className="mt-2 text-sm sm:text-base"
+                  style={{
+                    color: faqCfg.text_color || (isLightMode ? "#4b5563" : "#cbd5e1"),
+                    fontFamily: faqCfg.font_family || undefined,
+                  }}
+                >
+                  {faqCfg.subtitle || `Tire suas dúvidas antes de agendar sua visita conosco em ${city}.`}
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {faqItems.map((item, idx) => {
+                  const isOpen = openFaq === idx;
+                  return (
+                    <div
+                      key={idx}
+                      className="bg-gray-50 border border-gray-200/80 rounded-2xl overflow-hidden transition-all duration-300"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setOpenFaq(isOpen ? null : idx)}
+                        className="w-full p-5 sm:p-6 flex items-center justify-between text-left font-heading font-bold text-gray-900 text-base sm:text-lg hover:text-[var(--color-600)] transition-colors cursor-pointer"
+                      >
+                        <span className="pr-4">{item.q}</span>
+                        <span
+                          className={`w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm transition-transform duration-300 shrink-0 ${
+                            isOpen ? "rotate-180 bg-[var(--color-600)] text-white" : "text-gray-700"
+                          }`}
+                        >
+                          <ChevronDown className="h-4 w-4" />
+                        </span>
+                      </button>
+                      {isOpen && (
+                        <div className="px-5 sm:px-6 pb-6 text-gray-600 text-sm leading-relaxed border-t border-gray-100 pt-4 animate-fade-in">
+                          {item.a}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      case "contato": {
+        const contCfg = sectionStyles.contato || {};
+        return (
+          <section
+            id="contato"
+            className="py-16 sm:py-20"
+            style={{ backgroundColor: contCfg.bg_color || (isLightMode ? "#f9fafb" : "#0d1117") }}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-[var(--color-900)] rounded-3xl text-white overflow-hidden shadow-2xl">
+                <div className="grid grid-cols-1 lg:grid-cols-2">
+                  {/* Lado Esquerdo: Dados de Contato com Contraste 100% Blindado */}
+                  <div className="p-6 sm:p-10 lg:p-14 flex flex-col justify-between space-y-6 sm:space-y-8">
+                    <div>
+                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-300)] bg-white/10 px-3 py-1 rounded-full">
+                        Fale Conosco
+                      </span>
+                      <h2
+                        className={`font-heading font-black mt-4 leading-tight text-white ${getHeadingSizeClass(
+                          contCfg.font_size
+                        )}`}
+                        style={{
+                          color: (contCfg.title_color && hexLuminance(contCfg.title_color) > 130)
+                            ? contCfg.title_color
+                            : "#ffffff",
+                          fontFamily: contCfg.font_family || undefined,
+                        }}
+                      >
+                        {contCfg.title || "Venha nos visitar ou mande uma mensagem"}
+                      </h2>
+                      <p
+                        className="mt-4 text-sm sm:text-base leading-relaxed text-white/85"
+                        style={{
+                          color: (contCfg.text_color && hexLuminance(contCfg.text_color) > 120)
+                            ? contCfg.text_color
+                            : "rgba(255, 255, 255, 0.85)",
+                          fontFamily: contCfg.font_family || undefined,
+                        }}
+                      >
+                        {contCfg.subtitle ||
+                          `Estamos localizados em ${address.split("-")[0] || city}, prontos para lhe atender com todo o cuidado e atenção que você merece em ${city}.`}
+                      </p>
+
+                      <div className="mt-8 space-y-5">
+                        <div className="flex items-center gap-4">
+                          <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-lg">
+                            <MapPin className="h-5 w-5 text-[var(--color-300)]" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-white/70 font-medium">Endereço</div>
+                            <div className="font-semibold text-sm sm:text-base text-white">{address}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-lg">
+                            <MessageCircle className="h-5 w-5 text-emerald-400" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-white/70 font-medium">WhatsApp Oficial</div>
+                            <div className="font-semibold text-sm sm:text-base text-white">{cleanPhoneFormatted}</div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-4">
+                          <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-lg">
+                            <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-white/70 font-medium">Google Maps</div>
+                            <div className="font-semibold text-sm sm:text-base text-white">
+                              {rating.toFixed(1)} Estrelas Verificadas ({reviewsCount} opiniões)
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <a
+                        href={whatsappHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => onTrack("whatsapp_click")}
+                        className="inline-flex items-center justify-center gap-3 w-full sm:w-auto px-8 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base shadow-lg hover:shadow-xl transition-all active:scale-95"
+                      >
+                        <MessageCircle className="h-5 w-5" />
+                        <span>Falar no WhatsApp Agora</span>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Lado Direito: Mapa Interativo ao Vivo */}
+                  <div className="p-5 sm:p-8 lg:p-12 flex flex-col justify-center bg-gray-950/60 backdrop-blur-sm border-t lg:border-t-0 lg:border-l border-white/10">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
+                        <span className="font-heading font-bold text-sm text-white">Localização no Google Maps</span>
+                      </div>
+                      <a
+                        href={mapsLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-[var(--color-300)] hover:underline flex items-center gap-1 font-semibold shrink-0"
+                      >
+                        <span>Abrir Rota</span>
+                        <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+
+                    <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/15 h-64 sm:h-80 w-full relative bg-gray-900">
+                      <iframe
+                        title={`Localização de ${companyName}`}
+                        className="w-full h-full border-0"
+                        src={`https://maps.google.com/maps?q=${mapsQuery}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
+                        loading="lazy"
+                        allowFullScreen
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+
+                    <p className="text-white/60 text-xs text-center mt-3 truncate px-2">{address}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      default:
+        return null;
+    }
+  };
+
   return (
     <div
       className="site-maquina-root relative min-h-screen font-sans selection:bg-emerald-500/20 selection:text-emerald-900 scroll-smooth pb-20 sm:pb-0 w-full overflow-x-hidden"
@@ -354,7 +1267,6 @@ function SiteMaquinaView({
         {
           fontFamily: "'Inter', sans-serif",
           backgroundColor: customBg || (isLightMode ? "#ffffff" : "#080a11"),
-          color: customText,
           "--hue": hue,
           "--primary-exact": customPrimary || `hsl(${hue}, 75%, 45%)`,
           "--site-title": customTitle,
@@ -488,547 +1400,20 @@ function SiteMaquinaView({
         </div>
       </header>
 
-      {/* 3. HERO SECTION (1 DAS 5 ARQUITETURAS ASSINADAS COM 100% RESPONSIVIDADE) */}
-      <section className="relative overflow-hidden border-b border-gray-100">
-        {heroArchitecture === "asymmetric" ? (
-          /* Hero Asymmetric: 2 colunas com diagonal e foto */
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 lg:py-24">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
-              <div className="lg:col-span-7 space-y-5 sm:space-y-6 text-center lg:text-left">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[var(--color-100)] text-[var(--color-600)] text-xs font-bold uppercase tracking-wider">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>Atendimento Ativo Hoje em {city}</span>
-                </div>
-                <h1
-                  className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight"
-                  style={{ color: customTitle }}
-                >
-                  {companyName}
-                </h1>
-                <p
-                  className="text-base sm:text-lg leading-relaxed max-w-xl mx-auto lg:mx-0"
-                  style={{ color: customText }}
-                >
-                  {bio.description ||
-                    `Excelência comprovada, agendamento ágil e compromisso inegociável com a sua satisfação em ${city}.`}
-                </p>
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3 pt-2">
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => onTrack("whatsapp_click")}
-                    style={{ backgroundColor: customPrimary || undefined }}
-                    className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
-                  >
-                    <MessageCircle className="h-5 w-5 text-emerald-300" />
-                    <span>Iniciar Conversa no WhatsApp</span>
-                  </a>
-                  <a
-                    href={mapsLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full sm:w-auto px-6 py-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm transition-all flex items-center justify-center gap-2"
-                  >
-                    <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
-                    <span>★ {rating.toFixed(1)} no Google</span>
-                  </a>
-                </div>
-              </div>
+      {/* RENDERIZAÇÃO DINÂMICA DAS SEÇÕES DE ACORDO COM SECTIONS_ORDER */}
+      {sectionsOrder.map((sectionKey) => {
+        const cfg = getSectionConfig(sectionKey);
+        if (!cfg.visible) return null;
 
-              <div className="lg:col-span-5 relative">
-                <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100">
-                  <img src={heroCover} alt={companyName} className="w-full h-72 sm:h-96 object-cover" />
-                </div>
-                <div className="absolute -bottom-4 left-4 sm:-bottom-6 sm:-left-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-3 max-w-[calc(100%-2rem)]">
-                  <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center font-black text-lg shrink-0">
-                    ★
-                  </div>
-                  <div className="min-w-0">
-                    <div className="font-heading font-black text-lg text-gray-900 leading-tight">
-                      {rating.toFixed(1)} / 5.0
-                    </div>
-                    <div className="text-[11px] text-gray-500 truncate">
-                      {reviewsCount} avaliações reais no Google
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        const rendered = renderSection(sectionKey);
+        if (!rendered) return null;
+
+        return (
+          <div key={sectionKey} data-section={sectionKey} className="w-full">
+            {rendered}
           </div>
-        ) : heroArchitecture === "immersive" ? (
-          /* Hero Immersive: Full-bleed com Overlay Dark Garantido e Alto Contraste */
-          <div className="relative isolate min-h-[480px] sm:min-h-[580px] flex items-center justify-center text-center px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
-            <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-              <img src={heroCover} alt={companyName} className="w-full h-full object-cover scale-105" />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/85 to-gray-950/60 backdrop-blur-[1px]" />
-            </div>
-
-            <div className="relative z-10 max-w-3xl mx-auto space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
-                <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-                <span>Referência de Atendimento em {city}</span>
-              </div>
-
-              <h1
-                className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight text-white drop-shadow-md"
-                style={{ color: customTheme.title || "#ffffff" }}
-              >
-                {companyName}
-              </h1>
-
-              <p
-                className="text-base sm:text-xl font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm"
-                style={{ color: customTheme.text || "#f1f5f9" }}
-              >
-                {bio.description ||
-                  `Atendimento humanizado e infraestrutura completa em ${city}. Experiência diferenciada para quem valoriza pontualidade e excelência.`}
-              </p>
-
-              <div className="flex flex-col sm:flex-row justify-center gap-3 pt-2">
-                <a
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => onTrack("whatsapp_click")}
-                  style={{ backgroundColor: customPrimary || undefined }}
-                  className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl transition-all flex items-center justify-center gap-3 active:scale-95"
-                >
-                  <MessageCircle className="h-5 w-5 text-emerald-300" />
-                  <span>Falar com Atendente Agora</span>
-                </a>
-                <a
-                  href="#servicos"
-                  className="w-full sm:w-auto px-7 py-4 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-base backdrop-blur-md border border-white/40 shadow-sm transition-all flex items-center justify-center gap-2"
-                >
-                  <span>Conhecer Serviços</span>
-                  <ChevronDown className="h-4 w-4" />
-                </a>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Hero Centered (Padrão de policlinica-rmed/index.html & template_base.html) */
-          <div className="bg-gradient-to-b from-gray-50 to-white py-14 sm:py-20 lg:py-28 text-center">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--color-100)] text-[var(--color-600)] text-xs font-bold uppercase tracking-wider mb-6">
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Autoridade em {nicheLabel} em {city}</span>
-              </div>
-              <h1
-                className="font-heading text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight"
-                style={{ color: customTitle }}
-              >
-                {companyName}
-              </h1>
-              <p
-                className="mt-4 sm:mt-6 text-base sm:text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed"
-                style={{ color: customText }}
-              >
-                {bio.description ||
-                  `Atendimento personalizado e estrutura completa no bairro ${address.split("-")[0] || city}. Entre em contato direto e experimente a diferença.`}
-              </p>
-              <div className="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
-                <a
-                  href={whatsappHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => onTrack("whatsapp_click")}
-                  style={{ backgroundColor: customPrimary || undefined }}
-                  className="w-full sm:w-auto px-8 py-4 rounded-full bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-base shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 active:scale-95"
-                >
-                  <MessageCircle className="h-5 w-5 text-emerald-300" />
-                  <span>Solicitar Informações no WhatsApp</span>
-                </a>
-              </div>
-              <div className="mt-10 sm:mt-12 rounded-3xl overflow-hidden shadow-2xl max-w-3xl mx-auto border-4 border-white bg-gray-100">
-                <img src={heroCover} alt={companyName} className="w-full h-64 sm:h-80 lg:h-96 object-cover" />
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
-
-      {/* 4. FAIXA DE CREDIBILIDADE & SELOS DE CONFIANÇA */}
-      <section className="bg-gray-900 text-white py-6 sm:py-8 border-y border-gray-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 text-center sm:text-left">
-            <div className="flex items-center gap-3 justify-center sm:justify-start">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[var(--color-300)] text-lg shrink-0">
-                <Award className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-heading font-bold text-xs sm:text-sm text-white">Excelência no Atendimento</div>
-                <div className="text-[11px] sm:text-xs text-gray-400">Padrão humanizado e ético</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 justify-center sm:justify-start">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-amber-400 text-lg shrink-0">
-                <Star className="h-5 w-5 fill-amber-400" />
-              </div>
-              <div>
-                <div className="font-heading font-bold text-xs sm:text-sm text-white">{rating.toFixed(1)} no Google Maps</div>
-                <div className="text-[11px] sm:text-xs text-gray-400">Reputação verificada</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 justify-center sm:justify-start">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-emerald-400 text-lg shrink-0">
-                <MessageCircle className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-heading font-bold text-xs sm:text-sm text-white">Confirmação Rápida</div>
-                <div className="text-[11px] sm:text-xs text-gray-400">Direto via WhatsApp</div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 justify-center sm:justify-start">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center text-[var(--color-300)] text-lg shrink-0">
-                <MapPin className="h-5 w-5" />
-              </div>
-              <div>
-                <div className="font-heading font-bold text-xs sm:text-sm text-white">Fácil Acesso</div>
-                <div className="text-[11px] sm:text-xs text-gray-400 truncate max-w-[140px] sm:max-w-none">{address.split("-")[0] || city}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 5. FLUXO DE 4 PASSOS ("COMO FUNCIONA O ATENDIMENTO") */}
-      <section className="py-16 sm:py-20 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
-              Passo a Passo
-            </span>
-            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 mt-3">
-              Como funciona o atendimento
-            </h2>
-            <p className="text-gray-600 mt-2 text-sm sm:text-base">
-              Do primeiro contato no WhatsApp até a entrega com excelência em {city}.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {steps.map((step, idx) => {
-              const IconComponent = step.icon;
-              return (
-                <div
-                  key={idx}
-                  className="bg-gray-50 p-6 rounded-2xl border border-gray-100 hover:border-[var(--color-400)] transition-all group hover:shadow-md relative flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="text-3xl font-black text-gray-200 group-hover:text-[var(--color-200)] transition-colors mb-3">
-                      {step.num}
-                    </div>
-                    <div className="w-12 h-12 rounded-xl bg-white shadow-xs flex items-center justify-center text-[var(--color-600)] text-xl mb-4 border border-gray-100">
-                      <IconComponent className="h-6 w-6" />
-                    </div>
-                    <h3 className="font-heading font-bold text-gray-900 text-lg mb-2">{step.title}</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">{step.desc}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 6. VITRINE DE SERVIÇOS & ESPECIALIDADES EM BENTO GRID */}
-      {displayServices.length > 0 && (
-        <section id="servicos" className="py-16 sm:py-20 bg-gray-50 border-b border-gray-100">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16">
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
-                Especialidades & Soluções
-              </span>
-              <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 mt-3">
-                Soluções da {companyName}
-              </h2>
-              <p className="text-gray-600 mt-2 text-sm sm:text-base">
-                Conheça as principais áreas e solicite atendimento rápido no WhatsApp em {city}.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Card 1: Destaque Principal (Bento Grid Span 2) */}
-              {displayServices[0] && (
-                <div className="md:col-span-2 bg-gradient-to-br from-white to-gray-50/80 p-6 sm:p-10 rounded-3xl border-2 border-[var(--color-300)] shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
-                  <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--color-100)] rounded-full blur-3xl opacity-60 pointer-events-none" />
-
-                  <div>
-                    <div className="flex items-center justify-between gap-4 mb-6">
-                      <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[var(--color-600)] text-white flex items-center justify-center text-xl sm:text-2xl shadow-md">
-                        <Sparkles className="h-6 w-6" />
-                      </div>
-                      <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3.5 py-1.5 rounded-full border border-[var(--color-200)]">
-                        ⭐ Serviço em Alta
-                      </span>
-                    </div>
-
-                    <h3 className="font-heading font-black text-xl sm:text-3xl text-gray-900 mb-3">
-                      {displayServices[0].name}
-                    </h3>
-                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-6">
-                      {displayServices[0].description?.replace(/^\[.*?\]\s*/, "") ||
-                        "Avaliação completa com corpo profissional qualificado, diagnóstico assertivo e ambiente acolhedor."}
-                    </p>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                        <span>Equipe dedicada e atenciosa</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                        <span>Estrutura moderna e confortável</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
-                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                        <span>Garantia e acompanhamento</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
-                    <a
-                      href={whatsappUrl(
-                        phone,
-                        `Olá! Gostaria de agendar ou saber mais sobre o serviço: *${displayServices[0].name}* que vi no site.`
-                      )}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => onTrack("service_click", displayServices[0].id)}
-                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm font-bold text-white bg-[var(--color-600)] hover:bg-[var(--color-700)] px-6 py-3.5 rounded-xl shadow-md hover:shadow-lg transition-all active:scale-95"
-                    >
-                      <MessageCircle className="h-4 w-4 text-emerald-300" />
-                      <span>Agendar este Procedimento</span>
-                    </a>
-                    <span className="text-xs text-gray-500 font-medium">Atendimento com hora marcada</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Cards Secundários (Bento Grid Col 1) */}
-              {displayServices.slice(1, 3).map((item, idx) => (
-                <div
-                  key={item.id || idx}
-                  className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="w-12 h-12 rounded-2xl bg-[var(--color-100)] text-[var(--color-600)] flex items-center justify-center text-xl mb-6 shadow-inner">
-                      {idx === 0 ? <HeartPulse className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6" />}
-                    </div>
-                    <h3 className="font-heading font-black text-lg sm:text-xl text-gray-900 mb-3">
-                      {item.name}
-                    </h3>
-                    <p className="text-gray-600 text-sm leading-relaxed mb-6">
-                      {item.description?.replace(/^\[.*?\]\s*/, "") ||
-                        "Agilidade na realização de procedimentos para você iniciar seus cuidados sem esperas desnecessárias."}
-                    </p>
-                  </div>
-                  <div className="pt-4 border-t border-gray-100">
-                    <a
-                      href={whatsappUrl(phone, `Olá! Gostaria de mais informações sobre: *${item.name}*.`)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => onTrack("service_click", item.id)}
-                      className="text-[var(--color-600)] font-bold text-sm inline-flex items-center gap-2 hover:gap-3 transition-all"
-                    >
-                      <span>Tirar dúvidas pelo WhatsApp</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </a>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Demais serviços se houver mais de 3 */}
-            {displayServices.length > 3 && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                {displayServices.slice(3).map((item) => (
-                  <div
-                    key={item.id}
-                    className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between"
-                  >
-                    <div>
-                      <h4 className="font-heading font-bold text-base text-gray-900 mb-2">{item.name}</h4>
-                      <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-4">
-                        {item.description?.replace(/^\[.*?\]\s*/, "")}
-                      </p>
-                    </div>
-                    <a
-                      href={whatsappUrl(phone, `Olá! Vi o serviço *${item.name}* no site e gostaria de agendar.`)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={() => onTrack("service_click", item.id)}
-                      className="text-xs font-bold text-[var(--color-600)] flex items-center gap-1.5 hover:underline"
-                    >
-                      <span>Consultar no WhatsApp</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
-                    </a>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* 7. DIFERENCIAIS ("POR QUE NÓS") + CARD FLUTUANTE GOOGLE */}
-      <section id="diferenciais" className="py-16 sm:py-20 bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 items-center">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
-                Diferenciais
-              </span>
-              <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 mt-4 leading-tight">
-                Por que a {companyName} se destaca em {address.split("-")[0] || city}
-              </h2>
-              <p className="text-gray-600 mt-4 text-base leading-relaxed">
-                Nosso compromisso é entregar excelência com foco na satisfação, segurança e conforto de quem nos procura em {city}.
-              </p>
-
-              <div className="mt-8 space-y-4">
-                {differentials.map((diff: any, idx: number) => (
-                  <div key={idx} className="flex items-start gap-4 p-4 rounded-xl bg-gray-50 border border-gray-100">
-                    <div className="w-10 h-10 rounded-lg bg-[var(--color-600)] text-white flex items-center justify-center shrink-0">
-                      {diff.icon === "shield" ? (
-                        <ShieldCheck className="h-5 w-5" />
-                      ) : diff.icon === "heart" ? (
-                        <HeartPulse className="h-5 w-5" />
-                      ) : (
-                        <Award className="h-5 w-5" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="font-heading font-bold text-gray-900 text-base">{diff.title}</h4>
-                      <p className="text-gray-600 text-sm mt-1">{diff.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100">
-                <img src={secondaryImage} alt={companyName} className="w-full h-72 sm:h-[420px] lg:h-[450px] object-cover" />
-              </div>
-              <div className="absolute -bottom-4 left-4 sm:-bottom-6 sm:-left-6 bg-white p-4 sm:p-5 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-4 max-w-[calc(100%-2rem)]">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-xl sm:text-2xl font-bold shrink-0">
-                  ★
-                </div>
-                <div className="min-w-0">
-                  <div className="font-heading font-black text-xl sm:text-2xl text-gray-900 leading-tight">
-                    {rating.toFixed(1)} / 5.0
-                  </div>
-                  <div className="text-xs text-gray-500 truncate">Nota oficial no Google Maps</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 8. PROVA SOCIAL OFICIAL GOOGLE MAPS */}
-      <section id="avaliacoes" className="py-16 sm:py-20 bg-gray-50 border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-3xl p-6 sm:p-12 border border-gray-100 shadow-xl text-center relative overflow-hidden">
-            <div className="absolute -top-12 -right-12 w-48 h-48 bg-[var(--color-100)] rounded-full blur-3xl opacity-50 pointer-events-none" />
-
-            <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6">
-              <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
-              <span>Perfil Verificado no Google Maps</span>
-            </div>
-
-            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 leading-tight">
-              Avaliação Pública de {companyName}
-            </h2>
-            <p className="text-gray-600 mt-3 max-w-xl mx-auto text-sm sm:text-base">
-              Transparência total com a reputação de quem frequenta nosso espaço no bairro {address.split("-")[0] || city} e em toda a região de {city}.
-            </p>
-
-            <div className="my-8 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 py-6 px-6 sm:px-8 rounded-2xl bg-gray-50 border border-gray-100 max-w-2xl mx-auto">
-              <div className="text-center">
-                <div className="font-heading font-black text-4xl sm:text-5xl text-gray-900 tracking-tight">
-                  {rating.toFixed(1)}
-                </div>
-                <div className="flex items-center justify-center gap-1 text-amber-400 text-lg mt-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-                <span className="text-xs text-gray-500 mt-1 block">Escala de 1 a 5 estrelas</span>
-              </div>
-
-              <div className="w-px h-16 bg-gray-200 hidden sm:block" />
-
-              <div className="text-center sm:text-left">
-                <div className="font-heading font-bold text-base sm:text-lg text-gray-900 flex items-center gap-2 justify-center sm:justify-start">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
-                  <span>{reviewsCount} Avaliações Verificadas</span>
-                </div>
-                <p className="text-gray-600 text-xs sm:text-sm mt-1">
-                  Comentários e notas registradas diretamente por usuários na ficha oficial do Google Maps.
-                </p>
-              </div>
-            </div>
-
-            {/* Depoimentos reais e personalizados configurados */}
-            {Array.isArray(socialData.testimonials) && socialData.testimonials.length > 0 && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left my-8">
-                {socialData.testimonials.map((t: any) => (
-                  <div key={t.id || t.author} className="p-5 rounded-2xl bg-gray-50/80 border border-gray-100 shadow-xs flex flex-col justify-between">
-                    <p className="text-gray-700 text-sm italic mb-4 leading-relaxed line-clamp-4">"{t.text}"</p>
-                    <div className="flex items-center gap-3 border-t border-gray-200/60 pt-3 mt-auto">
-                      <div className="w-8 h-8 rounded-full bg-[var(--color-100)] text-[var(--color-600)] flex items-center justify-center font-bold text-xs shrink-0">
-                        {(t.author || "C").charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="font-heading font-bold text-xs text-gray-900 truncate">{t.author}</div>
-                        <div className="text-[10px] text-gray-400 truncate">{t.role || "Cliente Verificado"}</div>
-                      </div>
-                      <div className="flex text-amber-400 text-xs shrink-0">
-                        {"★".repeat(Math.min(5, Math.max(1, t.rating || 5)))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <a
-                href={mapsLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white text-gray-800 border-2 border-gray-200 hover:border-gray-900 px-6 sm:px-7 py-3.5 rounded-xl font-bold text-sm transition-all shadow-xs hover:shadow"
-              >
-                <ExternalLink className="h-4 w-4 text-red-500" />
-                <span>Conferir Avaliações no Google Maps</span>
-              </a>
-
-              <a
-                href={whatsappHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => onTrack("whatsapp_click")}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white px-6 sm:px-7 py-3.5 rounded-xl font-bold text-sm transition-all shadow-md hover:shadow-lg active:scale-95"
-              >
-                <MessageCircle className="h-4 w-4" />
-                <span>Agendar Atendimento</span>
-              </a>
-            </div>
-
-            <p className="text-xs text-gray-400 mt-6">
-              * Dados sincronizados diretamente com a ficha de localização da {companyName}.
-            </p>
-          </div>
-        </div>
-      </section>
+        );
+      })}
 
       {/* SEÇÕES MODULARES EXTRAS (VÍDEO / SOBRE / BLOCOS ADICIONAIS) */}
       {supplemental && (
@@ -1038,158 +1423,6 @@ function SiteMaquinaView({
           </div>
         </section>
       )}
-
-      {/* 9. PERGUNTAS FREQUENTES (FAQ ACCORDION INTERATIVO) */}
-      <section id="faq" className="py-16 sm:py-20 bg-white border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-14">
-            <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
-              Dúvidas Comuns
-            </span>
-            <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900 mt-3">
-              Perguntas Frequentes sobre {companyName}
-            </h2>
-            <p className="text-gray-600 mt-2 text-sm sm:text-base">
-              Tire suas dúvidas antes de agendar sua visita conosco em {city}.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            {faqItems.map((item, idx) => {
-              const isOpen = openFaq === idx;
-              return (
-                <div
-                  key={idx}
-                  className="bg-gray-50 border border-gray-200/80 rounded-2xl overflow-hidden transition-all duration-300"
-                >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="w-full p-5 sm:p-6 flex items-center justify-between text-left font-heading font-bold text-gray-900 text-base sm:text-lg hover:text-[var(--color-600)] transition-colors cursor-pointer"
-                  >
-                    <span className="pr-4">{item.q}</span>
-                    <span
-                      className={`w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm transition-transform duration-300 shrink-0 ${
-                        isOpen ? "rotate-180 bg-[var(--color-600)] text-white" : "text-gray-700"
-                      }`}
-                    >
-                      <ChevronDown className="h-4 w-4" />
-                    </span>
-                  </button>
-                  {isOpen && (
-                    <div className="px-5 sm:px-6 pb-6 text-gray-600 text-sm leading-relaxed border-t border-gray-100 pt-4 animate-fade-in">
-                      {item.a}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* 10. LOCALIZAÇÃO E CONTATO COM MAPA INTERATIVO EMBED */}
-      <section id="contato" className="py-16 sm:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-[var(--color-900)] rounded-3xl text-white overflow-hidden shadow-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-2">
-              {/* Lado Esquerdo: Dados de Contato */}
-              <div className="p-6 sm:p-10 lg:p-14 flex flex-col justify-between space-y-6 sm:space-y-8">
-                <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-300)] bg-white/10 px-3 py-1 rounded-full">
-                    Fale Conosco
-                  </span>
-                  <h2 className="font-heading text-2xl sm:text-3xl lg:text-4xl font-black mt-4 leading-tight">
-                    Venha nos visitar ou mande uma mensagem
-                  </h2>
-                  <p className="text-white/80 mt-4 text-sm sm:text-base leading-relaxed">
-                    Estamos localizados em {address.split("-")[0] || city}, prontos para lhe atender com todo o cuidado e atenção que você merece em {city}.
-                  </p>
-
-                  <div className="mt-8 space-y-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-lg">
-                        <MapPin className="h-5 w-5 text-[var(--color-300)]" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-white/60">Endereço</div>
-                        <div className="font-semibold text-sm sm:text-base text-white">{address}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-lg">
-                        <MessageCircle className="h-5 w-5 text-emerald-400" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-white/60">WhatsApp Oficial</div>
-                        <div className="font-semibold text-sm sm:text-base text-white">{cleanPhoneFormatted}</div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="w-11 h-11 rounded-xl bg-white/10 flex items-center justify-center shrink-0 text-lg">
-                        <Star className="h-5 w-5 text-amber-400 fill-amber-400" />
-                      </div>
-                      <div>
-                        <div className="text-xs text-white/60">Google Maps</div>
-                        <div className="font-semibold text-sm sm:text-base text-white">
-                          {rating.toFixed(1)} Estrelas Verificadas ({reviewsCount} opiniões)
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => onTrack("whatsapp_click")}
-                    className="inline-flex items-center justify-center gap-3 w-full sm:w-auto px-8 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-base shadow-lg hover:shadow-xl transition-all active:scale-95"
-                  >
-                    <MessageCircle className="h-5 w-5" />
-                    <span>Falar no WhatsApp Agora</span>
-                  </a>
-                </div>
-              </div>
-
-              {/* Lado Direito: Mapa Interativo ao Vivo */}
-              <div className="p-5 sm:p-8 lg:p-12 flex flex-col justify-center bg-gray-950/60 backdrop-blur-sm border-t lg:border-t-0 lg:border-l border-white/10">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-emerald-400 shrink-0" />
-                    <span className="font-heading font-bold text-sm text-white">Localização no Google Maps</span>
-                  </div>
-                  <a
-                    href={mapsLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-[var(--color-300)] hover:underline flex items-center gap-1 font-semibold shrink-0"
-                  >
-                    <span>Abrir Rota</span>
-                    <ExternalLink className="h-3 w-3" />
-                  </a>
-                </div>
-
-                <div className="rounded-2xl overflow-hidden shadow-2xl border border-white/15 h-64 sm:h-80 w-full relative bg-gray-900">
-                  <iframe
-                    title={`Localização de ${companyName}`}
-                    className="w-full h-full border-0"
-                    src={`https://maps.google.com/maps?q=${mapsQuery}&t=&z=16&ie=UTF8&iwloc=&output=embed`}
-                    loading="lazy"
-                    allowFullScreen
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-
-                <p className="text-white/60 text-xs text-center mt-3 truncate px-2">{address}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* LINKS ADICIONAIS / PIX SE CONFIGURADO */}
       {bio.pix_key && (

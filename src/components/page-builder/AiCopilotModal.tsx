@@ -226,11 +226,21 @@ export function AiCopilotModal({
             }
             if (extractedItems.length > 0) {
               setMediaItems((curr) => [...curr, ...extractedItems]);
+            }
+
+            if (assets.extractedText && assets.extractedText.trim().length > 0) {
+              setBriefing((prev) => {
+                const header = `\n\n📄 [DADOS EXTRAÍDOS DO DOCUMENTO / CARDÁPIO / TABELA: ${file.name}]:\n`;
+                if (prev.includes(file.name)) return prev;
+                return prev ? `${prev}${header}${assets.extractedText}` : `${header}${assets.extractedText}`;
+              });
+              toast.success(`✨ Logotipo, fotos e catálogo completo do PDF "${file.name}" extraídos com sucesso!`);
+            } else if (extractedItems.length > 0) {
               toast.success(`✨ Logotipo e imagens do PDF "${file.name}" recortados e preparados!`);
             }
           })
           .catch((err) => {
-            console.warn("Aviso ao extrair imagens do PDF:", err);
+            console.warn("Aviso ao extrair dados do PDF:", err);
           })
           .finally(() => {
             setLoadingStep("");

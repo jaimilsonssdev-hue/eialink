@@ -3,17 +3,23 @@ import {
   Award,
   BadgeCheck,
   CheckCircle2,
+  ChevronDown,
+  ChevronUp,
   Clock,
+  Eye,
+  EyeOff,
   HeartHandshake,
   Layers,
   MessageSquareHeart,
   Palette,
   Plus,
+  RotateCcw,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
   Star,
   Trash2,
+  Type,
   Video,
   Wand2,
   Zap,
@@ -899,6 +905,99 @@ const NICHE_SAMPLE_DIFFERENTIALS: Record<string, { badge: string; title: string;
   },
 };
 
+interface SiteSectionMeta {
+  id: string;
+  label: string;
+  badge: string;
+  icon: string;
+  defaultTitle: string;
+  defaultSubtitle: string;
+}
+
+const SITE_SECTIONS: SiteSectionMeta[] = [
+  {
+    id: "hero",
+    label: "Apresentação & Hero",
+    badge: "Topo do Site",
+    icon: "🎯",
+    defaultTitle: "Apresentação e Destaque Principal",
+    defaultSubtitle: "Frase de impacto e chamada para o WhatsApp",
+  },
+  {
+    id: "credibility",
+    label: "Credibilidade & Selos",
+    badge: "Garantia",
+    icon: "🛡️",
+    defaultTitle: "Faixa de Garantia e Confiança",
+    defaultSubtitle: "4 selos de reputação e agilidade",
+  },
+  {
+    id: "steps",
+    label: "Como Funciona (4 Passos)",
+    badge: "Processo",
+    icon: "📋",
+    defaultTitle: "Como funciona o atendimento",
+    defaultSubtitle: "Passo a passo transparente até a entrega",
+  },
+  {
+    id: "servicos",
+    label: "Serviços (Bento Grid)",
+    badge: "Vitrine",
+    icon: "🌟",
+    defaultTitle: "Soluções e Especialidades",
+    defaultSubtitle: "Cards de serviços com botão WhatsApp",
+  },
+  {
+    id: "diferenciais",
+    label: "Diferenciais da Empresa",
+    badge: "Destaques",
+    icon: "💎",
+    defaultTitle: "Por Que Nos Escolher",
+    defaultSubtitle: "Vantagens exclusivas e nota do Google Maps",
+  },
+  {
+    id: "avaliacoes",
+    label: "Avaliações & Prova Social",
+    badge: "Google Maps",
+    icon: "⭐",
+    defaultTitle: "Avaliação Pública e Depoimentos",
+    defaultSubtitle: "Reputação verificada com nota e comentários",
+  },
+  {
+    id: "faq",
+    label: "Dúvidas Frequentes (FAQ)",
+    badge: "Accordion",
+    icon: "❓",
+    defaultTitle: "Perguntas Frequentes",
+    defaultSubtitle: "Respostas diretas para dúvidas de clientes",
+  },
+  {
+    id: "contato",
+    label: "Localização & Contato",
+    badge: "Mapa ao Vivo",
+    icon: "📍",
+    defaultTitle: "Venha nos visitar ou mande uma mensagem",
+    defaultSubtitle: "Endereço, WhatsApp e rota no Google Maps",
+  },
+];
+
+const FONT_OPTIONS = [
+  { value: "Inter, sans-serif", label: "Inter (Padrão Moderno)" },
+  { value: "'Plus Jakarta Sans', sans-serif", label: "Plus Jakarta Sans (Corporativo / Tech)" },
+  { value: "'Poppins', sans-serif", label: "Poppins (Amigável / Arredondado)" },
+  { value: "'Montserrat', sans-serif", label: "Montserrat (Forte / Impacto)" },
+  { value: "'Playfair Display', serif", label: "Playfair Display (Sofisticado / Luxo)" },
+  { value: "'Outfit', sans-serif", label: "Outfit (Minimalista / Tendência)" },
+  { value: "'Roboto', sans-serif", label: "Roboto (Neutro / Direto)" },
+];
+
+const FONT_SIZE_OPTIONS: Array<{ value: "sm" | "base" | "lg" | "xl"; label: string; sizeHint: string }> = [
+  { value: "sm", label: "P", sizeHint: "Pequeno (24px)" },
+  { value: "base", label: "M", sizeHint: "Médio (32px)" },
+  { value: "lg", label: "G", sizeHint: "Grande (40px)" },
+  { value: "xl", label: "XG", sizeHint: "Extra Grande (48px)" },
+];
+
 export function SectionsEditor({
   nicheKey,
   companyName,
@@ -1046,18 +1145,402 @@ export function SectionsEditor({
     });
   };
 
+  // Gerenciamento e customização de seções em tempo real
+  const [expandedSectionId, setExpandedSectionId] = useState<string | null>(null);
+
+  const rawOrder = Array.isArray(socialLinks.sections_order) && socialLinks.sections_order.length > 0
+    ? socialLinks.sections_order
+    : SITE_SECTIONS.map((s) => s.id);
+
+  const sectionsOrder = [
+    ...rawOrder,
+    ...SITE_SECTIONS.map((s) => s.id).filter((id) => !rawOrder.includes(id)),
+  ];
+
+  const orderedSections = sectionsOrder
+    .map((id) => SITE_SECTIONS.find((s) => s.id === id))
+    .filter(Boolean) as SiteSectionMeta[];
+
+  const sectionStyles = (socialLinks.section_styles as Record<string, any>) || {};
+
+  const moveSection = (index: number, direction: "up" | "down") => {
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= sectionsOrder.length) return;
+    const newOrder = [...sectionsOrder];
+    const [removed] = newOrder.splice(index, 1);
+    newOrder.splice(targetIndex, 0, removed);
+    onUpdateSocialLinks({
+      ...socialLinks,
+      sections_order: newOrder,
+    });
+  };
+
+  const toggleSectionVisibility = (id: string) => {
+    const current = sectionStyles[id] || {};
+    const isVisible = current.visible !== false;
+    onUpdateSocialLinks({
+      ...socialLinks,
+      section_styles: {
+        ...sectionStyles,
+        [id]: {
+          ...current,
+          visible: !isVisible,
+        },
+      },
+    });
+  };
+
+  const updateSectionStyle = (id: string, patch: Record<string, any>) => {
+    const current = sectionStyles[id] || {};
+    onUpdateSocialLinks({
+      ...socialLinks,
+      section_styles: {
+        ...sectionStyles,
+        [id]: {
+          ...current,
+          ...patch,
+        },
+      },
+    });
+  };
+
+  const resetSectionStyle = (id: string) => {
+    const next = { ...sectionStyles };
+    delete next[id];
+    onUpdateSocialLinks({
+      ...socialLinks,
+      section_styles: next,
+    });
+  };
+
+  const resetSectionsOrder = () => {
+    onUpdateSocialLinks({
+      ...socialLinks,
+      sections_order: SITE_SECTIONS.map((s) => s.id),
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)]">
-          Mídia & Blocos Extras
+          Mídia & Estrutura
         </p>
         <h2 className="text-lg font-bold text-foreground">
-          Seções Modulares de Conversão
+          Gerenciamento de Seções & Layout
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Adicione vídeos de apresentação, depoimentos com estrelas, história da empresa e personalize as cores dos blocos.
+          Organize a ordem das seções, altere títulos, subtítulos, fontes e cores de cada bloco em tempo real.
         </p>
+      </div>
+
+      {/* 🗂️ GERENCIADOR DE SEÇÕES, TIPOGRAFIA & CORES EM TEMPO REAL */}
+      <div className="rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 p-4 sm:p-5 space-y-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border/80">
+          <div className="flex items-start gap-3">
+            <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0 text-xl shadow-xs">
+              🗂️
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-foreground">Gerenciador de Seções em Tempo Real</h3>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Ao Vivo
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Altere a ordem com ⬆️ e ⬇️, oculte seções e clique em qualquer uma para editar texto, fontes e cores instantaneamente.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={resetSectionsOrder}
+            className="text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border/60 hover:bg-muted/60 transition-colors shrink-0 self-start sm:self-auto cursor-pointer"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            <span>Ordem Padrão</span>
+          </button>
+        </div>
+
+        {/* Lista Reordenável de Seções */}
+        <div className="space-y-2.5">
+          {orderedSections.map((sec, idx) => {
+            const isFirst = idx === 0;
+            const isLast = idx === orderedSections.length - 1;
+            const currentStyle = sectionStyles[sec.id] || {};
+            const isVisible = currentStyle.visible !== false;
+            const isExpanded = expandedSectionId === sec.id;
+            const hasCustomStyles = Boolean(
+              currentStyle.title ||
+              currentStyle.subtitle ||
+              currentStyle.font_family ||
+              currentStyle.font_size ||
+              currentStyle.title_color ||
+              currentStyle.text_color ||
+              currentStyle.bg_color
+            );
+
+            return (
+              <div
+                key={sec.id}
+                className={`rounded-xl border transition-all duration-200 overflow-hidden ${
+                  !isVisible
+                    ? "opacity-50 border-dashed border-border/60 bg-muted/20"
+                    : isExpanded
+                    ? "border-primary/50 bg-card shadow-md ring-1 ring-primary/20"
+                    : "border-border/80 bg-card/80 hover:border-primary/30 hover:bg-card"
+                }`}
+              >
+                {/* Linha do Cabeçalho da Seção */}
+                <div className="p-3 sm:p-3.5 flex items-center justify-between gap-2.5">
+                  <div className="flex items-center gap-2 shrink-0">
+                    {/* Botões de Reordenação */}
+                    <div className="flex flex-col gap-0.5">
+                      <button
+                        type="button"
+                        disabled={isFirst}
+                        onClick={() => moveSection(idx, "up")}
+                        className="p-1 rounded bg-muted/60 hover:bg-primary/20 hover:text-primary text-muted-foreground disabled:opacity-20 disabled:hover:bg-muted/60 disabled:hover:text-muted-foreground transition-colors cursor-pointer disabled:cursor-not-allowed"
+                        title="Subir posição"
+                      >
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isLast}
+                        onClick={() => moveSection(idx, "down")}
+                        className="p-1 rounded bg-muted/60 hover:bg-primary/20 hover:text-primary text-muted-foreground disabled:opacity-20 disabled:hover:bg-muted/60 disabled:hover:text-muted-foreground transition-colors cursor-pointer disabled:cursor-not-allowed"
+                        title="Descer posição"
+                      >
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    <span className="text-xs font-mono font-bold text-muted-foreground w-5 text-center">
+                      #{idx + 1}
+                    </span>
+                  </div>
+
+                  {/* Informações da Seção e Botão para Abrir Edição */}
+                  <button
+                    type="button"
+                    onClick={() => setExpandedSectionId(isExpanded ? null : sec.id)}
+                    className="flex-1 min-w-0 text-left flex items-center gap-2.5 py-1 px-1.5 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
+                  >
+                    <span className="text-lg shrink-0">{sec.icon}</span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground truncate">
+                          {currentStyle.title || sec.label}
+                        </span>
+                        <span className="text-[10px] font-semibold px-2 py-0.2 rounded-md bg-muted text-muted-foreground shrink-0 hidden xs:inline">
+                          {sec.badge}
+                        </span>
+                        {hasCustomStyles && (
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 shrink-0">
+                            Customizado
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground truncate">
+                        {currentStyle.subtitle || sec.defaultSubtitle}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* Ações Rápidas: Olho e Expandir */}
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleSectionVisibility(sec.id)}
+                      className={`p-2 rounded-lg transition-colors cursor-pointer ${
+                        isVisible
+                          ? "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                          : "text-amber-500 bg-amber-500/10 hover:bg-amber-500/20"
+                      }`}
+                      title={isVisible ? "Ocultar seção" : "Mostrar seção"}
+                    >
+                      {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setExpandedSectionId(isExpanded ? null : sec.id)}
+                      className="px-2.5 py-1.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary text-xs font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>{isExpanded ? "Fechar" : "Editar"}</span>
+                      {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Bloco Expandido: Editor Detalhado da Seção */}
+                {isExpanded && (
+                  <div className="px-4 pb-5 pt-3 border-t border-border/80 bg-muted/10 space-y-4 animate-in fade-in-50 duration-200">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-primary flex items-center gap-1.5">
+                        <Type className="h-3.5 w-3.5" />
+                        <span>Tipografia & Textos de: {sec.label}</span>
+                      </span>
+                      {hasCustomStyles && (
+                        <button
+                          type="button"
+                          onClick={() => resetSectionStyle(sec.id)}
+                          className="text-[11px] text-destructive hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <RotateCcw className="h-3 w-3" />
+                          <span>Restaurar Padrão</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Título Personalizado */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-foreground">
+                        Título da Seção
+                      </label>
+                      <input
+                        type="text"
+                        value={currentStyle.title || ""}
+                        onChange={(e) => updateSectionStyle(sec.id, { title: e.target.value })}
+                        placeholder={sec.defaultTitle}
+                        className="w-full h-9 rounded-lg border border-input bg-background px-3 text-xs text-foreground focus:ring-2 focus:ring-primary focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Subtítulo / Descrição */}
+                    <div className="space-y-1">
+                      <label className="text-xs font-medium text-foreground">
+                        Subtítulo / Descrição da Seção
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={currentStyle.subtitle || ""}
+                        onChange={(e) => updateSectionStyle(sec.id, { subtitle: e.target.value })}
+                        placeholder={sec.defaultSubtitle}
+                        className="w-full rounded-lg border border-input bg-background p-2.5 text-xs text-foreground focus:ring-2 focus:ring-primary focus:outline-none resize-none"
+                      />
+                    </div>
+
+                    {/* Família da Fonte & Tamanho */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">
+                          Família da Fonte
+                        </label>
+                        <select
+                          value={currentStyle.font_family || ""}
+                          onChange={(e) => updateSectionStyle(sec.id, { font_family: e.target.value || undefined })}
+                          className="w-full h-9 rounded-lg border border-input bg-background px-3 text-xs text-foreground focus:ring-2 focus:ring-primary focus:outline-none cursor-pointer"
+                        >
+                          <option value="">Padrão do Modelo (Inter)</option>
+                          {FONT_OPTIONS.map((f) => (
+                            <option key={f.value} value={f.value}>
+                              {f.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-xs font-medium text-foreground">
+                          Tamanho do Título
+                        </label>
+                        <div className="grid grid-cols-4 gap-1">
+                          {FONT_SIZE_OPTIONS.map((fs) => (
+                            <button
+                              key={fs.value}
+                              type="button"
+                              onClick={() => updateSectionStyle(sec.id, { font_size: fs.value })}
+                              className={`h-9 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                                (currentStyle.font_size || "base") === fs.value
+                                  ? "bg-primary text-primary-foreground border-primary shadow-xs"
+                                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                              }`}
+                              title={fs.sizeHint}
+                            >
+                              {fs.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Cores Específicas da Seção */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                      {/* Cor do Título */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-medium text-muted-foreground">
+                          Cor do Título
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={currentStyle.title_color || (sec.id === "contato" || sec.id === "credibility" ? "#ffffff" : "#0f172a")}
+                            onChange={(e) => updateSectionStyle(sec.id, { title_color: e.target.value })}
+                            className="h-8 w-8 rounded-lg border border-border cursor-pointer bg-transparent shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={currentStyle.title_color || ""}
+                            onChange={(e) => updateSectionStyle(sec.id, { title_color: e.target.value })}
+                            placeholder="Automático"
+                            className="h-8 flex-1 rounded-lg border border-input bg-background px-2 font-mono text-xs text-foreground"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Cor do Subtítulo / Texto */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-medium text-muted-foreground">
+                          Cor do Texto
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={currentStyle.text_color || (sec.id === "contato" || sec.id === "credibility" ? "#ffffff" : "#475569")}
+                            onChange={(e) => updateSectionStyle(sec.id, { text_color: e.target.value })}
+                            className="h-8 w-8 rounded-lg border border-border cursor-pointer bg-transparent shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={currentStyle.text_color || ""}
+                            onChange={(e) => updateSectionStyle(sec.id, { text_color: e.target.value })}
+                            placeholder="Automático"
+                            className="h-8 flex-1 rounded-lg border border-input bg-background px-2 font-mono text-xs text-foreground"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Cor de Fundo da Seção */}
+                      <div className="space-y-1">
+                        <label className="text-[11px] font-medium text-muted-foreground">
+                          Fundo da Seção
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={currentStyle.bg_color || "#ffffff"}
+                            onChange={(e) => updateSectionStyle(sec.id, { bg_color: e.target.value })}
+                            className="h-8 w-8 rounded-lg border border-border cursor-pointer bg-transparent shrink-0"
+                          />
+                          <input
+                            type="text"
+                            value={currentStyle.bg_color || ""}
+                            onChange={(e) => updateSectionStyle(sec.id, { bg_color: e.target.value })}
+                            placeholder="Automático"
+                            className="h-8 flex-1 rounded-lg border border-input bg-background px-2 font-mono text-xs text-foreground"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* 🎨 SELETOR DE CORES E ESTILO DAS SEÇÕES */}

@@ -306,12 +306,13 @@ function StorefrontView({
       <header className="niche-store-hero w-full">
         {/* Capa com altura nobre e imponente idêntica no mobile e desktop */}
         <div className="niche-store-hero-banner relative w-full h-44 sm:h-56 md:h-64 overflow-hidden bg-muted">
-          {bio.cover_url ? (
+          {!coverImgError && typeof bio.cover_url === "string" && bio.cover_url.trim().length > 5 ? (
             <img
-              src={bio.cover_url}
+              src={bio.cover_url.trim()}
               alt={`Capa de ${bio.display_name}`}
               className="w-full h-full object-cover"
               loading="eager"
+              onError={() => setCoverImgError(true)}
             />
           ) : (
             <div className="w-full h-full bg-linear-to-r from-primary/30 via-primary/10 to-primary/20 flex items-center justify-center">
@@ -391,8 +392,20 @@ function StorefrontView({
                   </span>
 
                   <span
-                    className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-muted text-foreground border border-border"
-                    style={infoBadgeBg ? { backgroundColor: infoBadgeBg, color: readableTextColor(infoBadgeBg) } : undefined}
+                    className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${
+                      infoBadgeBg
+                        ? "shadow-2xs"
+                        : "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30"
+                    }`}
+                    style={
+                      infoBadgeBg
+                        ? {
+                            backgroundColor: infoBadgeBg,
+                            color: readableTextColor(infoBadgeBg) || "#ffffff",
+                            border: "none",
+                          }
+                        : undefined
+                    }
                   >
                     {isDelivery ? (
                       <>

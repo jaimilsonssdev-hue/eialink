@@ -10,6 +10,7 @@ export interface ExtractedPdfAssets {
   logoPreview?: string;
   coverFile?: File;
   coverPreview?: string;
+  extractedText?: string;
   pageImages: Array<{
     file: File;
     previewUrl: string;
@@ -35,10 +36,10 @@ function canvasToFile(canvas: HTMLCanvasElement, filename: string, mimeType = "i
 
 /**
  * Processa um arquivo PDF diretamente no navegador:
- * 1. Renderiza a primeira página em alta resolução (2x scale).
- * 2. Recorta o topo da página 1 onde se localiza o cabeçalho e logotipo do estabelecimento.
- * 3. Renderiza a página completa como banner de capa.
- * 4. Renderiza até 3 páginas do PDF como imagens de produtos/catálogo.
+ * 1. Extrai o texto semântico completo de todas as páginas (cardápios, preços, descrições, telefones).
+ * 2. Renderiza a primeira página em alta resolução (2x scale).
+ * 3. Recorta o topo da página 1 onde se localiza o logotipo e cabeçalho.
+ * 4. Renderiza as páginas subsequentes como fotos nítidas para o catálogo de pratos/produtos.
  */
 export async function extractAssetsFromPdf(pdfFile: File): Promise<ExtractedPdfAssets> {
   if (typeof window === "undefined") {
@@ -49,83 +50,108 @@ export async function extractAssetsFromPdf(pdfFile: File): Promise<ExtractedPdfA
   const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(arrayBuffer) });
   const pdfDoc = await loadingTask.promise;
 
-  const numPages = Math.min(pdfDoc.numPages, 3);
+  const totalPages = pdfDoc.numPages;
+  const maxPagesToProcess = Math.min(totalPages, 5);
+
   const result: ExtractedPdfAssets = {
     pageImages: [],
+    extractedText: "",
   };
 
-  // Renderiza Página 1 (Capa e Logotipo)
-  const page1 = await pdfDoc.getPage(1);
-  const viewport = page1.getViewport({ scale: 1.8 });
-
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d");
-
-  if (!ctx) {
-    throw new Error("Contexto 2D do Canvas indisponível");
-  }
-
-  canvas.width = viewport.width;
-  canvas.height = viewport.height;
-
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const renderContext: any = {
-    canvasContext: ctx,
-    viewport: viewport,
-  };
-
-  await page1.render(renderContext).promise;
-
-  // 1. Gera a imagem da Capa (Página 1 Completa)
-  const coverFileName = `${pdfFile.name.replace(/\.[^.]+$/, "")}-capa.png`;
-  const coverFile = await canvasToFile(canvas, coverFileName, "image/png");
-  result.coverFile = coverFile;
-  result.coverPreview = URL.createObjectURL(coverFile);
-
-  // 2. Recorta o Logotipo / Cabeçalho Superior (Topo 28% da Página 1)
-  try {
-    const logoCanvas = document.createElement("canvas");
-    const logoCtx = logoCanvas.getContext("2d");
-
-    if (logoCtx) {
-      const cropHeight = Math.round(canvas.height * 0.28);
-      const cropWidth = canvas.width;
-
-      logoCanvas.width = cropWidth;
-      logoCanvas.height = cropHeight;
-
-      logoCtx.drawImage(
-        canvas,
-        0,
-        0,
-        cropWidth,
-        cropHeight,
-        0,
-        0,
-        cropWidth,
-        cropHeight
-      );
-
-      const logoFileName = `${pdfFile.name.replace(/\.[^.]+$/, "")}-logo.png`;
-      const logoFile = await canvasToFile(logoCanvas, logoFileName, "image/png");
-      result.logoFile = logoFile;
-      result.logoPreview = URL.createObjectURL(logoFile);
-    }
-  } catch (cropErr) {
-    console.warn("Não foi possível recortar o topo do PDF para logotipo:", cropErr);
-  }
-
-  // 3. Renderiza demais páginas como imagens adicionais (pratos e produtos)
-  result.pageImages.push({
-    file: coverFile,
-    previewUrl: result.coverPreview,
-    pageNumber: 1,
-  });
-
-  for (let p = 2; p <= numPages; p++) {
+  // 1. Extração Completa de Texto de Cada Página do PDF
+  let accumulatedText = "";
+  for (let p = 1; p <= maxPagesToProcess; p++) {
     try {
       const page = await pdfDoc.getPage(p);
-      const pageViewport = page.getViewport({ scale: 1.5 });
+      const textContent = await page.getTextContent();
+      const pageStrings = textContent.items
+        .map((item: any) => item.str || "")
+        .filter((str: string) => str.trim().length > 0);
+
+      const pageText = pageStrings.join(" ").replace(/\s{2,}/g, " ").trim();
+      if (pageText) {
+        accumulatedText += `[PÁGINA ${p} DO DOCUMENTO]:\n${pageText}\n\n`;
+      }
+    } catch (textErr) {
+      console.warn(`Aviso ao extrair texto da página ${p} do PDF:`, textErr);
+    }
+  }
+  result.extractedText = accumulatedText.trim();
+
+  // 2. Renderiza Página 1 (Capa e Logotipo) em Alta Resolução (Scale 2.0x)
+  try {
+    const page1 = await pdfDoc.getPage(1);
+    const viewport = page1.getViewport({ scale: 2.0 });
+
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+
+    if (ctx) {
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const renderContext: any = {
+        canvasContext: ctx,
+        viewport: viewport,
+      };
+
+      await page1.render(renderContext).promise;
+
+      // Imagem da Capa (Página 1 Completa em Alta Resolução)
+      const coverFileName = `${pdfFile.name.replace(/\.[^.]+$/, "")}-capa.png`;
+      const coverFile = await canvasToFile(canvas, coverFileName, "image/png");
+      result.coverFile = coverFile;
+      result.coverPreview = URL.createObjectURL(coverFile);
+
+      // Recorte Focado do Logotipo (Topo 25% com margem de segurança)
+      try {
+        const logoCanvas = document.createElement("canvas");
+        const logoCtx = logoCanvas.getContext("2d");
+
+        if (logoCtx) {
+          const cropHeight = Math.round(canvas.height * 0.25);
+          const cropWidth = canvas.width;
+
+          logoCanvas.width = cropWidth;
+          logoCanvas.height = cropHeight;
+
+          logoCtx.drawImage(
+            canvas,
+            0,
+            0,
+            cropWidth,
+            cropHeight,
+            0,
+            0,
+            cropWidth,
+            cropHeight
+          );
+
+          const logoFileName = `${pdfFile.name.replace(/\.[^.]+$/, "")}-logo.png`;
+          const logoFile = await canvasToFile(logoCanvas, logoFileName, "image/png");
+          result.logoFile = logoFile;
+          result.logoPreview = URL.createObjectURL(logoFile);
+        }
+      } catch (cropErr) {
+        console.warn("Não foi possível recortar o topo do PDF para logotipo:", cropErr);
+      }
+
+      result.pageImages.push({
+        file: coverFile,
+        previewUrl: result.coverPreview,
+        pageNumber: 1,
+      });
+    }
+  } catch (p1Err) {
+    console.warn("Erro ao renderizar primeira página do PDF:", p1Err);
+  }
+
+  // 3. Renderiza páginas subsequentes (pratos, serviços, cardápios)
+  for (let p = 2; p <= Math.min(totalPages, 4); p++) {
+    try {
+      const page = await pdfDoc.getPage(p);
+      const pageViewport = page.getViewport({ scale: 1.6 });
       const pCanvas = document.createElement("canvas");
       const pCtx = pCanvas.getContext("2d");
 
@@ -155,4 +181,3 @@ export async function extractAssetsFromPdf(pdfFile: File): Promise<ExtractedPdfA
 
   return result;
 }
-

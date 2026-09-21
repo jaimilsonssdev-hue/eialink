@@ -9,6 +9,7 @@ import {
   Eye,
   EyeOff,
   HeartHandshake,
+  ImagePlus,
   Layers,
   MessageSquareHeart,
   Palette,
@@ -26,12 +27,20 @@ import {
 } from "lucide-react";
 import type { VideoConfig, TestimonialItem, AboutConfig } from "@/components/public-profile/ModularSections";
 import { parseVideoEmbedUrl } from "@/components/public-profile/ModularSections";
+import { MediaUploader } from "./MediaUploader";
 
 interface SectionsEditorProps {
   nicheKey: string;
   companyName: string;
   socialLinks: Record<string, any>;
   onUpdateSocialLinks: (updated: Record<string, any>) => void;
+  coverUrl?: string | null;
+  avatarUrl?: string | null;
+  onUpdateCover?: (url: string | null) => void;
+  onUpdateAvatar?: (url: string | null) => void;
+  templateId?: string | null;
+  aiUsageCount?: number;
+  onAiUsageIncrement?: () => void;
 }
 
 export interface DifferentialItem {
@@ -1003,6 +1012,13 @@ export function SectionsEditor({
   companyName,
   socialLinks,
   onUpdateSocialLinks,
+  coverUrl,
+  avatarUrl,
+  onUpdateCover,
+  onUpdateAvatar,
+  templateId,
+  aiUsageCount = 0,
+  onAiUsageIncrement,
 }: SectionsEditorProps) {
   const videoConfig: VideoConfig = socialLinks.video_embed || {
     enabled: false,
@@ -1227,11 +1243,99 @@ export function SectionsEditor({
           Mídia & Estrutura
         </p>
         <h2 className="text-lg font-bold text-foreground">
-          Gerenciamento de Seções & Layout
+          Gerenciamento de Seções & Mídia Visual
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Organize a ordem das seções, altere títulos, subtítulos, fontes e cores de cada bloco em tempo real.
+          Suba seu logotipo, altere a imagem de capa, organize a ordem das seções e personalize fontes e cores.
         </p>
+      </div>
+
+      {/* 📸 MÍDIA PRINCIPAL: LOGOTIPO & IMAGENS DO NEGÓCIO */}
+      <div className="rounded-2xl border border-border bg-card/90 p-4 sm:p-5 shadow-xs space-y-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center font-bold shrink-0">
+            <ImagePlus className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-heading font-bold text-base text-foreground">
+              Mídia Principal & Identidade da Marca
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Suba o logotipo oficial, a foto de capa (Hero) e imagens do estabelecimento.
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+          {/* Campo de Logotipo Oficial */}
+          {onUpdateAvatar && (
+            <div className="space-y-1.5">
+              <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                🏷️ Logotipo Oficial da Empresa
+              </span>
+              <MediaUploader
+                label="Logotipo da Marca (PNG transparente ou Quadrado)"
+                value={avatarUrl}
+                variant="avatar"
+                templateId={templateId}
+                niche={nicheKey}
+                companyName={companyName}
+                aiUsageCount={aiUsageCount}
+                onAiUsageIncrement={onAiUsageIncrement}
+                onChange={onUpdateAvatar}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Exibido na barra superior de navegação, cabeçalho e ícone do PWA.
+              </p>
+            </div>
+          )}
+
+          {/* Campo de Imagem de Capa / Hero */}
+          {onUpdateCover && (
+            <div className="space-y-1.5">
+              <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                🌄 Imagem de Capa / Hero (Banner Principal)
+              </span>
+              <MediaUploader
+                label="Foto de Capa / Fachada (Formato Horizontal 16:9)"
+                value={coverUrl}
+                variant="cover"
+                templateId={templateId}
+                niche={nicheKey}
+                companyName={companyName}
+                aiUsageCount={aiUsageCount}
+                onAiUsageIncrement={onAiUsageIncrement}
+                onChange={onUpdateCover}
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Foto principal exibida no topo do site (Hero) com overlay escuro e botão de contato.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Foto Secundária / Ambiente do Estabelecimento */}
+        <div className="pt-2 border-t border-border/60">
+          <div className="space-y-1.5">
+            <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+              🏢 Foto Secundária do Estabelecimento / Ambiente
+            </span>
+            <MediaUploader
+              label="Foto Secundária (Fachada, Consultório, Loja ou Equipe)"
+              value={socialLinks.secondary_image}
+              variant="square"
+              templateId={templateId}
+              niche={nicheKey}
+              companyName={companyName}
+              aiUsageCount={aiUsageCount}
+              onAiUsageIncrement={onAiUsageIncrement}
+              onChange={(url) => onUpdateSocialLinks({ ...socialLinks, secondary_image: url })}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Utilizada na vitrine Bento Grid, nos cards de serviços e diferenciais da empresa.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* 🗂️ GERENCIADOR DE SEÇÕES, TIPOGRAFIA & CORES EM TEMPO REAL */}
@@ -1535,6 +1639,51 @@ export function SectionsEditor({
                         </div>
                       </div>
                     </div>
+
+                    {/* Imagens Específicas da Seção */}
+                    {sec.id === "hero" && onUpdateCover && (
+                      <div className="pt-3 border-t border-border/60 space-y-1.5">
+                        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          🌄 Imagem de Fundo / Capa do Hero (Banner Principal)
+                        </span>
+                        <MediaUploader
+                          label="Foto de Capa do Hero (16:9)"
+                          value={coverUrl}
+                          variant="cover"
+                          templateId={templateId}
+                          niche={nicheKey}
+                          companyName={companyName}
+                          aiUsageCount={aiUsageCount}
+                          onAiUsageIncrement={onAiUsageIncrement}
+                          onChange={onUpdateCover}
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          Esta imagem preenche o topo do site com destaque visual imediato.
+                        </p>
+                      </div>
+                    )}
+
+                    {sec.id === "about" && (
+                      <div className="pt-3 border-t border-border/60 space-y-1.5">
+                        <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          🏢 Imagem da Seção Sobre Nós / Ambiente
+                        </span>
+                        <MediaUploader
+                          label="Foto de Ambiente ou Fachada da Empresa"
+                          value={socialLinks.secondary_image}
+                          variant="square"
+                          templateId={templateId}
+                          niche={nicheKey}
+                          companyName={companyName}
+                          aiUsageCount={aiUsageCount}
+                          onAiUsageIncrement={onAiUsageIncrement}
+                          onChange={(url) => onUpdateSocialLinks({ ...socialLinks, secondary_image: url })}
+                        />
+                        <p className="text-[11px] text-muted-foreground">
+                          Exibida no grid visual e na apresentação da história da sua empresa.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

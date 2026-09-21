@@ -1807,6 +1807,22 @@ export function UnifiedPageEditor({
                 companyName={bio.display_name || defaults.displayName || "Sua Empresa"}
                 socialLinks={(bio.social_links as Record<string, any>) || {}}
                 onUpdateSocialLinks={(social_links) => updateBio({ social_links })}
+                coverUrl={bio.cover_url}
+                avatarUrl={bio.avatar_url}
+                onUpdateCover={(cover_url) => updateBio({ cover_url })}
+                onUpdateAvatar={(avatar_url) => updateBio({ avatar_url })}
+                templateId={draftTemplate}
+                aiUsageCount={Number((bio.social_links as Record<string, any>)?.ai_images_count) || 0}
+                onAiUsageIncrement={() => {
+                  const currentSocial = (bio.social_links as Record<string, any>) || {};
+                  const count = Number(currentSocial.ai_images_count) || 0;
+                  updateBio({
+                    social_links: {
+                      ...currentSocial,
+                      ai_images_count: count + 1,
+                    },
+                  });
+                }}
               />
             )}
 
@@ -1819,8 +1835,74 @@ export function UnifiedPageEditor({
                   </p>
                   <h2 className="mt-1 text-xl font-semibold">Apresentação da Marca</h2>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Nome comercial, descrição e link exclusivo da sua página.
+                    Nome comercial, logotipo, fotos da marca, descrição e link exclusivo da sua página.
                   </p>
+                </div>
+
+                {/* 📸 Logotipo & Imagens da Marca */}
+                <div className="rounded-2xl border border-border bg-card/70 p-4 sm:p-5 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                      📸 Logotipo & Imagens da Marca
+                    </h3>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Suba a identidade visual da sua empresa para destacar sua marca no topo e em todas as seções.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                    <div>
+                      <MediaUploader
+                        label="Logotipo da Marca (Quadrado ou Transparente)"
+                        value={bio.avatar_url}
+                        variant="avatar"
+                        templateId={draftTemplate}
+                        niche={niche || activeNicheModel.nicheKey}
+                        companyName={bio.display_name || defaults.displayName || "Sua Empresa"}
+                        aiUsageCount={Number((bio.social_links as Record<string, any>)?.ai_images_count) || 0}
+                        onAiUsageIncrement={() => {
+                          const currentSocial = (bio.social_links as Record<string, any>) || {};
+                          const count = Number(currentSocial.ai_images_count) || 0;
+                          updateBio({
+                            social_links: {
+                              ...currentSocial,
+                              ai_images_count: count + 1,
+                            },
+                          });
+                        }}
+                        onChange={(avatar_url) => updateBio({ avatar_url })}
+                      />
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Utilizado na barra de navegação, cabeçalho e ícone do app.
+                      </p>
+                    </div>
+
+                    <div>
+                      <MediaUploader
+                        label="Imagem de Capa (Hero / Banner Principal)"
+                        value={bio.cover_url}
+                        variant="cover"
+                        templateId={draftTemplate}
+                        niche={niche || activeNicheModel.nicheKey}
+                        companyName={bio.display_name || defaults.displayName || "Sua Empresa"}
+                        aiUsageCount={Number((bio.social_links as Record<string, any>)?.ai_images_count) || 0}
+                        onAiUsageIncrement={() => {
+                          const currentSocial = (bio.social_links as Record<string, any>) || {};
+                          const count = Number(currentSocial.ai_images_count) || 0;
+                          updateBio({
+                            social_links: {
+                              ...currentSocial,
+                              ai_images_count: count + 1,
+                            },
+                          });
+                        }}
+                        onChange={(cover_url) => updateBio({ cover_url })}
+                      />
+                      <p className="mt-1 text-[11px] text-muted-foreground">
+                        Foto principal exibida em destaque no topo da página.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <Field label="Nome da Empresa / Profissional">

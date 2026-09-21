@@ -246,6 +246,7 @@ function SiteMaquinaView({
     curated.covers?.[0]?.url ||
     "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=85";
   const secondaryImage =
+    (socialData.secondary_image as string) ||
     curated.covers?.[1]?.url ||
     curated.covers?.[2]?.url ||
     heroCover;

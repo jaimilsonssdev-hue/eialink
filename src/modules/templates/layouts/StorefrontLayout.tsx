@@ -55,13 +55,19 @@ interface ParsedProduct extends CatalogItem {
   cleanDesc: string | null;
 }
 
-function readableTextColor(background?: string) {
-  if (!background || !/^#[0-9a-f]{6}$/i.test(background)) return undefined;
-  const red = Number.parseInt(background.slice(1, 3), 16);
-  const green = Number.parseInt(background.slice(3, 5), 16);
-  const blue = Number.parseInt(background.slice(5, 7), 16);
-  const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
-  return luminance > 150 ? "#111827" : "#ffffff";
+function readableTextColor(background?: string): string {
+  if (!background) return "#ffffff";
+  let hex = background.trim();
+  if (hex.startsWith("#")) hex = hex.slice(1);
+  if (hex.length === 3) hex = hex.split("").map((c) => c + c).join("");
+  if (/^[0-9a-fA-F]{6}$/.test(hex)) {
+    const red = Number.parseInt(hex.slice(0, 2), 16) || 0;
+    const green = Number.parseInt(hex.slice(2, 4), 16) || 0;
+    const blue = Number.parseInt(hex.slice(4, 6), 16) || 0;
+    const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
+    return luminance > 140 ? "#0f172a" : "#ffffff";
+  }
+  return "#ffffff";
 }
 
 function StorefrontView({
@@ -134,6 +140,7 @@ function StorefrontView({
   }, [parsedProducts]);
 
   // Estados do catálogo e carrinho
+  const [coverImgError, setCoverImgError] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [cart, setCart] = useState<Record<string, number>>({});

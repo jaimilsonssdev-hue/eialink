@@ -1164,25 +1164,6 @@ export function UnifiedPageEditor({
               <ExternalLink className="h-4 w-4" /> Ver página
             </a>
 
-            {hasPendingChanges || saveState === "error" ? (
-              <button
-                type="button"
-                onClick={() => void save()}
-                disabled={saving}
-                className="btn-primary text-xs py-2 px-4 flex items-center gap-1.5 shadow-sm"
-              >
-                <Save className="h-4 w-4" />
-                {saving
-                  ? "Salvando..."
-                  : saveState === "error"
-                    ? "Tentar novamente"
-                    : "Salvar e publicar"}
-              </button>
-            ) : (
-              <span className="builder-save-status text-xs py-1.5 px-3 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5 font-semibold">
-                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" /> Salvo
-              </span>
-            )}
             <button
               type="button"
               onClick={() => void save()}

@@ -3654,7 +3654,7 @@
 .builder-control-panel { grid-area: controls; min-width: 0; }
 .editor-workflow {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: .35rem;
   padding: .35rem;
   border: 1px solid var(--border);
@@ -3699,7 +3699,28 @@
   .builder-control-panel, .builder-preview-stage { width: 100%; }
   .builder-control-panel { order: 1; }
   .builder-preview-stage { order: 2; }
-  .editor-workflow { position: sticky; z-index: 12; top: 3.8rem; }
+  .editor-workflow {
+    position: sticky;
+    z-index: 12;
+    top: 3.8rem;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    gap: .4rem;
+    padding: .4rem;
+  }
+  .editor-workflow::-webkit-scrollbar { display: none; }
+  .editor-workflow button {
+    flex: 0 0 auto;
+    min-width: 7.5rem;
+    min-height: 4rem;
+    padding: .45rem .65rem;
+  }
+  .editor-workflow button b {
+    white-space: nowrap;
+    font-size: .75rem;
+  }
 }
 @media (max-width: 640px) {
   .editor-readiness { grid-template-columns: 1fr; gap: .65rem; }

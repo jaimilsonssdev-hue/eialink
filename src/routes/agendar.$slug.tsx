@@ -14,6 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BookingService } from "@/modules/booking/BookingService";
+import { GoogleCalendarService } from "@/modules/booking/services/GoogleCalendarService";
 import type {
   BookingAvailability,
   BookingService as Service,
@@ -144,6 +145,22 @@ function PublicBookingPage() {
         notes: form.notes,
       });
       setConfirmed({ start: slot.slot_start, end: result.end_at, service });
+
+      // Sincronização automática com a conta Google Agenda do dono do negócio
+      GoogleCalendarService.syncAppointment({
+        bioPageId: bio.id,
+        serviceName: service.name,
+        durationMinutes: service.duration_minutes,
+        startAt: slot.slot_start,
+        endAt: result.end_at,
+        clientName: form.name.trim(),
+        clientPhone: form.phone.trim(),
+        clientEmail: form.email?.trim() || null,
+        notes: form.notes?.trim() || null,
+        appointmentId: result.appointment_id,
+      }).catch((err) => {
+        console.warn("Aviso na sincronização em segundo plano com Google Calendar:", err);
+      });
     } catch (reason) {
       setSlot(undefined);
       setError("Este horário acabou de ser reservado. Escolha outro horário.");

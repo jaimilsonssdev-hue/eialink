@@ -46,6 +46,7 @@ import type {
 } from "@/modules/booking/types";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { UpgradePrompt } from "@/modules/billing/components/UpgradePrompt";
+import { GoogleCalendarIntegrationCard } from "@/components/dashboard/GoogleCalendarIntegrationCard";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
   component: AgendaPage,
@@ -628,6 +629,9 @@ function AgendaPage() {
 
       {tab === "setup" ? (
         <div className="space-y-6">
+          {/* Integração Automática com Google Agenda */}
+          {pageId && <GoogleCalendarIntegrationCard bioPageId={pageId} />}
+
           {/* Agenda Pública Switch Card */}
           <Card className="border-purple-200/80 bg-gradient-to-r from-purple-50/90 via-card to-indigo-50/50 shadow-sm dark:border-purple-500/30 dark:bg-gradient-to-r dark:from-purple-950/40 dark:via-[#160d29] dark:to-[#120a22] dark:shadow-xl overflow-hidden relative">
             <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />

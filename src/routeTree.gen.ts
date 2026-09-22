@@ -26,6 +26,7 @@ import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedCatalogRouteImport } from './routes/_authenticated/catalog'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDiagnosticRouteImport } from './routes/_authenticated/diagnostic'
+import { Route as AuthenticatedGoogleCallbackRouteImport } from './routes/_authenticated/google-callback'
 import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated/growth'
 import { Route as AuthenticatedLinksRouteImport } from './routes/_authenticated/links'
 import { Route as AuthenticatedPagesRouteImport } from './routes/_authenticated/pages'
@@ -122,6 +123,12 @@ const AuthenticatedDiagnosticRoute = AuthenticatedDiagnosticRouteImport.update({
   path: '/diagnostic',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedGoogleCallbackRoute =
+  AuthenticatedGoogleCallbackRouteImport.update({
+    id: '/google-callback',
+    path: '/google-callback',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedGrowthRoute = AuthenticatedGrowthRouteImport.update({
   id: '/growth',
   path: '/growth',
@@ -197,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/catalog': typeof AuthenticatedCatalogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
+  '/google-callback': typeof AuthenticatedGoogleCallbackRoute
   '/growth': typeof AuthenticatedGrowthRoute
   '/links': typeof AuthenticatedLinksRoute
   '/pages': typeof AuthenticatedPagesRoute
@@ -226,6 +234,7 @@ export interface FileRoutesByTo {
   '/catalog': typeof AuthenticatedCatalogRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
+  '/google-callback': typeof AuthenticatedGoogleCallbackRoute
   '/growth': typeof AuthenticatedGrowthRoute
   '/links': typeof AuthenticatedLinksRoute
   '/pages': typeof AuthenticatedPagesRoute
@@ -257,6 +266,7 @@ export interface FileRoutesById {
   '/_authenticated/catalog': typeof AuthenticatedCatalogRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/diagnostic': typeof AuthenticatedDiagnosticRoute
+  '/_authenticated/google-callback': typeof AuthenticatedGoogleCallbackRoute
   '/_authenticated/growth': typeof AuthenticatedGrowthRoute
   '/_authenticated/links': typeof AuthenticatedLinksRoute
   '/_authenticated/pages': typeof AuthenticatedPagesRoute
@@ -288,6 +298,7 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/dashboard'
     | '/diagnostic'
+    | '/google-callback'
     | '/growth'
     | '/links'
     | '/pages'
@@ -317,6 +328,7 @@ export interface FileRouteTypes {
     | '/catalog'
     | '/dashboard'
     | '/diagnostic'
+    | '/google-callback'
     | '/growth'
     | '/links'
     | '/pages'
@@ -347,6 +359,7 @@ export interface FileRouteTypes {
     | '/_authenticated/catalog'
     | '/_authenticated/dashboard'
     | '/_authenticated/diagnostic'
+    | '/_authenticated/google-callback'
     | '/_authenticated/growth'
     | '/_authenticated/links'
     | '/_authenticated/pages'
@@ -497,6 +510,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDiagnosticRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/google-callback': {
+      id: '/_authenticated/google-callback'
+      path: '/google-callback'
+      fullPath: '/google-callback'
+      preLoaderRoute: typeof AuthenticatedGoogleCallbackRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/growth': {
       id: '/_authenticated/growth'
       path: '/growth'
@@ -587,6 +607,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedCatalogRoute: typeof AuthenticatedCatalogRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiagnosticRoute: typeof AuthenticatedDiagnosticRoute
+  AuthenticatedGoogleCallbackRoute: typeof AuthenticatedGoogleCallbackRoute
   AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
   AuthenticatedLinksRoute: typeof AuthenticatedLinksRoute
   AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
@@ -605,6 +626,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedCatalogRoute: AuthenticatedCatalogRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiagnosticRoute: AuthenticatedDiagnosticRoute,
+  AuthenticatedGoogleCallbackRoute: AuthenticatedGoogleCallbackRoute,
   AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,
   AuthenticatedLinksRoute: AuthenticatedLinksRoute,
   AuthenticatedPagesRoute: AuthenticatedPagesRoute,

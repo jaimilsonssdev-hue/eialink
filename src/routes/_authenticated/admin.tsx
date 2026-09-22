@@ -25,6 +25,7 @@ import {
   formatPhoneDisplay,
   sanitizePhoneDigits,
 } from "@/modules/settings/services/CommercialSettingsService";
+import { GoogleApiAdminCard } from "@/components/admin/GoogleApiAdminCard";
 import { toPlanLimits, type Plan, type ProfessionalService } from "@/modules/billing/types";
 import {
   Card,
@@ -276,6 +277,9 @@ function AdminPage() {
 
       {/* WhatsApp Comercial da Plataforma */}
       <PlatformWhatsAppAdminCard />
+
+      {/* Configurações da Integração Google Agenda */}
+      <GoogleApiAdminCard />
 
       {/* Planos da Plataforma */}
       <Card className="rounded-xl border border-border bg-card shadow-xs">

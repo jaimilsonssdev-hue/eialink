@@ -22,6 +22,7 @@ import {
 import { MediaUploader } from "@/components/page-builder/MediaUploader";
 import { publicPageUrl } from "@/lib/public-page-url";
 import { formatPhoneDisplay, sanitizePhoneDigits } from "@/modules/settings/services/CommercialSettingsService";
+import { GoogleCalendarIntegrationCard } from "@/components/dashboard/GoogleCalendarIntegrationCard";
 
 export function CompanyBasicSettings() {
   const queryClient = useQueryClient();
@@ -453,6 +454,13 @@ export function CompanyBasicSettings() {
           </button>
         </div>
       </form>
+
+      {/* Sincronização Automática com o Google Agenda */}
+      {data?.bio?.id && (
+        <div className="pt-2">
+          <GoogleCalendarIntegrationCard bioPageId={data.bio.id} />
+        </div>
+      )}
     </div>
   );
 }

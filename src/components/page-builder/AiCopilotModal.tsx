@@ -399,14 +399,14 @@ export function AiCopilotModal({
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-bold uppercase tracking-wider">
             <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
-            <span>Google AI Studio · Gemini Multimodal</span>
+            <span>Google AI Studio · Gemini • Modo Cinematográfico</span>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
             Copiloto IA Multimodal
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-            Suba <b>fotos do estabelecimento, cardápios em PDF, tabelas de preço</b> ou cole textos soltos. A inteligência artificial organizará visualmente cada elemento nos lugares certos do site <b>sem quebrar o modelo ou layout</b>.
+            Suba <b>fotos do estabelecimento, cardápios em PDF, tabelas de preço</b> ou cole briefings. A IA aplicará o <b>Design System Cinematográfico Premium</b> (Dark Mode #030712, Bento Grids, superfícies #0b0f19 e acentos #7c3aed) organizando tudo com máxima conversão.
           </p>
         </div>
 

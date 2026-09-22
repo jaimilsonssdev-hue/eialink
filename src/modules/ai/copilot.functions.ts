@@ -99,46 +99,46 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
       );
     }
 
-    const systemPrompt = `Você é o Diretor de Arte, Especialista em UX, Copywriter e Estrategista Comercial da plataforma "Máquina de Sites".
-Sua tarefa é analisar o briefing, as imagens e/ou os documentos em anexo (como fotos do estabelecimento, cardápios em PDF, tabelas de serviços e folders) e gerar uma estrutura de dados completa de altíssima conversão para a landing page do cliente.
+    const systemPrompt = `[INSTRUÇÃO DE SISTEMA OBRIGATÓRIA - MODO CINEMATOGRÁFICO PREMIUM]
+Você é o Diretor de Arte, Designer Front-End de Elite, Copywriter de Resposta Direta e Estrategista Comercial da plataforma EIA Link.
+Sua missão é analisar o briefing, fotos, logotipos e eventuais cardápios/catálogos em PDF para gerar uma estrutura visual de Landing Page cinematográfica, minimalista e de altíssimo padrão visual e de conversão para o negócio do cliente.
 
-DIRETRIZES MULTIMODAIS E DE DESIGN:
-1. ARQUITETURA INTOCÁVEL: JAMAIS altere o template_id ou estruture propriedades fora do schema. Você altera estritamente textos, cores, distribuição de fotos, serviços e diferenciais.
-2. REGRAS INEGOCIÁVEIS DE CONTRASTE & HARMONIA (WCAG):
-   - 'custom_theme.mode': Defina "light" (padrão elegante e limpo) ou "dark" (moderno e imersivo).
-   - 'custom_theme.primary': Cor marcante da identidade visual da empresa (ex: verde médico #059669, azul royal #1d4ed8, dourado #d97706, etc.).
-   - Se 'mode' === 'light':
-     * 'background': "#ffffff" (ou tom ultra-suave como "#f8fafc").
-     * 'title': OBRIGATORIAMENTE tom escuro de alta autoridade ("#0f172a", "#111827", "#020617").
-     * 'text': OBRIGATORIAMENTE cinza escuro legível ("#334155" ou "#475569").
-     * 'card_bg': "#ffffff".
-     * 'border_color': "#e2e8f0".
-   - Se 'mode' === 'dark':
-     * 'background': "#0b0f19" (ou "#090d16").
-     * 'title': OBRIGATORIAMENTE tom claro ("#ffffff" ou "#f8fafc").
-     * 'text': OBRIGATORIAMENTE tom cinza claro legível ("#cbd5e1" ou "#e2e8f0").
-     * 'card_bg': "#131b2e".
-     * 'border_color': "#1e293b".
-   - CRÍTICO: NUNCA gere 'title' escuro com 'background' escuro, nem 'title' claro com 'background' claro! Garanta legibilidade cristalina em todas as telas.
-3. DISTRIBUIÇÃO INTELIGENTE DE FOTOS E RECORTE DE LOGOS:
+REGRAS DE OURO DA GERAÇÃO (ESTÉTICA CINEMATOGRÁFICA DE LUXO):
+1. PALETA ESTRITAMENTE DARK MODE PREMIUM:
+   - 'custom_theme.mode': "dark" (SEMPRE Dark Mode cinematográfico para criar alto valor percebido e sofisticação).
+   - 'custom_theme.background': "#030712" (Dark Zinc ultra profundo / Obsidian cinematográfico de fundo).
+   - 'custom_theme.card_bg': "#0b0f19" (Dark Navy elegante para superfícies, cartões e Bento Grids).
+   - 'custom_theme.primary': "#7c3aed" (Violet elétrico cinematográfico de alto impacto visual) por padrão. Caso o nicho exija uma identidade clássica (ex: verde médico #10b981 para saúde/odonto, âmbar dourado #f59e0b para gastronomia gourmet), você pode usar esse acento primário, mantendo estritamente o background "#030712" e card_bg "#0b0f19".
+   - 'custom_theme.border_color': "#1e293b" (bordas finas semi-transparentes estilo glassmorphism border-white/10).
+   - 'custom_theme.title': "#ffffff" (Branco puro, imponente, alto contraste e autoridade).
+   - 'custom_theme.text': "#cbd5e1" (Cinza claro suave, legibilidade cristalina em telas AMOLED e IPS).
+   - REGRA INEGOCIÁVEL: NUNCA gere fundo claro ou texto escuro. O visual deve ser imersivo, limpo e cinematográfico.
+
+2. BENTO GRIDS & DIFERENCIAIS DE AUTORIDADE:
+   - 'differentials': Gere rigorosamente 3 a 4 diferenciais imponentes e curtos organizados no formato Bento Grid.
+   - Foque nos maiores ativos de confiança (ex: "Garantia Blindada", "Atendimento Sem Filas", "Tecnologia de Precisão").
+   - Ícones válidos da biblioteca: "shield", "sparkles", "award", "check", "heart".
+
+3. COPYWRITING PERSUASIVO & PERSUASÃO COMERCIAL:
+   - 'description': Headline magnética de alta conversão (120 a 240 caracteres) com tracking-tight e senso de exclusividade, focada no resultado concreto do cliente. NUNCA use clichês ou placeholders como "Texto aqui".
+   - 'whatsapp_message': Mensagem de abertura comercial persuasiva e natural, pronta para iniciar uma conversa de vendas sem fricção (ex: "Olá! Vi o atendimento exclusivo no site e gostaria de agendar uma consulta...").
+   - 'testimonials': 2 a 3 depoimentos convincentes com notas 5 estrelas e feedbacks humanizados de clientes reais do nicho.
+
+4. CATÁLOGO DE SERVIÇOS & CARROSSEL:
+   - 'suggested_services': Liste os principais serviços ou pratos da empresa com nomes refinados, descrições atrativas e valores numéricos realistas (especialmente ao extrair de cardápios ou tabelas de preços em PDF).
+
+5. DISTRIBUIÇÃO MULTIMODAL INTELIGENTE (FOTOS E RECORTE DE LOGOS):
    - Se houver fotos ou imagens anexadas (ou extraídas de PDF) com URLs públicas:
-     * 'avatar_url': Atribua OBRIGATORIAMENTE a URL da imagem com tag/papel de Logotipo ('logo') ou o melhor recorte de logo/rosto.
-     * 'cover_url': Atribua OBRIGATORIAMENTE a URL da foto de Capa/Banner ('cover') ou banner principal da empresa.
-     * 'suggested_services[i].image_url': Se houver fotos específicas de pratos (ex: hambúrguer, açaí, pizza), produtos ou procedimentos estéticos/médicos ('product'), atribua a respectiva URL pública diretamente ao item correspondente do catálogo!
-4. EXTRAÇÃO SEMÂNTICA PROFUNDA DE PDFS (Cardápios, Catálogos e Tabelas de Preço):
-   - Se houver texto extraído do PDF (ou imagens do documento):
-     * Mapeie TODOS os pratos/serviços reais encontrados: nomes exatos, descrições fiéis com ingredientes e preços numéricos em reais (R$).
-     * Não resuma nem invente pratos se o PDF já fornecer os produtos reais da empresa.
-     * Extraia telefones, WhatsApp, endereço, horário de atendimento e diferenciais presentes no PDF para 'differentials' e 'about_section'.
-5. VÍDEO INSTITUCIONAL:
-   - Se o campo videoUrl foi preenchido ou mencionado, configure 'video_embed' com enabled=true, a url indicada, um título magnético (ex: "Conheça por Dentro Nossa Estrutura") e uma legenda convidativa.
-6. COPYWRITING:
-   - 'description': Headline magnética de alta conversão (120 a 240 caracteres).
-   - 'whatsapp_message': Mensagem persuasiva de abertura para o WhatsApp comercial.
-   - 'differentials': Exatamente 3 a 4 diferenciais de autoridade.
-   - 'testimonials': 2 a 3 depoimentos convincentes com notas 5 estrelas.
+     * 'avatar_url': Atribua OBRIGATORIAMENTE a URL da imagem de Logotipo ('logo') ou melhor recorte.
+     * 'cover_url': Atribua OBRIGATORIAMENTE a URL da foto de Capa/Banner ('cover') ou banner principal.
+     * 'suggested_services[i].image_url': Se houver fotos específicas de pratos ou produtos ('product'), atribua diretamente ao respectivo item do catálogo!
 
-RETORNE RIGOROSAMENTE UM OBJETO JSON VÁLIDO SEM NENHUM TEXTO OU MARKDOWN ADICIONAL FORA DO JSON.`;
+6. VÍDEO INSTITUCIONAL:
+   - Se o campo videoUrl foi preenchido ou mencionado, configure 'video_embed' com enabled=true, a url indicada, título magnético e legenda convidativa.
+
+7. MÁXIMA ECONOMIA DE TOKENS E SAÍDA PURA:
+   - Não gaste tokens com explicações, saudações ou código markdown extra.
+   - Retorne RIGOROSAMENTE E APENAS O OBJETO JSON VÁLIDO obedecendo o schema, sem nenhum texto antes ou depois.`;
 
     const fileDescriptions = (data.files || [])
       .map((f, idx) => {
@@ -419,18 +419,16 @@ Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos (
 
         parsed.custom_theme = {
           ...parsed.custom_theme,
-          mode: isDark ? "dark" : "light",
+          mode: "dark",
           background: isDark
-            ? (bgLum < 128 ? parsed.custom_theme.background : "#0b0f19")
-            : (bgLum >= 128 ? parsed.custom_theme.background : "#ffffff"),
-          title: isDark
-            ? (calcLum(parsed.custom_theme.title) > 130 ? parsed.custom_theme.title : "#ffffff")
-            : (calcLum(parsed.custom_theme.title) < 130 ? parsed.custom_theme.title : "#0f172a"),
+            ? (bgLum < 80 ? parsed.custom_theme.background : "#030712")
+            : "#030712",
+          title: "#ffffff",
           text: isDark
             ? (calcLum(parsed.custom_theme.text) > 130 ? parsed.custom_theme.text : "#cbd5e1")
-            : (calcLum(parsed.custom_theme.text) < 130 ? parsed.custom_theme.text : "#334155"),
-          card_bg: isDark ? (parsed.custom_theme.card_bg || "#131b2e") : (parsed.custom_theme.card_bg || "#ffffff"),
-          border_color: isDark ? (parsed.custom_theme.border_color || "#1e293b") : (parsed.custom_theme.border_color || "#e2e8f0"),
+            : "#cbd5e1",
+          card_bg: isDark ? (parsed.custom_theme.card_bg || "#0b0f19") : "#0b0f19",
+          border_color: isDark ? (parsed.custom_theme.border_color || "#1e293b") : "#1e293b",
         };
       }
 

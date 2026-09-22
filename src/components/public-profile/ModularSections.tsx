@@ -1,6 +1,13 @@
 import { memo } from "react";
 import { CheckCircle2, Play, Quote, Star, Video } from "lucide-react";
 import type { PublicBio, TrackEvent } from "./types";
+import {
+  InstagramProductCarousel,
+  type ProductCarouselConfig,
+  type CarouselProductItem,
+} from "./InstagramProductCarousel";
+
+export type { ProductCarouselConfig, CarouselProductItem };
 
 export interface VideoConfig {
   enabled: boolean;
@@ -71,6 +78,7 @@ export const ModularSections = memo(function ModularSections({
   hideTestimonialsIfInLayout?: boolean;
 }) {
   const socialData = (bio.social_links as Record<string, any>) || {};
+  const productCarouselConfig = socialData.product_carousel as ProductCarouselConfig | undefined;
   const videoConfig = socialData.video_embed as VideoConfig | undefined;
   const testimonials = (Array.isArray(socialData.testimonials) ? socialData.testimonials : []) as TestimonialItem[];
   const aboutConfig = socialData.about_section as AboutConfig | undefined;
@@ -83,16 +91,29 @@ export const ModularSections = memo(function ModularSections({
     border: socialData.custom_theme?.border_color,
   };
 
+  const hasProductCarousel = Boolean(
+    productCarouselConfig?.enabled &&
+      Array.isArray(productCarouselConfig.items) &&
+      productCarouselConfig.items.some((i) => i.name && i.image_url),
+  );
   const videoParsed = videoConfig?.enabled && videoConfig.url ? parseVideoEmbedUrl(videoConfig.url) : null;
   const hasAbout = aboutConfig?.enabled && (aboutConfig.text || (aboutConfig.highlights && aboutConfig.highlights.length > 0));
   const hasTestimonials = showTestimonials && testimonials.length > 0 && !hideTestimonialsIfInLayout;
 
-  if (!videoParsed && !hasAbout && !hasTestimonials) {
+  if (!hasProductCarousel && !videoParsed && !hasAbout && !hasTestimonials) {
     return null;
   }
 
   return (
     <div className="w-full max-w-xl mx-auto space-y-6 px-4 my-6">
+      {/* 0. CARROSSEL DE PRODUTOS / DESTAQUES ESTILO INSTAGRAM */}
+      {hasProductCarousel && (
+        <InstagramProductCarousel
+          bio={bio}
+          config={productCarouselConfig}
+          onTrack={onTrack}
+        />
+      )}
       {/* 1. SEÇÃO DE VÍDEO EM DESTAQUE */}
       {videoParsed && (
         <section className="space-y-2.5 animate-fade-in-up" aria-label="Vídeo em Destaque">

@@ -21,6 +21,7 @@ import { TemplateMarketplace } from "@/components/templates/TemplateMarketplace"
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { publicPageUrl } from "@/lib/public-page-url";
 import { QuickBusinessEditor } from "@/components/dashboard/QuickBusinessEditor";
+import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselManager";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -244,7 +245,10 @@ function Dashboard() {
       )}
 
       {bio && (
-        <QuickBusinessEditor bio={bio} publicUrl={publicUrl} />
+        <div className="space-y-6">
+          <QuickBusinessEditor bio={bio} publicUrl={publicUrl} />
+          <ProductCarouselManager bio={bio} />
+        </div>
       )}
 
       <div className="premium-section-heading">

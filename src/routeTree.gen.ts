@@ -40,6 +40,7 @@ import { Route as ComandaCozinhaRouteImport } from './routes/comanda.cozinha'
 import { Route as ComandaGarcomRouteImport } from './routes/comanda.garcom'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as RCodeRouteImport } from './routes/r.$code'
+import { Route as AuthenticatedAdminNfcRouteImport } from './routes/_authenticated/admin_.nfc'
 import { Route as AuthenticatedAdminProspeccaoRouteImport } from './routes/_authenticated/admin_.prospeccao'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -198,6 +199,11 @@ const RCodeRoute = RCodeRouteImport.update({
   path: '/r/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminNfcRoute = AuthenticatedAdminNfcRouteImport.update({
+  id: '/admin_/nfc',
+  path: '/admin/nfc',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdminProspeccaoRoute =
   AuthenticatedAdminProspeccaoRouteImport.update({
     id: '/admin_/prospeccao',
@@ -242,6 +248,7 @@ export interface FileRoutesByFullPath {
   '/comanda/garcom': typeof ComandaGarcomRoute
   '/p/$slug': typeof PSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/admin/nfc': typeof AuthenticatedAdminNfcRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -276,6 +283,7 @@ export interface FileRoutesByTo {
   '/comanda/garcom': typeof ComandaGarcomRoute
   '/p/$slug': typeof PSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/admin/nfc': typeof AuthenticatedAdminNfcRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -312,6 +320,7 @@ export interface FileRoutesById {
   '/comanda/garcom': typeof ComandaGarcomRoute
   '/p/$slug': typeof PSlugRoute
   '/r/$code': typeof RCodeRoute
+  '/_authenticated/admin_/nfc': typeof AuthenticatedAdminNfcRoute
   '/_authenticated/admin_/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -348,6 +357,7 @@ export interface FileRouteTypes {
     | '/comanda/garcom'
     | '/p/$slug'
     | '/r/$code'
+    | '/admin/nfc'
     | '/admin/prospeccao'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -382,6 +392,7 @@ export interface FileRouteTypes {
     | '/comanda/garcom'
     | '/p/$slug'
     | '/r/$code'
+    | '/admin/nfc'
     | '/admin/prospeccao'
     | '/api/public/payments/webhook'
   id:
@@ -417,6 +428,7 @@ export interface FileRouteTypes {
     | '/comanda/garcom'
     | '/p/$slug'
     | '/r/$code'
+    | '/_authenticated/admin_/nfc'
     | '/_authenticated/admin_/prospeccao'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -659,6 +671,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin_/nfc': {
+      id: '/_authenticated/admin_/nfc'
+      path: '/admin/nfc'
+      fullPath: '/admin/nfc'
+      preLoaderRoute: typeof AuthenticatedAdminNfcRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin_/prospeccao': {
       id: '/_authenticated/admin_/prospeccao'
       path: '/admin/prospeccao'
@@ -693,6 +712,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
   AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedAdminNfcRoute: typeof AuthenticatedAdminNfcRoute
   AuthenticatedAdminProspeccaoRoute: typeof AuthenticatedAdminProspeccaoRoute
 }
 
@@ -713,6 +733,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPagesRoute: AuthenticatedPagesRoute,
   AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedAdminNfcRoute: AuthenticatedAdminNfcRoute,
   AuthenticatedAdminProspeccaoRoute: AuthenticatedAdminProspeccaoRoute,
 }
 

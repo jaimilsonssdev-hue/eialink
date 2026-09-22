@@ -18,6 +18,7 @@ import {
   Save,
   Phone,
   Sliders,
+  Radio,
 } from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import {
@@ -214,6 +215,13 @@ function AdminPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
+            to="/admin/nfc"
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 text-xs font-medium shadow-sm transition-all"
+          >
+            <Radio className="h-4 w-4" />
+            <span>Plaquinhas & NFC</span>
+          </Link>
+          <Link
             to="/admin/prospeccao"
             className="inline-flex items-center gap-2 rounded-lg bg-primary hover:bg-primary/90 text-white px-3.5 py-2 text-xs font-medium shadow-sm transition-all"
           >
@@ -231,7 +239,7 @@ function AdminPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
         <StatCard
           icon={Users}
           label="Usuários"
@@ -271,6 +279,18 @@ function AdminPage() {
             value={data?.demoPagesCount ?? 0}
             description="Isoladas na prospecção →"
             colorClass="text-primary group-hover:text-purple-300 transition-colors"
+          />
+        </Link>
+        <Link
+          to="/admin/nfc"
+          className="group block"
+        >
+          <StatCard
+            icon={Radio}
+            label="Plaquinhas & NFC"
+            value="Gerenciar"
+            description="Google, Pix & Tags →"
+            colorClass="text-teal-400 group-hover:text-teal-300 transition-colors"
           />
         </Link>
       </div>

@@ -28,6 +28,7 @@ import {
   sanitizePhoneDigits,
 } from "@/modules/settings/services/CommercialSettingsService";
 import { GoogleApiAdminCard } from "@/components/admin/GoogleApiAdminCard";
+import { WhatsAppCheckoutLinksCard } from "@/components/admin/WhatsAppCheckoutLinksCard";
 import { toPlanLimits, type Plan, type ProfessionalService } from "@/modules/billing/types";
 import {
   Card,
@@ -303,6 +304,9 @@ function AdminPage() {
 
       {/* WhatsApp Comercial da Plataforma */}
       <PlatformWhatsAppAdminCard />
+
+      {/* Links de Checkout Direto para Fechamento no WhatsApp */}
+      <WhatsAppCheckoutLinksCard />
 
       {/* Configurações da Integração Google Agenda */}
       <GoogleApiAdminCard />

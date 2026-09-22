@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Check, Sparkles, Zap, ShieldCheck, ArrowRight, Radio, Store } from "lucide-react";
 import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import { FunnelService } from "@/modules/analytics/services/FunnelService";
@@ -55,6 +56,7 @@ const fallbackPlans: PublicPlan[] = [
 ];
 
 export function PublicPricingSection() {
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("yearly");
   const { data: plans, isLoading } = useQuery({
     queryKey: ["public-plans"],
     queryFn: BillingService.listPublicPlans,
@@ -147,6 +149,42 @@ export function PublicPricingSection() {
           </div>
         </div>
 
+        {/* Seletor Interativo: Mensal vs Anual */}
+        <div className="mt-8 flex flex-col items-center justify-center gap-2">
+          <div className="inline-flex items-center rounded-full border border-white/10 bg-black/50 p-1.5 backdrop-blur-md shadow-lg">
+            <button
+              type="button"
+              onClick={() => setBillingInterval("monthly")}
+              className={`cursor-pointer rounded-full px-5 py-2 text-xs font-bold transition-all ${
+                billingInterval === "monthly"
+                  ? "bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-md"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              Mensal
+            </button>
+            <button
+              type="button"
+              onClick={() => setBillingInterval("yearly")}
+              className={`cursor-pointer relative flex items-center gap-1.5 rounded-full px-5 py-2 text-xs font-bold transition-all ${
+                billingInterval === "yearly"
+                  ? "bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-md"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              Anual
+              <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[10px] font-extrabold text-emerald-300 border border-emerald-500/30">
+                2 Meses Grátis
+              </span>
+            </button>
+          </div>
+          <p className="text-[11px] text-zinc-400">
+            {billingInterval === "yearly"
+              ? "Economize R$ 58 por ano assinando o plano anual no Pix ou Cartão."
+              : "Sem fidelidade, cancele a qualquer momento direto pelo painel."}
+          </p>
+        </div>
+
         {/* Grade com os 3 Planos */}
         <div className="mt-8 grid gap-6 md:grid-cols-3 items-stretch">
           {/* 1. PLANO GRÁTIS */}
@@ -208,12 +246,27 @@ export function PublicPricingSection() {
               </p>
 
               <div className="mt-5 pb-5 border-b border-white/10">
-                <p className="font-display text-3xl font-extrabold text-white">
-                  R$ 29<span className="text-base font-normal text-zinc-400">/mês</span>
-                </p>
-                <p className="text-[11px] text-fuchsia-300 font-medium mt-1">
-                  Ou R$ 290/ano (economize 2 meses inteiros)
-                </p>
+                {billingInterval === "yearly" ? (
+                  <>
+                    <p className="font-display text-3xl font-extrabold text-white">
+                      R$ 24,16<span className="text-base font-normal text-zinc-400">/mês</span>
+                    </p>
+                    <p className="text-[11px] text-emerald-300 font-semibold mt-1">
+                      R$ 290 cobrados anualmente (2 meses 100% grátis!)
+                    </p>
+                    <p className="text-[10px] text-zinc-400 mt-0.5">Disponível no Cartão ou Pix à vista</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-display text-3xl font-extrabold text-white">
+                      R$ 29<span className="text-base font-normal text-zinc-400">/mês</span>
+                    </p>
+                    <p className="text-[11px] text-fuchsia-300 font-medium mt-1">
+                      Cobrança mensal no cartão de crédito
+                    </p>
+                    <p className="text-[10px] text-zinc-400 mt-0.5">Sem fidelidade · Cancele quando quiser</p>
+                  </>
+                )}
               </div>
 
               <ul className="mt-6 space-y-2.5 text-xs text-[#ddd5e8]">
@@ -228,17 +281,20 @@ export function PublicPricingSection() {
 
             <div className="mt-8">
               <Link
-                to="/auth"
-                search={{ mode: "signup", next: "billing" } as never}
+                to="/assinar"
+                search={{ plan: billingInterval === "yearly" ? "pro-yearly" : "pro-monthly" } as never}
                 className="w-full justify-center text-sm font-bold py-3 inline-flex items-center gap-2 rounded-xl shadow-lg transition-transform hover:scale-[1.02] bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white shadow-fuchsia-500/25"
                 onClick={() =>
                   void FunnelService.track("upgrade_click", {
                     source: "public_pricing",
-                    plan_slug: "pro-monthly",
+                    plan_slug: billingInterval === "yearly" ? "pro-yearly" : "pro-monthly",
                   })
                 }
               >
-                Ativar Minha Máquina Pro <ArrowRight className="h-4 w-4" />
+                {billingInterval === "yearly"
+                  ? "Ativar Pro Anual (2 Meses Grátis)"
+                  : "Ativar Pro Mensal"}{" "}
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </article>

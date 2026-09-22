@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Check, Sparkles, Zap, ShieldCheck, ArrowRight, Radio, Store } from "lucide-react";
+import { Check, Sparkles, Zap, ShieldCheck, ArrowRight, Radio, Store, MessageCircle } from "lucide-react";
 import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import { FunnelService } from "@/modules/analytics/services/FunnelService";
 import { BillingService } from "@/modules/billing/services/BillingService";
@@ -217,7 +217,7 @@ export function PublicPricingSection() {
               <Link
                 to="/auth"
                 search={{ mode: "signup" } as never}
-                className="btn-secondary w-full justify-center text-sm font-semibold py-3"
+                className="w-full justify-center text-sm font-bold py-3.5 inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 hover:bg-white/20 text-white transition-all shadow-md cursor-pointer"
                 onClick={() =>
                   void FunnelService.track("signup_click", {
                     source: "public_pricing",
@@ -225,7 +225,7 @@ export function PublicPricingSection() {
                   })
                 }
               >
-                Criar Meu EIA Link Grátis
+                Criar Meu EIA Link Grátis <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </article>
@@ -363,7 +363,7 @@ export function PublicPricingSection() {
                 href={commercialWhatsAppUrl("nfc")}
                 target="_blank"
                 rel="noreferrer"
-                className="btn-secondary w-full justify-center text-sm font-bold py-3 inline-flex items-center gap-2 border-violet-400/40 hover:bg-violet-500/20 text-white"
+                className="w-full justify-center text-sm font-bold py-3.5 inline-flex items-center gap-2 rounded-xl shadow-lg transition-transform hover:scale-[1.02] bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 text-white shadow-emerald-500/25 cursor-pointer"
                 onClick={() =>
                   void FunnelService.track("service_click", {
                     source: "public_pricing",
@@ -371,7 +371,9 @@ export function PublicPricingSection() {
                   })
                 }
               >
-                Falar com Consultor no WhatsApp <ArrowRight className="h-4 w-4" />
+                <MessageCircle className="h-4 w-4 shrink-0 text-white" />
+                <span>Falar com Consultor no WhatsApp</span>
+                <ArrowRight className="h-4 w-4 shrink-0 text-white" />
               </a>
             </div>
           </article>

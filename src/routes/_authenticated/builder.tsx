@@ -14,12 +14,13 @@ export const Route = createFileRoute("/_authenticated/builder")({
   validateSearch: z.object({
     template: z.string().optional(),
     page: z.string().optional(),
+    tab: z.string().optional(),
   }),
   head: () => ({ meta: [{ title: "Minha Página — EIA Digital" }] }),
 });
 
 function BuilderPage() {
-  const { template: requestedTemplateId, page: requestedPageId } = Route.useSearch();
+  const { template: requestedTemplateId, page: requestedPageId, tab: requestedTab } = Route.useSearch();
   const appliedTemplateRef = useRef<string | undefined>(undefined);
   const page = useQuery({
     queryKey: ["unified-page-editor", requestedPageId],
@@ -179,6 +180,7 @@ function BuilderPage() {
       initialBio={initialBio}
       initialLinks={links}
       initialProducts={products}
+      initialTab={requestedTab as any}
       planAccess={planAccess.data}
       defaults={{
         displayName: profile?.company_name ?? "",

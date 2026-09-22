@@ -46,6 +46,7 @@ import {
   Bot,
   Zap,
   Search,
+  Flame,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -58,6 +59,7 @@ import { SectionsEditor } from "./SectionsEditor";
 import { ModularSections } from "@/components/public-profile/ModularSections";
 import { CatalogEditor } from "@/modules/products/components/CatalogEditor";
 import { ChatFlowEditor } from "./ChatFlowEditor";
+import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselManager";
 import { SeoEditor } from "./SeoEditor";
 import { AiCopilotModal } from "./AiCopilotModal";
 import type { AiCopilotResult } from "@/modules/ai/copilot.functions";
@@ -112,7 +114,7 @@ type BioForm = Pick<
   | "motion_ambient"
 > & { id?: string };
 
-type EditorTab = "visual" | "sections" | "profile" | "contact" | "catalog" | "seo";
+type EditorTab = "visual" | "carousel" | "sections" | "profile" | "contact" | "catalog" | "seo";
 
 type EditableLink = Pick<PublicLink, "id" | "title" | "url" | "active" | "position">;
 
@@ -474,6 +476,12 @@ const TABS: Array<{
     icon: Palette,
   },
   {
+    id: "carousel",
+    label: "Carrossel Instagram",
+    description: "Fotos de produtos e pedidos",
+    icon: Flame,
+  },
+  {
     id: "sections",
     label: "Seções & Mídia",
     description: "Vídeo, depoimentos e história",
@@ -614,6 +622,7 @@ export function UnifiedPageEditor({
   initialBio: BioForm;
   initialLinks: EditableLink[];
   initialProducts?: CatalogItem[];
+  initialTab?: EditorTab;
   defaults: { displayName: string; whatsapp: string; instagram: string; niche: string };
   planAccess?: PlanAccess;
   onSave(data: {
@@ -650,7 +659,13 @@ export function UnifiedPageEditor({
     return match?.id || (isProductCatalogNiche(currentNiche) ? "delivery" : "beleza");
   });
   const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
-  const [activeTab, setActiveTab] = useState<EditorTab>("visual");
+  const [activeTab, setActiveTab] = useState<EditorTab>(() => initialTab || "visual");
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
 
   const [draftTemplate, setDraftTemplate] = useState(() => bio.template_id || initialTemplate);
   const [freeTypography, setFreeTypography] = useState<FreeTypography>(() =>
@@ -1850,6 +1865,28 @@ export function UnifiedPageEditor({
                     </Field>
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ABA 2: CARROSSEL DE PRODUTOS & DESTAQUES ESTILO INSTAGRAM */}
+            {activeTab === "carousel" && (
+              <div className="space-y-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[.16em] text-[color:var(--primary)] flex items-center gap-1.5">
+                    <Flame className="w-3.5 h-3.5 text-orange-500" />
+                    Vitrine Interativa de Fotos
+                  </p>
+                  <h2 className="mt-1 text-xl font-semibold">Carrossel de Produtos & Destaques (Estilo Instagram)</h2>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Cadastre até 10 fotos deslizantes com formato 4:5 vertical, preço, etiqueta de destaque e botão de pedido direto no WhatsApp.
+                  </p>
+                </div>
+
+                <ProductCarouselManager
+                  bio={bio as any}
+                  socialLinks={(bio.social_links as Record<string, any>) || {}}
+                  onUpdateSocialLinks={(social_links) => updateBio({ social_links })}
+                />
               </div>
             )}
 

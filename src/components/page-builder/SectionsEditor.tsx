@@ -934,6 +934,14 @@ const SITE_SECTIONS: SiteSectionMeta[] = [
     defaultSubtitle: "Frase de impacto e chamada para o WhatsApp",
   },
   {
+    id: "product_carousel",
+    label: "Carrossel de Produtos (Instagram)",
+    badge: "🔥 Destaques",
+    icon: "🔥",
+    defaultTitle: "Destaques & Mais Pedidos",
+    defaultSubtitle: "Carrossel deslizante estilo Instagram com pedido direto no WhatsApp",
+  },
+  {
     id: "credibility",
     label: "Credibilidade & Selos",
     badge: "Garantia",

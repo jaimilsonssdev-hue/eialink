@@ -683,6 +683,20 @@ export function UnifiedPageEditor({
   const [validationMessage, setValidationMessage] = useState<string>();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const { data: isAdmin } = useQuery({
+    queryKey: ["is-admin-builder"],
+    queryFn: async () => {
+      const { data: u } = await supabase.auth.getUser();
+      if (!u.user) return false;
+      if (u.user.email?.toLowerCase() === "jaimilsonvendas@gmail.com") return true;
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", u.user.id);
+      return !!roles?.some((r) => r.role === "admin");
+    },
+    staleTime: 5 * 60 * 1000,
+  });
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
     JSON.stringify({
       bio,
@@ -1176,15 +1190,17 @@ export function UnifiedPageEditor({
               <Eye className="h-4 w-4" /> Prévia
             </button>
 
-            <button
-              type="button"
-              onClick={() => setIsCopilotOpen(true)}
-              className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
-              title="Ajustar cores, textos, diferenciais e serviços com Inteligência Artificial"
-            >
-              <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
-              <span>Copiloto IA</span>
-            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => setIsCopilotOpen(true)}
+                className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
+                title="Ajustar cores, textos, diferenciais e serviços com Inteligência Artificial (Exclusivo Super Admin)"
+              >
+                <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
+                <span>Copiloto IA (Admin)</span>
+              </button>
+            )}
 
             <a
               href={pageUrl}

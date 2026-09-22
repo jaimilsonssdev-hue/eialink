@@ -16,8 +16,9 @@ import {
   Trash2,
   Film,
   FileUp,
+  Globe2,
 } from "lucide-react";
-import { generateCopilotSiteFn, type AiCopilotResult } from "@/modules/ai/copilot.functions";
+import { generateCopilotSiteFn, fetchBusinessFromUrlFn, type AiCopilotResult } from "@/modules/ai/copilot.functions";
 import { PageService } from "@/modules/page/services/PageService";
 import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
 import { toast } from "sonner";
@@ -97,6 +98,42 @@ export function AiCopilotModal({
   onApply,
 }: AiCopilotModalProps) {
   const [briefing, setBriefing] = useState("");
+  const [importUrl, setImportUrl] = useState("");
+  const [isImportingUrl, setIsImportingUrl] = useState(false);
+
+  async function handleImportFromUrl() {
+    if (!importUrl.trim()) return;
+    setIsImportingUrl(true);
+    setError(null);
+    try {
+      const res = await fetchBusinessFromUrlFn({
+        data: { url: importUrl.trim() },
+      });
+
+      if (res.name && (!currentContext.displayName || currentContext.displayName === "Empresa Local")) {
+        currentContext.displayName = res.name;
+      }
+
+      setBriefing((prev) => {
+        const header = `\n\n🔗 ${res.formattedBriefing}\n`;
+        if (prev.includes(res.formattedBriefing)) return prev;
+        return prev ? `${prev}${header}` : res.formattedBriefing;
+      });
+
+      toast.success(
+        res.source === "instagram"
+          ? "✨ Perfil do Instagram extraído com sucesso!"
+          : res.source === "google_maps"
+          ? "⭐ Dados do Google Maps (nota, endereço e avaliações) extraídos com sucesso!"
+          : "✨ Dados da página extraídos com sucesso!"
+      );
+    } catch (err: any) {
+      console.error("Erro ao importar URL:", err);
+      toast.error(err?.message || "Não foi possível extrair dados automaticamente deste link.");
+    } finally {
+      setIsImportingUrl(false);
+    }
+  }
   const [videoUrl, setVideoUrl] = useState("");
   const [mediaItems, setMediaItems] = useState<UploadedMediaItem[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -420,6 +457,58 @@ export function AiCopilotModal({
             <span className="text-emerald-400/90 text-[11px] leading-relaxed block">
               Documentos e chaves são processados de ponta a ponta no servidor seguro. Suas credenciais e mídias nunca são expostas publicamente no navegador dos visitantes.
             </span>
+          </div>
+        </div>
+
+        {/* IMPORTAÇÃO AUTOMÁTICA POR LINK: GOOGLE MEU NEGÓCIO OU INSTAGRAM */}
+        <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 p-4 space-y-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <label className="text-xs font-bold text-purple-200 uppercase tracking-wider flex items-center gap-2">
+              <Globe2 className="h-4 w-4 text-purple-400" />
+              <span>Importar por Link (Google Meu Negócio ou Instagram)</span>
+            </label>
+            <span className="text-[10px] text-purple-400/80 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
+              ⚡ Extração Inteligente
+            </span>
+          </div>
+          <p className="text-[11px] text-zinc-400">
+            Cole o link do perfil do <b>Instagram</b> ou do <b>Google Maps / Meu Negócio</b> da empresa. O sistema extrai automaticamente nome, telefone, avaliação, bio e comentários.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={importUrl}
+                onChange={(e) => setImportUrl(e.target.value)}
+                placeholder="Ex: https://maps.app.goo.gl/... ou instagram.com/nomedaempresa"
+                disabled={isImportingUrl}
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleImportFromUrl();
+                  }
+                }}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleImportFromUrl}
+              disabled={isImportingUrl || !importUrl.trim()}
+              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shrink-0 cursor-pointer"
+            >
+              {isImportingUrl ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Extraindo dados...</span>
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Puxar Dados</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 

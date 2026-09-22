@@ -438,3 +438,139 @@ Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos (
     }
   });
 
+
+const fetchUrlInputSchema = z.object({
+  url: z.string().min(3, "URL inválida"),
+});
+
+export interface FetchedBusinessData {
+  source: "google_maps" | "instagram" | "generic";
+  name?: string;
+  niche?: string;
+  city?: string;
+  phone?: string;
+  address?: string;
+  rating?: number;
+  reviewsCount?: number;
+  formattedBriefing: string;
+}
+
+export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
+  .inputValidator((data: z.infer<typeof fetchUrlInputSchema>) => fetchUrlInputSchema.parse(data))
+  .handler(async ({ data }): Promise<FetchedBusinessData> => {
+    let target = data.url.trim();
+    if (!target.startsWith("http://") && !target.startsWith("https://")) {
+      if (target.startsWith("@") || (!target.includes(".") && !target.includes("/"))) {
+        target = `https://www.instagram.com/${target.replace(/^@/, "")}/`;
+      } else {
+        target = `https://${target}`;
+      }
+    }
+
+    const isInstagram = target.includes("instagram.com");
+    const isGoogle =
+      target.includes("google.com/maps") ||
+      target.includes("maps.app.goo.gl") ||
+      target.includes("goo.gl/maps");
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 25000);
+
+    try {
+      const jinaUrl = `https://r.jina.ai/${target}`;
+      const res = await fetch(jinaUrl, {
+        signal: controller.signal,
+        headers: {
+          "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+          "x-locale": "pt-BR",
+        },
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        throw new Error(`Serviço de leitura retornou status ${res.status}`);
+      }
+
+      const text = await res.text();
+
+      if (isInstagram) {
+        const handleMatch = target.match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
+        const handle = handleMatch ? handleMatch[1] : "";
+
+        let name = handle;
+        const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
+        if (titleMatch) {
+          name = titleMatch[1]
+            .replace(/\(@[a-zA-Z0-9._]+\).*/i, "")
+            .replace(/•.*/, "")
+            .replace(/Instagram.*/i, "")
+            .trim();
+        }
+
+        const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
+        const phone = phoneMatch ? phoneMatch[0].trim() : undefined;
+
+        const briefing = `[DADOS COLETADOS DO PERFIL DO INSTAGRAM @${handle}]:\nNome Comercial: ${name || handle}\nInstagram: @${handle}\n${
+          phone ? `WhatsApp/Telefone Encontrado: ${phone}\n` : ""
+        }Informações do Perfil:\n${text.slice(0, 3000)}`;
+
+        return {
+          source: "instagram",
+          name: name || handle,
+          phone,
+          formattedBriefing: briefing,
+        };
+      }
+
+      if (isGoogle) {
+        let name = "";
+        const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
+        if (titleMatch) {
+          name = titleMatch[1].replace(/\s*-\s*Google Maps.*/i, "").trim();
+        }
+
+        const ratingMatch = text.match(/(\d[.,]\d)\s*★|\b(\d[.,]\d)\s*estrelas/i);
+        const rating = ratingMatch
+          ? parseFloat((ratingMatch[1] || ratingMatch[2]).replace(",", "."))
+          : undefined;
+
+        const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
+        const phone = phoneMatch ? phoneMatch[0].trim() : undefined;
+
+        const briefing = `[DADOS COLETADOS DO GOOGLE MEU NEGÓCIO / MAPS]:\nNome da Empresa: ${
+          name || "Empresa Local"
+        }\n${rating ? `Nota de Avaliação no Google: ${rating} estrelas ⭐\n` : ""}${
+          phone ? `Telefone / WhatsApp Comercial: ${phone}\n` : ""
+        }Dados e Comentários Públicos:\n${text.slice(0, 3500)}`;
+
+        return {
+          source: "google_maps",
+          name: name || undefined,
+          phone,
+          rating,
+          formattedBriefing: briefing,
+        };
+      }
+
+      const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
+      const name = titleMatch ? titleMatch[1].trim() : "Empresa";
+      const briefing = `[DADOS EXTRAÍDOS DO LINK ${target}]:\nTítulo: ${name}\nConteúdo da Página:\n${text.slice(
+        0,
+        3000
+      )}`;
+
+      return {
+        source: "generic",
+        name,
+        formattedBriefing: briefing,
+      };
+    } catch (err: any) {
+      clearTimeout(timeout);
+      throw new Error(
+        `Não foi possível extrair dados automaticamente do link informado: ${
+          err?.message || err
+        }`
+      );
+    }
+  });
+

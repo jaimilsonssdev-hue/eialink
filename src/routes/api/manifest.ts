@@ -19,8 +19,7 @@ export const Route = createFileRoute("/api/manifest")({
         try {
           let query = supabase
             .from("bio_pages")
-            .select("id, slug, display_name, description, avatar_url, cover_url, theme, template_id, social_links")
-            .eq("published", true);
+            .select("id, slug, display_name, description, avatar_url, cover_url, theme, template_id, social_links");
 
           if (slug) {
             query = query.eq("slug", slug);
@@ -48,24 +47,28 @@ export const Route = createFileRoute("/api/manifest")({
           const primaryColor = themeConfig.primary || "#10081d";
           const backgroundColor = themeConfig.background || "#090611";
 
-          // Resolve a URL da logo da empresa
+          // Resolve a URL da logo da empresa (prioridade total para a logo/avatar do cliente)
           let resolvedIcon: string | null = null;
           const rawIcon = bio.avatar_url || bio.cover_url || null;
 
           if (rawIcon) {
-            // Se for do Supabase Storage, tenta obter URL de longa duração (1 ano) ou pública
             const path = bioMediaPath(rawIcon);
             if (path) {
               try {
-                const { data: signed } = await supabase.storage
-                  .from("bio-media")
-                  .createSignedUrl(path, 60 * 60 * 24 * 365); // 365 dias
-                resolvedIcon = signed?.signedUrl || null;
+                const { data: publicData } = supabase.storage.from("bio-media").getPublicUrl(path);
+                if (publicData?.publicUrl) {
+                  resolvedIcon = publicData.publicUrl;
+                } else {
+                  const { data: signed } = await supabase.storage
+                    .from("bio-media")
+                    .createSignedUrl(path, 60 * 60 * 24 * 365); // 365 dias
+                  resolvedIcon = signed?.signedUrl || null;
+                }
               } catch {
                 resolvedIcon = await resolveBioMediaUrl(rawIcon);
               }
             } else {
-              resolvedIcon = await resolveBioMediaUrl(rawIcon);
+              resolvedIcon = rawIcon;
             }
           }
 
@@ -82,6 +85,7 @@ export const Route = createFileRoute("/api/manifest")({
                 ? "image/svg+xml"
                 : "image/jpeg";
 
+            // Ícones exclusivos da marca do cliente para instalação do PWA
             icons.push(
               {
                 src: resolvedIcon,
@@ -108,23 +112,23 @@ export const Route = createFileRoute("/api/manifest")({
                 purpose: "maskable",
               }
             );
+          } else {
+            // Apenas se o cliente não cadastrou NENHUMA imagem, usa o ícone neutro da plataforma como último recurso
+            icons.push(
+              {
+                src: "/icons/eia-link-icon.svg",
+                sizes: "any",
+                type: "image/svg+xml",
+                purpose: "any",
+              },
+              {
+                src: "/icons/eia-link-icon-maskable.svg",
+                sizes: "any",
+                type: "image/svg+xml",
+                purpose: "maskable",
+              }
+            );
           }
-
-          // Adiciona ícones de fallback caso a imagem do cliente demore a carregar
-          icons.push(
-            {
-              src: "/icons/eia-link-icon.svg",
-              sizes: "any",
-              type: "image/svg+xml",
-              purpose: "any",
-            },
-            {
-              src: "/icons/eia-link-icon-maskable.svg",
-              sizes: "any",
-              type: "image/svg+xml",
-              purpose: "maskable",
-            }
-          );
 
           const manifest = {
             name: `${companyName} — App Oficial`,

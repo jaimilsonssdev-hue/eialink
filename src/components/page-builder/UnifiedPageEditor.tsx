@@ -972,11 +972,22 @@ export function UnifiedPageEditor({
     patch.description = preset.generateDescription(companyDisplayName, "sua cidade");
     patch.whatsapp_message = preset.whatsapp_message(companyDisplayName);
 
-    // Atualiza fotos curadas caso não sejam fotos customizadas pelo usuário ou caso o nicho tenha mudado
-    if (!bio.cover_url || bio.cover_url.includes("template-assets") || bio.cover_url.includes("unsplash.com") || isDifferentNiche) {
+    // Protege imagens personalizadas do cliente: NUNCA sobrescreve se o usuário já fez upload próprio
+    const hasCustomCover = Boolean(
+      bio.cover_url &&
+      !bio.cover_url.includes("template-assets") &&
+      !bio.cover_url.includes("unsplash.com")
+    );
+    const hasCustomAvatar = Boolean(
+      bio.avatar_url &&
+      !bio.avatar_url.includes("template-assets") &&
+      !bio.avatar_url.includes("unsplash.com")
+    );
+
+    if (!hasCustomCover && (!bio.cover_url || bio.cover_url.includes("template-assets") || bio.cover_url.includes("unsplash.com"))) {
       patch.cover_url = preset.cover_url;
     }
-    if (!bio.avatar_url || bio.avatar_url.includes("unsplash.com") || isDifferentNiche) {
+    if (!hasCustomAvatar && (!bio.avatar_url || bio.avatar_url.includes("template-assets") || bio.avatar_url.includes("unsplash.com"))) {
       patch.avatar_url = preset.avatar_url;
     }
 
@@ -1029,14 +1040,18 @@ export function UnifiedPageEditor({
     if (addressError) {
       setValidationMessage(addressError);
       setSaveState("error");
+      toast.error(`Ajuste o endereço da página: ${addressError}`);
+      setActiveTab("profile");
       return;
     }
     const socialValidation = parseSocialLinks(bio.social_links);
     if (!socialValidation.success) {
-      setValidationMessage(
-        socialValidation.error.issues[0]?.message ?? "Revise os links das redes sociais.",
-      );
+      const errorMsg =
+        socialValidation.error.issues[0]?.message ?? "Revise os links das redes sociais.";
+      setValidationMessage(errorMsg);
       setSaveState("error");
+      toast.error(`Atenção ao salvar: ${errorMsg}`);
+      setActiveTab("contact");
       return;
     }
     setValidationMessage(undefined);
@@ -1063,13 +1078,14 @@ export function UnifiedPageEditor({
         }),
       );
       setSaveState("success");
-      toast.success("Alterações salvas e publicadas com sucesso!");
+      toast.success("Tudo salvo e publicado com sucesso!");
     } catch (error) {
       if (import.meta.env.DEV) console.error("Save failed", error);
-      setValidationMessage(
-        error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente.",
-      );
+      const errorMsg =
+        error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente.";
+      setValidationMessage(errorMsg);
       setSaveState("error");
+      toast.error(`Erro ao salvar: ${errorMsg}`);
     } finally {
       setSaving(false);
     }
@@ -1192,7 +1208,7 @@ export function UnifiedPageEditor({
               ) : (
                 <>
                   <CheckCircle2 className="h-4 w-4" />
-                  <span>Salvo (Clique para salvar)</span>
+                  <span>Tudo salvo ✓</span>
                 </>
               )}
             </button>
@@ -1278,11 +1294,16 @@ export function UnifiedPageEditor({
                       }}
                       className={`p-3 rounded-xl border text-left transition-all ${
                         bio.template_id === "site-maquina"
-                          ? "border-primary bg-primary text-primary-foreground shadow-md font-bold"
+                          ? "border-2 border-primary bg-primary/15 text-foreground shadow-md font-bold ring-2 ring-primary/30"
                           : "border-border bg-card hover:border-primary/50 text-foreground"
                       }`}
                     >
-                      <div className="text-base mb-1">🖥️</div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-base">🖥️</span>
+                        {bio.template_id === "site-maquina" && (
+                          <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-bold">✓ Ativo</span>
+                        )}
+                      </div>
                       <div className="text-xs font-bold">Site / Landing Page</div>
                       <div className="text-[10px] opacity-80 mt-0.5">Padrão Máquina de Sites: Hero, Prova Social, FAQ e Mapa</div>
                     </button>
@@ -1297,11 +1318,18 @@ export function UnifiedPageEditor({
                         bio.template_id !== "site-maquina" &&
                         bio.template_id !== "storefront" &&
                         bio.template_id !== "store-showcase"
-                          ? "border-primary bg-primary text-primary-foreground shadow-md font-bold"
+                          ? "border-2 border-primary bg-primary/15 text-foreground shadow-md font-bold ring-2 ring-primary/30"
                           : "border-border bg-card hover:border-primary/50 text-foreground"
                       }`}
                     >
-                      <div className="text-base mb-1">📱</div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-base">📱</span>
+                        {bio.template_id !== "site-maquina" &&
+                         bio.template_id !== "storefront" &&
+                         bio.template_id !== "store-showcase" && (
+                          <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-bold">✓ Ativo</span>
+                        )}
+                      </div>
                       <div className="text-xs font-bold">BioLink de Bolso</div>
                       <div className="text-[10px] opacity-80 mt-0.5">Compacto, direto para o Instagram e WhatsApp em 1 clique</div>
                     </button>
@@ -1314,11 +1342,16 @@ export function UnifiedPageEditor({
                       }}
                       className={`p-3 rounded-xl border text-left transition-all ${
                         bio.template_id === "storefront" || bio.template_id === "store-showcase"
-                          ? "border-primary bg-primary text-primary-foreground shadow-md font-bold"
+                          ? "border-2 border-primary bg-primary/15 text-foreground shadow-md font-bold ring-2 ring-primary/30"
                           : "border-border bg-card hover:border-primary/50 text-foreground"
                       }`}
                     >
-                      <div className="text-base mb-1">🛍️</div>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-base">🛍️</span>
+                        {(bio.template_id === "storefront" || bio.template_id === "store-showcase") && (
+                          <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-bold">✓ Ativo</span>
+                        )}
+                      </div>
                       <div className="text-xs font-bold">Delivery / Loja App</div>
                       <div className="text-[10px] opacity-80 mt-0.5">Sensação de iFood com sacola flutuante e instalação PWA</div>
                     </button>
@@ -1347,7 +1380,7 @@ export function UnifiedPageEditor({
                           onClick={() => selectNicheModel(model)}
                           className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-150 ${
                             isSelected
-                              ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40 text-foreground"
+                              ? "border-2 border-primary bg-primary/15 shadow-sm ring-2 ring-primary/30 text-foreground"
                               : "border-border bg-card hover:border-primary/50 hover:bg-muted/30 text-foreground shadow-2xs"
                           }`}
                         >
@@ -1361,9 +1394,14 @@ export function UnifiedPageEditor({
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className={`text-xs sm:text-sm font-semibold truncate ${isSelected ? "text-primary" : "text-foreground group-hover:text-primary"}`}>
-                              {model.title}
-                            </p>
+                            <div className="flex items-center justify-between gap-1">
+                              <p className={`text-xs sm:text-sm font-semibold truncate ${isSelected ? "text-primary font-bold" : "text-foreground group-hover:text-primary"}`}>
+                                {model.title}
+                              </p>
+                              {isSelected && (
+                                <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[9px] font-bold shrink-0">✓ Ativo</span>
+                              )}
+                            </div>
                             <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 font-normal">
                               {model.subtitle}
                             </p>
@@ -1410,7 +1448,7 @@ export function UnifiedPageEditor({
                             onClick={() => applyPresetVariant(variant, autoSyncServices, idx)}
                             className={`p-3 rounded-xl border text-left transition-all duration-150 relative flex flex-col justify-between ${
                               isVariantSelected
-                                ? "border-primary bg-primary/10 shadow-xs ring-1 ring-primary/40 text-foreground"
+                                ? "border-2 border-primary bg-primary/15 shadow-sm ring-2 ring-primary/30 text-foreground"
                                 : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground shadow-2xs"
                             }`}
                           >
@@ -1433,8 +1471,8 @@ export function UnifiedPageEditor({
 
                             <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
                               <span>{variant.services?.length || 3} serviços</span>
-                              <span className={`font-semibold text-[10px] uppercase ${isVariantSelected ? "text-primary font-bold" : "text-muted-foreground"}`}>
-                                {isVariantSelected ? "Ativo ✓" : "Aplicar"}
+                              <span className={`font-bold text-[10px] uppercase px-1.5 py-0.5 rounded ${isVariantSelected ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground"}`}>
+                                {isVariantSelected ? "✓ Ativo" : "Aplicar"}
                               </span>
                             </div>
                           </button>
@@ -1513,7 +1551,7 @@ export function UnifiedPageEditor({
                           }}
                           className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
                             isSelected
-                              ? "border-primary bg-primary/10 text-foreground ring-1 ring-primary/40 shadow-xs"
+                              ? "border-2 border-primary bg-primary/15 text-foreground ring-2 ring-primary/30 shadow-sm font-semibold"
                               : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground shadow-2xs"
                           }`}
                         >
@@ -1521,8 +1559,11 @@ export function UnifiedPageEditor({
                             className="h-5 w-5 shrink-0 rounded-full border border-white/20 shadow-xs"
                             style={{ background: theme.gradientStyle }}
                           />
-                          <div className="min-w-0">
-                            <p className="font-semibold text-xs truncate text-foreground">{theme.label}</p>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-1">
+                              <p className="font-semibold text-xs truncate text-foreground">{theme.label}</p>
+                              {isSelected && <span className="text-[10px] text-primary font-bold">✓ Ativo</span>}
+                            </div>
                             <p className="text-[10px] text-muted-foreground truncate font-normal">{theme.description}</p>
                           </div>
                         </button>
@@ -1530,41 +1571,53 @@ export function UnifiedPageEditor({
                     })}
                   </div>
 
-                  {/* Seletor Livre de Cores Hex & Design Tokens */}
-                  <ColorPickerControl
-                    value={(bio.social_links as Record<string, any>)?.custom_theme}
-                    currentThemeId={bio.theme || "aurora"}
-                    onChange={(customTheme) => {
-                      const currentSocial = (bio.social_links as Record<string, any>) || {};
-                      const tokensDesign = customTheme
-                        ? {
-                            layout_esqueleto: customTheme.layout_esqueleto || "list_vertical_premium",
-                            tipo_fundo: customTheme.mode === "gradient" ? "mesh_gradient" : customTheme.mode === "light" ? "solido" : "mesh_gradient",
-                            fundo_valores: {
-                              cor_gradiente_1: customTheme.background || customTheme.gradient_1 || "#0b0c10",
-                              cor_gradiente_2: customTheme.gradient_2 || customTheme.primary || "#1f2937",
-                              blur_sobreposicao: "8px",
-                              imagem_url: bio.cover_url || "",
-                            },
-                            estilo_botoes: {
-                              cor_fundo_card: customTheme.card_bg || (customTheme.mode === "light" ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
-                              cor_borda: customTheme.border_color || (customTheme.mode === "light" ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.12)"),
-                              cor_texto: customTheme.text || (customTheme.mode === "light" ? "#0f172a" : "#ffffff"),
-                              cor_destaque: customTheme.primary || "#6366f1",
-                              raio_borda: customTheme.border_radius || "16px",
-                            },
-                          }
-                        : undefined;
+                  {/* Seletor Livre de Cores Hex & Design Tokens (Recolhido para simplificar o uso diário) */}
+                  <details className="group rounded-xl border border-border/80 bg-card/40 p-3.5 mt-2 transition-all">
+                    <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center justify-between select-none">
+                      <span className="flex items-center gap-1.5">
+                        <Palette className="h-3.5 w-3.5 text-primary" />
+                        <span>Personalização Avançada de Cores e Fundo (Opcional)</span>
+                      </span>
+                      <span className="text-[11px] text-primary group-open:hidden">Editar cores livres</span>
+                      <span className="text-[11px] text-muted-foreground hidden group-open:inline">Recolher</span>
+                    </summary>
+                    <div className="pt-3 mt-2 border-t border-border/60">
+                      <ColorPickerControl
+                        value={(bio.social_links as Record<string, any>)?.custom_theme}
+                        currentThemeId={bio.theme || "aurora"}
+                        onChange={(customTheme) => {
+                          const currentSocial = (bio.social_links as Record<string, any>) || {};
+                          const tokensDesign = customTheme
+                            ? {
+                                layout_esqueleto: customTheme.layout_esqueleto || "list_vertical_premium",
+                                tipo_fundo: customTheme.mode === "gradient" ? "mesh_gradient" : customTheme.mode === "light" ? "solido" : "mesh_gradient",
+                                fundo_valores: {
+                                  cor_gradiente_1: customTheme.background || customTheme.gradient_1 || "#0b0c10",
+                                  cor_gradiente_2: customTheme.gradient_2 || customTheme.primary || "#1f2937",
+                                  blur_sobreposicao: "8px",
+                                  imagem_url: bio.cover_url || "",
+                                },
+                                estilo_botoes: {
+                                  cor_fundo_card: customTheme.card_bg || (customTheme.mode === "light" ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
+                                  cor_borda: customTheme.border_color || (customTheme.mode === "light" ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.12)"),
+                                  cor_texto: customTheme.text || (customTheme.mode === "light" ? "#0f172a" : "#ffffff"),
+                                  cor_destaque: customTheme.primary || "#6366f1",
+                                  raio_borda: customTheme.border_radius || "16px",
+                                },
+                              }
+                            : undefined;
 
-                      updateBio({
-                        social_links: {
-                          ...currentSocial,
-                          custom_theme: customTheme,
-                          tokens_design: tokensDesign,
-                        } as any,
-                      });
-                    }}
-                  />
+                          updateBio({
+                            social_links: {
+                              ...currentSocial,
+                              custom_theme: customTheme,
+                              tokens_design: tokensDesign,
+                            } as any,
+                          });
+                        }}
+                      />
+                    </div>
+                  </details>
                 </div>
 
                 {/* 3. Fotos e Logotipo do Negócio */}
@@ -1853,7 +1906,7 @@ export function UnifiedPageEditor({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                     <div>
                       <MediaUploader
-                        label="Logotipo da Marca (Quadrado ou Transparente)"
+                        label="Logotipo da Marca (Ícone Oficial do App PWA & Cabeçalho)"
                         value={bio.avatar_url}
                         variant="avatar"
                         templateId={draftTemplate}
@@ -1872,8 +1925,9 @@ export function UnifiedPageEditor({
                         }}
                         onChange={(avatar_url) => updateBio({ avatar_url })}
                       />
-                      <p className="mt-1 text-[11px] text-muted-foreground">
-                        Utilizado na barra de navegação, cabeçalho e ícone do app.
+                      <p className="mt-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                        <span>📲</span>
+                        <span>Este logotipo será usado como ícone do aplicativo na tela inicial do celular do cliente.</span>
                       </p>
                     </div>
 
@@ -2403,12 +2457,12 @@ export function UnifiedPageEditor({
               const previewCustomRadius = previewCustomTheme?.border_radius || previewTokens?.estilo_botoes?.raio_borda || "16px";
               const isPreviewLight = previewCustomTheme?.mode === "light" || previewBio.theme === "mono";
 
-              // Chave de remontagem dinâmica para Pure State Reset e atualização em tempo real
-              const simulatorKey = `${activeNicheModel.id}-var${selectedVariantIndex}-${previewBio.template_id}-${previewBio.theme}-${previewCustomPrimary}-${previewCustomBg}-${previewCustomCard}-${previewCustomText}-${previewBio.display_name}-${previewBio.avatar_url || ""}-${previewBio.cover_url || ""}-${hasPendingChanges ? "p" : "s"}-${snapshot.length}`;
+              // Chave estável para evitar remontagens desnecessárias e perda de rolagem na prévia
+              const stableTemplateKey = previewBio.template_id || "default";
 
               return (
                 <div
-                  key={simulatorKey}
+                  key="phone-preview-container"
                   className={`editor-phone-preview bio-theme ${previewBio.theme || "aurora"} relative w-full lg:w-[310px] xl:w-[330px] h-full lg:h-[min(650px,calc(100vh-10rem))] rounded-none lg:rounded-[2.8rem] border-0 lg:border-[6px] border-[#18181b] shadow-none lg:shadow-2xl shadow-black/90 ring-0 lg:ring-1 ring-white/10 overflow-hidden flex flex-col transition-all`}
                   data-custom-primary={Boolean(previewCustomPrimary) ? "true" : undefined}
                   data-custom-text={Boolean(previewCustomText) ? "true" : undefined}
@@ -2464,7 +2518,7 @@ export function UnifiedPageEditor({
                       />
                     ) : (
                       <TemplateRenderer
-                        key={simulatorKey}
+                        key={stableTemplateKey}
                         bio={previewBio}
                         links={previewLinks.filter((link) => link.active)}
                         onTrack={() => undefined}

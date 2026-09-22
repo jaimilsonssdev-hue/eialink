@@ -235,7 +235,8 @@ export const Route = createFileRoute("/p/$slug")({
         ...(companyLogo
           ? [
               { rel: "apple-touch-icon", href: companyLogo, key: "apple-touch-icon" },
-              { rel: "icon", href: companyLogo, key: "favicon" },
+              { rel: "icon", href: companyLogo, key: "favicon-svg" },
+              { rel: "icon", href: companyLogo, key: "favicon-png" },
             ]
           : [
               { rel: "apple-touch-icon", href: "/icons/eia-link-icon.svg", key: "apple-touch-icon" },
@@ -294,9 +295,17 @@ function PublicBio() {
       }
       appleIconEl.setAttribute("href", logo);
 
-      let faviconEl = document.querySelector('link[rel="icon"]');
-      if (faviconEl) {
-        faviconEl.setAttribute("href", logo);
+      const favicons = document.querySelectorAll('link[rel="icon"]');
+      if (favicons.length > 0) {
+        favicons.forEach((fav) => {
+          fav.setAttribute("href", logo);
+          fav.removeAttribute("type");
+        });
+      } else {
+        const newFavicon = document.createElement("link");
+        newFavicon.setAttribute("rel", "icon");
+        newFavicon.setAttribute("href", logo);
+        document.head.appendChild(newFavicon);
       }
     }
 

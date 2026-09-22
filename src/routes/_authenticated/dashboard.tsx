@@ -15,6 +15,14 @@ import {
   PanelsTopLeft,
   Target,
   Globe2,
+  Flame,
+  Calendar,
+  Radio,
+  Smartphone,
+  CheckCircle2,
+  Circle,
+  ArrowRight,
+  Zap,
 } from "lucide-react";
 
 import { TemplateMarketplace } from "@/components/templates/TemplateMarketplace";
@@ -27,7 +35,7 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — EIA Digital" },
-      { name: "description", content: "Painel de controle da sua presença digital." },
+      { name: "description", content: "Painel de controle da sua máquina de presença e vendas." },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -135,7 +143,6 @@ function Dashboard() {
     if ((requestsCount ?? 0) > 0) s += 10;
     s = Math.min(100, s);
     if (s !== profile.lead_score) {
-      // The builder is lazy: consuming the promise is what performs the update.
       void supabase
         .from("profiles")
         .update({ lead_score: s })
@@ -153,12 +160,51 @@ function Dashboard() {
     access.data?.isPro && access.data.features.custom_domain,
   );
   const publicUrl = bio ? publicPageUrl(bio.slug, hasProfessionalSubdomain) : "";
-  const setupItems = [
-    { label: "Nome do negócio", complete: Boolean(bio?.display_name?.trim()) },
-    { label: "WhatsApp", complete: (bio?.whatsapp?.replace(/\D/g, "").length ?? 0) >= 10 },
-    { label: "Primeiro link", complete: (linksCount ?? 0) > 0 },
+
+  // Diagnóstico dos 5 passos essenciais da Máquina
+  const carouselItemsCount = ((bio?.social_links as any)?.product_carousel as any[])?.length ?? 0;
+  const onboardingSteps = [
+    {
+      id: "profile",
+      title: "Configurar Nome & WhatsApp",
+      desc: "Garante que o cliente fale direto com você.",
+      done: Boolean(bio?.display_name?.trim()) && (bio?.whatsapp?.replace(/\D/g, "").length ?? 0) >= 10,
+      link: "/builder",
+    },
+    {
+      id: "carousel",
+      title: "Criar Carrossel Instagram de Produtos",
+      desc: "Fotos 4:5 reais dos seus produtos ou pratos com botão Zap.",
+      done: carouselItemsCount > 0,
+      link: "/builder?tab=carousel",
+    },
+    {
+      id: "agenda",
+      title: "Configurar Agendamento 24/7",
+      desc: "Sincronize com sua Google Agenda e receba clientes no piloto automático.",
+      done: false, // Guia para a rota /agenda
+      link: "/agenda",
+    },
+    {
+      id: "nfc",
+      title: "Gerar QR Code de Balcão / NFC",
+      desc: "Imprima ou grave placas para atrair clientes da loja física.",
+      done: false,
+      link: "/admin/nfc",
+    },
+    {
+      id: "share",
+      title: "Colocar Link na Bio do Instagram",
+      desc: "Receba as primeiras visitas e pedidos.",
+      done: (stats?.views ?? 0) > 0,
+      link: publicUrl || "/builder",
+      isExternal: Boolean(publicUrl),
+    },
   ];
-  const setupCompleted = setupItems.filter((item) => item.complete).length;
+
+  const completedSteps = onboardingSteps.filter((s) => s.done).length;
+  const progressPercent = Math.round((completedSteps / onboardingSteps.length) * 100);
+
   const scoreSuggestion = !bio?.published
     ? "Publique sua página para avançar."
     : !bio?.whatsapp
@@ -175,12 +221,12 @@ function Dashboard() {
     <div className="space-y-8 premium-dashboard">
       <section className="premium-welcome">
         <div>
-          <p className="eyebrow">Seu espaço digital</p>
+          <p className="eyebrow">Máquina de Vendas & Presença</p>
           <h1>
             Olá, {profile?.full_name?.split(" ")[0] ?? "empreendedor"}.<br />
             Sua presença merece <span>mais destaque.</span>
           </h1>
-          <p>Personalize sua página, apresente o que você faz e transforme visitas em conversas.</p>
+          <p>Seus produtos no estilo Instagram, agendamento 24h e integração de balcão com WhatsApp.</p>
           <div className="premium-welcome-actions">
             <Link to="/builder" className="premium-cta">
               <PanelsTopLeft className="h-4 w-4" /> Personalizar minha página
@@ -198,9 +244,94 @@ function Dashboard() {
           <div className="premium-phone-avatar">{(bio?.display_name ?? "E").slice(0, 1)}</div>
           <span className="premium-phone-line is-title" />
           <span className="premium-phone-line" />
-          <span className="premium-phone-cta">Falar no WhatsApp</span>
+          <span className="premium-phone-cta">Pedir no WhatsApp</span>
           <span className="premium-phone-link" />
           <span className="premium-phone-link" />
+        </div>
+      </section>
+
+      {/* Checklist Interativo: Roteiro dos Primeiros 3 Minutos */}
+      <section className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-950/40 via-card to-background p-6 shadow-md backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-border/60">
+          <div>
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-xs font-semibold text-violet-300">
+              <Zap className="h-3.5 w-3.5 text-fuchsia-400" />
+              <span>Roteiro de Ativação Rápida</span>
+            </div>
+            <h2 className="text-xl font-bold font-display text-foreground mt-1.5">
+              Complete sua Máquina em 3 Minutos
+            </h2>
+            <p className="text-sm text-muted-foreground">
+              Passos essenciais para colocar seus produtos na vitrine e receber pedidos no piloto automático.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+            <div className="text-right">
+              <span className="text-xs text-muted-foreground">Progresso</span>
+              <p className="text-base font-extrabold text-violet-400">{progressPercent}% Concluído</p>
+            </div>
+            <div className="h-10 w-10 rounded-full border-2 border-violet-500/30 grid place-items-center font-bold text-xs text-foreground bg-surface-elevated">
+              {completedSteps}/{onboardingSteps.length}
+            </div>
+          </div>
+        </div>
+
+        {/* Barra de progresso */}
+        <div className="mt-4 h-2 w-full rounded-full bg-white/5 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-emerald-400 transition-all duration-500"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+
+        {/* Grade de Passos */}
+        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {onboardingSteps.map((step, idx) => (
+            <div
+              key={step.id}
+              className={`rounded-xl border p-3.5 flex flex-col justify-between transition-all ${
+                step.done
+                  ? "border-emerald-500/30 bg-emerald-500/5 text-muted-foreground"
+                  : "border-border/80 bg-card hover:border-violet-500/50 hover:bg-violet-500/[0.02]"
+              }`}
+            >
+              <div className="flex items-start gap-2.5">
+                {step.done ? (
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                ) : (
+                  <Circle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                )}
+                <div>
+                  <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                    <span className="text-zinc-500">#{idx + 1}</span> {step.title}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                    {step.desc}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-3 pt-2 border-t border-border/40 flex justify-end">
+                {step.isExternal ? (
+                  <a
+                    href={step.link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300"
+                  >
+                    Abrir Página <ExternalLink className="h-3 w-3" />
+                  </a>
+                ) : (
+                  <Link
+                    to={step.link}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300"
+                  >
+                    Configurar <ArrowRight className="h-3 w-3" />
+                  </Link>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -227,8 +358,6 @@ function Dashboard() {
         </section>
       )}
 
-
-
       {!bio && (
         <div
           className="card-glow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
@@ -250,6 +379,74 @@ function Dashboard() {
           <ProductCarouselManager bio={bio} />
         </div>
       )}
+
+      {/* Superpoderes da sua Máquina */}
+      <section className="space-y-4">
+        <div className="premium-section-heading">
+          <div>
+            <p className="eyebrow">Arsenal de Conversão</p>
+            <h2>Superpoderes da sua Conta</h2>
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Link
+            to="/builder?tab=carousel"
+            className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-fuchsia-500/50 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="h-10 w-10 rounded-xl bg-fuchsia-500/10 text-fuchsia-400 grid place-items-center mb-3">
+              <Flame className="h-5 w-5" />
+            </div>
+            <h3 className="font-bold text-foreground text-sm flex items-center justify-between">
+              Carrossel Instagram <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+              Vitrine com fotos 4:5 deslizáveis e botão de pedido direto no WhatsApp com valor e produto selecionado.
+            </p>
+          </Link>
+
+          <Link
+            to="/agenda"
+            className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-violet-500/50 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="h-10 w-10 rounded-xl bg-violet-500/10 text-violet-400 grid place-items-center mb-3">
+              <Calendar className="h-5 w-5" />
+            </div>
+            <h3 className="font-bold text-foreground text-sm flex items-center justify-between">
+              Agendamento 24/7 <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+              Integração direta com o Google Agenda. Seus clientes agendam serviços sem você precisar responder no manual.
+            </p>
+          </Link>
+
+          <Link
+            to="/admin/nfc"
+            className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-emerald-500/50 hover:shadow-lg hover:-translate-y-0.5"
+          >
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-400 grid place-items-center mb-3">
+              <Radio className="h-5 w-5" />
+            </div>
+            <h3 className="font-bold text-foreground text-sm flex items-center justify-between">
+              Plaquinhas NFC & QR <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+              Aproxime o celular do cliente no balcão e capture avaliações no Google Meu Negócio ou novos pedidos.
+            </p>
+          </Link>
+
+          <div className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-blue-500/50">
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-400 grid place-items-center mb-3">
+              <Smartphone className="h-5 w-5" />
+            </div>
+            <h3 className="font-bold text-foreground text-sm">
+              App PWA Instalável
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+              Sua página pode ser salva na tela inicial do celular de cada cliente com ícone e tela cheia, como um aplicativo nativo.
+            </p>
+          </div>
+        </div>
+      </section>
 
       <div className="premium-section-heading">
         <div>

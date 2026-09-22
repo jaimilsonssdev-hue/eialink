@@ -14,10 +14,13 @@ import {
   BarChart3,
   Building2,
   CalendarDays,
+  CalendarClock,
   Check,
+  CheckCircle2,
   ChevronRight,
   CircleDollarSign,
   Dumbbell,
+  Flame,
   Heart,
   Instagram,
   Link2,
@@ -25,41 +28,45 @@ import {
   MessageCircle,
   Palette,
   PawPrint,
+  QrCode,
   Rocket,
   Scissors,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
   Sparkles,
+  Star,
   Stethoscope,
   Store,
   TrendingUp,
   UtensilsCrossed,
   WandSparkles,
+  Zap,
 } from "lucide-react";
 import { pageSlugFromHostname } from "@/lib/public-page-url";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "EIA Link — Vitrines digitais que vendem" },
+      { title: "EIA Link — Máquina de Vendas e Agendamentos para Negócios Locais" },
       {
         name: "description",
         content:
-          "Transforme o link da sua bio em uma vitrine digital profissional para apresentar seu negócio e facilitar o contato com clientes.",
+          "Transforme seu Instagram e seu balcão em uma máquina de vendas: vitrine estilo Instagram com pedidos no WhatsApp, agendamento online integrado com Google Agenda e tecnologia NFC.",
       },
-      { property: "og:title", content: "EIA Link — Vitrines digitais que vendem" },
+      { property: "og:title", content: "EIA Link — Máquina de Vendas e Agendamentos para Negócios Locais" },
       {
         property: "og:description",
         content:
-          "Transforme o link da sua bio em uma vitrine digital profissional para apresentar seu negócio e facilitar o contato com clientes.",
+          "Vitrine estilo Instagram com pedidos no WhatsApp, agendamento online integrado com Google Agenda e tecnologia NFC.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://eialink.com.br/" },
-      { name: "twitter:title", content: "EIA Link — Vitrines digitais que vendem" },
+      { name: "twitter:title", content: "EIA Link — Máquina de Vendas e Agendamentos" },
       {
         name: "twitter:description",
         content:
-          "Sua vitrine digital, seus produtos, seus serviços e seu WhatsApp em um só lugar.",
+          "Sua vitrine digital estilo Instagram, agendamento com Google Agenda, plaquinhas NFC e WhatsApp em um só lugar.",
       },
     ],
     links: [{ rel: "canonical", href: "https://eialink.com.br/" }],
@@ -82,80 +89,73 @@ export const Route = createFileRoute("/")({
 const templates = [
   {
     name: "Casa do Sabor",
-    niche: "Restaurante",
+    niche: "Restaurante & Delivery",
     icon: UtensilsCrossed,
     cover: "/template-assets/restaurant-demo-cover.png",
-    color: "#8b3ff2",
+    color: "#f97316",
   },
   {
     name: "Clínica Harmonia",
-    niche: "Clínica",
+    niche: "Clínica & Saúde",
     icon: Stethoscope,
     cover: "/template-assets/clinic-demo-cover.png",
-    color: "#16a6b8",
+    color: "#0ea5e9",
   },
   {
     name: "Studio Beauty",
-    niche: "Salão",
+    niche: "Salão & Estética",
     icon: Scissors,
     cover: "/template-assets/beauty-demo-cover.png",
-    color: "#e64d9b",
+    color: "#ec4899",
   },
   {
     name: "Power Gym",
-    niche: "Academia",
+    niche: "Academia & Treino",
     icon: Dumbbell,
     cover: "/template-assets/academy-gym-cover.png",
-    color: "#42b966",
+    color: "#10b981",
   },
   {
-    name: "Dr. Carlos",
-    niche: "Advogado",
+    name: "Dr. Carlos Advocacia",
+    niche: "Advocacia & Consultoria",
     icon: ShieldCheck,
     cover: "/template-assets/law-office-cover.png",
-    color: "#c99a40",
+    color: "#d97706",
   },
   {
     name: "Lar & Sonhos",
-    niche: "Imobiliária",
+    niche: "Imobiliária & Loja",
     icon: Building2,
     cover: "/template-assets/store-demo-cover.png",
-    color: "#259ed5",
+    color: "#6366f1",
   },
   {
     name: "Amor de Patas",
-    niche: "Pet Shop",
+    niche: "Pet Shop & Veterinária",
     icon: PawPrint,
     cover: "/template-assets/creator-demo-cover.png",
-    color: "#45ba6c",
+    color: "#14b8a6",
   },
-] as const;
-
-const benefits = [
-  [MessageCircle, "WhatsApp integrado", "Fale com seus clientes na hora que importa."],
-  [ShoppingBag, "Catálogo e produtos", "Mostre seus produtos e serviços de forma profissional."],
-  [CalendarDays, "Agendamento online", "Permita que clientes agendem serviços diretamente."],
-  [Sparkles, "Redes sociais", "Conecte Instagram, TikTok, Facebook e muito mais."],
 ] as const;
 
 const testimonials = [
   [
     "Rafael Martins",
-    "Casa do Sabor",
-    "Aumentamos 3x mais pedidos depois que começamos a usar a EIA Link. Transformou nosso negócio!",
-    "#45ba6c",
+    "Hamburgueria Casa do Sabor",
+    "Substituímos o cardápio em PDF e o Linktree pelo EIA Link. O carrossel estilo Instagram com pedido direto no WhatsApp triplicou nossos pedidos sem pagar 27% de taxa pro iFood!",
+    "#f97316",
   ],
   [
     "Dra. Juliana Alves",
-    "Clínica Harmonia",
-    "Conseguimos mais agendamentos e tratamentos muito mais profissionais para nossos pacientes.",
-    "#16a6b8",
+    "Clínica Harmonia Estética",
+    "O agendamento online sincronizado com meu Google Calendar foi um divisor de águas. Meus pacientes escolhem o horário no site e eu recebo tudo no WhatsApp. Economizei R$ 140/mês que pagava em outro app.",
+    "#0ea5e9",
   ],
   [
     "Mariana Costa",
-    "Studio Beauty",
-    "Meu salão ganhou um novo cara na internet e minhas clientes amaram a facilidade de contato.",
-    "#e64d9b",
+    "Studio Beauty Salão",
+    "A plaquinha NFC no balcão fez a gente saltar de 18 para mais de 120 avaliações 5 estrelas no Google em 2 meses! As clientes adoram a experiência.",
+    "#ec4899",
   ],
 ] as const;
 
@@ -182,7 +182,7 @@ function Landing() {
           observer.unobserve(entry.target);
         });
       },
-      { threshold: 0.14 },
+      { threshold: 0.12 },
     );
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
@@ -207,35 +207,45 @@ function Landing() {
       <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_55%_0,rgba(124,58,237,.16),transparent_24rem),radial-gradient(circle_at_95%_90%,rgba(217,70,239,.11),transparent_30rem)]" />
       <Nav />
       <Hero />
-      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-16">
-        <div className="rounded-3xl border border-violet-300/20 bg-violet-500/[.06] p-6 text-center md:p-10">
-          <p className="eyebrow">Do clique à conversa</p>
-          <h2 className="mt-3 font-display text-3xl font-bold md:text-4xl">Seu link deixa de ser um endereço. Ele passa a ser uma vitrine.</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#cfc5d8]">Instagram → EiaLink → Produto ou serviço → WhatsApp → Cliente.</p>
-        </div>
-      </section>
-      <div data-reveal>
+
+      {/* SEÇÃO 1: OS 4 PILARES DA MÁQUINA DE VENDAS */}
+      <div data-reveal id="superpoderes">
+        <Superpowers />
+      </div>
+
+      {/* SEÇÃO 2: COMPARATIVO JEITO ANTIGO VS JEITO NOVO */}
+      <div data-reveal id="comparativo">
         <Difference />
       </div>
-      <div data-reveal>
+
+      {/* SEÇÃO 3: TEMPLATES POR NICHO */}
+      <div data-reveal id="templates">
         <Templates onPreview={setPreviewTemplate} />
       </div>
-      <div data-reveal>
-        <Benefits />
-      </div>
-      <div data-reveal>
+
+      {/* SEÇÃO 4: COMO FUNCIONA */}
+      <div data-reveal id="como-funciona">
         <HowItWorks />
       </div>
+
+      {/* SEÇÃO 5: DEPOIMENTOS DE EMPREENDEDORES */}
       <div data-reveal>
         <Testimonials />
       </div>
-      <div data-reveal>
+
+      {/* SEÇÃO 6: TABELA DE PREÇOS */}
+      <div data-reveal id="precos">
         <PublicPricingSection />
       </div>
+
+      {/* SEÇÃO 7: CTA FINAL */}
       <div data-reveal>
         <FinalCta />
       </div>
+
       <Footer />
+
+      {/* MODAL DE PRÉVIA DO TEMPLATE */}
       <Dialog
         open={Boolean(previewTemplate)}
         onOpenChange={(open) => !open && setPreviewTemplate(null)}
@@ -246,14 +256,14 @@ function Landing() {
               <p className="eyebrow">Prévia do modelo</p>
               <DialogTitle>{previewTemplate.name}</DialogTitle>
               <DialogDescription>
-                Exemplo visual de uma página para {previewTemplate.niche.toLowerCase()}.
+                Exemplo visual de vitrine para {previewTemplate.niche.toLowerCase()}.
               </DialogDescription>
             </DialogHeader>
             <TemplatePhone template={previewTemplate} featured />
             <Link
               to="/auth"
               search={{ mode: "signup" } as never}
-              className="btn-primary justify-center"
+              className="btn-primary justify-center font-bold"
             >
               Criar com este estilo <ArrowRight className="h-4 w-4" />
             </Link>
@@ -270,25 +280,32 @@ function Nav() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
         <Brand compact />
         <nav className="hidden items-center gap-6 text-xs text-[#c6bdd0] md:flex">
-          <a href="#templates" className="hover:text-white">
-            Templates
+          <a href="#superpoderes" className="hover:text-white transition-colors">
+            4 Superpoderes
           </a>
-          <a href="#exemplos" className="hover:text-white">
-            Exemplos
+          <a href="#comparativo" className="hover:text-white transition-colors">
+            Por que Funciona
           </a>
-          <a href="#beneficios" className="hover:text-white">
-            Benefícios
+          <a href="#templates" className="hover:text-white transition-colors">
+            Modelos
           </a>
-          <a href="#como-funciona" className="hover:text-white">
-            Como funciona
+          <a href="#como-funciona" className="hover:text-white transition-colors">
+            Como Funciona
+          </a>
+          <a href="#precos" className="hover:text-white transition-colors">
+            Planos
           </a>
         </nav>
-        <div className="flex gap-2">
+        <div className="flex items-center gap-2">
           <Link to="/auth" className="btn-secondary hidden text-xs sm:inline-flex">
             Entrar
           </Link>
-          <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary text-xs">
-            Criar meu EiaLink grátis
+          <Link
+            to="/auth"
+            search={{ mode: "signup" } as never}
+            className="btn-primary text-xs font-bold shadow-md shadow-fuchsia-500/20"
+          >
+            Criar Minha Máquina Grátis
           </Link>
         </div>
       </div>
@@ -298,17 +315,17 @@ function Nav() {
 
 function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-500">
-        <Link2 className="h-5 w-5" />
+    <div className="flex items-center gap-2.5">
+      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 shadow-md shadow-purple-500/30">
+        <Sparkles className="h-5 w-5 text-white" />
       </span>
       <div>
-        <b className={compact ? "font-display text-lg" : "font-display text-3xl"}>
+        <b className={compact ? "font-display text-lg tracking-tight" : "font-display text-3xl tracking-tight"}>
           EIA <span className="text-fuchsia-400">LINK</span>
         </b>
         {!compact && (
           <p className="text-[10px] font-bold tracking-[.2em] text-violet-300">
-            VITRINES DIGITAIS QUE VENDEM.
+            MÁQUINA DE VENDAS LOCAL
           </p>
         )}
       </div>
@@ -320,46 +337,255 @@ function Hero() {
   return (
     <section
       data-reveal
-      className="landing-motion-section landing-motion-section-1 relative z-10 mx-auto max-w-7xl px-5 pb-14 pt-12 lg:pb-20 lg:pt-16"
+      className="landing-motion-section landing-motion-section-1 relative z-10 mx-auto max-w-7xl px-5 pb-14 pt-10 lg:pb-20 lg:pt-14"
     >
-      <div className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(29,15,50,.94),rgba(9,7,15,.97))] p-6 shadow-[0_20px_80px_rgba(0,0,0,.3)] md:p-10">
-        <div className="grid items-center gap-8 lg:grid-cols-[.9fr_1.1fr]">
+      <div className="rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(29,15,50,.94),rgba(9,7,15,.97))] p-6 shadow-[0_20px_80px_rgba(0,0,0,.4)] md:p-10">
+        <div className="grid items-center gap-8 lg:grid-cols-[1.05fr_.95fr]">
           <div>
-            <p className="eyebrow">SUA PRESENÇA DIGITAL, EM UM SÓ LUGAR</p>
-            <h1 className="mt-4 max-w-xl font-display text-4xl font-bold leading-[1.06] tracking-tight md:text-6xl">
-              Seu Instagram atrai pessoas. O{" "}
-              <span className="text-fuchsia-400">EiaLink ajuda a transformá-las em clientes.</span>
+            <div className="inline-flex items-center gap-2 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 px-3.5 py-1 text-xs font-semibold text-fuchsia-300 mb-3">
+              <Sparkles className="h-3.5 w-3.5 text-fuchsia-400 animate-pulse" />
+              <span>A Revolução da Presença Comercial (Físico + Digital)</span>
+            </div>
+            <h1 className="mt-2 max-w-xl font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.08] tracking-tight">
+              Transforme seu Instagram e seu Balcão em uma{" "}
+              <span className="bg-gradient-to-r from-fuchsia-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
+                Máquina de Vendas e Agendamentos.
+              </span>
             </h1>
-            <p className="mt-5 max-w-lg text-sm leading-6 text-[#cbc2d7] md:text-base">
-              Transforme o link da sua bio em uma vitrine digital profissional, com produtos, serviços, redes sociais e WhatsApp em um só lugar.
+            <p className="mt-5 max-w-lg text-sm sm:text-base leading-relaxed text-[#cbc2d7]">
+              Esqueça links de bio feios e sites lentos que ninguém lê. Tenha uma <strong>vitrine interativa com fotos estilo Instagram</strong>, <strong>agendamento online com Google Agenda</strong>, pedidos diretos no WhatsApp e <strong>plaquinhas inteligentes NFC</strong> para explodir suas notas 5 estrelas no Google.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <Link to="/auth" search={{ mode: "signup" } as never} className="btn-primary">
-                Criar meu EiaLink grátis <ArrowRight className="h-4 w-4" />
+              <Link
+                to="/auth"
+                search={{ mode: "signup" } as never}
+                className="btn-primary text-sm px-6 py-3.5 font-bold shadow-xl shadow-fuchsia-500/25 transition-all hover:scale-105"
+              >
+                Criar Minha Máquina Grátis <ArrowRight className="h-4 w-4" />
               </Link>
-              <a href="#exemplos" className="btn-secondary">
-                Ver como funciona
+              <a href="#superpoderes" className="btn-secondary text-sm px-5 py-3.5">
+                Conhecer os 4 Superpoderes
               </a>
             </div>
-            <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[11px] text-[#c6bdd0]">
-              <span>
-                <Check className="mr-1 inline h-3.5 w-3.5 text-green-400" />
-                Grátis para começar
+            <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4 border-t border-white/10 text-[11px] text-[#d6cde0]">
+              <span className="flex items-center gap-1.5 font-medium">
+                <Zap className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                Carrega em 0.5s
               </span>
-              <span>
-                <Check className="mr-1 inline h-3.5 w-3.5 text-violet-300" />
-                Sem cartão de crédito
+              <span className="flex items-center gap-1.5 font-medium">
+                <CalendarDays className="h-3.5 w-3.5 text-sky-400 shrink-0" />
+                Google Agenda
               </span>
-              <span>
-                <Check className="mr-1 inline h-3.5 w-3.5 text-fuchsia-300" />
-                Publique em 1 minuto
+              <span className="flex items-center gap-1.5 font-medium">
+                <Flame className="h-3.5 w-3.5 text-orange-400 shrink-0" />
+                Carrossel Instagram
+              </span>
+              <span className="flex items-center gap-1.5 font-medium">
+                <QrCode className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                Plaquinha NFC
               </span>
             </div>
           </div>
           <div className="relative">
-            <div className="absolute inset-x-12 bottom-0 h-20 rounded-full bg-violet-600/35 blur-3xl" />
+            <div className="absolute inset-x-12 bottom-0 h-24 rounded-full bg-violet-600/35 blur-3xl pointer-events-none" />
             <TemplateRail featured />
           </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Superpowers() {
+  const pillars = [
+    {
+      icon: Flame,
+      iconColor: "text-orange-400 bg-orange-500/10 border-orange-500/20",
+      badge: "🔥 Zero Comissões",
+      title: "Carrossel de Produtos Estilo Instagram",
+      subtitle: "Desperte desejo com fotos no formato 4:5 e pedidos diretos no WhatsApp.",
+      desc: "Seus produtos ou pratos em fotos verticais deslizantes com preço destacado, etiquetas de destaque ('Mais Vendido', 'Promoção') e botão de 1 clique que já abre o WhatsApp do seu negócio com o pedido pronto.",
+      benefit: "Economize milhares de reais em taxas de 27% de marketplaces.",
+    },
+    {
+      icon: CalendarClock,
+      iconColor: "text-sky-400 bg-sky-500/10 border-sky-500/20",
+      badge: "📅 Sincronizado Google",
+      title: "Agendamento Online 24 Horas",
+      subtitle: "Agenda inteligente conectada em tempo real com seu Google Calendar.",
+      desc: "O cliente escolhe o serviço, profissional e horário vago pelo link. Os agendamentos bloqueiam seus horários no Google Agenda na mesma hora e enviam lembrete automático no WhatsApp.",
+      benefit: "Economize mais de R$ 120/mês eliminando aplicativos como Calendly ou Trinks.",
+    },
+    {
+      icon: QrCode,
+      iconColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+      badge: "🏷️ Do Balcão ao Digital",
+      title: "Plaquinhas NFC & QR Codes Dinâmicos",
+      subtitle: "Aproxime o celular no balcão e ganhe avaliações 5 estrelas no Google.",
+      desc: "Grave chips NFC direto pelo navegador do seu celular com Web NFC nativo. Gere QR Codes dinâmicos com links curtos que você pode redirecionar quando quiser sem gastar com reimpressão de placas.",
+      benefit: "Multiplique suas notas no Google Meu Negócio e atraia clientes da sua cidade.",
+    },
+    {
+      icon: Smartphone,
+      iconColor: "text-purple-400 bg-purple-500/10 border-purple-500/20",
+      badge: "📲 Aplicativo de Bolso",
+      title: "Instalação PWA na Tela do Celular",
+      subtitle: "Seu negócio no bolso do cliente com ícone próprio e sem App Store.",
+      desc: "Com 1 toque, seu cliente instala seu site como um aplicativo de verdade na tela principal do celular dele. Carrega na velocidade da luz, funciona sem digitar links e sem pagar US$ 99 para a Apple.",
+      benefit: "Fidelização máxima: seus clientes nunca mais esquecem o seu negócio.",
+    },
+  ];
+
+  return (
+    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
+      <div className="rounded-3xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(20,10,35,.85),rgba(9,7,15,.95))] p-6 md:p-10 shadow-xl">
+        <div className="text-center max-w-3xl mx-auto space-y-3">
+          <p className="eyebrow">DIFERENCIAIS EXCLUSIVOS</p>
+          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight">
+            Os 4 Superpoderes da Sua Máquina de Vendas
+          </h2>
+          <p className="text-sm sm:text-base text-[#c4bacf]">
+            Tudo o que uma empresa local precisa para vender mais no balcão físico e no digital, reunido em uma única tecnologia.
+          </p>
+        </div>
+
+        <div className="mt-10 grid gap-6 md:grid-cols-2">
+          {pillars.map((item, idx) => {
+            const Icon = item.icon;
+            return (
+              <div
+                key={idx}
+                className="group relative rounded-2xl border border-white/10 bg-[#0d0a14] p-6 transition-all duration-200 hover:border-violet-400/40 hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-950/30 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-3 mb-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${item.iconColor}`}>
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-violet-300">
+                      {item.badge}
+                    </span>
+                  </div>
+                  <h3 className="font-display text-xl font-bold text-foreground text-white group-hover:text-fuchsia-300 transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs font-semibold text-[#cfc5d8] mt-1">
+                    {item.subtitle}
+                  </p>
+                  <p className="text-xs leading-relaxed text-[#a99fb5] mt-3">
+                    {item.desc}
+                  </p>
+                </div>
+                <div className="mt-5 pt-3 border-t border-white/10 flex items-center gap-2 text-xs font-medium text-emerald-400">
+                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                  <span>{item.benefit}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Difference() {
+  const oldWay = [
+    "Botões empilhados cinzas sem fotos dos produtos",
+    "Cliente não vê preços e desiste da compra",
+    "Sem agendamento online: dezenas de mensagens no WhatsApp",
+    "Zero conexão com o balcão físico do estabelecimento",
+    "70% dos visitantes saem em 5 segundos sem pedir nada",
+  ];
+  const newWay = [
+    "Fotos no formato do Instagram que despertam desejo imediato",
+    "Pedido em 1 clique no WhatsApp com nome e preço do item",
+    "Agendamento automático 24/7 conectado ao Google Agenda",
+    "Plaquinhas NFC inteligentes que explodem avaliações 5★ no Google",
+    "O cliente instala seu negócio como aplicativo no celular dele",
+    "Carregamento instantâneo em 0.5s sem burocracia nem lentidão",
+  ];
+
+  return (
+    <section id="comparativo" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
+      <div className="grid items-stretch gap-6 rounded-3xl border border-white/10 bg-[#0d0a12] p-6 lg:grid-cols-2 md:p-8">
+        {/* O JEITO ANTIGO */}
+        <div className="rounded-2xl border border-rose-500/20 bg-rose-950/10 p-6 flex flex-col justify-between">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-bold mb-4">
+              <span>✕ O Jeito Antigo (Linktree / Sites Lentos)</span>
+            </div>
+            <h3 className="text-2xl font-bold font-display text-white">
+              Por que os links comuns perdem vendas todos os dias:
+            </h3>
+            <ul className="mt-5 space-y-3.5 text-xs text-[#cfc5d8]">
+              {oldWay.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2.5">
+                  <span className="text-rose-400 font-bold shrink-0 mt-0.5">✕</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <p className="mt-6 text-[11px] text-rose-300/80 font-medium italic border-t border-rose-500/20 pt-3">
+            Resultado: visitantes entram, não entendem o que você vende e vão para o seu concorrente.
+          </p>
+        </div>
+
+        {/* O JEITO EIA LINK */}
+        <div className="rounded-2xl border-2 border-emerald-500/40 bg-gradient-to-br from-emerald-950/20 via-[#0d0a12] to-violet-950/20 p-6 shadow-xl flex flex-col justify-between">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 text-xs font-bold mb-4">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+              <span>✓ A Máquina de Vendas EIA Link</span>
+            </div>
+            <h3 className="text-2xl font-bold font-display text-white">
+              Uma experiência visual que converte visitas em dinheiro:
+            </h3>
+            <ul className="mt-5 space-y-3.5 text-xs text-[#f0ebf5]">
+              {newWay.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <span className="font-medium">{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="mt-6 border-t border-emerald-500/20 pt-3 flex items-center justify-between gap-3">
+            <span className="text-xs font-bold text-emerald-400">
+              Vendas no WhatsApp + Reservas no Google
+            </span>
+            <Link
+              to="/auth"
+              search={{ mode: "signup" } as never}
+              className="text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-3.5 py-1.5 rounded-lg transition-colors"
+            >
+              Quero Essa Vitrine
+            </Link>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Templates({ onPreview }: { onPreview: (template: (typeof templates)[number]) => void }) {
+  return (
+    <section id="templates" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
+      <div className="rounded-3xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(27,14,45,.86),rgba(11,8,16,.95))] p-6 md:p-8">
+        <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
+          <div>
+            <p className="eyebrow">Padrão Ouro por Nicho</p>
+            <h2 className="mt-2 font-display text-3xl font-bold">
+              Modelos Profissionais Testados para o Seu Ramo
+            </h2>
+          </div>
+          <p className="max-w-md text-sm text-[#c4bacf]">
+            Com carrossel de produtos, agendamento Google e rotas locais já estruturados para o seu tipo de negócio.
+          </p>
+        </div>
+        <div className="mt-7">
+          <TemplateRail onPreview={onPreview} />
         </div>
       </div>
     </section>
@@ -505,49 +731,49 @@ function getTemplateDemo(template: (typeof templates)[number]) {
         eyebrow: "ABERTO AGORA",
         subtitle: "Hamburgueria artesanal",
         action: "Pedir pelo WhatsApp",
-        items: ["Smash", "Pizza", "Brownie"],
+        items: ["Smash Burger", "Pizza 8 Fatias", "Brownie"],
       };
     case "Clínica Harmonia":
       return {
-        eyebrow: "ATENDIMENTO HUMANO",
-        subtitle: "Cuidado que acolhe",
-        action: "Agendar consulta",
-        items: ["Tratamentos", "Equipe", "Horários"],
+        eyebrow: "AGENDA ABERTA",
+        subtitle: "Cuidado & Estética",
+        action: "Agendar com Google",
+        items: ["Limpeza de Pele", "Botox", "Harmonização"],
       };
     case "Studio Beauty":
       return {
-        eyebrow: "BELEZA & BEM-ESTAR",
+        eyebrow: "HORÁRIO ONLINE",
         subtitle: "Sua melhor versão",
         action: "Agendar horário",
         items: ["Cabelo", "Unhas", "Make"],
       };
     case "Power Gym":
       return {
-        eyebrow: "TREINO & PERFORMANCE",
+        eyebrow: "TREINO & SAÚDE",
         subtitle: "Seu próximo nível",
-        action: "Agendar aula",
-        items: ["Planos", "Aulas", "Equipe"],
+        action: "Agendar aula experimental",
+        items: ["Musculação", "Cross", "Spinning"],
       };
-    case "Dr. Carlos":
+    case "Dr. Carlos Advocacia":
       return {
-        eyebrow: "ATUAÇÃO JURÍDICA",
+        eyebrow: "CONSULTORIA JURÍDICA",
         subtitle: "Orientação com clareza",
         action: "Falar com advogado",
-        items: ["Áreas", "Equipe", "Contato"],
+        items: ["Trabalhista", "Cível", "Empresarial"],
       };
     case "Lar & Sonhos":
       return {
         eyebrow: "IMÓVEIS SELECIONADOS",
         subtitle: "Encontre seu lugar",
-        action: "Ver imóveis",
-        items: ["Comprar", "Alugar", "Falar"],
+        action: "Ver catálogo de imóveis",
+        items: ["Comprar", "Alugar", "Falar no Zap"],
       };
     default:
       return {
         eyebrow: "CUIDADO ESPECIAL",
         subtitle: "Tudo para seu pet",
-        action: "Agendar serviço",
-        items: ["Banho", "Consulta", "Loja"],
+        action: "Agendar banho e tosa",
+        items: ["Banho", "Vacinas", "Hotel Pet"],
       };
   }
 }
@@ -611,7 +837,7 @@ function TemplatePhone({
               </span>
             ))}
           </div>
-          <small className="landing-template-footer">Instagram · Localização · Contato</small>
+          <small className="landing-template-footer">WhatsApp · Google Agenda · Localização</small>
         </div>
       </div>
       {interactive && (
@@ -621,171 +847,38 @@ function TemplatePhone({
   );
 }
 
-function Journey() {
-  const steps = ["Instagram", "EiaLink", "Produto / Serviço", "WhatsApp", "Conversa"];
-  return (
-    <section className="relative z-10 mx-auto max-w-5xl px-5 pb-16">
-      <div className="rounded-3xl border border-violet-300/20 bg-violet-500/[.06] p-6 text-center md:p-10">
-        <p className="eyebrow">Do clique à conversa</p>
-        <h2 className="mt-2 font-display text-3xl font-bold">Seu link deixa de ser um endereço. Ele passa a ser uma vitrine.</h2>
-        <p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-[#cfc5d8]">O cliente chega pelo Instagram, encontra o que precisa e sabe exatamente qual é o próximo passo.</p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">{steps.map((step, index) => <div key={step} className="flex items-center gap-2"><span className={`rounded-full px-4 py-2 text-sm font-semibold ${index === 1 ? "bg-fuchsia-500 text-white" : "bg-white/10 text-[#e5dced]"}`}>{step}</span>{index < steps.length - 1 && <ArrowRight className="h-4 w-4 text-violet-300" />}</div>)}</div>
-      </div>
-    </section>
-  );
-}
-
-function Difference() {
-  const old = ["WhatsApp", "Instagram", "Cardápio", "Localização"];
-  const gains = [
-    "Design profissional",
-    "Mais informações",
-    "WhatsApp integrado",
-    "Produtos e serviços",
-    "Redes sociais",
-    "Localização",
-    "Mais clientes",
-    "Mais vendas",
-  ];
-  return (
-    <section id="exemplos" className="relative z-10 mx-auto max-w-7xl px-5 pb-14">
-      <div className="grid items-center gap-8 rounded-3xl border border-white/10 bg-[#0d0a12] p-6 lg:grid-cols-[.8fr_1fr_.8fr]">
-        <div className="text-center">
-          <p className="eyebrow">Veja a diferença</p>
-          <div className="mt-5 rounded-2xl border border-white/10 bg-white/[.025] p-5">
-            <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white/10 text-[#bdb3c8]">
-              <Store className="h-6 w-6" />
-            </div>
-            <b className="mt-3 block text-sm">Seu negócio</b>
-            <p className="text-[10px] text-[#a99fb5]">Bio comum</p>
-            <div className="mt-4 space-y-2">
-              {old.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-lg bg-white/[.06] px-3 py-2 text-xs text-[#bdb3c8]"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-        <div className="relative">
-          <div className="absolute left-1/2 top-1/2 z-10 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-gradient-to-br from-violet-600 to-fuchsia-500 font-display font-bold shadow-[0_0_35px_rgba(168,85,247,.65)]">
-            VS
-          </div>
-          <div className="mx-auto max-w-[17rem] overflow-hidden rounded-[1.7rem] border-4 border-[#2c2633] bg-[#09070f]">
-            <img
-              src="/template-assets/restaurant-demo-cover.png"
-              alt="Exemplo EIA Link Casa do Sabor"
-              className="h-28 w-full object-cover"
-            />
-            <div className="p-4 text-center">
-              <b className="font-display text-xl">Casa do Sabor</b>
-              <p className="text-[9px] text-fuchsia-300">Hamburgueria artesanal</p>
-              <button className="mt-3 w-full rounded-lg bg-green-500 py-2 text-xs font-bold text-black">
-                Pedir pelo WhatsApp
-              </button>
-              <button className="mt-2 w-full rounded-lg border border-fuchsia-400 py-2 text-[10px] text-fuchsia-200">
-                Ver cardápio
-              </button>
-              <div className="mt-3 grid grid-cols-3 gap-1">
-                {["Burger", "Pizza", "Brownie"].map((item) => (
-                  <span key={item} className="rounded bg-white/10 p-1 text-[8px]">
-                    {item}
-                  </span>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-        <ul className="grid gap-3 text-sm">
-          {gains.map((gain) => (
-            <li key={gain} className="flex items-center gap-2 text-[#d5cbe1]">
-              <Check className="h-4 w-4 text-violet-400" />
-              {gain}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
-
-function Templates({ onPreview }: { onPreview: (template: (typeof templates)[number]) => void }) {
-  return (
-    <section id="templates" className="relative z-10 mx-auto max-w-7xl px-5 pb-14">
-      <div className="rounded-3xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(27,14,45,.86),rgba(11,8,16,.95))] p-6 md:p-8">
-        <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
-          <div>
-            <p className="eyebrow">Templates por nicho</p>
-            <h2 className="mt-2 font-display text-3xl font-bold">
-              Templates feitos para cada tipo de negócio
-            </h2>
-          </div>
-          <p className="max-w-md text-sm text-[#c4bacf]">
-            Clique em um modelo para abrir sua prévia e personalize somente o que faz sentido para
-            sua marca.
-          </p>
-        </div>
-        <div className="mt-7">
-          <TemplateRail onPreview={onPreview} />
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Benefits() {
-  return (
-    <section id="beneficios" className="relative z-10 mx-auto max-w-7xl px-5 pb-14">
-      <div className="grid gap-4 md:grid-cols-4">
-        {benefits.map(([Icon, title, description]) => (
-          <article
-            key={title}
-            className="rounded-2xl border border-white/10 bg-[#0e0b13] p-5 transition hover:-translate-y-1 hover:border-violet-400/45"
-          >
-            <span className="grid h-11 w-11 place-items-center rounded-xl bg-violet-500/12">
-              <Icon className="h-6 w-6 text-violet-400" />
-            </span>
-            <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
-            <p className="mt-2 text-sm leading-5 text-[#bdb3c7]">{description}</p>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 function HowItWorks() {
   const steps = [
-    [Store, "1. Escolha um nicho", "Selecione o template ideal para o seu negócio."],
-    [Palette, "2. Personalize", "Edite textos, cores, imagens e produtos."],
-    [Rocket, "3. Publique", "Sua vitrine fica pronta em poucos minutos."],
-    [TrendingUp, "4. Receba clientes", "Compartilhe seu link e comece a vender mais."],
+    [Store, "1. Escolha seu nicho", "Modelos pré-configurados com serviços, cores e argumentos de venda prontos."],
+    [Flame, "2. Suba fotos no Carrossel", "Cadastre fotos em formato 4:5 estilo Instagram com preços e botão WhatsApp."],
+    [CalendarClock, "3. Ative seu Agendamento", "Conecte seu Google Calendar para clientes agendarem horários sem conflitos."],
+    [QrCode, "4. Ative Placas & QR Codes", "Compartilhe na bio do Instagram e imprima plaquinhas NFC inteligentes de balcão."],
   ];
   return (
-    <section id="como-funciona" className="relative z-10 mx-auto max-w-7xl px-5 pb-14">
-      <div className="rounded-3xl border border-white/10 bg-[#0d0a12] p-6">
-        <div className="text-center">
-          <p className="eyebrow">Como funciona</p>
+    <section id="como-funciona" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
+      <div className="rounded-3xl border border-white/10 bg-[#0d0a12] p-6 md:p-10">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="eyebrow">PASSO A PASSO SIMPLES</p>
           <h2 className="mt-2 font-display text-3xl font-bold">
-            Crie sua vitrine digital em 4 passos simples
+            Sua Máquina de Vendas no Ar em Menos de 5 Minutos
           </h2>
+          <p className="mt-2 text-xs sm:text-sm text-[#b8aeca]">
+            Sem precisar saber programar, sem designers caros e sem complicação.
+          </p>
         </div>
-        <div className="mt-8 grid gap-6 md:grid-cols-4">
+        <div className="mt-10 grid gap-6 md:grid-cols-4">
           {steps.map(([Icon, title, description], index) => {
             const StepIcon = Icon as typeof Store;
             return (
               <div key={title as string} className="relative text-center">
-                <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-violet-400/40 bg-violet-500/10">
+                <span className="mx-auto grid h-16 w-16 place-items-center rounded-2xl border border-violet-400/40 bg-violet-500/10 shadow-lg shadow-violet-950/40">
                   <StepIcon className="h-8 w-8 text-violet-400" />
                 </span>
                 {index < 3 && (
                   <ChevronRight className="absolute right-[-1.35rem] top-6 hidden h-7 w-7 text-violet-400/60 md:block" />
                 )}
-                <h3 className="mt-4 font-semibold">{title as string}</h3>
-                <p className="mx-auto mt-2 max-w-[12rem] text-xs leading-5 text-[#bdb3c7]">
+                <h3 className="mt-4 font-semibold text-white">{title as string}</h3>
+                <p className="mx-auto mt-2 max-w-[13rem] text-xs leading-relaxed text-[#bdb3c7]">
                   {description as string}
                 </p>
               </div>
@@ -799,29 +892,31 @@ function HowItWorks() {
 
 function Testimonials() {
   return (
-    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-14">
-      <div className="rounded-3xl border border-white/10 bg-[#0d0a12] p-6">
-        <div className="text-center">
-          <p className="eyebrow">Depoimentos</p>
-          <h2 className="mt-2 font-display text-3xl font-bold">O que nossos clientes dizem</h2>
+    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
+      <div className="rounded-3xl border border-white/10 bg-[#0d0a12] p-6 md:p-10">
+        <div className="text-center max-w-2xl mx-auto">
+          <p className="eyebrow">PROVA SOCIAL REAL</p>
+          <h2 className="mt-2 font-display text-3xl font-bold">O Que Quem Já Usa Está Dizendo</h2>
         </div>
         <div className="mt-8 grid gap-4 md:grid-cols-3">
           {testimonials.map(([name, business, quote, color]) => (
-            <article key={name} className="rounded-2xl border border-white/10 bg-white/[.025] p-5">
-              <div className="flex items-center gap-3">
-                <span
-                  className="grid h-9 w-9 place-items-center rounded-full text-xs font-bold"
-                  style={{ background: color }}
-                >
-                  {name.slice(0, 1)}
-                </span>
-                <div>
-                  <b className="text-sm">{name}</b>
-                  <p className="text-[10px] text-[#b9afc4]">{business}</p>
+            <article key={name} className="rounded-2xl border border-white/10 bg-white/[.025] p-5 flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3">
+                  <span
+                    className="grid h-10 w-10 place-items-center rounded-full text-xs font-bold text-white shadow-sm"
+                    style={{ background: color }}
+                  >
+                    {name.slice(0, 1)}
+                  </span>
+                  <div>
+                    <b className="text-sm text-white block">{name}</b>
+                    <p className="text-[11px] text-[#b9afc4]">{business}</p>
+                  </div>
                 </div>
+                <p className="mt-4 text-xs leading-relaxed text-[#d2c8dc]">“{quote}”</p>
               </div>
-              <p className="mt-4 text-sm leading-6 text-[#d2c8dc]">“{quote}”</p>
-              <div className="mt-4 text-amber-400">★★★★★</div>
+              <div className="mt-4 text-amber-400 text-xs font-bold">★★★★★ Avaliação Verificada</div>
             </article>
           ))}
         </div>
@@ -832,33 +927,36 @@ function Testimonials() {
 
 function FinalCta() {
   return (
-    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-10">
-      <div className="relative overflow-hidden rounded-3xl border border-violet-300/30 bg-[linear-gradient(115deg,#47149b,#8124be_55%,#271051)] px-6 py-10 md:px-12">
-        <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-fuchsia-300/25 blur-3xl" />
+    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-12">
+      <div className="relative overflow-hidden rounded-3xl border border-violet-300/30 bg-[linear-gradient(115deg,#47149b,#8124be_55%,#271051)] px-6 py-10 md:px-12 shadow-2xl">
+        <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-fuchsia-300/25 blur-3xl pointer-events-none" />
         <div className="relative flex flex-col gap-7 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 className="max-w-xl font-display text-4xl font-bold leading-tight">
-              Talvez seu próximo cliente já esteja procurando por você.
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-bold text-white mb-2">
+              <Zap className="w-3.5 h-3.5 text-amber-300" />
+              <span>Comece hoje sem cartão de crédito</span>
+            </div>
+            <h2 className="max-w-xl font-display text-3xl sm:text-4xl font-bold leading-tight text-white">
+              Seu próximo cliente está a um toque do seu WhatsApp.
             </h2>
-            <p className="mt-3 text-sm text-violet-100">
-              Comece agora sua vitrine digital gratuitamente.
+            <p className="mt-3 text-sm text-violet-100 max-w-md">
+              Crie sua vitrine profissional com carrossel estilo Instagram e agendamento online em menos de 5 minutos.
             </p>
           </div>
-          <div className="grid gap-3">
+          <div className="grid gap-3 shrink-0">
             <Link
               to="/auth"
               search={{ mode: "signup" } as never}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 font-semibold text-violet-900"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3.5 font-bold text-violet-950 shadow-lg hover:bg-violet-50 transition-all text-sm"
             >
-              Criar meu EiaLink grátis <ArrowRight className="h-4 w-4" />
+              Criar Minha Máquina Grátis <ArrowRight className="h-4 w-4" />
             </Link>
-            <a
-              href="https://wa.me/"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/35 px-5 py-3 text-sm font-semibold"
+            <Link
+              to="/auth"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/35 px-5 py-3 text-xs font-semibold text-white hover:bg-white/10 transition-colors"
             >
-              <MessageCircle className="h-4 w-4 text-green-300" />
-              Falar no WhatsApp
-            </a>
+              Já tenho uma conta · Entrar
+            </Link>
           </div>
         </div>
       </div>
@@ -868,29 +966,29 @@ function FinalCta() {
 
 function Footer() {
   return (
-    <footer className="relative z-10 border-t border-white/10 bg-[#09070d] py-9">
-      <div className="mx-auto grid max-w-7xl gap-7 px-5 md:grid-cols-[1.2fr_.7fr_.7fr_.7fr]">
+    <footer className="relative z-10 border-t border-white/10 bg-[#09070d] py-10">
+      <div className="mx-auto grid max-w-7xl gap-8 px-5 md:grid-cols-[1.3fr_.7fr_.7fr_.7fr]">
         <div>
           <Brand />
           <p className="mt-3 max-w-xs text-xs leading-5 text-[#bcb2c8]">
-            Mais que um link na bio. Uma experiência que vende.
+            Mais que um link na bio: a máquina híbrida de vendas, agendamentos e avaliações no Google para negócios locais.
           </p>
-          <div className="mt-4 flex gap-3">
-            <Instagram className="h-4 w-4 text-fuchsia-400" />
-            <MessageCircle className="h-4 w-4 text-green-400" />
-            <Link2 className="h-4 w-4 text-violet-400" />
+          <div className="mt-4 flex gap-3 text-xs text-[#a99fb5]">
+            <span className="flex items-center gap-1"><Flame className="w-3.5 h-3.5 text-orange-400" /> Carrossel</span>
+            <span className="flex items-center gap-1"><CalendarDays className="w-3.5 h-3.5 text-sky-400" /> Agenda</span>
+            <span className="flex items-center gap-1"><QrCode className="w-3.5 h-3.5 text-emerald-400" /> NFC</span>
           </div>
         </div>
         {[
-          ["Produto", "Templates", "Exemplos", "Preços", "Recursos"],
-          ["Empresa", "Sobre nós", "Blog", "Contato", "Parceiros"],
-          ["Suporte", "Central de ajuda", "Tutoriais", "Termos de uso", "Privacidade"],
+          ["Superpoderes", "Carrossel Instagram", "Agendamento Google", "Plaquinhas NFC", "Aplicativo PWA"],
+          ["Nichos", "Restaurantes & Bares", "Clínicas & Médicos", "Salões & Barbearias", "Lojas & Varejo"],
+          ["Plataforma", "Planos & Preços", "Área do Cliente", "Central de Ajuda", "Termos & Privacidade"],
         ].map(([title, ...links]) => (
           <div key={title}>
-            <b className="text-sm">{title}</b>
+            <b className="text-sm text-white font-semibold">{title}</b>
             <div className="mt-3 grid gap-2">
               {links.map((item) => (
-                <a key={item} href="#" className="text-xs text-[#bcb2c8] hover:text-white">
+                <a key={item} href="#superpoderes" className="text-xs text-[#bcb2c8] hover:text-white transition-colors">
                   {item}
                 </a>
               ))}
@@ -898,11 +996,10 @@ function Footer() {
           </div>
         ))}
       </div>
-      <div className="mx-auto mt-8 flex max-w-7xl justify-between border-t border-white/10 px-5 pt-5 text-[10px] text-[#8f859d]">
-        <span>© 2026 EIA Link. Todos os direitos reservados.</span>
-        <span>Feito com ♥ no Brasil</span>
+      <div className="mx-auto mt-8 flex max-w-7xl flex-col sm:flex-row items-center justify-between border-t border-white/10 px-5 pt-6 text-[11px] text-[#8f859d] gap-2">
+        <span>© 2026 EIA Link — A Máquina de Vendas Local. Todos os direitos reservados.</span>
+        <span>Tecnologia Phygital + Web Nativa · Feito com excelência no Brasil</span>
       </div>
     </footer>
   );
 }
-

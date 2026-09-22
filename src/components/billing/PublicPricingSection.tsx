@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Check, Sparkles, Zap, Calendar, ShoppingBag, Radio, ShieldCheck, ArrowRight } from "lucide-react";
+import { Check, Sparkles, Zap, ShieldCheck, ArrowRight, Radio, Store } from "lucide-react";
 import { commercialWhatsAppUrl } from "@/modules/billing/components/UpgradePrompt";
 import { FunnelService } from "@/modules/analytics/services/FunnelService";
 import { BillingService } from "@/modules/billing/services/BillingService";
@@ -15,7 +15,7 @@ const fallbackPlans: PublicPlan[] = [
   {
     id: "fallback-essential",
     slug: "essential",
-    name: "Eialink Essencial",
+    name: "EIA Link Grátis",
     description: "Para pequenos negócios começarem com presença profissional gratuita.",
     price_cents: 0,
     billing_interval: "monthly",
@@ -35,15 +35,15 @@ const fallbackPlans: PublicPlan[] = [
   {
     id: "fallback-pro-monthly",
     slug: "pro-monthly",
-    name: "Eialink Pro",
-    description: "A Máquina Completa: Carrossel Instagram, Agendamento Google e QR Codes Dinâmicos.",
+    name: "EIA Link Pro",
+    description: "A Máquina Completa: Carrossel Instagram, Agendamento Google e QR Codes.",
     price_cents: 2900,
     billing_interval: "monthly",
     limits: { bio_pages: -1, links: -1, catalog_items: -1, templates: -1 },
     features: {
       whatsapp: true,
       analytics: true,
-      custom_domain: true,
+      custom_domain: false,
       catalog: true,
       premium_templates: true,
       advanced_appearance: true,
@@ -52,56 +52,7 @@ const fallbackPlans: PublicPlan[] = [
     active: true,
     position: 1,
   },
-  {
-    id: "fallback-pro-yearly",
-    slug: "pro-yearly",
-    name: "Eialink Pro Anual",
-    description: "Economia máxima de 2 meses grátis. Acesso ilimitado a todo o ecossistema.",
-    price_cents: 29000,
-    billing_interval: "yearly",
-    limits: { bio_pages: -1, links: -1, catalog_items: -1, templates: -1 },
-    features: {
-      whatsapp: true,
-      analytics: true,
-      custom_domain: true,
-      catalog: true,
-      premium_templates: true,
-      advanced_appearance: true,
-      remove_branding: true,
-    },
-    active: true,
-    position: 2,
-  },
 ];
-
-function planBenefits(plan: PublicPlan) {
-  const limits = toPlanLimits(plan.limits);
-  const features = toPlanFeatures(plan.features);
-  const isPro = plan.slug.includes("pro");
-
-  if (isPro) {
-    return [
-      "BioLinks e Páginas Ilimitadas",
-      "🔥 Carrossel Estilo Instagram (Pedido direto no Zap)",
-      "📅 Agendamento Online 24/7 integrado ao Google Agenda",
-      "📱 App PWA Instalável no celular do cliente",
-      "🏷️ QR Codes Dinâmicos de Balcão (Imprima para mesas e balcões)",
-      "⭐ Acelerador de Avaliações no Google Meu Negócio",
-      "📊 Métricas de Visitas e Conversões no WhatsApp",
-      "✨ Sem marca EIA Link + Domínio Próprio liberado",
-      "🛡️ 0% de comissão sobre seus pedidos ou reservas",
-    ];
-  }
-
-  return [
-    `${limits.bio_pages} BioLink Profissional no ar`,
-    "Até 3 Produtos ou Serviços cadastrados",
-    "Botão WhatsApp com mensagem pré-formatada",
-    "QR Code Dinâmico básico para balcão",
-    "Templates e temas clássicos gratuitos",
-    "Marca d\'água discreta EIA Link",
-  ];
-}
 
 export function PublicPricingSection() {
   const { data: plans, isLoading } = useQuery({
@@ -109,9 +60,45 @@ export function PublicPricingSection() {
     queryFn: BillingService.listPublicPlans,
     staleTime: 60_000,
   });
-  const visiblePlans = (plans?.length ? plans : fallbackPlans).filter((plan) =>
-    ["essential", "free", "pro-monthly", "pro-yearly"].includes(plan.slug),
-  );
+
+  const proPlan = (plans || fallbackPlans).find(
+    (p) => p.slug === "pro-monthly" || p.slug === "pro"
+  ) || fallbackPlans[1];
+
+  const freePlan = (plans || fallbackPlans).find(
+    (p) => p.slug === "essential" || p.slug === "free"
+  ) || fallbackPlans[0];
+
+  const freeBenefits = [
+    "1 BioLink Profissional no ar",
+    "Até 3 Produtos ou Serviços cadastrados",
+    "Botão WhatsApp com mensagem pré-formatada",
+    "QR Code digital básico para balcão",
+    "Templates e temas clássicos gratuitos",
+    "Marca d'água discreta EIA Link",
+  ];
+
+  const proBenefits = [
+    "BioLinks e Páginas Ilimitadas",
+    "🔥 Carrossel Estilo Instagram (Pedido direto no Zap)",
+    "📅 Agendamento Online 24/7 integrado ao Google Agenda",
+    "📱 App PWA Instalável no celular do cliente",
+    "🏷️ QR Codes Dinâmicos de Balcão (Pronto para imprimir)",
+    "⭐ Acelerador de Avaliações no Google Meu Negócio",
+    "📊 Métricas de Visitas e Conversões no WhatsApp",
+    "✨ Sem a marca EIA Link (100% com a sua marca)",
+    "🛡️ 0% de comissão sobre seus pedidos ou reservas",
+  ];
+
+  const nfcPlanBenefits = [
+    "Tudo o que está incluído no Plano Pro",
+    "🏷️ Kit de Plaquinhas Físicas em Acrílico Premium",
+    "⚡ Chip NFC Inteligente por aproximação de celular",
+    "⭐ Acelerador Físico de Avaliações 5 Estrelas no Google",
+    "🛠️ Configuração assistida por especialista da equipe",
+    "📦 Envio direto para o seu endereço comercial",
+    "💎 Ideal para mesas de restaurantes, balcões e clínicas",
+  ];
 
   return (
     <section id="precos" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
@@ -121,10 +108,10 @@ export function PublicPricingSection() {
             <Zap className="h-3.5 w-3.5 text-fuchsia-400" /> Planos Transparentes & Sem Pegadinhas
           </p>
           <h2 className="mt-3 font-display text-3xl md:text-4xl font-extrabold text-white">
-            Quanto custa transformar seguidores em clientes fiéis?
+            Escolha o plano ideal para transformar seguidores em clientes
           </h2>
           <p className="mt-3 text-base text-[#c4bacf]">
-            Comece 100% grátis. Ative os superpoderes Pro quando seu negócio estiver pronto para faturar alto.
+            Comece 100% grátis, evolua para a Máquina Pro ou solicite o Kit Físico de Placas NFC para o seu balcão.
           </p>
         </div>
 
@@ -160,127 +147,149 @@ export function PublicPricingSection() {
           </div>
         </div>
 
-        {/* Grade de Planos */}
+        {/* Grade com os 3 Planos */}
         <div className="mt-8 grid gap-6 md:grid-cols-3 items-stretch">
-          {isLoading
-            ? Array.from({ length: 3 }, (_, index) => (
-                <div
-                  key={index}
-                  className="h-[360px] animate-pulse rounded-2xl border border-white/10 bg-white/[.04]"
-                />
-              ))
-            : visiblePlans.map((plan) => {
-                const featured = plan.slug === "pro-monthly" || plan.slug === "pro";
-                return (
-                  <article
-                    key={plan.id}
-                    className={`relative flex flex-col justify-between rounded-2xl border p-6 transition-all duration-300 ${
-                      featured
-                        ? "border-fuchsia-400/80 bg-gradient-to-b from-violet-500/[.16] to-[#120a1f] shadow-[0_0_40px_rgba(168,85,247,.2)] scale-105 z-10"
-                        : "border-white/10 bg-[#0d0a12]/90 hover:border-white/20"
-                    }`}
-                  >
-                    {featured && (
-                      <span className="absolute -top-3.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gradient-to-r from-fuchsia-600 to-violet-600 px-4 py-1 text-xs font-bold text-white shadow-lg">
-                        <Sparkles className="h-3 w-3" /> Máquina Mais Vendida
-                      </span>
-                    )}
-
-                    <div>
-                      <h3 className="font-display text-2xl font-bold text-white">{plan.name}</h3>
-                      <p className="mt-2 min-h-12 text-xs text-[#c4bacf] leading-relaxed">
-                        {plan.description || "Uma presença digital pronta para vender."}
-                      </p>
-
-                      <div className="mt-5 pb-5 border-b border-white/10">
-                        <p className="font-display text-3xl font-extrabold text-white">
-                          {formatPlanPrice(plan.price_cents, plan.billing_interval)}
-                        </p>
-                        <p className="text-[11px] text-zinc-400 mt-1">
-                          {plan.price_cents === 0
-                            ? "Grátis para sempre. Sem cartão de crédito."
-                            : plan.billing_interval === "yearly"
-                            ? "Cobrado anualmente (2 meses de bônus)"
-                            : "Cancele quando quiser sem fidelidade"}
-                        </p>
-                      </div>
-
-                      <ul className="mt-6 space-y-2.5 text-xs text-[#ddd5e8]">
-                        {planBenefits(plan).map((benefit) => (
-                          <li key={benefit} className="flex items-start gap-2">
-                            <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400 font-bold" />
-                            <span className="leading-tight">{benefit}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="mt-8">
-                      {plan.price_cents === 0 ? (
-                        <Link
-                          to="/auth"
-                          search={{ mode: "signup" } as never}
-                          className="btn-secondary w-full justify-center text-sm font-semibold py-3"
-                          onClick={() =>
-                            void FunnelService.track("signup_click", {
-                              source: "public_pricing",
-                              plan_slug: plan.slug,
-                            })
-                          }
-                        >
-                          Criar Meu EIA Link Grátis
-                        </Link>
-                      ) : (
-                        <Link
-                          to="/auth"
-                          search={{ mode: "signup", next: "billing" } as never}
-                          className={`w-full justify-center text-sm font-bold py-3 inline-flex items-center gap-2 rounded-xl shadow-lg transition-transform hover:scale-[1.02] ${
-                            featured
-                              ? "bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white shadow-fuchsia-500/25"
-                              : "btn-secondary"
-                          }`}
-                          onClick={() =>
-                            void FunnelService.track("upgrade_click", {
-                              source: "public_pricing",
-                              plan_slug: plan.slug,
-                            })
-                          }
-                        >
-                          Ativar Minha Máquina Pro <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      )}
-                    </div>
-                  </article>
-                );
-              })}
-        </div>
-
-                {/* Recurso Adicional Opcional: Plaquinhas Físicas NFC sob Consulta */}
-        <div className="mt-8 rounded-2xl border border-violet-500/30 bg-violet-950/25 p-5 flex flex-col md:flex-row items-center justify-between gap-5 backdrop-blur-sm">
-          <div className="flex items-center gap-4 text-center md:text-left">
-            <div className="h-12 w-12 rounded-xl bg-violet-500/15 border border-violet-500/30 grid place-items-center text-violet-300 shrink-0 shadow-inner">
-              <Radio className="h-6 w-6 text-fuchsia-400" />
-            </div>
+          {/* 1. PLANO GRÁTIS */}
+          <article className="relative flex flex-col justify-between rounded-2xl border border-white/10 bg-[#0d0a12]/90 p-6 hover:border-white/20 transition-all">
             <div>
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-                <h5 className="text-sm font-bold text-white">Kit Físico de Plaquinhas NFC & Displays de Balcão</h5>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-violet-500/20 text-violet-300 px-2.5 py-0.5 rounded-full border border-violet-500/30">
-                  Opcional · Sob Consulta
-                </span>
+              <div className="inline-flex items-center gap-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider mb-2">
+                Para Começar
               </div>
-              <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
-                Deseja plaquinhas físicas em acrílico premium com chip NFC por aproximação para mesas ou balcão da sua loja? O sistema de software gera os links inteligentes por padrão, e fornecemos as placas físicas sob encomenda personalizada.
+              <h3 className="font-display text-2xl font-bold text-white">EIA Link Grátis</h3>
+              <p className="mt-2 min-h-10 text-xs text-[#c4bacf] leading-relaxed">
+                Para pequenos negócios e profissionais que querem uma presença digital profissional gratuita.
               </p>
+
+              <div className="mt-5 pb-5 border-b border-white/10">
+                <p className="font-display text-3xl font-extrabold text-white">R$ 0</p>
+                <p className="text-[11px] text-zinc-400 mt-1">Grátis para sempre. Sem cartão de crédito.</p>
+              </div>
+
+              <ul className="mt-6 space-y-2.5 text-xs text-[#ddd5e8]">
+                {freeBenefits.map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400 font-bold" />
+                    <span className="leading-tight">{benefit}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-          </div>
-          <a
-            href={commercialWhatsAppUrl("nfc")}
-            target="_blank"
-            rel="noreferrer"
-            className="px-5 py-2.5 rounded-xl border border-violet-400/40 bg-violet-500/15 hover:bg-violet-500/30 text-white text-xs font-bold whitespace-nowrap transition-all shadow-md shrink-0 cursor-pointer"
-          >
-            Consultar Valores do Kit NFC
-          </a>
+
+            <div className="mt-8">
+              <Link
+                to="/auth"
+                search={{ mode: "signup" } as never}
+                className="btn-secondary w-full justify-center text-sm font-semibold py-3"
+                onClick={() =>
+                  void FunnelService.track("signup_click", {
+                    source: "public_pricing",
+                    plan_slug: "free",
+                  })
+                }
+              >
+                Criar Meu EIA Link Grátis
+              </Link>
+            </div>
+          </article>
+
+          {/* 2. PLANO PRO */}
+          <article className="relative flex flex-col justify-between rounded-2xl border border-fuchsia-400/80 bg-gradient-to-b from-violet-500/[.16] to-[#120a1f] p-6 shadow-[0_0_40px_rgba(168,85,247,.2)] scale-105 z-10">
+            <span className="absolute -top-3.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-gradient-to-r from-fuchsia-600 to-violet-600 px-4 py-1 text-xs font-bold text-white shadow-lg">
+              <Sparkles className="h-3 w-3" /> Mais Escolhido
+            </span>
+
+            <div>
+              <div className="inline-flex items-center gap-1 text-[11px] font-bold text-fuchsia-400 uppercase tracking-wider mb-2">
+                Máquina Completa
+              </div>
+              <h3 className="font-display text-2xl font-bold text-white">EIA Link Pro</h3>
+              <p className="mt-2 min-h-10 text-xs text-[#c4bacf] leading-relaxed">
+                Carrossel Instagram com pedidos no WhatsApp, Agendamento Google 24h e QR Codes Dinâmicos.
+              </p>
+
+              <div className="mt-5 pb-5 border-b border-white/10">
+                <p className="font-display text-3xl font-extrabold text-white">
+                  R$ 29<span className="text-base font-normal text-zinc-400">/mês</span>
+                </p>
+                <p className="text-[11px] text-fuchsia-300 font-medium mt-1">
+                  Ou R$ 290/ano (economize 2 meses inteiros)
+                </p>
+              </div>
+
+              <ul className="mt-6 space-y-2.5 text-xs text-[#ddd5e8]">
+                {proBenefits.map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400 font-bold" />
+                    <span className="leading-tight">{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-8">
+              <Link
+                to="/auth"
+                search={{ mode: "signup", next: "billing" } as never}
+                className="w-full justify-center text-sm font-bold py-3 inline-flex items-center gap-2 rounded-xl shadow-lg transition-transform hover:scale-[1.02] bg-gradient-to-r from-fuchsia-500 to-violet-600 text-white shadow-fuchsia-500/25"
+                onClick={() =>
+                  void FunnelService.track("upgrade_click", {
+                    source: "public_pricing",
+                    plan_slug: "pro-monthly",
+                  })
+                }
+              >
+                Ativar Minha Máquina Pro <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </article>
+
+          {/* 3. PLANO PRESENÇA TOTAL + KIT FÍSICO NFC (SOB CONSULTA) */}
+          <article className="relative flex flex-col justify-between rounded-2xl border border-violet-500/40 bg-gradient-to-b from-[#180d2e] to-[#0c0816] p-6 hover:border-violet-400/60 transition-all shadow-xl">
+            <span className="absolute -top-3.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-violet-600/90 px-3.5 py-1 text-xs font-bold text-white shadow">
+              <Radio className="h-3 w-3 text-fuchsia-300" /> Físico + Digital
+            </span>
+
+            <div>
+              <div className="inline-flex items-center gap-1 text-[11px] font-bold text-violet-300 uppercase tracking-wider mb-2">
+                Para Balcão & Mesas
+              </div>
+              <h3 className="font-display text-2xl font-bold text-white">Presença Total + NFC</h3>
+              <p className="mt-2 min-h-10 text-xs text-[#c4bacf] leading-relaxed">
+                A experiência phygital: software Pro completo + kit de plaquinhas físicas em acrílico com chip NFC gravado.
+              </p>
+
+              <div className="mt-5 pb-5 border-b border-white/10">
+                <p className="font-display text-2xl font-extrabold text-white">Sob Consulta</p>
+                <p className="text-[11px] text-zinc-400 mt-1">Orçamento personalizado de acordo com seu número de mesas/pontos.</p>
+              </div>
+
+              <ul className="mt-6 space-y-2.5 text-xs text-[#ddd5e8]">
+                {nfcPlanBenefits.map((benefit) => (
+                  <li key={benefit} className="flex items-start gap-2">
+                    <Check className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400 font-bold" />
+                    <span className="leading-tight">{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="mt-8">
+              <a
+                href={commercialWhatsAppUrl("nfc")}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-secondary w-full justify-center text-sm font-bold py-3 inline-flex items-center gap-2 border-violet-400/40 hover:bg-violet-500/20 text-white"
+                onClick={() =>
+                  void FunnelService.track("service_click", {
+                    source: "public_pricing",
+                    service: "nfc_kit_plan",
+                  })
+                }
+              >
+                Falar com Consultor no WhatsApp <ArrowRight className="h-4 w-4" />
+              </a>
+            </div>
+          </article>
         </div>
 
         {/* Garantia & Atendimento Personalizado */}

@@ -615,6 +615,7 @@ export function UnifiedPageEditor({
   initialBio,
   initialLinks,
   initialProducts = [],
+  initialTab,
   defaults,
   planAccess,
   onSave,

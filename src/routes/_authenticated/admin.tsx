@@ -1,6 +1,6 @@
 import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Users,
@@ -13,8 +13,17 @@ import {
   Briefcase,
   Filter,
   CheckCircle2,
+  MessageCircle,
+  ExternalLink,
+  Save,
+  Phone,
 } from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
+import {
+  CommercialSettingsService,
+  formatPhoneDisplay,
+  sanitizePhoneDigits,
+} from "@/modules/settings/services/CommercialSettingsService";
 import { toPlanLimits, type Plan, type ProfessionalService } from "@/modules/billing/types";
 import {
   Card,
@@ -258,6 +267,9 @@ function AdminPage() {
           />
         </Link>
       </div>
+
+      {/* WhatsApp Comercial da Plataforma */}
+      <PlatformWhatsAppAdminCard />
 
       {/* Planos da Plataforma */}
       <Card className="rounded-xl border border-border bg-card shadow-xs">
@@ -779,4 +791,158 @@ function ServiceAdminCard({
     </article>
   );
 }
+
+function PlatformWhatsAppAdminCard() {
+  const [phoneInput, setPhoneInput] = useState(() =>
+    CommercialSettingsService.getInitialCachedNumber(),
+  );
+  const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    CommercialSettingsService.getCommercialWhatsApp().then((num) => {
+      if (isMounted && num) setPhoneInput(num);
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function handleSave(e?: React.FormEvent) {
+    if (e) e.preventDefault();
+    setSaving(true);
+    setErrorMsg(null);
+    setSuccess(false);
+    try {
+      const sanitized = await CommercialSettingsService.updateCommercialWhatsApp(phoneInput);
+      setPhoneInput(sanitized);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
+    } catch (err: unknown) {
+      setErrorMsg(
+        err instanceof Error ? err.message : "Erro ao salvar número de WhatsApp.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const cleanPhone = sanitizePhoneDigits(phoneInput);
+  const displayFormatted = formatPhoneDisplay(cleanPhone);
+  const testUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(
+    "Olá! Este é um teste do canal comercial oficial da plataforma EIA Link.",
+  )}`;
+
+  return (
+    <Card className="rounded-xl border border-primary/30 bg-card shadow-xs overflow-hidden">
+      <CardHeader className="p-5 pb-3 bg-primary/[0.03] border-b border-border/60">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <MessageCircle className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base font-semibold tracking-tight text-foreground">
+                  WhatsApp Comercial da Plataforma & Contato Oficial
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className="text-[11px] font-medium border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
+                >
+                  Canal Oficial
+                </Badge>
+              </div>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Número que recebe todos os upgrades para o Plano Pro, contatos comerciais e fallback de sites gerados.
+              </CardDescription>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="p-5">
+        <form onSubmit={handleSave} className="space-y-4">
+          <div className="grid sm:grid-cols-12 gap-3 items-end">
+            <div className="sm:col-span-6 space-y-1.5">
+              <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                <span>Número do WhatsApp (com DDD)</span>
+                {cleanPhone && (
+                  <span className="text-[11px] text-muted-foreground font-mono">
+                    Visualização: {displayFormatted || cleanPhone}
+                  </span>
+                )}
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground text-xs font-mono">
+                  +55
+                </span>
+                <input
+                  type="text"
+                  placeholder="(00) 00000-0000"
+                  value={
+                    phoneInput.startsWith("55") && phoneInput.length > 2
+                      ? phoneInput.slice(2)
+                      : phoneInput
+                  }
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "");
+                    setPhoneInput(digits ? `55${digits}` : "");
+                    setSuccess(false);
+                  }}
+                  className="w-full h-10 pl-11 pr-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 font-mono transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="sm:col-span-6 flex items-center gap-2 pt-1 sm:pt-0">
+              <button
+                type="submit"
+                disabled={saving || !cleanPhone}
+                className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-medium shadow-sm transition-all disabled:opacity-50"
+              >
+                {saving ? (
+                  <span>Salvando…</span>
+                ) : success ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                    <span>WhatsApp Atualizado!</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    <span>Salvar WhatsApp</span>
+                  </>
+                )}
+              </button>
+
+              <a
+                href={testUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-border bg-background hover:bg-muted/40 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                title="Abrir WhatsApp para testar recebimento de mensagens"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+                <span>Testar Conversa</span>
+              </a>
+            </div>
+          </div>
+
+          {errorMsg && <p className="text-xs text-rose-400">{errorMsg}</p>}
+
+          <div className="rounded-lg bg-muted/40 border border-border/50 p-3 text-xs text-muted-foreground leading-relaxed flex items-start gap-2.5">
+            <span className="text-base leading-none">💡</span>
+            <span>
+              <strong>Dica de ouro:</strong> Ao alterar este número, os botões{" "}
+              <em>&ldquo;Desbloquear com o Eialink Pro&rdquo;</em> de todos os clientes no sistema, os banners de demonstração pública e os botões de sites gerados sem WhatsApp passarão a conversar diretamente com o seu número novo imediatamente.
+            </span>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
 

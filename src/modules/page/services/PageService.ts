@@ -10,6 +10,7 @@ import {
   claimPageFn,
 } from "@/modules/page/page.functions";
 import { resolveBioMediaUrl } from "@/lib/bio-media";
+import { CommercialSettingsService } from "@/modules/settings/services/CommercialSettingsService";
 
 export type OwnedPage = Tables<"bio_pages">;
 
@@ -295,14 +296,14 @@ export const PageService = {
       ? {
           bio_page_id: data.id,
           title: "🛒 Fazer Pedido no WhatsApp",
-          url: `https://wa.me/?text=${encodeURIComponent(preset.whatsapp_message(companyName))}`,
+          url: `https://wa.me/${(finalWhatsapp || CommercialSettingsService.getInitialCachedNumber()).replace(/\D/g, "")}?text=${encodeURIComponent(preset.whatsapp_message(companyName))}`,
           position: 2,
           active: true,
         }
       : {
           bio_page_id: data.id,
           title: "💬 Solicitar Orçamento no WhatsApp",
-          url: `https://wa.me/?text=${encodeURIComponent(preset.whatsapp_message(companyName))}`,
+          url: `https://wa.me/${(finalWhatsapp || CommercialSettingsService.getInitialCachedNumber()).replace(/\D/g, "")}?text=${encodeURIComponent(preset.whatsapp_message(companyName))}`,
           position: 2,
           active: true,
         };

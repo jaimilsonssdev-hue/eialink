@@ -422,8 +422,7 @@ function PublicBio() {
     if (
       anchor.closest("[data-no-triage]") ||
       anchor.hasAttribute("data-no-triage") ||
-      anchor.closest("aside") ||
-      href.includes("5573991487816")
+      anchor.closest("aside")
     ) {
       return;
     }

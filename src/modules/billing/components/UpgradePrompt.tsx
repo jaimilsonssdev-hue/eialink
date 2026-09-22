@@ -1,11 +1,13 @@
 import { MessageCircle, Sparkles } from "lucide-react";
 import { FunnelService } from "@/modules/analytics/services/FunnelService";
 
-const FALLBACK_COMMERCIAL_WHATSAPP = "5573997498497";
+import {
+  CommercialSettingsService,
+  useCommercialWhatsApp,
+} from "@/modules/settings/services/CommercialSettingsService";
 
-function commercialWhatsAppNumber() {
-  const configured = import.meta.env.VITE_COMMERCIAL_WHATSAPP?.replace(/\D/g, "");
-  return configured || FALLBACK_COMMERCIAL_WHATSAPP;
+export function commercialWhatsAppNumber() {
+  return CommercialSettingsService.getInitialCachedNumber();
 }
 
 const messages = {
@@ -15,8 +17,12 @@ const messages = {
 };
 
 // eslint-disable-next-line react-refresh/only-export-components
-export function commercialWhatsAppUrl(kind: keyof typeof messages = "pro") {
-  return `https://wa.me/${commercialWhatsAppNumber()}?text=${encodeURIComponent(messages[kind])}`;
+export function commercialWhatsAppUrl(
+  kind: keyof typeof messages = "pro",
+  phoneOverride?: string,
+) {
+  const number = phoneOverride || commercialWhatsAppNumber();
+  return `https://wa.me/${number}?text=${encodeURIComponent(messages[kind])}`;
 }
 
 export function UpgradePrompt({
@@ -28,6 +34,8 @@ export function UpgradePrompt({
   description?: string;
   compact?: boolean;
 }) {
+  const phone = useCommercialWhatsApp();
+
   return (
     <section
       className={`rounded-2xl border border-violet-400/30 bg-violet-500/[.08] ${compact ? "p-4" : "p-6"}`}
@@ -41,7 +49,7 @@ export function UpgradePrompt({
           <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           <a
             className="btn-primary mt-4"
-            href={commercialWhatsAppUrl("pro")}
+            href={commercialWhatsAppUrl("pro", phone)}
             target="_blank"
             rel="noreferrer"
             onClick={() => void FunnelService.track("upgrade_click", { source: title })}

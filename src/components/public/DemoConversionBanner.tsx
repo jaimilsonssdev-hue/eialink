@@ -1,4 +1,5 @@
 import { Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+import { useCommercialWhatsApp } from "@/modules/settings/services/CommercialSettingsService";
 
 interface DemoConversionBannerProps {
   companyName: string;
@@ -7,9 +8,10 @@ interface DemoConversionBannerProps {
 
 export function DemoConversionBanner({
   companyName,
-  agencyWhatsApp = (import.meta.env.VITE_AGENCY_WHATSAPP as string) || "5573991487816",
+  agencyWhatsApp,
 }: DemoConversionBannerProps) {
-  const cleanPhone = agencyWhatsApp.replace(/\D/g, "");
+  const dynamicAgencyPhone = useCommercialWhatsApp();
+  const cleanPhone = (agencyWhatsApp || dynamicAgencyPhone).replace(/\D/g, "");
   const message = `Olá! Vi a demonstração que vocês criaram para a empresa *${companyName}* no EIA Link e gostaria de ativar nossa presença oficial com domínio próprio. Como podemos fazer?`;
   const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 

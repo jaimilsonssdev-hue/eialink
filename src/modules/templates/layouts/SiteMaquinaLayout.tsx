@@ -30,6 +30,7 @@ import {
   getSignatureHeroArchitectureForNiche,
   NICHE_GALLERIES,
 } from "@/modules/prospecting/nichePresets";
+import { CommercialSettingsService } from "@/modules/settings/services/CommercialSettingsService";
 
 export class SiteMaquinaLayout implements TemplateLayoutRenderer {
   layoutId() {
@@ -253,7 +254,9 @@ function SiteMaquinaView({
   const avatarImage = bio.avatar_url || curated.avatars?.[0]?.url;
 
   // Telefone formatado e WhatsApp
-  const phone = bio.whatsapp || "5573998608747";
+  const phone =
+    bio.whatsapp?.replace(/\D/g, "") ||
+    CommercialSettingsService.getInitialCachedNumber();
   const whatsappHref = whatsappUrl(
     phone,
     bio.whatsapp_message || `Olá! Vim pelo site da ${companyName} e gostaria de mais informações.`

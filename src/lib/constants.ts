@@ -1,4 +1,6 @@
-export const EIA_WHATSAPP = "5511999999999"; // TODO: substituir pelo número oficial da EIA Digital
+import { CommercialSettingsService } from "@/modules/settings/services/CommercialSettingsService";
+
+export const EIA_WHATSAPP = CommercialSettingsService.getInitialCachedNumber();
 
 export const NICHES = [
   "Alimentação",
@@ -56,5 +58,6 @@ export const MAIN_GOALS = [
 ] as const;
 
 export function whatsappLink(msg: string) {
-  return `https://wa.me/${EIA_WHATSAPP}?text=${encodeURIComponent(msg)}`;
+  const phone = CommercialSettingsService.getInitialCachedNumber();
+  return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 }

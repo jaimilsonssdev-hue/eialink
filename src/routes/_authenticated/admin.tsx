@@ -19,6 +19,7 @@ import {
   Phone,
   Sliders,
   Radio,
+  Utensils,
 } from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import {
@@ -135,6 +136,11 @@ function AdminPage() {
   const updateBuilderAccess = useMutation({
     mutationFn: ({ userId, enabled }: { userId: string; enabled: boolean }) =>
       BillingService.setBuilderAccess(userId, enabled),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
+  });
+  const updateComandaAccess = useMutation({
+    mutationFn: ({ userId, enabled }: { userId: string; enabled: boolean }) =>
+      BillingService.setComandaAccess(userId, enabled),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
   });
 
@@ -588,6 +594,7 @@ function AdminPage() {
                 {filteredProfiles.map((p) => {
                   const sub = data?.subscriptions.find((s) => s.user_id === p.id);
                   const hasBuilderAccess = Boolean(sub?.notes?.includes("builder_access:true"));
+                  const hasComandaAccess = Boolean(sub?.notes?.includes("comanda_access:true"));
                   const isOwner = p.email?.toLowerCase() === "jaimilsonvendas@gmail.com";
 
                   return (
@@ -623,29 +630,55 @@ function AdminPage() {
                             Super Admin Total
                           </span>
                         ) : (
-                          <button
-                            type="button"
-                            disabled={updateBuilderAccess.isPending}
-                            onClick={() =>
-                              updateBuilderAccess.mutate({
-                                userId: p.id,
-                                enabled: !hasBuilderAccess,
-                              })
-                            }
-                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
-                              hasBuilderAccess
-                                ? "bg-purple-500/15 text-purple-300 border border-purple-500/30 hover:bg-purple-500/25"
-                                : "bg-muted/60 text-muted-foreground border border-border/50 hover:text-foreground hover:bg-muted"
-                            }`}
-                            title={
-                              hasBuilderAccess
-                                ? "Clique para reverter para o Modo Simplificado"
-                                : "Clique para liberar o Construtor Visual Avançado para este cliente"
-                            }
-                          >
-                            <Sliders className="h-3 w-3" />
-                            <span>{hasBuilderAccess ? "Construtor Liberado" : "Modo Simplificado"}</span>
-                          </button>
+                          <div className="flex flex-col gap-1.5 items-start">
+                            <button
+                              type="button"
+                              disabled={updateBuilderAccess.isPending}
+                              onClick={() =>
+                                updateBuilderAccess.mutate({
+                                  userId: p.id,
+                                  enabled: !hasBuilderAccess,
+                                })
+                              }
+                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all ${
+                                hasBuilderAccess
+                                  ? "bg-purple-500/15 text-purple-300 border border-purple-500/30 hover:bg-purple-500/25"
+                                  : "bg-muted/60 text-muted-foreground border border-border/50 hover:text-foreground hover:bg-muted"
+                              }`}
+                              title={
+                                hasBuilderAccess
+                                  ? "Clique para reverter para o Modo Simplificado"
+                                  : "Clique para liberar o Construtor Visual Avançado para este cliente"
+                              }
+                            >
+                              <Sliders className="h-3 w-3" />
+                              <span>{hasBuilderAccess ? "Construtor: Liberado" : "Construtor: Oculto"}</span>
+                            </button>
+
+                            <button
+                              type="button"
+                              disabled={updateComandaAccess.isPending}
+                              onClick={() =>
+                                updateComandaAccess.mutate({
+                                  userId: p.id,
+                                  enabled: !hasComandaAccess,
+                                })
+                              }
+                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all ${
+                                hasComandaAccess
+                                  ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/25"
+                                  : "bg-muted/60 text-muted-foreground border border-border/50 hover:text-foreground hover:bg-muted"
+                              }`}
+                              title={
+                                hasComandaAccess
+                                  ? "Clique para bloquear a Comanda Digital para este cliente"
+                                  : "Clique para liberar a Comanda Digital para este cliente"
+                              }
+                            >
+                              <Utensils className="h-3 w-3" />
+                              <span>{hasComandaAccess ? "Comanda: Liberada" : "Comanda: Bloqueada"}</span>
+                            </button>
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">

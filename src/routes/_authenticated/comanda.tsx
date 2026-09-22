@@ -1,10 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState, useEffect } from "react";
-import { Utensils, Sparkles, Plus, Loader2 } from "lucide-react";
+import { Utensils, Sparkles, Plus, Loader2, Lock, MessageCircle } from "lucide-react";
 import { PageService } from "@/modules/page/services/PageService";
 import { ComandaManager } from "@/components/dashboard/ComandaManager";
 import { Badge } from "@/components/ui/badge";
+import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
+import { useCommercialWhatsApp } from "@/modules/settings/services/CommercialSettingsService";
 
 export const Route = createFileRoute("/_authenticated/comanda")({
   head: () => ({
@@ -17,6 +19,8 @@ export const Route = createFileRoute("/_authenticated/comanda")({
 });
 
 function ComandaRoutePage() {
+  const { data: access, isLoading: accessLoading } = usePlanAccess();
+  const commercialWhatsApp = useCommercialWhatsApp();
   const pages = useQuery({
     queryKey: ["owned-bio-pages"],
     queryFn: () => PageService.listOwnedPages(),
@@ -30,11 +34,40 @@ function ComandaRoutePage() {
     }
   }, [pages.data, selectedPageId]);
 
-  if (pages.isLoading) {
+  if (pages.isLoading || accessLoading) {
     return (
       <div className="flex items-center justify-center p-12 text-xs text-muted-foreground gap-2">
         <Loader2 className="h-4 w-4 animate-spin text-primary" />
         <span>Carregando Comanda Digital...</span>
+      </div>
+    );
+  }
+
+  // Trava de liberação pelo Super Admin
+  if (!access?.canAccessComanda) {
+    return (
+      <div className="rounded-2xl border border-amber-500/30 bg-card p-10 text-center space-y-4 max-w-lg mx-auto my-12 shadow-sm">
+        <div className="mx-auto w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+          <Lock className="h-6 w-6" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Módulo de Comanda Bloqueado</h2>
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto leading-relaxed">
+            O módulo de Comandas Digitais, Mesas e Garçons é um recurso exclusivo para o nicho de alimentação (bares, restaurantes e lanchonetes) e é liberado sob demanda pelo Super Admin.
+          </p>
+        </div>
+        <div className="pt-2">
+          <a
+            href={`https://wa.me/${commercialWhatsApp}?text=${encodeURIComponent(
+              "Olá! Gostaria de ativar o módulo de Comanda Digital & Garçons na minha conta.",
+            )}`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2.5 text-xs font-semibold shadow transition-all"
+          >
+            <MessageCircle className="h-4 w-4" /> Solicitar Liberação no WhatsApp
+          </a>
+        </div>
       </div>
     );
   }

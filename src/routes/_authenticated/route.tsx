@@ -56,52 +56,62 @@ function AuthedLayout() {
   }, []);
 
   const canAccessBuilder = isAdmin || Boolean(access?.canAccessBuilder);
+  const canAccessComanda = isAdmin || Boolean(access?.canAccessComanda);
 
   const navItems = useMemo(() => {
-    if (!canAccessBuilder) {
-      // Menu Simplificado do Cliente (Sem botões e termos técnicos confusos)
-      return [
-        { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-        { to: "/agenda", label: "Agenda", icon: CalendarDays },
-        { to: "/comanda", label: "Comanda & NFC", icon: Utensils },
-        { to: "/growth", label: "Assistente IA", icon: Sparkles },
-        { to: "/settings", label: "Dados da Empresa", icon: Settings },
-        { to: "/billing", label: "Planos", icon: CreditCard },
-      ];
+    const items = [
+      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+    ];
+
+    if (canAccessBuilder) {
+      items.push(
+        { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
+        { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
+      );
     }
 
-    // Menu Completo (Editor Visual liberado pelo Super Admin)
-    return [
-      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-      { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
-      { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
-      { to: "/agenda", label: "Agenda", icon: CalendarDays },
-      { to: "/comanda", label: "Comanda & NFC", icon: Utensils },
-      { to: "/analytics", label: "Resultados", icon: BarChart3 },
+    items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+
+    // Inclui a Comanda Digital APENAS se o Super Admin tiver liberado para este cliente
+    if (canAccessComanda) {
+      items.push({ to: "/comanda", label: "Comanda & NFC", icon: Utensils });
+    }
+
+    if (canAccessBuilder) {
+      items.push({ to: "/analytics", label: "Resultados", icon: BarChart3 });
+    }
+
+    items.push(
       { to: "/growth", label: "Assistente IA", icon: Sparkles },
       { to: "/settings", label: "Dados da Empresa", icon: Settings },
       { to: "/billing", label: "Planos", icon: CreditCard },
-    ];
-  }, [canAccessBuilder]);
+    );
+
+    return items;
+  }, [canAccessBuilder, canAccessComanda]);
 
   const mobileNavItems = useMemo(() => {
-    if (!canAccessBuilder) {
-      return [
-        { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-        { to: "/agenda", label: "Agenda", icon: CalendarDays },
-        { to: "/comanda", label: "Comanda", icon: Utensils },
-        { to: "/growth", label: "IA", icon: Sparkles },
-        { to: "/settings", label: "Empresa", icon: Settings },
-      ];
-    }
-    return [
+    const items = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-      { to: "/builder", label: "Editor", icon: PanelsTopLeft },
-      { to: "/agenda", label: "Agenda", icon: CalendarDays },
-      { to: "/comanda", label: "Comanda", icon: Utensils },
-      { to: "/settings", label: "Empresa", icon: Settings },
     ];
-  }, [canAccessBuilder]);
+
+    if (canAccessBuilder) {
+      items.push({ to: "/builder", label: "Editor", icon: PanelsTopLeft });
+    }
+
+    items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+
+    if (canAccessComanda) {
+      items.push({ to: "/comanda", label: "Comanda", icon: Utensils });
+    }
+
+    items.push(
+      { to: "/growth", label: "IA", icon: Sparkles },
+      { to: "/settings", label: "Empresa", icon: Settings },
+    );
+
+    return items;
+  }, [canAccessBuilder, canAccessComanda]);
 
   async function signOut() {
     await supabase.auth.signOut();

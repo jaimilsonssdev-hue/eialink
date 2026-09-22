@@ -36,6 +36,8 @@ export const BillingService = {
     const notes = subscription?.notes || "";
     const hasBuilderAccessNote = notes.includes("builder_access:true");
     const canAccessBuilder = isAdmin || hasBuilderAccessNote;
+    const hasComandaAccessNote = notes.includes("comanda_access:true");
+    const canAccessComanda = isAdmin || hasComandaAccessNote;
 
     return {
       plan,
@@ -44,6 +46,7 @@ export const BillingService = {
       features: plan ? toPlanFeatures(plan.features) : ESSENTIAL_FEATURES,
       isPro,
       canAccessBuilder,
+      canAccessComanda,
     };
   },
   async setBuilderAccess(userId: string, enabled: boolean) {
@@ -60,6 +63,28 @@ export const BillingService = {
     const newNotes = currentNotes
       ? `${currentNotes} builder_access:${enabled}`
       : `builder_access:${enabled}`;
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({ notes: newNotes })
+      .eq("id", sub.id);
+
+    if (error) throw error;
+  },
+  async setComandaAccess(userId: string, enabled: boolean) {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("id, notes")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!sub) return;
+
+    let currentNotes = sub.notes || "";
+    currentNotes = currentNotes.replace(/comanda_access:(true|false)/g, "").trim();
+    const newNotes = currentNotes
+      ? `${currentNotes} comanda_access:${enabled}`
+      : `comanda_access:${enabled}`;
 
     const { error } = await supabase
       .from("subscriptions")

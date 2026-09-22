@@ -68,7 +68,7 @@ export const InstagramProductCarousel = memo(function InstagramProductCarousel({
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
 
-  const items = config?.items?.filter((item) => item.name && item.image_url) || [];
+  const items = (config?.items?.filter((item) => item.name && item.image_url) || []).slice(0, 10);
 
   useEffect(() => {
     if (!api) return;
@@ -267,3 +267,4 @@ export const InstagramProductCarousel = memo(function InstagramProductCarousel({
     </section>
   );
 });
+

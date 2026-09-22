@@ -110,7 +110,11 @@ export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCaro
     }
   }, [bio]);
 
+  const MAX_CAROUSEL_ITEMS = 10;
+
   function handleAddItem() {
+    if (items.length >= MAX_CAROUSEL_ITEMS) return;
+
     const newItem: CarouselProductItem = {
       id: `prod-${Date.now()}`,
       name: `Novo Item ${items.length + 1}`,
@@ -279,10 +283,12 @@ export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCaro
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                  Produtos / Cards do Carrossel ({items.length})
+                  Produtos do Carrossel ({items.length}/{MAX_CAROUSEL_ITEMS})
                 </span>
                 <Badge variant="outline" className="text-[10px]">
-                  Swipe com o dedo no celular
+                  {items.length >= MAX_CAROUSEL_ITEMS
+                    ? "Limite máximo de 10 fotos atingido"
+                    : "Até 10 fotos (padrão Instagram)"}
                 </Badge>
               </div>
 
@@ -290,11 +296,12 @@ export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCaro
                 type="button"
                 variant="outline"
                 size="sm"
+                disabled={items.length >= MAX_CAROUSEL_ITEMS}
                 onClick={handleAddItem}
-                className="h-8 text-xs rounded-lg border-primary/40 text-primary hover:bg-primary/10"
+                className="h-8 text-xs rounded-lg border-primary/40 text-primary hover:bg-primary/10 disabled:opacity-40"
               >
                 <Plus className="h-3.5 w-3.5 mr-1" />
-                Adicionar Produto
+                {items.length >= MAX_CAROUSEL_ITEMS ? "Limite Atingido (10)" : "Adicionar Produto"}
               </Button>
             </div>
 
@@ -523,3 +530,4 @@ export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCaro
     </div>
   );
 }
+

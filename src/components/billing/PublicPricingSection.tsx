@@ -36,7 +36,7 @@ const fallbackPlans: PublicPlan[] = [
     id: "fallback-pro-monthly",
     slug: "pro-monthly",
     name: "Eialink Pro",
-    description: "A Máquina Completa: Carrossel Instagram, Agendamento Google e Placas NFC.",
+    description: "A Máquina Completa: Carrossel Instagram, Agendamento Google e QR Codes Dinâmicos.",
     price_cents: 2900,
     billing_interval: "monthly",
     limits: { bio_pages: -1, links: -1, catalog_items: -1, templates: -1 },
@@ -85,7 +85,7 @@ function planBenefits(plan: PublicPlan) {
       "🔥 Carrossel Estilo Instagram (Pedido direto no Zap)",
       "📅 Agendamento Online 24/7 integrado ao Google Agenda",
       "📱 App PWA Instalável no celular do cliente",
-      "🏷️ Plaquinhas NFC & QR Codes Dinâmicos de Balcão",
+      "🏷️ QR Codes Dinâmicos de Balcão (Imprima para mesas e balcões)",
       "⭐ Acelerador de Avaliações no Google Meu Negócio",
       "📊 Métricas de Visitas e Conversões no WhatsApp",
       "✨ Sem marca EIA Link + Domínio Próprio liberado",
@@ -253,6 +253,34 @@ export function PublicPricingSection() {
                   </article>
                 );
               })}
+        </div>
+
+                {/* Recurso Adicional Opcional: Plaquinhas Físicas NFC sob Consulta */}
+        <div className="mt-8 rounded-2xl border border-violet-500/30 bg-violet-950/25 p-5 flex flex-col md:flex-row items-center justify-between gap-5 backdrop-blur-sm">
+          <div className="flex items-center gap-4 text-center md:text-left">
+            <div className="h-12 w-12 rounded-xl bg-violet-500/15 border border-violet-500/30 grid place-items-center text-violet-300 shrink-0 shadow-inner">
+              <Radio className="h-6 w-6 text-fuchsia-400" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+                <h5 className="text-sm font-bold text-white">Kit Físico de Plaquinhas NFC & Displays de Balcão</h5>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-violet-500/20 text-violet-300 px-2.5 py-0.5 rounded-full border border-violet-500/30">
+                  Opcional · Sob Consulta
+                </span>
+              </div>
+              <p className="text-xs text-zinc-400 mt-1 max-w-2xl leading-relaxed">
+                Deseja plaquinhas físicas em acrílico premium com chip NFC por aproximação para mesas ou balcão da sua loja? O sistema de software gera os links inteligentes por padrão, e fornecemos as placas físicas sob encomenda personalizada.
+              </p>
+            </div>
+          </div>
+          <a
+            href={commercialWhatsAppUrl("nfc")}
+            target="_blank"
+            rel="noreferrer"
+            className="px-5 py-2.5 rounded-xl border border-violet-400/40 bg-violet-500/15 hover:bg-violet-500/30 text-white text-xs font-bold whitespace-nowrap transition-all shadow-md shrink-0 cursor-pointer"
+          >
+            Consultar Valores do Kit NFC
+          </a>
         </div>
 
         {/* Garantia & Atendimento Personalizado */}

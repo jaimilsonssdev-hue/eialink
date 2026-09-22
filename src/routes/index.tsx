@@ -52,13 +52,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Transforme seu Instagram e seu balcão em uma máquina de vendas: vitrine estilo Instagram com pedidos no WhatsApp, agendamento online integrado com Google Agenda e tecnologia NFC.",
+          "Transforme seu Instagram e seu balcão em uma máquina de vendas: vitrine estilo Instagram com pedidos no WhatsApp, agendamento online integrado com Google Agenda e QR Codes dinâmicos de balcão (com suporte opcional a plaquinhas NFC).",
       },
       { property: "og:title", content: "EIA Link — Máquina de Vendas e Agendamentos para Negócios Locais" },
       {
         property: "og:description",
         content:
-          "Vitrine estilo Instagram com pedidos no WhatsApp, agendamento online integrado com Google Agenda e tecnologia NFC.",
+          "Vitrine estilo Instagram com pedidos no WhatsApp, agendamento online integrado com Google Agenda e QR Codes dinâmicos de balcão (com suporte opcional a plaquinhas NFC).",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://eialink.com.br/" },
@@ -66,7 +66,7 @@ export const Route = createFileRoute("/")({
       {
         name: "twitter:description",
         content:
-          "Sua vitrine digital estilo Instagram, agendamento com Google Agenda, plaquinhas NFC e WhatsApp em um só lugar.",
+          "Sua vitrine digital estilo Instagram, agendamento com Google Agenda, QR Codes dinâmicos e WhatsApp em um só lugar.",
       },
     ],
     links: [{ rel: "canonical", href: "https://eialink.com.br/" }],
@@ -353,7 +353,7 @@ function Hero() {
               </span>
             </h1>
             <p className="mt-5 max-w-lg text-sm sm:text-base leading-relaxed text-[#cbc2d7]">
-              Esqueça links de bio feios e sites lentos que ninguém lê. Tenha uma <strong>vitrine interativa com fotos estilo Instagram</strong>, <strong>agendamento online com Google Agenda</strong>, pedidos diretos no WhatsApp e <strong>plaquinhas inteligentes NFC</strong> para explodir suas notas 5 estrelas no Google.
+              Esqueça links de bio feios e sites lentos que ninguém lê. Tenha uma <strong>vitrine interativa com fotos estilo Instagram</strong>, <strong>agendamento online com Google Agenda</strong>, pedidos diretos no WhatsApp e <strong>QR Codes dinâmicos de balcão</strong> para explodir suas notas 5 estrelas no Google.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Link
@@ -382,7 +382,7 @@ function Hero() {
               </span>
               <span className="flex items-center gap-1.5 font-medium">
                 <QrCode className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                Plaquinha NFC
+                QR Code Balcão
               </span>
             </div>
           </div>
@@ -420,9 +420,9 @@ function Superpowers() {
       icon: QrCode,
       iconColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
       badge: "🏷️ Do Balcão ao Digital",
-      title: "Plaquinhas NFC & QR Codes Dinâmicos",
-      subtitle: "Aproxime o celular no balcão e ganhe avaliações 5 estrelas no Google.",
-      desc: "Grave chips NFC direto pelo navegador do seu celular com Web NFC nativo. Gere QR Codes dinâmicos com links curtos que você pode redirecionar quando quiser sem gastar com reimpressão de placas.",
+      title: "QR Codes Dinâmicos & Tecnologia NFC",
+      subtitle: "Conecte o cliente que está na sua loja física direto ao catálogo e avaliações.",
+      desc: "Gere QR Codes dinâmicos para imprimir em mesas, cardápios e balcões com links que você redireciona quando quiser. O software inclui gravação Web NFC nativa para quem adquirir plaquinhas físicas (recurso adicional opcional sob consulta).",
       benefit: "Multiplique suas notas no Google Meu Negócio e atraia clientes da sua cidade.",
     },
     {
@@ -852,7 +852,7 @@ function HowItWorks() {
     [Store, "1. Escolha seu nicho", "Modelos pré-configurados com serviços, cores e argumentos de venda prontos."],
     [Flame, "2. Suba fotos no Carrossel", "Cadastre fotos em formato 4:5 estilo Instagram com preços e botão WhatsApp."],
     [CalendarClock, "3. Ative seu Agendamento", "Conecte seu Google Calendar para clientes agendarem horários sem conflitos."],
-    [QrCode, "4. Ative Placas & QR Codes", "Compartilhe na bio do Instagram e imprima plaquinhas NFC inteligentes de balcão."],
+    [QrCode, "4. Ative seus QR Codes", "Compartilhe na bio do Instagram e gere QR Codes dinâmicos para mesas e balcão."],
   ];
   return (
     <section id="como-funciona" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
@@ -980,7 +980,7 @@ function Footer() {
           </div>
         </div>
         {[
-          ["Superpoderes", "Carrossel Instagram", "Agendamento Google", "Plaquinhas NFC", "Aplicativo PWA"],
+          ["Superpoderes", "Carrossel Instagram", "Agendamento Google", "QR Codes & Balcão", "Aplicativo PWA"],
           ["Nichos", "Restaurantes & Bares", "Clínicas & Médicos", "Salões & Barbearias", "Lojas & Varejo"],
           ["Plataforma", "Planos & Preços", "Área do Cliente", "Central de Ajuda", "Termos & Privacidade"],
         ].map(([title, ...links]) => (

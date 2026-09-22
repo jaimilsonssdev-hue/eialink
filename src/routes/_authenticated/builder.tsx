@@ -55,6 +55,9 @@ function BuilderPage() {
       const products = bio ? await ProductService.list(bio.id) : [];
       return { userId: auth.user.id, bio, profile, links: links ?? [], products };
     },
+    staleTime: 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const planAccess = usePlanAccess();
   const requestedTemplate = requestedTemplateId

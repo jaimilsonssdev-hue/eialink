@@ -6,6 +6,7 @@ export function usePlanAccess() {
   return useQuery({
     queryKey: ["current-plan-access"],
     queryFn: BillingService.getCurrentAccess,
-    staleTime: 30_000,
+    staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });
 }

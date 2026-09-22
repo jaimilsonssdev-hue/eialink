@@ -49,6 +49,8 @@ import {
   Flame,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 import { FreeLinkRenderer } from "@/components/public-profile/FreeLinkRenderer";
@@ -696,7 +698,9 @@ export function UnifiedPageEditor({
         .eq("user_id", u.user.id);
       return !!roles?.some((r) => r.role === "admin");
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
   const [savedSnapshot, setSavedSnapshot] = useState(() =>
     JSON.stringify({

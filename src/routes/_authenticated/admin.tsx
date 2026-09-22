@@ -17,6 +17,7 @@ import {
   ExternalLink,
   Save,
   Phone,
+  Sliders,
 } from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import {
@@ -127,6 +128,11 @@ function AdminPage() {
       id: string;
       input: Parameters<typeof BillingService.updateService>[1];
     }) => BillingService.updateService(id, input),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
+  });
+  const updateBuilderAccess = useMutation({
+    mutationFn: ({ userId, enabled }: { userId: string; enabled: boolean }) =>
+      BillingService.setBuilderAccess(userId, enabled),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
   });
 
@@ -550,45 +556,83 @@ function AdminPage() {
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Nicho</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Cidade/UF</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Painel do Cliente</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Cadastro</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProfiles.map((p) => (
-                  <TableRow key={p.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
-                    <TableCell className="py-3.5 px-4 min-w-[180px]">
-                      <p className="font-semibold text-foreground tracking-tight text-sm">{p.full_name || "—"}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{p.email}</p>
-                    </TableCell>
-                    <TableCell className="py-3.5 px-4 text-sm text-foreground">
-                      {p.company_name || "—"}
-                    </TableCell>
-                    <TableCell className="py-3.5 px-4 text-xs font-mono text-muted-foreground whitespace-nowrap">
-                      {p.whatsapp || "—"}
-                    </TableCell>
-                    <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
-                      {p.niche ? (
-                        <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-muted/60 text-muted-foreground border border-border/40">
-                          {p.niche}
-                        </span>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
-                    <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
-                      {[p.city, p.state].filter(Boolean).join(" / ") || "—"}
-                    </TableCell>
-                    <TableCell className="py-3.5 px-4 whitespace-nowrap">
-                      <LeadTemperatureBadge score={p.lead_score ?? 0} />
-                    </TableCell>
-                    <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
-                      {p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "—"}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filteredProfiles.map((p) => {
+                  const sub = data?.subscriptions.find((s) => s.user_id === p.id);
+                  const hasBuilderAccess = Boolean(sub?.notes?.includes("builder_access:true"));
+                  const isOwner = p.email?.toLowerCase() === "jaimilsonvendas@gmail.com";
+
+                  return (
+                    <TableRow key={p.id} className="border-b border-border/40 hover:bg-muted/20 transition-colors">
+                      <TableCell className="py-3.5 px-4 min-w-[180px]">
+                        <p className="font-semibold text-foreground tracking-tight text-sm">{p.full_name || "—"}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{p.email}</p>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-sm text-foreground">
+                        {p.company_name || "—"}
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-xs font-mono text-muted-foreground whitespace-nowrap">
+                        {p.whatsapp || "—"}
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {p.niche ? (
+                          <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs bg-muted/60 text-muted-foreground border border-border/40">
+                            {p.niche}
+                          </span>
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {[p.city, p.state].filter(Boolean).join(" / ") || "—"}
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                        <LeadTemperatureBadge score={p.lead_score ?? 0} />
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                        {isOwner ? (
+                          <span className="inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary border border-primary/30">
+                            Super Admin Total
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            disabled={updateBuilderAccess.isPending}
+                            onClick={() =>
+                              updateBuilderAccess.mutate({
+                                userId: p.id,
+                                enabled: !hasBuilderAccess,
+                              })
+                            }
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${
+                              hasBuilderAccess
+                                ? "bg-purple-500/15 text-purple-300 border border-purple-500/30 hover:bg-purple-500/25"
+                                : "bg-muted/60 text-muted-foreground border border-border/50 hover:text-foreground hover:bg-muted"
+                            }`}
+                            title={
+                              hasBuilderAccess
+                                ? "Clique para reverter para o Modo Simplificado"
+                                : "Clique para liberar o Construtor Visual Avançado para este cliente"
+                            }
+                          >
+                            <Sliders className="h-3 w-3" />
+                            <span>{hasBuilderAccess ? "Construtor Liberado" : "Modo Simplificado"}</span>
+                          </button>
+                        )}
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
+                        {p.created_at ? new Date(p.created_at).toLocaleDateString("pt-BR") : "—"}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
                 {filteredProfiles.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-8 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={8} className="py-8 text-center text-sm text-muted-foreground">
                       Nenhum lead encontrado com os filtros atuais.
                     </TableCell>
                   </TableRow>

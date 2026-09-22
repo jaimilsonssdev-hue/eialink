@@ -17,6 +17,8 @@ import {
   Sliders,
 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
+import { MediaUploader } from "@/components/page-builder/MediaUploader";
+import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 
 interface QuickBusinessEditorProps {
   bio: {
@@ -28,6 +30,8 @@ interface QuickBusinessEditorProps {
     whatsapp_message: string | null;
     instagram: string | null;
     pix_key: string | null;
+    avatar_url?: string | null;
+    cover_url?: string | null;
     published: boolean;
   };
   publicUrl: string;
@@ -44,6 +48,10 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
   );
   const [instagram, setInstagram] = useState(bio.instagram || "");
   const [pixKey, setPixKey] = useState(bio.pix_key || "");
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(bio.avatar_url || null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(bio.cover_url || null);
+
+  const { data: access } = usePlanAccess();
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -58,6 +66,8 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
     setWhatsappMessage(bio.whatsapp_message || "Olá! Gostaria de mais informações.");
     setInstagram(bio.instagram || "");
     setPixKey(bio.pix_key || "");
+    setAvatarUrl(bio.avatar_url || null);
+    setCoverUrl(bio.cover_url || null);
   }, [bio]);
 
   // Formata telefone/whatsapp
@@ -82,6 +92,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
 
   // Cálculo de progresso do perfil
   const checks = [
+    { label: "Foto ou Logotipo", done: Boolean(avatarUrl) },
     { label: "Nome do negócio", done: Boolean(displayName.trim()) },
     { label: "WhatsApp de atendimento", done: cleanWhatsappDigits.length >= 10 },
     { label: "Descrição / Slogan", done: Boolean(description.trim()) },
@@ -113,11 +124,26 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
           whatsapp_message: whatsappMessage.trim() || null,
           instagram: cleanInsta ? `@${cleanInsta}` : null,
           pix_key: pixKey.trim() || null,
+          avatar_url: avatarUrl || null,
+          cover_url: coverUrl || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", bio.id);
 
       if (error) throw error;
+
+      // Sincroniza também no perfil do usuário
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData?.user?.id) {
+        await supabase
+          .from("profiles")
+          .update({
+            avatar_url: avatarUrl || null,
+            full_name: displayName.trim() || undefined,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", userData.user.id);
+      }
 
       setSaveSuccess(true);
       await queryClient.invalidateQueries({ queryKey: ["bio-me"] });
@@ -175,6 +201,34 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
 
       {/* Formulário Direto & Intuitivo */}
       <form onSubmit={handleSave} className="space-y-5">
+        {/* Fotos Principais com Enquadramento e Dimensionamento */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-b border-border/50 pb-5">
+          <div>
+            <MediaUploader
+              value={avatarUrl || ""}
+              onChange={(url) => {
+                setAvatarUrl(url);
+                setSaveSuccess(false);
+              }}
+              label="Logotipo ou Foto de Perfil"
+              description="Aparece no topo do seu site. Clique em 'Enquadrar / Dimensionar' para ajustar zoom e corte."
+              aspectRatio="square"
+            />
+          </div>
+          <div>
+            <MediaUploader
+              value={coverUrl || ""}
+              onChange={(url) => {
+                setCoverUrl(url);
+                setSaveSuccess(false);
+              }}
+              label="Foto de Capa do Negócio"
+              description="Banner de destaque do seu site. Clique em 'Enquadrar / Dimensionar' para ajustar o ângulo."
+              aspectRatio="cover"
+            />
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Nome da Empresa */}
           <div className="space-y-1.5">
@@ -313,12 +367,21 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
           </div>
 
           <div className="flex items-center gap-2.5">
-            <Link
-              to="/builder"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-border/80 bg-transparent text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
-            >
-              <Sliders className="h-3.5 w-3.5" /> Construtor Visual Avançado
-            </Link>
+            {access?.canAccessBuilder ? (
+              <Link
+                to="/builder"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-border/80 bg-transparent text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
+              >
+                <Sliders className="h-3.5 w-3.5" /> Construtor Visual Avançado
+              </Link>
+            ) : (
+              <Link
+                to="/settings"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-border/80 bg-transparent text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
+              >
+                <Sliders className="h-3.5 w-3.5" /> Mais Configurações
+              </Link>
+            )}
 
             <button
               type="submit"

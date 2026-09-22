@@ -27,9 +27,15 @@ export const BillingService = {
     const subscription = data as (Subscription & { plans?: Plan | null }) | null;
     const plan = subscription?.plans ?? null;
     const active = subscription?.status === "active" || subscription?.status === "trialing";
-    const isPro = Boolean(
-      active && plan && ["pro", "pro-monthly", "pro-yearly"].includes(plan.slug),
-    );
+    const isOwner = auth.user.email?.toLowerCase() === "jaimilsonvendas@gmail.com";
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", auth.user.id);
+    const isAdmin = isOwner || Boolean(roles?.some((r) => r.role === "admin"));
+    const notes = subscription?.notes || "";
+    const hasBuilderAccessNote = notes.includes("builder_access:true");
+    const canAccessBuilder = isAdmin || hasBuilderAccessNote;
 
     return {
       plan,
@@ -37,7 +43,30 @@ export const BillingService = {
       limits: plan ? toPlanLimits(plan.limits) : ESSENTIAL_LIMITS,
       features: plan ? toPlanFeatures(plan.features) : ESSENTIAL_FEATURES,
       isPro,
+      canAccessBuilder,
     };
+  },
+  async setBuilderAccess(userId: string, enabled: boolean) {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("id, notes")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!sub) return;
+
+    let currentNotes = sub.notes || "";
+    currentNotes = currentNotes.replace(/builder_access:(true|false)/g, "").trim();
+    const newNotes = currentNotes
+      ? `${currentNotes} builder_access:${enabled}`
+      : `builder_access:${enabled}`;
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({ notes: newNotes })
+      .eq("id", sub.id);
+
+    if (error) throw error;
   },
   async listPlans(): Promise<Plan[]> {
     const { data, error } = await supabase.from("plans").select("*").order("position");

@@ -6,7 +6,7 @@ import {
   useNavigate,
   useRouterState,
 } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
   LayoutDashboard,
@@ -23,6 +23,7 @@ import {
   Target,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -34,24 +35,12 @@ export const Route = createFileRoute("/_authenticated")({
   component: AuthedLayout,
 });
 
-const NAV = [
-  { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-  { to: "/pages", label: "Páginas", icon: PanelsTopLeft },
-  { to: "/agenda", label: "Agenda", icon: CalendarDays },
-  { to: "/analytics", label: "Resultados", icon: BarChart3 },
-  { to: "/growth", label: "Crescimento", icon: Sparkles },
-  { to: "/billing", label: "Planos", icon: CreditCard },
-  { to: "/settings", label: "Configurações", icon: Settings },
-] as const;
-
-const MOBILE_NAV = [NAV[0], NAV[1], NAV[2], NAV[3], NAV[5]] as const;
-
-
 function AuthedLayout() {
   const navigate = useNavigate();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
+  const { data: access } = usePlanAccess();
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -65,6 +54,49 @@ function AuthedLayout() {
     });
   }, []);
 
+  const canAccessBuilder = isAdmin || Boolean(access?.canAccessBuilder);
+
+  const navItems = useMemo(() => {
+    if (!canAccessBuilder) {
+      // Menu Simplificado do Cliente (Sem botões e termos técnicos confusos)
+      return [
+        { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+        { to: "/agenda", label: "Agenda", icon: CalendarDays },
+        { to: "/growth", label: "Assistente IA", icon: Sparkles },
+        { to: "/settings", label: "Dados da Empresa", icon: Settings },
+        { to: "/billing", label: "Planos", icon: CreditCard },
+      ];
+    }
+
+    // Menu Completo (Editor Visual liberado pelo Super Admin)
+    return [
+      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+      { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
+      { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
+      { to: "/agenda", label: "Agenda", icon: CalendarDays },
+      { to: "/analytics", label: "Resultados", icon: BarChart3 },
+      { to: "/growth", label: "Assistente IA", icon: Sparkles },
+      { to: "/settings", label: "Dados da Empresa", icon: Settings },
+      { to: "/billing", label: "Planos", icon: CreditCard },
+    ];
+  }, [canAccessBuilder]);
+
+  const mobileNavItems = useMemo(() => {
+    if (!canAccessBuilder) {
+      return [
+        { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+        { to: "/agenda", label: "Agenda", icon: CalendarDays },
+        { to: "/growth", label: "IA", icon: Sparkles },
+        { to: "/settings", label: "Empresa", icon: Settings },
+      ];
+    }
+    return [
+      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
+      { to: "/builder", label: "Editor", icon: PanelsTopLeft },
+      { to: "/agenda", label: "Agenda", icon: CalendarDays },
+      { to: "/settings", label: "Empresa", icon: Settings },
+    ];
+  }, [canAccessBuilder]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -100,7 +132,7 @@ function AuthedLayout() {
           <ThemeToggle />
         </div>
         <nav className="px-3 space-y-1">
-          {NAV.map(({ to, label, icon: Icon }) => {
+          {navItems.map(({ to, label, icon: Icon }) => {
             const active = pathname === to;
             return (
               <Link
@@ -134,7 +166,6 @@ function AuthedLayout() {
               </Link>
             </div>
           )}
-
         </nav>
         <div className="absolute bottom-4 left-3 right-3">
           <button
@@ -145,6 +176,7 @@ function AuthedLayout() {
           </button>
         </div>
       </aside>
+
       {/* Content */}
       <div className="min-w-0 flex-1 md:ml-64">
         <header className="app-mobile-header md:hidden sticky top-0 z-30 glass flex items-center justify-between px-4 h-14">
@@ -160,7 +192,7 @@ function AuthedLayout() {
           <Outlet />
         </main>
         <nav className="app-mobile-nav md:hidden" aria-label="Navegação principal">
-          {MOBILE_NAV.map(({ to, label, icon: Icon }) => {
+          {mobileNavItems.map(({ to, label, icon: Icon }) => {
             const active = pathname === to;
             return (
               <Link key={to} to={to} className={active ? "is-active" : ""}>

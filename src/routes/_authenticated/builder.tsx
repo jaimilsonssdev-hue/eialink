@@ -1,7 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { UnifiedPageEditor } from "@/components/page-builder/UnifiedPageEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { ProductService } from "@/modules/products/services/ProductService";
@@ -78,7 +78,41 @@ function BuilderPage() {
       });
   }, [currentBio, refetch, requestedTemplate]);
 
-  if (page.isLoading) return <Loader2 className="h-6 w-6 animate-spin" />;
+  if (page.isLoading || planAccess.isLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (planAccess.data && !planAccess.data.canAccessBuilder) {
+    return (
+      <div className="max-w-xl mx-auto py-16 px-4 text-center space-y-4">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 flex items-center justify-center mx-auto">
+          <Sparkles className="h-7 w-7" />
+        </div>
+        <h2 className="text-xl font-bold tracking-tight">Modo Simplificado do Cliente</h2>
+        <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
+          O design visual da sua página está configurado com segurança pela sua agência. Você pode alterar facilmente seus textos, fotos, logo e canais de contato em <strong>Dados da Empresa</strong>.
+        </p>
+        <div className="pt-3 flex justify-center gap-3">
+          <Link
+            to="/settings"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold shadow-sm transition-all"
+          >
+            Editar Dados da Empresa
+          </Link>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-xl border border-border bg-background hover:bg-muted/40 text-xs font-medium transition-colors"
+          >
+            Voltar ao Início
+          </Link>
+        </div>
+      </div>
+    );
+  }
   if (page.isError || !page.data) {
     return (
       <p role="alert" className="text-sm text-[color:var(--destructive)]">

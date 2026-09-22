@@ -1,9 +1,10 @@
-import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2, Wand2, Palette } from "lucide-react";
+import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2, Wand2, Palette, Crop } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { PageService } from "@/modules/page/services/PageService";
 import { detectNicheKey, getGalleryForNiche, type CuratedPhoto } from "@/modules/prospecting/nichePresets";
 import { generateSvgCover, generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
 import { generateAiImage, MAX_AI_IMAGES_PER_PAGE } from "@/modules/media/services/AiImageService";
+import { ImageCropModal } from "./ImageCropModal";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const DEFAULT_MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -65,6 +66,12 @@ export function MediaUploader({
   const limitMb = Math.round(maxSizeBytes / 1024 / 1024);
 
   const isCover = variant === "cover";
+  const aspectRatio = isCover ? 16 / 9 : 1;
+  const cropShape = variant === "avatar" ? "round" : "rect";
+
+  const [isCropOpen, setIsCropOpen] = useState(false);
+  const [cropSourceUrl, setCropSourceUrl] = useState<string | null>(null);
+
   const initialKey = detectNicheKey(niche || templateId, null);
   const [activeGalleryNiche, setActiveGalleryNiche] = useState<string>(initialKey);
 
@@ -87,7 +94,7 @@ export function MediaUploader({
     }
   }
 
-  async function upload(file?: File) {
+  async function handleFileSelected(file?: File) {
     if (!file) return;
     try {
       await validate(file);
@@ -97,17 +104,34 @@ export function MediaUploader({
       return;
     }
 
+    const reader = new FileReader();
+    reader.onload = () => {
+      setCropSourceUrl(reader.result as string);
+      setIsCropOpen(true);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function handleCropSave(croppedBlob: Blob) {
     setStatus("uploading");
     setError(undefined);
-
     try {
-      const publicUrl = await PageService.uploadAsset(file);
+      const fileToUpload = new File([croppedBlob], `crop_${Date.now()}.webp`, {
+        type: "image/webp",
+      });
+      const publicUrl = await PageService.uploadAsset(fileToUpload);
       onChange(publicUrl);
       setStatus("success");
     } catch (cause) {
       setStatus("error");
-      setError(cause instanceof Error ? cause.message : "Falha no upload da imagem");
+      setError(cause instanceof Error ? cause.message : "Falha no upload da imagem enquadrada");
     }
+  }
+
+  function handleOpenCropForCurrent() {
+    if (!value) return;
+    setCropSourceUrl(value);
+    setIsCropOpen(true);
   }
 
   function handleApplyCustomUrl() {
@@ -224,6 +248,20 @@ export function MediaUploader({
               )}
             </button>
 
+            {/* 1.1 Enquadrar / Dimensionar foto existente */}
+            {value && (
+              <button
+                type="button"
+                onClick={handleOpenCropForCurrent}
+                disabled={status === "uploading" || status === "generating_ai"}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-all shadow-2xs"
+                title="Ajustar zoom, enquadramento e corte da foto"
+              >
+                <Crop className="h-3.5 w-3.5" />
+                <span>Enquadrar / Dimensionar</span>
+              </button>
+            )}
+
             {/* 2. Gerar Gráfico em HTML/SVG (Zero Custo & Nítido) */}
             <button
               type="button"
@@ -285,7 +323,10 @@ export function MediaUploader({
           className="hidden"
           type="file"
           accept="image/png,image/jpeg,image/webp,image/gif"
-          onChange={(event) => void upload(event.target.files?.[0])}
+          onChange={(event) => {
+            void handleFileSelected(event.target.files?.[0]);
+            event.target.value = "";
+          }}
         />
       </div>
 
@@ -378,6 +419,16 @@ export function MediaUploader({
           </div>
         </div>
       )}
+
+      <ImageCropModal
+        open={isCropOpen}
+        onOpenChange={setIsCropOpen}
+        imageUrl={cropSourceUrl}
+        aspectRatio={aspectRatio}
+        cropShape={cropShape}
+        title={`Dimensionar e Enquadrar: ${label}`}
+        onCropComplete={handleCropSave}
+      />
     </div>
   );
 }

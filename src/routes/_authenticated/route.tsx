@@ -21,6 +21,7 @@ import {
   CreditCard,
   CalendarDays,
   Target,
+  Utensils,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
@@ -62,6 +63,7 @@ function AuthedLayout() {
       return [
         { to: "/dashboard", label: "Início", icon: LayoutDashboard },
         { to: "/agenda", label: "Agenda", icon: CalendarDays },
+        { to: "/comanda", label: "Comanda & NFC", icon: Utensils },
         { to: "/growth", label: "Assistente IA", icon: Sparkles },
         { to: "/settings", label: "Dados da Empresa", icon: Settings },
         { to: "/billing", label: "Planos", icon: CreditCard },
@@ -74,6 +76,7 @@ function AuthedLayout() {
       { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
       { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
+      { to: "/comanda", label: "Comanda & NFC", icon: Utensils },
       { to: "/analytics", label: "Resultados", icon: BarChart3 },
       { to: "/growth", label: "Assistente IA", icon: Sparkles },
       { to: "/settings", label: "Dados da Empresa", icon: Settings },
@@ -86,6 +89,7 @@ function AuthedLayout() {
       return [
         { to: "/dashboard", label: "Início", icon: LayoutDashboard },
         { to: "/agenda", label: "Agenda", icon: CalendarDays },
+        { to: "/comanda", label: "Comanda", icon: Utensils },
         { to: "/growth", label: "IA", icon: Sparkles },
         { to: "/settings", label: "Empresa", icon: Settings },
       ];
@@ -94,6 +98,7 @@ function AuthedLayout() {
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
       { to: "/builder", label: "Editor", icon: PanelsTopLeft },
       { to: "/agenda", label: "Agenda", icon: CalendarDays },
+      { to: "/comanda", label: "Comanda", icon: Utensils },
       { to: "/settings", label: "Empresa", icon: Settings },
     ];
   }, [canAccessBuilder]);

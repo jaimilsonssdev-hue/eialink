@@ -17,6 +17,7 @@ import { ModularSections } from "@/components/public-profile/ModularSections";
 import { AiAssistantChat } from "@/components/public/AiAssistantChat";
 import { resolveBioMediaUrl } from "@/lib/bio-media";
 import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
+import { ComandaFloatingBar } from "@/components/public/ComandaFloatingBar";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -648,6 +649,9 @@ function PublicBio() {
           onShare={share}
         />
       )}
+
+      {/* Comanda Digital e Chamar Garçom (Ativo apenas se acessado via QR Code / NFC com mesa ou garçom) */}
+      <ComandaFloatingBar bioPageId={bio.id} products={products} />
     </div>
   );
 }

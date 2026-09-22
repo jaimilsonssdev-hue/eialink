@@ -24,6 +24,7 @@ import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBioRouteImport } from './routes/_authenticated/bio'
 import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
 import { Route as AuthenticatedCatalogRouteImport } from './routes/_authenticated/catalog'
+import { Route as AuthenticatedComandaRouteImport } from './routes/_authenticated/comanda'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedDiagnosticRouteImport } from './routes/_authenticated/diagnostic'
 import { Route as AuthenticatedGoogleCallbackRouteImport } from './routes/_authenticated/google-callback'
@@ -35,7 +36,10 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AgendarSlugRouteImport } from './routes/agendar.$slug'
 import { Route as ApiManifestRouteImport } from './routes/api/manifest'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
+import { Route as ComandaCozinhaRouteImport } from './routes/comanda.cozinha'
+import { Route as ComandaGarcomRouteImport } from './routes/comanda.garcom'
 import { Route as PSlugRouteImport } from './routes/p.$slug'
+import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedAdminProspeccaoRouteImport } from './routes/_authenticated/admin_.prospeccao'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -113,6 +117,11 @@ const AuthenticatedCatalogRoute = AuthenticatedCatalogRouteImport.update({
   path: '/catalog',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedComandaRoute = AuthenticatedComandaRouteImport.update({
+  id: '/comanda',
+  path: '/comanda',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -169,9 +178,24 @@ const CheckoutReturnRoute = CheckoutReturnRouteImport.update({
   path: '/checkout/return',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ComandaCozinhaRoute = ComandaCozinhaRouteImport.update({
+  id: '/comanda/cozinha',
+  path: '/comanda/cozinha',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComandaGarcomRoute = ComandaGarcomRouteImport.update({
+  id: '/comanda/garcom',
+  path: '/comanda/garcom',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PSlugRoute = PSlugRouteImport.update({
   id: '/p/$slug',
   path: '/p/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RCodeRoute = RCodeRouteImport.update({
+  id: '/r/$code',
+  path: '/r/$code',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAdminProspeccaoRoute =
@@ -202,6 +226,7 @@ export interface FileRoutesByFullPath {
   '/bio': typeof AuthenticatedBioRoute
   '/builder': typeof AuthenticatedBuilderRoute
   '/catalog': typeof AuthenticatedCatalogRoute
+  '/comanda': typeof AuthenticatedComandaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/google-callback': typeof AuthenticatedGoogleCallbackRoute
@@ -213,7 +238,10 @@ export interface FileRoutesByFullPath {
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/comanda/cozinha': typeof ComandaCozinhaRoute
+  '/comanda/garcom': typeof ComandaGarcomRoute
   '/p/$slug': typeof PSlugRoute
+  '/r/$code': typeof RCodeRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -232,6 +260,7 @@ export interface FileRoutesByTo {
   '/bio': typeof AuthenticatedBioRoute
   '/builder': typeof AuthenticatedBuilderRoute
   '/catalog': typeof AuthenticatedCatalogRoute
+  '/comanda': typeof AuthenticatedComandaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/google-callback': typeof AuthenticatedGoogleCallbackRoute
@@ -243,7 +272,10 @@ export interface FileRoutesByTo {
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/comanda/cozinha': typeof ComandaCozinhaRoute
+  '/comanda/garcom': typeof ComandaGarcomRoute
   '/p/$slug': typeof PSlugRoute
+  '/r/$code': typeof RCodeRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -264,6 +296,7 @@ export interface FileRoutesById {
   '/_authenticated/bio': typeof AuthenticatedBioRoute
   '/_authenticated/builder': typeof AuthenticatedBuilderRoute
   '/_authenticated/catalog': typeof AuthenticatedCatalogRoute
+  '/_authenticated/comanda': typeof AuthenticatedComandaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/diagnostic': typeof AuthenticatedDiagnosticRoute
   '/_authenticated/google-callback': typeof AuthenticatedGoogleCallbackRoute
@@ -275,7 +308,10 @@ export interface FileRoutesById {
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
+  '/comanda/cozinha': typeof ComandaCozinhaRoute
+  '/comanda/garcom': typeof ComandaGarcomRoute
   '/p/$slug': typeof PSlugRoute
+  '/r/$code': typeof RCodeRoute
   '/_authenticated/admin_/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -296,6 +332,7 @@ export interface FileRouteTypes {
     | '/bio'
     | '/builder'
     | '/catalog'
+    | '/comanda'
     | '/dashboard'
     | '/diagnostic'
     | '/google-callback'
@@ -307,7 +344,10 @@ export interface FileRouteTypes {
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'
+    | '/comanda/cozinha'
+    | '/comanda/garcom'
     | '/p/$slug'
+    | '/r/$code'
     | '/admin/prospeccao'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -326,6 +366,7 @@ export interface FileRouteTypes {
     | '/bio'
     | '/builder'
     | '/catalog'
+    | '/comanda'
     | '/dashboard'
     | '/diagnostic'
     | '/google-callback'
@@ -337,7 +378,10 @@ export interface FileRouteTypes {
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'
+    | '/comanda/cozinha'
+    | '/comanda/garcom'
     | '/p/$slug'
+    | '/r/$code'
     | '/admin/prospeccao'
     | '/api/public/payments/webhook'
   id:
@@ -357,6 +401,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bio'
     | '/_authenticated/builder'
     | '/_authenticated/catalog'
+    | '/_authenticated/comanda'
     | '/_authenticated/dashboard'
     | '/_authenticated/diagnostic'
     | '/_authenticated/google-callback'
@@ -368,7 +413,10 @@ export interface FileRouteTypes {
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'
+    | '/comanda/cozinha'
+    | '/comanda/garcom'
     | '/p/$slug'
+    | '/r/$code'
     | '/_authenticated/admin_/prospeccao'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -385,7 +433,10 @@ export interface RootRouteChildren {
   AgendarSlugRoute: typeof AgendarSlugRoute
   ApiManifestRoute: typeof ApiManifestRoute
   CheckoutReturnRoute: typeof CheckoutReturnRoute
+  ComandaCozinhaRoute: typeof ComandaCozinhaRoute
+  ComandaGarcomRoute: typeof ComandaGarcomRoute
   PSlugRoute: typeof PSlugRoute
+  RCodeRoute: typeof RCodeRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -496,6 +547,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCatalogRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/comanda': {
+      id: '/_authenticated/comanda'
+      path: '/comanda'
+      fullPath: '/comanda'
+      preLoaderRoute: typeof AuthenticatedComandaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -573,11 +631,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CheckoutReturnRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/comanda/cozinha': {
+      id: '/comanda/cozinha'
+      path: '/comanda/cozinha'
+      fullPath: '/comanda/cozinha'
+      preLoaderRoute: typeof ComandaCozinhaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comanda/garcom': {
+      id: '/comanda/garcom'
+      path: '/comanda/garcom'
+      fullPath: '/comanda/garcom'
+      preLoaderRoute: typeof ComandaGarcomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$slug': {
       id: '/p/$slug'
       path: '/p/$slug'
       fullPath: '/p/$slug'
       preLoaderRoute: typeof PSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/r/$code': {
+      id: '/r/$code'
+      path: '/r/$code'
+      fullPath: '/r/$code'
+      preLoaderRoute: typeof RCodeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/admin_/prospeccao': {
@@ -605,6 +684,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBioRoute: typeof AuthenticatedBioRoute
   AuthenticatedBuilderRoute: typeof AuthenticatedBuilderRoute
   AuthenticatedCatalogRoute: typeof AuthenticatedCatalogRoute
+  AuthenticatedComandaRoute: typeof AuthenticatedComandaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedDiagnosticRoute: typeof AuthenticatedDiagnosticRoute
   AuthenticatedGoogleCallbackRoute: typeof AuthenticatedGoogleCallbackRoute
@@ -624,6 +704,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBioRoute: AuthenticatedBioRoute,
   AuthenticatedBuilderRoute: AuthenticatedBuilderRoute,
   AuthenticatedCatalogRoute: AuthenticatedCatalogRoute,
+  AuthenticatedComandaRoute: AuthenticatedComandaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedDiagnosticRoute: AuthenticatedDiagnosticRoute,
   AuthenticatedGoogleCallbackRoute: AuthenticatedGoogleCallbackRoute,
@@ -650,7 +731,10 @@ const rootRouteChildren: RootRouteChildren = {
   AgendarSlugRoute: AgendarSlugRoute,
   ApiManifestRoute: ApiManifestRoute,
   CheckoutReturnRoute: CheckoutReturnRoute,
+  ComandaCozinhaRoute: ComandaCozinhaRoute,
+  ComandaGarcomRoute: ComandaGarcomRoute,
   PSlugRoute: PSlugRoute,
+  RCodeRoute: RCodeRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

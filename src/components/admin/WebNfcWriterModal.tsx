@@ -318,3 +318,4 @@ export function WebNfcWriterModal({ link, isOpen, onClose }: WebNfcWriterModalPr
     </Dialog>
   );
 }
+

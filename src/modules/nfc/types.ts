@@ -59,3 +59,4 @@ export interface PlaqueTemplateConfig {
   showQrCode: boolean;
   showStars: boolean;
 }
+

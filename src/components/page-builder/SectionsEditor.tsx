@@ -28,6 +28,7 @@ import {
 import type { VideoConfig, TestimonialItem, AboutConfig } from "@/components/public-profile/ModularSections";
 import { parseVideoEmbedUrl } from "@/components/public-profile/ModularSections";
 import { MediaUploader } from "./MediaUploader";
+import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselManager";
 
 interface SectionsEditorProps {
   nicheKey: string;
@@ -1860,6 +1861,12 @@ export function SectionsEditor({
           </div>
         </div>
       </div>
+
+      {/* 0. CARROSSEL DE PRODUTOS & DESTAQUES ESTILO INSTAGRAM */}
+      <ProductCarouselManager
+        socialLinks={socialLinks}
+        onUpdateSocialLinks={onUpdateSocialLinks}
+      />
 
       {/* 1. SEÇÃO DE VÍDEO */}
       <div className="rounded-xl border border-border/80 bg-card/60 p-4 space-y-4">

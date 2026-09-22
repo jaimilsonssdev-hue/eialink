@@ -31,8 +31,9 @@ import {
 import type { PublicBio } from "@/components/public-profile/types";
 
 interface ProductCarouselManagerProps {
-  bio: PublicBio;
-  onUpdateSocialLinks?: (newSocialLinks: Record<string, unknown>) => void;
+  bio?: PublicBio;
+  socialLinks?: Record<string, any>;
+  onUpdateSocialLinks?: (newSocialLinks: Record<string, any>) => void;
 }
 
 const DEFAULT_DEMO_ITEMS: CarouselProductItem[] = [
@@ -65,9 +66,9 @@ const DEFAULT_DEMO_ITEMS: CarouselProductItem[] = [
   },
 ];
 
-export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCarouselManagerProps) {
+export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }: ProductCarouselManagerProps) {
   const queryClient = useQueryClient();
-  const socialData = (bio.social_links as Record<string, any>) || {};
+  const socialData = (bio?.social_links as Record<string, any>) || socialLinks || {};
   const currentConfig: ProductCarouselConfig = socialData.product_carousel || {
     enabled: false,
     title: "Destaques & Mais Pedidos",
@@ -95,9 +96,9 @@ export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCaro
   const [saveError, setSaveError] = useState<string | null>(null);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(0);
 
-  // Sincroniza se o bio mudar
+  // Sincroniza se o bio ou socialLinks mudar
   useEffect(() => {
-    const freshSocial = (bio.social_links as Record<string, any>) || {};
+    const freshSocial = (bio?.social_links as Record<string, any>) || socialLinks || {};
     if (freshSocial.product_carousel) {
       const cfg = freshSocial.product_carousel as ProductCarouselConfig;
       setEnabled(Boolean(cfg.enabled));
@@ -108,7 +109,7 @@ export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCaro
         setItems(cfg.items);
       }
     }
-  }, [bio]);
+  }, [bio, socialLinks]);
 
   const MAX_CAROUSEL_ITEMS = 10;
 
@@ -161,29 +162,35 @@ export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCaro
       product_carousel: updatedConfig,
     };
 
-    try {
-      const { error } = await supabase
-        .from("bio_pages")
-        .update({
-          social_links: newSocialLinks,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", bio.id);
+    if (onUpdateSocialLinks) {
+      onUpdateSocialLinks(newSocialLinks);
+    }
 
-      if (error) throw error;
+    if (bio?.id) {
+      try {
+        const { error } = await supabase
+          .from("bio_pages")
+          .update({
+            social_links: newSocialLinks,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", bio.id);
 
-      if (onUpdateSocialLinks) {
-        onUpdateSocialLinks(newSocialLinks);
+        if (error) throw error;
+
+        setSaveSuccess(true);
+        await queryClient.invalidateQueries({ queryKey: ["bio-me"] });
+        await queryClient.invalidateQueries({ queryKey: ["public-bio", bio.slug] });
+        setTimeout(() => setSaveSuccess(false), 3500);
+      } catch (err: unknown) {
+        const error = err as Error;
+        setSaveError(error.message || "Erro ao salvar carrossel de produtos.");
+      } finally {
+        setIsSaving(false);
       }
-
+    } else {
       setSaveSuccess(true);
-      await queryClient.invalidateQueries({ queryKey: ["bio-me"] });
-      await queryClient.invalidateQueries({ queryKey: ["public-bio", bio.slug] });
-      setTimeout(() => setSaveSuccess(false), 3500);
-    } catch (err: unknown) {
-      const error = err as Error;
-      setSaveError(error.message || "Erro ao salvar carrossel de produtos.");
-    } finally {
+      setTimeout(() => setSaveSuccess(false), 3000);
       setIsSaving(false);
     }
   }
@@ -483,7 +490,14 @@ export function ProductCarouselManager({ bio, onUpdateSocialLinks }: ProductCaro
 
             <div className="rounded-2xl border border-dashed border-border/80 bg-background/40 p-2 overflow-hidden">
               <InstagramProductCarousel
-                bio={bio}
+                bio={
+                  bio ||
+                  ({
+                    display_name: "Sua Empresa",
+                    whatsapp: "5511999999999",
+                    theme: "ocean",
+                  } as any)
+                }
                 config={previewConfig}
               />
             </div>

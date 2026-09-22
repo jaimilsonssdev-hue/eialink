@@ -241,11 +241,40 @@ export function PublicPricingSection() {
                 Máquina Completa
               </div>
               <h3 className="font-display text-2xl font-bold text-white">EIA Link Pro</h3>
-              <p className="mt-2 min-h-10 text-xs text-[#c4bacf] leading-relaxed">
+              <p className="mt-2 text-xs text-[#c4bacf] leading-relaxed">
                 Carrossel Instagram com pedidos no WhatsApp, Agendamento Google 24h e QR Codes Dinâmicos.
               </p>
 
-              <div className="mt-5 pb-5 border-b border-white/10">
+              {/* Seletor Mensal / Anual NO PRÓPRIO CARD DO PLANO */}
+              <div className="mt-3 mb-2 rounded-xl bg-black/60 p-1 border border-violet-400/30 grid grid-cols-2 gap-1 shadow-inner">
+                <button
+                  type="button"
+                  onClick={() => setBillingInterval("monthly")}
+                  className={`cursor-pointer rounded-lg py-2 text-xs font-bold transition-all text-center ${
+                    billingInterval === "monthly"
+                      ? "bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-md ring-1 ring-fuchsia-400"
+                      : "text-zinc-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  Mensal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBillingInterval("yearly")}
+                  className={`cursor-pointer rounded-lg py-2 text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5 ${
+                    billingInterval === "yearly"
+                      ? "bg-gradient-to-r from-fuchsia-600 to-violet-600 text-white shadow-md ring-1 ring-fuchsia-400"
+                      : "text-zinc-400 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <span>Anual</span>
+                  <span className="rounded bg-emerald-500/25 px-1.5 py-0.5 text-[10px] font-extrabold text-emerald-300 border border-emerald-500/30">
+                    2 Meses Grátis
+                  </span>
+                </button>
+              </div>
+
+              <div className="mt-3 pb-5 border-b border-white/10">
                 {billingInterval === "yearly" ? (
                   <>
                     <p className="font-display text-3xl font-extrabold text-white">

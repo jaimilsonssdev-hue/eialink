@@ -32,6 +32,7 @@ import type { PublicBio } from "@/components/public-profile/types";
 
 interface ProductCarouselManagerProps {
   bio?: PublicBio;
+  bioPageId?: string;
   socialLinks?: Record<string, any>;
   onUpdateSocialLinks?: (newSocialLinks: Record<string, any>) => void;
 }
@@ -66,7 +67,7 @@ const DEFAULT_DEMO_ITEMS: CarouselProductItem[] = [
   },
 ];
 
-export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }: ProductCarouselManagerProps) {
+export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSocialLinks }: ProductCarouselManagerProps) {
   const queryClient = useQueryClient();
   const socialData = (bio?.social_links as Record<string, any>) || socialLinks || {};
   const currentConfig: ProductCarouselConfig = socialData.product_carousel || {
@@ -111,6 +112,26 @@ export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }
     }
   }, [bio, socialLinks]);
 
+  function notifyParent(cfgPatch: Partial<ProductCarouselConfig>) {
+    if (!onUpdateSocialLinks) return;
+    const updatedConfig: ProductCarouselConfig = {
+      enabled: cfgPatch.enabled !== undefined ? cfgPatch.enabled : enabled,
+      title: (cfgPatch.title !== undefined ? cfgPatch.title : title).trim(),
+      subtitle: (cfgPatch.subtitle !== undefined ? cfgPatch.subtitle : subtitle).trim(),
+      aspect_ratio: cfgPatch.aspect_ratio !== undefined ? cfgPatch.aspect_ratio : aspectRatio,
+      items: (cfgPatch.items !== undefined ? cfgPatch.items : items).filter((i) => i.name.trim() && i.image_url.trim()),
+    };
+    onUpdateSocialLinks({
+      ...socialData,
+      product_carousel: updatedConfig,
+    });
+  }
+
+  function handleToggleEnabled(next: boolean) {
+    setEnabled(next);
+    notifyParent({ enabled: next });
+  }
+
   const MAX_CAROUSEL_ITEMS = 10;
 
   function handleAddItem() {
@@ -128,6 +149,7 @@ export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }
     const next = [...items, newItem];
     setItems(next);
     setExpandedIndex(next.length - 1);
+    notifyParent({ items: next });
   }
 
   function handleRemoveItem(index: number) {
@@ -136,12 +158,14 @@ export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }
     if (expandedIndex === index) {
       setExpandedIndex(null);
     }
+    notifyParent({ items: next });
   }
 
   function handleUpdateItem(index: number, patch: Partial<CarouselProductItem>) {
     const next = [...items];
     next[index] = { ...next[index], ...patch };
     setItems(next);
+    notifyParent({ items: next });
   }
 
   async function handleSave() {
@@ -166,31 +190,43 @@ export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }
       onUpdateSocialLinks(newSocialLinks);
     }
 
-    if (bio?.id) {
-      try {
+    const targetPageId = bioPageId || bio?.id;
+    try {
+      if (targetPageId) {
         const { error } = await supabase
           .from("bio_pages")
           .update({
             social_links: newSocialLinks,
             updated_at: new Date().toISOString(),
           })
-          .eq("id", bio.id);
+          .eq("id", targetPageId);
 
         if (error) throw error;
-
-        setSaveSuccess(true);
-        await queryClient.invalidateQueries({ queryKey: ["bio-me"] });
-        await queryClient.invalidateQueries({ queryKey: ["public-bio", bio.slug] });
-        setTimeout(() => setSaveSuccess(false), 3500);
-      } catch (err: unknown) {
-        const error = err as Error;
-        setSaveError(error.message || "Erro ao salvar carrossel de produtos.");
-      } finally {
-        setIsSaving(false);
+      } else {
+        const { data: u } = await supabase.auth.getUser();
+        if (u?.user?.id) {
+          const { error } = await supabase
+            .from("bio_pages")
+            .update({
+              social_links: newSocialLinks,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("user_id", u.user.id);
+          if (error) throw error;
+        }
       }
-    } else {
+
       setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
+      await Promise.allSettled([
+        queryClient.invalidateQueries({ queryKey: ["unified-page-editor"] }),
+        queryClient.invalidateQueries({ queryKey: ["bio-me"] }),
+        bio?.slug ? queryClient.invalidateQueries({ queryKey: ["public-bio", bio.slug] }) : Promise.resolve(),
+      ]);
+      setTimeout(() => setSaveSuccess(false), 3500);
+    } catch (err: unknown) {
+      const error = err as Error;
+      setSaveError(error.message || "Erro ao salvar carrossel de produtos.");
+    } finally {
       setIsSaving(false);
     }
   }
@@ -233,7 +269,7 @@ export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }
           </div>
           <Switch
             checked={enabled}
-            onCheckedChange={setEnabled}
+            onCheckedChange={handleToggleEnabled}
             aria-label="Ativar carrossel de produtos"
           />
         </div>
@@ -250,7 +286,10 @@ export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }
               <Input
                 placeholder="Ex: Destaques & Mais Pedidos"
                 value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                onChange={(e) => {
+                  setTitle(e.target.value);
+                  notifyParent({ title: e.target.value });
+                }}
                 className="h-9 text-xs"
               />
             </div>
@@ -262,7 +301,10 @@ export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }
               <Input
                 placeholder="Ex: Arraste para o lado e peça no WhatsApp"
                 value={subtitle}
-                onChange={(e) => setSubtitle(e.target.value)}
+                onChange={(e) => {
+                  setSubtitle(e.target.value);
+                  notifyParent({ subtitle: e.target.value });
+                }}
                 className="h-9 text-xs"
               />
             </div>
@@ -273,9 +315,11 @@ export function ProductCarouselManager({ bio, socialLinks, onUpdateSocialLinks }
               </label>
               <select
                 value={aspectRatio}
-                onChange={(e) =>
-                  setAspectRatio(e.target.value as "1:1" | "4:5" | "16:9")
-                }
+                onChange={(e) => {
+                  const val = e.target.value as "1:1" | "4:5" | "16:9";
+                  setAspectRatio(val);
+                  notifyParent({ aspect_ratio: val });
+                }}
                 className="w-full h-9 text-xs rounded-lg border border-border bg-background px-3 text-foreground"
               >
                 <option value="4:5">Vertical Elegante (4:5 — Estilo Feed Instagram)</option>

@@ -25,7 +25,6 @@ export async function resolveBioMediaUrl(value?: string | null): Promise<string 
   const path = bioMediaPath(value);
   if (!path) return value ?? null;
 
-  const { data, error } = await supabase.storage.from("bio-media").createSignedUrl(path, 60 * 60);
-  if (error) return null;
-  return data.signedUrl;
+  const { data } = supabase.storage.from("bio-media").getPublicUrl(path);
+  return data?.publicUrl ?? value ?? null;
 }

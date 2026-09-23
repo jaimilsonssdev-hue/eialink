@@ -335,13 +335,13 @@ export const PageService = {
       .from("bio-media")
       .upload(path, file, { upsert: false, contentType: file.type });
     if (error) throw error;
-    const { data: signed, error: signError } = await supabase.storage
+    const { data } = supabase.storage
       .from("bio-media")
-      .createSignedUrl(path, 60 * 60);
-    if (signError || !signed?.signedUrl) {
-      throw new Error("Não foi possível proteger a imagem enviada.");
+      .getPublicUrl(path);
+    if (!data?.publicUrl) {
+      throw new Error("Não foi possível obter a URL da imagem enviada.");
     }
-    return signed.signedUrl;
+    return data.publicUrl;
   },
 
   async uploadAsset(file: File) {

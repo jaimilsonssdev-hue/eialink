@@ -128,6 +128,7 @@ function BuilderPage() {
   const { bio, profile, links, products, userId } = page.data;
   const initialBio = bio
     ? {
+        id: bio.id,
         slug: bio.slug ?? "",
         display_name: bio.display_name ?? profile?.company_name ?? "",
         description: bio.description ?? "",

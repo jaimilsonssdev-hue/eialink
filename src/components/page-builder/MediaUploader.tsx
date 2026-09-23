@@ -1,5 +1,6 @@
 import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2, Wand2, Palette, Crop } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import { PageService } from "@/modules/page/services/PageService";
 import { detectNicheKey, getGalleryForNiche, type CuratedPhoto } from "@/modules/prospecting/nichePresets";
 import { generateSvgCover, generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
@@ -122,9 +123,13 @@ export function MediaUploader({
       const publicUrl = await PageService.uploadAsset(fileToUpload);
       onChange(publicUrl);
       setStatus("success");
+      toast.success("Foto atualizada e redimensionada com sucesso!");
     } catch (cause) {
       setStatus("error");
-      setError(cause instanceof Error ? cause.message : "Falha no upload da imagem enquadrada");
+      const msg = cause instanceof Error ? cause.message : "Falha no upload da imagem enquadrada";
+      setError(msg);
+      toast.error(msg);
+      throw cause;
     }
   }
 

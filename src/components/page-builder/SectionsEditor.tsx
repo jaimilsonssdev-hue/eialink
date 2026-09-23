@@ -42,6 +42,7 @@ interface SectionsEditorProps {
   templateId?: string | null;
   aiUsageCount?: number;
   onAiUsageIncrement?: () => void;
+  bioPageId?: string;
 }
 
 export interface DifferentialItem {
@@ -1028,6 +1029,7 @@ export function SectionsEditor({
   templateId,
   aiUsageCount = 0,
   onAiUsageIncrement,
+  bioPageId,
 }: SectionsEditorProps) {
   const videoConfig: VideoConfig = socialLinks.video_embed || {
     enabled: false,
@@ -1872,6 +1874,7 @@ export function SectionsEditor({
 
       {/* 0. CARROSSEL DE PRODUTOS & DESTAQUES ESTILO INSTAGRAM */}
       <ProductCarouselManager
+        bioPageId={bioPageId}
         socialLinks={socialLinks}
         onUpdateSocialLinks={onUpdateSocialLinks}
       />

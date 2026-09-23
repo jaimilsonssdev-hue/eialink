@@ -665,9 +665,7 @@ export function UnifiedPageEditor({
   const [activeTab, setActiveTab] = useState<EditorTab>(() => initialTab || "visual");
 
   useEffect(() => {
-    if (initialTab) {
-      setActiveTab(initialTab);
-    }
+    setActiveTab(initialTab || "visual");
   }, [initialTab]);
 
   const [draftTemplate, setDraftTemplate] = useState(() => bio.template_id || initialTemplate);
@@ -784,7 +782,19 @@ export function UnifiedPageEditor({
     return () => window.removeEventListener("beforeunload", warnBeforeLeaving);
   }, [hasPendingChanges]);
 
-  const updateBio = (patch: Partial<BioForm>) => setBio((current) => ({ ...current, ...patch }));
+  const updateBio = (patch: Partial<BioForm>) => {
+    setBio((current) => ({ ...current, ...patch }));
+    if ((patch.avatar_url !== undefined || patch.cover_url !== undefined) && bio.id) {
+      void supabase
+        .from("bio_pages")
+        .update({
+          ...(patch.avatar_url !== undefined ? { avatar_url: patch.avatar_url } : {}),
+          ...(patch.cover_url !== undefined ? { cover_url: patch.cover_url } : {}),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", bio.id);
+    }
+  };
 
   const handleApplyCopilotResult = (result: AiCopilotResult) => {
     const currentSocial = (bio.social_links as Record<string, any>) || {};
@@ -1905,6 +1915,7 @@ export function UnifiedPageEditor({
 
                 <ProductCarouselManager
                   bio={bio as any}
+                  bioPageId={bio.id}
                   socialLinks={(bio.social_links as Record<string, any>) || {}}
                   onUpdateSocialLinks={(social_links) => updateBio({ social_links })}
                 />
@@ -1923,6 +1934,7 @@ export function UnifiedPageEditor({
                 onUpdateCover={(cover_url) => updateBio({ cover_url })}
                 onUpdateAvatar={(avatar_url) => updateBio({ avatar_url })}
                 templateId={draftTemplate}
+                bioPageId={bio.id}
                 aiUsageCount={Number((bio.social_links as Record<string, any>)?.ai_images_count) || 0}
                 onAiUsageIncrement={() => {
                   const currentSocial = (bio.social_links as Record<string, any>) || {};

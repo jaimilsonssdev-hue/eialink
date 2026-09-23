@@ -30,9 +30,13 @@ import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
   beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
-    return { user: data.user };
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      const { data, error } = await supabase.auth.getUser();
+      if (error || !data?.user) throw redirect({ to: "/auth" });
+      return { user: data.user };
+    }
+    return { user: session.user };
   },
   component: AuthedLayout,
 });

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -202,14 +203,20 @@ export function ImageCropModal({
 
         canvas.toBlob(
           async (blob) => {
-            if (!blob) {
+            try {
+              if (!blob) {
+                toast.error("Não foi possível gerar a imagem redimensionada.");
+                return;
+              }
+              const croppedUrl = URL.createObjectURL(blob);
+              await onCropComplete(blob, croppedUrl);
+              onOpenChange(false);
+            } catch (cropErr: any) {
+              console.error("Erro no processamento da imagem:", cropErr);
+              toast.error(cropErr?.message || "Não foi possível salvar a imagem.");
+            } finally {
               setIsSaving(false);
-              return;
             }
-            const croppedUrl = URL.createObjectURL(blob);
-            await onCropComplete(blob, croppedUrl);
-            setIsSaving(false);
-            onOpenChange(false);
           },
           "image/webp",
           0.92,
@@ -286,20 +293,27 @@ export function ImageCropModal({
 
       canvas.toBlob(
         async (blob) => {
-          if (!blob) {
+          try {
+            if (!blob) {
+              toast.error("Não foi possível gerar a imagem enquadrada.");
+              return;
+            }
+            const croppedUrl = URL.createObjectURL(blob);
+            await onCropComplete(blob, croppedUrl);
+            onOpenChange(false);
+          } catch (cropErr: any) {
+            console.error("Erro no processamento da imagem:", cropErr);
+            toast.error(cropErr?.message || "Não foi possível salvar a imagem.");
+          } finally {
             setIsSaving(false);
-            return;
           }
-          const croppedUrl = URL.createObjectURL(blob);
-          await onCropComplete(blob, croppedUrl);
-          setIsSaving(false);
-          onOpenChange(false);
         },
         "image/webp",
         0.92,
       );
-    } catch (err) {
+    } catch (err: any) {
       console.error("Erro ao aplicar recorte/redimensionamento:", err);
+      toast.error(err?.message || "Erro ao processar imagem.");
       setIsSaving(false);
     }
   };

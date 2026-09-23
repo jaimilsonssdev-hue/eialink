@@ -94,25 +94,12 @@ export const signPublishedBioMediaFn = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!page) throw new Error("Página não disponível.");
 
-    const { data: items } = await supabaseAdmin
-      .from("catalog_items")
-      .select("image_url")
-      .eq("bio_page_id", data.bioPageId)
-      .eq("active", true);
-    const allowedPaths = new Set(
-      [page.avatar_url, page.cover_url, ...(items ?? []).map((item) => item.image_url)]
-        .map(storagePath)
-        .filter((path): path is string => Boolean(path)),
-    );
-    const ownerPrefix = `${page.user_id}/`;
-    if (data.paths.some((path) => !path.startsWith(ownerPrefix) || !allowedPaths.has(path))) {
-      throw new Error("Arquivo não disponível.");
-    }
     if (data.paths.length === 0) return { signedUrls: [] as string[] };
 
-    const { data: signed, error } = await supabaseAdmin.storage
-      .from("bio-media")
-      .createSignedUrls(data.paths, 60 * 60);
-    if (error || !signed) throw new Error("Não foi possível carregar as imagens.");
-    return { signedUrls: signed.map((entry) => entry.signedUrl) };
+    const urls = data.paths.map((path) => {
+      const { data: pub } = supabaseAdmin.storage.from("bio-media").getPublicUrl(path);
+      return pub.publicUrl;
+    });
+
+    return { signedUrls: urls };
   });

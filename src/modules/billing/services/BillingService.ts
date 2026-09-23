@@ -33,6 +33,7 @@ export const BillingService = {
       .select("role")
       .eq("user_id", auth.user.id);
     const isAdmin = isOwner || Boolean(roles?.some((r) => r.role === "admin"));
+    const isPro = Boolean(active && plan && ["pro", "essential"].includes(plan.slug));
     const notes = subscription?.notes || "";
     const hasBuilderAccessNote = notes.includes("builder_access:true");
     const canAccessBuilder = isAdmin || hasBuilderAccessNote;

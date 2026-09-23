@@ -157,8 +157,8 @@ function StorefrontView({
   const whats = bio.whatsapp?.replace(/\D/g, "") || "";
   const insta = bio.instagram?.replace("@", "") || "";
 
-  const googleRating = socialData.google_rating || "4.9";
-  const reviewsCount = socialData.reviews_count || "120+";
+  const googleRating = socialData.google_rating;
+  const reviewsCount = socialData.reviews_count;
   const address = socialData.address;
   const testimonials = Array.isArray(socialData.testimonials) ? socialData.testimonials : [];
 

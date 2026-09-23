@@ -660,19 +660,8 @@ export function BioLinkView({
   const blurOverlay = fundo_valores.blur_sobreposicao || "8px";
   const imagemFundo = fundo_valores.imagem_url;
 
-  const isCardTooTransparent =
-    !estilo_botoes.cor_fundo_card ||
-    estilo_botoes.cor_fundo_card.includes("0.03") ||
-    estilo_botoes.cor_fundo_card.includes("0.04") ||
-    estilo_botoes.cor_fundo_card.includes("0.05") ||
-    estilo_botoes.cor_fundo_card.includes("0.06");
-
-  const corFundoCard = isCardTooTransparent
-    ? "rgba(18, 20, 28, 0.90)"
-    : estilo_botoes.cor_fundo_card;
-  const corBorda = estilo_botoes.cor_borda && !estilo_botoes.cor_borda.includes("0.1)")
-    ? estilo_botoes.cor_borda
-    : "rgba(255, 255, 255, 0.12)";
+  const corFundoCard = estilo_botoes.cor_fundo_card || "rgba(18, 20, 28, 0.90)";
+  const corBorda = estilo_botoes.cor_borda || "rgba(255, 255, 255, 0.12)";
   const corTexto = estilo_botoes.cor_texto || "#ffffff";
   const corDestaque = estilo_botoes.cor_destaque || "#6366f1";
   const raioBorda = estilo_botoes.raio_borda || "16px";

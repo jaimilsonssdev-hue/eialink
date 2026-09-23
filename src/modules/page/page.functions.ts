@@ -240,7 +240,19 @@ export const getClaimPageInfoFn = createServerFn({ method: "GET" })
         _claim_token: data.token,
       });
       if (!rpcErr && rpcRes && rpcRes.valid) {
-        return { valid: true, page: rpcRes };
+        return {
+          valid: true,
+          page: {
+            id: rpcRes.id,
+            displayName: rpcRes.display_name,
+            slug: rpcRes.slug,
+            theme: rpcRes.theme,
+            coverUrl: rpcRes.cover_url,
+            avatarUrl: rpcRes.avatar_url,
+            description: rpcRes.description,
+            targetEmail: rpcRes.claim_email || null,
+          },
+        };
       }
     } catch {
       // Segue para consulta direta

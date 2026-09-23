@@ -554,7 +554,8 @@ function PublicBio() {
 
   const isSiteMaquina = effectiveTemplateId === "site-maquina";
   const isStore = effectiveTemplateId === "store-showcase" || effectiveTemplateId === "storefront";
-  const shouldShowMobileSticky = !isSiteMaquina && !isStore;
+  const isFullPageChat = effectiveTemplateId === "ai-chat-agent";
+  const shouldShowMobileSticky = !isSiteMaquina && !isStore && !isFullPageChat;
 
   return (
     <div className={`min-h-screen flex flex-col w-full overflow-x-hidden ${shouldShowMobileSticky ? "pb-16 sm:pb-0" : ""}`}>

@@ -216,7 +216,7 @@ export function TemplateMarketplace() {
             </DialogHeader>
             <div className="template-preview-large">
               <span className="template-preview-phone is-large">
-                <TemplateThumbnail template={previewTemplate} height={620} />
+                <TemplateThumbnail template={previewTemplate} height={620} scrollable />
               </span>
             </div>
             <p className="template-gallery-best-for">

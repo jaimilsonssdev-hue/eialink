@@ -8,7 +8,8 @@ export function safeExternalUrl(value?: string | null): string | undefined {
   if (!trimmed) return undefined;
 
   try {
-    const url = new URL(trimmed);
+    const hasScheme = /^[a-z][a-z\d+.-]*:/i.test(trimmed);
+    const url = new URL(hasScheme ? trimmed : `https://${trimmed}`);
     return ["https:", "http:", "mailto:", "tel:"].includes(url.protocol)
       ? url.toString()
       : undefined;

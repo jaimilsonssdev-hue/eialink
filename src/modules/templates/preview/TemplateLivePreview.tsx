@@ -13,11 +13,13 @@ export function TemplateLivePreview({
   template,
   height = 320,
   frameWidth = FRAME_WIDTH,
+  scrollable = false,
 }: {
   template: TemplateDefinition;
   /** Visible height of the preview window, in px. */
   height?: number;
   frameWidth?: number;
+  scrollable?: boolean;
 }) {
   const wrapperRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.5);
@@ -39,7 +41,7 @@ export function TemplateLivePreview({
   return (
     <div
       ref={wrapperRef}
-      className="template-live-preview"
+      className={`template-live-preview${scrollable ? " is-scrollable" : ""}`}
       style={{ height }}
       aria-hidden="true"
       inert
@@ -49,7 +51,7 @@ export function TemplateLivePreview({
         style={{
           width: frameWidth,
           transform: `scale(${scale})`,
-          height: scale > 0 ? height / scale : height,
+          minHeight: scale > 0 ? height / scale : height,
         }}
       >
         <TemplateRenderer

@@ -335,11 +335,13 @@ export const PageService = {
       .from("bio-media")
       .upload(path, file, { upsert: false, contentType: file.type });
     if (error) throw error;
-    const signedUrl = await resolveBioMediaUrl(
-      supabase.storage.from("bio-media").getPublicUrl(path).data.publicUrl,
-    );
-    if (!signedUrl) throw new Error("Não foi possível proteger a imagem enviada.");
-    return signedUrl;
+    const { data: signed, error: signError } = await supabase.storage
+      .from("bio-media")
+      .createSignedUrl(path, 60 * 60);
+    if (signError || !signed?.signedUrl) {
+      throw new Error("Não foi possível proteger a imagem enviada.");
+    }
+    return signed.signedUrl;
   },
 
   async uploadAsset(file: File) {
@@ -425,7 +427,6 @@ export const PageService = {
 
   async createClaimLink(pageId: string, targetEmail?: string) {
     const userId = await this.getCurrentUserId();
-    const claimToken = crypto.randomUUID();
 
     const { data: page, error: fetchErr } = await supabase
       .from("bio_pages")
@@ -437,11 +438,15 @@ export const PageService = {
     if (fetchErr || !page) throw new Error("Página não encontrada.");
 
     const currentSocial = (page.social_links as Record<string, any>) || {};
+    const existingToken =
+      typeof currentSocial.claim_token === "string" && currentSocial.claim_token.trim()
+        ? currentSocial.claim_token.trim()
+        : null;
+    const claimToken = existingToken || crypto.randomUUID();
     const updatedSocial: Record<string, any> = {
       ...currentSocial,
       claim_token: claimToken,
       claim_email: targetEmail?.trim().toLowerCase() || undefined,
-      is_demo: false,
     };
 
     const { error: updateErr } = await supabase

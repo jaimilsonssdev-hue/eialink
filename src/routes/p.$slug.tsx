@@ -15,7 +15,11 @@ import { WhatsAppTriageModal, type TriageConfig } from "@/components/public/What
 import { MobileStickyBar } from "@/components/public-profile/MobileStickyBar";
 import { ModularSections } from "@/components/public-profile/ModularSections";
 import { AiAssistantChat } from "@/components/public/AiAssistantChat";
-import { resolveBioMediaUrl } from "@/lib/bio-media";
+import { bioMediaPath } from "@/lib/bio-media";
+import {
+  recordPublicAnalyticsEventFn,
+  signPublishedBioMediaFn,
+} from "@/lib/public-page.functions";
 import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
 import { ComandaFloatingBar } from "@/components/public/ComandaFloatingBar";
 
@@ -85,11 +89,22 @@ export const Route = createFileRoute("/p/$slug")({
           .eq("active", true)
           .maybeSingle()
       : { data: null };
-    const [avatarUrl, coverUrl, productImageUrls] = await Promise.all([
-      resolveBioMediaUrl(bio.avatar_url),
-      resolveBioMediaUrl(bio.cover_url),
-      Promise.all((products ?? []).map((product: { image_url?: string | null }) => resolveBioMediaUrl(product.image_url))),
-    ]);
+    const mediaValues = [
+      bio.avatar_url,
+      bio.cover_url,
+      ...(products ?? []).map((product: { image_url?: string | null }) => product.image_url ?? null),
+    ];
+    const mediaPaths = mediaValues.map(bioMediaPath);
+    const storedPaths = mediaPaths.filter((path): path is string => Boolean(path));
+    const { signedUrls } = await signPublishedBioMediaFn({
+      data: { bioPageId: bio.id, paths: storedPaths },
+    });
+    let signedIndex = 0;
+    const resolvedMedia = mediaValues.map((value, index) =>
+      mediaPaths[index] ? signedUrls[signedIndex++] ?? null : value,
+    );
+    const [avatarUrl, coverUrl, ...productImageUrls] = resolvedMedia;
+
     const rawSocial =
       (bio.social_links && typeof bio.social_links === "object"
         ? bio.social_links
@@ -355,36 +370,30 @@ function PublicBio() {
     const url = new URL(window.location.href);
     // The Supabase query builder only issues the request once it is awaited,
     // so the promise must be consumed for the page view to be recorded.
-    void supabase
-      .from("analytics_events")
-      .insert({
-        bio_page_id: bio.id,
-        event_type: "view",
-        utm_source: url.searchParams.get("utm_source"),
-        utm_medium: url.searchParams.get("utm_medium"),
-        utm_campaign: url.searchParams.get("utm_campaign"),
-        referrer: document.referrer || null,
+    void recordPublicAnalyticsEventFn({
+      data: {
+        bioPageId: bio.id,
+        eventType: "view",
+        utmSource: url.searchParams.get("utm_source")?.slice(0, 200) ?? null,
+        utmMedium: url.searchParams.get("utm_medium")?.slice(0, 200) ?? null,
+        utmCampaign: url.searchParams.get("utm_campaign")?.slice(0, 200) ?? null,
+        referrer: document.referrer.slice(0, 2048) || null,
         device: /Mobi/i.test(navigator.userAgent) ? "mobile" : "desktop",
-      })
-      .then(({ error }) => {
-        if (error) console.error("analytics view", error.message);
-      });
+      },
+    }).catch(() => undefined);
   }, [bio.id]);
 
   function track(eventType: string, targetId?: string) {
     const device = /Mobi/i.test(navigator.userAgent) ? "mobile" : "desktop";
-    void supabase
-      .from("analytics_events")
-      .insert({
-        bio_page_id: bio.id,
-        event_type: eventType,
-        target_id: targetId ?? null,
+    void recordPublicAnalyticsEventFn({
+      data: {
+        bioPageId: bio.id,
+        eventType,
+        targetId: targetId ?? null,
         device,
-        referrer: document.referrer || null,
-      })
-      .then(({ error }) => {
-        if (error) console.error("analytics event", error.message);
-      });
+        referrer: document.referrer.slice(0, 2048) || null,
+      },
+    }).catch(() => undefined);
   }
 
   async function share() {
@@ -570,7 +579,8 @@ function PublicBio() {
 
   const isSiteMaquina = effectiveTemplateId === "site-maquina";
   const isStore = effectiveTemplateId === "store-showcase" || effectiveTemplateId === "storefront";
-  const shouldShowMobileSticky = !isSiteMaquina && !isStore;
+  const isFullPageChat = effectiveTemplateId === "ai-chat-agent";
+  const shouldShowMobileSticky = !isSiteMaquina && !isStore && !isFullPageChat;
 
   return (
     <div className={`min-h-screen flex flex-col w-full overflow-x-hidden ${shouldShowMobileSticky ? "pb-16 sm:pb-0" : ""}`}>

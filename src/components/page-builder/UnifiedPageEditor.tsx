@@ -796,7 +796,7 @@ export function UnifiedPageEditor({
     }
   };
 
-  const handleApplyCopilotResult = (result: AiCopilotResult) => {
+  const handleApplyCopilotResult = async (result: AiCopilotResult) => {
     const currentSocial = (bio.social_links as Record<string, any>) || {};
 
     const customTheme = result.custom_theme
@@ -817,7 +817,7 @@ export function UnifiedPageEditor({
             cor_gradiente_1: customTheme.background || "#0b0c10",
             cor_gradiente_2: customTheme.primary || "#1f2937",
             blur_sobreposicao: "8px",
-            imagem_url: bio.cover_url || "",
+            imagem_url: result.cover_url || bio.cover_url || "",
           },
           estilo_botoes: {
             cor_fundo_card: customTheme.card_bg || "rgba(255, 255, 255, 0.04)",
@@ -829,12 +829,37 @@ export function UnifiedPageEditor({
         }
       : currentSocial.tokens_design;
 
-    const updatedSocial: Record<string, any> = {
-      ...currentSocial,
-      custom_theme: customTheme,
-      tokens_design: tokensDesign,
+    // Seção Hero e estilos por seção: substituição obrigatória de títulos e subtítulos genéricos do modelo base
+    const existingSectionStyles = (currentSocial.section_styles as Record<string, any>) || {};
+    const existingHero = (existingSectionStyles.hero as Record<string, any>) || {};
+
+    const updatedHero = {
+      ...existingHero,
+      title: result.display_name || existingHero.title || bio.display_name,
+      subtitle: result.description || existingHero.subtitle || bio.description,
     };
 
+    const updatedSectionStyles = {
+      ...existingSectionStyles,
+      hero: updatedHero,
+    };
+
+    const targetNiche = result.niche || currentSocial.niche || niche;
+
+    const updatedSocial: Record<string, any> = {
+      ...currentSocial,
+      niche: targetNiche,
+      custom_theme: customTheme,
+      tokens_design: tokensDesign,
+      section_styles: updatedSectionStyles,
+    };
+
+    if (result.city) {
+      updatedSocial.city = result.city;
+    }
+    if (result.address) {
+      updatedSocial.address = result.address;
+    }
     if (result.differentials && result.differentials.length > 0) {
       updatedSocial.differentials = result.differentials;
     }
@@ -849,19 +874,23 @@ export function UnifiedPageEditor({
       updatedSocial.video_embed = result.video_embed;
     }
 
-    const patch: Partial<BioForm> = {
-      display_name: result.display_name || bio.display_name,
+    const newDisplayName = result.display_name || bio.display_name;
+    const newNormalizedSlug = normalizePageSlug(bio.slug || newDisplayName);
+
+    const updatedBio: BioForm = {
+      ...bio,
+      display_name: newDisplayName,
       description: result.description || bio.description,
       whatsapp_message: result.whatsapp_message || bio.whatsapp_message,
       avatar_url: result.avatar_url || bio.avatar_url,
       cover_url: result.cover_url || bio.cover_url,
       social_links: updatedSocial as any,
+      slug: newNormalizedSlug,
     };
 
-    updateBio(patch);
-
+    let updatedProductsList: CatalogItem[] = products;
     if (result.suggested_services && result.suggested_services.length > 0) {
-      const newItems: CatalogItem[] = result.suggested_services.map((svc, idx) => ({
+      updatedProductsList = result.suggested_services.map((svc, idx) => ({
         id: crypto.randomUUID(),
         bio_page_id: bio.id || "preview",
         type: "service",
@@ -878,10 +907,49 @@ export function UnifiedPageEditor({
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }));
-      setProducts(newItems);
     }
 
-    toast.success("Alterações do Copiloto IA aplicadas com sucesso! Clique em 'Salvar' para publicar.");
+    // Atualiza o estado da UI imediatamente
+    setBio(updatedBio);
+    if (result.niche) {
+      setNiche(result.niche);
+    }
+    setProducts(updatedProductsList);
+
+    // Auto-save e publicação imediata no Supabase
+    setSaving(true);
+    setSaveState("idle");
+    const toastId = toast.loading("✨ Montando o site e publicando com seus dados reais...");
+    try {
+      const savedRes = await onSave({
+        bio: updatedBio,
+        links,
+        products: updatedProductsList,
+        niche: targetNiche,
+      });
+      if (savedRes?.products) {
+        setProducts(savedRes.products);
+      }
+      setSavedSnapshot(
+        JSON.stringify({
+          bio: updatedBio,
+          links,
+          products: savedRes?.products || updatedProductsList,
+          niche: targetNiche,
+        }),
+      );
+      setSaveState("success");
+      toast.success("🚀 Site montado, personalizado e publicado com sucesso!", { id: toastId });
+    } catch (saveErr: any) {
+      console.error("Erro ao salvar automaticamente após Copiloto:", saveErr);
+      setSaveState("error");
+      toast.error(
+        `Site montado na prévia! Aviso ao salvar: ${saveErr?.message || "Clique em 'Salvar e publicar' no topo."}`,
+        { id: toastId },
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addLink = () => {
@@ -1205,17 +1273,15 @@ export function UnifiedPageEditor({
               <Eye className="h-4 w-4" /> Prévia
             </button>
 
-            {isAdmin && (
-              <button
-                type="button"
-                onClick={() => setIsCopilotOpen(true)}
-                className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
-                title="Ajustar cores, textos, diferenciais e serviços com Inteligência Artificial (Exclusivo Super Admin)"
-              >
-                <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
-                <span>Copiloto IA (Admin)</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => setIsCopilotOpen(true)}
+              className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
+              title="Editar textos, cores da marca, fotos e serviços com Inteligência Artificial"
+            >
+              <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
+              <span>Editar com IA</span>
+            </button>
 
             <a
               href={pageUrl}

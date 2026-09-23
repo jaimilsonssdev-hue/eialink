@@ -88,6 +88,52 @@ function fileToBase64(file: File): Promise<string> {
   });
 }
 
+/**
+ * Redimensiona imagens no navegador para no máximo 1024px e converte para JPEG com qualidade 0.82.
+ * Reduz arquivos pesados de câmera (8MB-15MB) para apenas ~60-80KB com máxima nitidez visual.
+ */
+async function getOptimizedBase64(file: File): Promise<string> {
+  if (!file.type.startsWith("image/") || file.type.includes("svg")) {
+    return fileToBase64(file);
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const MAX_DIM = 1024;
+      let { width, height } = img;
+      if (width > MAX_DIM || height > MAX_DIM) {
+        if (width > height) {
+          height = Math.round((height * MAX_DIM) / width);
+          width = MAX_DIM;
+        } else {
+          width = Math.round((width * MAX_DIM) / height);
+          height = MAX_DIM;
+        }
+      }
+
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        fileToBase64(file).then(resolve);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+      resolve(dataUrl);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      fileToBase64(file).then(resolve);
+    };
+    img.src = url;
+  });
+}
+
 function formatFileSize(bytes: number) {
   if (bytes < 1024 * 1024) {
     return `${(bytes / 1024).toFixed(1)} KB`;
@@ -434,8 +480,16 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
       for (const item of mediaItems) {
         if (abortController.signal.aborted) return;
 
-        // Gera base64 para envio ao Gemini
-        const base64Data = await fileToBase64(item.file);
+        // Se for PDF e os dados de texto/imagens já tiverem sido extraídos localmente para o briefing/mídias,
+        // não reenviamos o arquivo binário bruto para evitar estouro de limite de corpo HTTP (413).
+        if (item.isPdf) {
+          if (item.file.size > 2 * 1024 * 1024 || briefing.includes(item.name)) {
+            continue;
+          }
+        }
+
+        // Gera base64 otimizado (Canvas 1024px JPEG) para envio rápido e leve ao Gemini
+        const base64Data = await getOptimizedBase64(item.file);
         let publicUrl = item.publicUrl;
 
         // Se for imagem e ainda não tem URL pública, faz upload seguro via PageService
@@ -452,7 +506,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
 
         preparedFiles.push({
           name: item.name,
-          mimeType: item.type,
+          mimeType: item.type.startsWith("image/") ? "image/jpeg" : item.type,
           base64: base64Data,
           publicUrl,
           role: item.role,
@@ -484,10 +538,18 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         return;
       }
       console.error("Erro no Copiloto IA Multimodal:", err);
-      setError(
+      const msg =
         err?.message ||
-          "Ocorreu um erro ao comunicar com a IA do Google AI Studio. Verifique os dados e tente novamente.",
-      );
+        "Ocorreu um erro ao comunicar com a IA do Google AI Studio. Verifique os dados e tente novamente.";
+      setError(msg);
+      if (
+        msg.toLowerCase().includes("chave") ||
+        msg.toLowerCase().includes("api key") ||
+        msg.toLowerCase().includes("não configurada") ||
+        msg.toLowerCase().includes("inválida")
+      ) {
+        setShowKeyConfig(true);
+      }
     } finally {
       abortControllerRef.current = null;
       setLoading(false);
@@ -865,37 +927,50 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-              <div className="space-y-1 p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
-                <span className="text-zinc-500 block font-semibold">Nome & Descrição:</span>
+              <div className="space-y-1.5 p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
+                <span className="text-zinc-500 block font-semibold">Negócio Real Identificado:</span>
                 <b className="text-white block text-sm">{generatedResult.display_name}</b>
+                <div className="flex flex-wrap gap-2 text-[10px] text-purple-300">
+                  {generatedResult.niche && (
+                    <span className="px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800/40">
+                      Nicho: {generatedResult.niche}
+                    </span>
+                  )}
+                  {generatedResult.city && (
+                    <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 border border-zinc-700">
+                      📍 {generatedResult.city}
+                    </span>
+                  )}
+                </div>
                 <p className="text-zinc-300 text-[11px] line-clamp-2">
                   {generatedResult.description}
                 </p>
               </div>
 
-              <div className="space-y-1 p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
+              <div className="space-y-1.5 p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
                 <span className="text-zinc-500 block font-semibold">
-                  Paleta de Cores Harmônica:
+                  Cor da Marca & Identidade Visual:
                 </span>
                 <div className="flex items-center gap-2 pt-1">
                   <div
-                    className="w-5 h-5 rounded-full border border-white/20 shadow-xs"
+                    className="w-6 h-6 rounded-full border-2 border-white/40 shadow-md shrink-0"
                     style={{ backgroundColor: generatedResult.custom_theme?.primary }}
-                    title="Primária"
+                    title="Cor Primária da Marca"
                   />
                   <div
-                    className="w-5 h-5 rounded-full border border-white/20 shadow-xs"
+                    className="w-5 h-5 rounded-full border border-white/20 shadow-xs shrink-0"
                     style={{ backgroundColor: generatedResult.custom_theme?.background }}
-                    title="Fundo"
+                    title="Fundo Dark Obsidian"
                   />
                   <div
-                    className="w-5 h-5 rounded-full border border-white/20 shadow-xs"
+                    className="w-5 h-5 rounded-full border border-white/20 shadow-xs shrink-0"
                     style={{ backgroundColor: generatedResult.custom_theme?.card_bg }}
-                    title="Card"
+                    title="Superfície Card"
                   />
-                  <span className="text-[11px] font-mono text-zinc-400 ml-1">
-                    {generatedResult.custom_theme?.primary} · {generatedResult.custom_theme?.mode}
-                  </span>
+                  <div className="text-[11px] font-mono text-zinc-300 ml-1">
+                    <span className="font-bold text-white">{generatedResult.custom_theme?.primary}</span>
+                    <span className="text-zinc-500 text-[10px] block">Tom primário da marca</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1120,7 +1195,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               className="w-full sm:w-auto px-7 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
             >
               <CheckCircle2 className="h-4 w-4" />
-              <span>Aplicar no Site Agora</span>
+              <span>Montar e Publicar Site Agora</span>
             </button>
           )}
         </div>

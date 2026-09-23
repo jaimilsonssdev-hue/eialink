@@ -415,7 +415,13 @@ function SiteMaquinaView({
     switch (sectionKey) {
       case "hero": {
         const heroCfg = sectionStyles.hero || {};
-        const heroTitle = heroCfg.title || companyName;
+        const isGenericTemplateTitle = (t?: string) =>
+          !t ||
+          t.toLowerCase().includes("policlínica rmed") ||
+          t.toLowerCase().includes("empresa local") ||
+          t.startsWith("[DEMO]");
+        const heroTitle =
+          (!isGenericTemplateTitle(heroCfg.title) ? heroCfg.title : null) || companyName;
         const heroSubtitle =
           heroCfg.subtitle ||
           bio.description ||

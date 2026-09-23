@@ -70,30 +70,109 @@ function AuthPage() {
 }
 
 function LoginForm({ next }: { next?: "billing" }) {
-  const [email, setEmail] = useState(""); const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false); const [error, setError] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [cooldownSeconds, setCooldownSeconds] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (cooldownSeconds <= 0) return;
+    const interval = setInterval(() => {
+      setCooldownSeconds((prev) => {
+        if (prev <= 1) {
+          setFailedAttempts(0);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [cooldownSeconds]);
+
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault(); setError(null); setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    e.preventDefault();
+    if (cooldownSeconds > 0) return;
+    setError(null);
+    setLoading(true);
+
+    const { error: authErr } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
-    if (error) return setError(error.message);
+
+    if (authErr) {
+      const nextFail = failedAttempts + 1;
+      setFailedAttempts(nextFail);
+
+      const isRateLimited =
+        authErr.status === 429 ||
+        authErr.message.toLowerCase().includes("too many requests") ||
+        authErr.message.toLowerCase().includes("rate limit");
+
+      if (isRateLimited || nextFail >= 5) {
+        setCooldownSeconds(60);
+        return setError(
+          "Muitas tentativas com credenciais incorretas. Por segurança, aguarde 60 segundos antes de tentar novamente.",
+        );
+      }
+
+      const remaining = 5 - nextFail;
+      const warning =
+        remaining > 0 && remaining <= 2
+          ? ` (${remaining} tentativa(s) restante(s) antes do bloqueio temporário)`
+          : "";
+
+      return setError(
+        authErr.message === "Invalid login credentials"
+          ? `E-mail ou senha incorretos.${warning}`
+          : `${authErr.message}${warning}`,
+      );
+    }
+
+    setFailedAttempts(0);
     navigate({ to: next === "billing" ? "/billing" : "/builder" });
   }
+
   return (
     <form onSubmit={onSubmit} className="card-surface space-y-4">
       <h1 className="text-2xl font-bold">Bem-vindo de volta</h1>
       <div>
         <label className="text-sm text-muted-foreground">Email</label>
-        <input className="input-base mt-1" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <input
+          className="input-base mt-1"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          disabled={cooldownSeconds > 0 || loading}
+          required
+        />
       </div>
       <div>
         <label className="text-sm text-muted-foreground">Senha</label>
-        <input className="input-base mt-1" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <input
+          className="input-base mt-1"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          disabled={cooldownSeconds > 0 || loading}
+          required
+        />
       </div>
       {error && <p className="text-sm text-[color:var(--destructive)]">{error}</p>}
-      <button className="btn-primary w-full" disabled={loading}>
-        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Entrar <ArrowRight className="h-4 w-4" /></>}
+      <button
+        className="btn-primary w-full"
+        disabled={loading || cooldownSeconds > 0}
+      >
+        {loading ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : cooldownSeconds > 0 ? (
+          <>Aguarde {cooldownSeconds}s...</>
+        ) : (
+          <>
+            Entrar <ArrowRight className="h-4 w-4" />
+          </>
+        )}
       </button>
     </form>
   );

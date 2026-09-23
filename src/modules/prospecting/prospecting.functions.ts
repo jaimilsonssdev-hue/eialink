@@ -2,8 +2,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { searchGoogleMapsAndInstagram, lookupBusinessProfile } from "./LiveProspectingEngine";
 import { prospectingSearchSchema } from "./validation";
 import type { ProspectDraft } from "./types";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const runLiveProspecting = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { niche: string; city: string; limit?: number }) =>
     prospectingSearchSchema.parse(data),
   )
@@ -12,6 +14,7 @@ export const runLiveProspecting = createServerFn({ method: "POST" })
   });
 
 export const lookupBusinessProfileFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { query: string }) => {
     const query = (data?.query ?? "").trim();
     if (!query) {

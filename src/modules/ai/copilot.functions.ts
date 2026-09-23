@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export interface AiCopilotResult {
   display_name?: string;
@@ -83,6 +84,7 @@ const copilotInputSchema = z
   );
 
 export const generateCopilotSiteFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
   .handler(async ({ data }): Promise<AiCopilotResult> => {
     // RESOLUÇÃO SEGURA DA CHAVE NO SERVIDOR:
@@ -456,6 +458,7 @@ export interface FetchedBusinessData {
 }
 
 export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof fetchUrlInputSchema>) => fetchUrlInputSchema.parse(data))
   .handler(async ({ data }): Promise<FetchedBusinessData> => {
     let target = data.url.trim();

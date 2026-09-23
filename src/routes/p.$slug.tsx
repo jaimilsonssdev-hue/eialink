@@ -90,7 +90,31 @@ export const Route = createFileRoute("/p/$slug")({
       resolveBioMediaUrl(bio.cover_url),
       Promise.all((products ?? []).map((product: { image_url?: string | null }) => resolveBioMediaUrl(product.image_url))),
     ]);
-    const protectedBio = { ...bio, avatar_url: avatarUrl, cover_url: coverUrl };
+    const rawSocial =
+      (bio.social_links && typeof bio.social_links === "object"
+        ? bio.social_links
+        : {}) as Record<string, any>;
+    const safeSocial: Record<string, any> = { ...rawSocial };
+    // Blindagem de segurança: remove tokens de autenticação antes da serialização pública
+    delete safeSocial.google_calendar;
+    delete safeSocial.claim_token;
+    delete safeSocial.claim_email;
+    if (safeSocial.comanda_settings && typeof safeSocial.comanda_settings === "object") {
+      const comanda = safeSocial.comanda_settings as Record<string, any>;
+      if (Array.isArray(comanda.waiters)) {
+        safeSocial.comanda_settings = {
+          ...comanda,
+          waiters: comanda.waiters.map(({ pin, ...w }: any) => w),
+        };
+      }
+    }
+
+    const protectedBio = {
+      ...bio,
+      social_links: safeSocial,
+      avatar_url: avatarUrl,
+      cover_url: coverUrl,
+    };
     const protectedProducts = (products ?? []).map((product: CatalogItem, index: number) => ({
       ...product,
       image_url: productImageUrls[index] ?? null,

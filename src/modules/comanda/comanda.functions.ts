@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import type {
   ComandaSettings,
@@ -17,6 +18,16 @@ function getServiceSupabase() {
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return null;
   return createClient<Database>(url, key);
+}
+
+async function checkIsAdmin(supabase: any, userId: string, email?: string): Promise<boolean> {
+  const isOwner = email?.toLowerCase() === "jaimilsonvendas@gmail.com";
+  if (isOwner) return true;
+  const { data: roles } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  return Boolean(roles?.some((r: any) => r.role === "admin"));
 }
 
 const DEFAULT_SETTINGS: ComandaSettings = {
@@ -48,24 +59,32 @@ const DEFAULT_SETTINGS: ComandaSettings = {
 };
 
 /**
- * 1. Obter configurações da Comanda Digital para uma bioPage
+ * 1. Obter configurações da Comanda Digital para uma bioPage (Apenas dono da página ou Admin)
  */
 export const getComandaSettingsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { bioPageId: string }) => {
     if (!data.bioPageId) throw new Error("ID da página é obrigatório.");
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase: userSupabase, userId, claims } = context;
     const supabase = getServiceSupabase();
     if (!supabase) return { settings: DEFAULT_SETTINGS, slug: "" };
 
     const { data: page } = await supabase
       .from("bio_pages")
-      .select("id, slug, social_links")
+      .select("id, user_id, slug, social_links")
       .eq("id", data.bioPageId)
       .maybeSingle();
 
     if (!page) return { settings: DEFAULT_SETTINGS, slug: "" };
+
+    const isOwner = page.user_id === userId;
+    const isAdmin = await checkIsAdmin(userSupabase, userId, claims.email as string);
+    if (!isOwner && !isAdmin) {
+      throw new Error("Acesso não autorizado.");
+    }
 
     const social = (page.social_links as Record<string, unknown>) || {};
     const settings = (social.comanda_settings as ComandaSettings) || DEFAULT_SETTINGS;
@@ -77,24 +96,32 @@ export const getComandaSettingsFn = createServerFn({ method: "POST" })
   });
 
 /**
- * 2. Salvar configurações da Comanda Digital (Mesas, Garçons, Modo)
+ * 2. Salvar configurações da Comanda Digital (Mesas, Garçons, Modo) - Apenas dono ou Admin
  */
 export const saveComandaSettingsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { bioPageId: string; settings: ComandaSettings }) => {
     if (!data.bioPageId) throw new Error("ID da página é obrigatório.");
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase: userSupabase, userId, claims } = context;
     const supabase = getServiceSupabase();
     if (!supabase) throw new Error("Banco de dados indisponível.");
 
     const { data: page, error: fetchErr } = await supabase
       .from("bio_pages")
-      .select("social_links")
+      .select("id, user_id, social_links")
       .eq("id", data.bioPageId)
       .single();
 
     if (fetchErr || !page) throw new Error("Página não encontrada.");
+
+    const isOwner = page.user_id === userId;
+    const isAdmin = await checkIsAdmin(userSupabase, userId, claims.email as string);
+    if (!isOwner && !isAdmin) {
+      throw new Error("Acesso não autorizado.");
+    }
 
     const social = (page.social_links as Record<string, unknown>) || {};
 
@@ -264,8 +291,53 @@ export const callWaiterFn = createServerFn({ method: "POST" })
     };
   });
 
+// Rate limiter em memória contra ataques de força bruta no PIN dos garçons
+interface WaiterLoginAttempt {
+  attempts: number;
+  blockedUntil?: number;
+}
+const waiterLoginAttempts = new Map<string, WaiterLoginAttempt>();
+
+function checkWaiterRateLimit(key: string): { blocked: boolean; waitMinutes?: number } {
+  const now = Date.now();
+  const record = waiterLoginAttempts.get(key);
+  if (!record) return { blocked: false };
+
+  if (record.blockedUntil && record.blockedUntil > now) {
+    const remainingMs = record.blockedUntil - now;
+    const waitMinutes = Math.max(1, Math.ceil(remainingMs / 60000));
+    return { blocked: true, waitMinutes };
+  }
+
+  if (record.blockedUntil && record.blockedUntil <= now) {
+    waiterLoginAttempts.delete(key);
+    return { blocked: false };
+  }
+
+  return { blocked: false };
+}
+
+function recordFailedWaiterAttempt(key: string): { blocked: boolean; waitMinutes?: number } {
+  const now = Date.now();
+  const record = waiterLoginAttempts.get(key) || { attempts: 0 };
+  record.attempts += 1;
+
+  if (record.attempts >= 5) {
+    record.blockedUntil = now + 5 * 60 * 1000; // Bloqueio temporário de 5 minutos
+    waiterLoginAttempts.set(key, record);
+    return { blocked: true, waitMinutes: 5 };
+  }
+
+  waiterLoginAttempts.set(key, record);
+  return { blocked: false };
+}
+
+function clearWaiterAttempts(key: string) {
+  waiterLoginAttempts.delete(key);
+}
+
 /**
- * 5. Login rápido do Garçom por PIN de 4 dígitos
+ * 5. Login rápido do Garçom por PIN de 4 dígitos (com proteção anti-força bruta)
  */
 export const waiterLoginFn = createServerFn({ method: "POST" })
   .inputValidator((data: { bioPageId: string; pin: string }) => {
@@ -274,6 +346,13 @@ export const waiterLoginFn = createServerFn({ method: "POST" })
     return data;
   })
   .handler(async ({ data }) => {
+    const rateCheck = checkWaiterRateLimit(data.bioPageId);
+    if (rateCheck.blocked) {
+      throw new Error(
+        `Muitas tentativas com PIN incorreto. Por segurança, aguarde ${rateCheck.waitMinutes} minuto(s) antes de tentar novamente.`,
+      );
+    }
+
     const supabase = getServiceSupabase();
     if (!supabase) throw new Error("Banco de dados indisponível.");
 
@@ -293,8 +372,17 @@ export const waiterLoginFn = createServerFn({ method: "POST" })
     );
 
     if (!waiter) {
+      const lockResult = recordFailedWaiterAttempt(data.bioPageId);
+      if (lockResult.blocked) {
+        throw new Error(
+          `Limite de tentativas excedido (5 erros). O acesso a este painel foi temporariamente bloqueado por ${lockResult.waitMinutes} minutos por segurança.`,
+        );
+      }
       throw new Error("PIN incorreto ou garçom desativado.");
     }
+
+    // Sucesso: reseta histórico de falhas
+    clearWaiterAttempts(data.bioPageId);
 
     return {
       authenticated: true,

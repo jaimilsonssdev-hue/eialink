@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import type { DynamicLink } from "./types";
 
@@ -11,6 +12,16 @@ function getServiceSupabase() {
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) return null;
   return createClient<Database>(url, key);
+}
+
+async function checkIsAdmin(supabase: any, userId: string, email?: string): Promise<boolean> {
+  const isOwner = email?.toLowerCase() === "jaimilsonvendas@gmail.com";
+  if (isOwner) return true;
+  const { data: roles } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId);
+  return Boolean(roles?.some((r: any) => r.role === "admin"));
 }
 
 /**
@@ -48,7 +59,14 @@ export function buildGoogleReviewUrl(input: string): string {
  * 1. Listar todos os links dinâmicos / plaquinhas cadastradas
  */
 export const listDynamicLinksFn = createServerFn({ method: "POST" })
-  .handler(async () => {
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase: userSupabase, userId, claims } = context;
+    const isAdmin = await checkIsAdmin(userSupabase, userId, claims.email as string);
+    if (!isAdmin) {
+      throw new Error("Acesso restrito a administradores.");
+    }
+
     const supabase = getServiceSupabase();
     if (!supabase) return { links: [] as DynamicLink[] };
 
@@ -82,12 +100,19 @@ export const listDynamicLinksFn = createServerFn({ method: "POST" })
  * 2. Salvar ou atualizar link dinâmico
  */
 export const saveDynamicLinkFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { link: Partial<DynamicLink> & { code: string; title: string } }) => {
     if (!data.link.code) throw new Error("O código/slug curto é obrigatório.");
     if (!data.link.title) throw new Error("O título da plaquinha é obrigatório.");
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase: userSupabase, userId, claims } = context;
+    const isAdmin = await checkIsAdmin(userSupabase, userId, claims.email as string);
+    if (!isAdmin) {
+      throw new Error("Apenas administradores podem cadastrar ou editar plaquinhas NFC.");
+    }
+
     const supabase = getServiceSupabase();
     if (!supabase) throw new Error("Serviço de banco de dados indisponível.");
 
@@ -190,11 +215,18 @@ export const saveDynamicLinkFn = createServerFn({ method: "POST" })
  * 3. Excluir link dinâmico
  */
 export const deleteDynamicLinkFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { id: string }) => {
     if (!data.id) throw new Error("ID do link é obrigatório.");
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase: userSupabase, userId, claims } = context;
+    const isAdmin = await checkIsAdmin(userSupabase, userId, claims.email as string);
+    if (!isAdmin) {
+      throw new Error("Apenas administradores podem excluir plaquinhas NFC.");
+    }
+
     const supabase = getServiceSupabase();
     if (!supabase) throw new Error("Serviço de banco de dados indisponível.");
 

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 
 function getServiceSupabase() {
@@ -78,11 +79,25 @@ async function resolveGoogleOAuthCredentials(): Promise<GoogleOAuthPlatformConfi
  * 1. Gera a URL de autorização OAuth2 do Google
  */
 export const getGoogleAuthUrlFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { bioPageId: string; redirectOrigin: string }) => {
     if (!data.bioPageId) throw new Error("ID da página é obrigatório.");
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    // Confirma que a página pertence ao usuário autenticado
+    const { data: page, error: pageErr } = await supabase
+      .from("bio_pages")
+      .select("id, user_id")
+      .eq("id", data.bioPageId)
+      .maybeSingle();
+
+    if (pageErr || !page || page.user_id !== userId) {
+      throw new Error("Página não encontrada ou sem autorização para integrar o Google Agenda.");
+    }
+
     const { clientId } = await resolveGoogleOAuthCredentials();
     if (!clientId) {
       throw new Error(
@@ -92,9 +107,10 @@ export const getGoogleAuthUrlFn = createServerFn({ method: "POST" })
 
     const redirectUri = `${data.redirectOrigin.replace(/\/$/, "")}/_authenticated/google-callback`;
 
-    // Empacota o estado com bioPageId
+    // Empacota o estado com bioPageId e userId do solicitante
     const statePayload = JSON.stringify({
       bioPageId: data.bioPageId,
+      userId,
       ts: Date.now(),
     });
     const state = Buffer.from(statePayload).toString("base64");
@@ -118,6 +134,7 @@ export const getGoogleAuthUrlFn = createServerFn({ method: "POST" })
  * 2. Processa o callback de autorização do Google, troca o code por tokens e armazena na página
  */
 export const handleGoogleAuthCallbackFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (data: { code: string; state: string; redirectOrigin: string }) => {
       if (!data.code) throw new Error("Código de autorização não informado.");
@@ -125,21 +142,43 @@ export const handleGoogleAuthCallbackFn = createServerFn({ method: "POST" })
       return data;
     },
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
     const { clientId, clientSecret } = await resolveGoogleOAuthCredentials();
     if (!clientId || !clientSecret) {
       throw new Error("Credenciais do Google OAuth incompletas no servidor.");
     }
 
     let bioPageId: string;
+    let stateUserId: string | undefined;
     try {
       const decoded = JSON.parse(Buffer.from(data.state, "base64").toString("utf-8"));
       bioPageId = decoded.bioPageId;
+      stateUserId = decoded.userId;
     } catch {
       throw new Error("Estado OAuth inválido ou expirado.");
     }
 
+    // Se o state registrou um userId, garante que é da mesma sessão autenticada
+    if (stateUserId && stateUserId !== userId) {
+      throw new Error("Sessão de autorização inválida para este usuário.");
+    }
+
     const redirectUri = `${data.redirectOrigin.replace(/\/$/, "")}/_authenticated/google-callback`;
+
+    const supabase = getServiceSupabase();
+    if (!supabase) throw new Error("Conexão com banco de dados indisponível.");
+
+    // Recupera e valida titularidade da bio_page antes de salvar
+    const { data: page, error: pageErr } = await supabase
+      .from("bio_pages")
+      .select("id, user_id, social_links")
+      .eq("id", bioPageId)
+      .maybeSingle();
+
+    if (pageErr || !page || page.user_id !== userId) {
+      throw new Error("Página não encontrada ou sem permissão para vincular a agenda.");
+    }
 
     // Troca o code por access_token e refresh_token
     const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -177,20 +216,6 @@ export const handleGoogleAuthCallbackFn = createServerFn({ method: "POST" })
       }
     } catch (e) {
       console.warn("Aviso ao buscar e-mail do Google:", e);
-    }
-
-    const supabase = getServiceSupabase();
-    if (!supabase) throw new Error("Conexão com banco de dados indisponível.");
-
-    // Recupera dados atuais da bio_page
-    const { data: page, error: pageErr } = await supabase
-      .from("bio_pages")
-      .select("id, social_links")
-      .eq("id", bioPageId)
-      .single();
-
-    if (pageErr || !page) {
-      throw new Error("Página não encontrada para salvar a conexão.");
     }
 
     const currentSocial =
@@ -244,19 +269,23 @@ export const handleGoogleAuthCallbackFn = createServerFn({ method: "POST" })
  * 3. Obtém o status da conexão da Google Agenda para a página (sem expor tokens sensíveis)
  */
 export const getGoogleCalendarStatusFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { bioPageId: string }) => {
     if (!data.bioPageId) throw new Error("ID da página é obrigatório.");
     return data;
   })
-  .handler(async ({ data }) => {
-    const supabase = getServiceSupabase();
-    if (!supabase) return { connected: false };
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
 
     const { data: page } = await supabase
       .from("bio_pages")
-      .select("social_links")
+      .select("user_id, social_links")
       .eq("id", data.bioPageId)
       .maybeSingle();
+
+    if (!page || page.user_id !== userId) {
+      return { connected: false };
+    }
 
     if (!page?.social_links || typeof page.social_links !== "object") {
       return { connected: false };
@@ -281,21 +310,23 @@ export const getGoogleCalendarStatusFn = createServerFn({ method: "POST" })
  * 4. Desconecta a Google Agenda da página
  */
 export const disconnectGoogleCalendarFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { bioPageId: string }) => {
     if (!data.bioPageId) throw new Error("ID da página é obrigatório.");
     return data;
   })
-  .handler(async ({ data }) => {
-    const supabase = getServiceSupabase();
-    if (!supabase) throw new Error("Banco de dados indisponível.");
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
 
-    const { data: page } = await supabase
+    const { data: page, error: pageErr } = await supabase
       .from("bio_pages")
-      .select("social_links")
+      .select("id, user_id, social_links")
       .eq("id", data.bioPageId)
-      .single();
+      .maybeSingle();
 
-    if (!page) throw new Error("Página não encontrada.");
+    if (pageErr || !page || page.user_id !== userId) {
+      throw new Error("Página não encontrada ou sem permissão para desconectar.");
+    }
 
     const currentSocial =
       (page.social_links && typeof page.social_links === "object"
@@ -305,7 +336,8 @@ export const disconnectGoogleCalendarFn = createServerFn({ method: "POST" })
     const updatedSocial = { ...currentSocial };
     delete updatedSocial.google_calendar;
 
-    const { error } = await supabase
+    const adminSupabase = getServiceSupabase() || supabase;
+    const { error } = await adminSupabase
       .from("bio_pages")
       .update({
         social_links: updatedSocial,
@@ -511,11 +543,24 @@ export const syncGoogleCalendarEventFn = createServerFn({ method: "POST" })
  * 6. Envio de evento teste para o dono verificar a integração no seu próprio celular
  */
 export const testGoogleCalendarSyncFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { bioPageId: string }) => {
     if (!data.bioPageId) throw new Error("ID da página é obrigatório.");
     return data;
   })
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: page } = await supabase
+      .from("bio_pages")
+      .select("user_id")
+      .eq("id", data.bioPageId)
+      .maybeSingle();
+
+    if (!page || page.user_id !== userId) {
+      throw new Error("Página não encontrada ou sem autorização.");
+    }
+
     const auth = await getValidAccessTokenForPage(data.bioPageId);
     if (!auth) {
       throw new Error(
@@ -568,8 +613,21 @@ export const testGoogleCalendarSyncFn = createServerFn({ method: "POST" })
 /**
  * 7. Gestão de Credenciais da API pelo Super Admin (para configurar Client ID e Secret)
  */
-export const getGoogleApiCredentialsFn = createServerFn({ method: "GET" }).handler(
-  async () => {
+export const getGoogleApiCredentialsFn = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId, claims } = context;
+    const isOwner = (claims.email as string)?.toLowerCase() === "jaimilsonvendas@gmail.com";
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    const isAdmin = isOwner || Boolean(roles?.some((r) => r.role === "admin"));
+    if (!isAdmin) {
+      throw new Error("Acesso restrito a administradores.");
+    }
+
     const creds = await resolveGoogleOAuthCredentials();
     return {
       hasClientId: Boolean(creds.clientId),
@@ -577,16 +635,29 @@ export const getGoogleApiCredentialsFn = createServerFn({ method: "GET" }).handl
       hasClientSecret: Boolean(creds.clientSecret),
       isFromEnv: Boolean(process.env.GOOGLE_CLIENT_ID),
     };
-  },
-);
+  });
 
 export const saveGoogleApiCredentialsFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (data: { clientId: string; clientSecret: string }) => {
+      if (!data.clientId?.trim()) throw new Error("Client ID é obrigatório.");
       return data;
     },
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { supabase: userSupabase, userId, claims } = context;
+    const isOwner = (claims.email as string)?.toLowerCase() === "jaimilsonvendas@gmail.com";
+    const { data: roles } = await userSupabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+
+    const isAdmin = isOwner || Boolean(roles?.some((r) => r.role === "admin"));
+    if (!isAdmin) {
+      throw new Error("Apenas administradores podem salvar credenciais do Google.");
+    }
+
     const supabase = getServiceSupabase();
     if (!supabase) throw new Error("Banco de dados indisponível.");
 

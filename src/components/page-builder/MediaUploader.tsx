@@ -248,17 +248,17 @@ export function MediaUploader({
               )}
             </button>
 
-            {/* 1.1 Enquadrar / Dimensionar foto existente */}
+            {/* 1.1 Redimensionar / Enquadrar foto existente */}
             {value && (
               <button
                 type="button"
                 onClick={handleOpenCropForCurrent}
                 disabled={status === "uploading" || status === "generating_ai"}
                 className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-all shadow-2xs"
-                title="Ajustar zoom, enquadramento e corte da foto"
+                title="Ajustar zoom, proporções, rotação e redimensionamento da foto"
               >
                 <Crop className="h-3.5 w-3.5" />
-                <span>Enquadrar / Dimensionar</span>
+                <span>Redimensionar / Enquadrar</span>
               </button>
             )}
 
@@ -426,7 +426,7 @@ export function MediaUploader({
         imageUrl={cropSourceUrl}
         aspectRatio={aspectRatio}
         cropShape={cropShape}
-        title={`Dimensionar e Enquadrar: ${label}`}
+        title={`Redimensionar e Enquadrar: ${label}`}
         onCropComplete={handleCropSave}
       />
     </div>

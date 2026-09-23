@@ -15,6 +15,10 @@ import { Footer } from "./Footer";
 import { PixCard } from "./PixCard";
 import { ProfileHeader } from "./ProfileHeader";
 import { PublicSocialLinks } from "./PublicSocialLinks";
+import {
+  InstagramProductCarousel,
+  type ProductCarouselConfig,
+} from "./InstagramProductCarousel";
 import type { PublicBio, PublicLink, TrackEvent } from "./types";
 
 type FreeLayout = "essential" | "showcase" | "social" | "neon";
@@ -58,6 +62,12 @@ export function FreeLinkRenderer({
   const socialData = (bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links)
     ? bio.social_links
     : {}) as Record<string, any>;
+  const productCarouselConfig = socialData.product_carousel as ProductCarouselConfig | undefined;
+  const hasProductCarousel = Boolean(
+    productCarouselConfig?.enabled &&
+      Array.isArray(productCarouselConfig.items) &&
+      productCarouselConfig.items.some((i) => i.name && i.image_url),
+  );
   const customTheme = socialData.custom_theme as {
     primary?: string;
     background?: string;
@@ -148,6 +158,15 @@ export function FreeLinkRenderer({
 
         <div className="free-link-card">
           <ProfileHeader bio={bio} onTrack={onTrack} />
+          {hasProductCarousel && (
+            <div className="w-full my-2">
+              <InstagramProductCarousel
+                bio={bio}
+                config={productCarouselConfig}
+                onTrack={onTrack}
+              />
+            </div>
+          )}
           {layout === "showcase" && safeProducts.length > 0 && (
             <CatalogSection items={safeProducts} whatsapp={bio.whatsapp} niche={(bio.social_links as any)?.niche} />
           )}

@@ -29,6 +29,7 @@ import type { VideoConfig, TestimonialItem, AboutConfig } from "@/components/pub
 import { parseVideoEmbedUrl } from "@/components/public-profile/ModularSections";
 import { MediaUploader } from "./MediaUploader";
 import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselManager";
+import { supabase } from "@/integrations/supabase/client";
 
 interface SectionsEditorProps {
   nicheKey: string;
@@ -1179,9 +1180,20 @@ export function SectionsEditor({
     ? socialLinks.sections_order
     : SITE_SECTIONS.map((s) => s.id);
 
+  // Se product_carousel não estiver explicitamente em rawOrder, insere na posição #2 (logo após 'hero')
+  let initialSectionsOrder = [...rawOrder];
+  if (!initialSectionsOrder.includes("product_carousel")) {
+    const heroIdx = initialSectionsOrder.indexOf("hero");
+    if (heroIdx !== -1) {
+      initialSectionsOrder.splice(heroIdx + 1, 0, "product_carousel");
+    } else {
+      initialSectionsOrder.unshift("product_carousel");
+    }
+  }
+
   const sectionsOrder = [
-    ...rawOrder,
-    ...SITE_SECTIONS.map((s) => s.id).filter((id) => !rawOrder.includes(id)),
+    ...initialSectionsOrder,
+    ...SITE_SECTIONS.map((s) => s.id).filter((id) => !initialSectionsOrder.includes(id)),
   ];
 
   const orderedSections = sectionsOrder
@@ -1196,16 +1208,27 @@ export function SectionsEditor({
     const newOrder = [...sectionsOrder];
     const [removed] = newOrder.splice(index, 1);
     newOrder.splice(targetIndex, 0, removed);
-    onUpdateSocialLinks({
+    const updatedSocial = {
       ...socialLinks,
       sections_order: newOrder,
-    });
+    };
+    onUpdateSocialLinks(updatedSocial);
+
+    if (bioPageId) {
+      void supabase
+        .from("bio_pages")
+        .update({
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", bioPageId);
+    }
   };
 
   const toggleSectionVisibility = (id: string) => {
     const current = sectionStyles[id] || {};
     const isVisible = current.visible !== false;
-    onUpdateSocialLinks({
+    const updatedSocial = {
       ...socialLinks,
       section_styles: {
         ...sectionStyles,
@@ -1214,7 +1237,18 @@ export function SectionsEditor({
           visible: !isVisible,
         },
       },
-    });
+    };
+    onUpdateSocialLinks(updatedSocial);
+
+    if (bioPageId) {
+      void supabase
+        .from("bio_pages")
+        .update({
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", bioPageId);
+    }
   };
 
   const updateSectionStyle = (id: string, patch: Record<string, any>) => {
@@ -1874,6 +1908,14 @@ export function SectionsEditor({
 
       {/* 0. CARROSSEL DE PRODUTOS & DESTAQUES ESTILO INSTAGRAM */}
       <ProductCarouselManager
+        bio={
+          {
+            id: bioPageId,
+            display_name: companyName,
+            social_links: socialLinks,
+          } as any
+        }
+        companyName={companyName}
         bioPageId={bioPageId}
         socialLinks={socialLinks}
         onUpdateSocialLinks={onUpdateSocialLinks}

@@ -23,6 +23,10 @@ import type { PublicLink } from "@/components/public-profile/types";
 import type { TemplateRenderModel } from "../types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import { PixCard } from "@/components/public-profile/PixCard";
+import {
+  InstagramProductCarousel,
+  type ProductCarouselConfig,
+} from "@/components/public-profile/InstagramProductCarousel";
 import { whatsappUrl } from "@/lib/whatsapp";
 import type { CatalogItem } from "@/modules/products/types";
 import {
@@ -191,13 +195,22 @@ function SiteMaquinaView({
   // Customizações individuais por seção e reordenação
   const sectionStyles = (socialData.section_styles as Record<string, any>) || {};
   const DEFAULT_SECTIONS_ORDER = useMemo(
-    () => ["hero", "credibility", "steps", "servicos", "diferenciais", "avaliacoes", "faq", "contato"],
+    () => ["hero", "product_carousel", "credibility", "steps", "servicos", "diferenciais", "avaliacoes", "faq", "contato"],
     []
   );
 
   const sectionsOrder: string[] = useMemo(() => {
     if (Array.isArray(socialData.sections_order) && socialData.sections_order.length > 0) {
       const order = [...socialData.sections_order];
+      // Se product_carousel não estiver explicitamente em order, insere na posição #2 (logo após 'hero')
+      if (!order.includes("product_carousel")) {
+        const heroIdx = order.indexOf("hero");
+        if (heroIdx !== -1) {
+          order.splice(heroIdx + 1, 0, "product_carousel");
+        } else {
+          order.unshift("product_carousel");
+        }
+      }
       for (const def of DEFAULT_SECTIONS_ORDER) {
         if (!order.includes(def)) order.push(def);
       }
@@ -588,6 +601,37 @@ function SiteMaquinaView({
                 </div>
               </div>
             )}
+          </section>
+        );
+      }
+
+      case "product_carousel": {
+        const carouselConfig = socialData.product_carousel as ProductCarouselConfig | undefined;
+        const hasCarousel = Boolean(
+          carouselConfig?.enabled &&
+          Array.isArray(carouselConfig.items) &&
+          carouselConfig.items.some((i) => i.name && i.image_url)
+        );
+        if (!hasCarousel) return null;
+
+        const pcfg = getSectionConfig("product_carousel");
+        return (
+          <section
+            id="product_carousel"
+            style={{ backgroundColor: pcfg.bgColor || undefined }}
+            className="w-full py-8 sm:py-12 border-b border-gray-100/80 overflow-hidden"
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <InstagramProductCarousel
+                bio={bio}
+                config={{
+                  ...carouselConfig!,
+                  title: pcfg.title || carouselConfig?.title || "Destaques & Mais Pedidos",
+                  subtitle: pcfg.subtitle || carouselConfig?.subtitle || "Arraste para o lado e faça seu pedido direto no WhatsApp",
+                }}
+                onTrack={onTrack}
+              />
+            </div>
           </section>
         );
       }

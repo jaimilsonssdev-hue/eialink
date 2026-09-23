@@ -18,6 +18,7 @@ import {
   Sliders,
   Store,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -31,7 +32,8 @@ import {
 import type { PublicBio } from "@/components/public-profile/types";
 
 interface ProductCarouselManagerProps {
-  bio?: PublicBio;
+  bio?: PublicBio | any;
+  companyName?: string;
   bioPageId?: string;
   socialLinks?: Record<string, any>;
   onUpdateSocialLinks?: (newSocialLinks: Record<string, any>) => void;
@@ -67,7 +69,7 @@ const DEFAULT_DEMO_ITEMS: CarouselProductItem[] = [
   },
 ];
 
-export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSocialLinks }: ProductCarouselManagerProps) {
+export function ProductCarouselManager({ bio, companyName, bioPageId, socialLinks, onUpdateSocialLinks }: ProductCarouselManagerProps) {
   const queryClient = useQueryClient();
   const socialData = (bio?.social_links as Record<string, any>) || socialLinks || {};
   const currentConfig: ProductCarouselConfig = socialData.product_carousel || {
@@ -112,14 +114,26 @@ export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSo
     }
   }, [bio, socialLinks]);
 
+  function sanitizeItems(rawItems: CarouselProductItem[]): CarouselProductItem[] {
+    return rawItems
+      .map((item, idx) => ({
+        ...item,
+        name: item.name?.trim() || `Item ${idx + 1}`,
+        image_url: item.image_url?.trim() || "",
+      }))
+      .filter((item) => Boolean(item.image_url));
+  }
+
   function notifyParent(cfgPatch: Partial<ProductCarouselConfig>) {
     if (!onUpdateSocialLinks) return;
+    const rawItems = cfgPatch.items !== undefined ? cfgPatch.items : items;
+    const validItems = sanitizeItems(rawItems);
     const updatedConfig: ProductCarouselConfig = {
       enabled: cfgPatch.enabled !== undefined ? cfgPatch.enabled : enabled,
       title: (cfgPatch.title !== undefined ? cfgPatch.title : title).trim(),
       subtitle: (cfgPatch.subtitle !== undefined ? cfgPatch.subtitle : subtitle).trim(),
       aspect_ratio: cfgPatch.aspect_ratio !== undefined ? cfgPatch.aspect_ratio : aspectRatio,
-      items: (cfgPatch.items !== undefined ? cfgPatch.items : items).filter((i) => i.name.trim() && i.image_url.trim()),
+      items: validItems.length > 0 ? validItems : rawItems,
     };
     onUpdateSocialLinks({
       ...socialData,
@@ -127,9 +141,38 @@ export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSo
     });
   }
 
-  function handleToggleEnabled(next: boolean) {
+  async function handleToggleEnabled(next: boolean) {
     setEnabled(next);
-    notifyParent({ enabled: next });
+    const validItems = sanitizeItems(items);
+    const updatedConfig: ProductCarouselConfig = {
+      enabled: next,
+      title: title.trim() || "Destaques & Mais Pedidos",
+      subtitle: subtitle.trim() || "Arraste para o lado e faça seu pedido direto no WhatsApp",
+      aspect_ratio: aspectRatio,
+      items: validItems.length > 0 ? validItems : items,
+    };
+    const newSocial = {
+      ...socialData,
+      product_carousel: updatedConfig,
+    };
+    if (onUpdateSocialLinks) {
+      onUpdateSocialLinks(newSocial);
+    }
+    const targetPageId = bioPageId || bio?.id;
+    if (targetPageId) {
+      try {
+        await supabase
+          .from("bio_pages")
+          .update({
+            social_links: newSocial,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", targetPageId);
+        toast.success(next ? "Carrossel ativado e publicado com sucesso!" : "Carrossel desativado com sucesso!");
+      } catch (err) {
+        console.error("Erro ao salvar status do carrossel:", err);
+      }
+    }
   }
 
   const MAX_CAROUSEL_ITEMS = 10;
@@ -173,12 +216,13 @@ export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSo
     setSaveError(null);
     setSaveSuccess(false);
 
+    const validItems = sanitizeItems(items);
     const updatedConfig: ProductCarouselConfig = {
       enabled,
-      title: title.trim(),
-      subtitle: subtitle.trim(),
+      title: title.trim() || "Destaques & Mais Pedidos",
+      subtitle: subtitle.trim() || "Arraste para o lado e faça seu pedido direto no WhatsApp",
       aspect_ratio: aspectRatio,
-      items: items.filter((i) => i.name.trim() && i.image_url.trim()),
+      items: validItems.length > 0 ? validItems : items,
     };
 
     const newSocialLinks = {
@@ -217,6 +261,7 @@ export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSo
       }
 
       setSaveSuccess(true);
+      toast.success("Carrossel de produtos salvo e publicado com sucesso!");
       await Promise.allSettled([
         queryClient.invalidateQueries({ queryKey: ["unified-page-editor"] }),
         queryClient.invalidateQueries({ queryKey: ["bio-me"] }),
@@ -225,7 +270,9 @@ export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSo
       setTimeout(() => setSaveSuccess(false), 3500);
     } catch (err: unknown) {
       const error = err as Error;
-      setSaveError(error.message || "Erro ao salvar carrossel de produtos.");
+      const msg = error.message || "Erro ao salvar carrossel de produtos.";
+      setSaveError(msg);
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
@@ -434,7 +481,7 @@ export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSo
                             label="Foto do Produto"
                             value={item.image_url}
                             variant="square"
-                            companyName={bio.display_name}
+                            companyName={bio?.display_name || companyName || "Sua Empresa"}
                             onChange={(url) =>
                               handleUpdateItem(index, { image_url: url || "" })
                             }
@@ -537,9 +584,10 @@ export function ProductCarouselManager({ bio, bioPageId, socialLinks, onUpdateSo
                 bio={
                   bio ||
                   ({
-                    display_name: "Sua Empresa",
+                    display_name: companyName || "Sua Empresa",
                     whatsapp: "5511999999999",
                     theme: "ocean",
+                    social_links: socialLinks || {},
                   } as any)
                 }
                 config={previewConfig}

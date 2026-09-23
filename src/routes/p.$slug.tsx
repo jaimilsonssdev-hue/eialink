@@ -602,14 +602,17 @@ function PublicBio() {
               bookingUrl={isServiceBookingNiche && bookingActive ? `/agendar/${bio.slug}` : undefined}
               motionLevel={bio.motion_enabled === false ? "off" : "pro"}
               supplemental={
-                isSiteMaquina ? null : (
-                  <>
-                    <ModularSections bio={{ ...bio, template_id: effectiveTemplateId }} onTrack={track} />
-                    {supplementalBlocks.map((block: PageBlock) => (
-                      <BlockRenderer key={block.id} block={block} />
-                    ))}
-                  </>
-                )
+                <>
+                  <ModularSections
+                    bio={{ ...bio, template_id: effectiveTemplateId }}
+                    onTrack={track}
+                    hideProductCarouselIfInLayout={isSiteMaquina}
+                    hideTestimonialsIfInLayout={isSiteMaquina}
+                  />
+                  {supplementalBlocks.map((block: PageBlock) => (
+                    <BlockRenderer key={block.id} block={block} />
+                  ))}
+                </>
               }
             />
           ) : (
@@ -621,7 +624,7 @@ function PublicBio() {
               products={products}
               supplemental={
                 <>
-                  <ModularSections bio={bio} onTrack={track} />
+                  <ModularSections bio={bio} onTrack={track} hideProductCarouselIfInLayout={true} />
                   {supplementalBlocks.map((block: PageBlock) => (
                     <BlockRenderer key={block.id} block={block} />
                   ))}

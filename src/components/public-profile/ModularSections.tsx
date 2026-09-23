@@ -72,10 +72,12 @@ export const ModularSections = memo(function ModularSections({
   bio,
   onTrack,
   hideTestimonialsIfInLayout = false,
+  hideProductCarouselIfInLayout = false,
 }: {
   bio: PublicBio;
   onTrack?: TrackEvent;
   hideTestimonialsIfInLayout?: boolean;
+  hideProductCarouselIfInLayout?: boolean;
 }) {
   const socialData = (bio.social_links as Record<string, any>) || {};
   const productCarouselConfig = socialData.product_carousel as ProductCarouselConfig | undefined;
@@ -91,11 +93,13 @@ export const ModularSections = memo(function ModularSections({
     border: socialData.custom_theme?.border_color,
   };
 
-  const hasProductCarousel = Boolean(
-    productCarouselConfig?.enabled &&
-      Array.isArray(productCarouselConfig.items) &&
-      productCarouselConfig.items.some((i) => i.name && i.image_url),
-  );
+  const hasProductCarousel =
+    !hideProductCarouselIfInLayout &&
+    Boolean(
+      productCarouselConfig?.enabled &&
+        Array.isArray(productCarouselConfig.items) &&
+        productCarouselConfig.items.some((i) => i.name && i.image_url),
+    );
   const videoParsed = videoConfig?.enabled && videoConfig.url ? parseVideoEmbedUrl(videoConfig.url) : null;
   const hasAbout = aboutConfig?.enabled && (aboutConfig.text || (aboutConfig.highlights && aboutConfig.highlights.length > 0));
   const hasTestimonials = showTestimonials && testimonials.length > 0 && !hideTestimonialsIfInLayout;

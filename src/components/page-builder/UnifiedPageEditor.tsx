@@ -719,7 +719,7 @@ export function UnifiedPageEditor({
       id: "profile",
       label: "Apresente seu negócio",
       help: "Nome e descrição",
-      complete: bio.display_name.trim().length >= 2 && Boolean(bio.description?.trim()),
+      complete: (bio?.display_name || "").trim().length >= 2 && Boolean(bio.description?.trim()),
     },
     {
       id: "contact",
@@ -766,10 +766,10 @@ export function UnifiedPageEditor({
   );
 
   const hasProfessionalSubdomain = Boolean(planAccess?.isPro && planAccess.features.custom_domain);
-  const normalizedSlug = normalizePageSlug(bio.slug || bio.display_name);
+  const normalizedSlug = normalizePageSlug(bio?.slug || bio?.display_name || "");
   const pageUrl = publicPageUrl(normalizedSlug, hasProfessionalSubdomain);
   const addressError = hasProfessionalSubdomain
-    ? subdomainValidationMessage(bio.slug || bio.display_name)
+    ? subdomainValidationMessage(bio?.slug || bio?.display_name || "")
     : null;
 
   useEffect(() => {
@@ -1279,6 +1279,15 @@ export function UnifiedPageEditor({
                   onClick={() => {
                     setActiveTab(tab.id);
                     setSaveState("idle");
+                    try {
+                      const url = new URL(window.location.href);
+                      if (tab.id === "visual") {
+                        url.searchParams.delete("tab");
+                      } else {
+                        url.searchParams.set("tab", tab.id);
+                      }
+                      window.history.replaceState({}, "", url.toString());
+                    } catch {}
                     if (window.matchMedia("(max-width: 900px)").matches) {
                       window.setTimeout(
                         () => inspectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
@@ -1915,6 +1924,7 @@ export function UnifiedPageEditor({
 
                 <ProductCarouselManager
                   bio={bio as any}
+                  companyName={bio.display_name || defaults.displayName || "Sua Empresa"}
                   bioPageId={bio.id}
                   socialLinks={(bio.social_links as Record<string, any>) || {}}
                   onUpdateSocialLinks={(social_links) => updateBio({ social_links })}
@@ -2588,7 +2598,7 @@ export function UnifiedPageEditor({
                         onTrack={() => undefined}
                         onShare={() => undefined}
                         products={products}
-                        supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} />}
+                        supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} hideProductCarouselIfInLayout={true} />}
                       />
                     ) : (
                       <TemplateRenderer
@@ -2600,7 +2610,14 @@ export function UnifiedPageEditor({
                         products={products}
                         bookingUrl={`/agendar/${previewBio.slug}`}
                         motionLevel={previewBio.motion_enabled === false ? "off" : "pro"}
-                        supplemental={<ModularSections bio={previewBio} onTrack={() => undefined} />}
+                        supplemental={
+                          <ModularSections
+                            bio={previewBio}
+                            onTrack={() => undefined}
+                            hideProductCarouselIfInLayout={previewBio.template_id === "site-maquina"}
+                            hideTestimonialsIfInLayout={previewBio.template_id === "site-maquina"}
+                          />
+                        }
                       />
                     )}
                   </div>

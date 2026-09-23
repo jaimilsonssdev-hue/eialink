@@ -427,7 +427,6 @@ export const PageService = {
 
   async createClaimLink(pageId: string, targetEmail?: string) {
     const userId = await this.getCurrentUserId();
-    const claimToken = crypto.randomUUID();
 
     const { data: page, error: fetchErr } = await supabase
       .from("bio_pages")
@@ -439,11 +438,15 @@ export const PageService = {
     if (fetchErr || !page) throw new Error("Página não encontrada.");
 
     const currentSocial = (page.social_links as Record<string, any>) || {};
+    const existingToken =
+      typeof currentSocial.claim_token === "string" && currentSocial.claim_token.trim()
+        ? currentSocial.claim_token.trim()
+        : null;
+    const claimToken = existingToken || crypto.randomUUID();
     const updatedSocial: Record<string, any> = {
       ...currentSocial,
       claim_token: claimToken,
       claim_email: targetEmail?.trim().toLowerCase() || undefined,
-      is_demo: false,
     };
 
     const { error: updateErr } = await supabase

@@ -4373,8 +4373,14 @@
 .template-preview-large .template-preview-phone {
   border-radius: 1.5rem;
 }
-.template-preview-large .template-live-preview {
+.template-preview-large .template-live-preview.is-scrollable {
   overflow-y: auto;
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+.template-preview-large .template-live-preview.is-scrollable .template-live-preview-stage {
+  height: auto !important;
+  overflow: visible;
 }
 
 @media (hover: hover) and (min-width: 641px) {

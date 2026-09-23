@@ -8,9 +8,11 @@ import { TemplateLivePreview } from "../preview/TemplateLivePreview";
 export function TemplateThumbnail({
   template,
   height,
+  scrollable = false,
 }: {
   template: TemplateDefinition;
   height?: number;
+  scrollable?: boolean;
 }) {
-  return <TemplateLivePreview template={template} height={height} />;
+  return <TemplateLivePreview template={template} height={height} scrollable={scrollable} />;
 }

@@ -2287,7 +2287,11 @@ export function UnifiedPageEditor({
                                 id === "instagram" ? defaults.instagram || placeholder : placeholder
                               }
                               onChange={(event) => {
-                                const next = { ...values };
+                                const current =
+                                  bio.social_links && typeof bio.social_links === "object" && !Array.isArray(bio.social_links)
+                                    ? bio.social_links
+                                    : {};
+                                const next = { ...current } as Record<string, unknown>;
                                 const nextValue = event.target.value.trim();
                                 if (nextValue) next[id] = nextValue;
                                 else delete next[id];

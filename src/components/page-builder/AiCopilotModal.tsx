@@ -114,14 +114,53 @@ export function AiCopilotModal({
         currentContext.displayName = res.name;
       }
 
-      setBriefing((prev) => {
-        const header = `\n\n🔗 ${res.formattedBriefing}\n`;
-        if (prev.includes(res.formattedBriefing)) return prev;
-        return prev ? `${prev}${header}` : res.formattedBriefing;
-      });
+      if (res.formattedBriefing) {
+        setBriefing((prev) => {
+          const header = `\n\n🔗 ${res.formattedBriefing}\n`;
+          if (prev.includes(res.formattedBriefing)) return prev;
+          return prev ? `${prev}${header}` : res.formattedBriefing;
+        });
+      }
+
+      // Adiciona imagens importadas do Google Drive diretamente à lista de mídias
+      if (res.importedImages && res.importedImages.length > 0) {
+        const newMedia: UploadedMediaItem[] = [];
+        for (const img of res.importedImages) {
+          try {
+            const byteString = atob(img.base64.split(",")[1]);
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+              ia[i] = byteString.charCodeAt(i);
+            }
+            const blob = new Blob([ab], { type: img.mimeType });
+            const file = new File([blob], img.name, { type: img.mimeType });
+            const isPdf = img.mimeType === "application/pdf";
+
+            newMedia.push({
+              id: crypto.randomUUID(),
+              file,
+              name: img.name,
+              size: file.size,
+              type: img.mimeType,
+              previewUrl: isPdf ? "" : (img.publicUrl || URL.createObjectURL(file)),
+              isPdf,
+              role: isPdf ? "general" : (mediaItems.length + newMedia.length === 0 ? "cover" : "general"),
+              tag: isPdf ? "📄 PDF Google Drive" : "📷 Google Drive",
+            });
+          } catch (blobErr) {
+            console.warn("Aviso ao processar foto importada:", blobErr);
+          }
+        }
+        if (newMedia.length > 0) {
+          setMediaItems((prev) => [...prev, ...newMedia]);
+        }
+      }
 
       toast.success(
-        res.source === "instagram"
+        res.source === "google_drive"
+          ? `✨ ${res.importedImages?.length || 0} foto(s) do Google Drive importada(s) com sucesso!`
+          : res.source === "instagram"
           ? "✨ Perfil do Instagram extraído com sucesso!"
           : res.source === "google_maps"
           ? "⭐ Dados do Google Maps (nota, endereço e avaliações) extraídos com sucesso!"
@@ -215,52 +254,76 @@ export function AiCopilotModal({
       });
 
       if (isPdf) {
-        // Extrai imagens e logotipo do PDF automaticamente em alta resolução
-        setLoadingStep("Recortando logotipo e imagens do PDF...");
+        // Extrai imagens nativas e catálogo do PDF automaticamente em alta resolução
+        setLoadingStep("Extraindo fotos reais e catálogo do PDF...");
         extractAssetsFromPdf(file)
           .then((assets) => {
             const extractedItems: UploadedMediaItem[] = [];
-            if (assets.logoFile) {
-              extractedItems.push({
-                id: crypto.randomUUID(),
-                file: assets.logoFile,
-                name: `Logo - ${file.name.replace(/\.[^.]+$/, "")}`,
-                size: assets.logoFile.size,
-                type: "image/png",
-                previewUrl: assets.logoPreview || "",
-                isPdf: false,
-                role: "logo",
-                tag: "🏷️ Logotipo do PDF",
-              });
-            }
-            if (assets.coverFile) {
-              extractedItems.push({
-                id: crypto.randomUUID(),
-                file: assets.coverFile,
-                name: `Capa - ${file.name.replace(/\.[^.]+$/, "")}`,
-                size: assets.coverFile.size,
-                type: "image/png",
-                previewUrl: assets.coverPreview || "",
-                isPdf: false,
-                role: "cover",
-                tag: "🌄 Capa do PDF",
-              });
-            }
-            if (assets.pageImages && assets.pageImages.length > 1) {
-              for (const pg of assets.pageImages.slice(1)) {
+
+            // 1. Caso haja fotos nativas isoladas extraídas (XObjects)
+            if (assets.embeddedImages && assets.embeddedImages.length > 0) {
+              const hasLogo = assets.embeddedImages.some((img) => img.isLikelyLogo);
+              assets.embeddedImages.forEach((img, idx) => {
+                const isLogo = img.isLikelyLogo || (!hasLogo && idx === 0 && assets.embeddedImages.length > 1);
+                const isCover = !isLogo && idx === (isLogo ? 1 : 0);
+
                 extractedItems.push({
                   id: crypto.randomUUID(),
-                  file: pg.file,
-                  name: `Pág ${pg.pageNumber} - ${file.name.replace(/\.[^.]+$/, "")}`,
-                  size: pg.file.size,
+                  file: img.file,
+                  name: img.name,
+                  size: img.file.size,
                   type: "image/png",
-                  previewUrl: pg.previewUrl,
+                  previewUrl: img.previewUrl,
                   isPdf: false,
-                  role: "product",
-                  tag: `🍽️ Pratos / Pág ${pg.pageNumber}`,
+                  role: isLogo ? "logo" : isCover ? "cover" : "product",
+                  tag: isLogo ? "🏷️ Logotipo (PDF)" : isCover ? "👑 Capa Hero (PDF)" : `🍽️ Item #${idx + 1} (${img.width}x${img.height})`,
+                });
+              });
+            } else {
+              // 2. Fallback caso seja um PDF escaneado/achatado sem objetos vetoriais isolados
+              if (assets.logoFile) {
+                extractedItems.push({
+                  id: crypto.randomUUID(),
+                  file: assets.logoFile,
+                  name: `Logo - ${file.name.replace(/\.[^.]+$/, "")}`,
+                  size: assets.logoFile.size,
+                  type: "image/png",
+                  previewUrl: assets.logoPreview || "",
+                  isPdf: false,
+                  role: "logo",
+                  tag: "🏷️ Logotipo do PDF",
                 });
               }
+              if (assets.coverFile) {
+                extractedItems.push({
+                  id: crypto.randomUUID(),
+                  file: assets.coverFile,
+                  name: `Capa - ${file.name.replace(/\.[^.]+$/, "")}`,
+                  size: assets.coverFile.size,
+                  type: "image/png",
+                  previewUrl: assets.coverPreview || "",
+                  isPdf: false,
+                  role: "cover",
+                  tag: "🌄 Capa do PDF",
+                });
+              }
+              if (assets.pageImages && assets.pageImages.length > 1) {
+                for (const pg of assets.pageImages.slice(1)) {
+                  extractedItems.push({
+                    id: crypto.randomUUID(),
+                    file: pg.file,
+                    name: `Pág ${pg.pageNumber} - ${file.name.replace(/\.[^.]+$/, "")}`,
+                    size: pg.file.size,
+                    type: "image/png",
+                    previewUrl: pg.previewUrl,
+                    isPdf: false,
+                    role: "product",
+                    tag: `🍽️ Pratos / Pág ${pg.pageNumber}`,
+                  });
+                }
+              }
             }
+
             if (extractedItems.length > 0) {
               setMediaItems((curr) => [...curr, ...extractedItems]);
             }
@@ -271,9 +334,13 @@ export function AiCopilotModal({
                 if (prev.includes(file.name)) return prev;
                 return prev ? `${prev}${header}${assets.extractedText}` : `${header}${assets.extractedText}`;
               });
-              toast.success(`✨ Logotipo, fotos e catálogo completo do PDF "${file.name}" extraídos com sucesso!`);
+              toast.success(
+                assets.embeddedImages.length > 0
+                  ? `✨ ${assets.embeddedImages.length} fotos nativas e catálogo do PDF "${file.name}" extraídos com sucesso!`
+                  : `✨ Logotipo, fotos e catálogo completo do PDF "${file.name}" extraídos com sucesso!`
+              );
             } else if (extractedItems.length > 0) {
-              toast.success(`✨ Logotipo e imagens do PDF "${file.name}" recortados e preparados!`);
+              toast.success(`✨ ${extractedItems.length} foto(s) e imagem(ns) do PDF "${file.name}" preparadas!`);
             }
           })
           .catch((err) => {
@@ -460,19 +527,19 @@ export function AiCopilotModal({
           </div>
         </div>
 
-        {/* IMPORTAÇÃO AUTOMÁTICA POR LINK: GOOGLE MEU NEGÓCIO OU INSTAGRAM */}
+        {/* IMPORTAÇÃO AUTOMÁTICA POR LINK: GOOGLE DRIVE, GOOGLE MAPS OU INSTAGRAM */}
         <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 p-4 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <label className="text-xs font-bold text-purple-200 uppercase tracking-wider flex items-center gap-2">
               <Globe2 className="h-4 w-4 text-purple-400" />
-              <span>Importar por Link (Google Meu Negócio ou Instagram)</span>
+              <span>Importar por Link (Google Drive, Instagram ou Maps)</span>
             </label>
             <span className="text-[10px] text-purple-400/80 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
               ⚡ Extração Inteligente
             </span>
           </div>
           <p className="text-[11px] text-zinc-400">
-            Cole o link do perfil do <b>Instagram</b> ou do <b>Google Maps / Meu Negócio</b> da empresa. O sistema extrai automaticamente nome, telefone, avaliação, bio e comentários.
+            Cole o link de uma <b>pasta ou foto do Google Drive</b>, perfil do <b>Instagram</b> ou do <b>Google Maps</b>. O sistema baixa fotos em alta resolução e extrai dados comerciais automaticamente.
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
@@ -480,7 +547,7 @@ export function AiCopilotModal({
                 type="text"
                 value={importUrl}
                 onChange={(e) => setImportUrl(e.target.value)}
-                placeholder="Ex: https://maps.app.goo.gl/... ou instagram.com/nomedaempresa"
+                placeholder="Ex: drive.google.com/drive/folders/... ou instagram.com/empresa ou link do Maps"
                 disabled={isImportingUrl}
                 className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                 onKeyDown={(e) => {
@@ -829,6 +896,93 @@ export function AiCopilotModal({
                       <span>Vídeo Institucional configurado</span>
                     </div>
                   )}
+                </div>
+              </div>
+            )}
+
+            {/* Curadoria Visual por IA (Diretor de Arte) */}
+            {generatedResult.curated_photos && generatedResult.curated_photos.length > 0 && (
+              <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-purple-300 font-bold uppercase tracking-wider text-[11px]">
+                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                    <span>Curadoria Visual de Fotos (Diretor de Arte IA)</span>
+                  </div>
+                  <span className="text-[10px] text-zinc-400">
+                    {generatedResult.curated_photos.length} fotos avaliadas
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
+                  {generatedResult.curated_photos.map((item, cIdx) => {
+                    const isDiscard = item.role === "discard";
+                    const isCover = item.role === "cover";
+                    const isLogo = item.role === "logo";
+                    const isProduct = item.role === "product";
+
+                    const badgeColor = isCover
+                      ? "bg-indigo-600/30 text-indigo-300 border-indigo-500/40"
+                      : isLogo
+                      ? "bg-purple-600/30 text-purple-300 border-purple-500/40"
+                      : isProduct
+                      ? "bg-emerald-600/30 text-emerald-300 border-emerald-500/40"
+                      : "bg-zinc-800 text-zinc-400 border-zinc-700";
+
+                    const roleLabel = isCover
+                      ? "👑 Capa de Autoridade"
+                      : isLogo
+                      ? "🏷️ Logotipo Oficial"
+                      : isProduct
+                      ? "🍽️ Carrossel / Vitrine"
+                      : "⚠️ Descartada";
+
+                    return (
+                      <div
+                        key={cIdx}
+                        className={`p-2.5 rounded-xl border flex items-start gap-2.5 transition-all ${
+                          isDiscard
+                            ? "bg-black/40 border-zinc-800/80 opacity-60"
+                            : "bg-zinc-900/90 border-zinc-800"
+                        }`}
+                      >
+                        {item.url ? (
+                          <img
+                            src={item.url}
+                            alt={item.name || "Foto"}
+                            className="w-12 h-12 rounded-lg object-cover shrink-0 border border-zinc-700 bg-zinc-950"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0 text-zinc-500 text-base">
+                            📷
+                          </div>
+                        )}
+
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <span
+                              className={`text-[9px] px-1.5 py-0.5 rounded-md border font-semibold ${badgeColor}`}
+                            >
+                              {roleLabel}
+                            </span>
+                            <div className="flex items-center gap-1.5 text-[10px] font-mono">
+                              <span title="Autoridade" className="text-indigo-400 font-bold">
+                                A:{item.scores?.authority || 0}
+                              </span>
+                              <span title="Qualidade Técnica" className="text-emerald-400 font-bold">
+                                Q:{item.scores?.quality || 0}
+                              </span>
+                              <span title="Posicionamento" className="text-amber-400 font-bold">
+                                P:{item.scores?.positioning || 0}
+                              </span>
+                            </div>
+                          </div>
+                          <p className="text-[11px] text-zinc-300 leading-snug line-clamp-2">
+                            {item.critique}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}

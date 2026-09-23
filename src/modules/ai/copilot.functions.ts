@@ -41,6 +41,17 @@ export interface AiCopilotResult {
     price?: number;
     image_url?: string | null;
   }>;
+  curated_photos?: Array<{
+    url: string;
+    name?: string;
+    role: "logo" | "cover" | "product" | "discard";
+    scores: {
+      authority: number;
+      quality: number;
+      positioning: number;
+    };
+    critique: string;
+  }>;
   video_embed?: {
     enabled: boolean;
     url: string;
@@ -127,13 +138,21 @@ REGRAS DE OURO DA GERAÇÃO (ESTÉTICA CINEMATOGRÁFICA DE LUXO):
    - 'testimonials': 2 a 3 depoimentos convincentes com notas 5 estrelas e feedbacks humanizados de clientes reais do nicho.
 
 4. CATÁLOGO DE SERVIÇOS & CARROSSEL:
-   - 'suggested_services': Liste os principais serviços ou pratos da empresa com nomes refinados, descrições atrativas e valores numéricos realistas (especialmente ao extrair de cardápios ou tabelas de preços em PDF).
+   - 'suggested_services': Liste os principais serviços ou pratos da empresa com nomes refinados, descrições atrativas e valores numéricos realistas (especialmente ao extrair de cardápios, PDFs ou briefing).
 
-5. DISTRIBUIÇÃO MULTIMODAL INTELIGENTE (FOTOS E RECORTE DE LOGOS):
-   - Se houver fotos ou imagens anexadas (ou extraídas de PDF) com URLs públicas:
-     * 'avatar_url': Atribua OBRIGATORIAMENTE a URL da imagem de Logotipo ('logo') ou melhor recorte.
-     * 'cover_url': Atribua OBRIGATORIAMENTE a URL da foto de Capa/Banner ('cover') ou banner principal.
-     * 'suggested_services[i].image_url': Se houver fotos específicas de pratos ou produtos ('product'), atribua diretamente ao respectivo item do catálogo!
+5. CURADORIA VISUAL DE FOTOS E DIRETOR DE ARTE (AVALIAÇÃO DE AUTORIDADE, QUALIDADE E POSICIONAMENTO):
+   - Para CADA arquivo de imagem anexado ou importado (Google Drive, PDF, Upload):
+     * Avalie com critério de Diretor de Arte:
+       - 'scores.authority' (0 a 100): Presença e postura profissional, olhar focado na câmera, ambiente de alto valor (consultório, estúdio, escritório executivo, bancada impecável) vs. fotos amadoras/selfies caseiras.
+       - 'scores.quality' (0 a 100): Resolução, nitidez, iluminação equilibrada e ausência de ruídos ou pixelização excessiva do WhatsApp.
+       - 'scores.positioning' (0 a 100): Aderência ao nicho (gastronomia apetitosa, medicina empática e higiênica, advocacia nobre).
+       - 'role': Classifique o papel ideal: 'logo' (símbolo/vetor de marca), 'cover' (foto com maior autoridade e impacto para a Capa Hero), 'product' (fotos de procedimentos, pratos ou produtos para o Carrossel), ou 'discard' (foto de baixa resolução, ilegível ou amadora que rebaixa o valor percebido).
+       - 'critique': Frase concisa explicando o motivo da escolha (ex: "Excelente nitidez e autoridade no consultório médico, ideal para a Capa principal.").
+     * Preencha a lista 'curated_photos' contendo { url, name, role, scores: { authority, quality, positioning }, critique }.
+   - Alocação automática e obrigatória no site:
+     * 'avatar_url': Atribua OBRIGATORIAMENTE a melhor imagem com papel 'logo'.
+     * 'cover_url': Atribua OBRIGATORIAMENTE a foto com maior score combinado de Autoridade e Qualidade (papel 'cover').
+     * 'suggested_services[i].image_url': Atribua as fotos com papel 'product' aos serviços/pratos correspondentes (Carrossel).
 
 6. VÍDEO INSTITUCIONAL:
    - Se o campo videoUrl foi preenchido ou mencionado, configure 'video_embed' com enabled=true, a url indicada, título magnético e legenda convidativa.
@@ -174,7 +193,7 @@ ${
     ? `BRIEFING / INFORMAÇÕES ADICIONAIS:\n"""\n${data.briefing}\n"""\n`
     : ""
 }
-Analise todos os dados e arquivos anexados. Aloque as fotos nos lugares certos ('avatar_url', 'cover_url', 'image_url' de serviços), extraia todos os itens e preços de eventuais PDFs e gere a estrutura JSON completa.`;
+Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score de cada foto (Autoridade, Qualidade e Posicionamento) em 'curated_photos', aloque as fotos vencedoras nos lugares certos ('avatar_url', 'cover_url', 'image_url' de serviços), extraia todos os itens e preços de eventuais PDFs e gere a estrutura JSON completa.`;
 
     // Monta o payload multimodal com as partes inline_data dos arquivos + prompt de texto
     const promptParts: Array<{
@@ -446,7 +465,7 @@ const fetchUrlInputSchema = z.object({
 });
 
 export interface FetchedBusinessData {
-  source: "google_maps" | "instagram" | "generic";
+  source: "google_maps" | "instagram" | "google_drive" | "generic";
   name?: string;
   niche?: string;
   city?: string;
@@ -455,6 +474,13 @@ export interface FetchedBusinessData {
   rating?: number;
   reviewsCount?: number;
   formattedBriefing: string;
+  importedImages?: Array<{
+    name: string;
+    mimeType: string;
+    base64: string;
+    publicUrl?: string;
+    role?: "logo" | "cover" | "product" | "general";
+  }>;
 }
 
 export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
@@ -470,6 +496,10 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
       }
     }
 
+    const isGoogleDrive =
+      target.includes("drive.google.com") ||
+      target.includes("docs.google.com");
+
     const isInstagram = target.includes("instagram.com");
     const isGoogle =
       target.includes("google.com/maps") ||
@@ -478,6 +508,203 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000);
+
+    // TRATAMENTO EXCLUSIVO DE LINKS DO GOOGLE DRIVE
+    if (isGoogleDrive) {
+      const serverKey =
+        process.env.GEMINI_API_KEY ||
+        process.env.GOOGLE_AI_STUDIO_KEY ||
+        (process.env as any).VITE_GEMINI_API_KEY;
+
+      const fileMatch = target.match(/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]{20,})/i);
+      const folderMatch = target.match(/(?:folders\/)([a-zA-Z0-9_-]{20,})/i);
+
+      // Caso A: Arquivo Individual no Google Drive
+      if (fileMatch) {
+        const fileId = fileMatch[1];
+        let buffer: ArrayBuffer | null = null;
+        let mimeType = "image/jpeg";
+
+        try {
+          const lh3Res = await fetch(`https://lh3.googleusercontent.com/d/${fileId}`, {
+            signal: controller.signal,
+          });
+          if (lh3Res.ok && (lh3Res.headers.get("content-type") || "").startsWith("image/")) {
+            buffer = await lh3Res.arrayBuffer();
+            mimeType = lh3Res.headers.get("content-type") || "image/jpeg";
+          }
+        } catch {
+          // fallback
+        }
+
+        if (!buffer) {
+          try {
+            const dlRes = await fetch(
+              `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
+              {
+                signal: controller.signal,
+                headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
+              }
+            );
+            const cType = (dlRes.headers.get("content-type") || "").toLowerCase();
+            if (dlRes.ok && !cType.includes("text/html")) {
+              buffer = await dlRes.arrayBuffer();
+              mimeType = cType;
+            }
+          } catch {
+            // fallback
+          }
+        }
+
+        if (!buffer) {
+          clearTimeout(timeout);
+          throw new Error(
+            "O arquivo do Google Drive não pôde ser baixado. Verifique se o compartilhamento está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive."
+          );
+        }
+
+        clearTimeout(timeout);
+        const base64Data = `data:${mimeType};base64,${Buffer.from(buffer).toString("base64")}`;
+        const ext = mimeType.includes("pdf") ? "pdf" : mimeType.includes("png") ? "png" : "jpg";
+
+        return {
+          source: "google_drive",
+          name: `Foto Google Drive (${fileId.slice(0, 6)})`,
+          formattedBriefing: `[ARQUIVO IMPORTADO DO GOOGLE DRIVE]: Arquivo de mídia obtido diretamente do Google Drive com alta definição para curadoria visual e alocação da IA.`,
+          importedImages: [
+            {
+              name: `drive-arquivo-${fileId.slice(0, 8)}.${ext}`,
+              mimeType,
+              base64: base64Data,
+              publicUrl: `https://lh3.googleusercontent.com/d/${fileId}`,
+              role: "general",
+            },
+          ],
+        };
+      }
+
+      // Caso B: Pasta Pública no Google Drive
+      if (folderMatch) {
+        const folderId = folderMatch[1];
+        let driveFiles: Array<{ id: string; name: string; mimeType: string }> = [];
+
+        // 1. Tenta API oficial se houver chave do Google
+        if (serverKey) {
+          try {
+            const apiUrl = `https://www.googleapis.com/drive/v3/files?q=%27${folderId}%27+in+parents+and+trashed%3Dfalse&fields=files(id%2Cname%2CmimeType)&pageSize=25&key=${encodeURIComponent(serverKey)}`;
+            const apiRes = await fetch(apiUrl, { signal: controller.signal });
+            if (apiRes.ok) {
+              const apiData = await apiRes.json();
+              if (Array.isArray(apiData.files)) {
+                driveFiles = apiData.files.filter((f: any) =>
+                  (f.mimeType || "").startsWith("image/") || (f.mimeType || "").includes("pdf")
+                );
+              }
+            }
+          } catch {
+            // fallback
+          }
+        }
+
+        // 2. Extração via página pública caso a API não esteja ativa
+        if (driveFiles.length === 0) {
+          try {
+            const folderRes = await fetch(`https://drive.google.com/drive/folders/${folderId}`, {
+              signal: controller.signal,
+              headers: {
+                "User-Agent":
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8",
+              },
+            });
+            if (folderRes.ok) {
+              const folderHtml = await folderRes.text();
+              const uniqueIds = new Set<string>();
+
+              const jsonBlobMatches = Array.from(
+                folderHtml.matchAll(/\["([a-zA-Z0-9_-]{28,})","([^"]+\.(?:jpg|jpeg|png|webp|pdf))"/gi)
+              );
+              for (const match of jsonBlobMatches) {
+                uniqueIds.add(match[1]);
+                driveFiles.push({
+                  id: match[1],
+                  name: match[2],
+                  mimeType: match[2].endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+                });
+              }
+
+              const idMatches = Array.from(folderHtml.matchAll(/\/file\/d\/([a-zA-Z0-9_-]{25,})/g)).map(
+                (m) => m[1]
+              );
+              const dataIdMatches = Array.from(folderHtml.matchAll(/data-id="([a-zA-Z0-9_-]{25,})"/g)).map(
+                (m) => m[1]
+              );
+
+              for (const id of [...idMatches, ...dataIdMatches]) {
+                if (id !== folderId && !uniqueIds.has(id)) {
+                  uniqueIds.add(id);
+                  driveFiles.push({ id, name: `drive-foto-${id.slice(0, 6)}.jpg`, mimeType: "image/jpeg" });
+                }
+              }
+            }
+          } catch {
+            // fallback
+          }
+        }
+
+        // 3. Download das imagens em lote (limite seguro de até 12 fotos)
+        const importedImages: Array<{
+          name: string;
+          mimeType: string;
+          base64: string;
+          publicUrl?: string;
+          role?: "logo" | "cover" | "product" | "general";
+        }> = [];
+
+        for (const item of driveFiles.slice(0, 12)) {
+          try {
+            const imgRes = await fetch(`https://lh3.googleusercontent.com/d/${item.id}`, {
+              signal: controller.signal,
+            });
+            if (imgRes.ok) {
+              const mime = imgRes.headers.get("content-type") || item.mimeType || "image/jpeg";
+              if (mime.startsWith("image/")) {
+                const buf = await imgRes.arrayBuffer();
+                importedImages.push({
+                  name: item.name || `drive-foto-${item.id.slice(0, 6)}.jpg`,
+                  mimeType: mime,
+                  base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
+                  publicUrl: `https://lh3.googleusercontent.com/d/${item.id}`,
+                  role: "general",
+                });
+              }
+            }
+          } catch {
+            // continua para o próximo
+          }
+        }
+
+        clearTimeout(timeout);
+
+        if (importedImages.length === 0) {
+          throw new Error(
+            "Não foi possível acessar as fotos desta pasta do Google Drive. Verifique se o compartilhamento da pasta está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive."
+          );
+        }
+
+        return {
+          source: "google_drive",
+          name: `Pasta Google Drive (${importedImages.length} fotos)`,
+          formattedBriefing: `[PASTA DO GOOGLE DRIVE IMPORTADA]: ${importedImages.length} foto(s) de alta resolução importada(s) com sucesso diretamente para avaliação e curadoria da IA.`,
+          importedImages,
+        };
+      }
+
+      clearTimeout(timeout);
+      throw new Error(
+        "Link do Google Drive não reconhecido. Use o link de compartilhamento de um arquivo individual ou de uma pasta pública do Google Drive."
+      );
+    }
 
     try {
       const jinaUrl = `https://r.jina.ai/${target}`;

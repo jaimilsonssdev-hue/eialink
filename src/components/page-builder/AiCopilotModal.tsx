@@ -18,7 +18,11 @@ import {
   FileUp,
   Globe2,
 } from "lucide-react";
-import { generateCopilotSiteFn, fetchBusinessFromUrlFn, type AiCopilotResult } from "@/modules/ai/copilot.functions";
+import {
+  generateCopilotSiteFn,
+  fetchBusinessFromUrlFn,
+  type AiCopilotResult,
+} from "@/modules/ai/copilot.functions";
 import { PageService } from "@/modules/page/services/PageService";
 import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
 import { toast } from "sonner";
@@ -91,12 +95,7 @@ function formatFileSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-export function AiCopilotModal({
-  isOpen,
-  onClose,
-  currentContext,
-  onApply,
-}: AiCopilotModalProps) {
+export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiCopilotModalProps) {
   const [briefing, setBriefing] = useState("");
   const [importUrl, setImportUrl] = useState("");
   const [isImportingUrl, setIsImportingUrl] = useState(false);
@@ -110,7 +109,10 @@ export function AiCopilotModal({
         data: { url: importUrl.trim() },
       });
 
-      if (res.name && (!currentContext.displayName || currentContext.displayName === "Empresa Local")) {
+      if (
+        res.name &&
+        (!currentContext.displayName || currentContext.displayName === "Empresa Local")
+      ) {
         currentContext.displayName = res.name;
       }
 
@@ -143,9 +145,13 @@ export function AiCopilotModal({
               name: img.name,
               size: file.size,
               type: img.mimeType,
-              previewUrl: isPdf ? "" : (img.publicUrl || URL.createObjectURL(file)),
+              previewUrl: isPdf ? "" : img.publicUrl || URL.createObjectURL(file),
               isPdf,
-              role: isPdf ? "general" : (mediaItems.length + newMedia.length === 0 ? "cover" : "general"),
+              role: isPdf
+                ? "general"
+                : mediaItems.length + newMedia.length === 0
+                  ? "cover"
+                  : "general",
               tag: isPdf ? "📄 PDF Google Drive" : "📷 Google Drive",
             });
           } catch (blobErr) {
@@ -161,10 +167,10 @@ export function AiCopilotModal({
         res.source === "google_drive"
           ? `✨ ${res.importedImages?.length || 0} foto(s) do Google Drive importada(s) com sucesso!`
           : res.source === "instagram"
-          ? "✨ Perfil do Instagram extraído com sucesso!"
-          : res.source === "google_maps"
-          ? "⭐ Dados do Google Maps (nota, endereço e avaliações) extraídos com sucesso!"
-          : "✨ Dados da página extraídos com sucesso!"
+            ? "✨ Perfil do Instagram extraído com sucesso!"
+            : res.source === "google_maps"
+              ? "⭐ Dados do Google Maps (nota, endereço e avaliações) extraídos com sucesso!"
+              : "✨ Dados da página extraídos com sucesso!",
       );
     } catch (err: any) {
       console.error("Erro ao importar URL:", err);
@@ -231,7 +237,9 @@ export function AiCopilotModal({
       const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
 
       if (!isImg && !isPdf) {
-        setError(`O arquivo "${file.name}" possui formato não suportado. Envie imagens (JPG, PNG, WEBP) ou PDFs.`);
+        setError(
+          `O arquivo "${file.name}" possui formato não suportado. Envie imagens (JPG, PNG, WEBP) ou PDFs.`,
+        );
         continue;
       }
 
@@ -250,7 +258,7 @@ export function AiCopilotModal({
         type: isPdf ? "application/pdf" : file.type,
         previewUrl,
         isPdf,
-        role: isPdf ? "general" : (mediaItems.length === 0 ? "cover" : "general"),
+        role: isPdf ? "general" : mediaItems.length === 0 ? "cover" : "general",
       });
 
       if (isPdf) {
@@ -264,7 +272,8 @@ export function AiCopilotModal({
             if (assets.embeddedImages && assets.embeddedImages.length > 0) {
               const hasLogo = assets.embeddedImages.some((img) => img.isLikelyLogo);
               assets.embeddedImages.forEach((img, idx) => {
-                const isLogo = img.isLikelyLogo || (!hasLogo && idx === 0 && assets.embeddedImages.length > 1);
+                const isLogo =
+                  img.isLikelyLogo || (!hasLogo && idx === 0 && assets.embeddedImages.length > 1);
                 const isCover = !isLogo && idx === (isLogo ? 1 : 0);
 
                 extractedItems.push({
@@ -276,7 +285,11 @@ export function AiCopilotModal({
                   previewUrl: img.previewUrl,
                   isPdf: false,
                   role: isLogo ? "logo" : isCover ? "cover" : "product",
-                  tag: isLogo ? "🏷️ Logotipo (PDF)" : isCover ? "👑 Capa Hero (PDF)" : `🍽️ Item #${idx + 1} (${img.width}x${img.height})`,
+                  tag: isLogo
+                    ? "🏷️ Logotipo (PDF)"
+                    : isCover
+                      ? "👑 Capa Hero (PDF)"
+                      : `🍽️ Item #${idx + 1} (${img.width}x${img.height})`,
                 });
               });
             } else {
@@ -332,15 +345,19 @@ export function AiCopilotModal({
               setBriefing((prev) => {
                 const header = `\n\n📄 [DADOS EXTRAÍDOS DO DOCUMENTO / CARDÁPIO / TABELA: ${file.name}]:\n`;
                 if (prev.includes(file.name)) return prev;
-                return prev ? `${prev}${header}${assets.extractedText}` : `${header}${assets.extractedText}`;
+                return prev
+                  ? `${prev}${header}${assets.extractedText}`
+                  : `${header}${assets.extractedText}`;
               });
               toast.success(
                 assets.embeddedImages.length > 0
                   ? `✨ ${assets.embeddedImages.length} fotos nativas e catálogo do PDF "${file.name}" extraídos com sucesso!`
-                  : `✨ Logotipo, fotos e catálogo completo do PDF "${file.name}" extraídos com sucesso!`
+                  : `✨ Logotipo, fotos e catálogo completo do PDF "${file.name}" extraídos com sucesso!`,
               );
             } else if (extractedItems.length > 0) {
-              toast.success(`✨ ${extractedItems.length} foto(s) e imagem(ns) do PDF "${file.name}" preparadas!`);
+              toast.success(
+                `✨ ${extractedItems.length} foto(s) e imagem(ns) do PDF "${file.name}" preparadas!`,
+              );
             }
           })
           .catch((err) => {
@@ -382,10 +399,9 @@ export function AiCopilotModal({
           return { ...item, role: "general" };
         }
         return item;
-      })
+      }),
     );
   }
-
 
   async function handleGenerate() {
     const hasText = briefing.trim().length >= 3;
@@ -427,7 +443,10 @@ export function AiCopilotModal({
           try {
             publicUrl = await PageService.uploadAsset(item.file);
           } catch (uploadErr) {
-            console.warn(`Aviso: falha ao salvar ${item.name} no storage, usando envio direto por base64.`, uploadErr);
+            console.warn(
+              `Aviso: falha ao salvar ${item.name} no storage, usando envio direto por base64.`,
+              uploadErr,
+            );
           }
         }
 
@@ -466,7 +485,8 @@ export function AiCopilotModal({
       }
       console.error("Erro no Copiloto IA Multimodal:", err);
       setError(
-        err?.message || "Ocorreu um erro ao comunicar com a IA do Google AI Studio. Verifique os dados e tente novamente."
+        err?.message ||
+          "Ocorreu um erro ao comunicar com a IA do Google AI Studio. Verifique os dados e tente novamente.",
       );
     } finally {
       abortControllerRef.current = null;
@@ -510,7 +530,10 @@ export function AiCopilotModal({
             Copiloto IA Multimodal
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-            Suba <b>fotos do estabelecimento, cardápios em PDF, tabelas de preço</b> ou cole briefings. A IA aplicará o <b>Design System Cinematográfico Premium</b> (Dark Mode #030712, Bento Grids, superfícies #0b0f19 e acentos #7c3aed) organizando tudo com máxima conversão.
+            Suba <b>fotos do estabelecimento, cardápios em PDF, tabelas de preço</b> ou cole
+            briefings. A IA aplicará o <b>Design System Cinematográfico Premium</b> (Dark Mode
+            #030712, Bento Grids, superfícies #0b0f19 e acentos #7c3aed) organizando tudo com máxima
+            conversão.
           </p>
         </div>
 
@@ -522,7 +545,8 @@ export function AiCopilotModal({
               Processamento Seguro e Confidencial
             </span>
             <span className="text-emerald-400/90 text-[11px] leading-relaxed block">
-              Documentos e chaves são processados de ponta a ponta no servidor seguro. Suas credenciais e mídias nunca são expostas publicamente no navegador dos visitantes.
+              Documentos e chaves são processados de ponta a ponta no servidor seguro. Suas
+              credenciais e mídias nunca são expostas publicamente no navegador dos visitantes.
             </span>
           </div>
         </div>
@@ -539,7 +563,9 @@ export function AiCopilotModal({
             </span>
           </div>
           <p className="text-[11px] text-zinc-400">
-            Cole o link de uma <b>pasta ou foto do Google Drive</b>, perfil do <b>Instagram</b> ou do <b>Google Maps</b>. O sistema baixa fotos em alta resolução e extrai dados comerciais automaticamente.
+            Cole o link de uma <b>pasta ou foto do Google Drive</b>, perfil do <b>Instagram</b> ou
+            do <b>Google Maps</b>. O sistema baixa fotos em alta resolução e extrai dados comerciais
+            automaticamente.
           </p>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative flex-1">
@@ -629,10 +655,14 @@ export function AiCopilotModal({
             </div>
             <div>
               <p className="text-xs sm:text-sm font-semibold text-zinc-200">
-                Arraste fotos e PDFs aqui, ou <span className="text-purple-400 underline underline-offset-2">clique para escolher</span>
+                Arraste fotos e PDFs aqui, ou{" "}
+                <span className="text-purple-400 underline underline-offset-2">
+                  clique para escolher
+                </span>
               </p>
               <p className="text-[11px] text-zinc-500 mt-1">
-                Fotos do local/pratos (PNG, JPG, WEBP) ou cardápio/tabela em PDF (até 15MB por arquivo)
+                Fotos do local/pratos (PNG, JPG, WEBP) ou cardápio/tabela em PDF (até 15MB por
+                arquivo)
               </p>
             </div>
           </div>
@@ -684,7 +714,9 @@ export function AiCopilotModal({
                   {/* Badges e seletor de destinação do arquivo */}
                   {!item.isPdf ? (
                     <div className="flex items-center gap-1.5 pt-1 border-t border-zinc-800/60">
-                      <span className="text-[10px] text-zinc-500 shrink-0 font-medium">Usar como:</span>
+                      <span className="text-[10px] text-zinc-500 shrink-0 font-medium">
+                        Usar como:
+                      </span>
                       <div className="flex items-center gap-1 overflow-x-auto">
                         <button
                           type="button"
@@ -779,7 +811,8 @@ export function AiCopilotModal({
                 className="w-full rounded-lg border border-zinc-700 bg-black/60 px-3 py-2 text-xs font-mono text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none"
               />
               <p className="text-[10px] text-zinc-500">
-                A chave é salva apenas no seu navegador localmente e transmitida por canal criptografado do servidor.
+                A chave é salva apenas no seu navegador localmente e transmitida por canal
+                criptografado do servidor.
               </p>
             </div>
           )}
@@ -835,11 +868,15 @@ export function AiCopilotModal({
               <div className="space-y-1 p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
                 <span className="text-zinc-500 block font-semibold">Nome & Descrição:</span>
                 <b className="text-white block text-sm">{generatedResult.display_name}</b>
-                <p className="text-zinc-300 text-[11px] line-clamp-2">{generatedResult.description}</p>
+                <p className="text-zinc-300 text-[11px] line-clamp-2">
+                  {generatedResult.description}
+                </p>
               </div>
 
               <div className="space-y-1 p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
-                <span className="text-zinc-500 block font-semibold">Paleta de Cores Harmônica:</span>
+                <span className="text-zinc-500 block font-semibold">
+                  Paleta de Cores Harmônica:
+                </span>
                 <div className="flex items-center gap-2 pt-1">
                   <div
                     className="w-5 h-5 rounded-full border border-white/20 shadow-xs"
@@ -864,7 +901,9 @@ export function AiCopilotModal({
             </div>
 
             {/* Mídias Alocadas Inteligente */}
-            {(generatedResult.avatar_url || generatedResult.cover_url || generatedResult.video_embed?.enabled) && (
+            {(generatedResult.avatar_url ||
+              generatedResult.cover_url ||
+              generatedResult.video_embed?.enabled) && (
               <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 text-xs">
                 <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px]">
                   Mídias Alocadas Automaticamente:
@@ -923,18 +962,18 @@ export function AiCopilotModal({
                     const badgeColor = isCover
                       ? "bg-indigo-600/30 text-indigo-300 border-indigo-500/40"
                       : isLogo
-                      ? "bg-purple-600/30 text-purple-300 border-purple-500/40"
-                      : isProduct
-                      ? "bg-emerald-600/30 text-emerald-300 border-emerald-500/40"
-                      : "bg-zinc-800 text-zinc-400 border-zinc-700";
+                        ? "bg-purple-600/30 text-purple-300 border-purple-500/40"
+                        : isProduct
+                          ? "bg-emerald-600/30 text-emerald-300 border-emerald-500/40"
+                          : "bg-zinc-800 text-zinc-400 border-zinc-700";
 
                     const roleLabel = isCover
                       ? "👑 Capa de Autoridade"
                       : isLogo
-                      ? "🏷️ Logotipo Oficial"
-                      : isProduct
-                      ? "🍽️ Carrossel / Vitrine"
-                      : "⚠️ Descartada";
+                        ? "🏷️ Logotipo Oficial"
+                        : isProduct
+                          ? "🍽️ Carrossel / Vitrine"
+                          : "⚠️ Descartada";
 
                     return (
                       <div
@@ -968,7 +1007,10 @@ export function AiCopilotModal({
                               <span title="Autoridade" className="text-indigo-400 font-bold">
                                 A:{item.scores?.authority || 0}
                               </span>
-                              <span title="Qualidade Técnica" className="text-emerald-400 font-bold">
+                              <span
+                                title="Qualidade Técnica"
+                                className="text-emerald-400 font-bold"
+                              >
                                 Q:{item.scores?.quality || 0}
                               </span>
                               <span title="Posicionamento" className="text-amber-400 font-bold">
@@ -988,47 +1030,53 @@ export function AiCopilotModal({
             )}
 
             {/* Serviços e Itens Extraídos */}
-            {generatedResult.suggested_services && generatedResult.suggested_services.length > 0 && (
-              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 text-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px]">
-                    Catálogo de Serviços / Itens Extraídos ({generatedResult.suggested_services.length}):
-                  </span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
-                  {generatedResult.suggested_services.map((svc, sIdx) => (
-                    <div
-                      key={sIdx}
-                      className="p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex items-center justify-between gap-2"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        {svc.image_url && (
-                          <img
-                            src={svc.image_url}
-                            alt={svc.name}
-                            className="w-7 h-7 rounded object-cover shrink-0 border border-zinc-700"
-                          />
-                        )}
-                        <div className="min-w-0 truncate">
-                          <p className="text-white font-medium text-[11px] truncate">{svc.name}</p>
-                          <p className="text-zinc-500 text-[10px] truncate">{svc.description}</p>
+            {generatedResult.suggested_services &&
+              generatedResult.suggested_services.length > 0 && (
+                <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px]">
+                      Catálogo de Serviços / Itens Extraídos (
+                      {generatedResult.suggested_services.length}):
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+                    {generatedResult.suggested_services.map((svc, sIdx) => (
+                      <div
+                        key={sIdx}
+                        className="p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex items-center justify-between gap-2"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          {svc.image_url && (
+                            <img
+                              src={svc.image_url}
+                              alt={svc.name}
+                              className="w-7 h-7 rounded object-cover shrink-0 border border-zinc-700"
+                            />
+                          )}
+                          <div className="min-w-0 truncate">
+                            <p className="text-white font-medium text-[11px] truncate">
+                              {svc.name}
+                            </p>
+                            <p className="text-zinc-500 text-[10px] truncate">{svc.description}</p>
+                          </div>
                         </div>
+                        {svc.price ? (
+                          <span className="text-emerald-400 font-mono font-bold text-[11px] shrink-0">
+                            R$ {svc.price.toFixed(2)}
+                          </span>
+                        ) : null}
                       </div>
-                      {svc.price ? (
-                        <span className="text-emerald-400 font-mono font-bold text-[11px] shrink-0">
-                          R$ {svc.price.toFixed(2)}
-                        </span>
-                      ) : null}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
             {generatedResult.differentials && generatedResult.differentials.length > 0 && (
               <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 pt-1">
                 <span className="text-purple-400 font-bold">✓</span>
-                <span>{generatedResult.differentials.length} Diferenciais de alta autoridade prontos</span>
+                <span>
+                  {generatedResult.differentials.length} Diferenciais de alta autoridade prontos
+                </span>
                 <span className="mx-1 text-zinc-700">·</span>
                 <span>{generatedResult.testimonials?.length || 0} Depoimentos gerados</span>
               </div>

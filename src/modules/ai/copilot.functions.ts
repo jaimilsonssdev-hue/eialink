@@ -91,7 +91,7 @@ const copilotInputSchema = z
     {
       message:
         "Forneça ao menos um briefing em texto, fotos/documentos anexos ou um link de vídeo.",
-    }
+    },
   );
 
 export const generateCopilotSiteFn = createServerFn({ method: "POST" })
@@ -108,7 +108,7 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
 
     if (!resolvedKey) {
       throw new Error(
-        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto."
+        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto.",
       );
     }
 
@@ -166,9 +166,17 @@ REGRAS DE OURO DA GERAÇÃO (ESTÉTICA CINEMATOGRÁFICA DE LUXO):
         let roleHint = "";
         if (f.role === "logo" || f.name.toLowerCase().includes("logo")) {
           roleHint = ` [IMPORTANTE: Logotipo da Empresa -> Atribua esta URL pública a 'avatar_url']`;
-        } else if (f.role === "cover" || f.name.toLowerCase().includes("capa") || f.name.toLowerCase().includes("banner")) {
+        } else if (
+          f.role === "cover" ||
+          f.name.toLowerCase().includes("capa") ||
+          f.name.toLowerCase().includes("banner")
+        ) {
           roleHint = ` [IMPORTANTE: Banner/Capa Principal -> Atribua esta URL pública a 'cover_url']`;
-        } else if (f.role === "product" || f.name.toLowerCase().includes("prato") || f.name.toLowerCase().includes("pagina")) {
+        } else if (
+          f.role === "product" ||
+          f.name.toLowerCase().includes("prato") ||
+          f.name.toLowerCase().includes("pagina")
+        ) {
           roleHint = ` [IMPORTANTE: Foto de Prato/Serviço -> Atribua esta URL ao respectivo item em 'suggested_services[i].image_url']`;
         }
         return `- Arquivo #${idx + 1}: "${f.name}" (${f.mimeType})${
@@ -188,11 +196,7 @@ ${
     ? `ARQUIVOS MULTIMODAIS ANEXADOS (${data.files?.length} arquivo(s)):\n${fileDescriptions}\n`
     : ""
 }
-${
-  data.briefing?.trim()
-    ? `BRIEFING / INFORMAÇÕES ADICIONAIS:\n"""\n${data.briefing}\n"""\n`
-    : ""
-}
+${data.briefing?.trim() ? `BRIEFING / INFORMAÇÕES ADICIONAIS:\n"""\n${data.briefing}\n"""\n` : ""}
 Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score de cada foto (Autoridade, Qualidade e Posicionamento) em 'curated_photos', aloque as fotos vencedoras nos lugares certos ('avatar_url', 'cover_url', 'image_url' de serviços), extraia todos os itens e preços de eventuais PDFs e gere a estrutura JSON completa.`;
 
     // Monta o payload multimodal com as partes inline_data dos arquivos + prompt de texto
@@ -222,7 +226,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     let activeModels: string[] = [];
     try {
       const listRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(resolvedKey)}`
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(resolvedKey)}`,
       );
       if (listRes.ok) {
         const listData = await listRes.json();
@@ -231,7 +235,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
             .filter(
               (m: any) =>
                 Array.isArray(m.supportedGenerationMethods) &&
-                m.supportedGenerationMethods.includes("generateContent")
+                m.supportedGenerationMethods.includes("generateContent"),
             )
             .map((m: any) => (m.name || "").replace(/^models\//, ""))
             .filter((m: string) => !m.includes("2.5-flash-lite"));
@@ -242,7 +246,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           const errObj = JSON.parse(errText);
           if (listRes.status === 400 || listRes.status === 403) {
             throw new Error(
-              `Chave do Google AI Studio inválida ou sem permissão (${listRes.status}): ${errObj.error?.message || errText}`
+              `Chave do Google AI Studio inválida ou sem permissão (${listRes.status}): ${errObj.error?.message || errText}`,
             );
           }
         } catch (e: any) {
@@ -290,7 +294,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
       try {
         const response = await fetch(
           `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
-            resolvedKey
+            resolvedKey,
           )}`,
           {
             method: "POST",
@@ -313,7 +317,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
                 temperature: 0.7,
               },
             }),
-          }
+          },
         );
 
         if (!response.ok) {
@@ -353,7 +357,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
         try {
           const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/interactions?key=${encodeURIComponent(
-              resolvedKey
+              resolvedKey,
             )}`,
             {
               method: "POST",
@@ -368,7 +372,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
                 input: userPrompt,
                 response_mime_type: "application/json",
               }),
-            }
+            },
           );
 
           if (!response.ok) {
@@ -413,7 +417,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
 
     if (!rawContent) {
       throw new Error(
-        `Não foi possível gerar com a API do Google AI Studio. Detalhe: ${lastError}. Certifique-se de que sua chave de API está ativa no console do Google AI Studio.`
+        `Não foi possível gerar com a API do Google AI Studio. Detalhe: ${lastError}. Certifique-se de que sua chave de API está ativa no console do Google AI Studio.`,
       );
     }
 
@@ -442,14 +446,18 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           ...parsed.custom_theme,
           mode: "dark",
           background: isDark
-            ? (bgLum < 80 ? parsed.custom_theme.background : "#030712")
+            ? bgLum < 80
+              ? parsed.custom_theme.background
+              : "#030712"
             : "#030712",
           title: "#ffffff",
           text: isDark
-            ? (calcLum(parsed.custom_theme.text) > 130 ? parsed.custom_theme.text : "#cbd5e1")
+            ? calcLum(parsed.custom_theme.text) > 130
+              ? parsed.custom_theme.text
+              : "#cbd5e1"
             : "#cbd5e1",
-          card_bg: isDark ? (parsed.custom_theme.card_bg || "#0b0f19") : "#0b0f19",
-          border_color: isDark ? (parsed.custom_theme.border_color || "#1e293b") : "#1e293b",
+          card_bg: isDark ? parsed.custom_theme.card_bg || "#0b0f19" : "#0b0f19",
+          border_color: isDark ? parsed.custom_theme.border_color || "#1e293b" : "#1e293b",
         };
       }
 
@@ -458,7 +466,6 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
       throw new Error("Não foi possível decodificar o JSON estruturado gerado pelo Gemini.");
     }
   });
-
 
 const fetchUrlInputSchema = z.object({
   url: z.string().min(3, "URL inválida"),
@@ -496,9 +503,7 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
       }
     }
 
-    const isGoogleDrive =
-      target.includes("drive.google.com") ||
-      target.includes("docs.google.com");
+    const isGoogleDrive = target.includes("drive.google.com") || target.includes("docs.google.com");
 
     const isInstagram = target.includes("instagram.com");
     const isGoogle =
@@ -543,8 +548,10 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
               `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
               {
                 signal: controller.signal,
-                headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" },
-              }
+                headers: {
+                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                },
+              },
             );
             const cType = (dlRes.headers.get("content-type") || "").toLowerCase();
             if (dlRes.ok && !cType.includes("text/html")) {
@@ -559,7 +566,7 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
         if (!buffer) {
           clearTimeout(timeout);
           throw new Error(
-            "O arquivo do Google Drive não pôde ser baixado. Verifique se o compartilhamento está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive."
+            "O arquivo do Google Drive não pôde ser baixado. Verifique se o compartilhamento está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive.",
           );
         }
 
@@ -596,8 +603,9 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
             if (apiRes.ok) {
               const apiData = await apiRes.json();
               if (Array.isArray(apiData.files)) {
-                driveFiles = apiData.files.filter((f: any) =>
-                  (f.mimeType || "").startsWith("image/") || (f.mimeType || "").includes("pdf")
+                driveFiles = apiData.files.filter(
+                  (f: any) =>
+                    (f.mimeType || "").startsWith("image/") || (f.mimeType || "").includes("pdf"),
                 );
               }
             }
@@ -622,7 +630,9 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
               const uniqueIds = new Set<string>();
 
               const jsonBlobMatches = Array.from(
-                folderHtml.matchAll(/\["([a-zA-Z0-9_-]{28,})","([^"]+\.(?:jpg|jpeg|png|webp|pdf))"/gi)
+                folderHtml.matchAll(
+                  /\["([a-zA-Z0-9_-]{28,})","([^"]+\.(?:jpg|jpeg|png|webp|pdf))"/gi,
+                ),
               );
               for (const match of jsonBlobMatches) {
                 uniqueIds.add(match[1]);
@@ -633,17 +643,21 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
                 });
               }
 
-              const idMatches = Array.from(folderHtml.matchAll(/\/file\/d\/([a-zA-Z0-9_-]{25,})/g)).map(
-                (m) => m[1]
-              );
-              const dataIdMatches = Array.from(folderHtml.matchAll(/data-id="([a-zA-Z0-9_-]{25,})"/g)).map(
-                (m) => m[1]
-              );
+              const idMatches = Array.from(
+                folderHtml.matchAll(/\/file\/d\/([a-zA-Z0-9_-]{25,})/g),
+              ).map((m) => m[1]);
+              const dataIdMatches = Array.from(
+                folderHtml.matchAll(/data-id="([a-zA-Z0-9_-]{25,})"/g),
+              ).map((m) => m[1]);
 
               for (const id of [...idMatches, ...dataIdMatches]) {
                 if (id !== folderId && !uniqueIds.has(id)) {
                   uniqueIds.add(id);
-                  driveFiles.push({ id, name: `drive-foto-${id.slice(0, 6)}.jpg`, mimeType: "image/jpeg" });
+                  driveFiles.push({
+                    id,
+                    name: `drive-foto-${id.slice(0, 6)}.jpg`,
+                    mimeType: "image/jpeg",
+                  });
                 }
               }
             }
@@ -688,7 +702,7 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
 
         if (importedImages.length === 0) {
           throw new Error(
-            "Não foi possível acessar as fotos desta pasta do Google Drive. Verifique se o compartilhamento da pasta está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive."
+            "Não foi possível acessar as fotos desta pasta do Google Drive. Verifique se o compartilhamento da pasta está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive.",
           );
         }
 
@@ -702,7 +716,7 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
 
       clearTimeout(timeout);
       throw new Error(
-        "Link do Google Drive não reconhecido. Use o link de compartilhamento de um arquivo individual ou de uma pasta pública do Google Drive."
+        "Link do Google Drive não reconhecido. Use o link de compartilhamento de um arquivo individual ou de uma pasta pública do Google Drive.",
       );
     }
 
@@ -786,7 +800,7 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
       const name = titleMatch ? titleMatch[1].trim() : "Empresa";
       const briefing = `[DADOS EXTRAÍDOS DO LINK ${target}]:\nTítulo: ${name}\nConteúdo da Página:\n${text.slice(
         0,
-        3000
+        3000,
       )}`;
 
       return {
@@ -797,10 +811,7 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
     } catch (err: any) {
       clearTimeout(timeout);
       throw new Error(
-        `Não foi possível extrair dados automaticamente do link informado: ${
-          err?.message || err
-        }`
+        `Não foi possível extrair dados automaticamente do link informado: ${err?.message || err}`,
       );
     }
   });
-

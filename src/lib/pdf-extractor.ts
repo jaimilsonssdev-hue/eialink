@@ -31,16 +31,24 @@ export interface ExtractedPdfAssets {
 /**
  * Converte um Canvas HTML em um File com nome especificado
  */
-function canvasToFile(canvas: HTMLCanvasElement, filename: string, mimeType = "image/png"): Promise<File> {
+function canvasToFile(
+  canvas: HTMLCanvasElement,
+  filename: string,
+  mimeType = "image/png",
+): Promise<File> {
   return new Promise((resolve, reject) => {
-    canvas.toBlob((blob) => {
-      if (!blob) {
-        reject(new Error("Falha ao gerar imagem a partir do canvas"));
-        return;
-      }
-      const file = new File([blob], filename, { type: mimeType });
-      resolve(file);
-    }, mimeType, 0.92);
+    canvas.toBlob(
+      (blob) => {
+        if (!blob) {
+          reject(new Error("Falha ao gerar imagem a partir do canvas"));
+          return;
+        }
+        const file = new File([blob], filename, { type: mimeType });
+        resolve(file);
+      },
+      mimeType,
+      0.92,
+    );
   });
 }
 
@@ -195,7 +203,10 @@ export async function extractAssetsFromPdf(pdfFile: File): Promise<ExtractedPdfA
         .map((item: any) => item.str || "")
         .filter((str: string) => str.trim().length > 0);
 
-      const pageText = pageStrings.join(" ").replace(/\s{2,}/g, " ").trim();
+      const pageText = pageStrings
+        .join(" ")
+        .replace(/\s{2,}/g, " ")
+        .trim();
       if (pageText) {
         accumulatedText += `[PÁGINA ${p} DO DOCUMENTO]:\n${pageText}\n\n`;
       }
@@ -253,7 +264,13 @@ export async function extractAssetsFromPdf(pdfFile: File): Promise<ExtractedPdfA
           const previewUrl = URL.createObjectURL(file);
           // Critério heurístico para candidatos a logo: tamanho médio/quadrado ou wide elegante na página 1
           const isLikelyLogo =
-            (p === 1 && w >= 100 && w <= 800 && h >= 60 && h <= 500 && ratio >= 0.7 && ratio <= 4.0) ||
+            (p === 1 &&
+              w >= 100 &&
+              w <= 800 &&
+              h >= 60 &&
+              h <= 500 &&
+              ratio >= 0.7 &&
+              ratio <= 4.0) ||
             imgName.toLowerCase().includes("logo");
 
           extractedEmbedded.push({
@@ -283,7 +300,9 @@ export async function extractAssetsFromPdf(pdfFile: File): Promise<ExtractedPdfA
     }
 
     // 1º Candidato a Capa: a imagem de maior resolução e impacto visual
-    const sortedBySize = [...extractedEmbedded].sort((a, b) => b.width * b.height - a.width * a.height);
+    const sortedBySize = [...extractedEmbedded].sort(
+      (a, b) => b.width * b.height - a.width * a.height,
+    );
     const coverCandidate = sortedBySize.find((img) => img !== logoCandidate) || sortedBySize[0];
     if (coverCandidate) {
       result.coverFile = coverCandidate.file;
@@ -332,7 +351,11 @@ export async function extractAssetsFromPdf(pdfFile: File): Promise<ExtractedPdfA
             logoCanvas.width = cropWidth;
             logoCanvas.height = cropHeight;
             logoCtx.drawImage(canvas, 0, 0, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-            const fallbackLogoFile = await canvasToFile(logoCanvas, `${baseName}-topo-logo.png`, "image/png");
+            const fallbackLogoFile = await canvasToFile(
+              logoCanvas,
+              `${baseName}-topo-logo.png`,
+              "image/png",
+            );
             result.logoFile = fallbackLogoFile;
             result.logoPreview = URL.createObjectURL(fallbackLogoFile);
           }

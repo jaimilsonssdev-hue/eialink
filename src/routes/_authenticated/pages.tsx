@@ -524,7 +524,22 @@ function PagesWorkspace() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => {
+              const firstPage = pages.data?.[0];
+              if (firstPage) {
+                navigate({ to: "/builder", search: { page: firstPage.id, copilot: true } });
+              } else {
+                navigate({ to: "/builder", search: { copilot: true } });
+              }
+            }}
+            className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+            title="Abrir o Copiloto IA para construir ou editar sites com estética cinematográfica"
+          >
+            <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
+            <span>Copiloto IA (Criar/Editar)</span>
+          </button>
           <button
             onClick={() => setIsWizardOpen(true)}
             disabled={isCreatingWizard || access.isLoading}
@@ -731,6 +746,16 @@ function PagesWorkspace() {
                         className="flex-1 btn-primary inline-flex items-center justify-center gap-1 rounded-xl py-2 text-xs font-semibold"
                       >
                         <Pencil className="h-3.5 w-3.5" /> Editar
+                      </Link>
+
+                      <Link
+                        to="/builder"
+                        search={{ page: page.id, copilot: true }}
+                        className="inline-flex items-center justify-center gap-1 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-2.5 py-2 text-xs font-semibold transition-all"
+                        title="Montar ou transformar com o Copiloto IA"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                        <span className="hidden sm:inline">Copiloto IA</span>
                       </Link>
 
 

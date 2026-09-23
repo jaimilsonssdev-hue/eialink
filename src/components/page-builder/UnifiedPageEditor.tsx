@@ -618,6 +618,7 @@ export function UnifiedPageEditor({
   initialLinks,
   initialProducts = [],
   initialTab,
+  initialCopilotOpen,
   defaults,
   planAccess,
   onSave,
@@ -626,6 +627,7 @@ export function UnifiedPageEditor({
   initialLinks: EditableLink[];
   initialProducts?: CatalogItem[];
   initialTab?: EditorTab;
+  initialCopilotOpen?: boolean;
   defaults: { displayName: string; whatsapp: string; instagram: string; niche: string };
   planAccess?: PlanAccess;
   onSave(data: {
@@ -683,7 +685,13 @@ export function UnifiedPageEditor({
   const [saveState, setSaveState] = useState<"idle" | "success" | "error">("idle");
   const [validationMessage, setValidationMessage] = useState<string>();
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [isCopilotOpen, setIsCopilotOpen] = useState(false);
+  const [isCopilotOpen, setIsCopilotOpen] = useState(() => Boolean(initialCopilotOpen));
+
+  useEffect(() => {
+    if (initialCopilotOpen) {
+      setIsCopilotOpen(true);
+    }
+  }, [initialCopilotOpen]);
   const { data: isAdmin } = useQuery({
     queryKey: ["is-admin-builder"],
     queryFn: async () => {

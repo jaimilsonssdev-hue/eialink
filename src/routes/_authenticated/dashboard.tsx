@@ -227,9 +227,18 @@ function Dashboard() {
             Sua presença merece <span>mais destaque.</span>
           </h1>
           <p>Seus produtos no estilo Instagram, agendamento 24h e integração de balcão com WhatsApp.</p>
-          <div className="premium-welcome-actions">
+          <div className="premium-welcome-actions flex-wrap gap-2.5">
             <Link to="/builder" className="premium-cta">
               <PanelsTopLeft className="h-4 w-4" /> Personalizar minha página
+            </Link>
+            <Link
+              to="/builder"
+              search={{ copilot: true }}
+              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02]"
+              title="Abrir o Copiloto IA para construir ou refatorar o site com estética cinematográfica"
+            >
+              <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
+              <span>Agente Copiloto IA (Site Cinematográfico)</span>
             </Link>
             {bio && (
               <a href={publicUrl} target="_blank" rel="noopener" className="premium-text-action">

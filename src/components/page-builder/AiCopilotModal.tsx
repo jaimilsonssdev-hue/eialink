@@ -585,17 +585,16 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         <div className="space-y-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-bold uppercase tracking-wider">
             <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
-            <span>Google AI Studio · Gemini • Modo Cinematográfico</span>
+            <span>Google AI Studio · Gemini • Modo Cinematográfico Premium</span>
           </div>
 
           <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
-            Copiloto IA Multimodal
+            Agente Copiloto IA (Site Cinematográfico)
           </h2>
           <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-            Suba <b>fotos do estabelecimento, cardápios em PDF, tabelas de preço</b> ou cole
-            briefings. A IA aplicará o <b>Design System Cinematográfico Premium</b> (Dark Mode
-            #030712, Bento Grids, superfícies #0b0f19 e acentos #7c3aed) organizando tudo com máxima
-            conversão.
+            Peça alterações ou anexe <b>fotos, logotipo, cardápios em PDF ou links (Google Drive, Instagram, Maps)</b>.
+            O Agente atua como <b>Diretor de Arte & Designer de Elite</b>: identifica as cores reais da sua marca,
+            elimina dados genéricos e monta o site completo em <b>Dark Mode Cinematográfico de luxo</b>.
           </p>
         </div>
 
@@ -846,8 +845,9 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         {/* Formulário do Briefing e Chave de API */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-zinc-200 uppercase tracking-wider">
-              Briefing / Observações Adicionais
+            <label className="text-xs font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+              <span>Instruções ao Agente / Briefing do Negócio</span>
             </label>
             <button
               type="button"
@@ -883,7 +883,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
             rows={4}
             value={briefing}
             onChange={(e) => setBriefing(e.target.value)}
-            placeholder="Exemplo: Clínica estética em Salvador especializada em botox, preenchimento e hidratação. O tom deve ser acolhedor e luxuoso. Queremos cores em vinho e dourado, fotos limpas e botão para agendar avaliação gratuita no WhatsApp..."
+            placeholder="Digite aqui o que você deseja (apenas pedindo): Ex: Monte o site completo com as fotos e dados em anexo, mude a cor principal para azul marinho, adicione os pratos do cardápio e configure botão de WhatsApp..."
             className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-xs sm:text-sm text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all resize-y"
           />
 

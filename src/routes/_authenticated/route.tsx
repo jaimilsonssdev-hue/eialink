@@ -76,6 +76,7 @@ function AuthedLayout() {
     if (canAccessBuilder) {
       items.push(
         { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
+        { to: "/builder", search: { copilot: true }, label: "Copiloto IA (Sites)", icon: Sparkles },
         { to: "/builder", search: { tab: "carousel" }, label: "Carrossel Instagram", icon: Flame },
         { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
       );
@@ -113,6 +114,7 @@ function AuthedLayout() {
 
     if (canAccessBuilder) {
       items.push({ to: "/builder", label: "Editor", icon: PanelsTopLeft });
+      items.push({ to: "/builder", search: { copilot: true }, label: "Copiloto IA", icon: Sparkles });
       items.push({ to: "/builder", search: { tab: "carousel" }, label: "Carrossel", icon: Flame });
     }
 

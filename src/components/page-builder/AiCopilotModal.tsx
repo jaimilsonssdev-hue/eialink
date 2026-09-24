@@ -27,6 +27,7 @@ import {
 import { PageService } from "@/modules/page/services/PageService";
 import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
 import { toast } from "sonner";
+import { formatPrice } from "@/lib/utils";
 
 interface AiCopilotModalProps {
   isOpen: boolean;
@@ -1166,9 +1167,9 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                             <p className="text-zinc-500 text-[10px] truncate">{svc.description}</p>
                           </div>
                         </div>
-                        {svc.price ? (
+                        {formatPrice(svc.price) ? (
                           <span className="text-emerald-400 font-mono font-bold text-[11px] shrink-0">
-                            R$ {svc.price.toFixed(2)}
+                            {formatPrice(svc.price)}
                           </span>
                         ) : null}
                       </div>

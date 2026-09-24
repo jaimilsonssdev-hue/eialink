@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import type { CatalogItem } from "@/modules/products/types";
 import { whatsappUrl } from "@/lib/whatsapp";
+import { formatPrice } from "@/lib/utils";
 import { DEFAULT_CHAT_FLOW, type ChatFlowConfig } from "@/components/page-builder/ChatFlowEditor";
 
 export interface ChatMessage {
@@ -504,9 +505,9 @@ Poderiam me informar valores e disponibilidade para atendimento? Aguardo retorno
                       >
                         <div className="min-w-0">
                           <p className="font-bold text-xs truncate">{item.name}</p>
-                          {item.price !== null && (
+                          {formatPrice(item.price) && (
                             <p className="text-[11px] font-semibold text-primary">
-                              R$ {item.price.toFixed(2).replace(".", ",")}
+                              {formatPrice(item.price)}
                             </p>
                           )}
                         </div>

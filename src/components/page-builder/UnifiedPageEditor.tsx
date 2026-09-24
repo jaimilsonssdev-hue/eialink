@@ -65,6 +65,7 @@ import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselMa
 import { SeoEditor } from "./SeoEditor";
 import { AiCopilotModal } from "./AiCopilotModal";
 import type { AiCopilotResult } from "@/modules/ai/copilot.functions";
+import { parsePrice } from "@/lib/utils";
 import { parseSocialLinks } from "@/lib/social-links";
 import {
   freeTemplateBase,
@@ -907,7 +908,7 @@ export function UnifiedPageEditor({
         type: "service",
         name: svc.name,
         description: svc.description,
-        price: svc.price ? Number(svc.price) : null,
+        price: parsePrice(svc.price),
         promotional_price: null,
         image_url: svc.image_url || null,
         category: "Destaques",

@@ -37,6 +37,7 @@ import { whatsappUrl } from "@/lib/whatsapp";
 import { parseCatalogItemCategory } from "@/modules/products/services/ProductService";
 import type { CatalogItem } from "@/modules/products/types";
 import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
+import { formatPrice, parsePrice } from "@/lib/utils";
 
 export class StorefrontLayout implements TemplateLayoutRenderer {
   layoutId() {
@@ -183,7 +184,7 @@ function StorefrontView({
       .map((p) => ({
         ...p,
         quantity: cart[p.id] ?? 0,
-        subtotal: (p.price ?? 0) * (cart[p.id] ?? 0),
+        subtotal: (parsePrice(p.price) ?? 0) * (cart[p.id] ?? 0),
       }));
   }, [parsedProducts, cart]);
 
@@ -254,19 +255,17 @@ function StorefrontView({
     lines.push(`📦 *ITENS DO PEDIDO:*`);
 
     cartItems.forEach((item) => {
-      const unit =
-        item.price !== null
-          ? ` (R$ ${item.price.toFixed(2).replace(".", ",")} un)`
-          : "";
-      const itemSub =
-        item.price !== null
-          ? ` — R$ ${item.subtotal.toFixed(2).replace(".", ",")}`
-          : "";
+      const unit = formatPrice(item.price)
+        ? ` (${formatPrice(item.price)} un)`
+        : "";
+      const itemSub = formatPrice(item.subtotal)
+        ? ` — ${formatPrice(item.subtotal)}`
+        : "";
       lines.push(`• *${item.quantity}x* ${item.name}${unit}${itemSub}`);
     });
 
     lines.push(`━━━━━━━━━━━━━━━━━━━━━`);
-    lines.push(`💰 *VALOR TOTAL:* R$ ${totalCartPrice.toFixed(2).replace(".", ",")}`);
+    lines.push(`💰 *VALOR TOTAL:* ${formatPrice(totalCartPrice) ?? "R$ 0,00"}`);
 
     if (orderNotes.trim()) {
       lines.push(`📝 *Observações:* ${orderNotes.trim()}`);
@@ -634,14 +633,14 @@ function StorefrontView({
 
                       <div className="mt-4 pt-3 border-t border-border/60">
                         <div className="flex items-baseline justify-between mb-2.5">
-                          {item.price !== null ? (
+                          {formatPrice(item.price) ? (
                             <div>
                               <p className="text-lg font-black text-foreground">
-                                R$ {item.price.toFixed(2).replace(".", ",")}
+                                {formatPrice(item.price)}
                               </p>
-                              {item.price >= 30 && (
+                              {(parsePrice(item.price) ?? 0) >= 30 && (
                                 <p className="text-[10px] text-muted-foreground">
-                                  ou até 3x de R$ {(item.price / 3).toFixed(2).replace(".", ",")}
+                                  ou até 3x de {formatPrice((parsePrice(item.price) ?? 0) / 3)}
                                 </p>
                               )}
                             </div>
@@ -732,9 +731,9 @@ function StorefrontView({
                   )}
                 </div>
                 <div className="text-right shrink-0">
-                  {svc.price !== null && (
+                  {formatPrice(svc.price) && (
                     <p className="font-bold text-sm text-foreground">
-                      R$ {svc.price.toFixed(2).replace(".", ",")}
+                      {formatPrice(svc.price)}
                     </p>
                   )}
                   {svc.button_url ? (
@@ -881,7 +880,7 @@ function StorefrontView({
               <div>
                 <p className="text-[11px] opacity-80 leading-none">Total da sacola</p>
                 <p className="text-base font-black leading-tight mt-0.5">
-                  R$ {totalCartPrice.toFixed(2).replace(".", ",")}
+                  {formatPrice(totalCartPrice) ?? "R$ 0,00"}
                 </p>
               </div>
             </div>
@@ -962,8 +961,8 @@ function StorefrontView({
                     <div className="min-w-0 flex-1">
                       <p className="text-xs font-bold text-foreground truncate">{item.name}</p>
                       <p className="text-[11px] text-muted-foreground">
-                        {item.price !== null
-                          ? `R$ ${item.price.toFixed(2).replace(".", ",")} un`
+                        {formatPrice(item.price)
+                          ? `${formatPrice(item.price)} un`
                           : "Sob consulta"}
                       </p>
                     </div>
@@ -1147,7 +1146,7 @@ function StorefrontView({
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground font-medium">Subtotal dos Itens:</span>
                 <span className="font-bold text-foreground">
-                  R$ {totalCartPrice.toFixed(2).replace(".", ",")}
+                  {formatPrice(totalCartPrice) ?? "R$ 0,00"}
                 </span>
               </div>
 

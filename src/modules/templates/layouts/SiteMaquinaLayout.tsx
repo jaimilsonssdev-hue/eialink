@@ -181,8 +181,10 @@ function SiteMaquinaView({
   const nicheLabel = NICHE_LABELS[nicheKey] || "Empresa";
   const city = socialData.city || "sua região";
   const address = socialData.address || `${city} - Centro`;
-  const rating = Number(socialData.google_rating || socialData.rating || 4.9);
-  const reviewsCount = Number(socialData.reviews_count || 73);
+  const rawRating = Number(socialData.google_rating || socialData.rating);
+  const rating = isNaN(rawRating) || rawRating <= 0 ? 4.9 : rawRating;
+  const rawReviews = Number(socialData.reviews_count);
+  const reviewsCount = isNaN(rawReviews) || rawReviews <= 0 ? 73 : rawReviews;
 
   const customTheme = (socialData.custom_theme as Record<string, any>) || {};
   const customPrimary = customTheme.primary;

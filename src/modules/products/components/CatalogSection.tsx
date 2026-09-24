@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowUpRight, ImageOff, PackageOpen, ShoppingCart, Minus, Plus, X, Sparkles, ChevronRight } from "lucide-react";
 import type { CatalogItem } from "../types";
 import { safeExternalUrl } from "@/lib/safe-url";
+import { formatPrice, parsePrice } from "@/lib/utils";
 
 export function CatalogSection({
   items,
@@ -55,19 +56,17 @@ export function CatalogSection({
 
   const cartItems = activeItems.filter((item) => (cart[item.id] ?? 0) > 0);
   const totalItemsCount = cartItems.reduce((sum, item) => sum + (cart[item.id] ?? 0), 0);
-  const total = cartItems.reduce((sum, item) => sum + (item.price ?? 0) * (cart[item.id] ?? 0), 0);
+  const total = cartItems.reduce((sum, item) => sum + (parsePrice(item.price) ?? 0) * (cart[item.id] ?? 0), 0);
 
   const checkout = () => {
     if (!whatsapp) return;
-    const lines = cartItems.map(
-      (item) =>
-        `• ${item.name} x${cart[item.id]}${
-          item.price != null ? ` — R$ ${(item.price * (cart[item.id] ?? 0)).toFixed(2).replace(".", ",")}` : ""
-        }`
-    );
-    const message = `Olá! Gostaria de fazer este pedido:\n\n${lines.join("\n")}\n\n*Total: R$ ${total
-      .toFixed(2)
-      .replace(".", ",")}*`;
+    const lines = cartItems.map((item) => {
+      const itemP = parsePrice(item.price);
+      return `• ${item.name} x${cart[item.id]}${
+        itemP != null ? ` — ${formatPrice(itemP * (cart[item.id] ?? 0))}` : ""
+      }`;
+    });
+    const message = `Olá! Gostaria de fazer este pedido:\n\n${lines.join("\n")}\n\n*Total: ${formatPrice(total)}*`;
     window.open(`https://wa.me/${whatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
   };
 
@@ -123,9 +122,9 @@ export function CatalogSection({
                       {item.description}
                     </p>
                   )}
-                  {item.price !== null && (
+                  {formatPrice(item.price, "Sob Consulta") && (
                     <p className="text-sm font-extrabold text-primary pt-0.5">
-                      {item.price > 0 ? `R$ ${item.price.toFixed(2).replace(".", ",")}` : "Sob Consulta"}
+                      {formatPrice(item.price, "Sob Consulta")}
                     </p>
                   )}
                 </div>
@@ -222,9 +221,9 @@ export function CatalogSection({
                   <span className="text-muted-foreground font-bold tabular-nums">
                     {cart[item.id]}x
                   </span>
-                  {item.price != null && (
+                  {parsePrice(item.price) != null && (
                     <span className="text-foreground font-bold tabular-nums">
-                      R$ {(item.price * (cart[item.id] ?? 0)).toFixed(2).replace(".", ",")}
+                      {formatPrice((parsePrice(item.price) ?? 0) * (cart[item.id] ?? 0))}
                     </span>
                   )}
                 </div>
@@ -235,7 +234,7 @@ export function CatalogSection({
           <div className="flex items-center justify-between border-t border-border/60 pt-2.5 text-sm font-extrabold text-foreground">
             <span>Total do Pedido:</span>
             <span className="text-primary text-base font-black">
-              R$ {total.toFixed(2).replace(".", ",")}
+              {formatPrice(total)}
             </span>
           </div>
 

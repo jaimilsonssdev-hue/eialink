@@ -21,6 +21,7 @@ import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolv
 import type { TemplateRenderModel } from "../types";
 import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
+import { formatPrice } from "@/lib/utils";
 import { whatsappUrl } from "@/lib/whatsapp";
 import { detectNicheKey } from "@/modules/prospecting/nichePresets";
 
@@ -302,9 +303,9 @@ export class BusinessLayout implements TemplateLayoutRenderer {
                           <h3 className="text-sm sm:text-base font-bold text-foreground line-clamp-1">
                             {item.name}
                           </h3>
-                          {item.price !== null && item.price !== undefined && (
+                          {formatPrice(item.price, "Sob Consulta") && (
                             <span className="text-xs font-bold text-primary px-2 py-0.5 rounded-md bg-primary/10 shrink-0">
-                              {item.price > 0 ? `R$ ${item.price.toFixed(2).replace(".", ",")}` : "Sob Consulta"}
+                              {formatPrice(item.price, "Sob Consulta")}
                             </span>
                           )}
                         </div>

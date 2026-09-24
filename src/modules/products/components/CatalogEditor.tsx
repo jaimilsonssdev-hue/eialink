@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, ChevronDown, ImagePlus, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { MediaUploader } from "@/components/page-builder/MediaUploader";
+import { formatPrice } from "@/lib/utils";
 import type { CatalogItem, CatalogItemType } from "../types";
 
 const blankDraft = (type: CatalogItemType): Omit<CatalogItem, "id" | "position"> => ({
@@ -15,8 +16,8 @@ const blankDraft = (type: CatalogItemType): Omit<CatalogItem, "id" | "position">
   active: true,
 });
 
-function priceLabel(price: number | null) {
-  return price === null ? "Sob consulta" : `R$ ${price.toFixed(2).replace(".", ",")}`;
+function priceLabel(price: unknown) {
+  return formatPrice(price, "Sob consulta") ?? "Sob consulta";
 }
 
 export function CatalogEditor({

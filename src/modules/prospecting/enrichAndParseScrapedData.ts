@@ -22,6 +22,7 @@ import type {
 } from "@/pages/BioLinkView";
 import { detectNicheKey, getPresetForCompany, getSignatureHeroArchitectureForNiche, NICHE_GALLERIES } from "./nichePresets";
 import { extractBrazilianPhone, normalizeName, normalizePhone, stripAccents } from "./scoring";
+import { formatPrice, parsePrice } from "@/lib/utils";
 
 export interface GoogleRawDataInput {
   name?: string;
@@ -348,7 +349,7 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
       if (name && typeof name === "string") {
         rawServicesList.push({
           name: name.trim(),
-          price: typeof item.price === "number" ? item.price : undefined,
+          price: parsePrice(item.price) ?? undefined,
           description: typeof item.description === "string" ? item.description : undefined,
         });
       }
@@ -368,7 +369,7 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
       preset.services.forEach((s) => {
         rawServicesList.push({
           name: s.name,
-          price: s.price,
+          price: parsePrice(s.price) ?? undefined,
           description: s.description,
         });
       });
@@ -385,7 +386,7 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
     const isCol2 = idx % 3 === 2;
     const tamanhoBento: "col-span-1" | "col-span-2" = isCol2 ? "col-span-2" : "col-span-1";
 
-    const priceText = svc.price ? `R$ ${svc.price.toFixed(2).replace(".", ",")}` : undefined;
+    const priceText = formatPrice(svc.price) ?? undefined;
     const subtitulo = priceText || svc.description || "Clique para solicitar este serviço";
 
     const serviceWaUrl = normalizedPhoneDigits
@@ -444,7 +445,8 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
 
   // 8. Título, Subtítulo e Bio Curta
   const city = raw.city || raw.cidade || "";
-  const rating = typeof raw.rating === "number" ? raw.rating : raw.rating ? parseFloat(String(raw.rating)) : null;
+  const rawRatingNum = typeof raw.rating === "number" ? raw.rating : raw.rating ? parseFloat(String(raw.rating)) : null;
+  const rating = rawRatingNum !== null && !isNaN(rawRatingNum) ? rawRatingNum : null;
   const reviewsCount =
     typeof raw.reviews_count === "number"
       ? raw.reviews_count

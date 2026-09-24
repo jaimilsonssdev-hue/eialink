@@ -16,6 +16,7 @@ import type { TemplateRenderModel } from "../types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
+import { formatPrice } from "@/lib/utils";
 import { whatsappUrl } from "@/lib/whatsapp";
 
 /**
@@ -189,9 +190,9 @@ export class SpotlightLayout implements TemplateLayoutRenderer {
                   <div className="niche-spotlight-service-body">
                     <div className="niche-spotlight-service-header">
                       <h3>{item.name}</h3>
-                      {item.price !== null && (
+                      {formatPrice(item.price) && (
                         <span className="niche-spotlight-service-price">
-                          R$ {item.price.toFixed(2).replace(".", ",")}
+                          {formatPrice(item.price)}
                         </span>
                       )}
                     </div>

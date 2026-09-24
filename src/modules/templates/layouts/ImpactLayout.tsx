@@ -36,6 +36,7 @@ import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolv
 import type { TemplateRenderModel } from "../types";
 import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
+import { formatPrice } from "@/lib/utils";
 import { whatsappUrl } from "@/lib/whatsapp";
 import type { PublicLink } from "@/components/public-profile/types";
 import { detectNicheKey } from "@/modules/prospecting/nichePresets";
@@ -595,9 +596,9 @@ export class ImpactLayout implements TemplateLayoutRenderer {
                       <h3 className="text-base font-bold uppercase tracking-tight text-foreground group-hover:text-primary transition-colors">
                         {item.name}
                       </h3>
-                      {item.price !== null && (
+                      {formatPrice(item.price) && (
                         <span className="shrink-0 text-xs font-extrabold text-primary bg-primary/10 px-2.5 py-1 rounded-lg">
-                          R$ {item.price.toFixed(2).replace(".", ",")}
+                          {formatPrice(item.price)}
                         </span>
                       )}
                     </div>

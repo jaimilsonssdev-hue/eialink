@@ -541,6 +541,27 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
         };
       }
 
+      // NORMALIZAÇÃO RIGOROSA DOS SERVIÇOS E PREÇOS EXTRAÍDOS PELA IA:
+      if (Array.isArray(parsed.suggested_services)) {
+        parsed.suggested_services = parsed.suggested_services.map((svc: any) => {
+          let cleanPrice: number | null = null;
+          if (typeof svc.price === "number") {
+            cleanPrice = isNaN(svc.price) ? null : svc.price;
+          } else if (typeof svc.price === "string") {
+            const cleanStr = svc.price.replace(/[^\d.,]/g, "").replace(",", ".");
+            const num = parseFloat(cleanStr);
+            cleanPrice = !isNaN(num) ? num : null;
+          }
+          return {
+            ...svc,
+            name: String(svc.name || "Serviço"),
+            description: String(svc.description || ""),
+            price: cleanPrice,
+            image_url: svc.image_url || null,
+          };
+        });
+      }
+
       // PERSISTÊNCIA & ALOCAÇÃO DETERMINÍSTICA DAS FOTOS ENVIADAS PELO USUÁRIO:
       const uploadedFiles = (data.files || []).filter((f) => Boolean(f.publicUrl));
 

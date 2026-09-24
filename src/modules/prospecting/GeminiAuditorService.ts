@@ -151,7 +151,8 @@ export function generateHeuristicAudit(company: ProspectedCompany, demoUrl?: str
   const name = company.name;
   const niche = company.niche || "Negócio Local";
   const city = company.city || "sua região";
-  const rating = company.rating;
+  const rawRating = typeof company.rating === "number" ? company.rating : Number(company.rating);
+  const rating = !isNaN(rawRating) && rawRating > 0 ? rawRating : null;
   const reviews = company.reviews_count ?? 0;
   const hasWebsite = Boolean(company.has_website && !company.website?.includes("wa.me"));
 

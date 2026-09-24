@@ -221,7 +221,13 @@ export function SeoEditor({
           {/* Avaliação em Estrelas & Rich Snippet */}
           <div className="flex items-center gap-1.5 text-xs text-[#9aa0a6]">
             <span className="text-[#fbbc04] text-xs font-bold tracking-tight">★★★★★</span>
-            <span className="text-white font-semibold text-xs">{rating ? rating.toFixed(1) : "4.9"}</span>
+            <span className="text-white font-semibold text-xs">
+              {typeof rating === "number" && !isNaN(rating)
+                ? rating.toFixed(1)
+                : Number(rating) && !isNaN(Number(rating))
+                ? Number(rating).toFixed(1)
+                : "4.9"}
+            </span>
             <span>({reviewsCount || 48})</span>
             <span>·</span>
             <span>Preço: {seo.priceRange || "$$"}</span>

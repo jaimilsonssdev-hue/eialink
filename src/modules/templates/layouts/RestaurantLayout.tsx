@@ -22,6 +22,7 @@ import type { TemplateRenderModel } from "../types";
 import type { LayoutRenderContext, TemplateLayoutRenderer } from "./LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { PixCard } from "@/components/public-profile/PixCard";
+import { formatPrice } from "@/lib/utils";
 import { whatsappUrl } from "@/lib/whatsapp";
 
 /**
@@ -327,9 +328,9 @@ export class RestaurantLayout implements TemplateLayoutRenderer {
                       <h3 className="text-base font-bold text-foreground group-hover:text-amber-500 transition-colors">
                         {item.name}
                       </h3>
-                      {item.price !== null && (
+                      {formatPrice(item.price) && (
                         <span className="shrink-0 text-xs font-extrabold text-amber-500 bg-amber-500/10 px-2.5 py-1 rounded-lg">
-                          R$ {item.price.toFixed(2).replace(".", ",")}
+                          {formatPrice(item.price)}
                         </span>
                       )}
                     </div>

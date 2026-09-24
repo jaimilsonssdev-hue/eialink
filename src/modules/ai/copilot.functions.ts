@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { createClient } from "@supabase/supabase-js";
+import type { Database } from "@/integrations/supabase/types";
 import {
   PremiumBetaProposalSchema,
   type PremiumBetaProposal,
@@ -9,6 +10,22 @@ import {
   adaptProposalToExistingStructures,
   type AdaptedProposalResult,
 } from "./premiumProposal.adapter";
+
+function getSupabaseServerClient() {
+  const url =
+    process.env.SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL ||
+    "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+  const key =
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.SUPABASE_PUBLISHABLE_KEY ||
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    "sb_publishable_7cbVuf-q1wh7nqSeCXM1Ag_FMhRT2fS";
+  if (!url || !key) return null;
+  return createClient<Database>(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
 
 export interface AiCopilotResult {
   display_name?: string;
@@ -135,7 +152,6 @@ const copilotInputSchema = z
   );
 
 export const generateCopilotSiteFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
   .handler(async ({ data, context }): Promise<AiCopilotResult> => {
     // RESOLUÇÃO SEGURA DA CHAVE NO SERVIDOR:
@@ -164,7 +180,7 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
     }
 
     // 0. PREPARAÇÃO & PERSISTÊNCIA DAS IMAGENS ENVIADAS (Storage Supabase ou Data URL infalível)
-    const supabaseAdmin = (context as any)?.supabase;
+    const supabaseAdmin = (context as any)?.supabase || getSupabaseServerClient();
     const userId = (context as any)?.userId || "copilot-assets";
 
     const preparedFiles: Array<{
@@ -747,7 +763,6 @@ export interface PremiumProposalResponse {
 }
 
 export const generatePremiumProposalFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
   .handler(async ({ data, context }): Promise<PremiumProposalResponse> => {
     const serverKey =
@@ -775,7 +790,7 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
     }
 
     // 0. Preparação & Persistência das Imagens
-    const supabaseAdmin = (context as any)?.supabase;
+    const supabaseAdmin = (context as any)?.supabase || getSupabaseServerClient();
     const userId = (context as any)?.userId || "premium-assets";
 
     const preparedFiles: Array<{
@@ -1171,10 +1186,9 @@ export interface FetchedBusinessData {
 }
 
 export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof fetchUrlInputSchema>) => fetchUrlInputSchema.parse(data))
   .handler(async ({ data, context }: any): Promise<FetchedBusinessData> => {
-    const supabaseAdmin = (context as any)?.supabase;
+    const supabaseAdmin = (context as any)?.supabase || getSupabaseServerClient();
     const userId = (context as any)?.userId || "drive-assets";
 
     let target = data.url.trim();

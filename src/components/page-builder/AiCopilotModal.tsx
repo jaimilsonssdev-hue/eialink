@@ -112,7 +112,7 @@ async function getOptimizedImage(file: File): Promise<{ optimizedFile: File; bas
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const MAX_DIM = 1200;
+      const MAX_DIM = 800;
       let { width, height } = img;
       if (width > MAX_DIM || height > MAX_DIM) {
         if (width > height) {
@@ -133,7 +133,7 @@ async function getOptimizedImage(file: File): Promise<{ optimizedFile: File; bas
         return;
       }
       ctx.drawImage(img, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
 
       canvas.toBlob(
         (blob) => {
@@ -146,7 +146,7 @@ async function getOptimizedImage(file: File): Promise<{ optimizedFile: File; bas
           }
         },
         "image/jpeg",
-        0.85,
+        0.75,
       );
     };
     img.onerror = () => {
@@ -510,11 +510,8 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
       const failedUploadsList: string[] = [];
 
       const eligibleItems = mediaItems.filter((item) => {
-        if (item.isPdf) {
-          if (item.file.size > 2 * 1024 * 1024 || briefing.includes(item.name)) {
-            return false;
-          }
-        }
+        // Se for o arquivo de documento PDF, seu catálogo e fotos já foram extraídos e inseridos
+        if (item.isPdf) return false;
         return true;
       });
 
@@ -595,9 +592,17 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         return;
       }
       console.error("Erro no Copiloto IA Multimodal:", err);
-      const msg =
+      let msg =
         err?.message ||
         "Ocorreu um erro ao comunicar com a IA do Google AI Studio. Verifique os dados e tente novamente.";
+      if (
+        msg.toLowerCase().includes("failed to fetch") ||
+        msg.toLowerCase().includes("networkerror") ||
+        msg.toLowerCase().includes("load failed")
+      ) {
+        msg =
+          "Falha de conexão com o servidor (Failed to fetch). Verifique se o servidor de desenvolvimento está rodando (npm run dev) ou se a conexão está ativa.";
+      }
       setError(msg);
       if (
         msg.toLowerCase().includes("chave") ||

@@ -918,7 +918,180 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
      * 'whatsapp_cta': Chamada de fechamento irresistível para o WhatsApp.
 
 5. FORMATO DA RESPOSTA:
-   - Retorne EXCLUSIVAMENTE o objeto JSON válido estruturado de acordo com o Schema v2, sem nenhum texto antes ou depois.`;
+   - Retorne EXCLUSIVAMENTE o objeto JSON válido estruturado de acordo com o Schema v2 (use camelCase exatamente como no exemplo abaixo), sem nenhum texto antes ou depois:
+
+{
+  "schemaVersion": 2,
+  "generator": "premium-beta",
+  "status": "proposal",
+  "strategy": {
+    "businessType": "...",
+    "niche": "...",
+    "city": "...",
+    "audience": "...",
+    "primaryGoal": "whatsapp",
+    "primaryCta": "Falar no WhatsApp",
+    "tone": "Profissional e sofisticado",
+    "confirmedFacts": ["Fato confirmado 1"],
+    "missingInformation": ["Informação faltante"]
+  },
+  "creativeDirection": {
+    "id": "cinematic-noir",
+    "name": "Cinematográfico Premium",
+    "referenceIds": [],
+    "visualPrinciples": ["Tipografia imponente", "Contraste escuro profundo", "Foco visual nas fotos"],
+    "motionIntensity": "subtle"
+  },
+  "theme": {
+    "paletteId": null,
+    "primary": "#10b981",
+    "background": "#030712",
+    "card_bg": "#0b0f19",
+    "border_color": "#1e293b",
+    "title": "#ffffff",
+    "text": "#cbd5e1",
+    "mode": "dark",
+    "radius": "16px",
+    "density": "comfortable"
+  },
+  "pagePatch": {
+    "displayName": "Nome da Empresa",
+    "description": "Descrição magnética da empresa",
+    "whatsapp": "55...",
+    "whatsappMessage": "Olá! Gostaria de mais informações.",
+    "whatsappButtonLabel": "Chamar no WhatsApp",
+    "avatarUrl": "URL_DO_LOGO_SE_HOUVER",
+    "coverUrl": "URL_DA_CAPA_SE_HOUVER",
+    "seo": {
+      "metaTitle": "Nome da Empresa | Especialidade",
+      "metaDescription": "Descrição SEO otimizada"
+    }
+  },
+  "links": [],
+  "catalogItems": [
+    {
+      "name": "Nome do Produto ou Serviço",
+      "description": "Descrição detalhada e atraente",
+      "price": 59.9,
+      "imageUrl": "URL_DA_FOTO_DO_PRODUTO",
+      "category": "Destaques",
+      "buttonLabel": "Pedir no WhatsApp"
+    }
+  ],
+  "sections": [
+    {
+      "id": "hero-section",
+      "type": "hero",
+      "variant": "cinematic-fullscreen",
+      "enabled": true,
+      "position": 0,
+      "source": "bio_pages",
+      "title": "Título Imponente do Hero",
+      "subtitle": "Subtítulo convincente e focado na proposta de valor",
+      "content": {},
+      "media": [{ "url": "URL_DA_FOTO_DE_CAPA", "role": "cover" }]
+    },
+    {
+      "id": "differentials-section",
+      "type": "differentials",
+      "variant": "bento-grid",
+      "enabled": true,
+      "position": 1,
+      "source": "custom",
+      "title": "Por que nos escolher",
+      "content": {
+        "items": [
+          { "title": "Diferencial 1", "description": "Explicação do diferencial", "icon": "shield" },
+          { "title": "Diferencial 2", "description": "Explicação do diferencial", "icon": "sparkles" },
+          { "title": "Diferencial 3", "description": "Explicação do diferencial", "icon": "award" }
+        ]
+      },
+      "media": []
+    },
+    {
+      "id": "catalog-section",
+      "type": "catalog_carousel",
+      "variant": "modern-carousel",
+      "enabled": true,
+      "position": 2,
+      "source": "catalog_items",
+      "title": "Nossos Destaques",
+      "subtitle": "Conheça nossas opções preparadas com máxima dedicação",
+      "content": {},
+      "media": []
+    },
+    {
+      "id": "about-section",
+      "type": "about",
+      "variant": "story-split",
+      "enabled": true,
+      "position": 3,
+      "source": "custom",
+      "title": "Nossa História & Propósito",
+      "subtitle": "Compromisso com excelência",
+      "content": {
+        "story": "Texto contando sobre a dedicação, tradição ou qualidade do negócio.",
+        "highlights": ["Atendimento de excelência", "Ingredientes / materiais selecionados", "Experiência comprovada"]
+      },
+      "media": []
+    },
+    {
+      "id": "testimonials-section",
+      "type": "testimonials",
+      "variant": "quote-cards",
+      "enabled": true,
+      "position": 4,
+      "source": "custom",
+      "title": "O que nossos clientes dizem",
+      "content": {
+        "testimonials": [
+          { "name": "Cliente 1", "review": "Atendimento impecável e qualidade excelente!", "rating": 5 },
+          { "name": "Cliente 2", "review": "Superou todas as expectativas. Recomendo de olhos fechados.", "rating": 5 }
+        ]
+      },
+      "media": []
+    },
+    {
+      "id": "contact-section",
+      "type": "contact_map",
+      "variant": "compact-info",
+      "enabled": true,
+      "position": 5,
+      "source": "custom",
+      "title": "Venha nos Visitar ou Fale Conosco",
+      "content": {},
+      "media": []
+    },
+    {
+      "id": "cta-section",
+      "type": "whatsapp_cta",
+      "variant": "floating-action",
+      "enabled": true,
+      "position": 6,
+      "source": "custom",
+      "title": "Pronto para ter a melhor experiência?",
+      "subtitle": "Fale agora mesmo com nossa equipe e tire suas dúvidas.",
+      "content": {},
+      "media": []
+    }
+  ],
+  "mediaAssignments": [
+    {
+      "fileName": "foto.jpg",
+      "assignedUrl": "URL_EXATA_DO_ARQUIVO",
+      "assignedSectionId": "hero",
+      "assignedRole": "cover",
+      "qualityScore": 95,
+      "reasoning": "Foto de alta definição com enquadramento cinematográfico ideal para capa."
+    }
+  ],
+  "audit": {
+    "criticalIssues": [],
+    "warnings": [],
+    "suggestions": [],
+    "unconfirmedContent": []
+  }
+}`;
 
     const userPrompt = `DADOS ATUAIS DO SITE:
 Nome Atual: ${data.currentContext?.displayName || "Empresa Local"}
@@ -1114,20 +1287,22 @@ Como Diretor de Arte e Arquiteto de Produto:
         return candidate.trim();
       }
 
-      if (parsedJson.pagePatch) {
-        parsedJson.pagePatch.avatarUrl = resolveFileUrl(parsedJson.pagePatch.avatarUrl);
-        parsedJson.pagePatch.coverUrl = resolveFileUrl(parsedJson.pagePatch.coverUrl);
+      const validatedProposal = PremiumBetaProposalSchema.parse(parsedJson);
+
+      if (validatedProposal.pagePatch) {
+        validatedProposal.pagePatch.avatarUrl = resolveFileUrl(validatedProposal.pagePatch.avatarUrl);
+        validatedProposal.pagePatch.coverUrl = resolveFileUrl(validatedProposal.pagePatch.coverUrl);
       }
 
-      if (Array.isArray(parsedJson.catalogItems)) {
-        parsedJson.catalogItems = parsedJson.catalogItems.map((item: any) => ({
+      if (Array.isArray(validatedProposal.catalogItems)) {
+        validatedProposal.catalogItems = validatedProposal.catalogItems.map((item: any) => ({
           ...item,
           imageUrl: resolveFileUrl(item.imageUrl),
         }));
       }
 
-      if (Array.isArray(parsedJson.sections)) {
-        parsedJson.sections = parsedJson.sections.map((sec: any) => ({
+      if (Array.isArray(validatedProposal.sections)) {
+        validatedProposal.sections = validatedProposal.sections.map((sec: any) => ({
           ...sec,
           media: Array.isArray(sec.media)
             ? sec.media.map((m: any) => ({
@@ -1138,14 +1313,12 @@ Como Diretor de Arte e Arquiteto de Produto:
         }));
       }
 
-      if (Array.isArray(parsedJson.mediaAssignments)) {
-        parsedJson.mediaAssignments = parsedJson.mediaAssignments.map((a: any) => ({
+      if (Array.isArray(validatedProposal.mediaAssignments)) {
+        validatedProposal.mediaAssignments = validatedProposal.mediaAssignments.map((a: any) => ({
           ...a,
           assignedUrl: resolveFileUrl(a.assignedUrl) || a.assignedUrl,
         }));
       }
-
-      const validatedProposal = PremiumBetaProposalSchema.parse(parsedJson);
 
       const adapted = adaptProposalToExistingStructures(
         validatedProposal,

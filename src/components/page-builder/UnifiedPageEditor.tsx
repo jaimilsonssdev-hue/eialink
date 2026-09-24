@@ -919,6 +919,23 @@ export function UnifiedPageEditor({
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }));
+
+      // Ativa automaticamente o carrossel estilo Instagram com as fotos e serviços extraídos
+      updatedSocial.product_carousel = {
+        enabled: true,
+        title: "Destaques & Mais Pedidos",
+        subtitle: "Conheça nossos principais serviços e itens exclusivos",
+        aspect_ratio: "portrait_4_5",
+        items: updatedProductsList.map((p, idx) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description || "",
+          price: p.price ?? undefined,
+          image_url: p.image_url || undefined,
+          badge: idx === 0 ? "Destaque" : undefined,
+          button_text: "Pedir no WhatsApp",
+        })),
+      };
     }
 
     // Atualiza o estado da UI imediatamente

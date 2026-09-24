@@ -486,7 +486,16 @@ function SiteMaquinaView({
 
                   <div className="lg:col-span-5 relative">
                     <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100">
-                      <img src={heroCover} alt={companyName} className="w-full h-72 sm:h-96 object-cover" />
+                      <img
+                        src={heroCover}
+                        alt={companyName}
+                        className="w-full h-72 sm:h-96 object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            curated.covers?.[0]?.url ||
+                            "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=85";
+                        }}
+                      />
                     </div>
                     <div className="absolute -bottom-4 left-4 sm:-bottom-6 sm:-left-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-3 max-w-[calc(100%-2rem)]">
                       <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center font-black text-lg shrink-0">
@@ -508,7 +517,16 @@ function SiteMaquinaView({
               /* Hero Immersive: Full-bleed com Overlay Dark Garantido e Alto Contraste */
               <div className="relative isolate min-h-[480px] sm:min-h-[580px] flex items-center justify-center text-center px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
                 <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-                  <img src={heroCover} alt={companyName} className="w-full h-full object-cover scale-105" />
+                  <img
+                    src={heroCover}
+                    alt={companyName}
+                    className="w-full h-full object-cover scale-105"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        curated.covers?.[0]?.url ||
+                        "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=85";
+                    }}
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-gray-950 via-gray-950/85 to-gray-950/60 backdrop-blur-[1px]" />
                 </div>
 
@@ -604,7 +622,16 @@ function SiteMaquinaView({
                     </a>
                   </div>
                   <div className="mt-10 sm:mt-12 rounded-3xl overflow-hidden shadow-2xl max-w-3xl mx-auto border-4 border-white bg-gray-100">
-                    <img src={heroCover} alt={companyName} className="w-full h-64 sm:h-80 lg:h-96 object-cover" />
+                    <img
+                      src={heroCover}
+                      alt={companyName}
+                      className="w-full h-64 sm:h-80 lg:h-96 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          curated.covers?.[0]?.url ||
+                          "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=85";
+                      }}
+                    />
                   </div>
                 </div>
               </div>
@@ -614,11 +641,29 @@ function SiteMaquinaView({
       }
 
       case "product_carousel": {
-        const carouselConfig = socialData.product_carousel as ProductCarouselConfig | undefined;
+        let carouselConfig = socialData.product_carousel as ProductCarouselConfig | undefined;
+        if (!carouselConfig || !Array.isArray(carouselConfig.items) || carouselConfig.items.length === 0) {
+          if (products.length > 0) {
+            carouselConfig = {
+              enabled: true,
+              title: "Destaques & Mais Pedidos",
+              subtitle: "Arraste para o lado e faça seu pedido direto no WhatsApp",
+              items: products.map((p, idx) => ({
+                id: p.id,
+                name: p.name,
+                description: p.description || "",
+                price: p.price ?? undefined,
+                image_url: p.image_url || undefined,
+                badge: idx === 0 ? "Destaque" : undefined,
+                button_text: p.button_label || "Pedir no WhatsApp",
+              })),
+            };
+          }
+        }
         const hasCarousel = Boolean(
-          carouselConfig?.enabled &&
-          Array.isArray(carouselConfig.items) &&
-          carouselConfig.items.some((i) => i.name && i.image_url)
+          carouselConfig?.enabled !== false &&
+          Array.isArray(carouselConfig?.items) &&
+          carouselConfig!.items.length > 0
         );
         if (!hasCarousel) return null;
 
@@ -800,6 +845,18 @@ function SiteMaquinaView({
                     <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--color-100)] rounded-full blur-3xl opacity-60 pointer-events-none" />
 
                     <div>
+                      {displayServices[0].image_url && (
+                        <div className="w-full h-44 sm:h-56 rounded-2xl overflow-hidden mb-6 bg-gray-100 shadow-sm border border-gray-100">
+                          <img
+                            src={displayServices[0].image_url}
+                            alt={displayServices[0].name}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </div>
+                      )}
                       <div className="flex items-center justify-between gap-4 mb-6">
                         <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-[var(--color-600)] text-white flex items-center justify-center text-xl sm:text-2xl shadow-md">
                           <Sparkles className="h-6 w-6" />
@@ -859,9 +916,22 @@ function SiteMaquinaView({
                     className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
                   >
                     <div>
-                      <div className="w-12 h-12 rounded-2xl bg-[var(--color-100)] text-[var(--color-600)] flex items-center justify-center text-xl mb-6 shadow-inner">
-                        {idx === 0 ? <HeartPulse className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6" />}
-                      </div>
+                      {item.image_url ? (
+                        <div className="w-full h-36 rounded-2xl overflow-hidden mb-5 bg-gray-100 shadow-xs">
+                          <img
+                            src={item.image_url}
+                            alt={item.name}
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-500"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        </div>
+                      ) : (
+                        <div className="w-12 h-12 rounded-2xl bg-[var(--color-100)] text-[var(--color-600)] flex items-center justify-center text-xl mb-6 shadow-inner">
+                          {idx === 0 ? <HeartPulse className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6" />}
+                        </div>
+                      )}
                       <h3 className="font-heading font-black text-lg sm:text-xl text-gray-900 mb-3">
                         {item.name}
                       </h3>
@@ -895,6 +965,18 @@ function SiteMaquinaView({
                       className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between"
                     >
                       <div>
+                        {item.image_url && (
+                          <div className="w-full h-32 rounded-xl overflow-hidden mb-3 bg-gray-100">
+                            <img
+                              src={item.image_url}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        )}
                         <h4 className="font-heading font-bold text-base text-gray-900 mb-2">{item.name}</h4>
                         <p className="text-gray-600 text-xs sm:text-sm leading-relaxed mb-4">
                           {item.description?.replace(/^\[.*?\]\s*/, "")}
@@ -975,7 +1057,17 @@ function SiteMaquinaView({
 
                 <div className="relative">
                   <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100">
-                    <img src={secondaryImage} alt={companyName} className="w-full h-72 sm:h-[420px] lg:h-[450px] object-cover" />
+                    <img
+                      src={secondaryImage}
+                      alt={companyName}
+                      className="w-full h-72 sm:h-[420px] lg:h-[450px] object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src =
+                          curated.covers?.[1]?.url ||
+                          curated.covers?.[0]?.url ||
+                          "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=85";
+                      }}
+                    />
                   </div>
                   <div className="absolute -bottom-4 left-4 sm:-bottom-6 sm:-left-6 bg-white p-4 sm:p-5 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-4 max-w-[calc(100%-2rem)]">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-xl sm:text-2xl font-bold shrink-0">
@@ -1394,15 +1486,20 @@ function SiteMaquinaView({
                 src={avatarImage}
                 alt={companyName}
                 className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl object-cover shadow-sm border border-gray-200 shrink-0"
+                onError={(e) => {
+                  e.currentTarget.style.display = "none";
+                  const fallbackEl = document.getElementById("navbar-fallback-logo");
+                  if (fallbackEl) fallbackEl.style.display = "flex";
+                }}
               />
-            ) : (
-              <div
-                className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl text-white flex items-center justify-center font-black text-base sm:text-xl shadow-sm shrink-0"
-                style={{ backgroundColor: customPrimary || "var(--color-600)" }}
-              >
-                {companyName.slice(0, 1)}
-              </div>
-            )}
+            ) : null}
+            <div
+              id="navbar-fallback-logo"
+              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl text-white items-center justify-center font-black text-base sm:text-xl shadow-sm shrink-0 ${avatarImage ? "hidden" : "flex"}`}
+              style={{ backgroundColor: customPrimary || "var(--color-600)" }}
+            >
+              {companyName.slice(0, 1)}
+            </div>
             <div className="min-w-0">
               <span
                 className="font-heading font-black text-base sm:text-xl tracking-tight block leading-tight truncate max-w-[170px] sm:max-w-none"

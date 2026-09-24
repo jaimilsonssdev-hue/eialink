@@ -176,10 +176,17 @@ export const InstagramProductCarousel = memo(function InstagramProductCarousel({
                     {/* Imagem do Produto com Aspect Ratio Instagram */}
                     <div className={`relative w-full ${aspectRatioClass} overflow-hidden bg-muted`}>
                       <img
-                        src={item.image_url}
+                        src={
+                          item.image_url ||
+                          "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80"
+                        }
                         alt={item.name}
                         loading="lazy"
                         className="w-full h-full object-cover object-center group-hover/card:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          e.currentTarget.src =
+                            "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80";
+                        }}
                       />
 
                       {/* Gradiente sutil inferior */}

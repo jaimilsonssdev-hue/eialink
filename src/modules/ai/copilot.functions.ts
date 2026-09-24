@@ -129,7 +129,7 @@ const copilotInputSchema = z
 export const generateCopilotSiteFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
-  .handler(async ({ data }): Promise<AiCopilotResult> => {
+  .handler(async ({ data, context }): Promise<AiCopilotResult> => {
     // RESOLUÇÃO SEGURA DA CHAVE NO SERVIDOR:
     const serverKey =
       process.env.GEMINI_API_KEY ||
@@ -142,6 +142,82 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
       throw new Error(
         "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto.",
       );
+    }
+
+    function isRealImageUrl(url?: string | null): boolean {
+      if (!url || typeof url !== "string") return false;
+      const trimmed = url.trim();
+      if (trimmed.startsWith("data:image/") || trimmed.startsWith("blob:")) return true;
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        if (trimmed.includes("example.com") || trimmed.includes("via.placeholder.com")) return false;
+        return true;
+      }
+      return false;
+    }
+
+    // 0. PREPARAÇÃO & PERSISTÊNCIA DAS IMAGENS ENVIADAS (Storage Supabase ou Data URL infalível)
+    const supabaseAdmin = (context as any)?.supabase;
+    const userId = (context as any)?.userId || "copilot-assets";
+
+    const preparedFiles: Array<{
+      name: string;
+      mimeType: string;
+      base64: string;
+      publicUrl: string;
+      role?: "logo" | "cover" | "product" | "general";
+    }> = [];
+
+    for (const f of data.files || []) {
+      const cleanBase64 = f.base64 ? f.base64.replace(/^data:[^;]+;base64,/, "").trim() : "";
+      let finalUrl = f.publicUrl;
+
+      // Se a imagem ainda não tem URL pública válida mas temos o base64, persiste no Storage
+      if (!isRealImageUrl(finalUrl) && cleanBase64) {
+        if (supabaseAdmin) {
+          try {
+            const ext = f.mimeType.includes("png")
+              ? "png"
+              : f.mimeType.includes("webp")
+                ? "webp"
+                : "jpg";
+            const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+            const buffer = Buffer.from(cleanBase64, "base64");
+
+            const { error: upErr } = await supabaseAdmin.storage
+              .from("bio-media")
+              .upload(path, buffer, {
+                contentType: f.mimeType || "image/jpeg",
+                upsert: true,
+              });
+
+            if (!upErr) {
+              const { data: pubData } = supabaseAdmin.storage
+                .from("bio-media")
+                .getPublicUrl(path);
+              if (pubData?.publicUrl) {
+                finalUrl = pubData.publicUrl;
+              }
+            }
+          } catch (uploadErr) {
+            console.warn("Aviso ao persistir arquivo no storage via servidor:", uploadErr);
+          }
+        }
+
+        // Se o storage não estiver acessível, usa Data URL que renderiza 100% no navegador sem quebrar
+        if (!isRealImageUrl(finalUrl)) {
+          finalUrl = `data:${f.mimeType || "image/jpeg"};base64,${cleanBase64}`;
+        }
+      }
+
+      if (isRealImageUrl(finalUrl)) {
+        preparedFiles.push({
+          name: f.name,
+          mimeType: f.mimeType,
+          base64: cleanBase64,
+          publicUrl: finalUrl!,
+          role: f.role,
+        });
+      }
     }
 
     const systemPrompt = `[INSTRUÇÃO DE SISTEMA OBRIGATÓRIA - MODO CINEMATOGRÁFICO PREMIUM]
@@ -183,19 +259,14 @@ REGRAS DE OURO DA GERAÇÃO (ESTÉTICA CINEMATOGRÁFICA DE LUXO & EXTRAÇÃO PRE
 6. CATÁLOGO DE SERVIÇOS & CARROSSEL:
    - 'suggested_services': Liste os principais serviços ou pratos da empresa com nomes refinados, descrições atrativas e valores numéricos realistas (especialmente ao extrair de cardápios, PDFs ou briefing).
 
-7. CURADORIA VISUAL DE FOTOS E DIRETOR DE ARTE (AVALIAÇÃO DE AUTORIDADE, QUALIDADE E POSICIONAMENTO):
-   - Para CADA arquivo de imagem anexado ou importado (Google Drive, PDF, Upload):
-     * Avalie com critério de Diretor de Arte:
-       - 'scores.authority' (0 a 100): Presença e postura profissional, olhar focado na câmera, ambiente de alto valor (consultório, estúdio, escritório executivo, bancada impecável) vs. fotos amadoras/selfies caseiras.
-       - 'scores.quality' (0 a 100): Resolução, nitidez, iluminação equilibrada e ausência de ruídos ou pixelização excessiva do WhatsApp.
-       - 'scores.positioning' (0 a 100): Aderência ao nicho (gastronomia apetitosa, medicina empática e higiênica, advocacia nobre).
-       - 'role': Classifique o papel ideal: 'logo' (símbolo/vetor de marca), 'cover' (foto com maior autoridade e impacto para a Capa Hero), 'product' (fotos de procedimentos, pratos ou produtos para o Carrossel), ou 'discard' (foto de baixa resolução, ilegível ou amadora que rebaixa o valor percebido).
-       - 'critique': Frase concisa explicando o motivo da escolha (ex: "Excelente nitidez e autoridade no consultório médico, ideal para a Capa principal.").
-     * Preencha a lista 'curated_photos' contendo { url, name, role, scores: { authority, quality, positioning }, critique }.
-   - Alocação automática e obrigatória no site:
-     * 'avatar_url': Atribua OBRIGATORIAMENTE a melhor imagem com papel 'logo'.
-     * 'cover_url': Atribua OBRIGATORIAMENTE a foto com maior score combinado de Autoridade e Qualidade (papel 'cover').
-     * 'suggested_services[i].image_url': Atribua as fotos com papel 'product' aos serviços/pratos correspondentes (Carrossel).
+7. REGRAS CRÍTICAS E OBRIGATÓRIAS PARA URLs DE FOTOS:
+   - Ao preencher 'avatar_url', 'cover_url', 'suggested_services[i].image_url' e 'curated_photos[i].url':
+     * Use RIGOROSAMENTE as URLs fornecidas na lista de arquivos em [URL: "..."] ou o nome exato do arquivo.
+     * NUNCA invente links externos ou nomes soltos de arquivos (ex: "logo.png" ou "foto.jpg" são estritamente proibidos se não existirem na lista de arquivos).
+     * 'avatar_url': Atribua OBRIGATORIAMENTE a URL da imagem de logotipo.
+     * 'cover_url': Atribua OBRIGATORIAMENTE a URL da foto de maior presença e impacto.
+     * 'suggested_services[i].image_url': Atribua a URL das fotos de produtos/pratos.
+     * 'curated_photos': Preencha a lista com as fotos avaliadas, suas respectivas URLs, scores (authority, quality, positioning de 0 a 100) e critique de Diretor de Arte.
 
 8. VÍDEO INSTITUCIONAL:
    - Se o campo videoUrl foi preenchido ou mencionado, configure 'video_embed' com enabled=true, a url indicada, título magnético e legenda convidativa.
@@ -204,27 +275,25 @@ REGRAS DE OURO DA GERAÇÃO (ESTÉTICA CINEMATOGRÁFICA DE LUXO & EXTRAÇÃO PRE
    - Não gaste tokens com explicações, saudações ou código markdown extra.
    - Retorne RIGOROSAMENTE E APENAS O OBJETO JSON VÁLIDO obedecendo o schema, sem nenhum texto antes ou depois.`;
 
-    const fileDescriptions = (data.files || [])
+    const fileDescriptions = preparedFiles
       .map((f, idx) => {
         let roleHint = "";
         if (f.role === "logo" || f.name.toLowerCase().includes("logo")) {
-          roleHint = ` [IMPORTANTE: Logotipo da Empresa -> Atribua esta URL pública a 'avatar_url']`;
+          roleHint = ` [Papel sugerido: LOGOTIPO da Empresa -> Atribua esta URL exata a 'avatar_url']`;
         } else if (
           f.role === "cover" ||
           f.name.toLowerCase().includes("capa") ||
           f.name.toLowerCase().includes("banner")
         ) {
-          roleHint = ` [IMPORTANTE: Banner/Capa Principal -> Atribua esta URL pública a 'cover_url']`;
+          roleHint = ` [Papel sugerido: CAPA PRINCIPAL / HERO -> Atribua esta URL exata a 'cover_url']`;
         } else if (
           f.role === "product" ||
           f.name.toLowerCase().includes("prato") ||
           f.name.toLowerCase().includes("pagina")
         ) {
-          roleHint = ` [IMPORTANTE: Foto de Prato/Serviço -> Atribua esta URL ao respectivo item em 'suggested_services[i].image_url']`;
+          roleHint = ` [Papel sugerido: FOTO DE PRATO/SERVIÇO -> Atribua esta URL ao respectivo item em 'suggested_services[i].image_url']`;
         }
-        return `- Arquivo #${idx + 1}: "${f.name}" (${f.mimeType})${
-          f.publicUrl ? ` [URL Pública: "${f.publicUrl}"]` : ""
-        }${roleHint}`;
+        return `- Arquivo #${idx + 1}: "${f.name}" (${f.mimeType}) [URL: "${f.publicUrl}"]${roleHint}`;
       })
       .join("\n");
 
@@ -236,11 +305,11 @@ Cidade / Região: ${data.currentContext?.city || "Brasil"}
 ${data.videoUrl ? `LINK DE VÍDEO INFORMADO: ${data.videoUrl}\n` : ""}
 ${
   fileDescriptions
-    ? `ARQUIVOS MULTIMODAIS ANEXADOS (${data.files?.length} arquivo(s)):\n${fileDescriptions}\n`
+    ? `ARQUIVOS MULTIMODAIS ANEXADOS (${preparedFiles.length} arquivo(s)):\n${fileDescriptions}\n`
     : ""
 }
 ${data.briefing?.trim() ? `BRIEFING / INFORMAÇÕES ADICIONAIS:\n"""\n${data.briefing}\n"""\n` : ""}
-Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score de cada foto (Autoridade, Qualidade e Posicionamento) em 'curated_photos', aloque as fotos vencedoras nos lugares certos ('avatar_url', 'cover_url', 'image_url' de serviços), extraia todos os itens e preços de eventuais PDFs e gere a estrutura JSON completa.`;
+Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score de cada foto (Autoridade, Qualidade e Posicionamento) em 'curated_photos', aloque as fotos vencedoras nos lugares certos ('avatar_url', 'cover_url', 'image_url' de serviços usando as URLs fornecidas), extraia todos os itens e preços de eventuais PDFs e gere a estrutura JSON completa.`;
 
     // Monta o payload multimodal com as partes inline_data dos arquivos + prompt de texto
     const promptParts: Array<{
@@ -248,15 +317,16 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
       inline_data?: { mime_type: string; data: string };
     }> = [];
 
-    if (data.files && data.files.length > 0) {
-      for (const file of data.files) {
-        const cleanBase64 = file.base64.replace(/^data:[^;]+;base64,/, "").trim();
-        promptParts.push({
-          inline_data: {
-            mime_type: file.mimeType,
-            data: cleanBase64,
-          },
-        });
+    if (preparedFiles.length > 0) {
+      for (const file of preparedFiles) {
+        if (file.base64) {
+          promptParts.push({
+            inline_data: {
+              mime_type: file.mimeType,
+              data: file.base64,
+            },
+          });
+        }
       }
     }
 
@@ -279,79 +349,17 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     // Se houver um AI Gateway (Cloudflare AI Gateway) configurado, usa-o; caso contrário, usa o endpoint oficial do Google
     const apiBase = customGateway || defaultEndpoint;
 
-    // 1. Descoberta dinâmica dos modelos disponíveis para a chave informada
-    let activeModels: string[] = [];
-    try {
-      const listRes = await fetch(
-        `${apiBase}/v1beta/models?key=${encodeURIComponent(resolvedKey)}`,
-        {
-          headers: customGateway
-            ? { "cf-aig-metadata": JSON.stringify({ app: "eialink", service: "copilot-list" }) }
-            : undefined,
-        },
-      );
-      if (listRes.ok) {
-        const listData = await listRes.json();
-        if (Array.isArray(listData.models)) {
-          activeModels = listData.models
-            .filter(
-              (m: any) =>
-                Array.isArray(m.supportedGenerationMethods) &&
-                m.supportedGenerationMethods.includes("generateContent"),
-            )
-            .map((m: any) => (m.name || "").replace(/^models\//, ""))
-            .filter((m: string) => !m.includes("2.5-flash-lite"));
-        }
-      } else {
-        const errText = await listRes.text();
-        try {
-          const errObj = JSON.parse(errText);
-          if (listRes.status === 400 || listRes.status === 403) {
-            throw new Error(
-              `Chave do Google AI Studio inválida ou sem permissão (${listRes.status}): ${errObj.error?.message || errText}`,
-            );
-          }
-        } catch (e: any) {
-          if (e.message?.startsWith("Chave do Google")) throw e;
-        }
-      }
-    } catch (e: any) {
-      if (e.message?.startsWith("Chave do Google")) throw e;
-      // segue para os candidatos recomendados se a listagem falhar por CORS/rede
-    }
-
-    const preferredPriority = [
-      "gemini-3.6-flash",
-      "gemini-3.5-flash",
-      "gemini-3.7-flash",
-      "gemini-3.1-flash-lite",
-      "gemini-flash-latest",
-      "gemini-flash-lite-latest",
+    // Modelos Google Gemini de alta performance em ordem estrita de velocidade e confiabilidade:
+    // Começa direto no gemini-2.5-flash e gemini-2.0-flash (respostas em ~1 a 2 segundos)
+    const finalModelsToTry = [
       "gemini-2.5-flash",
       "gemini-2.0-flash",
       "gemini-1.5-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-1.5-pro",
     ];
 
-    const candidateModels = [
-      ...preferredPriority.filter((m) => activeModels.includes(m)),
-      ...activeModels.filter((m) => !preferredPriority.includes(m)),
-    ];
-
-    const finalModelsToTry =
-      candidateModels.length > 0
-        ? candidateModels
-        : [
-            "gemini-3.6-flash",
-            "gemini-3.5-flash",
-            "gemini-3.7-flash",
-            "gemini-3.1-flash-lite",
-            "gemini-flash-latest",
-            "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
-          ];
-
-    // 2. Tenta a API generateContent nos modelos suportados
+    // 1. Tenta a API generateContent nos modelos suportados
     for (const modelName of finalModelsToTry) {
       try {
         const response = await fetch(
@@ -415,14 +423,12 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
       }
     }
 
-    // 3. Fallback: Interactions API recomendada pela Google para novas contas
+    // 2. Fallback: Interactions API caso generateContent falhe
     if (!rawContent) {
       const interactionModels = [
-        "gemini-3.5-flash",
-        "gemini-3.6-flash",
-        "gemini-3.7-flash",
-        "gemini-3.1-flash-lite",
-        "gemini-flash-latest",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
       ];
       for (const modelName of interactionModels) {
         try {
@@ -562,56 +568,103 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
         });
       }
 
-      // PERSISTÊNCIA & ALOCAÇÃO DETERMINÍSTICA DAS FOTOS ENVIADAS PELO USUÁRIO:
-      const uploadedFiles = (data.files || []).filter((f) => Boolean(f.publicUrl));
+      // RESOLUÇÃO DETERMINÍSTICA E INFALÍVEL DE FOTOS DO USUÁRIO:
+      // Mapeia referências retornadas pelo Gemini (URLs, nomes de arquivo, números de arquivo)
+      // para URLs perenes e reais das fotos enviadas, garantindo que NENHUMA foto fique quebrada.
+      function resolveFileUrl(candidate?: string | null): string | null {
+        if (!candidate || typeof candidate !== "string") return null;
+        const cleanCandidate = candidate.trim().toLowerCase();
 
-      if (uploadedFiles.length > 0) {
-        // 1. Logo (avatar_url)
-        if (!parsed.avatar_url) {
-          const logoCandidate =
-            uploadedFiles.find(
-              (f) => f.role === "logo" || f.name.toLowerCase().includes("logo"),
-            ) || uploadedFiles[0];
-          if (logoCandidate?.publicUrl) {
-            parsed.avatar_url = logoCandidate.publicUrl;
+        // 1. URL pública exata de um dos nossos arquivos
+        const exact = preparedFiles.find((f) => f.publicUrl === candidate.trim());
+        if (exact?.publicUrl) return exact.publicUrl;
+
+        // 2. Por nome do arquivo (ou correspondência parcial)
+        const byName = preparedFiles.find((f) => {
+          const fn = f.name.toLowerCase();
+          return fn === cleanCandidate || cleanCandidate.includes(fn) || fn.includes(cleanCandidate);
+        });
+        if (byName?.publicUrl) return byName.publicUrl;
+
+        // 3. Por menção a número de arquivo (#1, Arquivo #1, file 1, etc.)
+        const numMatch = cleanCandidate.match(/(?:arquivo|file|foto|imagem|#)\s*#?(\d+)/i);
+        if (numMatch) {
+          const idx = parseInt(numMatch[1], 10) - 1;
+          if (idx >= 0 && idx < preparedFiles.length) {
+            return preparedFiles[idx].publicUrl;
           }
         }
 
+        // 4. URL externa real e válida
+        if (isRealImageUrl(candidate)) {
+          return candidate.trim();
+        }
+
+        return null;
+      }
+
+      if (preparedFiles.length > 0) {
+        // 1. Logo (avatar_url)
+        let resolvedAvatar = resolveFileUrl(parsed.avatar_url);
+        if (!resolvedAvatar) {
+          const logoCandidate =
+            preparedFiles.find((f) => f.role === "logo" || f.name.toLowerCase().includes("logo")) ||
+            preparedFiles[0];
+          resolvedAvatar = logoCandidate?.publicUrl || null;
+        }
+        parsed.avatar_url = resolvedAvatar;
+
         // 2. Capa Principal / Hero (cover_url)
-        if (!parsed.cover_url) {
+        let resolvedCover = resolveFileUrl(parsed.cover_url);
+        if (!resolvedCover) {
           const coverCandidate =
-            uploadedFiles.find(
+            preparedFiles.find(
               (f) =>
                 (f.role === "cover" ||
                   f.name.toLowerCase().includes("capa") ||
                   f.name.toLowerCase().includes("banner")) &&
                 f.publicUrl !== parsed.avatar_url,
             ) ||
-            uploadedFiles.find((f) => f.publicUrl !== parsed.avatar_url) ||
-            uploadedFiles[0];
-          if (coverCandidate?.publicUrl) {
-            parsed.cover_url = coverCandidate.publicUrl;
-          }
+            preparedFiles.find((f) => f.publicUrl !== parsed.avatar_url) ||
+            preparedFiles[0];
+          resolvedCover = coverCandidate?.publicUrl || null;
         }
+        parsed.cover_url = resolvedCover;
 
         // 3. Catálogo / Serviços / Pratos
-        if (parsed.suggested_services && parsed.suggested_services.length > 0) {
-          const productPool = uploadedFiles.filter(
+        if (Array.isArray(parsed.suggested_services) && parsed.suggested_services.length > 0) {
+          const servicePool = preparedFiles.filter(
             (f) => f.publicUrl !== parsed.avatar_url && f.publicUrl !== parsed.cover_url,
           );
-          let pIdx = 0;
+          let poolIdx = 0;
           for (const svc of parsed.suggested_services) {
-            if (!svc.image_url && pIdx < productPool.length) {
-              svc.image_url = productPool[pIdx].publicUrl;
-              pIdx++;
+            let resolvedSvcImg = resolveFileUrl(svc.image_url);
+            if (!resolvedSvcImg && poolIdx < servicePool.length) {
+              resolvedSvcImg = servicePool[poolIdx].publicUrl;
+              poolIdx++;
             }
+            svc.image_url = resolvedSvcImg || null;
           }
         }
 
         // 4. Curadoria Completa das Fotos
-        if (!parsed.curated_photos || parsed.curated_photos.length === 0) {
-          parsed.curated_photos = uploadedFiles.map((f) => ({
-            url: f.publicUrl!,
+        if (Array.isArray(parsed.curated_photos) && parsed.curated_photos.length > 0) {
+          parsed.curated_photos = parsed.curated_photos
+            .map((item, idx) => {
+              let itemUrl = resolveFileUrl(item.url) || resolveFileUrl(item.name);
+              if (!itemUrl && idx < preparedFiles.length) {
+                itemUrl = preparedFiles[idx].publicUrl;
+              }
+              return {
+                ...item,
+                url: itemUrl || preparedFiles[0]?.publicUrl || "",
+                name: item.name || preparedFiles[idx]?.name || `Foto ${idx + 1}`,
+              };
+            })
+            .filter((item) => Boolean(item.url));
+        } else {
+          parsed.curated_photos = preparedFiles.map((f) => ({
+            url: f.publicUrl,
             name: f.name,
             role:
               f.publicUrl === parsed.avatar_url
@@ -666,7 +719,10 @@ export interface FetchedBusinessData {
 export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof fetchUrlInputSchema>) => fetchUrlInputSchema.parse(data))
-  .handler(async ({ data }): Promise<FetchedBusinessData> => {
+  .handler(async ({ data, context }: any): Promise<FetchedBusinessData> => {
+    const supabaseAdmin = (context as any)?.supabase;
+    const userId = (context as any)?.userId || "drive-assets";
+
     let target = data.url.trim();
     if (!target.startsWith("http://") && !target.startsWith("https://")) {
       if (target.startsWith("@") || (!target.includes(".") && !target.includes("/"))) {
@@ -747,6 +803,29 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
         const base64Data = `data:${mimeType};base64,${Buffer.from(buffer).toString("base64")}`;
         const ext = mimeType.includes("pdf") ? "pdf" : mimeType.includes("png") ? "png" : "jpg";
 
+        let finalPublicUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+        if (supabaseAdmin) {
+          try {
+            const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+            const { error: upErr } = await supabaseAdmin.storage
+              .from("bio-media")
+              .upload(storagePath, Buffer.from(buffer), {
+                contentType: mimeType,
+                upsert: true,
+              });
+            if (!upErr) {
+              const { data: pubData } = supabaseAdmin.storage
+                .from("bio-media")
+                .getPublicUrl(storagePath);
+              if (pubData?.publicUrl) {
+                finalPublicUrl = pubData.publicUrl;
+              }
+            }
+          } catch (storageErr) {
+            console.warn("Aviso ao persistir arquivo do drive no storage:", storageErr);
+          }
+        }
+
         return {
           source: "google_drive",
           name: `Foto Google Drive (${fileId.slice(0, 6)})`,
@@ -756,7 +835,7 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
               name: `drive-arquivo-${fileId.slice(0, 8)}.${ext}`,
               mimeType,
               base64: base64Data,
-              publicUrl: `https://lh3.googleusercontent.com/d/${fileId}`,
+              publicUrl: finalPublicUrl,
               role: "general",
             },
           ],
@@ -857,11 +936,36 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
               const mime = imgRes.headers.get("content-type") || item.mimeType || "image/jpeg";
               if (mime.startsWith("image/")) {
                 const buf = await imgRes.arrayBuffer();
+                let filePubUrl = `https://lh3.googleusercontent.com/d/${item.id}`;
+
+                if (supabaseAdmin) {
+                  try {
+                    const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+                    const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+                    const { error: upErr } = await supabaseAdmin.storage
+                      .from("bio-media")
+                      .upload(storagePath, Buffer.from(buf), {
+                        contentType: mime,
+                        upsert: true,
+                      });
+                    if (!upErr) {
+                      const { data: pubData } = supabaseAdmin.storage
+                        .from("bio-media")
+                        .getPublicUrl(storagePath);
+                      if (pubData?.publicUrl) {
+                        filePubUrl = pubData.publicUrl;
+                      }
+                    }
+                  } catch (sErr) {
+                    console.warn("Aviso ao persistir foto da pasta no storage:", sErr);
+                  }
+                }
+
                 importedImages.push({
                   name: item.name || `drive-foto-${item.id.slice(0, 6)}.jpg`,
                   mimeType: mime,
                   base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
-                  publicUrl: `https://lh3.googleusercontent.com/d/${item.id}`,
+                  publicUrl: filePubUrl,
                   role: "general",
                 });
               }

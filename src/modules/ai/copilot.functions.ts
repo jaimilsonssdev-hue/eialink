@@ -349,15 +349,17 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     // Se houver um AI Gateway (Cloudflare AI Gateway) configurado, usa-o; caso contrário, usa o endpoint oficial do Google
     const apiBase = customGateway || defaultEndpoint;
 
-    // Modelos Google Gemini de alta performance em ordem estrita de velocidade e confiabilidade:
-    // Começa direto no gemini-2.5-flash e gemini-2.0-flash (respostas em ~1 a 2 segundos)
+    // Modelos Google Gemini de alta performance em ordem estrita de velocidade, compatibilidade e suporte ativo:
+    // gemini-3.5-flash é o modelo padrão recomendado pelo Google AI Studio
     const finalModelsToTry = [
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.6-flash",
       "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
       "gemini-2.5-flash-lite",
-      "gemini-1.5-pro",
     ];
+
+    const errorLogs: string[] = [];
 
     // 1. Tenta a API generateContent nos modelos suportados
     for (const modelName of finalModelsToTry) {
@@ -408,27 +410,54 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           } catch {
             // raw text
           }
-          lastError = `Modelo ${modelName} (${response.status}): ${parsedError}`;
+          const errItem = `Modelo ${modelName} (${response.status}): ${parsedError}`;
+          lastError = errItem;
+          errorLogs.push(errItem);
           continue;
         }
 
         const payload = await response.json();
-        const text = payload.candidates?.[0]?.content?.parts?.[0]?.text;
+        const candidate = payload.candidates?.[0];
+        const parts = candidate?.content?.parts || [];
+
+        // Em modelos de raciocínio (Gemini 3.5 e 2.5), partes com `thought: true` contêm
+        // a cadeia de reflexão interna. Extraímos o JSON real das partes de conteúdo (`!p.thought`).
+        const nonThoughtParts = parts.filter(
+          (p: any) => !p.thought && typeof p.text === "string" && p.text.trim(),
+        );
+        let text = "";
+        if (nonThoughtParts.length > 0) {
+          text = nonThoughtParts.map((p: any) => p.text).join("\n");
+        } else {
+          // Fallback se nenhuma parte possuir a flag thought
+          const textParts = parts.filter(
+            (p: any) => typeof p.text === "string" && p.text.trim(),
+          );
+          text = textParts.map((p: any) => p.text).join("\n");
+        }
+
         if (text) {
           rawContent = text;
           break;
+        } else {
+          const finishReason = candidate?.finishReason || "UNKNOWN";
+          const errItem = `Modelo ${modelName}: resposta vazia (finishReason: ${finishReason})`;
+          lastError = errItem;
+          errorLogs.push(errItem);
         }
       } catch (err: any) {
-        lastError = err?.message || String(err);
+        const errItem = `Modelo ${modelName} falhou: ${err?.message || String(err)}`;
+        lastError = errItem;
+        errorLogs.push(errItem);
       }
     }
 
     // 2. Fallback: Interactions API caso generateContent falhe
     if (!rawContent) {
       const interactionModels = [
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
         "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
       ];
       for (const modelName of interactionModels) {
         try {
@@ -470,7 +499,9 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
             } catch {
               // raw
             }
-            lastError = `Interactions API (${modelName} - ${response.status}): ${parsedErr}`;
+            const errItem = `Interactions API (${modelName} - ${response.status}): ${parsedErr}`;
+            lastError = errItem;
+            errorLogs.push(errItem);
             continue;
           }
 
@@ -481,7 +512,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
               const step = payload.steps[i];
               if (step?.content && Array.isArray(step.content)) {
                 for (const part of step.content) {
-                  if (part.type === "text" && part.text) {
+                  if (!part.thought && (part.type === "text" || !part.type) && part.text) {
                     text = part.text;
                     break;
                   }
@@ -496,23 +527,32 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
             break;
           }
         } catch (err: any) {
-          lastError = err?.message || String(err);
+          const errItem = `Interactions API (${modelName}) falhou: ${err?.message || String(err)}`;
+          lastError = errItem;
+          errorLogs.push(errItem);
         }
       }
     }
 
     if (!rawContent) {
+      const detailMsg = errorLogs.length > 0 ? errorLogs.join(" | ") : (lastError || "Nenhum modelo respondeu com sucesso");
       throw new Error(
-        `Não foi possível gerar com a API do Google AI Studio. Detalhe: ${lastError}. Certifique-se de que sua chave de API está ativa no console do Google AI Studio.`,
+        `Não foi possível gerar com a API do Google AI Studio. Detalhe: ${detailMsg}. Certifique-se de que sua chave de API está ativa no console do Google AI Studio.`,
       );
     }
 
     try {
-      const cleanJson = rawContent
-        .replace(/^```json\s*/i, "")
-        .replace(/^```\s*/i, "")
-        .replace(/\s*```$/i, "")
-        .trim();
+      let cleanJson = rawContent.trim();
+      const codeBlockMatch = cleanJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (codeBlockMatch) {
+        cleanJson = codeBlockMatch[1].trim();
+      } else {
+        cleanJson = cleanJson
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
+      }
       const parsed: AiCopilotResult = JSON.parse(cleanJson);
 
       // Blindagem matemática WCAG de contraste do tema gerado pela IA

@@ -103,15 +103,14 @@ export async function testGeminiKey(key: string): Promise<{ ok: boolean; message
 
     // Lista ordenada dos modelos preferidos do ecossistema Gemini
     const priority = [
-      "gemini-3.6-flash",
-      "gemini-3.7-flash",
       "gemini-3.5-flash",
-      "gemini-3.8-flash",
-      "gemini-1.5-flash",
-      "gemini-2.0-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.6-flash",
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
     ];
 
-    let chosenModel = "gemini-3.6-flash";
+    let chosenModel = "gemini-3.5-flash";
 
     if (contentModels.length > 0) {
       let found = false;
@@ -273,13 +272,12 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
   // Modelo ativo pré-descoberto ou candidatos modernos
   const savedModel = typeof window !== "undefined" ? localStorage.getItem(GEMINI_ACTIVE_MODEL_STORAGE) : null;
   const candidateModels = [
-    ...(savedModel && !savedModel.includes("2.5") ? [savedModel] : []),
-    "gemini-3.6-flash",
-    "gemini-3.7-flash",
+    ...(savedModel ? [savedModel] : []),
     "gemini-3.5-flash",
-    "gemini-3.8-flash",
-    "gemini-1.5-flash",
-    "gemini-2.0-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-2.5-flash",
+    "gemini-2.5-flash-lite",
   ];
 
   const models = [...new Set(candidateModels)];
@@ -313,10 +311,16 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
       }
 
       const data = await response.json();
-      const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const candidate = data.candidates?.[0];
+      const parts = candidate?.content?.parts || [];
+      const nonThought = parts.filter((p: any) => !p.thought && typeof p.text === "string" && p.text.trim());
+      const rawText = nonThought.length > 0
+        ? nonThought.map((p: any) => p.text).join("\n")
+        : parts.map((p: any) => p.text).filter(Boolean).join("\n");
       if (!rawText) continue;
 
-      const jsonStr = rawText.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+      const codeBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      const jsonStr = codeBlockMatch ? codeBlockMatch[1].trim() : rawText.trim();
       const parsed = JSON.parse(jsonStr);
 
       // Salva o modelo que funcionou

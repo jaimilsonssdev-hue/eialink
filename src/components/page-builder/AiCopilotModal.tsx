@@ -18,12 +18,18 @@ import {
   Film,
   FileUp,
   Globe2,
+  Check,
+  Info,
+  LayoutTemplate,
 } from "lucide-react";
 import {
   generateCopilotSiteFn,
+  generatePremiumProposalFn,
   fetchBusinessFromUrlFn,
   type AiCopilotResult,
+  type PremiumProposalResponse,
 } from "@/modules/ai/copilot.functions";
+import type { PremiumBetaProposal } from "@/modules/ai/premiumProposal.schema";
 import { PageService } from "@/modules/page/services/PageService";
 import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
 import { toast } from "sonner";
@@ -38,7 +44,7 @@ interface AiCopilotModalProps {
     city?: string | null;
     servicesCount?: number | null;
   };
-  onApply: (result: AiCopilotResult) => void;
+  onApply: (result: AiCopilotResult, proposalResp?: PremiumProposalResponse | null) => void;
 }
 
 interface UploadedMediaItem {
@@ -263,6 +269,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
   const [loadingStep, setLoadingStep] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [failedUploads, setFailedUploads] = useState<string[]>([]);
+  const [proposalResponse, setProposalResponse] = useState<PremiumProposalResponse | null>(null);
   const [generatedResult, setGeneratedResult] = useState<AiCopilotResult | null>(null);
 
   useEffect(() => {
@@ -284,8 +291,16 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
     setLoadingStep("");
     setError(null);
     setFailedUploads([]);
+    setProposalResponse(null);
+    setGeneratedResult(null);
     onClose();
   };
+
+  function handleDiscardProposal() {
+    setProposalResponse(null);
+    setGeneratedResult(null);
+    setError(null);
+  }
 
   if (!isOpen) return null;
 
@@ -548,9 +563,9 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
 
       if (abortController.signal.aborted) return;
 
-      // 2. Chama a IA Multimodal
-      setLoadingStep("🧠 Copiloto IA (Gemini 2.5 Flash) criando seu site cinematográfico...");
-      const result = await generateCopilotSiteFn({
+      // 2. Chama a IA Multimodal com Gerador Premium Beta Nível 2
+      setLoadingStep("🧠 Gerador Premium Beta (Gemini 3.5 Flash) estruturando proposta com Grounding...");
+      const result = await generatePremiumProposalFn({
         data: {
           briefing: briefing.trim(),
           files: preparedFiles,
@@ -566,7 +581,8 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
       });
 
       if (abortController.signal.aborted) return;
-      setGeneratedResult(result);
+      setProposalResponse(result);
+      setGeneratedResult(result.adapted.copilotResult);
       if (failedUploadsList.length > 0) {
         setFailedUploads(failedUploadsList);
         toast.warning(
@@ -600,7 +616,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
 
   function handleConfirmApply() {
     if (!generatedResult) return;
-    onApply(generatedResult);
+    onApply(generatedResult, proposalResponse);
     onClose();
   }
 
@@ -985,8 +1001,314 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           </div>
         )}
 
-        {/* Prévia do Resultado Gerado pela IA */}
-        {generatedResult && (
+        {/* Prévia da Proposta Premium Beta (Nível 2) ou Fallback */}
+        {proposalResponse ? (
+          <div className="rounded-2xl border border-purple-500/40 bg-purple-950/20 p-4 sm:p-5 space-y-4 animate-fade-in">
+            {/* Header da Proposta */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-500/20 pb-3">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-600/30 to-indigo-600/30 border border-purple-500/40 text-purple-200 text-xs font-bold tracking-wide uppercase flex items-center gap-1.5 shadow-xs">
+                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  Gerador Premium Beta (Nível 2)
+                </span>
+                <span className="px-2.5 py-0.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400 text-[11px] font-medium">
+                  Composição Livre Controlada
+                </span>
+              </div>
+              <span className="text-[11px] text-amber-400/90 font-medium flex items-center gap-1.5 shrink-0">
+                <ShieldCheck className="h-4 w-4 text-amber-400" />
+                Rascunho Temporário · Não Publicado
+              </span>
+            </div>
+
+            {/* Diagnóstico do Negócio e Grounding (Sem Alucinação) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="space-y-2 p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500 block font-semibold text-[10px] uppercase tracking-wider">
+                    Negócio Validado:
+                  </span>
+                  {proposalResponse.proposal.strategy.primaryGoal && (
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800/40 text-purple-300 font-mono">
+                      Foco: {proposalResponse.proposal.strategy.primaryGoal}
+                    </span>
+                  )}
+                </div>
+                <b className="text-white block text-sm sm:text-base font-bold">
+                  {proposalResponse.proposal.pagePatch.displayName || generatedResult?.display_name || "Seu Negócio"}
+                </b>
+                <div className="flex flex-wrap gap-1.5 text-[10px] text-purple-300">
+                  {proposalResponse.proposal.strategy.niche && (
+                    <span className="px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800/40">
+                      Nicho: {proposalResponse.proposal.strategy.niche}
+                    </span>
+                  )}
+                  {proposalResponse.proposal.strategy.city && (
+                    <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 border border-zinc-700">
+                      📍 {proposalResponse.proposal.strategy.city}
+                    </span>
+                  )}
+                </div>
+                <p className="text-zinc-300 text-[11px] leading-relaxed line-clamp-3">
+                  {proposalResponse.proposal.pagePatch.description || generatedResult?.description}
+                </p>
+              </div>
+
+              {/* Direção Criativa & Identidade Visual */}
+              <div className="space-y-2 p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-500 block font-semibold text-[10px] uppercase tracking-wider">
+                    Direção Criativa & Estilo
+                  </span>
+                  <span className="text-[10px] text-purple-300 font-medium">
+                    Movimento: {proposalResponse.proposal.creativeDirection.motionIntensity}
+                  </span>
+                </div>
+                <b className="text-white block text-sm font-semibold">
+                  {proposalResponse.proposal.creativeDirection.name}
+                </b>
+                <div className="flex items-center gap-2 pt-1">
+                  <div
+                    className="w-7 h-7 rounded-full border-2 border-white/40 shadow-md shrink-0"
+                    style={{ backgroundColor: proposalResponse.proposal.theme.primary }}
+                    title="Tom Primário"
+                  />
+                  <div
+                    className="w-6 h-6 rounded-full border border-white/20 shadow-xs shrink-0"
+                    style={{ backgroundColor: proposalResponse.proposal.theme.background }}
+                    title="Fundo"
+                  />
+                  <div
+                    className="w-6 h-6 rounded-full border border-white/20 shadow-xs shrink-0"
+                    style={{ backgroundColor: proposalResponse.proposal.theme.card_bg }}
+                    title="Superfície Card"
+                  />
+                  <div
+                    className="w-6 h-6 rounded-full border border-white/20 shadow-xs shrink-0"
+                    style={{ backgroundColor: proposalResponse.proposal.theme.text }}
+                    title="Texto"
+                  />
+                  <div className="text-[11px] font-mono text-zinc-300 ml-1">
+                    <span className="font-bold text-white">{proposalResponse.proposal.theme.primary}</span>
+                    <span className="text-zinc-500 text-[10px] block font-sans">Paleta de alto contraste</span>
+                  </div>
+                </div>
+                {proposalResponse.proposal.creativeDirection.visualPrinciples.length > 0 && (
+                  <p className="text-zinc-400 text-[11px] pt-1 leading-snug">
+                    {proposalResponse.proposal.creativeDirection.visualPrinciples.slice(0, 2).join(" · ")}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Grounding Rígido: Fatos Confirmados vs Informações Ausentes */}
+            <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-zinc-800 space-y-2.5 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-400 font-bold uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                  <span>Grounding & Fatos Confirmados do Negócio (Zero Alucinação)</span>
+                </span>
+                <span className="text-[10px] text-zinc-500 font-mono">
+                  {proposalResponse.proposal.strategy.confirmedFacts.length} confirmados
+                </span>
+              </div>
+
+              {proposalResponse.proposal.strategy.confirmedFacts.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5">
+                  {proposalResponse.proposal.strategy.confirmedFacts.map((fact, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 text-[11px] flex items-center gap-1.5"
+                    >
+                      <CheckCircle2 className="h-3 w-3 text-emerald-400 shrink-0" />
+                      <span>{fact}</span>
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-zinc-500 text-[11px]">
+                  Fatos derivados do briefing inicial fornecido.
+                </p>
+              )}
+
+              {proposalResponse.proposal.strategy.missingInformation.length > 0 && (
+                <div className="pt-2 border-t border-zinc-800/80 space-y-1.5">
+                  <span className="text-zinc-400 text-[10px] block font-medium flex items-center gap-1">
+                    <Info className="h-3 w-3 text-zinc-500" />
+                    <span>Dados não especificados no briefing (podem ser ajustados no editor):</span>
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {proposalResponse.proposal.strategy.missingInformation.map((gap, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 rounded-md bg-zinc-800/80 border border-zinc-700/60 text-zinc-400 text-[10px]"
+                      >
+                        • {gap}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Alocação Exclusiva de Mídias (mediaAssignments) */}
+            {proposalResponse.proposal.mediaAssignments.length > 0 && (
+              <div className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/30 space-y-2.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-purple-300 font-bold uppercase tracking-wider text-[11px]">
+                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                    <span>Curadoria & Alocação de Fotos ({proposalResponse.proposal.mediaAssignments.length})</span>
+                  </div>
+                  <span className="text-[10px] text-zinc-400">100% das fotos direcionadas estrategicamente</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-52 overflow-y-auto pr-1">
+                  {proposalResponse.proposal.mediaAssignments.map((assignment, aIdx) => {
+                    const isCover = assignment.assignedRole === "cover";
+                    const isLogo = assignment.assignedRole === "logo";
+                    const isProduct = assignment.assignedRole === "product";
+
+                    const badgeColor = isCover
+                      ? "bg-indigo-600/30 text-indigo-300 border-indigo-500/40"
+                      : isLogo
+                        ? "bg-purple-600/30 text-purple-300 border-purple-500/40"
+                        : isProduct
+                          ? "bg-emerald-600/30 text-emerald-300 border-emerald-500/40"
+                          : "bg-zinc-800 text-zinc-400 border-zinc-700";
+
+                    const roleLabel = isCover
+                      ? "👑 Capa Hero Principal"
+                      : isLogo
+                        ? "🏷️ Logotipo / Perfil"
+                        : isProduct
+                          ? "🍽️ Vitrine / Carrossel"
+                          : "🖼️ Galeria de Ambiente";
+
+                    return (
+                      <div
+                        key={aIdx}
+                        className="p-2.5 rounded-xl bg-zinc-900/90 border border-zinc-800 flex items-start gap-2.5"
+                      >
+                        {assignment.assignedUrl ? (
+                          <img
+                            src={assignment.assignedUrl}
+                            alt={assignment.fileName || "Foto"}
+                            className="w-12 h-12 rounded-lg object-cover shrink-0 border border-zinc-700 bg-zinc-950"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        ) : (
+                          <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0 text-zinc-500 text-base">
+                            📷
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-center justify-between gap-1">
+                            <span className={`text-[9px] px-1.5 py-0.5 rounded-md border font-semibold ${badgeColor}`}>
+                              {roleLabel}
+                            </span>
+                            <span className="text-[10px] font-mono text-zinc-400">
+                              Q:{assignment.qualityScore}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-zinc-300 leading-snug line-clamp-2">
+                            {assignment.reasoning || assignment.fileName}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Composição Ordenada de Blocos Homologados */}
+            {proposalResponse.proposal.sections.length > 0 && (
+              <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
+                    <Layers className="h-3.5 w-3.5 text-purple-400" />
+                    <span>Composição de Seções Homologadas ({proposalResponse.proposal.sections.length} blocos)</span>
+                  </span>
+                  <span className="text-[10px] text-zinc-500">Zero código arbitrário</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {proposalResponse.proposal.sections.map((sec, sIdx) => {
+                    const secLabel =
+                      sec.type === "hero"
+                        ? "1. Hero Cinematográfico"
+                        : sec.type === "services_grid" || sec.type === "catalog_carousel"
+                          ? "2. Vitrine & Serviços"
+                          : sec.type === "differentials"
+                            ? "3. Diferenciais"
+                            : sec.type === "about"
+                              ? "4. Sobre Nós"
+                              : sec.type === "testimonials"
+                                ? "5. Prova Social"
+                                : sec.type === "video"
+                                  ? "6. Vídeo Institucional"
+                                  : sec.type === "whatsapp_cta" || sec.type === "contact_map"
+                                    ? "7. CTA WhatsApp"
+                                    : `${sIdx + 1}. ${sec.type}`;
+
+                    return (
+                      <span
+                        key={sec.id || sIdx}
+                        className="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 text-[11px] flex items-center gap-1"
+                      >
+                        <span className="text-purple-400 font-bold">#</span>
+                        <span>{secLabel}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Catálogo de Serviços e Itens Extraídos */}
+            {proposalResponse.proposal.catalogItems.length > 0 && (
+              <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px]">
+                    Catálogo de Serviços / Itens ({proposalResponse.proposal.catalogItems.length}):
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+                  {proposalResponse.proposal.catalogItems.map((svc, cIdx) => (
+                    <div
+                      key={cIdx}
+                      className="p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {svc.imageUrl && (
+                          <img
+                            src={svc.imageUrl}
+                            alt={svc.name}
+                            className="w-7 h-7 rounded object-cover shrink-0 border border-zinc-700"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        )}
+                        <div className="min-w-0 truncate">
+                          <p className="text-white font-medium text-[11px] truncate">{svc.name}</p>
+                          <p className="text-zinc-500 text-[10px] truncate">{svc.description}</p>
+                        </div>
+                      </div>
+                      {formatPrice(svc.price) ? (
+                        <span className="text-emerald-400 font-mono font-bold text-[11px] shrink-0">
+                          {formatPrice(svc.price)}
+                        </span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : generatedResult ? (
+          /* Fallback Clássico */
           <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 p-4 space-y-3.5 animate-fade-in">
             <div className="flex items-center gap-2 text-xs font-bold text-purple-300 uppercase tracking-wider">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
@@ -1087,13 +1409,13 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               </div>
             )}
 
-            {/* Curadoria Visual por IA (Diretor de Arte) */}
+            {/* Curadoria Visual por IA */}
             {generatedResult.curated_photos && generatedResult.curated_photos.length > 0 && (
               <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-purple-300 font-bold uppercase tracking-wider text-[11px]">
                     <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                    <span>Curadoria Visual de Fotos (Diretor de Arte IA)</span>
+                    <span>Curadoria Visual de Fotos</span>
                   </div>
                   <span className="text-[10px] text-zinc-400">
                     {generatedResult.curated_photos.length} fotos avaliadas
@@ -1101,143 +1423,72 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1">
-                  {generatedResult.curated_photos.map((item, cIdx) => {
-                    const isDiscard = item.role === "discard";
-                    const isCover = item.role === "cover";
-                    const isLogo = item.role === "logo";
-                    const isProduct = item.role === "product";
-
-                    const badgeColor = isCover
-                      ? "bg-indigo-600/30 text-indigo-300 border-indigo-500/40"
-                      : isLogo
-                        ? "bg-purple-600/30 text-purple-300 border-purple-500/40"
-                        : isProduct
-                          ? "bg-emerald-600/30 text-emerald-300 border-emerald-500/40"
-                          : "bg-zinc-800 text-zinc-400 border-zinc-700";
-
-                    const roleLabel = isCover
-                      ? "👑 Capa de Autoridade"
-                      : isLogo
-                        ? "🏷️ Logotipo Oficial"
-                        : isProduct
-                          ? "🍽️ Carrossel / Vitrine"
-                          : "⚠️ Descartada";
-
-                    return (
-                      <div
-                        key={cIdx}
-                        className={`p-2.5 rounded-xl border flex items-start gap-2.5 transition-all ${
-                          isDiscard
-                            ? "bg-black/40 border-zinc-800/80 opacity-60"
-                            : "bg-zinc-900/90 border-zinc-800"
-                        }`}
-                      >
-                        {item.url ? (
-                          <img
-                            src={item.url}
-                            alt={item.name || "Foto"}
-                            className="w-12 h-12 rounded-lg object-cover shrink-0 border border-zinc-700 bg-zinc-950"
-                            onError={(e) => {
-                              e.currentTarget.src =
-                                "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=400&q=80";
-                            }}
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0 text-zinc-500 text-base">
-                            📷
-                          </div>
-                        )}
-
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex items-center justify-between gap-1">
-                            <span
-                              className={`text-[9px] px-1.5 py-0.5 rounded-md border font-semibold ${badgeColor}`}
-                            >
-                              {roleLabel}
-                            </span>
-                            <div className="flex items-center gap-1.5 text-[10px] font-mono">
-                              <span title="Autoridade" className="text-indigo-400 font-bold">
-                                A:{item.scores?.authority || 0}
-                              </span>
-                              <span
-                                title="Qualidade Técnica"
-                                className="text-emerald-400 font-bold"
-                              >
-                                Q:{item.scores?.quality || 0}
-                              </span>
-                              <span title="Posicionamento" className="text-amber-400 font-bold">
-                                P:{item.scores?.positioning || 0}
-                              </span>
-                            </div>
-                          </div>
-                          <p className="text-[11px] text-zinc-300 leading-snug line-clamp-2">
-                            {item.critique}
-                          </p>
-                        </div>
+                  {generatedResult.curated_photos.map((item, cIdx) => (
+                    <div
+                      key={cIdx}
+                      className="p-2.5 rounded-xl border border-zinc-800 bg-zinc-900/90 flex items-start gap-2.5"
+                    >
+                      {item.url && (
+                        <img
+                          src={item.url}
+                          alt={item.name || "Foto"}
+                          className="w-12 h-12 rounded-lg object-cover shrink-0 border border-zinc-700 bg-zinc-950"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1 space-y-1">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-md border font-semibold bg-purple-600/30 text-purple-300 border-purple-500/40">
+                          {item.role || "Foto"}
+                        </span>
+                        <p className="text-[11px] text-zinc-300 leading-snug line-clamp-2">
+                          {item.critique}
+                        </p>
                       </div>
-                    );
-                  })}
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
 
             {/* Serviços e Itens Extraídos */}
-            {generatedResult.suggested_services &&
-              generatedResult.suggested_services.length > 0 && (
-                <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 text-xs">
-                  <div className="flex items-center justify-between">
-                    <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px]">
-                      Catálogo de Serviços / Itens Extraídos (
-                      {generatedResult.suggested_services.length}):
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
-                    {generatedResult.suggested_services.map((svc, sIdx) => (
-                      <div
-                        key={sIdx}
-                        className="p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex items-center justify-between gap-2"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          {svc.image_url && (
-                            <img
-                              src={svc.image_url}
-                              alt={svc.name}
-                              className="w-7 h-7 rounded object-cover shrink-0 border border-zinc-700"
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
-                              }}
-                            />
-                          )}
-                          <div className="min-w-0 truncate">
-                            <p className="text-white font-medium text-[11px] truncate">
-                              {svc.name}
-                            </p>
-                            <p className="text-zinc-500 text-[10px] truncate">{svc.description}</p>
-                          </div>
-                        </div>
-                        {formatPrice(svc.price) ? (
-                          <span className="text-emerald-400 font-mono font-bold text-[11px] shrink-0">
-                            {formatPrice(svc.price)}
-                          </span>
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-            {generatedResult.differentials && generatedResult.differentials.length > 0 && (
-              <div className="text-[11px] text-zinc-400 flex items-center gap-1.5 pt-1">
-                <span className="text-purple-400 font-bold">✓</span>
-                <span>
-                  {generatedResult.differentials.length} Diferenciais de alta autoridade prontos
+            {generatedResult.suggested_services && generatedResult.suggested_services.length > 0 && (
+              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 text-xs">
+                <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px]">
+                  Catálogo de Serviços / Itens ({generatedResult.suggested_services.length}):
                 </span>
-                <span className="mx-1 text-zinc-700">·</span>
-                <span>{generatedResult.testimonials?.length || 0} Depoimentos gerados</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-36 overflow-y-auto pr-1">
+                  {generatedResult.suggested_services.map((svc, sIdx) => (
+                    <div
+                      key={sIdx}
+                      className="p-2 rounded-lg bg-zinc-950/60 border border-zinc-800/80 flex items-center justify-between gap-2"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        {svc.image_url && (
+                          <img
+                            src={svc.image_url}
+                            alt={svc.name}
+                            className="w-7 h-7 rounded object-cover shrink-0 border border-zinc-700"
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
+                            }}
+                          />
+                        )}
+                        <div className="min-w-0 truncate">
+                          <p className="text-white font-medium text-[11px] truncate">{svc.name}</p>
+                          <p className="text-zinc-500 text-[10px] truncate">{svc.description}</p>
+                        </div>
+                      </div>
+                      {formatPrice(svc.price) ? (
+                        <span className="text-emerald-400 font-mono font-bold text-[11px] shrink-0">
+                          {formatPrice(svc.price)}
+                        </span>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>
-        )}
+        ) : null}
 
         {/* Botões de Ação */}
         <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
@@ -1246,8 +1497,19 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
             onClick={handleCancel}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all cursor-pointer"
           >
-            Cancelar
+            Fechar
           </button>
+
+          {(proposalResponse || generatedResult) && (
+            <button
+              type="button"
+              onClick={handleDiscardProposal}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+              <span>Descartar Proposta</span>
+            </button>
+          )}
 
           {!generatedResult ? (
             <button
@@ -1264,7 +1526,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               ) : (
                 <>
                   <Wand2 className="h-4 w-4" />
-                  <span>Organizar e Gerar com IA</span>
+                  <span>Gerar Proposta Premium Beta</span>
                 </>
               )}
             </button>
@@ -1275,7 +1537,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               className="w-full sm:w-auto px-7 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
             >
               <CheckCircle2 className="h-4 w-4" />
-              <span>Montar e Publicar Site Agora</span>
+              <span>Aplicar Proposta ao Editor (Rascunho)</span>
             </button>
           )}
         </div>

@@ -1,6 +1,14 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import {
+  PremiumBetaProposalSchema,
+  type PremiumBetaProposal,
+} from "./premiumProposal.schema";
+import {
+  adaptProposalToExistingStructures,
+  type AdaptedProposalResult,
+} from "./premiumProposal.adapter";
 
 export interface AiCopilotResult {
   display_name?: string;
@@ -733,6 +741,412 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     }
   });
 
+export interface PremiumProposalResponse {
+  proposal: PremiumBetaProposal;
+  adapted: AdaptedProposalResult;
+}
+
+export const generatePremiumProposalFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
+  .handler(async ({ data, context }): Promise<PremiumProposalResponse> => {
+    const serverKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_AI_STUDIO_KEY ||
+      (process.env as any).VITE_GEMINI_API_KEY;
+
+    const resolvedKey = (data.overrideApiKey || serverKey || "").trim();
+
+    if (!resolvedKey) {
+      throw new Error(
+        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto.",
+      );
+    }
+
+    function isRealImageUrl(url?: string | null): boolean {
+      if (!url || typeof url !== "string") return false;
+      const trimmed = url.trim();
+      if (trimmed.startsWith("data:image/") || trimmed.startsWith("blob:")) return true;
+      if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+        if (trimmed.includes("example.com") || trimmed.includes("via.placeholder.com")) return false;
+        return true;
+      }
+      return false;
+    }
+
+    // 0. Preparação & Persistência das Imagens
+    const supabaseAdmin = (context as any)?.supabase;
+    const userId = (context as any)?.userId || "premium-assets";
+
+    const preparedFiles: Array<{
+      name: string;
+      mimeType: string;
+      base64: string;
+      publicUrl: string;
+      role?: "logo" | "cover" | "product" | "general";
+    }> = [];
+
+    for (const f of data.files || []) {
+      const cleanBase64 = f.base64 ? f.base64.replace(/^data:[^;]+;base64,/, "").trim() : "";
+      let finalUrl = f.publicUrl;
+
+      if (!isRealImageUrl(finalUrl) && cleanBase64) {
+        if (supabaseAdmin) {
+          try {
+            const ext = f.mimeType.includes("png")
+              ? "png"
+              : f.mimeType.includes("webp")
+                ? "webp"
+                : "jpg";
+            const path = `${userId}/${crypto.randomUUID()}.${ext}`;
+            const buffer = Buffer.from(cleanBase64, "base64");
+
+            const { error: upErr } = await supabaseAdmin.storage
+              .from("bio-media")
+              .upload(path, buffer, {
+                contentType: f.mimeType || "image/jpeg",
+                upsert: true,
+              });
+
+            if (!upErr) {
+              const { data: pubData } = supabaseAdmin.storage
+                .from("bio-media")
+                .getPublicUrl(path);
+              if (pubData?.publicUrl) {
+                finalUrl = pubData.publicUrl;
+              }
+            }
+          } catch (uploadErr) {
+            console.warn("Aviso ao persistir arquivo no storage via servidor:", uploadErr);
+          }
+        }
+
+        if (!isRealImageUrl(finalUrl)) {
+          finalUrl = `data:${f.mimeType || "image/jpeg"};base64,${cleanBase64}`;
+        }
+      }
+
+      if (isRealImageUrl(finalUrl)) {
+        preparedFiles.push({
+          name: f.name,
+          mimeType: f.mimeType,
+          base64: cleanBase64,
+          publicUrl: finalUrl!,
+          role: f.role,
+        });
+      }
+    }
+
+    const fileDescriptions = preparedFiles
+      .map((f, idx) => {
+        let roleHint = "";
+        if (f.role === "logo" || f.name.toLowerCase().includes("logo")) {
+          roleHint = ` [Papel sugerido: LOGOTIPO -> avatarUrl]`;
+        } else if (
+          f.role === "cover" ||
+          f.name.toLowerCase().includes("capa") ||
+          f.name.toLowerCase().includes("banner")
+        ) {
+          roleHint = ` [Papel sugerido: CAPA PRINCIPAL -> coverUrl e seção hero]`;
+        } else if (
+          f.role === "product" ||
+          f.name.toLowerCase().includes("prato") ||
+          f.name.toLowerCase().includes("servico")
+        ) {
+          roleHint = ` [Papel sugerido: PRODUTO/SERVIÇO -> catalogItems e catalog_carousel]`;
+        }
+        return `- Arquivo #${idx + 1}: "${f.name}" (${f.mimeType}) [URL: "${f.publicUrl}"]${roleHint}`;
+      })
+      .join("\n");
+
+    const systemPrompt = `[INSTRUÇÃO MESTRE - GERADOR PREMIUM BETA NÍVEL 2 - COMPOSIÇÃO LIVRE CONTROLADA]
+Você é um Arquiteto Sênior de Produto, Diretor de Arte de Elite e Copywriter Especialista da plataforma EIA Link.
+Sua missão é transformar o briefing, fotos e dados do negócio do cliente em uma PROPOSTA ESTRUTURADA DE SITE DE ALTO PADRÃO (Schema Version 2).
+
+NÃO reconstrua o sistema do zero.
+NÃO escreva nem execute React, HTML, CSS ou JavaScript arbitrário.
+Apenas escolha, ordene e configure blocos aprovados do sistema.
+
+REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
+1. PROIBIÇÃO TOTAL DE INVENÇÃO:
+   - Se o usuário forneceu dados reais (nome da empresa, nicho, cidade, telefone, endereço, pratos/serviços), use-os EXATAMENTE como fornecidos.
+   - Preencha 'strategy.confirmedFacts' listando cada fato comprovado pelos dados de entrada.
+   - NUNCA invente fatos externos que não existam (ex: não invente que a empresa tem 20 anos de tradição, não invente endereço falso, não invente nomes de pratos que não existem).
+   - Se faltarem informações críticas, liste-as em 'strategy.missingInformation' (ex: "Preços exatos ausentes", "Endereço físico não informado").
+   - Qualquer copy inferida para valorizar a página deve ser listada em 'audit.unconfirmedContent' para ciência do usuário.
+
+2. ATRIBUIÇÃO DE TODAS AS MÍDIAS FORNECIDAS (ZERO FOTOS PERDIDAS):
+   - Para CADA arquivo listado em 'ARQUIVOS MULTIMODAIS ANEXADOS', crie OBRIGATORIAMENTE uma entrada em 'mediaAssignments'.
+   - Atribua a URL exata do arquivo fornecida em [URL: "..."] à seção correspondente ('hero', 'differentials', 'catalog_carousel', 'about', 'testimonials').
+   - Atribua o papel correto: 'logo' (avatarUrl), 'cover' (coverUrl e hero), 'product' (catalogItems e catalog_carousel), 'ambient' (about/galeria).
+   - Avalie 'qualityScore' (0 a 100) e forneça um breve 'reasoning' de Diretor de Arte para cada foto.
+
+3. DIREÇÃO DE ARTE CINEMATOGRÁFICA DE LUXO (WCAG DARK MODE):
+   - 'theme.mode': "dark" (SEMPRE Dark Mode cinematográfico para criar alto valor percebido e autoridade).
+   - 'theme.background': "#030712" (Dark Zinc / Obsidian profundo).
+   - 'theme.card_bg': "#0b0f19" (Dark Navy elegante para superfícies e cartões Bento Grid).
+   - 'theme.border_color': "#1e293b" (bordas finas com transparência sutil).
+   - 'theme.title': "#ffffff" (Branco puro, alta autoridade e contraste).
+   - 'theme.text': "#cbd5e1" (Cinza claro suave e altamente legível).
+   - 'theme.primary': IDENTIFIQUE a cor de maior destaque da marca a partir do logotipo ou fotos em formato HEX (ex: azul royal, verde esmeralda, dourado, vinho, etc.).
+   - 'theme.radius': "16px".
+
+4. COMPOSIÇÃO DE BLOCOS HOMOLOGADOS DO SISTEMA:
+   - Organize uma sequência lógica de alta conversão usando os tipos de blocos suportados:
+     * 'hero': Título imponente, subtítulo magnético, CTA para WhatsApp e imagem de capa.
+     * 'differentials': 3 a 4 pilares em Bento Grid (ícones válidos: "shield", "sparkles", "award", "check", "heart").
+     * 'catalog_carousel': Carrossel de serviços/produtos em destaque com nome, descrição, preço e foto.
+     * 'about': História do negócio, propósito e 3 a 4 destaques com checkmarks.
+     * 'testimonials': 2 a 3 depoimentos convincentes do nicho com nota 5 estrelas.
+     * 'video': Se vídeo fornecido, configure esta seção.
+     * 'contact_map': Endereço, telefone, WhatsApp e cidade.
+     * 'whatsapp_cta': Chamada de fechamento irresistível para o WhatsApp.
+
+5. FORMATO DA RESPOSTA:
+   - Retorne EXCLUSIVAMENTE o objeto JSON válido estruturado de acordo com o Schema v2, sem nenhum texto antes ou depois.`;
+
+    const userPrompt = `DADOS ATUAIS DO SITE:
+Nome Atual: ${data.currentContext?.displayName || "Empresa Local"}
+Nicho: ${data.currentContext?.niche || "Geral"}
+Cidade / Região: ${data.currentContext?.city || "Brasil"}
+
+${data.videoUrl ? `LINK DE VÍDEO INFORMADO: ${data.videoUrl}\n` : ""}
+${
+  fileDescriptions
+    ? `ARQUIVOS MULTIMODAIS ANEXADOS (${preparedFiles.length} arquivo(s)):\n${fileDescriptions}\n`
+    : "Nenhum arquivo multimodal anexado.\n"
+}
+${data.briefing?.trim() ? `BRIEFING / INFORMAÇÕES DO CLIENTE:\n"""\n${data.briefing}\n"""\n` : ""}
+
+Como Diretor de Arte e Arquiteto de Produto:
+1. Registre os fatos confirmados em 'strategy.confirmedFacts'.
+2. Aloue 100% dos arquivos fornecidos em 'mediaAssignments' e nas seções correspondentes.
+3. Extraia o catálogo de serviços/produtos com preços reais em 'catalogItems'.
+4. Monte a composição ordenada das seções usando apenas os blocos homologados.
+5. Retorne a resposta em JSON válido do Schema v2.`;
+
+    const promptParts: Array<{
+      text?: string;
+      inline_data?: { mime_type: string; data: string };
+    }> = [];
+
+    if (preparedFiles.length > 0) {
+      for (const file of preparedFiles) {
+        if (file.base64) {
+          promptParts.push({
+            inline_data: {
+              mime_type: file.mimeType,
+              data: file.base64,
+            },
+          });
+        }
+      }
+    }
+
+    promptParts.push({ text: userPrompt });
+
+    const defaultEndpoint = "https://generativelanguage.googleapis.com";
+    const customGateway = (
+      data.aiGatewayUrl ||
+      process.env.AI_GATEWAY_URL ||
+      process.env.CLOUDFLARE_AI_GATEWAY ||
+      process.env.CF_AI_GATEWAY ||
+      ""
+    )
+      .trim()
+      .replace(/\/+$/, "");
+
+    const apiBase = customGateway || defaultEndpoint;
+
+    const finalModelsToTry = [
+      "gemini-3.5-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-3.6-flash",
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+    ];
+
+    let rawContent: string | null = null;
+    let lastError = "";
+    const errorLogs: string[] = [];
+
+    for (const modelName of finalModelsToTry) {
+      try {
+        const response = await fetch(
+          `${apiBase}/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
+            resolvedKey,
+          )}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": resolvedKey,
+              ...(customGateway
+                ? {
+                    "cf-aig-metadata": JSON.stringify({
+                      app: "eialink",
+                      service: "copilot-premium-proposal",
+                      model: modelName,
+                    }),
+                  }
+                : {}),
+            },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemPrompt }],
+              },
+              contents: [
+                {
+                  role: "user",
+                  parts: promptParts,
+                },
+              ],
+              generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.5,
+              },
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          let parsedError = errorText;
+          try {
+            const errorJson = JSON.parse(errorText);
+            parsedError = errorJson.error?.message || errorText;
+          } catch {}
+          const errItem = `Modelo ${modelName} (${response.status}): ${parsedError}`;
+          lastError = errItem;
+          errorLogs.push(errItem);
+          continue;
+        }
+
+        const payload = await response.json();
+        const candidate = payload.candidates?.[0];
+        const parts = candidate?.content?.parts || [];
+
+        const nonThoughtParts = parts.filter(
+          (p: any) => !p.thought && typeof p.text === "string" && p.text.trim(),
+        );
+        let text = "";
+        if (nonThoughtParts.length > 0) {
+          text = nonThoughtParts.map((p: any) => p.text).join("\n");
+        } else {
+          const textParts = parts.filter(
+            (p: any) => typeof p.text === "string" && p.text.trim(),
+          );
+          text = textParts.map((p: any) => p.text).join("\n");
+        }
+
+        if (text) {
+          rawContent = text;
+          break;
+        } else {
+          const finishReason = candidate?.finishReason || "UNKNOWN";
+          const errItem = `Modelo ${modelName}: resposta vazia (finishReason: ${finishReason})`;
+          lastError = errItem;
+          errorLogs.push(errItem);
+        }
+      } catch (err: any) {
+        const errItem = `Modelo ${modelName} falhou: ${err?.message || String(err)}`;
+        lastError = errItem;
+        errorLogs.push(errItem);
+      }
+    }
+
+    if (!rawContent) {
+      const detailMsg = errorLogs.length > 0 ? errorLogs.join(" | ") : (lastError || "Nenhum modelo respondeu com sucesso");
+      throw new Error(
+        `Não foi possível gerar a Proposta Premium. Detalhe: ${detailMsg}. Certifique-se de que sua chave de API está ativa no Google AI Studio.`,
+      );
+    }
+
+    try {
+      let cleanJson = rawContent.trim();
+      const codeBlockMatch = cleanJson.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+      if (codeBlockMatch) {
+        cleanJson = codeBlockMatch[1].trim();
+      } else {
+        cleanJson = cleanJson
+          .replace(/^```json\s*/i, "")
+          .replace(/^```\s*/i, "")
+          .replace(/\s*```$/i, "")
+          .trim();
+      }
+
+      const parsedJson = JSON.parse(cleanJson);
+
+      function resolveFileUrl(candidate?: string | null): string | null {
+        if (!candidate || typeof candidate !== "string") return null;
+        const cleanCandidate = candidate.trim().toLowerCase();
+        const exact = preparedFiles.find((f) => f.publicUrl === candidate.trim());
+        if (exact?.publicUrl) return exact.publicUrl;
+        const byName = preparedFiles.find(
+          (f) =>
+            f.name.toLowerCase() === cleanCandidate ||
+            cleanCandidate.includes(f.name.toLowerCase()) ||
+            f.name.toLowerCase().includes(cleanCandidate),
+        );
+        if (byName?.publicUrl) return byName.publicUrl;
+        const numMatch = cleanCandidate.match(/#?(\d+)/);
+        if (numMatch) {
+          const idx = parseInt(numMatch[1], 10) - 1;
+          if (idx >= 0 && idx < preparedFiles.length) {
+            return preparedFiles[idx].publicUrl;
+          }
+        }
+        return candidate.trim();
+      }
+
+      if (parsedJson.pagePatch) {
+        parsedJson.pagePatch.avatarUrl = resolveFileUrl(parsedJson.pagePatch.avatarUrl);
+        parsedJson.pagePatch.coverUrl = resolveFileUrl(parsedJson.pagePatch.coverUrl);
+      }
+
+      if (Array.isArray(parsedJson.catalogItems)) {
+        parsedJson.catalogItems = parsedJson.catalogItems.map((item: any) => ({
+          ...item,
+          imageUrl: resolveFileUrl(item.imageUrl),
+        }));
+      }
+
+      if (Array.isArray(parsedJson.sections)) {
+        parsedJson.sections = parsedJson.sections.map((sec: any) => ({
+          ...sec,
+          media: Array.isArray(sec.media)
+            ? sec.media.map((m: any) => ({
+                ...m,
+                url: resolveFileUrl(m.url) || m.url,
+              }))
+            : [],
+        }));
+      }
+
+      if (Array.isArray(parsedJson.mediaAssignments)) {
+        parsedJson.mediaAssignments = parsedJson.mediaAssignments.map((a: any) => ({
+          ...a,
+          assignedUrl: resolveFileUrl(a.assignedUrl) || a.assignedUrl,
+        }));
+      }
+
+      const validatedProposal = PremiumBetaProposalSchema.parse(parsedJson);
+
+      const adapted = adaptProposalToExistingStructures(
+        validatedProposal,
+        data.currentContext as any,
+      );
+
+      return {
+        proposal: validatedProposal,
+        adapted,
+      };
+    } catch (parseErr: any) {
+      console.error("Erro ao validar Proposta Premium v2:", parseErr);
+      throw new Error(`A IA gerou a proposta mas o esquema apresentou divergência: ${parseErr.message}`);
+    }
+  });
+
 const fetchUrlInputSchema = z.object({
   url: z.string().min(3, "URL inválida"),
 });
@@ -1087,7 +1501,15 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
         let name = "";
         const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
         if (titleMatch) {
-          name = titleMatch[1].replace(/\s*-\s*Google Maps.*/i, "").trim();
+          const raw = titleMatch[1].replace(/\s*-\s*Google Maps.*/i, "").trim();
+          if (
+            !raw.toLowerCase().includes("antes de ir para o google") &&
+            !raw.toLowerCase().includes("google search") &&
+            !raw.toLowerCase().includes("google maps") &&
+            !raw.toLowerCase().includes("fazer login")
+          ) {
+            name = raw;
+          }
         }
 
         const ratingMatch = text.match(/(\d[.,]\d)\s*★|\b(\d[.,]\d)\s*estrelas/i);
@@ -1098,16 +1520,28 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
         const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
         const phone = phoneMatch ? phoneMatch[0].trim() : undefined;
 
-        const briefing = `[DADOS COLETADOS DO GOOGLE MEU NEGÓCIO / MAPS]:\nNome da Empresa: ${
-          name || "Empresa Local"
-        }\n${rating ? `Nota de Avaliação no Google: ${rating} estrelas ⭐\n` : ""}${
-          phone ? `Telefone / WhatsApp Comercial: ${phone}\n` : ""
-        }Dados e Comentários Públicos:\n${text.slice(0, 3500)}`;
+        const addressMatch = text.match(/(?:Endereço|Address):\s*([^\n\r]+)/i) ||
+                             text.match(/📍\s*([^\n\r]+)/);
+        const address = addressMatch ? addressMatch[1].trim() : undefined;
+
+        const cleanSnippet = text
+          .replace(/Antes de ir para o Google[\s\S]*?(?:Aceitar tudo|Concordo)/i, "")
+          .replace(/Google LLC[\s\S]*/i, "")
+          .slice(0, 3500)
+          .trim();
+
+        const briefing = `[DADOS REAIS DO GOOGLE MAPS / GOOGLE MEU NEGÓCIO]:
+${name ? `- Nome Comercial Confirmado: ${name}\n` : ""}${rating ? `- Avaliação: ${rating} estrelas no Google Maps ⭐\n` : ""}${
+          phone ? `- Telefone / WhatsApp: ${phone}\n` : ""
+        }${address ? `- Endereço Físico: ${address}\n` : ""}
+Resumo de Avaliações e Informações Públicas:
+${cleanSnippet || "Empresa indexada no Google Maps."}`;
 
         return {
           source: "google_maps",
           name: name || undefined,
           phone,
+          address,
           rating,
           formattedBriefing: briefing,
         };

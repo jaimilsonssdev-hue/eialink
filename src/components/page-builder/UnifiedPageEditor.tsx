@@ -64,7 +64,7 @@ import { ChatFlowEditor } from "./ChatFlowEditor";
 import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselManager";
 import { SeoEditor } from "./SeoEditor";
 import { AiCopilotModal } from "./AiCopilotModal";
-import type { AiCopilotResult } from "@/modules/ai/copilot.functions";
+import type { AiCopilotResult, PremiumProposalResponse } from "@/modules/ai/copilot.functions";
 import { parsePrice } from "@/lib/utils";
 import { parseSocialLinks } from "@/lib/social-links";
 import {
@@ -805,7 +805,10 @@ export function UnifiedPageEditor({
     }
   };
 
-  const handleApplyCopilotResult = async (result: AiCopilotResult) => {
+  const handleApplyCopilotResult = async (
+    result: AiCopilotResult,
+    proposalResp?: PremiumProposalResponse | null,
+  ) => {
     const currentSocial = (bio.social_links as Record<string, any>) || {};
 
     const customTheme = result.custom_theme
@@ -838,7 +841,7 @@ export function UnifiedPageEditor({
         }
       : currentSocial.tokens_design;
 
-    // Seção Hero e estilos por seção: substituição obrigatória de títulos e subtítulos genéricos do modelo base
+    // Seção Hero e estilos por seção: substituição de títulos e subtítulos
     const existingSectionStyles = (currentSocial.section_styles as Record<string, any>) || {};
     const existingHero = (existingSectionStyles.hero as Record<string, any>) || {};
 
@@ -886,16 +889,31 @@ export function UnifiedPageEditor({
       updatedSocial.curated_photos = result.curated_photos;
     }
 
+    if (proposalResp?.proposal?.strategy) {
+      updatedSocial.proposal_strategy = {
+        confirmedFacts: proposalResp.proposal.strategy.confirmedFacts,
+        missingInformation: proposalResp.proposal.strategy.missingInformation,
+        creativeDirection: proposalResp.proposal.creativeDirection.name,
+      };
+    }
+
     const newDisplayName = result.display_name || bio.display_name;
     const newNormalizedSlug = normalizePageSlug(bio.slug || newDisplayName);
 
+    const targetTemplate = proposalResp?.adapted?.updatedBio?.template_id;
+    if (targetTemplate) {
+      setDraftTemplate(targetTemplate);
+    }
+
     const updatedBio: BioForm = {
       ...bio,
+      template_id: targetTemplate || bio.template_id,
       display_name: newDisplayName,
       description: result.description || bio.description,
       whatsapp_message: result.whatsapp_message || bio.whatsapp_message,
       avatar_url: result.avatar_url || bio.avatar_url,
       cover_url: result.cover_url || bio.cover_url,
+      pix_key: proposalResp?.proposal?.pagePatch?.pixKey || bio.pix_key,
       social_links: updatedSocial as any,
       slug: newNormalizedSlug,
     };
@@ -938,47 +956,34 @@ export function UnifiedPageEditor({
       };
     }
 
-    // Atualiza o estado da UI imediatamente
+    if (proposalResp?.adapted?.updatedLinks && proposalResp.adapted.updatedLinks.length > 0) {
+      setLinks(
+        proposalResp.adapted.updatedLinks.map((l) => ({
+          id: l.id || crypto.randomUUID(),
+          bio_page_id: bio.id || "preview",
+          title: l.title,
+          url: l.url,
+          active: l.active,
+          position: l.position,
+          icon: l.icon || null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        })) as EditableLink[],
+      );
+    }
+
+    // Atualiza o estado da UI imediatamente no editor como rascunho
     setBio(updatedBio);
     if (result.niche) {
       setNiche(result.niche);
     }
     setProducts(updatedProductsList);
 
-    // Auto-save e publicação imediata no Supabase
-    setSaving(true);
-    setSaveState("idle");
-    const toastId = toast.loading("✨ Montando o site e publicando com seus dados reais...");
-    try {
-      const savedRes = await onSave({
-        bio: updatedBio,
-        links,
-        products: updatedProductsList,
-        niche: targetNiche,
-      });
-      if (savedRes?.products) {
-        setProducts(savedRes.products);
-      }
-      setSavedSnapshot(
-        JSON.stringify({
-          bio: updatedBio,
-          links,
-          products: savedRes?.products || updatedProductsList,
-          niche: targetNiche,
-        }),
-      );
-      setSaveState("success");
-      toast.success("🚀 Site montado, personalizado e publicado com sucesso!", { id: toastId });
-    } catch (saveErr: any) {
-      console.error("Erro ao salvar automaticamente após Copiloto:", saveErr);
-      setSaveState("error");
-      toast.error(
-        `Site montado na prévia! Aviso ao salvar: ${saveErr?.message || "Clique em 'Salvar e publicar' no topo."}`,
-        { id: toastId },
-      );
-    } finally {
-      setSaving(false);
-    }
+    // O resultado permanece como rascunho no editor até ação explícita do usuário
+    toast.success(
+      "✨ Proposta Premium Beta aplicada como rascunho! Revise os detalhes na prévia ao lado e clique em 'Salvar e Publicar' quando quiser oficializar.",
+      { duration: 8000 },
+    );
   };
 
   const addLink = () => {

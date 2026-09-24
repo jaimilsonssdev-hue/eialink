@@ -535,10 +535,10 @@ function PagesWorkspace() {
               }
             }}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
-            title="Abrir o Copiloto IA para construir ou editar sites com estética cinematográfica"
+            title="Enviar briefing e fotos para gerar proposta de site completa via AI Gateway"
           >
             <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
-            <span>Copiloto IA (Criar/Editar)</span>
+            <span>Gerar Proposta com Fotos (IA Gateway)</span>
           </button>
           <button
             onClick={() => setIsWizardOpen(true)}
@@ -633,12 +633,21 @@ function PagesWorkspace() {
                 Elimine a barreira técnica! Use nosso Criador Inteligente para gerar um site profissional com fotos, vitrine e agendamento em apenas 30 segundos.
               </p>
             </div>
-            <button
-              onClick={() => setIsWizardOpen(true)}
-              className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold"
-            >
-              <Sparkles className="h-4 w-4" /> Criar Minha Primeira Página Agora
-            </button>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <button
+                onClick={() => navigate({ to: "/builder", search: { copilot: true } })}
+                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+              >
+                <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
+                <span>Gerar Proposta com Fotos (IA Gateway)</span>
+              </button>
+              <button
+                onClick={() => setIsWizardOpen(true)}
+                className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold"
+              >
+                <Sparkles className="h-4 w-4" /> Criar Rápido (30s)
+              </button>
+            </div>
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

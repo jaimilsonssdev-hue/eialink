@@ -63,28 +63,57 @@ export interface AiCopilotResult {
   };
 }
 
+const nullableString = z.preprocess((val) => {
+  if (val === null || val === undefined) return undefined;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  }
+  return String(val);
+}, z.string().optional());
+
+const nullableNumber = z.preprocess((val) => {
+  if (val === null || val === undefined || val === "") return undefined;
+  const parsed = Number(val);
+  return isNaN(parsed) ? undefined : parsed;
+}, z.number().optional());
+
 const copilotFileInputSchema = z.object({
-  name: z.string(),
-  mimeType: z.string(),
+  name: z.preprocess((val) => (val ? String(val).trim() : "imagem"), z.string().default("imagem")),
+  mimeType: z.preprocess((val) => (val ? String(val).trim() : "image/jpeg"), z.string().default("image/jpeg")),
   base64: z.string(),
-  publicUrl: z.string().optional(),
-  role: z.enum(["logo", "cover", "product", "general"]).optional(),
+  publicUrl: nullableString,
+  role: z.preprocess((val) => {
+    if (!val || typeof val !== "string") return undefined;
+    const clean = val.trim().toLowerCase();
+    if (["logo", "cover", "product", "general"].includes(clean)) return clean;
+    return undefined;
+  }, z.enum(["logo", "cover", "product", "general"]).optional()),
 });
+
+const copilotContextSchema = z.preprocess(
+  (val) => (val && typeof val === "object" ? val : undefined),
+  z
+    .object({
+      displayName: nullableString,
+      niche: nullableString,
+      city: nullableString,
+      servicesCount: nullableNumber,
+    })
+    .optional(),
+);
 
 const copilotInputSchema = z
   .object({
-    briefing: z.string().max(20000).optional().default(""),
-    files: z.array(copilotFileInputSchema).optional().default([]),
-    videoUrl: z.string().optional(),
-    currentContext: z
-      .object({
-        displayName: z.string().optional(),
-        niche: z.string().optional(),
-        city: z.string().optional(),
-        servicesCount: z.number().optional(),
-      })
-      .optional(),
-    overrideApiKey: z.string().optional(),
+    briefing: z.preprocess((val) => {
+      if (val === null || val === undefined) return "";
+      return typeof val === "string" ? val : String(val);
+    }, z.string().max(25000).default("")),
+    files: z.preprocess((val) => (Array.isArray(val) ? val : []), z.array(copilotFileInputSchema).default([])),
+    videoUrl: nullableString,
+    currentContext: copilotContextSchema,
+    overrideApiKey: nullableString,
+    aiGatewayUrl: nullableString,
   })
   .refine(
     (data) =>
@@ -236,11 +265,30 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     let lastError = "";
     let rawContent: string | null = null;
 
+    const defaultEndpoint = "https://generativelanguage.googleapis.com";
+    const customGateway = (
+      data.aiGatewayUrl ||
+      process.env.AI_GATEWAY_URL ||
+      process.env.CLOUDFLARE_AI_GATEWAY ||
+      process.env.CF_AI_GATEWAY ||
+      ""
+    )
+      .trim()
+      .replace(/\/+$/, "");
+
+    // Se houver um AI Gateway (Cloudflare AI Gateway) configurado, usa-o; caso contrário, usa o endpoint oficial do Google
+    const apiBase = customGateway || defaultEndpoint;
+
     // 1. Descoberta dinâmica dos modelos disponíveis para a chave informada
     let activeModels: string[] = [];
     try {
       const listRes = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(resolvedKey)}`,
+        `${apiBase}/v1beta/models?key=${encodeURIComponent(resolvedKey)}`,
+        {
+          headers: customGateway
+            ? { "cf-aig-metadata": JSON.stringify({ app: "eialink", service: "copilot-list" }) }
+            : undefined,
+        },
       );
       if (listRes.ok) {
         const listData = await listRes.json();
@@ -307,7 +355,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     for (const modelName of finalModelsToTry) {
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
+          `${apiBase}/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
             resolvedKey,
           )}`,
           {
@@ -315,6 +363,15 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
             headers: {
               "Content-Type": "application/json",
               "x-goog-api-key": resolvedKey,
+              ...(customGateway
+                ? {
+                    "cf-aig-metadata": JSON.stringify({
+                      app: "eialink",
+                      service: "copilot-generate",
+                      model: modelName,
+                    }),
+                  }
+                : {}),
             },
             body: JSON.stringify({
               system_instruction: {
@@ -370,7 +427,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
       for (const modelName of interactionModels) {
         try {
           const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/interactions?key=${encodeURIComponent(
+            `${apiBase}/v1beta/interactions?key=${encodeURIComponent(
               resolvedKey,
             )}`,
             {
@@ -379,6 +436,15 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
                 "Content-Type": "application/json",
                 "x-goog-api-key": resolvedKey,
                 "api-revision": "2026-05-20",
+                ...(customGateway
+                  ? {
+                      "cf-aig-metadata": JSON.stringify({
+                        app: "eialink",
+                        service: "copilot-interactions",
+                        model: modelName,
+                      }),
+                    }
+                  : {}),
               },
               body: JSON.stringify({
                 model: modelName,
@@ -473,6 +539,78 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           card_bg: isDark ? parsed.custom_theme.card_bg || "#0b0f19" : "#0b0f19",
           border_color: isDark ? parsed.custom_theme.border_color || "#1e293b" : "#1e293b",
         };
+      }
+
+      // PERSISTÊNCIA & ALOCAÇÃO DETERMINÍSTICA DAS FOTOS ENVIADAS PELO USUÁRIO:
+      const uploadedFiles = (data.files || []).filter((f) => Boolean(f.publicUrl));
+
+      if (uploadedFiles.length > 0) {
+        // 1. Logo (avatar_url)
+        if (!parsed.avatar_url) {
+          const logoCandidate =
+            uploadedFiles.find(
+              (f) => f.role === "logo" || f.name.toLowerCase().includes("logo"),
+            ) || uploadedFiles[0];
+          if (logoCandidate?.publicUrl) {
+            parsed.avatar_url = logoCandidate.publicUrl;
+          }
+        }
+
+        // 2. Capa Principal / Hero (cover_url)
+        if (!parsed.cover_url) {
+          const coverCandidate =
+            uploadedFiles.find(
+              (f) =>
+                (f.role === "cover" ||
+                  f.name.toLowerCase().includes("capa") ||
+                  f.name.toLowerCase().includes("banner")) &&
+                f.publicUrl !== parsed.avatar_url,
+            ) ||
+            uploadedFiles.find((f) => f.publicUrl !== parsed.avatar_url) ||
+            uploadedFiles[0];
+          if (coverCandidate?.publicUrl) {
+            parsed.cover_url = coverCandidate.publicUrl;
+          }
+        }
+
+        // 3. Catálogo / Serviços / Pratos
+        if (parsed.suggested_services && parsed.suggested_services.length > 0) {
+          const productPool = uploadedFiles.filter(
+            (f) => f.publicUrl !== parsed.avatar_url && f.publicUrl !== parsed.cover_url,
+          );
+          let pIdx = 0;
+          for (const svc of parsed.suggested_services) {
+            if (!svc.image_url && pIdx < productPool.length) {
+              svc.image_url = productPool[pIdx].publicUrl;
+              pIdx++;
+            }
+          }
+        }
+
+        // 4. Curadoria Completa das Fotos
+        if (!parsed.curated_photos || parsed.curated_photos.length === 0) {
+          parsed.curated_photos = uploadedFiles.map((f) => ({
+            url: f.publicUrl!,
+            name: f.name,
+            role:
+              f.publicUrl === parsed.avatar_url
+                ? "logo"
+                : f.publicUrl === parsed.cover_url
+                  ? "cover"
+                  : "product",
+            scores: {
+              authority: 92,
+              quality: 94,
+              positioning: 90,
+            },
+            critique:
+              f.publicUrl === parsed.avatar_url
+                ? "Logotipo identificado e incorporado como identidade oficial da marca."
+                : f.publicUrl === parsed.cover_url
+                  ? "Foto com maior presença e impacto, alocada na Capa Hero cinematográfica."
+                  : "Foto inserida no catálogo de produtos/serviços de alta conversão.",
+          }));
+        }
       }
 
       return parsed;

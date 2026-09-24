@@ -881,6 +881,9 @@ export function UnifiedPageEditor({
     if (result.video_embed) {
       updatedSocial.video_embed = result.video_embed;
     }
+    if (result.curated_photos && result.curated_photos.length > 0) {
+      updatedSocial.curated_photos = result.curated_photos;
+    }
 
     const newDisplayName = result.display_name || bio.display_name;
     const newNormalizedSlug = normalizePageSlug(bio.slug || newDisplayName);
@@ -2735,9 +2738,9 @@ export function UnifiedPageEditor({
         isOpen={isCopilotOpen}
         onClose={() => setIsCopilotOpen(false)}
         currentContext={{
-          displayName: bio.display_name,
-          niche: niche || activeNicheModel.nicheKey,
-          city: (bio.social_links as any)?.address || (bio.social_links as any)?.city,
+          displayName: bio.display_name?.trim() || undefined,
+          niche: niche?.trim() || activeNicheModel.nicheKey || undefined,
+          city: (((bio.social_links as any)?.address || (bio.social_links as any)?.city) as string)?.trim() || undefined,
         }}
         onApply={handleApplyCopilotResult}
       />

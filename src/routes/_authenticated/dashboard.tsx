@@ -235,10 +235,10 @@ function Dashboard() {
               to="/builder"
               search={{ copilot: true }}
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02]"
-              title="Abrir o Copiloto IA para construir ou refatorar o site com estética cinematográfica"
+              title="Gerar proposta de site completa com briefing e fotos via IA Gateway"
             >
               <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
-              <span>Agente Copiloto IA (Site Cinematográfico)</span>
+              <span>Gerar Proposta com Fotos (IA Gateway)</span>
             </Link>
             {bio && (
               <a href={publicUrl} target="_blank" rel="noopener" className="premium-text-action">

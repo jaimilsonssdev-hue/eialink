@@ -6,6 +6,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   Loader2,
   Wand2,
   Palette,
@@ -31,9 +32,10 @@ interface AiCopilotModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentContext: {
-    displayName: string;
-    niche: string;
-    city?: string;
+    displayName?: string | null;
+    niche?: string | null;
+    city?: string | null;
+    servicesCount?: number | null;
   };
   onApply: (result: AiCopilotResult) => void;
 }
@@ -242,6 +244,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [failedUploads, setFailedUploads] = useState<string[]>([]);
   const [generatedResult, setGeneratedResult] = useState<AiCopilotResult | null>(null);
 
   useEffect(() => {
@@ -262,6 +265,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
     setLoading(false);
     setLoadingStep("");
     setError(null);
+    setFailedUploads([]);
     onClose();
   };
 
@@ -463,6 +467,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
     abortControllerRef.current = abortController;
 
     setError(null);
+    setFailedUploads([]);
     setLoading(true);
     setGeneratedResult(null);
 
@@ -476,6 +481,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         publicUrl?: string;
         role?: "logo" | "cover" | "product" | "general";
       }> = [];
+      const failedUploadsList: string[] = [];
 
       for (const item of mediaItems) {
         if (abortController.signal.aborted) return;
@@ -496,11 +502,13 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         if (!item.isPdf && !publicUrl) {
           try {
             publicUrl = await PageService.uploadAsset(item.file);
+            item.publicUrl = publicUrl;
           } catch (uploadErr) {
             console.warn(
               `Aviso: falha ao salvar ${item.name} no storage, usando envio direto por base64.`,
               uploadErr,
             );
+            failedUploadsList.push(item.name);
           }
         }
 
@@ -508,7 +516,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           name: item.name,
           mimeType: item.type.startsWith("image/") ? "image/jpeg" : item.type,
           base64: base64Data,
-          publicUrl,
+          publicUrl: publicUrl || undefined,
           role: item.role,
         });
       }
@@ -523,9 +531,10 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           files: preparedFiles,
           videoUrl: videoUrl.trim() || undefined,
           currentContext: {
-            displayName: currentContext.displayName,
-            niche: currentContext.niche,
-            city: currentContext.city,
+            displayName: currentContext?.displayName?.trim() || undefined,
+            niche: currentContext?.niche?.trim() || undefined,
+            city: currentContext?.city?.trim() || undefined,
+            servicesCount: currentContext?.servicesCount ?? undefined,
           },
           overrideApiKey: overrideKey.trim() || undefined,
         },
@@ -533,6 +542,13 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
 
       if (abortController.signal.aborted) return;
       setGeneratedResult(result);
+      if (failedUploadsList.length > 0) {
+        setFailedUploads(failedUploadsList);
+        toast.warning(
+          `⚠️ Proposta gerada com sucesso! No entanto, ${failedUploadsList.length} imagem(ns) (${failedUploadsList.join(", ")}) não puderam ser gravadas na nuvem. O site foi montado com os textos e fotos disponíveis.`,
+          { duration: 8000 },
+        );
+      }
     } catch (err: any) {
       if (abortController.signal.aborted || err?.name === "AbortError") {
         return;
@@ -915,6 +931,21 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3.5 flex items-start gap-2.5 text-xs text-red-300 animate-shake">
             <AlertCircle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {/* Aviso de Imagens que falharam upload no storage sem cancelar a montagem */}
+        {failedUploads.length > 0 && (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3.5 flex items-start gap-2.5 text-xs text-amber-300 animate-fade-in">
+            <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <span className="font-bold text-amber-200 block">
+                Aviso: {failedUploads.length} imagem(ns) não puderam ser gravadas na nuvem:
+              </span>
+              <p className="text-[11px] text-amber-300/90 leading-relaxed">
+                As fotos <b>{failedUploads.join(", ")}</b> foram lidas pela IA para criação de textos e estilo, mas não foram salvas no armazenamento perene. O site foi montado com os textos e imagens restantes!
+              </p>
+            </div>
           </div>
         )}
 

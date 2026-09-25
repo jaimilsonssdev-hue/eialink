@@ -851,8 +851,11 @@ export function UnifiedPageEditor({
       subtitle: result.description || existingHero.subtitle || bio.description,
     };
 
+    const adaptedSocial = (proposalResp?.adapted?.updatedBio?.social_links as Record<string, any>) || {};
+
     const updatedSectionStyles = {
       ...existingSectionStyles,
+      ...(adaptedSocial.section_styles || {}),
       hero: updatedHero,
     };
 
@@ -864,6 +867,9 @@ export function UnifiedPageEditor({
       custom_theme: customTheme,
       tokens_design: tokensDesign,
       section_styles: updatedSectionStyles,
+      sections_order: adaptedSocial.sections_order || currentSocial.sections_order,
+      faq_items: adaptedSocial.faq_items || currentSocial.faq_items,
+      steps: adaptedSocial.steps || currentSocial.steps,
     };
 
     if (result.city) {

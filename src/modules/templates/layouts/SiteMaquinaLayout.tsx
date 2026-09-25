@@ -32,6 +32,7 @@ import type { CatalogItem } from "@/modules/products/types";
 import {
   detectNicheKey,
   getSignatureHeroArchitectureForNiche,
+  isProductCatalogNiche,
   NICHE_GALLERIES,
 } from "@/modules/prospecting/nichePresets";
 import { CommercialSettingsService } from "@/modules/settings/services/CommercialSettingsService";
@@ -204,8 +205,11 @@ function SiteMaquinaView({
   const sectionsOrder: string[] = useMemo(() => {
     if (Array.isArray(socialData.sections_order) && socialData.sections_order.length > 0) {
       const order = [...socialData.sections_order];
-      // Se product_carousel não estiver explicitamente em order, insere na posição #2 (logo após 'hero')
-      if (!order.includes("product_carousel")) {
+      // Se product_carousel não estiver explicitamente em order mas houver itens, insere logo após 'hero'
+      if (
+        !order.includes("product_carousel") &&
+        (products.length > 0 || (socialData.product_carousel?.items && socialData.product_carousel.items.length > 0))
+      ) {
         const heroIdx = order.indexOf("hero");
         if (heroIdx !== -1) {
           order.splice(heroIdx + 1, 0, "product_carousel");
@@ -213,13 +217,10 @@ function SiteMaquinaView({
           order.unshift("product_carousel");
         }
       }
-      for (const def of DEFAULT_SECTIONS_ORDER) {
-        if (!order.includes(def)) order.push(def);
-      }
       return order;
     }
     return DEFAULT_SECTIONS_ORDER;
-  }, [socialData.sections_order, DEFAULT_SECTIONS_ORDER]);
+  }, [socialData.sections_order, DEFAULT_SECTIONS_ORDER, products.length, socialData.product_carousel]);
 
   const getSectionConfig = (key: string, defaultTitleColor?: string, defaultTextColor?: string) => {
     const s = sectionStyles[key] || {};
@@ -311,69 +312,188 @@ function SiteMaquinaView({
 
   // Passos de atendimento ("Como funciona")
   const steps = useMemo(() => {
+    if (Array.isArray(socialData.steps) && socialData.steps.length > 0) {
+      return socialData.steps.map((s: any, idx: number) => ({
+        num: s.num || String(idx + 1).padStart(2, "0"),
+        title: s.title,
+        desc: s.desc || s.description || "",
+        icon: idx === 0 ? MessageCircle : idx === 1 ? Clock : idx === 2 ? CalendarCheck : CheckCircle2,
+      }));
+    }
+    // Passos sob medida por nicho (sem termos médicos para outros negócios)
+    if (
+      isProductCatalogNiche(nicheKey) ||
+      nicheKey.includes("restaurante") ||
+      nicheKey.includes("delivery") ||
+      nicheKey.includes("pizzaria") ||
+      nicheKey.includes("hamburgueria")
+    ) {
+      return [
+        { num: "01", title: "Escolha no Cardápio", desc: "Confira nossas opções e selecione seus itens favoritos.", icon: ShoppingBag },
+        { num: "02", title: "Faça seu Pedido", desc: "Chame no WhatsApp e informe seu pedido ou endereço.", icon: MessageCircle },
+        { num: "03", title: "Preparo Artesanal", desc: "Preparamos tudo com ingredientes frescos e máxima atenção.", icon: Sparkles },
+        { num: "04", title: "Entrega ou Retirada", desc: "Receba quentinho onde estiver ou venha retirar no local.", icon: CheckCircle2 },
+      ];
+    }
+    if (
+      nicheKey.includes("barbearia") ||
+      nicheKey.includes("beleza") ||
+      nicheKey.includes("salao") ||
+      nicheKey.includes("estetica")
+    ) {
+      return [
+        { num: "01", title: "Agendamento Fácil", desc: `Clique no WhatsApp e reserve o melhor dia e horário na ${companyName}.`, icon: MessageCircle },
+        { num: "02", title: "Recepção Exclusiva", desc: "Ambiente moderno, climatizado e atendimento com hora marcada.", icon: Clock },
+        { num: "03", title: "Experiência de Elite", desc: "Profissionais qualificados cuidando do seu visual com precisão.", icon: Sparkles },
+        { num: "04", title: "Visual Impecável", desc: "Saia confiante com um resultado alinhado ao seu estilo.", icon: CheckCircle2 },
+      ];
+    }
     return [
-      {
-        num: "01",
-        title: "Contato no WhatsApp",
-        desc: `Você clica no botão e fala direto com a recepção da ${companyName} sem intermediários.`,
-        icon: MessageCircle,
-      },
-      {
-        num: "02",
-        title: "Entendimento da Necessidade",
-        desc: "Ouvimos com atenção o que você procura para direcionar o melhor serviço ou procedimento.",
-        icon: Clock,
-      },
-      {
-        num: "03",
-        title: "Horário Reservado",
-        desc: "Agendamento ágil e pontual em dia e horário mais convenientes para você.",
-        icon: CalendarCheck,
-      },
-      {
-        num: "04",
-        title: "Cuidado Completo",
-        desc: "Experiência tranquila, ambiente confortável e resultados que superam suas expectativas.",
-        icon: CheckCircle2,
-      },
+      { num: "01", title: "Primeiro Contato", desc: `Fale diretamente com nossa equipe no WhatsApp sem intermediários.`, icon: MessageCircle },
+      { num: "02", title: "Entendimento Rápido", desc: "Compreendemos sua necessidade para oferecer a solução exata.", icon: Clock },
+      { num: "03", title: "Horário Reservado", desc: "Agendamento flexível e pontual para maior comodidade.", icon: CalendarCheck },
+      { num: "04", title: "Entrega com Excelência", desc: "Experiência acolhedora e resultado que supera suas expectativas.", icon: CheckCircle2 },
     ];
-  }, [companyName]);
+  }, [socialData.steps, nicheKey, companyName]);
 
   // Perguntas Frequentes por Nicho
   const faqItems = useMemo(() => {
+    if (Array.isArray(socialData.faq_items) && socialData.faq_items.length > 0) {
+      return socialData.faq_items;
+    }
+    if (Array.isArray(socialData.faq) && socialData.faq.length > 0) {
+      return socialData.faq.map((f: any) => ({ q: f.q || f.question, a: f.a || f.answer }));
+    }
+    // Perguntas sob medida por nicho (sem termos clínicos/médicos para outros negócios)
+    if (
+      isProductCatalogNiche(nicheKey) ||
+      nicheKey.includes("restaurante") ||
+      nicheKey.includes("delivery") ||
+      nicheKey.includes("pizzaria") ||
+      nicheKey.includes("hamburgueria")
+    ) {
+      return [
+        { q: `Como faço para pedir na ${companyName}?`, a: `Basta clicar no botão de WhatsApp. Nossa equipe envia o cardápio atualizado e confirma seu pedido em minutos.` },
+        { q: "Quais são as formas de pagamento?", a: "Aceitamos PIX, cartões de crédito e débito, além de pagamento na entrega ou retirada." },
+        { q: `Onde a ${companyName} fica localizada?`, a: `Estamos localizados em ${address}. Atendemos pedidos no balcão e entregas em toda a região de ${city}.` },
+        { q: "Qual o tempo médio de preparo?", a: "Nossos pedidos são preparados com produtos frescos, garantindo qualidade máxima e sabor inconfundível." },
+      ];
+    }
+    if (
+      nicheKey.includes("barbearia") ||
+      nicheKey.includes("beleza") ||
+      nicheKey.includes("salao")
+    ) {
+      return [
+        { q: `Preciso agendar horário com antecedência na ${companyName}?`, a: `Recomendamos agendar pelo WhatsApp para garantir seu horário sem espera, mas também atendemos por ordem de chegada conforme disponibilidade.` },
+        { q: "Quais formas de pagamento são aceitas?", a: "Aceitamos PIX, cartões de crédito, débito e dinheiro." },
+        { q: `Onde a ${companyName} fica localizada?`, a: `Estamos em ${address}. Confira o mapa interativo no final desta página para traçar a melhor rota.` },
+        { q: "Vocês atendem aos sábados e horários estendidos?", a: `Sim! Consulte nossos horários especiais diretamente com nossa recepção no WhatsApp.` },
+      ];
+    }
     return [
-      {
-        q: `Como faço para agendar um horário de atendimento na ${companyName}?`,
-        a: `Basta clicar em qualquer botão de WhatsApp deste site. Você será direcionado diretamente para nossa equipe, que informará os dias e horários livres mais convenientes para você em ${city}.`,
-      },
-      {
-        q: "Quais são as formas de pagamento aceitas?",
-        a: "Aceitamos cartões de crédito (com possibilidade de parcelamento facilitado), débito, PIX e dinheiro. Caso você possua convênio ou benefício, nossa equipe confirma a cobertura imediatamente pelo WhatsApp.",
-      },
-      {
-        q: `Onde a ${companyName} fica localizada?`,
-        a: `Estamos situados em ${address}. Você pode conferir o mapa interativo no final desta página para traçar a melhor rota até nós pelo Google Maps ou Waze.`,
-      },
-      {
-        q: "É necessário levar algum documento no primeiro comparecimento?",
-        a: "Recomendamos trazer um documento de identificação com foto (RG ou CNH). Caso possua exames recentes ou histórico prévio, você também pode trazê-los para enriquecer seu atendimento.",
-      },
+      { q: `Como faço para solicitar atendimento na ${companyName}?`, a: `Basta clicar em qualquer botão de WhatsApp deste site para falar diretamente com nossa equipe em ${city}.` },
+      { q: "Quais são as formas de pagamento aceitas?", a: "Aceitamos PIX, cartões de crédito e débito com opções facilitadas." },
+      { q: `Onde a ${companyName} fica localizada?`, a: `Estamos em ${address}. Você pode usar o mapa no rodapé para traçar a melhor rota até nossa unidade em ${city}.` },
+      { q: "Qual é o horário de funcionamento?", a: "Nosso atendimento principal funciona em horário comercial. Chame no WhatsApp para confirmar horários hoje." },
     ];
-  }, [companyName, address, city]);
+  }, [socialData.faq_items, socialData.faq, nicheKey, companyName, address, city]);
 
   // Lista de serviços para o Bento Grid
   const displayServices: CatalogItem[] = useMemo(() => {
     if (products.length > 0) return products;
+
+    const isFood =
+      isProductCatalogNiche(nicheKey) ||
+      nicheKey.includes("restaurante") ||
+      nicheKey.includes("delivery") ||
+      nicheKey.includes("pizzaria");
+    const isBeauty =
+      nicheKey.includes("barbearia") ||
+      nicheKey.includes("beleza") ||
+      nicheKey.includes("salao") ||
+      nicheKey.includes("estetica");
+
+    if (isFood) {
+      return [
+        {
+          id: "serv-1",
+          bio_page_id: bio.id,
+          type: "service",
+          name: "Especialidade da Casa",
+          description: "Nossa receita mais elogiada, preparada com ingredientes selecionados e muito sabor.",
+          price: null,
+          image_url: heroCover,
+          button_label: "Pedir no WhatsApp",
+          button_url: null,
+          position: 0,
+          active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: "serv-2",
+          bio_page_id: bio.id,
+          type: "service",
+          name: "Opções Especiais & Combos",
+          description: "Combinações perfeitas para você saborear o melhor do nosso cardápio.",
+          price: null,
+          image_url: secondaryImage,
+          button_label: "Ver Opções",
+          button_url: null,
+          position: 1,
+          active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ];
+    }
+
+    if (isBeauty) {
+      return [
+        {
+          id: "serv-1",
+          bio_page_id: bio.id,
+          type: "service",
+          name: "Atendimento Completo & Personalizado",
+          description: "Procedimento executado por profissionais especializados com técnicas modernas e produtos de alto padrão.",
+          price: null,
+          image_url: heroCover,
+          button_label: "Agendar Horário",
+          button_url: null,
+          position: 0,
+          active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        {
+          id: "serv-2",
+          bio_page_id: bio.id,
+          type: "service",
+          name: "Serviços Tradicionais & Cuidados",
+          description: "Precisão nos detalhes, conforto e produtos selecionados para o seu bem-estar.",
+          price: null,
+          image_url: secondaryImage,
+          button_label: "Consultar no WhatsApp",
+          button_url: null,
+          position: 1,
+          active: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ];
+    }
+
     return [
       {
         id: "serv-1",
         bio_page_id: bio.id,
         type: "service",
-        name: "Consultas & Avaliações Especializadas",
-        description: "Avaliação completa com profissionais de referência, diagnóstico seguro e ambiente acolhedor.",
+        name: "Serviço Especializado de Excelência",
+        description: "Solução completa desenvolvida com métodos modernos, foco em agilidade e alta satisfação.",
         price: null,
         image_url: heroCover,
-        button_label: "Agendar este Procedimento",
+        button_label: "Solicitar Atendimento",
         button_url: null,
         position: 0,
         active: true,
@@ -384,34 +504,19 @@ function SiteMaquinaView({
         id: "serv-2",
         bio_page_id: bio.id,
         type: "service",
-        name: "Procedimentos de Rotina & Cuidados",
-        description: "Agilidade na realização de procedimentos para você iniciar seus cuidados sem esperas desnecessárias.",
+        name: "Atendimento com Hora Marcada",
+        description: "Pontualidade e dedicação para resolver sua necessidade com o máximo de conforto.",
         price: null,
         image_url: secondaryImage,
-        button_label: "Tirar dúvidas pelo WhatsApp",
+        button_label: "Tirar dúvidas no WhatsApp",
         button_url: null,
         position: 1,
         active: true,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
-      {
-        id: "serv-3",
-        bio_page_id: bio.id,
-        type: "service",
-        name: "Acompanhamento Contínuo",
-        description: "Planos de cuidado personalizado para garantir sua tranquilidade, disposição e bem-estar permanente.",
-        price: null,
-        image_url: null,
-        button_label: "Consultar horários",
-        button_url: null,
-        position: 2,
-        active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      },
     ];
-  }, [products, bio.id, heroCover, secondaryImage]);
+  }, [products, bio.id, heroCover, secondaryImage, nicheKey]);
 
   const renderSection = (sectionKey: string): ReactNode => {
     switch (sectionKey) {
@@ -1397,6 +1502,143 @@ function SiteMaquinaView({
                     <p className="text-white/60 text-xs text-center mt-3 truncate px-2">{address}</p>
                   </div>
                 </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      case "about": {
+        const aboutSection = socialData.about_section;
+        const aboutCfg = sectionStyles.about || {};
+        if (!aboutSection && !aboutCfg.visible) return null;
+        const title = aboutCfg.title || aboutSection?.title || `Sobre a ${companyName}`;
+        const text =
+          aboutSection?.text ||
+          bio.description ||
+          `Dedicados a oferecer uma experiência diferenciada e atendimento de excelência em ${city}.`;
+        const highlights: string[] =
+          Array.isArray(aboutSection?.highlights) && aboutSection.highlights.length > 0
+            ? aboutSection.highlights
+            : [
+                "Atendimento com foco no cliente e respeito",
+                "Ambiente moderno, confortável e climatizado",
+                "Profissionais experientes e dedicados",
+                `Compromisso e credibilidade em ${city}`,
+              ];
+
+        return (
+          <section
+            id="sobre"
+            className="py-16 sm:py-20 border-b border-gray-100"
+            style={{ backgroundColor: aboutCfg.bg_color || (isLightMode ? "#ffffff" : "#0d1117") }}
+          >
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+                <div className="space-y-6">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
+                    Nossa História & Propósito
+                  </span>
+                  <h2
+                    className={`font-heading font-black leading-tight ${getHeadingSizeClass(aboutCfg.font_size)}`}
+                    style={{
+                      color: aboutCfg.title_color || (isLightMode ? "#111827" : "#ffffff"),
+                      fontFamily: aboutCfg.font_family || undefined,
+                    }}
+                  >
+                    {title}
+                  </h2>
+                  <p
+                    className="text-base sm:text-lg leading-relaxed"
+                    style={{
+                      color: aboutCfg.text_color || (isLightMode ? "#4b5563" : "#cbd5e1"),
+                      fontFamily: aboutCfg.font_family || undefined,
+                    }}
+                  >
+                    {text}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                    {highlights.map((h: string, i: number) => (
+                      <div key={i} className="flex items-center gap-2.5 p-3 rounded-xl bg-gray-50 border border-gray-100">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
+                        <span className="text-xs sm:text-sm font-semibold text-gray-800">{h}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="pt-2">
+                    <a
+                      href={whatsappHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => onTrack("whatsapp_click")}
+                      style={{ backgroundColor: customPrimary || undefined }}
+                      className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-[var(--color-600)] hover:bg-[var(--color-700)] text-white font-bold text-sm shadow-md transition-all active:scale-95"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                      <span>Falar no WhatsApp</span>
+                    </a>
+                  </div>
+                </div>
+                <div className="relative">
+                  <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100">
+                    <img
+                      src={secondaryImage}
+                      alt={companyName}
+                      className="w-full h-80 sm:h-96 object-cover"
+                      onError={(e) => {
+                        e.currentTarget.src = heroCover;
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      }
+
+      case "video": {
+        const videoConfig = socialData.video_embed;
+        const videoCfg = sectionStyles.video || {};
+        if (!videoConfig?.url && !videoCfg.visible) return null;
+        const rawVideoUrl = videoConfig?.url || "";
+        const ytMatch = rawVideoUrl.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+        const embedUrl = ytMatch
+          ? `https://www.youtube-nocookie.com/embed/${ytMatch[1]}?rel=0&modestbranding=1`
+          : rawVideoUrl;
+
+        return (
+          <section
+            id="video"
+            className="py-16 sm:py-20 border-b border-gray-100"
+            style={{ backgroundColor: videoCfg.bg_color || (isLightMode ? "#f9fafb" : "#0b0f19") }}
+          >
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+              <span className="text-xs font-bold uppercase tracking-wider text-[var(--color-600)] bg-[var(--color-100)] px-3 py-1 rounded-full">
+                Apresentação Exclusiva
+              </span>
+              <h2
+                className={`font-heading font-black leading-tight ${getHeadingSizeClass(videoCfg.font_size)}`}
+                style={{
+                  color: videoCfg.title_color || (isLightMode ? "#111827" : "#ffffff"),
+                }}
+              >
+                {videoCfg.title || videoConfig?.title || `Conheça Mais Sobre a ${companyName}`}
+              </h2>
+              {videoConfig?.caption && (
+                <p className="text-sm text-gray-500 max-w-xl mx-auto">
+                  {videoConfig.caption}
+                </p>
+              )}
+              <div className="relative aspect-video w-full rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-black">
+                <iframe
+                  src={embedUrl}
+                  title={videoConfig?.title || "Vídeo"}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full border-0"
+                  loading="lazy"
+                />
               </div>
             </div>
           </section>

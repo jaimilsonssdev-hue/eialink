@@ -127,6 +127,45 @@ export function adaptProposalToExistingStructures(
       }
     : undefined;
 
+  // Extração de Perguntas Frequentes (FAQ) da proposta
+  const faqSection = proposal.sections.find((s) => s.type === "faq");
+  const extractedFaq: Array<{ q: string; a: string }> = [];
+  const rawFaqItems =
+    (faqSection?.content as any)?.items ||
+    (faqSection?.content as any)?.faq ||
+    (faqSection?.content as any)?.questions ||
+    [];
+  if (Array.isArray(rawFaqItems)) {
+    for (const item of rawFaqItems) {
+      if (item && (item.q || item.question) && (item.a || item.answer)) {
+        extractedFaq.push({
+          q: String(item.q || item.question),
+          a: String(item.a || item.answer),
+        });
+      }
+    }
+  }
+
+  // Extração de Passos de Atendimento (Steps / Como Funciona)
+  const stepsSection = proposal.sections.find((s) => s.type === "steps" || s.type === "how_it_works");
+  const extractedSteps: Array<{ num: string; title: string; desc: string }> = [];
+  const rawSteps =
+    (stepsSection?.content as any)?.items ||
+    (stepsSection?.content as any)?.steps ||
+    [];
+  if (Array.isArray(rawSteps)) {
+    for (let i = 0; i < rawSteps.length; i++) {
+      const s = rawSteps[i];
+      if (s && s.title) {
+        extractedSteps.push({
+          num: String(s.num || i + 1).padStart(2, "0"),
+          title: String(s.title),
+          desc: String(s.desc || s.description || ""),
+        });
+      }
+    }
+  }
+
   // 3. Catálogo de Serviços e Produtos (Canônico)
   const updatedProducts: Array<Partial<CatalogItem>> = proposal.catalogItems.map((item, idx) => ({
     id: item.id || crypto.randomUUID(),
@@ -184,18 +223,139 @@ export function adaptProposalToExistingStructures(
     critique: assignment.reasoning || `Foto atribuída à seção ${assignment.assignedRole}.`,
   }));
 
-  // 7. Objeto social_links de compatibilidade (preservando legados)
+  // 7. Mapeamento dinâmico da ordem das seções homologadas
+  const mappedSectionsOrder: string[] = [];
+  for (const s of proposal.sections) {
+    if (s.enabled === false) continue;
+    switch (s.type) {
+      case "hero":
+        if (!mappedSectionsOrder.includes("hero")) mappedSectionsOrder.push("hero");
+        break;
+      case "catalog_carousel":
+      case "products":
+        if (!mappedSectionsOrder.includes("product_carousel")) mappedSectionsOrder.push("product_carousel");
+        break;
+      case "servicos":
+      case "services":
+      case "catalog_items":
+        if (!mappedSectionsOrder.includes("servicos")) mappedSectionsOrder.push("servicos");
+        break;
+      case "differentials":
+      case "features":
+        if (!mappedSectionsOrder.includes("diferenciais")) mappedSectionsOrder.push("diferenciais");
+        break;
+      case "about":
+        if (!mappedSectionsOrder.includes("about")) mappedSectionsOrder.push("about");
+        break;
+      case "video":
+        if (!mappedSectionsOrder.includes("video")) mappedSectionsOrder.push("video");
+        break;
+      case "testimonials":
+      case "reviews":
+        if (!mappedSectionsOrder.includes("avaliacoes")) mappedSectionsOrder.push("avaliacoes");
+        break;
+      case "steps":
+      case "how_it_works":
+        if (!mappedSectionsOrder.includes("steps")) mappedSectionsOrder.push("steps");
+        break;
+      case "faq":
+        if (!mappedSectionsOrder.includes("faq")) mappedSectionsOrder.push("faq");
+        break;
+      case "contact_map":
+      case "contact":
+      case "whatsapp_cta":
+        if (!mappedSectionsOrder.includes("contato")) mappedSectionsOrder.push("contato");
+        break;
+      case "credibility":
+        if (!mappedSectionsOrder.includes("credibility")) mappedSectionsOrder.push("credibility");
+        break;
+    }
+  }
+
+  // Garante hero no início e contato no fim
+  if (!mappedSectionsOrder.includes("hero")) mappedSectionsOrder.unshift("hero");
+  if (updatedProducts.length > 0 && !mappedSectionsOrder.includes("product_carousel") && !mappedSectionsOrder.includes("servicos")) {
+    const heroIdx = mappedSectionsOrder.indexOf("hero");
+    mappedSectionsOrder.splice(heroIdx + 1, 0, "product_carousel", "servicos");
+  }
+  if (!mappedSectionsOrder.includes("contato")) mappedSectionsOrder.push("contato");
+
+  // Configurações de estilo e visibilidade de cada seção
+  const sectionStyles: Record<string, any> = {
+    ...(currentSocial.section_styles || {}),
+    hero: {
+      ...(currentSocial.section_styles?.hero || {}),
+      title: proposal.pagePatch.displayName || currentBio?.display_name,
+      subtitle: proposal.pagePatch.description || currentBio?.description,
+      visible: true,
+    },
+    product_carousel: {
+      ...(currentSocial.section_styles?.product_carousel || {}),
+      visible: mappedSectionsOrder.includes("product_carousel") && updatedProducts.length > 0,
+    },
+    servicos: {
+      ...(currentSocial.section_styles?.servicos || {}),
+      visible: mappedSectionsOrder.includes("servicos") || updatedProducts.length > 0,
+    },
+    diferenciais: {
+      ...(currentSocial.section_styles?.diferenciais || {}),
+      visible: mappedSectionsOrder.includes("diferenciais") && extractedDifferentials.length > 0,
+      title: differentialsSection?.title || `Por que nos escolher`,
+    },
+    about: {
+      ...(currentSocial.section_styles?.about || {}),
+      visible: mappedSectionsOrder.includes("about") || Boolean(extractedAbout),
+      title: aboutSection?.title || "Sobre Nós",
+    },
+    video: {
+      ...(currentSocial.section_styles?.video || {}),
+      visible: mappedSectionsOrder.includes("video") && Boolean(extractedVideo),
+      title: videoSection?.title || "Vídeo de Apresentação",
+    },
+    avaliacoes: {
+      ...(currentSocial.section_styles?.avaliacoes || {}),
+      visible: mappedSectionsOrder.includes("avaliacoes") && extractedTestimonials.length > 0,
+      title: testimonialsSection?.title || "Avaliações e Recomendações",
+    },
+    // Esconde passos genéricos caso a IA não tenha gerado passos específicos para este negócio
+    steps: {
+      ...(currentSocial.section_styles?.steps || {}),
+      visible: mappedSectionsOrder.includes("steps") && extractedSteps.length > 0,
+      title: stepsSection?.title || "Como funciona o atendimento",
+    },
+    // Esconde FAQ caso a IA não tenha gerado dúvidas para este negócio (evita perguntas médicas genéricas)
+    faq: {
+      ...(currentSocial.section_styles?.faq || {}),
+      visible: mappedSectionsOrder.includes("faq") && extractedFaq.length > 0,
+      title: faqSection?.title || "Dúvidas Frequentes",
+    },
+    // Esconde credibilidade a menos que explicitamente requerida
+    credibility: {
+      ...(currentSocial.section_styles?.credibility || {}),
+      visible: mappedSectionsOrder.includes("credibility"),
+    },
+    contato: {
+      ...(currentSocial.section_styles?.contato || {}),
+      visible: true,
+    },
+  };
+
+  // 8. Objeto social_links de compatibilidade (preservando legados)
   const updatedSocial: Record<string, any> = {
     ...currentSocial,
     niche: proposal.strategy.niche || currentSocial.niche || "geral",
     city: proposal.strategy.city || currentSocial.city,
     custom_theme: customTheme,
     tokens_design: tokensDesign,
+    sections_order: mappedSectionsOrder,
+    section_styles: sectionStyles,
     differentials: extractedDifferentials.length > 0 ? extractedDifferentials : currentSocial.differentials,
     testimonials: extractedTestimonials.length > 0 ? extractedTestimonials : currentSocial.testimonials,
     show_testimonials: extractedTestimonials.length > 0 ? true : currentSocial.show_testimonials,
     about_section: extractedAbout || currentSocial.about_section,
     video_embed: extractedVideo || currentSocial.video_embed,
+    faq_items: extractedFaq.length > 0 ? extractedFaq : currentSocial.faq_items,
+    steps: extractedSteps.length > 0 ? extractedSteps : currentSocial.steps,
     product_carousel: productCarousel,
     curated_photos: curatedPhotos.length > 0 ? curatedPhotos : currentSocial.curated_photos,
     proposal_strategy: {
@@ -205,7 +365,7 @@ export function adaptProposalToExistingStructures(
     },
   };
 
-  // 8. Patch do registro canônico bio_pages
+  // 9. Patch do registro canônico bio_pages
   const updatedBio: Partial<Tables<"bio_pages">> = {
     ...currentBio,
     display_name: proposal.pagePatch.displayName || currentBio?.display_name || "Seu Negócio",
@@ -228,7 +388,7 @@ export function adaptProposalToExistingStructures(
     published: currentBio?.published ?? false,
   };
 
-  // 9. Composição de PageBlocks padronizados para o editor por blocos
+  // 10. Composição de PageBlocks padronizados para o editor por blocos
   const updatedPageBlocks: PageBlock[] = proposal.sections.map((section, idx) => ({
     id: section.id || crypto.randomUUID(),
     type: section.type as any,
@@ -243,7 +403,7 @@ export function adaptProposalToExistingStructures(
     },
   }));
 
-  // 10. Objeto de compatibilidade direta com AiCopilotResult
+  // 11. Objeto de compatibilidade direta com AiCopilotResult
   const copilotResult: AiCopilotResult = {
     display_name: updatedBio.display_name,
     niche: updatedSocial.niche,
@@ -264,7 +424,11 @@ export function adaptProposalToExistingStructures(
     curated_photos: curatedPhotos,
     about_section: extractedAbout,
     video_embed: extractedVideo,
-  };
+    faq_items: extractedFaq,
+    steps: extractedSteps,
+    sections_order: mappedSectionsOrder,
+    section_styles: sectionStyles,
+  } as any;
 
   return {
     updatedBio,

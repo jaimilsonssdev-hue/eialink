@@ -244,6 +244,49 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
       }
     }
 
+    // Auto-extração caso o usuário tenha colado link do Google Maps, Drive ou Instagram no texto do briefing
+    if (preparedFiles.length < 2 && data.briefing) {
+      const urlMatch = data.briefing.match(/https?:\/\/[^\s"'<>]+/);
+      if (urlMatch) {
+        const foundUrl = urlMatch[0];
+        if (
+          foundUrl.includes("maps.app.goo.gl") ||
+          foundUrl.includes("google.com/maps") ||
+          foundUrl.includes("goo.gl/maps") ||
+          foundUrl.includes("drive.google.com") ||
+          foundUrl.includes("instagram.com")
+        ) {
+          try {
+            const extracted = await internalFetchBusinessFromUrl(foundUrl, context);
+            if (extracted.importedImages && extracted.importedImages.length > 0) {
+              for (const img of extracted.importedImages) {
+                if (img.publicUrl && isRealImageUrl(img.publicUrl)) {
+                  preparedFiles.push({
+                    name: img.name,
+                    mimeType: img.mimeType,
+                    base64: img.base64 ? img.base64.replace(/^data:[^;]+;base64,/, "").trim() : "",
+                    publicUrl: img.publicUrl,
+                    role: img.role,
+                  });
+                }
+              }
+            }
+            if (extracted.formattedBriefing) {
+              data.briefing = `${extracted.formattedBriefing}\n\n${data.briefing}`;
+            }
+            if (
+              extracted.name &&
+              (!data.currentContext?.displayName || data.currentContext.displayName === "Empresa Local")
+            ) {
+              if (data.currentContext) data.currentContext.displayName = extracted.name;
+            }
+          } catch (autoErr) {
+            console.warn("Aviso ao auto-extrair mídias da URL do briefing:", autoErr);
+          }
+        }
+      }
+    }
+
     const systemPrompt = `[INSTRUÇÃO DE SISTEMA OBRIGATÓRIA - MODO CINEMATOGRÁFICO PREMIUM]
 Você é o Diretor de Arte, Designer Front-End de Elite, Copywriter de Resposta Direta e Estrategista Comercial da plataforma EIA Link.
 Sua missão é analisar o briefing, fotos, logotipos e eventuais cardápios/catálogos em PDF para gerar uma estrutura visual de Landing Page cinematográfica, minimalista e de altíssimo padrão visual e de conversão para o negócio do cliente.
@@ -852,6 +895,49 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
       }
     }
 
+    // Auto-extração caso o usuário tenha colado link do Google Maps, Drive ou Instagram no texto do briefing
+    if (preparedFiles.length < 2 && data.briefing) {
+      const urlMatch = data.briefing.match(/https?:\/\/[^\s"'<>]+/);
+      if (urlMatch) {
+        const foundUrl = urlMatch[0];
+        if (
+          foundUrl.includes("maps.app.goo.gl") ||
+          foundUrl.includes("google.com/maps") ||
+          foundUrl.includes("goo.gl/maps") ||
+          foundUrl.includes("drive.google.com") ||
+          foundUrl.includes("instagram.com")
+        ) {
+          try {
+            const extracted = await internalFetchBusinessFromUrl(foundUrl, context);
+            if (extracted.importedImages && extracted.importedImages.length > 0) {
+              for (const img of extracted.importedImages) {
+                if (img.publicUrl && isRealImageUrl(img.publicUrl)) {
+                  preparedFiles.push({
+                    name: img.name,
+                    mimeType: img.mimeType,
+                    base64: img.base64 ? img.base64.replace(/^data:[^;]+;base64,/, "").trim() : "",
+                    publicUrl: img.publicUrl,
+                    role: img.role,
+                  });
+                }
+              }
+            }
+            if (extracted.formattedBriefing) {
+              data.briefing = `${extracted.formattedBriefing}\n\n${data.briefing}`;
+            }
+            if (
+              extracted.name &&
+              (!data.currentContext?.displayName || data.currentContext.displayName === "Empresa Local")
+            ) {
+              if (data.currentContext) data.currentContext.displayName = extracted.name;
+            }
+          } catch (autoErr) {
+            console.warn("Aviso ao auto-extrair mídias da URL do briefing:", autoErr);
+          }
+        }
+      }
+    }
+
     const fileDescriptions = preparedFiles
       .map((f, idx) => {
         let roleHint = "";
@@ -1358,558 +1444,601 @@ export interface FetchedBusinessData {
   }>;
 }
 
-export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
-  .inputValidator((data: z.infer<typeof fetchUrlInputSchema>) => fetchUrlInputSchema.parse(data))
-  .handler(async ({ data, context }: any): Promise<FetchedBusinessData> => {
-    const supabaseAdmin = (context as any)?.supabase || getSupabaseServerClient();
-    const userId = (context as any)?.userId || "drive-assets";
+export async function internalFetchBusinessFromUrl(
+  rawUrl: string,
+  context?: any,
+): Promise<FetchedBusinessData> {
+  const supabaseAdmin = (context as any)?.supabase || getSupabaseServerClient();
+  const userId = (context as any)?.userId || "drive-assets";
 
-    let target = data.url.trim();
-    if (!target.startsWith("http://") && !target.startsWith("https://")) {
-      if (target.startsWith("@") || (!target.includes(".") && !target.includes("/"))) {
-        target = `https://www.instagram.com/${target.replace(/^@/, "")}/`;
-      } else {
-        target = `https://${target}`;
-      }
+  let target = rawUrl.trim();
+  if (!target.startsWith("http://") && !target.startsWith("https://")) {
+    if (target.startsWith("@") || (!target.includes(".") && !target.includes("/"))) {
+      target = `https://www.instagram.com/${target.replace(/^@/, "")}/`;
+    } else {
+      target = `https://${target}`;
     }
+  }
 
-    const isGoogleDrive = target.includes("drive.google.com") || target.includes("docs.google.com");
+  const isGoogleDrive = target.includes("drive.google.com") || target.includes("docs.google.com");
 
-    const isInstagram = target.includes("instagram.com");
-    let isGoogle =
-      target.includes("google.com/maps") ||
-      target.includes("maps.app.goo.gl") ||
-      target.includes("goo.gl/maps");
+  const isInstagram = target.includes("instagram.com");
+  let isGoogle =
+    target.includes("google.com/maps") ||
+    target.includes("maps.app.goo.gl") ||
+    target.includes("goo.gl/maps");
 
-    // Expande links curtos do Google Maps para obter coordenadas e nome do local
-    if (target.includes("maps.app.goo.gl") || target.includes("goo.gl/maps")) {
+  // Expande links curtos do Google Maps para obter coordenadas e nome do local
+  if (target.includes("maps.app.goo.gl") || target.includes("goo.gl/maps")) {
+    try {
+      const headRes = await fetch(target, {
+        redirect: "follow",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (headRes.url && headRes.url !== target) {
+        target = headRes.url;
+        isGoogle = true;
+      }
+    } catch (redirectErr) {
+      console.warn("Aviso ao expandir link curto do Google Maps:", redirectErr);
+    }
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 28000);
+
+  // TRATAMENTO EXCLUSIVO DE LINKS DO GOOGLE DRIVE
+  if (isGoogleDrive) {
+    const serverKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_AI_STUDIO_KEY ||
+      (process.env as any).VITE_GEMINI_API_KEY;
+
+    const fileMatch = target.match(/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]{20,})/i);
+    const folderMatch = target.match(/(?:folders\/)([a-zA-Z0-9_-]{20,})/i);
+
+    // Caso A: Arquivo Individual no Google Drive
+    if (fileMatch) {
+      const fileId = fileMatch[1];
+      let buffer: ArrayBuffer | null = null;
+      let mimeType = "image/jpeg";
+
       try {
-        const headRes = await fetch(target, {
-          redirect: "follow",
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          },
-          signal: AbortSignal.timeout(6000),
+        const lh3Res = await fetch(`https://lh3.googleusercontent.com/d/${fileId}`, {
+          signal: controller.signal,
         });
-        if (headRes.url && headRes.url !== target) {
-          target = headRes.url;
-          isGoogle = true;
+        if (lh3Res.ok && (lh3Res.headers.get("content-type") || "").startsWith("image/")) {
+          buffer = await lh3Res.arrayBuffer();
+          mimeType = lh3Res.headers.get("content-type") || "image/jpeg";
         }
-      } catch (redirectErr) {
-        console.warn("Aviso ao expandir link curto do Google Maps:", redirectErr);
+      } catch {
+        // fallback
       }
-    }
 
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 25000);
-
-    // TRATAMENTO EXCLUSIVO DE LINKS DO GOOGLE DRIVE
-    if (isGoogleDrive) {
-      const serverKey =
-        process.env.GEMINI_API_KEY ||
-        process.env.GOOGLE_AI_STUDIO_KEY ||
-        (process.env as any).VITE_GEMINI_API_KEY;
-
-      const fileMatch = target.match(/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]{20,})/i);
-      const folderMatch = target.match(/(?:folders\/)([a-zA-Z0-9_-]{20,})/i);
-
-      // Caso A: Arquivo Individual no Google Drive
-      if (fileMatch) {
-        const fileId = fileMatch[1];
-        let buffer: ArrayBuffer | null = null;
-        let mimeType = "image/jpeg";
-
+      if (!buffer) {
         try {
-          const lh3Res = await fetch(`https://lh3.googleusercontent.com/d/${fileId}`, {
-            signal: controller.signal,
-          });
-          if (lh3Res.ok && (lh3Res.headers.get("content-type") || "").startsWith("image/")) {
-            buffer = await lh3Res.arrayBuffer();
-            mimeType = lh3Res.headers.get("content-type") || "image/jpeg";
+          const dlRes = await fetch(
+            `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
+            {
+              signal: controller.signal,
+              headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+              },
+            },
+          );
+          const cType = (dlRes.headers.get("content-type") || "").toLowerCase();
+          if (dlRes.ok && !cType.includes("text/html")) {
+            buffer = await dlRes.arrayBuffer();
+            mimeType = cType;
           }
         } catch {
           // fallback
         }
-
-        if (!buffer) {
-          try {
-            const dlRes = await fetch(
-              `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
-              {
-                signal: controller.signal,
-                headers: {
-                  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                },
-              },
-            );
-            const cType = (dlRes.headers.get("content-type") || "").toLowerCase();
-            if (dlRes.ok && !cType.includes("text/html")) {
-              buffer = await dlRes.arrayBuffer();
-              mimeType = cType;
-            }
-          } catch {
-            // fallback
-          }
-        }
-
-        if (!buffer) {
-          clearTimeout(timeout);
-          throw new Error(
-            "O arquivo do Google Drive não pôde ser baixado. Verifique se o compartilhamento está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive.",
-          );
-        }
-
-        clearTimeout(timeout);
-        const base64Data = `data:${mimeType};base64,${Buffer.from(buffer).toString("base64")}`;
-        const ext = mimeType.includes("pdf") ? "pdf" : mimeType.includes("png") ? "png" : "jpg";
-
-        let finalPublicUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
-        if (supabaseAdmin) {
-          try {
-            const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
-            const { error: upErr } = await supabaseAdmin.storage
-              .from("bio-media")
-              .upload(storagePath, Buffer.from(buffer), {
-                contentType: mimeType,
-                upsert: true,
-              });
-            if (!upErr) {
-              const { data: pubData } = supabaseAdmin.storage
-                .from("bio-media")
-                .getPublicUrl(storagePath);
-              if (pubData?.publicUrl) {
-                finalPublicUrl = pubData.publicUrl;
-              }
-            }
-          } catch (storageErr) {
-            console.warn("Aviso ao persistir arquivo do drive no storage:", storageErr);
-          }
-        }
-
-        return {
-          source: "google_drive",
-          name: `Foto Google Drive (${fileId.slice(0, 6)})`,
-          formattedBriefing: `[ARQUIVO IMPORTADO DO GOOGLE DRIVE]: Arquivo de mídia obtido diretamente do Google Drive com alta definição para curadoria visual e alocação da IA.`,
-          importedImages: [
-            {
-              name: `drive-arquivo-${fileId.slice(0, 8)}.${ext}`,
-              mimeType,
-              base64: base64Data,
-              publicUrl: finalPublicUrl,
-              role: "general",
-            },
-          ],
-        };
       }
 
-      // Caso B: Pasta Pública no Google Drive
-      if (folderMatch) {
-        const folderId = folderMatch[1];
-        let driveFiles: Array<{ id: string; name: string; mimeType: string }> = [];
-
-        // 1. Tenta API oficial se houver chave do Google
-        if (serverKey) {
-          try {
-            const apiUrl = `https://www.googleapis.com/drive/v3/files?q=%27${folderId}%27+in+parents+and+trashed%3Dfalse&fields=files(id%2Cname%2CmimeType)&pageSize=25&key=${encodeURIComponent(serverKey)}`;
-            const apiRes = await fetch(apiUrl, { signal: controller.signal });
-            if (apiRes.ok) {
-              const apiData = await apiRes.json();
-              if (Array.isArray(apiData.files)) {
-                driveFiles = apiData.files.filter(
-                  (f: any) =>
-                    (f.mimeType || "").startsWith("image/") || (f.mimeType || "").includes("pdf"),
-                );
-              }
-            }
-          } catch {
-            // fallback
-          }
-        }
-
-        // 2. Extração via página pública caso a API não esteja ativa
-        if (driveFiles.length === 0) {
-          try {
-            const folderRes = await fetch(`https://drive.google.com/drive/folders/${folderId}`, {
-              signal: controller.signal,
-              headers: {
-                "User-Agent":
-                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-                "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8",
-              },
-            });
-            if (folderRes.ok) {
-              const folderHtml = await folderRes.text();
-              const uniqueIds = new Set<string>();
-
-              const jsonBlobMatches = Array.from(
-                folderHtml.matchAll(
-                  /\["([a-zA-Z0-9_-]{28,})","([^"]+\.(?:jpg|jpeg|png|webp|pdf))"/gi,
-                ),
-              );
-              for (const match of jsonBlobMatches) {
-                uniqueIds.add(match[1]);
-                driveFiles.push({
-                  id: match[1],
-                  name: match[2],
-                  mimeType: match[2].endsWith(".pdf") ? "application/pdf" : "image/jpeg",
-                });
-              }
-
-              const idMatches = Array.from(
-                folderHtml.matchAll(/\/file\/d\/([a-zA-Z0-9_-]{25,})/g),
-              ).map((m) => m[1]);
-              const dataIdMatches = Array.from(
-                folderHtml.matchAll(/data-id="([a-zA-Z0-9_-]{25,})"/g),
-              ).map((m) => m[1]);
-
-              for (const id of [...idMatches, ...dataIdMatches]) {
-                if (id !== folderId && !uniqueIds.has(id)) {
-                  uniqueIds.add(id);
-                  driveFiles.push({
-                    id,
-                    name: `drive-foto-${id.slice(0, 6)}.jpg`,
-                    mimeType: "image/jpeg",
-                  });
-                }
-              }
-            }
-          } catch {
-            // fallback
-          }
-        }
-
-        // 3. Download das imagens em lote (limite seguro de até 12 fotos)
-        const importedImages: Array<{
-          name: string;
-          mimeType: string;
-          base64: string;
-          publicUrl?: string;
-          role?: "logo" | "cover" | "product" | "general";
-        }> = [];
-
-        for (const item of driveFiles.slice(0, 12)) {
-          try {
-            const imgRes = await fetch(`https://lh3.googleusercontent.com/d/${item.id}`, {
-              signal: controller.signal,
-            });
-            if (imgRes.ok) {
-              const mime = imgRes.headers.get("content-type") || item.mimeType || "image/jpeg";
-              if (mime.startsWith("image/")) {
-                const buf = await imgRes.arrayBuffer();
-                let filePubUrl = `https://lh3.googleusercontent.com/d/${item.id}`;
-
-                if (supabaseAdmin) {
-                  try {
-                    const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
-                    const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
-                    const { error: upErr } = await supabaseAdmin.storage
-                      .from("bio-media")
-                      .upload(storagePath, Buffer.from(buf), {
-                        contentType: mime,
-                        upsert: true,
-                      });
-                    if (!upErr) {
-                      const { data: pubData } = supabaseAdmin.storage
-                        .from("bio-media")
-                        .getPublicUrl(storagePath);
-                      if (pubData?.publicUrl) {
-                        filePubUrl = pubData.publicUrl;
-                      }
-                    }
-                  } catch (sErr) {
-                    console.warn("Aviso ao persistir foto da pasta no storage:", sErr);
-                  }
-                }
-
-                importedImages.push({
-                  name: item.name || `drive-foto-${item.id.slice(0, 6)}.jpg`,
-                  mimeType: mime,
-                  base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
-                  publicUrl: filePubUrl,
-                  role: "general",
-                });
-              }
-            }
-          } catch {
-            // continua para o próximo
-          }
-        }
-
+      if (!buffer) {
         clearTimeout(timeout);
-
-        if (importedImages.length === 0) {
-          throw new Error(
-            "Não foi possível acessar as fotos desta pasta do Google Drive. Verifique se o compartilhamento da pasta está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive.",
-          );
-        }
-
-        return {
-          source: "google_drive",
-          name: `Pasta Google Drive (${importedImages.length} fotos)`,
-          formattedBriefing: `[PASTA DO GOOGLE DRIVE IMPORTADA]: ${importedImages.length} foto(s) de alta resolução importada(s) com sucesso diretamente para avaliação e curadoria da IA.`,
-          importedImages,
-        };
+        throw new Error(
+          "O arquivo do Google Drive não pôde ser baixado. Verifique se o compartilhamento está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive.",
+        );
       }
 
       clearTimeout(timeout);
-      throw new Error(
-        "Link do Google Drive não reconhecido. Use o link de compartilhamento de um arquivo individual ou de uma pasta pública do Google Drive.",
-      );
+      const base64Data = `data:${mimeType};base64,${Buffer.from(buffer).toString("base64")}`;
+      const ext = mimeType.includes("pdf") ? "pdf" : mimeType.includes("png") ? "png" : "jpg";
+
+      let finalPublicUrl = `https://lh3.googleusercontent.com/d/${fileId}`;
+      if (supabaseAdmin) {
+        try {
+          const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+          const { error: upErr } = await supabaseAdmin.storage
+            .from("bio-media")
+            .upload(storagePath, Buffer.from(buffer), {
+              contentType: mimeType,
+              upsert: true,
+            });
+          if (!upErr) {
+            const { data: pubData } = supabaseAdmin.storage
+              .from("bio-media")
+              .getPublicUrl(storagePath);
+            if (pubData?.publicUrl) {
+              finalPublicUrl = pubData.publicUrl;
+            }
+          }
+        } catch (storageErr) {
+          console.warn("Aviso ao persistir arquivo do drive no storage:", storageErr);
+        }
+      }
+
+      return {
+        source: "google_drive",
+        name: `Foto Google Drive (${fileId.slice(0, 6)})`,
+        formattedBriefing: `[ARQUIVO IMPORTADO DO GOOGLE DRIVE]: Arquivo de mídia obtido diretamente do Google Drive com alta definição para curadoria visual e alocação da IA.`,
+        importedImages: [
+          {
+            name: `drive-arquivo-${fileId.slice(0, 8)}.${ext}`,
+            mimeType,
+            base64: base64Data,
+            publicUrl: finalPublicUrl,
+            role: "general",
+          },
+        ],
+      };
     }
 
-    try {
-      const jinaUrl = `https://r.jina.ai/${target}`;
-      const res = await fetch(jinaUrl, {
-        signal: controller.signal,
-        headers: {
-          "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
-          "x-locale": "pt-BR",
-        },
-      });
-      clearTimeout(timeout);
+    // Caso B: Pasta Pública no Google Drive
+    if (folderMatch) {
+      const folderId = folderMatch[1];
+      let driveFiles: Array<{ id: string; name: string; mimeType: string }> = [];
 
-      if (!res.ok) {
-        throw new Error(`Serviço de leitura retornou status ${res.status}`);
-      }
-
-      const text = await res.text();
-
-      if (isInstagram) {
-        const handleMatch = target.match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
-        const handle = handleMatch ? handleMatch[1] : "";
-
-        let name = handle;
-        const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
-        if (titleMatch) {
-          name = titleMatch[1]
-            .replace(/\(@[a-zA-Z0-9._]+\).*/i, "")
-            .replace(/•.*/, "")
-            .replace(/Instagram.*/i, "")
-            .trim();
-        }
-
-        const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
-        const phone = phoneMatch ? phoneMatch[0].trim() : undefined;
-
-        const briefing = `[DADOS COLETADOS DO PERFIL DO INSTAGRAM @${handle}]:\nNome Comercial: ${name || handle}\nInstagram: @${handle}\n${
-          phone ? `WhatsApp/Telefone Encontrado: ${phone}\n` : ""
-        }Informações do Perfil:\n${text.slice(0, 3000)}`;
-
-        return {
-          source: "instagram",
-          name: name || handle,
-          phone,
-          formattedBriefing: briefing,
-        };
-      }
-
-      if (isGoogle) {
-        let name = "";
-        const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
-        if (titleMatch) {
-          const raw = titleMatch[1]
-            .replace(/\s*-\s*Google Maps.*/i, "")
-            .replace(/\s*-\s*Pesquisa Google.*/i, "")
-            .trim();
-          if (
-            !raw.toLowerCase().includes("antes de ir para o google") &&
-            !raw.toLowerCase().includes("google search") &&
-            !raw.toLowerCase().includes("google maps") &&
-            !raw.toLowerCase().includes("fazer login")
-          ) {
-            name = raw;
-          }
-        }
-
-        // Tenta também pelo path da URL caso o título esteja genérico
-        if (!name) {
-          const placeMatch = target.match(/\/maps\/place\/([^/@?]+)/i);
-          if (placeMatch) {
-            name = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
-          }
-        }
-
-        const ratingMatch = text.match(/(\d[.,]\d)\s*★|\b(\d[.,]\d)\s*estrelas/i);
-        const rating = ratingMatch
-          ? parseFloat((ratingMatch[1] || ratingMatch[2]).replace(",", "."))
-          : undefined;
-
-        const reviewsCountMatch = text.match(/\(([\d.]+)\s*avaliações?\)/i) || text.match(/\(([\d.]+)\)/);
-        const reviewsCount = reviewsCountMatch
-          ? parseInt(reviewsCountMatch[1].replace(/\D/g, ""), 10)
-          : undefined;
-
-        const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
-        const phone = phoneMatch ? phoneMatch[0].trim() : undefined;
-
-        const addressMatch = text.match(/(?:Endereço|Address):\s*([^\n\r]+)/i) ||
-                             text.match(/📍\s*([^\n\r]+)/);
-        const address = addressMatch ? addressMatch[1].trim() : undefined;
-
-        // EXTRAÇÃO AVANÇADA DE FOTOS REAIS DO GOOGLE MAPS
-        const candidatePhotoUrls = new Set<string>();
-
-        function addCandidatePhotos(rawBlob: string) {
-          if (!rawBlob) return;
-          const guUrls = rawBlob.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com)[^\s\)\"']*/gi) || [];
-          for (const u of guUrls) {
-            if (u.includes("/a/") || u.includes("/a-/") || u.includes("default-user")) continue;
-            if (
-              u.includes("/grass-cs/") ||
-              u.includes("/grass-proxy/") ||
-              u.includes("/gps-cs-s/") ||
-              u.includes("/p/")
-            ) {
-              // Converte o thumbnail para alta resolução real de 1200px da CDN do Google
-              const highRes = u.replace(/=(?:w\d+-h\d+.*|s\d+.*|p-.*)$/, "=s1200");
-              candidatePhotoUrls.add(highRes);
+      // 1. Tenta API oficial se houver chave do Google
+      if (serverKey) {
+        try {
+          const apiUrl = `https://www.googleapis.com/drive/v3/files?q=%27${folderId}%27+in+parents+and+trashed%3Dfalse&fields=files(id%2Cname%2CmimeType)&pageSize=25&key=${encodeURIComponent(serverKey)}`;
+          const apiRes = await fetch(apiUrl, { signal: controller.signal });
+          if (apiRes.ok) {
+            const apiData = await apiRes.json();
+            if (Array.isArray(apiData.files)) {
+              driveFiles = apiData.files.filter(
+                (f: any) =>
+                  (f.mimeType || "").startsWith("image/") || (f.mimeType || "").includes("pdf"),
+              );
             }
           }
+        } catch {
+          // fallback
         }
+      }
 
-        // 1. Extrai fotos da página do Maps capturada pelo Jina
-        addCandidatePhotos(text);
+      // 2. Extração via página pública caso a API não esteja ativa
+      if (driveFiles.length === 0) {
+        try {
+          const folderRes = await fetch(`https://drive.google.com/drive/folders/${folderId}`, {
+            signal: controller.signal,
+            headers: {
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8",
+            },
+          });
+          if (folderRes.ok) {
+            const folderHtml = await folderRes.text();
+            const uniqueIds = new Set<string>();
 
-        // 2. Se temos o nome da empresa e poucas fotos, consulta a busca do Google Maps no Jina
-        if (candidatePhotoUrls.size < 6 && name) {
-          try {
-            const cleanQuery = name.replace(/[^\w\sÀ-ÿ]/g, " ").trim();
-            const searchPromises = [
-              fetch(
-                `https://r.jina.ai/https://www.google.com/maps/search/${encodeURIComponent(cleanQuery)}?hl=pt-BR&gl=BR`,
-                {
-                  headers: { "Accept-Language": "pt-BR,pt;q=0.9", "x-locale": "pt-BR" },
-                  signal: AbortSignal.timeout(12000),
-                },
-              )
-                .then((r) => (r.ok ? r.text() : ""))
-                .catch(() => ""),
-              fetch(
-                `https://r.jina.ai/https://www.google.com/maps/search/${encodeURIComponent(cleanQuery + " fotos")}?hl=pt-BR&gl=BR`,
-                {
-                  headers: { "Accept-Language": "pt-BR,pt;q=0.9", "x-locale": "pt-BR" },
-                  signal: AbortSignal.timeout(12000),
-                },
-              )
-                .then((r) => (r.ok ? r.text() : ""))
-                .catch(() => ""),
-            ];
-
-            const searchResults = await Promise.all(searchPromises);
-            for (const resText of searchResults) {
-              addCandidatePhotos(resText);
+            const jsonBlobMatches = Array.from(
+              folderHtml.matchAll(
+                /\["([a-zA-Z0-9_-]{28,})","([^"]+\.(?:jpg|jpeg|png|webp|pdf))"/gi,
+              ),
+            );
+            for (const match of jsonBlobMatches) {
+              uniqueIds.add(match[1]);
+              driveFiles.push({
+                id: match[1],
+                name: match[2],
+                mimeType: match[2].endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+              });
             }
-          } catch (searchErr) {
-            console.warn("Aviso na busca secundária de fotos do Maps:", searchErr);
-          }
-        }
 
-        // 3. Processa e baixa até 8 fotos em alta definição com persistência
-        const importedImages: Array<{
-          name: string;
-          mimeType: string;
-          base64: string;
-          publicUrl?: string;
-          role?: "logo" | "cover" | "product" | "general";
-        }> = [];
+            const idMatches = Array.from(
+              folderHtml.matchAll(/\/file\/d\/([a-zA-Z0-9_-]{25,})/g),
+            ).map((m) => m[1]);
+            const dataIdMatches = Array.from(
+              folderHtml.matchAll(/data-id="([a-zA-Z0-9_-]{25,})"/g),
+            ).map((m) => m[1]);
 
-        const targetPhotos = Array.from(candidatePhotoUrls).slice(0, 8);
-
-        for (let i = 0; i < targetPhotos.length; i++) {
-          const photoUrl = targetPhotos[i];
-          try {
-            const imgRes = await fetch(photoUrl, { signal: AbortSignal.timeout(8000) });
-            if (imgRes.ok) {
-              const mime = imgRes.headers.get("content-type") || "image/jpeg";
-              if (mime.startsWith("image/")) {
-                const buf = await imgRes.arrayBuffer();
-                let filePubUrl = photoUrl;
-
-                // Tenta persistir no Supabase Storage para garantir URL própria permanente
-                if (supabaseAdmin) {
-                  try {
-                    const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
-                    const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
-                    const { error: upErr } = await supabaseAdmin.storage
-                      .from("bio-media")
-                      .upload(storagePath, Buffer.from(buf), {
-                        contentType: mime,
-                        upsert: true,
-                      });
-                    if (!upErr) {
-                      const { data: pubData } = supabaseAdmin.storage
-                        .from("bio-media")
-                        .getPublicUrl(storagePath);
-                      if (pubData?.publicUrl) {
-                        filePubUrl = pubData.publicUrl;
-                      }
-                    }
-                  } catch (sErr) {
-                    console.warn("Aviso ao persistir foto do Maps no storage:", sErr);
-                  }
-                }
-
-                const role: "cover" | "product" | "general" =
-                  i === 0 ? "cover" : i < 3 ? "product" : "general";
-
-                importedImages.push({
-                  name: `maps-foto-${i + 1}.jpg`,
-                  mimeType: mime,
-                  base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
-                  publicUrl: filePubUrl,
-                  role,
+            for (const id of [...idMatches, ...dataIdMatches]) {
+              if (id !== folderId && !uniqueIds.has(id)) {
+                uniqueIds.add(id);
+                driveFiles.push({
+                  id,
+                  name: `drive-foto-${id.slice(0, 6)}.jpg`,
+                  mimeType: "image/jpeg",
                 });
               }
             }
-          } catch (downErr) {
-            console.warn(`Aviso ao baixar foto ${i + 1} do Google Maps:`, downErr);
+          }
+        } catch {
+          // fallback
+        }
+      }
+
+      // 3. Download das imagens em lote (limite seguro de até 12 fotos)
+      const importedImages: Array<{
+        name: string;
+        mimeType: string;
+        base64: string;
+        publicUrl?: string;
+        role?: "logo" | "cover" | "product" | "general";
+      }> = [];
+
+      for (const item of driveFiles.slice(0, 12)) {
+        try {
+          const imgRes = await fetch(`https://lh3.googleusercontent.com/d/${item.id}`, {
+            signal: controller.signal,
+          });
+          if (imgRes.ok) {
+            const mime = imgRes.headers.get("content-type") || item.mimeType || "image/jpeg";
+            if (mime.startsWith("image/")) {
+              const buf = await imgRes.arrayBuffer();
+              let filePubUrl = `https://lh3.googleusercontent.com/d/${item.id}`;
+
+              if (supabaseAdmin) {
+                try {
+                  const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+                  const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+                  const { error: upErr } = await supabaseAdmin.storage
+                    .from("bio-media")
+                    .upload(storagePath, Buffer.from(buf), {
+                      contentType: mime,
+                      upsert: true,
+                    });
+                  if (!upErr) {
+                    const { data: pubData } = supabaseAdmin.storage
+                      .from("bio-media")
+                      .getPublicUrl(storagePath);
+                    if (pubData?.publicUrl) {
+                      filePubUrl = pubData.publicUrl;
+                    }
+                  }
+                } catch (sErr) {
+                  console.warn("Aviso ao persistir foto da pasta no storage:", sErr);
+                }
+              }
+
+              importedImages.push({
+                name: item.name || `drive-foto-${item.id.slice(0, 6)}.jpg`,
+                mimeType: mime,
+                base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
+                publicUrl: filePubUrl,
+                role: "general",
+              });
+            }
+          }
+        } catch {
+          // continua para o próximo
+        }
+      }
+
+      clearTimeout(timeout);
+
+      if (importedImages.length === 0) {
+        throw new Error(
+          "Não foi possível acessar as fotos desta pasta do Google Drive. Verifique se o compartilhamento da pasta está configurado como 'Qualquer pessoa com o link' (leitor) no Google Drive.",
+        );
+      }
+
+      return {
+        source: "google_drive",
+        name: `Pasta Google Drive (${importedImages.length} fotos)`,
+        formattedBriefing: `[PASTA DO GOOGLE DRIVE IMPORTADA]: ${importedImages.length} foto(s) de alta resolução importada(s) com sucesso diretamente para avaliação e curadoria da IA.`,
+        importedImages,
+      };
+    }
+
+    clearTimeout(timeout);
+    throw new Error(
+      "Link do Google Drive não reconhecido. Use o link de compartilhamento de um arquivo individual ou de uma pasta pública do Google Drive.",
+    );
+  }
+
+  try {
+    const jinaUrl = `https://r.jina.ai/${target}`;
+    const res = await fetch(jinaUrl, {
+      signal: controller.signal,
+      headers: {
+        "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
+        "x-locale": "pt-BR",
+      },
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      throw new Error(`Serviço de leitura retornou status ${res.status}`);
+    }
+
+    const text = await res.text();
+
+    if (isInstagram) {
+      const handleMatch = target.match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
+      const handle = handleMatch ? handleMatch[1] : "";
+
+      let name = handle;
+      const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
+      if (titleMatch) {
+        name = titleMatch[1]
+          .replace(/\(@[a-zA-Z0-9._]+\).*/i, "")
+          .replace(/•.*/, "")
+          .replace(/Instagram.*/i, "")
+          .trim();
+      }
+
+      const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
+      const phone = phoneMatch ? phoneMatch[0].trim() : undefined;
+
+      const briefing = `[DADOS COLETADOS DO PERFIL DO INSTAGRAM @${handle}]:\nNome Comercial: ${name || handle}\nInstagram: @${handle}\n${
+        phone ? `WhatsApp/Telefone Encontrado: ${phone}\n` : ""
+      }Informações do Perfil:\n${text.slice(0, 3000)}`;
+
+      return {
+        source: "instagram",
+        name: name || handle,
+        phone,
+        formattedBriefing: briefing,
+      };
+    }
+
+    if (isGoogle) {
+      let name = "";
+      const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
+      if (titleMatch) {
+        const raw = titleMatch[1]
+          .replace(/\s*-\s*Google Maps.*/i, "")
+          .replace(/\s*-\s*Pesquisa Google.*/i, "")
+          .trim();
+        if (
+          !raw.toLowerCase().includes("antes de ir para o google") &&
+          !raw.toLowerCase().includes("google search") &&
+          !raw.toLowerCase().includes("google maps") &&
+          !raw.toLowerCase().includes("fazer login")
+        ) {
+          name = raw;
+        }
+      }
+
+      // Tenta também pelo path da URL caso o título esteja genérico
+      if (!name) {
+        const placeMatch = target.match(/\/maps\/place\/([^/@?]+)/i);
+        if (placeMatch) {
+          name = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
+        }
+      }
+
+      let ratingMatch = text.match(/(\d[.,]\d)\s*★|\b(\d[.,]\d)\s*estrelas/i);
+      let rating = ratingMatch
+        ? parseFloat((ratingMatch[1] || ratingMatch[2]).replace(",", "."))
+        : undefined;
+
+      let reviewsCountMatch = text.match(/\(([\d.]+)\s*avaliações?\)/i) || text.match(/\(([\d.]+)\)/);
+      let reviewsCount = reviewsCountMatch
+        ? parseInt(reviewsCountMatch[1].replace(/\D/g, ""), 10)
+        : undefined;
+
+      let phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
+      let phone = phoneMatch ? phoneMatch[0].trim() : undefined;
+
+      let addressMatch = text.match(/(?:Endereço|Address):\s*([^\n\r]+)/i) ||
+                           text.match(/📍\s*([^\n\r]+)/);
+      let address = addressMatch ? addressMatch[1].trim() : undefined;
+
+      // EXTRAÇÃO AVANÇADA DE FOTOS REAIS DO GOOGLE MAPS
+      const candidatePhotoUrls = new Set<string>();
+
+      function addCandidatePhotos(rawBlob: string) {
+        if (!rawBlob) return;
+        const guUrls = rawBlob.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com)[^\s\)\"']*/gi) || [];
+        for (const u of guUrls) {
+          if (u.includes("/a/") || u.includes("/a-/") || u.includes("default-user")) continue;
+          if (
+            u.includes("/grass-cs/") ||
+            u.includes("/grass-proxy/") ||
+            u.includes("/gps-cs-s/") ||
+            u.includes("/p/")
+          ) {
+            candidatePhotoUrls.add(u);
+          }
+        }
+      }
+
+      // 1. Extrai fotos da página do Maps capturada pelo Jina
+      addCandidatePhotos(text);
+
+      // 2. Se temos o nome da empresa e poucas fotos, consulta a busca do Google Maps no Jina
+      if (candidatePhotoUrls.size < 6 && name) {
+        try {
+          const cleanQuery = name.replace(/[^\w\sÀ-ÿ]/g, " ").replace(/\s+/g, " ").trim();
+          const searchPromises = [
+            fetch(
+              `https://r.jina.ai/https://www.google.com/maps/search/${encodeURIComponent(cleanQuery)}?hl=pt-BR&gl=BR`,
+              {
+                headers: { "Accept-Language": "pt-BR,pt;q=0.9", "x-locale": "pt-BR" },
+                signal: AbortSignal.timeout(25000),
+              },
+            )
+              .then((r) => (r.ok ? r.text() : ""))
+              .catch(() => ""),
+            fetch(
+              `https://r.jina.ai/https://www.google.com/maps/search/${encodeURIComponent(cleanQuery + " fotos")}?hl=pt-BR&gl=BR`,
+              {
+                headers: { "Accept-Language": "pt-BR,pt;q=0.9", "x-locale": "pt-BR" },
+                signal: AbortSignal.timeout(25000),
+              },
+            )
+              .then((r) => (r.ok ? r.text() : ""))
+              .catch(() => ""),
+          ];
+
+          const searchResults = await Promise.all(searchPromises);
+          for (const resText of searchResults) {
+            addCandidatePhotos(resText);
+            if (!rating && resText) {
+              const rm = resText.match(/(\d[.,]\d)\s*★|\b(\d[.,]\d)\s*estrelas/i) || resText.match(/(\d[.,]\d)\s*\(\d+/);
+              if (rm) rating = parseFloat((rm[1] || rm[2]).replace(",", "."));
+            }
+            if (!reviewsCount && resText) {
+              const rcm = resText.match(/\(([\d.]+)\s*avaliações?\)/i) || resText.match(/\(([\d.]+)\)/);
+              if (rcm) reviewsCount = parseInt(rcm[1].replace(/\D/g, ""), 10);
+            }
+            if (!address && resText) {
+              const am = resText.match(/(?:Endereço|Address):\s*([^\n\r]+)/i) || resText.match(/📍\s*([^\n\r]+)/) || resText.match(/(?:Rua|Av\.|Avenida|Alameda|Travessa)[^\n\r,]+,\s*\d+[^,\n\r]*/i);
+              if (am) address = (am[1] || am[0]).trim();
+            }
+          }
+        } catch (searchErr) {
+          console.warn("Aviso na busca secundária de fotos do Maps:", searchErr);
+        }
+      }
+
+      // 3. Processa e baixa até 8 fotos em alta definição com persistência
+      const importedImages: Array<{
+        name: string;
+        mimeType: string;
+        base64: string;
+        publicUrl?: string;
+        role?: "logo" | "cover" | "product" | "general";
+      }> = [];
+
+      const targetPhotos = Array.from(candidatePhotoUrls).slice(0, 8);
+
+      for (let i = 0; i < targetPhotos.length; i++) {
+        const rawPhotoUrl = targetPhotos[i];
+        const variations: string[] = [];
+        if (rawPhotoUrl.includes("googleusercontent.com")) {
+          // =w1200-h800-k-no é o formato comprovado para gps-cs-s que entrega alta definição sem 400
+          variations.push(rawPhotoUrl.replace(/=(?:w\d+-h\d+.*|s\d+.*|p-.*)$/, "=w1200-h800-k-no"));
+          variations.push(rawPhotoUrl.replace(/=(?:w\d+-h\d+.*|s\d+.*|p-.*)$/, "=s1200"));
+          variations.push(rawPhotoUrl);
+        } else {
+          variations.push(rawPhotoUrl);
+        }
+
+        let imgRes: Response | null = null;
+        let successfulUrl = rawPhotoUrl;
+
+        for (const vUrl of variations) {
+          try {
+            const res = await fetch(vUrl, { signal: AbortSignal.timeout(10000) });
+            if (res.ok) {
+              const cType = res.headers.get("content-type") || "";
+              if (cType.startsWith("image/")) {
+                imgRes = res;
+                successfulUrl = vUrl;
+                break;
+              }
+            }
+          } catch {
+            // tenta próxima variação
           }
         }
 
-        const cleanSnippet = text
-          .replace(/Antes de ir para o Google[\s\S]*?(?:Aceitar tudo|Concordo)/i, "")
-          .replace(/Google LLC[\s\S]*/i, "")
-          .slice(0, 3500)
-          .trim();
+        if (imgRes) {
+          try {
+            const mime = imgRes.headers.get("content-type") || "image/jpeg";
+            const buf = await imgRes.arrayBuffer();
+            let filePubUrl = successfulUrl;
 
-        const briefing = `[DADOS REAIS DO GOOGLE MAPS / GOOGLE MEU NEGÓCIO]:
-${name ? `- Nome Comercial Confirmado: ${name}\n` : ""}${rating ? `- Avaliação: ${rating} estrelas no Google Maps ⭐ (${reviewsCount ?? 0} avaliações)\n` : ""}${
-          phone ? `- Telefone / WhatsApp: ${phone}\n` : ""
-        }${address ? `- Endereço Físico: ${address}\n` : ""}${
-          importedImages.length > 0 ? `- Fotos Reais do Google Maps: ${importedImages.length} foto(s) em alta resolução capturada(s) para o site.\n` : ""
+            // Tenta persistir no Supabase Storage para garantir URL própria permanente
+            if (supabaseAdmin) {
+              try {
+                const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+                const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+                const { error: upErr } = await supabaseAdmin.storage
+                  .from("bio-media")
+                  .upload(storagePath, Buffer.from(buf), {
+                    contentType: mime,
+                    upsert: true,
+                  });
+                if (!upErr) {
+                  const { data: pubData } = supabaseAdmin.storage
+                    .from("bio-media")
+                    .getPublicUrl(storagePath);
+                  if (pubData?.publicUrl) {
+                    filePubUrl = pubData.publicUrl;
+                  }
+                }
+              } catch (sErr) {
+                console.warn("Aviso ao persistir foto do Maps no storage:", sErr);
+              }
+            }
+
+            const role: "cover" | "product" | "general" =
+              i === 0 ? "cover" : i < 3 ? "product" : "general";
+
+            importedImages.push({
+              name: `maps-foto-${i + 1}.jpg`,
+              mimeType: mime,
+              base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
+              publicUrl: filePubUrl,
+              role,
+            });
+          } catch (downErr) {
+            console.warn(`Aviso ao ler foto ${i + 1} do Google Maps:`, downErr);
+          }
         }
+      }
+
+      const cleanSnippet = text
+        .replace(/Antes de ir para o Google[\s\S]*?(?:Aceitar tudo|Concordo)/i, "")
+        .replace(/Google LLC[\s\S]*/i, "")
+        .slice(0, 3500)
+        .trim();
+
+      const briefing = `[DADOS REAIS DO GOOGLE MAPS / GOOGLE MEU NEGÓCIO]:
+${name ? `- Nome Comercial Confirmado: ${name}\n` : ""}${rating ? `- Avaliação: ${rating} estrelas no Google Maps ⭐ (${reviewsCount ?? 0} avaliações)\n` : ""}${
+        phone ? `- Telefone / WhatsApp: ${phone}\n` : ""
+      }${address ? `- Endereço Físico: ${address}\n` : ""}${
+        importedImages.length > 0 ? `- Fotos Reais do Google Maps: ${importedImages.length} foto(s) em alta resolução capturada(s) para o site.\n` : ""
+      }
 Resumo de Avaliações e Informações Públicas:
 ${cleanSnippet || "Empresa indexada no Google Maps."}`;
 
-        return {
-          source: "google_maps",
-          name: name || undefined,
-          phone,
-          address,
-          rating,
-          reviewsCount,
-          formattedBriefing: briefing,
-          importedImages,
-        };
-      }
-
-      const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
-      const name = titleMatch ? titleMatch[1].trim() : "Empresa";
-      const briefing = `[DADOS EXTRAÍDOS DO LINK ${target}]:\nTítulo: ${name}\nConteúdo da Página:\n${text.slice(
-        0,
-        3000,
-      )}`;
-
       return {
-        source: "generic",
-        name,
+        source: "google_maps",
+        name: name || undefined,
+        phone,
+        address,
+        rating,
+        reviewsCount,
         formattedBriefing: briefing,
+        importedImages,
       };
-    } catch (err: any) {
-      clearTimeout(timeout);
-      throw new Error(
-        `Não foi possível extrair dados automaticamente do link informado: ${err?.message || err}`,
-      );
     }
+
+    const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
+    const name = titleMatch ? titleMatch[1].trim() : "Empresa";
+    const briefing = `[DADOS EXTRAÍDOS DO LINK ${target}]:\nTítulo: ${name}\nConteúdo da Página:\n${text.slice(
+      0,
+      3000,
+    )}`;
+
+    return {
+      source: "generic",
+      name,
+      formattedBriefing: briefing,
+    };
+  } catch (err: any) {
+    clearTimeout(timeout);
+    throw new Error(
+      `Não foi possível extrair dados automaticamente do link informado: ${err?.message || err}`,
+    );
+  }
+}
+
+export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
+  .inputValidator((data: z.infer<typeof fetchUrlInputSchema>) => fetchUrlInputSchema.parse(data))
+  .handler(async ({ data, context }: any): Promise<FetchedBusinessData> => {
+    return internalFetchBusinessFromUrl(data.url, context);
   });

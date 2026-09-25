@@ -1376,10 +1376,30 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
     const isGoogleDrive = target.includes("drive.google.com") || target.includes("docs.google.com");
 
     const isInstagram = target.includes("instagram.com");
-    const isGoogle =
+    let isGoogle =
       target.includes("google.com/maps") ||
       target.includes("maps.app.goo.gl") ||
       target.includes("goo.gl/maps");
+
+    // Expande links curtos do Google Maps para obter coordenadas e nome do local
+    if (target.includes("maps.app.goo.gl") || target.includes("goo.gl/maps")) {
+      try {
+        const headRes = await fetch(target, {
+          redirect: "follow",
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          },
+          signal: AbortSignal.timeout(6000),
+        });
+        if (headRes.url && headRes.url !== target) {
+          target = headRes.url;
+          isGoogle = true;
+        }
+      } catch (redirectErr) {
+        console.warn("Aviso ao expandir link curto do Google Maps:", redirectErr);
+      }
+    }
 
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 25000);
@@ -1688,7 +1708,10 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
         let name = "";
         const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
         if (titleMatch) {
-          const raw = titleMatch[1].replace(/\s*-\s*Google Maps.*/i, "").trim();
+          const raw = titleMatch[1]
+            .replace(/\s*-\s*Google Maps.*/i, "")
+            .replace(/\s*-\s*Pesquisa Google.*/i, "")
+            .trim();
           if (
             !raw.toLowerCase().includes("antes de ir para o google") &&
             !raw.toLowerCase().includes("google search") &&
@@ -1699,9 +1722,22 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
           }
         }
 
+        // Tenta também pelo path da URL caso o título esteja genérico
+        if (!name) {
+          const placeMatch = target.match(/\/maps\/place\/([^/@?]+)/i);
+          if (placeMatch) {
+            name = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
+          }
+        }
+
         const ratingMatch = text.match(/(\d[.,]\d)\s*★|\b(\d[.,]\d)\s*estrelas/i);
         const rating = ratingMatch
           ? parseFloat((ratingMatch[1] || ratingMatch[2]).replace(",", "."))
+          : undefined;
+
+        const reviewsCountMatch = text.match(/\(([\d.]+)\s*avaliações?\)/i) || text.match(/\(([\d.]+)\)/);
+        const reviewsCount = reviewsCountMatch
+          ? parseInt(reviewsCountMatch[1].replace(/\D/g, ""), 10)
           : undefined;
 
         const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
@@ -1711,6 +1747,126 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
                              text.match(/📍\s*([^\n\r]+)/);
         const address = addressMatch ? addressMatch[1].trim() : undefined;
 
+        // EXTRAÇÃO AVANÇADA DE FOTOS REAIS DO GOOGLE MAPS
+        const candidatePhotoUrls = new Set<string>();
+
+        function addCandidatePhotos(rawBlob: string) {
+          if (!rawBlob) return;
+          const guUrls = rawBlob.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com)[^\s\)\"']*/gi) || [];
+          for (const u of guUrls) {
+            if (u.includes("/a/") || u.includes("/a-/") || u.includes("default-user")) continue;
+            if (
+              u.includes("/grass-cs/") ||
+              u.includes("/grass-proxy/") ||
+              u.includes("/gps-cs-s/") ||
+              u.includes("/p/")
+            ) {
+              // Converte o thumbnail para alta resolução real de 1200px da CDN do Google
+              const highRes = u.replace(/=(?:w\d+-h\d+.*|s\d+.*|p-.*)$/, "=s1200");
+              candidatePhotoUrls.add(highRes);
+            }
+          }
+        }
+
+        // 1. Extrai fotos da página do Maps capturada pelo Jina
+        addCandidatePhotos(text);
+
+        // 2. Se temos o nome da empresa e poucas fotos, consulta a busca do Google Maps no Jina
+        if (candidatePhotoUrls.size < 6 && name) {
+          try {
+            const cleanQuery = name.replace(/[^\w\sÀ-ÿ]/g, " ").trim();
+            const searchPromises = [
+              fetch(
+                `https://r.jina.ai/https://www.google.com/maps/search/${encodeURIComponent(cleanQuery)}?hl=pt-BR&gl=BR`,
+                {
+                  headers: { "Accept-Language": "pt-BR,pt;q=0.9", "x-locale": "pt-BR" },
+                  signal: AbortSignal.timeout(12000),
+                },
+              )
+                .then((r) => (r.ok ? r.text() : ""))
+                .catch(() => ""),
+              fetch(
+                `https://r.jina.ai/https://www.google.com/maps/search/${encodeURIComponent(cleanQuery + " fotos")}?hl=pt-BR&gl=BR`,
+                {
+                  headers: { "Accept-Language": "pt-BR,pt;q=0.9", "x-locale": "pt-BR" },
+                  signal: AbortSignal.timeout(12000),
+                },
+              )
+                .then((r) => (r.ok ? r.text() : ""))
+                .catch(() => ""),
+            ];
+
+            const searchResults = await Promise.all(searchPromises);
+            for (const resText of searchResults) {
+              addCandidatePhotos(resText);
+            }
+          } catch (searchErr) {
+            console.warn("Aviso na busca secundária de fotos do Maps:", searchErr);
+          }
+        }
+
+        // 3. Processa e baixa até 8 fotos em alta definição com persistência
+        const importedImages: Array<{
+          name: string;
+          mimeType: string;
+          base64: string;
+          publicUrl?: string;
+          role?: "logo" | "cover" | "product" | "general";
+        }> = [];
+
+        const targetPhotos = Array.from(candidatePhotoUrls).slice(0, 8);
+
+        for (let i = 0; i < targetPhotos.length; i++) {
+          const photoUrl = targetPhotos[i];
+          try {
+            const imgRes = await fetch(photoUrl, { signal: AbortSignal.timeout(8000) });
+            if (imgRes.ok) {
+              const mime = imgRes.headers.get("content-type") || "image/jpeg";
+              if (mime.startsWith("image/")) {
+                const buf = await imgRes.arrayBuffer();
+                let filePubUrl = photoUrl;
+
+                // Tenta persistir no Supabase Storage para garantir URL própria permanente
+                if (supabaseAdmin) {
+                  try {
+                    const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+                    const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+                    const { error: upErr } = await supabaseAdmin.storage
+                      .from("bio-media")
+                      .upload(storagePath, Buffer.from(buf), {
+                        contentType: mime,
+                        upsert: true,
+                      });
+                    if (!upErr) {
+                      const { data: pubData } = supabaseAdmin.storage
+                        .from("bio-media")
+                        .getPublicUrl(storagePath);
+                      if (pubData?.publicUrl) {
+                        filePubUrl = pubData.publicUrl;
+                      }
+                    }
+                  } catch (sErr) {
+                    console.warn("Aviso ao persistir foto do Maps no storage:", sErr);
+                  }
+                }
+
+                const role: "cover" | "product" | "general" =
+                  i === 0 ? "cover" : i < 3 ? "product" : "general";
+
+                importedImages.push({
+                  name: `maps-foto-${i + 1}.jpg`,
+                  mimeType: mime,
+                  base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
+                  publicUrl: filePubUrl,
+                  role,
+                });
+              }
+            }
+          } catch (downErr) {
+            console.warn(`Aviso ao baixar foto ${i + 1} do Google Maps:`, downErr);
+          }
+        }
+
         const cleanSnippet = text
           .replace(/Antes de ir para o Google[\s\S]*?(?:Aceitar tudo|Concordo)/i, "")
           .replace(/Google LLC[\s\S]*/i, "")
@@ -1718,9 +1874,11 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
           .trim();
 
         const briefing = `[DADOS REAIS DO GOOGLE MAPS / GOOGLE MEU NEGÓCIO]:
-${name ? `- Nome Comercial Confirmado: ${name}\n` : ""}${rating ? `- Avaliação: ${rating} estrelas no Google Maps ⭐\n` : ""}${
+${name ? `- Nome Comercial Confirmado: ${name}\n` : ""}${rating ? `- Avaliação: ${rating} estrelas no Google Maps ⭐ (${reviewsCount ?? 0} avaliações)\n` : ""}${
           phone ? `- Telefone / WhatsApp: ${phone}\n` : ""
-        }${address ? `- Endereço Físico: ${address}\n` : ""}
+        }${address ? `- Endereço Físico: ${address}\n` : ""}${
+          importedImages.length > 0 ? `- Fotos Reais do Google Maps: ${importedImages.length} foto(s) em alta resolução capturada(s) para o site.\n` : ""
+        }
 Resumo de Avaliações e Informações Públicas:
 ${cleanSnippet || "Empresa indexada no Google Maps."}`;
 
@@ -1730,7 +1888,9 @@ ${cleanSnippet || "Empresa indexada no Google Maps."}`;
           phone,
           address,
           rating,
+          reviewsCount,
           formattedBriefing: briefing,
+          importedImages,
         };
       }
 

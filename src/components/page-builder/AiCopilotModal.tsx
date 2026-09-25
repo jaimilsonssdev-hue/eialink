@@ -221,10 +221,14 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               base64: img.base64,
               role: isPdf
                 ? "general"
-                : mediaItems.length + newMedia.length === 0
+                : img.role || (mediaItems.length + newMedia.length === 0
                   ? "cover"
-                  : "general",
-              tag: isPdf ? "📄 PDF Google Drive" : "📷 Google Drive",
+                  : "general"),
+              tag: res.source === "google_maps"
+                ? "📷 Google Maps"
+                : isPdf
+                  ? "📄 PDF Google Drive"
+                  : "📷 Google Drive",
             });
           } catch (blobErr) {
             console.warn("Aviso ao processar foto importada:", blobErr);
@@ -241,7 +245,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           : res.source === "instagram"
             ? "✨ Perfil do Instagram extraído com sucesso!"
             : res.source === "google_maps"
-              ? "⭐ Dados do Google Maps (nota, endereço e avaliações) extraídos com sucesso!"
+              ? `⭐ Dados e ${res.importedImages?.length || 0} foto(s) reais do Google Maps importadas com sucesso!`
               : "✨ Dados da página extraídos com sucesso!",
       );
     } catch (err: any) {

@@ -1,4 +1,4 @@
-import type { Tables } from "@/integrations/supabase/types";
+﻿import type { Tables } from "@/integrations/supabase/types";
 import type { PageBlock } from "@/components/page-builder/types";
 import type { CatalogItem } from "@/modules/products/types";
 import type { PublicLink } from "@/components/public-profile/types";
@@ -29,7 +29,7 @@ export interface AdaptedProposalResult {
     icon?: string | null;
   }>;
   updatedProducts: Array<Partial<CatalogItem>>;
-  updatedPageBlocks: Array<PageBlock>;
+  updatedPageBlocks: Array<Omit<PageBlock, "data"> & { data: Record<string, any> }>;
   copilotResult: AiCopilotResult;
 }
 
@@ -128,7 +128,7 @@ export function adaptProposalToExistingStructures(
     : undefined;
 
   // Extração de Perguntas Frequentes (FAQ) da proposta
-  const faqSection = proposal.sections.find((s) => s.type === "faq");
+  const faqSection = proposal.sections.find((s) => (s.type as string) === "faq");
   const extractedFaq: Array<{ q: string; a: string }> = [];
   const rawFaqItems =
     (faqSection?.content as any)?.items ||
@@ -147,7 +147,7 @@ export function adaptProposalToExistingStructures(
   }
 
   // Extração de Passos de Atendimento (Steps / Como Funciona)
-  const stepsSection = proposal.sections.find((s) => s.type === "steps" || s.type === "how_it_works");
+  const stepsSection = proposal.sections.find((s) => (s.type as string) === "steps" || (s.type as string) === "how_it_works");
   const extractedSteps: Array<{ num: string; title: string; desc: string }> = [];
   const rawSteps =
     (stepsSection?.content as any)?.items ||
@@ -227,7 +227,7 @@ export function adaptProposalToExistingStructures(
   const mappedSectionsOrder: string[] = [];
   for (const s of proposal.sections) {
     if (s.enabled === false) continue;
-    switch (s.type) {
+    switch (s.type as string) {
       case "hero":
         if (!mappedSectionsOrder.includes("hero")) mappedSectionsOrder.push("hero");
         break;

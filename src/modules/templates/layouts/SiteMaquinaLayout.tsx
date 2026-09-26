@@ -758,7 +758,7 @@ function SiteMaquinaView({
                 name: p.name,
                 description: p.description || "",
                 price: p.price ?? undefined,
-                image_url: p.image_url || undefined,
+                image_url: p.image_url || "",
                 badge: idx === 0 ? "Destaque" : undefined,
                 button_text: p.button_label || "Pedir no WhatsApp",
               })),

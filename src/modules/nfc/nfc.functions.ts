@@ -245,7 +245,7 @@ export const deleteDynamicLinkFn = createServerFn({ method: "POST" })
           features: {
             ...features,
             nfc_dynamic_links: links,
-          },
+          } as unknown as Json,
         })
         .eq("id", plan.id);
     }
@@ -301,11 +301,10 @@ export const resolveDynamicLinkFn = createServerFn({ method: "POST" })
           features: {
             ...features,
             nfc_dynamic_links: links,
-          },
+          } as unknown as Json,
         })
         .eq("id", targetPlan.id)
-        .then(() => {})
-        .catch((e) => console.warn("Erro ao atualizar clicks_count:", e));
+        .then(() => {}, (e: unknown) => console.warn("Erro ao atualizar clicks_count:", e));
 
       return {
         found: true,

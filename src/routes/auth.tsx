@@ -102,6 +102,18 @@ function LoginForm({ next }: { next?: "billing" }) {
     setLoading(false);
 
     if (authErr) {
+      const isConnectionError =
+        authErr.message.toLowerCase().includes("failed to fetch") ||
+        authErr.message.toLowerCase().includes("networkerror") ||
+        authErr.message.toLowerCase().includes("enotfound") ||
+        authErr.status === 0;
+
+      if (isConnectionError) {
+        return setError(
+          "Não foi possível conectar ao servidor do Supabase. O projeto pode estar pausado por inatividade no painel da Supabase. Acesse https://supabase.com/dashboard e clique em 'Restore project'.",
+        );
+      }
+
       const nextFail = failedAttempts + 1;
       setFailedAttempts(nextFail);
 

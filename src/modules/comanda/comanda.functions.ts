@@ -413,7 +413,7 @@ export const listWaiterDashboardFn = createServerFn({ method: "POST" })
 
     const { data: records } = await supabase
       .from("service_requests")
-      .select("id, service_type, status, message, notes, created_at, updated_at")
+      .select("id, service_type, status, message, notes, created_at")
       .eq("bio_page_id", data.bioPageId)
       .in("service_type", ["waiter_call", "comanda_order"])
       .gte("created_at", twelveHoursAgo)
@@ -480,7 +480,7 @@ export const listKitchenDashboardFn = createServerFn({ method: "POST" })
 
     const { data: records } = await supabase
       .from("service_requests")
-      .select("id, status, message, created_at, updated_at")
+      .select("id, status, message, created_at")
       .eq("bio_page_id", data.bioPageId)
       .eq("service_type", "comanda_order")
       .in("status", ["in_kitchen", "ready"])

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import {
   Flame,
   Plus,
@@ -164,7 +165,7 @@ export function ProductCarouselManager({ bio, companyName, bioPageId, socialLink
         await supabase
           .from("bio_pages")
           .update({
-            social_links: newSocial,
+            social_links: newSocial as unknown as Json,
             updated_at: new Date().toISOString(),
           })
           .eq("id", targetPageId);
@@ -240,7 +241,7 @@ export function ProductCarouselManager({ bio, companyName, bioPageId, socialLink
         const { error } = await supabase
           .from("bio_pages")
           .update({
-            social_links: newSocialLinks,
+            social_links: newSocialLinks as unknown as Json,
             updated_at: new Date().toISOString(),
           })
           .eq("id", targetPageId);
@@ -252,7 +253,7 @@ export function ProductCarouselManager({ bio, companyName, bioPageId, socialLink
           const { error } = await supabase
             .from("bio_pages")
             .update({
-              social_links: newSocialLinks,
+              social_links: newSocialLinks as unknown as Json,
               updated_at: new Date().toISOString(),
             })
             .eq("user_id", u.user.id);

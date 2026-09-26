@@ -88,7 +88,7 @@ import {
 } from "@/lib/public-page-url";
 import type { CatalogItem } from "@/modules/products/types";
 import { getPresetForCompany, getVariantsForNiche, isProductCatalogNiche, type NichePreset } from "@/modules/prospecting/nichePresets";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, Json } from "@/integrations/supabase/types";
 
 type BioForm = Pick<
   Tables<"bio_pages">,
@@ -2424,7 +2424,7 @@ export function UnifiedPageEditor({
                                 if (nextValue) next[id] = nextValue;
                                 else delete next[id];
                                 updateBio({
-                                  social_links: next,
+                                  social_links: next as unknown as Json,
                                   ...(id === "instagram" ? { instagram: event.target.value.trim() } : {}),
                                 });
                               }}

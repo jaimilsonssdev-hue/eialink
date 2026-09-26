@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import type {
   ComandaSettings,
   ComandaOrder,
@@ -131,7 +131,7 @@ export const saveComandaSettingsFn = createServerFn({ method: "POST" })
         social_links: {
           ...social,
           comanda_settings: data.settings,
-        },
+        } as unknown as Json,
         updated_at: new Date().toISOString(),
       })
       .eq("id", data.bioPageId);
@@ -413,7 +413,7 @@ export const listWaiterDashboardFn = createServerFn({ method: "POST" })
 
     const { data: records } = await supabase
       .from("service_requests")
-      .select("id, service_type, status, message, notes, created_at, updated_at")
+      .select("id, service_type, status, message, notes, created_at")
       .eq("bio_page_id", data.bioPageId)
       .in("service_type", ["waiter_call", "comanda_order"])
       .gte("created_at", twelveHoursAgo)
@@ -450,7 +450,7 @@ export const listWaiterDashboardFn = createServerFn({ method: "POST" })
             status: row.status as ComandaOrderStatus,
             notes: payload.notes || null,
             created_at: row.created_at,
-            updated_at: row.updated_at,
+            updated_at: row.created_at,
           });
         }
       } catch (e) {
@@ -480,7 +480,7 @@ export const listKitchenDashboardFn = createServerFn({ method: "POST" })
 
     const { data: records } = await supabase
       .from("service_requests")
-      .select("id, status, message, created_at, updated_at")
+      .select("id, status, message, created_at")
       .eq("bio_page_id", data.bioPageId)
       .eq("service_type", "comanda_order")
       .in("status", ["in_kitchen", "ready"])
@@ -505,7 +505,7 @@ export const listKitchenDashboardFn = createServerFn({ method: "POST" })
           status: row.status as ComandaOrderStatus,
           notes: payload.notes || null,
           created_at: row.created_at,
-          updated_at: row.updated_at,
+          updated_at: row.created_at,
         });
       } catch (e) {
         console.warn("Erro ao fazer parse do pedido:", e);

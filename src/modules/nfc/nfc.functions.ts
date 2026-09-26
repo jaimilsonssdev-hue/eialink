@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import type { DynamicLink } from "./types";
 
 function getServiceSupabase() {
@@ -203,7 +203,7 @@ export const saveDynamicLinkFn = createServerFn({ method: "POST" })
           features: {
             ...pFeatures,
             nfc_dynamic_links: links,
-          },
+          } as unknown as Json,
         })
         .eq("id", plan.id);
     }
@@ -245,7 +245,7 @@ export const deleteDynamicLinkFn = createServerFn({ method: "POST" })
           features: {
             ...features,
             nfc_dynamic_links: links,
-          },
+          } as unknown as Json,
         })
         .eq("id", plan.id);
     }
@@ -301,11 +301,10 @@ export const resolveDynamicLinkFn = createServerFn({ method: "POST" })
           features: {
             ...features,
             nfc_dynamic_links: links,
-          },
+          } as unknown as Json,
         })
         .eq("id", targetPlan.id)
-        .then(() => {})
-        .catch((e) => console.warn("Erro ao atualizar clicks_count:", e));
+        .then(() => {}, (e: unknown) => console.warn("Erro ao atualizar clicks_count:", e));
 
       return {
         found: true,

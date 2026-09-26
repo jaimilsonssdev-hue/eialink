@@ -138,7 +138,6 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
         await supabase
           .from("profiles")
           .update({
-            avatar_url: avatarUrl || null,
             full_name: displayName.trim() || undefined,
             updated_at: new Date().toISOString(),
           })
@@ -211,8 +210,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
                 setSaveSuccess(false);
               }}
               label="Logotipo ou Foto de Perfil"
-              description="Aparece no topo do seu site. Clique em 'Enquadrar / Dimensionar' para ajustar zoom e corte."
-              aspectRatio="square"
+              variant="square"
             />
           </div>
           <div>
@@ -223,8 +221,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
                 setSaveSuccess(false);
               }}
               label="Foto de Capa do Negócio"
-              description="Banner de destaque do seu site. Clique em 'Enquadrar / Dimensionar' para ajustar o ângulo."
-              aspectRatio="cover"
+              variant="cover"
             />
           </div>
         </div>

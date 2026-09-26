@@ -93,7 +93,7 @@ export function CompanyBasicSettings() {
     }
   }, [data]);
 
-  const publicUrl = data?.bio ? publicPageUrl(data.bio.slug) : null;
+  const publicUrl = data?.bio ? publicPageUrl(data.bio.slug, false) : null;
 
   const handleCopyLink = () => {
     if (!publicUrl) return;

@@ -399,7 +399,8 @@ function Dashboard() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Link
-            to="/builder?tab=carousel"
+            to="/builder"
+            search={{ tab: "carousel" }}
             className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-fuchsia-500/50 hover:shadow-lg hover:-translate-y-0.5"
           >
             <div className="h-10 w-10 rounded-xl bg-fuchsia-500/10 text-fuchsia-400 grid place-items-center mb-3">

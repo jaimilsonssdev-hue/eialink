@@ -1773,7 +1773,115 @@ export async function internalFetchBusinessFromUrl(
     );
   }
 
+  // INSTAGRAM: leitura pública do perfil (sem login). Se falhar, cai no leitor genérico abaixo.
+  if (isInstagram) {
+    const handle = (target.match(/instagram\.com\/([a-zA-Z0-9._]+)/i)?.[1] ?? "").replace(/\/$/, "");
+    if (handle && !["p", "reel", "reels", "stories", "explore"].includes(handle.toLowerCase())) {
+      try {
+        const igRes = await fetch(
+          `https://i.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(handle)}`,
+          {
+            headers: {
+              "x-ig-app-id": "936619743392459",
+              "User-Agent":
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              Accept: "application/json",
+            },
+            signal: AbortSignal.timeout(10000),
+          },
+        );
+        const igJson: any = igRes.ok ? await igRes.json().catch(() => null) : null;
+        const u = igJson?.data?.user;
+        if (u) {
+          const bio: string = u.biography ?? "";
+          const name: string = (u.full_name || handle).trim();
+          const phoneFromBio = bio.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?9?\s?\d{4}[-\s]?\d{4}/)?.[0];
+          const phone: string | undefined =
+            (u.business_contact_method !== "UNKNOWN" && u.business_phone_number) ||
+            phoneFromBio?.trim() ||
+            undefined;
+          let city: string | undefined;
+          try {
+            city = u.business_address_json ? JSON.parse(u.business_address_json)?.city_name : undefined;
+          } catch {
+            city = undefined;
+          }
+          const followers = u.edge_followed_by?.count;
+          const posts: any[] = u.edge_owner_to_timeline_media?.edges ?? [];
+          const captions = posts
+            .map((e) => e?.node?.edge_media_to_caption?.edges?.[0]?.node?.text)
+            .filter(Boolean)
+            .slice(0, 6)
+            .map((t: string) => `- ${t.slice(0, 220).replace(/\s+/g, " ")}`)
+            .join("\n");
+
+          // Baixa foto de perfil (logo) e fotos recentes. Cada falha é individual.
+          const photoUrls: Array<{ url: string; role: "logo" | "cover" | "general" }> = [];
+          if (u.profile_pic_url_hd || u.profile_pic_url)
+            photoUrls.push({ url: u.profile_pic_url_hd || u.profile_pic_url, role: "logo" });
+          posts
+            .map((e) => e?.node)
+            .filter((n) => n?.display_url)
+            .slice(0, 8)
+            .forEach((n, i) => photoUrls.push({ url: n.display_url, role: i === 0 ? "cover" : "general" }));
+
+          const downloaded = await Promise.all(
+            photoUrls.map(async (p, i) => {
+              try {
+                const r = await fetch(p.url, { signal: AbortSignal.timeout(8000) });
+                const type = r.headers.get("content-type") || "image/jpeg";
+                if (!r.ok || !type.startsWith("image/")) return null;
+                const buf = await r.arrayBuffer();
+                if (buf.byteLength > 4 * 1024 * 1024) return null;
+                return {
+                  name: `instagram-${handle}-${i}.jpg`,
+                  mimeType: type,
+                  base64: Buffer.from(buf).toString("base64"),
+                  role: p.role,
+                };
+              } catch {
+                return null;
+              }
+            }),
+          );
+          const importedImages = downloaded.filter((x): x is NonNullable<typeof x> => Boolean(x));
+
+          clearTimeout(timeout);
+          const briefing = [
+            `[DADOS COLETADOS DO PERFIL DO INSTAGRAM @${handle}]:`,
+            `Nome Comercial: ${name}`,
+            `Instagram: @${handle}`,
+            u.category_name ? `Categoria: ${u.category_name}` : "",
+            city ? `Cidade: ${city}` : "",
+            phone ? `WhatsApp/Telefone Encontrado: ${phone}` : "",
+            u.business_email ? `E-mail: ${u.business_email}` : "",
+            u.external_url ? `Site/Link: ${u.external_url}` : "",
+            typeof followers === "number" ? `Seguidores: ${followers}` : "",
+            bio ? `Bio original:\n${bio}` : "",
+            captions ? `Legendas recentes (use para entender serviços/produtos, não invente fatos):\n${captions}` : "",
+            `Fotos importadas: ${importedImages.length}`,
+          ]
+            .filter(Boolean)
+            .join("\n");
+
+          return {
+            source: "instagram",
+            name,
+            niche: u.category_name || undefined,
+            city,
+            phone,
+            formattedBriefing: briefing,
+            importedImages,
+          };
+        }
+      } catch (igErr) {
+        console.warn("Leitura pública do Instagram falhou, usando leitor genérico:", igErr);
+      }
+    }
+  }
+
   try {
+
     const jinaUrl = `https://r.jina.ai/${target}`;
     const res = await fetch(jinaUrl, {
       signal: controller.signal,

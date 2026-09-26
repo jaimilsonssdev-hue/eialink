@@ -178,11 +178,12 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         data: { url: importUrl.trim() },
       });
 
-      if (
-        res.name &&
-        (!currentContext.displayName || currentContext.displayName === "Empresa Local")
-      ) {
+      if (res.name) {
         currentContext.displayName = res.name;
+        currentContext.niche = undefined;
+      }
+      if (res.address) {
+        currentContext.city = res.address;
       }
 
       if (res.formattedBriefing) {

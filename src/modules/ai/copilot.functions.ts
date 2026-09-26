@@ -1,4 +1,4 @@
-﻿import { createServerFn } from "@tanstack/react-start";
+import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -274,11 +274,13 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
             if (extracted.formattedBriefing) {
               data.briefing = `${extracted.formattedBriefing}\n\n${data.briefing}`;
             }
-            if (
-              extracted.name &&
-              (!data.currentContext?.displayName || data.currentContext.displayName === "Empresa Local")
-            ) {
-              if (data.currentContext) data.currentContext.displayName = extracted.name;
+            if (extracted.name) {
+              if (!data.currentContext) data.currentContext = {};
+              data.currentContext.displayName = extracted.name;
+              data.currentContext.niche = undefined;
+            }
+            if (extracted.address && data.currentContext) {
+              data.currentContext.city = extracted.address;
             }
           } catch (autoErr) {
             console.warn("Aviso ao auto-extrair mídias da URL do briefing:", autoErr);
@@ -376,7 +378,7 @@ REGRAS DE OURO DA GERAÇÃO (ESTÉTICA CINEMATOGRÁFICA DE LUXO & EXTRAÇÃO PRE
       .join("\n");
 
     const userPrompt = `DADOS ATUAIS DO SITE:
-Nome Atual: ${data.currentContext?.displayName || "Empresa Local"}
+Nome Comercial do Cliente / Empresa a Gerar: ${data.currentContext?.displayName || "Empresa Local"}
 Nicho: ${data.currentContext?.niche || "Geral"}
 Cidade / Região: ${data.currentContext?.city || "Brasil"}
 
@@ -387,6 +389,8 @@ ${
     : ""
 }
 ${data.briefing?.trim() ? `BRIEFING / INFORMAÇÕES ADICIONAIS:\n"""\n${data.briefing}\n"""\n` : ""}
+REGRA ABSOLUTA DE IDENTIDADE DO CLIENTE: O site deve ser gerado 100% para o CLIENTE/EMPRESA informado no briefing e nos links. NUNCA misture ou utilize o nicho, produtos ou nome de sites anteriores do usuário.
+
 REGRA CRITICA DE HONESTIDADE: Use APENAS os dados fornecidos acima. NAO invente endereco, telefone, servicos, precos, anos de experiencia, numero de clientes, depoimentos ou certificacoes ausentes do briefing. Dados ausentes = campo null ou secao omitida.
 
 Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score de cada foto (Autoridade, Qualidade e Posicionamento) em 'curated_photos', aloque as fotos vencedoras nos lugares certos ('avatar_url', 'cover_url', 'image_url' de serviços usando as URLs fornecidas), extraia todos os itens e preços de eventuais PDFs e gere a estrutura JSON completa.`;
@@ -938,11 +942,13 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
             if (extracted.formattedBriefing) {
               data.briefing = `${extracted.formattedBriefing}\n\n${data.briefing}`;
             }
-            if (
-              extracted.name &&
-              (!data.currentContext?.displayName || data.currentContext.displayName === "Empresa Local")
-            ) {
-              if (data.currentContext) data.currentContext.displayName = extracted.name;
+            if (extracted.name) {
+              if (!data.currentContext) data.currentContext = {};
+              data.currentContext.displayName = extracted.name;
+              data.currentContext.niche = undefined;
+            }
+            if (extracted.address && data.currentContext) {
+              data.currentContext.city = extracted.address;
             }
           } catch (autoErr) {
             console.warn("Aviso ao auto-extrair mídias da URL do briefing:", autoErr);
@@ -1190,7 +1196,7 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
 }`;
 
     const userPrompt = `DADOS ATUAIS DO SITE:
-Nome Atual: ${data.currentContext?.displayName || "Empresa Local"}
+Nome Comercial do Cliente / Empresa a Gerar: ${data.currentContext?.displayName || "Empresa Local"}
 Nicho: ${data.currentContext?.niche || "Geral"}
 Cidade / Região: ${data.currentContext?.city || "Brasil"}
 
@@ -1201,6 +1207,8 @@ ${
     : "Nenhum arquivo multimodal anexado.\n"
 }
 ${data.briefing?.trim() ? `BRIEFING / INFORMAÇÕES DO CLIENTE:\n"""\n${data.briefing}\n"""\n` : ""}
+
+REGRA ABSOLUTA DE IDENTIDADE DO CLIENTE: O site deve ser gerado 100% para o CLIENTE/EMPRESA informado no briefing e nos links. NUNCA misture ou utilize o nicho, produtos ou nome de sites anteriores do usuário.
 
 REGRA CRITICA DE HONESTIDADE: Use APENAS os dados fornecidos acima. NAO invente endereco, telefone, servicos, precos, depoimentos ou certificacoes. Dados ausentes vao para missingInformation. Secoes sem dados ficam com enabled:false.
 
@@ -1481,8 +1489,12 @@ export async function internalFetchBusinessFromUrl(
   const isInstagram = target.includes("instagram.com");
   let isGoogle =
     target.includes("google.com/maps") ||
+    target.includes("google.com.br/maps") ||
+    target.includes("maps.google.com") ||
     target.includes("maps.app.goo.gl") ||
-    target.includes("goo.gl/maps");
+    target.includes("goo.gl/maps") ||
+    target.includes("google.com/search") ||
+    target.includes("google.com.br/search");
 
   // Expande links curtos do Google Maps para obter coordenadas e nome do local
   if (target.includes("maps.app.goo.gl") || target.includes("goo.gl/maps")) {
@@ -1813,6 +1825,24 @@ export async function internalFetchBusinessFromUrl(
 
     if (isGoogle) {
       let name = "";
+      // Prioridade 1: Extrai nome diretamente do path /maps/place/Nome+Do+Lugar/ da URL
+      const placeMatch = target.match(/\/maps\/place\/([^/@?&]+)/i);
+      if (placeMatch) {
+        const extracted = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
+        if (extracted && !extracted.match(/^[@\d]/) && !extracted.toLowerCase().includes("google")) {
+          name = extracted;
+        }
+      }
+      // Prioridade 2: Se for URL com query ?q=Nome+Do+Lugar
+      if (!name) {
+        const qMatch = target.match(/[?&]q=([^&]+)/i);
+        if (qMatch) {
+          const extracted = decodeURIComponent(qMatch[1]).replace(/\+/g, " ").trim();
+          if (extracted && !extracted.match(/^[@\d\-]/) && !extracted.toLowerCase().includes("google")) {
+            name = extracted;
+          }
+        }
+      }
       const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
       if (titleMatch) {
         const raw = titleMatch[1]
@@ -1909,6 +1939,15 @@ export async function internalFetchBusinessFromUrl(
 
           if (directRes.ok) {
             const rawHtml = await directRes.text();
+
+            // Extrai nome do link preview oficial do Maps se disponivel
+            if (!name) {
+              const previewMatch = rawHtml.match(/href="\/maps\/preview\/place\?[^"]*q=([^&"]+)/i);
+              if (previewMatch) {
+                const raw = decodeURIComponent(previewMatch[1]).replace(/\+/g, " ").trim();
+                if (raw && !raw.toLowerCase().includes("google")) name = raw;
+              }
+            }
 
             // og:title geralmente contem: "Nome do Lugar - Google Maps"
             if (!name) {

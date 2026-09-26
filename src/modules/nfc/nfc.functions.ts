@@ -203,7 +203,7 @@ export const saveDynamicLinkFn = createServerFn({ method: "POST" })
           features: {
             ...pFeatures,
             nfc_dynamic_links: links,
-          },
+          } as unknown as Json,
         })
         .eq("id", plan.id);
     }

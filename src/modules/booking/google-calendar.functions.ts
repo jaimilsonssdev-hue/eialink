@@ -251,7 +251,7 @@ export const handleGoogleAuthCallbackFn = createServerFn({ method: "POST" })
     const { error: updateErr } = await supabase
       .from("bio_pages")
       .update({
-        social_links: updatedSocial,
+        social_links: updatedSocial as unknown as Json,
         updated_at: new Date().toISOString(),
       })
       .eq("id", bioPageId);
@@ -340,7 +340,7 @@ export const disconnectGoogleCalendarFn = createServerFn({ method: "POST" })
     const { error } = await adminSupabase
       .from("bio_pages")
       .update({
-        social_links: updatedSocial,
+        social_links: updatedSocial as unknown as Json,
         updated_at: new Date().toISOString(),
       })
       .eq("id", data.bioPageId);
@@ -418,7 +418,7 @@ async function getValidAccessTokenForPage(
         social_links: {
           ...social,
           google_calendar: updatedGCal,
-        },
+        } as unknown as Json,
       })
       .eq("id", bioPageId);
 

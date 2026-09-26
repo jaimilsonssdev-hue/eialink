@@ -2424,7 +2424,7 @@ export function UnifiedPageEditor({
                                 if (nextValue) next[id] = nextValue;
                                 else delete next[id];
                                 updateBio({
-                                  social_links: next,
+                                  social_links: next as unknown as Json,
                                   ...(id === "instagram" ? { instagram: event.target.value.trim() } : {}),
                                 });
                               }}

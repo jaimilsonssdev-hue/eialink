@@ -131,7 +131,7 @@ export const saveComandaSettingsFn = createServerFn({ method: "POST" })
         social_links: {
           ...social,
           comanda_settings: data.settings,
-        },
+        } as unknown as Json,
         updated_at: new Date().toISOString(),
       })
       .eq("id", data.bioPageId);

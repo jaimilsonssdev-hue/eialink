@@ -14,6 +14,7 @@ const messages = {
   pro: "Olá! Quero assinar o Eialink Pro e liberar os recursos da minha página.",
   help: "Olá! Quero ajuda profissional para configurar meu Eialink.",
   site: "Olá! Conheci a Talento pelo Eialink e quero saber mais sobre um site profissional para minha empresa.",
+  nfc: "Olá! Quero um orçamento do plano Presença Total + NFC (plaquinhas com chip) para meu negócio.",
 };
 
 // eslint-disable-next-line react-refresh/only-export-components

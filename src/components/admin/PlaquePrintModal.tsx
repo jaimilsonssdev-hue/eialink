@@ -55,6 +55,7 @@ export function PlaquePrintModal({ link, isOpen, onClose }: PlaquePrintModalProp
   }
 
   async function handleDownloadPng() {
+    if (!link) return;
     setIsExporting(true);
     try {
       // Cria um canvas em altíssima definição (1200x1800 para 10x15cm em alta resolução)

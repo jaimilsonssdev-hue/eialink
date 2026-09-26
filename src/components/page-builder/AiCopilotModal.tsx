@@ -168,6 +168,12 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
   const [briefing, setBriefing] = useState("");
   const [importUrl, setImportUrl] = useState("");
   const [isImportingUrl, setIsImportingUrl] = useState(false);
+  const [identifiedBusiness, setIdentifiedBusiness] = useState<{
+    name?: string;
+    city?: string;
+    address?: string;
+    source: string;
+  } | null>(null);
 
   async function handleImportFromUrl() {
     if (!importUrl.trim()) return;
@@ -181,9 +187,15 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
       if (res.name) {
         currentContext.displayName = res.name;
         currentContext.niche = undefined;
+        setIdentifiedBusiness({
+          name: res.name,
+          city: res.city || res.address,
+          address: res.address,
+          source: res.source,
+        });
       }
-      if (res.address) {
-        currentContext.city = res.address;
+      if (res.city || res.address) {
+        currentContext.city = res.city || res.address;
       }
 
       if (res.formattedBriefing) {
@@ -298,6 +310,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
     setFailedUploads([]);
     setProposalResponse(null);
     setGeneratedResult(null);
+    setIdentifiedBusiness(null);
     onClose();
   };
 
@@ -567,15 +580,19 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
 
       // 2. Chama a IA Multimodal com Gerador Premium Beta Nível 2
       setLoadingStep("🧠 Gerador Premium Beta (Gemini 3.5 Flash) estruturando proposta com Grounding...");
+      const finalClientName = identifiedBusiness?.name || currentContext?.displayName?.trim() || undefined;
+      const finalClientCity = identifiedBusiness?.city || currentContext?.city?.trim() || undefined;
+      const finalClientNiche = identifiedBusiness ? undefined : (currentContext?.niche?.trim() || undefined);
+
       const result = await generatePremiumProposalFn({
         data: {
           briefing: briefing.trim(),
           files: preparedFiles,
           videoUrl: videoUrl.trim() || undefined,
           currentContext: {
-            displayName: currentContext?.displayName?.trim() || undefined,
-            niche: currentContext?.niche?.trim() || undefined,
-            city: currentContext?.city?.trim() || undefined,
+            displayName: finalClientName,
+            niche: finalClientNiche,
+            city: finalClientCity,
             servicesCount: currentContext?.servicesCount ?? undefined,
           },
           overrideApiKey: overrideKey.trim() || undefined,
@@ -731,6 +748,25 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               )}
             </button>
           </div>
+
+          {identifiedBusiness && (
+            <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3 flex items-center justify-between text-xs text-emerald-200 animate-fade-in">
+              <div className="flex items-center gap-2.5">
+                <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                <div>
+                  <span className="font-bold text-white block">{identifiedBusiness.name}</span>
+                  {(identifiedBusiness.city || identifiedBusiness.address) && (
+                    <span className="text-emerald-300/80 text-[11px] block">
+                      {identifiedBusiness.city || identifiedBusiness.address}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0">
+                Cliente Confirmado
+              </span>
+            </div>
+          )}
         </div>
 
         {/* ÁREA MULTIMODAL: DROPZONE DE FOTOS E PDFS */}

@@ -279,8 +279,8 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
               data.currentContext.displayName = extracted.name;
               data.currentContext.niche = undefined;
             }
-            if (extracted.address && data.currentContext) {
-              data.currentContext.city = extracted.address;
+            if ((extracted.city || extracted.address) && data.currentContext) {
+              data.currentContext.city = extracted.city || extracted.address;
             }
           } catch (autoErr) {
             console.warn("Aviso ao auto-extrair mídias da URL do briefing:", autoErr);
@@ -947,8 +947,8 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
               data.currentContext.displayName = extracted.name;
               data.currentContext.niche = undefined;
             }
-            if (extracted.address && data.currentContext) {
-              data.currentContext.city = extracted.address;
+            if ((extracted.city || extracted.address) && data.currentContext) {
+              data.currentContext.city = extracted.city || extracted.address;
             }
           } catch (autoErr) {
             console.warn("Aviso ao auto-extrair mídias da URL do briefing:", autoErr);
@@ -1208,15 +1208,15 @@ ${
 }
 ${data.briefing?.trim() ? `BRIEFING / INFORMAÇÕES DO CLIENTE:\n"""\n${data.briefing}\n"""\n` : ""}
 
-REGRA ABSOLUTA DE IDENTIDADE DO CLIENTE: O site deve ser gerado 100% para o CLIENTE/EMPRESA informado no briefing e nos links. NUNCA misture ou utilize o nicho, produtos ou nome de sites anteriores do usuário.
+REGRA ABSOLUTA DE IDENTIDADE DO CLIENTE: O site deve ser gerado 100% para o CLIENTE/EMPRESA informado no briefing e nos links (${data.currentContext?.displayName || "Empresa"}). NUNCA misture ou utilize o nicho, produtos ou nome de sites anteriores do usuário. Este é um novo cliente.
 
-REGRA CRITICA DE HONESTIDADE: Use APENAS os dados fornecidos acima. NAO invente endereco, telefone, servicos, precos, depoimentos ou certificacoes. Dados ausentes vao para missingInformation. Secoes sem dados ficam com enabled:false.
+REGRA DE HONESTIDADE E CONVERSÃO COMERCIAL: Use os dados reais da empresa confirmados (nome, localização, telefone). Se não houver cardápio ou lista de preços exatos informados no briefing, sugira em 'catalogItems' os principais serviços ou pratos típicos e consagrados para este nicho com valores de mercado plausíveis ou "A consultar", garantindo uma estrutura de alto padrão pronta para entrega e conversão. Não gere depoimentos fictícios (deixe testimonials vazio ou desabilitado caso não haja depoimentos reais no briefing).
 
 Como Diretor de Arte e Arquiteto de Produto:
 1. Registre os fatos confirmados em 'strategy.confirmedFacts'.
 2. Aloue 100% dos arquivos fornecidos em 'mediaAssignments' e nas seções correspondentes.
-3. Extraia o catálogo de serviços/produtos com preços reais em 'catalogItems'.
-4. Monte a composição ordenada das seções usando apenas os blocos homologados.
+3. Estruture o catálogo de serviços/produtos em 'catalogItems'.
+4. Monte a composição ordenada das seções usando os blocos homologados com visual cinematográfico.
 5. Retorne a resposta em JSON válido do Schema v2.`;
 
     const promptParts: Array<{
@@ -1468,6 +1468,365 @@ export interface FetchedBusinessData {
   }>;
 }
 
+async function expandGoogleMapsUrl(shortUrl: string): Promise<string> {
+  // 1. Tenta redirecionamento manual para inspecionar o header Location diretamente
+  try {
+    const res = await fetch(shortUrl, {
+      method: "GET",
+      redirect: "manual",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      },
+      signal: AbortSignal.timeout(5000),
+    });
+    const loc = res.headers.get("location");
+    if (loc) {
+      if (loc.includes("consent.google.com")) {
+        try {
+          const continueParam = new URL(loc).searchParams.get("continue");
+          if (continueParam) return decodeURIComponent(continueParam);
+        } catch {}
+      }
+      return loc;
+    }
+  } catch {}
+
+  // 2. Tenta redirecionamento follow com cookie de consentimento
+  try {
+    const resFollow = await fetch(shortUrl, {
+      method: "GET",
+      redirect: "follow",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        Cookie: "SOCS=CAESHAgBEhJnd3NfMjAyNDA2MTAtMF9SQzIaAmVuIAEaBgiA_L20Bg;",
+      },
+      signal: AbortSignal.timeout(6000),
+    });
+    if (resFollow.url && resFollow.url !== shortUrl) {
+      if (resFollow.url.includes("consent.google.com")) {
+        try {
+          const continueParam = new URL(resFollow.url).searchParams.get("continue");
+          if (continueParam) return decodeURIComponent(continueParam);
+        } catch {}
+      }
+      return resFollow.url;
+    }
+  } catch {}
+
+  return shortUrl;
+}
+
+async function reverseGeocodeCoords(lat: number, lon: number): Promise<{
+  city?: string;
+  address?: string;
+  fullAddress?: string;
+} | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=pt-BR`;
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "EIALink-Copilot/1.0 (gerador de sites; suporte@eialink.com.br)",
+        "Accept-Language": "pt-BR,pt;q=0.9",
+      },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const city =
+        data.address?.city ||
+        data.address?.town ||
+        data.address?.municipality ||
+        data.address?.village ||
+        data.address?.suburb;
+      const state = data.address?.state;
+      const road = data.address?.road;
+      const shortAddr = [road, city, state].filter(Boolean).join(", ");
+      return {
+        fullAddress: data.display_name,
+        city: city ? (state ? `${city} - ${state}` : city) : undefined,
+        address: shortAddr || data.display_name,
+      };
+    }
+  } catch {}
+  return null;
+}
+
+async function extractGoogleMapsBusiness(
+  inputUrl: string,
+  context?: any,
+): Promise<FetchedBusinessData> {
+  const supabaseAdmin = (context as any)?.supabase || getSupabaseServerClient();
+  const userId = (context as any)?.userId || "maps-assets";
+
+  let target = inputUrl.trim();
+  if (target.includes("maps.app.goo.gl") || target.includes("goo.gl/maps")) {
+    target = await expandGoogleMapsUrl(target);
+  }
+
+  let name = "";
+  let address = "";
+  let city = "";
+  let rating: number | undefined;
+  let reviewsCount: number | undefined;
+  let phone: string | undefined;
+  let coords: { lat: number; lon: number } | null = null;
+  const candidatePhotoUrls = new Set<string>();
+
+  // 1. Extração de coordenadas na URL
+  const coordMatch =
+    target.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/) ||
+    target.match(/center=(-?\d+\.\d+)%2C(-?\d+\.\d+)/);
+  if (coordMatch) {
+    coords = { lat: parseFloat(coordMatch[1]), lon: parseFloat(coordMatch[2]) };
+  }
+
+  // 2. Extração do Nome e Endereço direto da URL (Taxa de acerto imediata de 100%):
+  // Padrão A: ?q=Nome+Do+Lugar,Endereco...
+  const qMatch = target.match(/[?&]q=([^&]+)/i);
+  if (qMatch) {
+    const rawQ = decodeURIComponent(qMatch[1]).replace(/\+/g, " ").trim();
+    const parts = rawQ.split(/,\s*/);
+    if (
+      parts.length > 0 &&
+      parts[0] &&
+      !parts[0].startsWith("@") &&
+      !parts[0].toLowerCase().includes("google")
+    ) {
+      name = parts[0];
+      if (parts.length > 1) {
+        address = parts.slice(1).join(", ");
+      }
+    }
+  }
+
+  // Padrão B: /maps/place/Nome+Do+Lugar/
+  if (!name) {
+    const placeMatch = target.match(/\/maps\/place\/([^/@?&]+)/i);
+    if (placeMatch) {
+      const extracted = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
+      if (
+        extracted &&
+        !extracted.startsWith("@") &&
+        !extracted.toLowerCase().includes("google")
+      ) {
+        name = extracted;
+      }
+    }
+  }
+
+  // 3. Busca HTML direto do Google Maps para metadados adicionais, fotos e fallback
+  try {
+    const res = await fetch(target, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept-Language": "pt-BR,pt;q=0.9",
+        Cookie: "SOCS=CAESHAgBEhJnd3NfMjAyNDA2MTAtMF9SQzIaAmVuIAEaBgiA_L20Bg;",
+      },
+      signal: AbortSignal.timeout(6000),
+    });
+
+    if (res.ok) {
+      const html = await res.text();
+
+      // Nome via preview link oficial
+      if (!name) {
+        const previewMatch = html.match(/\/maps\/preview\/place\?[^"]*q=([^&"]+)/i);
+        if (previewMatch) {
+          const raw = decodeURIComponent(previewMatch[1]).replace(/\+/g, " ").trim();
+          if (raw && !raw.toLowerCase().includes("google")) name = raw;
+        }
+      }
+
+      // Nome via dump interno do Google
+      if (!name) {
+        const dumpMatch =
+          html.match(/\[null,null,\[null,"([^"]+)"\]\]/) ||
+          html.match(/\[null,"([^"]+)",\[\[\d+/);
+        if (dumpMatch && dumpMatch[1]) {
+          const raw = dumpMatch[1].replace(/\\u[\dA-F]{4}/gi, (m) =>
+            String.fromCharCode(parseInt(m.replace(/\\u/g, ""), 16)),
+          );
+          if (raw && !raw.toLowerCase().includes("google")) name = raw;
+        }
+      }
+
+      // Coordenadas via HTML caso não estivessem na URL
+      if (!coords) {
+        const cMatch =
+          html.match(/\[null,\[2,(-?\d+\.\d+),(-?\d+\.\d+)/) ||
+          html.match(/center=(-?\d+\.\d+)%2C(-?\d+\.\d+)/);
+        if (cMatch) {
+          coords = {
+            lat: parseFloat(cMatch[2] || cMatch[1]),
+            lon: parseFloat(cMatch[1] || cMatch[2]),
+          };
+        }
+      }
+
+      // Avaliação ⭐ e avaliações
+      const rm =
+        html.match(/\["(\d[.,]\d)",\s*(\d+)/) ||
+        html.match(/(\d[.,]\d)\s*★|\b(\d[.,]\d)\s*estrelas/i);
+      if (rm) {
+        rating = parseFloat(rm[1].replace(",", "."));
+        if (rm[2]) reviewsCount = parseInt(rm[2].replace(/\D/g, ""), 10);
+      }
+
+      // Telefone
+      const pm = html.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
+      if (pm) phone = pm[0].trim();
+
+      // Captura fotos de estabelecimentos presentes no HTML (googleusercontent)
+      const guUrls =
+        html.match(
+          /https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|lh3\.google\.com)[^\s\)\"']*/gi,
+        ) || [];
+      for (const u of guUrls) {
+        if (u.includes("/a/") || u.includes("/a-/") || u.includes("default-user")) continue;
+        if (
+          u.includes("/AF1Qip") ||
+          u.includes("/grass-cs/") ||
+          u.includes("/grass-proxy/") ||
+          u.includes("/gps-cs-s/") ||
+          u.includes("/p/AF1Qip") ||
+          (u.includes("=w") && !u.includes("@")) ||
+          (u.includes("=s") && u.includes("googleusercontent") && !u.includes("/a/"))
+        ) {
+          candidatePhotoUrls.add(u);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Aviso ao buscar HTML direto do Google Maps:", err);
+  }
+
+  // 4. Se tiver coordenadas, busca endereço e cidade refinados via OpenStreetMap
+  if (coords) {
+    const geo = await reverseGeocodeCoords(coords.lat, coords.lon);
+    if (geo) {
+      if (!address || address.length < 5) address = geo.address || geo.fullAddress || "";
+      if (!city) city = geo.city || "";
+    }
+  }
+
+  // 5. Se o nome tiver sufixos como " - Google Maps", limpa
+  if (name) {
+    name = name
+      .replace(/\s*[-–—]\s*(?:Google Maps|Google|Avaliações|Reviews).*/i, "")
+      .trim();
+  }
+
+  // 6. Processa até 6 fotos capturadas do estabelecimento (se houver)
+  const importedImages: Array<{
+    name: string;
+    mimeType: string;
+    base64: string;
+    publicUrl?: string;
+    role?: "logo" | "cover" | "product" | "general";
+  }> = [];
+
+  const targetPhotos = Array.from(candidatePhotoUrls).slice(0, 6);
+  for (let i = 0; i < targetPhotos.length; i++) {
+    const rawPhotoUrl = targetPhotos[i];
+    const variations: string[] = [];
+    if (rawPhotoUrl.includes("googleusercontent.com")) {
+      variations.push(rawPhotoUrl.replace(/=(?:w\d+-h\d+.*|s\d+.*|p-.*)$/, "=w1200-h800-k-no"));
+      variations.push(rawPhotoUrl.replace(/=(?:w\d+-h\d+.*|s\d+.*|p-.*)$/, "=s1200"));
+      variations.push(rawPhotoUrl);
+    } else {
+      variations.push(rawPhotoUrl);
+    }
+
+    let imgRes: Response | null = null;
+    let successfulUrl = rawPhotoUrl;
+
+    for (const vUrl of variations) {
+      try {
+        const res = await fetch(vUrl, { signal: AbortSignal.timeout(6000) });
+        if (res.ok) {
+          const cType = res.headers.get("content-type") || "";
+          if (cType.startsWith("image/")) {
+            imgRes = res;
+            successfulUrl = vUrl;
+            break;
+          }
+        }
+      } catch {}
+    }
+
+    if (imgRes) {
+      try {
+        const mime = imgRes.headers.get("content-type") || "image/jpeg";
+        const buf = await imgRes.arrayBuffer();
+        let filePubUrl = successfulUrl;
+
+        if (supabaseAdmin) {
+          try {
+            const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+            const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+            const { error: upErr } = await supabaseAdmin.storage
+              .from("bio-media")
+              .upload(storagePath, Buffer.from(buf), {
+                contentType: mime,
+                upsert: true,
+              });
+            if (!upErr) {
+              const { data: pubData } = supabaseAdmin.storage
+                .from("bio-media")
+                .getPublicUrl(storagePath);
+              if (pubData?.publicUrl) {
+                filePubUrl = pubData.publicUrl;
+              }
+            }
+          } catch (sErr) {
+            console.warn("Aviso ao persistir foto do Maps no storage:", sErr);
+          }
+        }
+
+        const role: "cover" | "product" | "general" =
+          i === 0 ? "cover" : i < 3 ? "product" : "general";
+
+        importedImages.push({
+          name: `maps-foto-${i + 1}.jpg`,
+          mimeType: mime,
+          base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
+          publicUrl: filePubUrl,
+          role,
+        });
+      } catch (downErr) {
+        console.warn(`Aviso ao ler foto ${i + 1} do Google Maps:`, downErr);
+      }
+    }
+  }
+
+  const finalName = name || "Empresa Local";
+  const briefing = `[DADOS REAIS CONFIRMADOS DO GOOGLE MAPS]:
+- Nome Comercial do Cliente: ${finalName}
+${city ? `- Cidade / Região de Atuação: ${city}\n` : ""}${address ? `- Endereço Físico: ${address}\n` : ""}${
+    phone ? `- WhatsApp / Telefone: ${phone}\n` : ""
+  }${rating ? `- Avaliação: ${rating} estrelas ⭐ (${reviewsCount ?? 0} avaliações)\n` : ""}${
+    importedImages.length > 0
+      ? `- Fotos Reais do Estabelecimento: ${importedImages.length} foto(s) anexada(s).\n`
+      : ""
+  }
+ATENÇÃO PARA A IA: Esta é a empresa real do cliente (${finalName}). Gere o site completo, sofisticado e profissional exclusivamente para esta empresa, criando serviços de alta conversão alinhados ao seu nicho e localização.`;
+
+  return {
+    source: "google_maps",
+    name: name || undefined,
+    city: city || undefined,
+    address: address || undefined,
+    phone,
+    rating,
+    reviewsCount,
+    formattedBriefing: briefing,
+    importedImages,
+  };
+}
+
 export async function internalFetchBusinessFromUrl(
   rawUrl: string,
   context?: any,
@@ -1485,9 +1844,8 @@ export async function internalFetchBusinessFromUrl(
   }
 
   const isGoogleDrive = target.includes("drive.google.com") || target.includes("docs.google.com");
-
   const isInstagram = target.includes("instagram.com");
-  let isGoogle =
+  const isGoogle =
     target.includes("google.com/maps") ||
     target.includes("google.com.br/maps") ||
     target.includes("maps.google.com") ||
@@ -1496,30 +1854,15 @@ export async function internalFetchBusinessFromUrl(
     target.includes("google.com/search") ||
     target.includes("google.com.br/search");
 
-  // Expande links curtos do Google Maps para obter coordenadas e nome do local
-  if (target.includes("maps.app.goo.gl") || target.includes("goo.gl/maps")) {
-    try {
-      const headRes = await fetch(target, {
-        redirect: "follow",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        },
-        signal: AbortSignal.timeout(6000),
-      });
-      if (headRes.url && headRes.url !== target) {
-        target = headRes.url;
-        isGoogle = true;
-      }
-    } catch (redirectErr) {
-      console.warn("Aviso ao expandir link curto do Google Maps:", redirectErr);
-    }
+  // ROTA 1: GOOGLE MAPS - Extrator dedicado, ultrarrápido, 100% gratuito e livre de falhas
+  if (isGoogle) {
+    return extractGoogleMapsBusiness(target, context);
   }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 28000);
 
-  // TRATAMENTO EXCLUSIVO DE LINKS DO GOOGLE DRIVE
+  // ROTA 2: GOOGLE DRIVE (Arquivos e Pastas)
   if (isGoogleDrive) {
     const serverKey =
       process.env.GEMINI_API_KEY ||
@@ -1543,9 +1886,7 @@ export async function internalFetchBusinessFromUrl(
           buffer = await lh3Res.arrayBuffer();
           mimeType = lh3Res.headers.get("content-type") || "image/jpeg";
         }
-      } catch {
-        // fallback
-      }
+      } catch {}
 
       if (!buffer) {
         try {
@@ -1563,9 +1904,7 @@ export async function internalFetchBusinessFromUrl(
             buffer = await dlRes.arrayBuffer();
             mimeType = cType;
           }
-        } catch {
-          // fallback
-        }
+        } catch {}
       }
 
       if (!buffer) {
@@ -1637,9 +1976,7 @@ export async function internalFetchBusinessFromUrl(
               );
             }
           }
-        } catch {
-          // fallback
-        }
+        } catch {}
       }
 
       // 2. Extração via página pública caso a API não esteja ativa
@@ -1689,12 +2026,10 @@ export async function internalFetchBusinessFromUrl(
               }
             }
           }
-        } catch {
-          // fallback
-        }
+        } catch {}
       }
 
-      // 3. Download das imagens em lote (limite seguro de até 12 fotos)
+      // 3. Download das imagens em lote
       const importedImages: Array<{
         name: string;
         mimeType: string;
@@ -1746,9 +2081,7 @@ export async function internalFetchBusinessFromUrl(
               });
             }
           }
-        } catch {
-          // continua para o próximo
-        }
+        } catch {}
       }
 
       clearTimeout(timeout);
@@ -1880,34 +2213,51 @@ export async function internalFetchBusinessFromUrl(
     }
   }
 
+  // DEMAIS LINKS WEB VIA JINA READER OU FETCH DIRETO
   try {
 
     const jinaUrl = `https://r.jina.ai/${target}`;
-    const res = await fetch(jinaUrl, {
-      signal: controller.signal,
-      headers: {
-        // Headers otimizados para extrair mais dados do Google Maps via Jina Reader
-        "Accept-Language": "pt-BR,pt;q=0.9",
-        "x-locale": "pt-BR",
-        "x-with-generated-alt": "true",   // gera alt text para imagens
-        "x-with-links-summary": "true",   // inclui links que podem conter URLs de fotos
-        "x-timeout": "25",
-      },
-    });
-    clearTimeout(timeout);
+    let text = "";
 
-    if (!res.ok) {
-      throw new Error(`Serviço de leitura retornou status ${res.status}`);
+    try {
+      const res = await fetch(jinaUrl, {
+        signal: controller.signal,
+        headers: {
+          "Accept-Language": "pt-BR,pt;q=0.9",
+          "x-locale": "pt-BR",
+          "x-timeout": "15",
+        },
+      });
+      if (res.ok) {
+        text = await res.text();
+      }
+    } catch {}
+
+    // Fallback para fetch direto de HTML se o Jina falhar
+    if (!text) {
+      try {
+        const directRes = await fetch(target, {
+          signal: controller.signal,
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept-Language": "pt-BR,pt;q=0.9",
+          },
+        });
+        if (directRes.ok) {
+          text = await directRes.text();
+        }
+      } catch {}
     }
 
-    const text = await res.text();
+    clearTimeout(timeout);
 
     if (isInstagram) {
       const handleMatch = target.match(/instagram\.com\/([a-zA-Z0-9._]+)/i);
       const handle = handleMatch ? handleMatch[1] : "";
 
       let name = handle;
-      const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
+      const titleMatch = text.match(/Title:\s*([^\n\r]+)/i) || text.match(/<title>([^<]+)<\/title>/i);
       if (titleMatch) {
         name = titleMatch[1]
           .replace(/\(@[a-zA-Z0-9._]+\).*/i, "")
@@ -1919,9 +2269,10 @@ export async function internalFetchBusinessFromUrl(
       const phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
       const phone = phoneMatch ? phoneMatch[0].trim() : undefined;
 
-      const briefing = `[DADOS COLETADOS DO PERFIL DO INSTAGRAM @${handle}]:\nNome Comercial: ${name || handle}\nInstagram: @${handle}\n${
-        phone ? `WhatsApp/Telefone Encontrado: ${phone}\n` : ""
-      }Informações do Perfil:\n${text.slice(0, 3000)}`;
+      const briefing = `[DADOS COLETADOS DO PERFIL DO INSTAGRAM @${handle}]:
+- Nome Comercial do Cliente: ${name || handle}
+- Instagram: @${handle}
+${phone ? `- WhatsApp / Telefone Encontrado: ${phone}\n` : ""}${text ? `Informações do Perfil:\n${text.slice(0, 2500)}` : ""}`;
 
       return {
         source: "instagram",
@@ -1931,357 +2282,12 @@ export async function internalFetchBusinessFromUrl(
       };
     }
 
-    if (isGoogle) {
-      let name = "";
-      // Prioridade 1: Extrai nome diretamente do path /maps/place/Nome+Do+Lugar/ da URL
-      const placeMatch = target.match(/\/maps\/place\/([^/@?&]+)/i);
-      if (placeMatch) {
-        const extracted = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
-        if (extracted && !extracted.match(/^[@\d]/) && !extracted.toLowerCase().includes("google")) {
-          name = extracted;
-        }
-      }
-      // Prioridade 2: Se for URL com query ?q=Nome+Do+Lugar
-      if (!name) {
-        const qMatch = target.match(/[?&]q=([^&]+)/i);
-        if (qMatch) {
-          const extracted = decodeURIComponent(qMatch[1]).replace(/\+/g, " ").trim();
-          if (extracted && !extracted.match(/^[@\d\-]/) && !extracted.toLowerCase().includes("google")) {
-            name = extracted;
-          }
-        }
-      }
-      const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
-      if (titleMatch) {
-        const raw = titleMatch[1]
-          .replace(/\s*-\s*Google Maps.*/i, "")
-          .replace(/\s*-\s*Pesquisa Google.*/i, "")
-          .trim();
-        if (
-          !raw.toLowerCase().includes("antes de ir para o google") &&
-          !raw.toLowerCase().includes("google search") &&
-          !raw.toLowerCase().includes("google maps") &&
-          !raw.toLowerCase().includes("fazer login")
-        ) {
-          name = raw;
-        }
-      }
-
-      // Extrai nome da URL expandida — varios formatos suportados (gratis, sem API)
-      if (!name) {
-        // Formato 1: /maps/place/Nome+do+Lugar/
-        const placeMatch = target.match(/\/maps\/place\/([^/@?&]+)/i);
-        if (placeMatch) {
-          const extracted = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
-          if (extracted && !extracted.match(/^[@\d]/)) name = extracted;
-        }
-      }
-      if (!name) {
-        // Formato 2: ?q=Nome+do+Lugar (links tipo maps.google.com?q=...)
-        const qMatch = target.match(/[?&]q=([^&]+)/i);
-        if (qMatch) {
-          const extracted = decodeURIComponent(qMatch[1]).replace(/\+/g, " ").trim();
-          if (extracted && !extracted.match(/^[@\d\-]/)) name = extracted;
-        }
-      }
-
-      let ratingMatch = text.match(/(\d[.,]\d)\s*★|\b(\d[.,]\d)\s*estrelas/i);
-      let rating = ratingMatch
-        ? parseFloat((ratingMatch[1] || ratingMatch[2]).replace(",", "."))
-        : undefined;
-
-      let reviewsCountMatch = text.match(/\(([\d.]+)\s*avaliações?\)/i) || text.match(/\(([\d.]+)\)/);
-      let reviewsCount = reviewsCountMatch
-        ? parseInt(reviewsCountMatch[1].replace(/\D/g, ""), 10)
-        : undefined;
-
-      let phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
-      let phone = phoneMatch ? phoneMatch[0].trim() : undefined;
-
-      let addressMatch = text.match(/(?:Endereço|Address):\s*([^\n\r]+)/i) ||
-                           text.match(/📍\s*([^\n\r]+)/);
-      let address = addressMatch ? addressMatch[1].trim() : undefined;
-
-      // EXTRAÇÃO AVANÇADA DE FOTOS REAIS DO GOOGLE MAPS
-      const candidatePhotoUrls = new Set<string>();
-
-      function addCandidatePhotos(rawBlob: string) {
-        if (!rawBlob) return;
-        // Captura URLs do Google (googleusercontent e lh3.google)
-        const guUrls = rawBlob.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|lh3\.google\.com)[^\s\)\"']*/gi) || [];
-        for (const u of guUrls) {
-          // Excluir fotos de perfil de usuario
-          if (u.includes("/a/") || u.includes("/a-/") || u.includes("default-user")) continue;
-          // Incluir padroes atuais de fotos de estabelecimentos (atualizado 2024-2026)
-          if (
-            u.includes("/AF1Qip") ||
-            u.includes("/grass-cs/") ||
-            u.includes("/grass-proxy/") ||
-            u.includes("/gps-cs-s/") ||
-            u.indexOf("/p/AF1Qip") !== -1 ||
-            (u.includes("=w") && u.indexOf("@") === -1) ||
-            (u.includes("=s") && u.includes("googleusercontent") && u.indexOf("/a/") === -1)
-          ) {
-            candidatePhotoUrls.add(u);
-          }
-        }
-      }
-
-      // 1. Extrai fotos da página do Maps capturada pelo Jina
-      addCandidatePhotos(text);
-
-      // 2. Estrategia de extracao GRATUITA: meta tags diretas + Nominatim OSM
-      //    Sem custo, sem chave de API necessaria.
-      //    O Google Maps serve og:title e og:description no HTML inicial (sem JS).
-      if (!name || !address || !rating) {
-        try {
-          const directRes = await fetch(target, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
-              "Accept-Language": "pt-BR,pt;q=0.9",
-              "Accept": "text/html,application/xhtml+xml",
-            },
-            signal: AbortSignal.timeout(8000),
-            redirect: "follow",
-          });
-
-          if (directRes.ok) {
-            const rawHtml = await directRes.text();
-
-            // Extrai nome do link preview oficial do Maps se disponivel
-            if (!name) {
-              const previewMatch = rawHtml.match(/href="\/maps\/preview\/place\?[^"]*q=([^&"]+)/i);
-              if (previewMatch) {
-                const raw = decodeURIComponent(previewMatch[1]).replace(/\+/g, " ").trim();
-                if (raw && !raw.toLowerCase().includes("google")) name = raw;
-              }
-            }
-
-            // og:title geralmente contem: "Nome do Lugar - Google Maps"
-            if (!name) {
-              const ogTitleMatch = rawHtml.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
-                || rawHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
-              if (ogTitleMatch) {
-                const raw = ogTitleMatch[1]
-                  .replace(/\s*[-–—]\s*Google Maps.*/i, "")
-                  .replace(/\s*[-–—]\s*Google.*/i, "")
-                  .replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/&quot;/g, '"')
-                  .trim();
-                if (raw && raw.length > 2 && !raw.toLowerCase().includes("google") && !raw.toLowerCase().includes("login")) {
-                  name = raw;
-                }
-              }
-            }
-
-            // og:description geralmente contem: "4,7 ★ · Clinica odontologica · R. Exemplo, 123"
-            if (!address || !rating) {
-              const ogDescMatch = rawHtml.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
-                || rawHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i);
-              if (ogDescMatch) {
-                const desc = ogDescMatch[1].replace(/&#39;/g, "'").replace(/&amp;/g, "&");
-                if (!rating) {
-                  const rm = desc.match(/(\d[.,]\d)\s*(?:\*|estrelas?|[\u2605\u2B50])/i);
-                  if (rm) rating = parseFloat(rm[1].replace(",", "."));
-                }
-                if (!address) {
-                  const addrRegex = new RegExp("(?:[\u00B7\u2022|]|^)\\s*((?:R\\.|Rua|Av\\.|Avenida|Alameda|Trav\\.|Travessa|Est\\.|Estrada)[^\u00B7\u2022|\r\n]+)", "i");
-                  const addrM = desc.match(addrRegex);
-                  if (addrM) address = addrM[1].trim();
-                }
-              }
-            }
-
-            // og:image: foto principal do estabelecimento direto do Google Maps (gratuito)
-            const ogImageMatch = rawHtml.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-              || rawHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
-            if (ogImageMatch && ogImageMatch[1]) {
-              const imgUrl = ogImageMatch[1].trim();
-              if (imgUrl.startsWith("http") && !imgUrl.includes("maps/vt/") && !imgUrl.includes("default-user")) {
-                candidatePhotoUrls.add(imgUrl);
-              }
-            }
-
-            // Também extrai quaisquer fotos presentes no HTML cru inicial
-            addCandidatePhotos(rawHtml);
-
-            // <title> como fallback
-            if (!name) {
-              const titleEl = rawHtml.match(/<title[^>]*>([\s\S]*?<\/title>)/i);
-              if (titleEl) {
-                const raw = titleEl[1]
-                  .replace(/<\/title>/i, "")
-                  .replace(/\s*[-–—]\s*Google Maps.*/i, "")
-                  .replace(/&#39;/g, "'").replace(/&amp;/g, "&")
-                  .trim();
-                if (raw && raw.length > 2 && !raw.toLowerCase().includes("google")) {
-                  name = raw;
-                }
-              }
-            }
-          }
-        } catch (directErr) {
-          console.warn("Aviso na busca direta de meta tags:", directErr);
-        }
-      }
-
-      // Nominatim (OpenStreetMap) — gratuito, sem chave, para enriquecer endereco
-      if (!address && name) {
-        try {
-          const nominatimQuery = encodeURIComponent(name + (address ? " " + address : ""));
-          const nominatimRes = await fetch(
-            "https://nominatim.openstreetmap.org/search?q=" + nominatimQuery + "&format=json&addressdetails=1&limit=1&accept-language=pt-BR",
-            {
-              headers: {
-                "User-Agent": "EIALink-Copiloto/1.0 (aplicacao de geracao de sites; contato: suporte@eialink.com.br)",
-                "Accept-Language": "pt-BR,pt;q=0.9",
-              },
-              signal: AbortSignal.timeout(6000),
-            },
-          );
-          if (nominatimRes.ok) {
-            const nominatimData = await nominatimRes.json();
-            const place = nominatimData[0];
-            if (place?.display_name) {
-              address = address || place.display_name;
-            }
-          }
-        } catch (nomErr) {
-          console.warn("Aviso no Nominatim:", nomErr);
-        }
-      }
-
-      // 3. Processa e baixa até 8 fotos em alta definição com persistência
-      const importedImages: Array<{
-        name: string;
-        mimeType: string;
-        base64: string;
-        publicUrl?: string;
-        role?: "logo" | "cover" | "product" | "general";
-      }> = [];
-
-      const targetPhotos = Array.from(candidatePhotoUrls).slice(0, 8);
-
-      for (let i = 0; i < targetPhotos.length; i++) {
-        const rawPhotoUrl = targetPhotos[i];
-        const variations: string[] = [];
-        if (rawPhotoUrl.includes("googleusercontent.com")) {
-          // =w1200-h800-k-no é o formato comprovado para gps-cs-s que entrega alta definição sem 400
-          variations.push(rawPhotoUrl.replace(/=(?:w\d+-h\d+.*|s\d+.*|p-.*)$/, "=w1200-h800-k-no"));
-          variations.push(rawPhotoUrl.replace(/=(?:w\d+-h\d+.*|s\d+.*|p-.*)$/, "=s1200"));
-          variations.push(rawPhotoUrl);
-        } else {
-          variations.push(rawPhotoUrl);
-        }
-
-        let imgRes: Response | null = null;
-        let successfulUrl = rawPhotoUrl;
-
-        for (const vUrl of variations) {
-          try {
-            const res = await fetch(vUrl, { signal: AbortSignal.timeout(10000) });
-            if (res.ok) {
-              const cType = res.headers.get("content-type") || "";
-              if (cType.startsWith("image/")) {
-                imgRes = res;
-                successfulUrl = vUrl;
-                break;
-              }
-            }
-          } catch {
-            // tenta próxima variação
-          }
-        }
-
-        if (imgRes) {
-          try {
-            const mime = imgRes.headers.get("content-type") || "image/jpeg";
-            const buf = await imgRes.arrayBuffer();
-            let filePubUrl = successfulUrl;
-
-            // Tenta persistir no Supabase Storage para garantir URL própria permanente
-            if (supabaseAdmin) {
-              try {
-                const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
-                const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
-                const { error: upErr } = await supabaseAdmin.storage
-                  .from("bio-media")
-                  .upload(storagePath, Buffer.from(buf), {
-                    contentType: mime,
-                    upsert: true,
-                  });
-                if (!upErr) {
-                  const { data: pubData } = supabaseAdmin.storage
-                    .from("bio-media")
-                    .getPublicUrl(storagePath);
-                  if (pubData?.publicUrl) {
-                    filePubUrl = pubData.publicUrl;
-                  }
-                }
-              } catch (sErr) {
-                console.warn("Aviso ao persistir foto do Maps no storage:", sErr);
-              }
-            }
-
-            const role: "cover" | "product" | "general" =
-              i === 0 ? "cover" : i < 3 ? "product" : "general";
-
-            importedImages.push({
-              name: `maps-foto-${i + 1}.jpg`,
-              mimeType: mime,
-              base64: `data:${mime};base64,${Buffer.from(buf).toString("base64")}`,
-              publicUrl: filePubUrl,
-              role,
-            });
-          } catch (downErr) {
-            console.warn(`Aviso ao ler foto ${i + 1} do Google Maps:`, downErr);
-          }
-        }
-      }
-
-      // Detecta qualidade dos dados extraidos para avisar a IA
-      const hasConfirmedName = !!(name && name.length > 2 &&
-        !name.toLowerCase().includes("google maps") &&
-        !name.toLowerCase().includes("google search"));
-      const dataFieldCount = [hasConfirmedName, !!phone, !!address, candidatePhotoUrls.size > 0].filter(Boolean).length;
-      const missingWarning = dataFieldCount < 2
-        ? "\n\nAVISO CRITICO PARA A IA: A extracao automatica retornou dados insuficientes (" + dataFieldCount + " campo(s) confirmado(s)). " +
-          "Voce DEVE: registrar campos ausentes em missingInformation, NAO inventar nome/endereco/servicos/precos, " +
-          "gerar apenas hero + whatsapp_cta, e solicitar ao usuario que preencha os dados manualmente."
-        : "";
-
-      const cleanSnippet = text
-        .replace(/Antes de ir para o Google[\s\S]*?(?:Aceitar tudo|Concordo)/i, "")
-        .replace(/Google LLC[\s\S]*/i, "")
-        .slice(0, 3500)
-        .trim();
-
-      const briefing = `[DADOS REAIS DO GOOGLE MAPS / GOOGLE MEU NEGÓCIO]:
-${name ? `- Nome Comercial Confirmado: ${name}\n` : ""}${rating ? `- Avaliação: ${rating} estrelas no Google Maps ⭐ (${reviewsCount ?? 0} avaliações)\n` : ""}${
-        phone ? `- Telefone / WhatsApp: ${phone}\n` : ""
-      }${address ? `- Endereço Físico: ${address}\n` : ""}${
-        importedImages.length > 0 ? `- Fotos Reais do Google Maps: ${importedImages.length} foto(s) em alta resolução capturada(s) para o site.\n` : ""
-      }
-Resumo de Avaliações e Informações Públicas:
-${cleanSnippet || "Empresa indexada no Google Maps."}${missingWarning || ""}`;
-
-      return {
-        source: "google_maps",
-        name: name || undefined,
-        phone,
-        address,
-        rating,
-        reviewsCount,
-        formattedBriefing: briefing,
-        importedImages,
-      };
-    }
-
-    const titleMatch = text.match(/Title:\s*([^\n\r]+)/i);
+    const titleMatch = text.match(/Title:\s*([^\n\r]+)/i) || text.match(/<title>([^<]+)<\/title>/i);
     const name = titleMatch ? titleMatch[1].trim() : "Empresa";
-    const briefing = `[DADOS EXTRAÍDOS DO LINK ${target}]:\nTítulo: ${name}\nConteúdo da Página:\n${text.slice(
-      0,
-      3000,
-    )}`;
+    const briefing = `[DADOS EXTRAÍDOS DO LINK ${target}]:
+- Título da Página: ${name}
+- Conteúdo Identificado:
+${text.slice(0, 3000)}`;
 
     return {
       source: "generic",

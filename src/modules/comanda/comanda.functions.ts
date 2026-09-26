@@ -450,7 +450,7 @@ export const listWaiterDashboardFn = createServerFn({ method: "POST" })
             status: row.status as ComandaOrderStatus,
             notes: payload.notes || null,
             created_at: row.created_at,
-            updated_at: row.updated_at,
+            updated_at: row.created_at,
           });
         }
       } catch (e) {
@@ -505,7 +505,7 @@ export const listKitchenDashboardFn = createServerFn({ method: "POST" })
           status: row.status as ComandaOrderStatus,
           notes: payload.notes || null,
           created_at: row.created_at,
-          updated_at: row.updated_at,
+          updated_at: row.created_at,
         });
       } catch (e) {
         console.warn("Erro ao fazer parse do pedido:", e);

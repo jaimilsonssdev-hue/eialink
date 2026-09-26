@@ -88,7 +88,7 @@ import {
 } from "@/lib/public-page-url";
 import type { CatalogItem } from "@/modules/products/types";
 import { getPresetForCompany, getVariantsForNiche, isProductCatalogNiche, type NichePreset } from "@/modules/prospecting/nichePresets";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, Json } from "@/integrations/supabase/types";
 
 type BioForm = Pick<
   Tables<"bio_pages">,

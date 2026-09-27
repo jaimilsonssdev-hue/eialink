@@ -1469,6 +1469,226 @@ export interface FetchedBusinessData {
   }>;
 }
 
+export async function extractGoogleMapsSearchUniversal(
+  target: string,
+  context?: any,
+): Promise<FetchedBusinessData> {
+  const supabaseAdmin = (context as any)?.supabase || getSupabaseServerClient();
+  const userId = (context as any)?.userId || "maps-assets";
+
+  let urlOrQuery = target.trim();
+
+  // 1. Expande links encurtados do Maps (maps.app.goo.gl ou goo.gl/maps)
+  if (urlOrQuery.includes("maps.app.goo.gl") || urlOrQuery.includes("goo.gl/maps")) {
+    try {
+      const headRes = await fetch(urlOrQuery, {
+        redirect: "follow",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        },
+        signal: AbortSignal.timeout(6000),
+      });
+      if (headRes.url && headRes.url !== urlOrQuery) {
+        urlOrQuery = headRes.url;
+      }
+    } catch (e) {
+      console.warn("[UniversalMaps] Erro ao expandir link curto:", e);
+    }
+  }
+
+  // 2. Extrai termo de busca do Maps
+  let searchQuery = "";
+  const placeMatch = urlOrQuery.match(/\/maps\/place\/([^/@?&]+)/i);
+  const qMatch = urlOrQuery.match(/[?&]q=([^&]+)/i);
+  const searchMatch = urlOrQuery.match(/\/maps\/search\/([^/@?&]+)/i);
+
+  if (placeMatch && placeMatch[1]) {
+    searchQuery = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
+  } else if (qMatch && qMatch[1]) {
+    searchQuery = decodeURIComponent(qMatch[1]).replace(/\+/g, " ").trim();
+  } else if (searchMatch && searchMatch[1]) {
+    searchQuery = decodeURIComponent(searchMatch[1]).replace(/\+/g, " ").trim();
+  } else if (!urlOrQuery.startsWith("http://") && !urlOrQuery.startsWith("https://")) {
+    searchQuery = urlOrQuery;
+  }
+
+  if (searchQuery.startsWith("@")) searchQuery = "";
+  const queryToSearch = searchQuery || urlOrQuery;
+
+  console.log(`[UniversalMaps] Buscando termo no Google Maps Search: "${queryToSearch}"`);
+
+  const mapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(queryToSearch)}?hl=pt-BR`;
+  const jinaUrl = `https://r.jina.ai/${mapsSearchUrl}`;
+
+  let text = "";
+  try {
+    const res = await fetch(jinaUrl, {
+      headers: {
+        "Accept-Language": "pt-BR,pt;q=0.9",
+        "x-timeout": "25",
+      },
+      signal: AbortSignal.timeout(28000),
+    });
+    if (res.ok) {
+      text = await res.text();
+    }
+  } catch (jinaErr) {
+    console.warn("[UniversalMaps] Falha ao consultar Jina Reader para Google Maps Search:", jinaErr);
+  }
+
+  // 3. Extração dos Campos
+  let name = "";
+  const placeLinkMatch = text.match(/\[([^\n\r\]]+)\]\(https:\/\/www\.google\.com\/maps\/place\//);
+  if (placeLinkMatch && placeLinkMatch[1]) {
+    name = placeLinkMatch[1].trim();
+  }
+  if (!name) {
+    const h1Match = text.match(/#\s*([^\n\r]+)/);
+    if (h1Match) {
+      const raw = h1Match[1].trim();
+      if (
+        !raw.toLowerCase().includes("google maps") &&
+        !raw.toLowerCase().includes("pesquisa google") &&
+        !raw.toLowerCase().includes("resultados")
+      ) {
+        name = raw;
+      }
+    }
+  }
+  if (!name && searchQuery) name = searchQuery;
+
+  let rating: number | undefined;
+  let niche: string | undefined;
+  const ratingBlockMatch = text.match(/(\d[.,]\d)\s*\n+([^\n\r·]+)·/);
+  if (ratingBlockMatch) {
+    rating = parseFloat(ratingBlockMatch[1].replace(",", "."));
+    niche = ratingBlockMatch[2].trim();
+  } else {
+    const rSolo = text.match(/\b(\d[.,]\d)\b/);
+    if (rSolo) rating = parseFloat(rSolo[1].replace(",", "."));
+  }
+
+  let address: string | undefined;
+  const addrMatch =
+    text.match(/\s*\n+([^\n\r]+)/) ||
+    text.match(/(?:Av\.|Rua|Alameda|Travessa|Praça|Estrada|Rodovia)[^\n\r]+/i);
+  if (addrMatch) {
+    address = (addrMatch[1] || addrMatch[0]).trim();
+  }
+
+  let phone: string | undefined;
+  const telMatch =
+    text.match(/tel:([+\d]+)/) ||
+    text.match(/\s*\n+([+\d\s-]+)/) ||
+    text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
+  if (telMatch) {
+    phone = (telMatch[1] || telMatch[0]).trim();
+  }
+
+  let description: string | undefined;
+  const descMatch = text.match(/Compartilhar\s*\n+([^\n\r]+)/);
+  if (descMatch) {
+    const rawDesc = descMatch[1].trim();
+    if (!rawDesc.startsWith("[") && rawDesc.length > 10) {
+      description = rawDesc;
+    }
+  }
+
+  // Fotos reais em HD
+  const rawPhotos =
+    text.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|googleapis\.com\/v1\/thumbnail)[^\s\)\"']*/gi) || [];
+  const blocked = ["/a/", "/a-/", "/al/", "default_user", "loader", "mapslogo", "tactile"];
+  const candidatePhotos: string[] = [];
+  for (const p of rawPhotos) {
+    if (blocked.some((b) => p.includes(b))) continue;
+    let hd = p;
+    if (p.includes("googleapis.com/v1/thumbnail")) {
+      hd = p.replace(/&w=\d+&h=\d+/, "&w=1200&h=800");
+    } else if (p.includes("googleusercontent.com")) {
+      hd = p.replace(/=w\d+.*$/, "=w1200-h800-k-no");
+      if (!hd.includes("=w1200")) hd += "=w1200-h800-k-no";
+    }
+    if (!candidatePhotos.includes(hd)) candidatePhotos.push(hd);
+  }
+
+  // 4. Download & Persistência das Fotos
+  const importedImages: NonNullable<FetchedBusinessData["importedImages"]> = [];
+  for (let i = 0; i < Math.min(candidatePhotos.length, 6); i++) {
+    const photoUrl = candidatePhotos[i];
+    try {
+      const imgRes = await fetch(photoUrl, { signal: AbortSignal.timeout(8000) });
+      if (imgRes.ok) {
+        const mime = imgRes.headers.get("content-type") || "image/jpeg";
+        const buf = await imgRes.arrayBuffer();
+        const b64 = Buffer.from(buf).toString("base64");
+        let publicUrl = photoUrl;
+
+        if (supabaseAdmin) {
+          try {
+            const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
+            const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
+            const { error: upErr } = await supabaseAdmin.storage
+              .from("bio-media")
+              .upload(storagePath, Buffer.from(buf), {
+                contentType: mime,
+                upsert: true,
+              });
+            if (!upErr) {
+              const { data: pubData } = supabaseAdmin.storage
+                .from("bio-media")
+                .getPublicUrl(storagePath);
+              if (pubData?.publicUrl) {
+                publicUrl = pubData.publicUrl;
+              }
+            }
+          } catch (storageErr) {
+            console.warn("[UniversalMaps] Erro ao persistir foto no storage:", storageErr);
+          }
+        }
+
+        importedImages.push({
+          name: `maps-foto-${i + 1}.jpg`,
+          mimeType: mime,
+          base64: `data:${mime};base64,${b64}`,
+          publicUrl,
+          role: i === 0 ? "cover" : i < 3 ? "product" : "general",
+        });
+      }
+    } catch (downErr) {
+      console.warn(`[UniversalMaps] Aviso ao baixar foto ${i + 1}:`, downErr);
+    }
+  }
+
+  // 5. Briefing Estruturado
+  const finalName = name || searchQuery || "Empresa";
+  const formattedBriefing = `[DADOS REAIS E CONFIRMADOS DO GOOGLE MAPS / GOOGLE MEU NEGÓCIO]:
+- Nome Comercial Oficial: ${finalName}
+${niche ? `- Nicho / Ramo de Atuação: ${niche}\n` : ""}${
+    rating ? `- Avaliação dos Clientes: ${rating} estrelas no Google Maps ⭐\n` : ""
+  }${phone ? `- Telefone / WhatsApp: ${phone}\n` : ""}${
+    address ? `- Endereço Físico: ${address}\n` : ""
+  }${description ? `- Descrição / Diferenciais: ${description}\n` : ""}${
+    importedImages.length > 0
+      ? `- Fotos Reais Obtidas: ${importedImages.length} fotos em alta resolução do estabelecimento.\n`
+      : ""
+  }
+DIRETRIZ CRÍTICA PARA A IA:
+Estes são os dados OFICIAIS e REAIS da empresa do cliente acima. Substitua integralmente qualquer informação de empresas anteriores ou perfis pessoais. Construa o site, textos de autoridade, serviços e prova social exclusivamente baseados nesta empresa.`;
+
+  return {
+    source: "google_maps",
+    name: finalName,
+    niche,
+    address,
+    city: address,
+    phone,
+    rating,
+    formattedBriefing,
+    importedImages,
+  };
+}
+
 export async function internalFetchBusinessFromUrl(
   rawUrl: string,
   context?: any,
@@ -1517,7 +1737,7 @@ export async function internalFetchBusinessFromUrl(
     }
   }
 
-  // 1. TENTA O SCRAPER AUTOMÁTICO GOSOM (Playwright Headless nativo com 100% dos dados reais)
+  // 1. TENTA O SCRAPER LOCAL GOSOM SE HOUVER BINÁRIO (ex: ambiente desktop)
   if (isGoogle) {
     try {
       const gosomData = await runGosomScraper(target, {
@@ -1529,8 +1749,14 @@ export async function internalFetchBusinessFromUrl(
         return gosomData;
       }
     } catch (gosomErr) {
-      console.warn("[Copilot] Gosom Scraper falhou ou indisponível, usando fallback HTTP:", gosomErr);
+      console.warn("[Copilot] Gosom Scraper indisponível, usando motor universal Google Maps Search:", gosomErr);
     }
+
+    // 2. MOTOR UNIVERSAL VIA GOOGLE MAPS SEARCH (Funciona 100% no Lovable, Cloud, Linux e Web)
+    return await extractGoogleMapsSearchUniversal(target, {
+      supabase: supabaseAdmin,
+      userId,
+    });
   }
 
   const controller = new AbortController();

@@ -170,6 +170,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
   const [isImportingUrl, setIsImportingUrl] = useState(false);
   const [identifiedBusiness, setIdentifiedBusiness] = useState<{
     name?: string;
+    niche?: string;
     city?: string;
     address?: string;
     source: string;
@@ -582,7 +583,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
       setLoadingStep("🧠 Gerador Premium Beta (Gemini 3.5 Flash) estruturando proposta com Grounding...");
       const finalClientName = identifiedBusiness?.name || currentContext?.displayName?.trim() || undefined;
       const finalClientCity = identifiedBusiness?.city || currentContext?.city?.trim() || undefined;
-      const finalClientNiche = identifiedBusiness ? undefined : (currentContext?.niche?.trim() || undefined);
+      const finalClientNiche = identifiedBusiness?.niche || (identifiedBusiness ? undefined : (currentContext?.niche?.trim() || undefined));
 
       const result = await generatePremiumProposalFn({
         data: {

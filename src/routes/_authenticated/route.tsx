@@ -152,9 +152,18 @@ function AuthedLayout() {
 
   return (
     <div className="app-shell min-h-screen flex">
+      {/* Backdrop mobile */}
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`app-sidebar fixed inset-y-0 left-0 z-40 w-64 transform transition-transform md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`app-sidebar fixed inset-y-0 left-0 z-40 flex h-full w-72 max-w-[85vw] flex-col transform transition-transform md:w-64 md:max-w-none md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="app-sidebar-header p-5 flex items-center justify-between">
           <Link
@@ -178,7 +187,7 @@ function AuthedLayout() {
         <div className="px-3 pb-4">
           <ThemeToggle />
         </div>
-        <nav className="px-3 space-y-1 overflow-y-auto pb-20">
+        <nav className="min-h-0 flex-1 overflow-y-auto px-3 space-y-1 pb-4">
           {navGroups.map((group, gi) => (
             <div key={group.title ?? `group-${gi}`} className={group.title ? "pt-4 space-y-1" : "space-y-1"}>
               {group.title && (
@@ -226,7 +235,7 @@ function AuthedLayout() {
             </div>
           )}
         </nav>
-        <div className="absolute bottom-4 left-3 right-3">
+        <div className="shrink-0 border-t border-border bg-[color:var(--card,transparent)] p-3">
           <button
             onClick={signOut}
             className="app-nav-link flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm"

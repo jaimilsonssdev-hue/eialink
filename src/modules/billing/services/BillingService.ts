@@ -39,6 +39,8 @@ export const BillingService = {
     const canAccessBuilder = isAdmin || hasBuilderAccessNote;
     const hasComandaAccessNote = notes.includes("comanda_access:true");
     const canAccessComanda = isAdmin || hasComandaAccessNote;
+    // A Agenda fica liberada por padrão; o Super Admin pode desligá-la por cliente.
+    const canAccessAgenda = isAdmin || !notes.includes("agenda_access:false");
 
     return {
       plan,
@@ -48,6 +50,7 @@ export const BillingService = {
       isPro,
       canAccessBuilder,
       canAccessComanda,
+      canAccessAgenda,
     };
   },
   async setBuilderAccess(userId: string, enabled: boolean) {

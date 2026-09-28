@@ -67,6 +67,7 @@ export type PlanAccess = {
   isPro: boolean;
   canAccessBuilder: boolean;
   canAccessComanda: boolean;
+  canAccessAgenda: boolean;
 };
 
 export const ESSENTIAL_LIMITS: PlanLimits = {

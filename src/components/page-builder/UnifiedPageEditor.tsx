@@ -823,7 +823,12 @@ export function UnifiedPageEditor({
           ...((result.custom_theme as any).title ? { title: (result.custom_theme as any).title } : {}),
           ...((result.custom_theme as any).border_radius ? { border_radius: (result.custom_theme as any).border_radius } : {}),
           ...((result.custom_theme as any).hue != null ? { hue: (result.custom_theme as any).hue } : {}),
-          ...((result.custom_theme as any).hero_style ? { hero_style: (result.custom_theme as any).hero_style } : {}),
+         ...((result.custom_theme as any).hero_style ? { hero_style: (result.custom_theme as any).hero_style } : {}),
+         ...(typeof (result.custom_theme as any).parallax === "boolean"
+           ? { parallax: (result.custom_theme as any).parallax }
+           : currentSocial.custom_theme?.parallax != null
+             ? { parallax: currentSocial.custom_theme.parallax }
+             : {}),
           font_pair: (result.custom_theme as any).font_pair || currentSocial.custom_theme?.font_pair,
         }
       : currentSocial.custom_theme;

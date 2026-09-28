@@ -73,7 +73,7 @@ async function resolveTransport(): Promise<PlacesTransport | null> {
   if (!apiKey || !lovableKey) return null;
 
   return {
-    base: GATEWAY_URL,
+    base: `${GATEWAY_URL}/places`,
     headers: (fieldMask?: string) => {
       const headers: Record<string, string> = {
         Authorization: `Bearer ${lovableKey}`,

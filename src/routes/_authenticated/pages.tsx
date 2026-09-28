@@ -263,6 +263,7 @@ function PagesWorkspace() {
   const [wizardWhatsapp, setWizardWhatsapp] = useState("");
   const [wizardCity, setWizardCity] = useState("");
   const [isCreatingWizard, setIsCreatingWizard] = useState(false);
+  const [creationEngine, setCreationEngine] = useState<"express" | "premium">("express");
 
   // Auto-importador do Perfil do Google Maps / Link
   const [lookupQuery, setLookupQuery] = useState("");
@@ -398,7 +399,13 @@ function PagesWorkspace() {
 
       await pages.refetch();
       setIsWizardOpen(false);
-      navigate({ to: "/builder", search: { page: page.id } });
+      navigate({
+        to: "/builder",
+        search:
+          creationEngine === "premium"
+            ? { page: page.id, copilot: true }
+            : { page: page.id },
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Não foi possível criar a página.";
       setCreationError(message);
@@ -527,21 +534,20 @@ function PagesWorkspace() {
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => {
-              const firstPage = pages.data?.[0];
-              if (firstPage) {
-                navigate({ to: "/builder", search: { page: firstPage.id, copilot: true } });
-              } else {
-                navigate({ to: "/builder", search: { copilot: true } });
-              }
+              setCreationEngine("premium");
+              setIsWizardOpen(true);
             }}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
-            title="Enviar briefing e fotos para gerar proposta de site completa via AI Gateway"
+            title="Criar uma nova página exclusiva com direção de arte gerada por IA"
           >
             <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
-            <span>Gerar Proposta com Fotos (IA Gateway)</span>
+            <span>Criar Página Premium com IA</span>
           </button>
           <button
-            onClick={() => setIsWizardOpen(true)}
+            onClick={() => {
+              setCreationEngine("express");
+              setIsWizardOpen(true);
+            }}
             disabled={isCreatingWizard || access.isLoading}
             className="btn-primary inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg shadow-[color:var(--primary)]/20 transition-all hover:scale-[1.02]"
           >
@@ -635,14 +641,20 @@ function PagesWorkspace() {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
-                onClick={() => navigate({ to: "/builder", search: { copilot: true } })}
+                onClick={() => {
+                  setCreationEngine("premium");
+                  setIsWizardOpen(true);
+                }}
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
               >
                 <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
-                <span>Gerar Proposta com Fotos (IA Gateway)</span>
+                <span>Criar Página Premium com IA</span>
               </button>
               <button
-                onClick={() => setIsWizardOpen(true)}
+                onClick={() => {
+                  setCreationEngine("express");
+                  setIsWizardOpen(true);
+                }}
                 className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold"
               >
                 <Sparkles className="h-4 w-4" /> Criar Rápido (30s)
@@ -973,6 +985,43 @@ function PagesWorkspace() {
                       </button>
                     );
                   })}
+                </div>
+              </div>
+
+              {/* Escolha do motor de criação */}
+              <div>
+                <label className="block text-xs font-bold text-foreground mb-1.5">
+                  Como você quer criar esta página?
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreationEngine("express")}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      creationEngine === "express"
+                        ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 ring-1 ring-[color:var(--primary)]/50"
+                        : "border-border bg-surface-elevated/30 hover:border-border/80"
+                    }`}
+                  >
+                    <p className="text-xs font-bold text-foreground">Máquina Express</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Modelo pronto preenchido com as informações reais do negócio. Fica pronto em segundos.
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreationEngine("premium")}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      creationEngine === "premium"
+                        ? "border-purple-500 bg-purple-500/15 ring-1 ring-purple-500/50"
+                        : "border-border bg-surface-elevated/30 hover:border-border/80"
+                    }`}
+                  >
+                    <p className="text-xs font-bold text-foreground">Premium com IA</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Cria a página nova e abre o assistente de IA para montar um visual exclusivo com suas fotos.
+                    </p>
+                  </button>
                 </div>
               </div>
 

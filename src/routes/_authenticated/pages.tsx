@@ -544,7 +544,10 @@ function PagesWorkspace() {
             <span>Criar Página Premium com IA</span>
           </button>
           <button
-            onClick={() => setIsWizardOpen(true)}
+            onClick={() => {
+              setCreationEngine("express");
+              setIsWizardOpen(true);
+            }}
             disabled={isCreatingWizard || access.isLoading}
             className="btn-primary inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg shadow-[color:var(--primary)]/20 transition-all hover:scale-[1.02]"
           >
@@ -638,14 +641,20 @@ function PagesWorkspace() {
             </div>
             <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
               <button
-                onClick={() => navigate({ to: "/builder", search: { copilot: true } })}
+                onClick={() => {
+                  setCreationEngine("premium");
+                  setIsWizardOpen(true);
+                }}
                 className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
               >
                 <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
-                <span>Gerar Proposta com Fotos (IA Gateway)</span>
+                <span>Criar Página Premium com IA</span>
               </button>
               <button
-                onClick={() => setIsWizardOpen(true)}
+                onClick={() => {
+                  setCreationEngine("express");
+                  setIsWizardOpen(true);
+                }}
                 className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold"
               >
                 <Sparkles className="h-4 w-4" /> Criar Rápido (30s)

@@ -10,6 +10,7 @@ import {
 } from "./scoring";
 import { detectNicheKey } from "./nichePresets";
 import type { ProspectDraft } from "./types";
+import { normalizeBusinessQuery } from "./normalizeBusinessLink";
 
 interface RawScrapedLead {
   name: string;

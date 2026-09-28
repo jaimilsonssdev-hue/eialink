@@ -97,6 +97,28 @@ export const BillingService = {
 
     if (error) throw error;
   },
+  async setAgendaAccess(userId: string, enabled: boolean) {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("id, notes")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!sub) return;
+
+    let currentNotes = sub.notes || "";
+    currentNotes = currentNotes.replace(/agenda_access:(true|false)/g, "").trim();
+    const newNotes = currentNotes
+      ? `${currentNotes} agenda_access:${enabled}`
+      : `agenda_access:${enabled}`;
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({ notes: newNotes })
+      .eq("id", sub.id);
+
+    if (error) throw error;
+  },
   async listPlans(): Promise<Plan[]> {
     const { data, error } = await supabase.from("plans").select("*").order("position");
     if (error) throw error;

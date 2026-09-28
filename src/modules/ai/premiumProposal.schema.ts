@@ -123,6 +123,7 @@ export const ThemeProposalSchema = z.preprocess((val: any) => {
   mode: z.enum(["dark", "light"]).default("dark"),
   radius: z.string().default("16px"),
   density: z.enum(["compact", "comfortable", "spacious"]).default("comfortable"),
+  parallax: z.boolean().nullable().default(null),
 }));
 
 export const PagePatchSchema = z.preprocess((val: any) => {

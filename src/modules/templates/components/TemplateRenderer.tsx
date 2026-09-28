@@ -122,6 +122,8 @@ export function TemplateRenderer({
 
   return (
     <main
+      ref={parallaxRef}
+      data-parallax={parallaxEnabled ? "on" : undefined}
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}
       data-template={bio.template_id ?? "default"}
       data-layout={model.template.layout}

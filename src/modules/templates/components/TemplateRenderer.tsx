@@ -104,9 +104,12 @@ export function TemplateRenderer({
     navigation_bg?: string;
     info_badge_bg?: string;
     font_pair?: string;
+    parallax?: boolean;
   } | undefined;
 
   const fontPair = findFontPair(customTheme?.font_pair);
+  const parallaxEnabled = customTheme?.parallax === true && bio.motion_enabled !== false;
+  const parallaxRef = useParallaxScene<HTMLElement>(parallaxEnabled);
 
   const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
   const customText = customTheme?.text || tokensDesign?.estilo_botoes?.cor_texto;

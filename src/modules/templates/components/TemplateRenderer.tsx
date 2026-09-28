@@ -7,6 +7,7 @@ import { layoutResolver } from "../layouts/LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { PublicSocialLinks } from "@/components/public-profile/PublicSocialLinks";
 import { safeExternalUrl } from "@/lib/safe-url";
+import { findFontPair } from "@/lib/font-pairs";
 
 const NICHE_FALLBACK_COVERS: Record<string, string> = {
   restaurant: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",

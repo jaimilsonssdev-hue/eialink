@@ -2,7 +2,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { getPresetForCompany, isProductCatalogNiche, isHealthBookingNiche } from "@/modules/prospecting/nichePresets";
 import { formatCatalogDescription } from "@/modules/products/services/ProductService";
-import { fetchGoogleMapsPlaceDetails, type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspectingEngine";
+import { type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspectingEngine";
+import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
 import {
   makePageOfficialFn,
   transferPageOwnershipFn,
@@ -137,7 +138,9 @@ export const PageService = {
     let realPlace = placeDetails;
     if (!realPlace) {
       try {
-        realPlace = await fetchGoogleMapsPlaceDetails(sanitizedCompanyName, city, cid);
+        realPlace = await fetchPlaceDetailsFn({
+          data: { companyName: sanitizedCompanyName, city: city ?? null, cid: cid ?? null },
+        });
       } catch (placeErr) {
         console.warn("Aviso ao buscar detalhes reais do Google Maps:", placeErr);
       }

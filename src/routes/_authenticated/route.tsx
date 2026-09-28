@@ -235,7 +235,7 @@ function AuthedLayout() {
             </div>
           )}
         </nav>
-        <div className="absolute bottom-4 left-3 right-3">
+        <div className="shrink-0 border-t border-border bg-[color:var(--card,transparent)] p-3">
           <button
             onClick={signOut}
             className="app-nav-link flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm"

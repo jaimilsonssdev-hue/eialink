@@ -1047,7 +1047,8 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
    - 'theme.fontPair': um de "moderna" | "elegante" | "marcante" | "corporativa".
    - 'theme.radius': entre "4px" e "28px" coerente com a direção.
    - 'creativeDirection.heroStyle': um de "fullscreen-photo" | "split" | "centered-minimal" | "overlay-gradient".
-   - 'creativeDirection.motionIntensity': "subtle" | "standard" | "cinematic".
+    - 'creativeDirection.motionIntensity': "subtle" | "standard" | "cinematic".
+    - 'theme.parallax': true | false. Ative (true) o efeito imersivo de profundidade quando o negócio for visual e premium (gastronomia, estética, barbearia, moda, arquitetura, academia, eventos) ou quando o usuário pedir algo imersivo/cinematográfico. Use false para páginas sóbrias ou institucionais com poucas fotos.
    - Escolha e ORDENE as seções de forma estratégica para este negócio (não siga sempre a mesma ordem). Desative seções sem dados reais.
 
 4. COPYWRITING ESPECIALIZADO DE ALTO PADRÃO (ZERO CLICHÊS):

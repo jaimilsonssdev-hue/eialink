@@ -1,9 +1,11 @@
-﻿import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 import type { PageBlock } from "@/components/page-builder/types";
 import type { CatalogItem } from "@/modules/products/types";
 import type { PublicLink } from "@/components/public-profile/types";
 import type { AiCopilotResult } from "./copilot.functions";
 import type { PremiumBetaProposal } from "./premiumProposal.schema";
+import { detectNicheKey } from "@/modules/prospecting/nichePresets";
+import { hexToHue, getNicheHue } from "@/modules/templates/layouts/SiteMaquinaLayout";
 
 /**
  * ADAPTADOR DETERMINÍSTICO DO GERADOR PREMIUM BETA (NÍVEL 2)
@@ -41,7 +43,15 @@ export function adaptProposalToExistingStructures(
 ): AdaptedProposalResult {
   const currentSocial = ((currentBio?.social_links as Record<string, any>) || {}) as Record<string, any>;
 
-  // 1. Extração e montagem do tema customizado (Design Tokens com contraste WCAG)
+  const detectedNicheKey = detectNicheKey(
+    proposal.strategy.niche || currentSocial.niche,
+    proposal.pagePatch.displayName || currentBio?.display_name
+  );
+
+  const derivedHue = proposal.theme.primary ? hexToHue(proposal.theme.primary) : null;
+  const nicheHue = derivedHue ?? getNicheHue(detectedNicheKey);
+
+  // 1. Extração e montagem do tema customizado (Design Tokens com contraste WCAG e HUE dinâmico)
   const customTheme = {
     primary: proposal.theme.primary,
     background: proposal.theme.background,
@@ -51,6 +61,7 @@ export function adaptProposalToExistingStructures(
     text: proposal.theme.text,
     mode: proposal.theme.mode,
     border_radius: proposal.theme.radius,
+    hue: nicheHue,
   };
 
   const tokensDesign = {
@@ -365,6 +376,57 @@ export function adaptProposalToExistingStructures(
     },
   };
 
+  // Mapeamento dinâmico de tema e template por nicho
+  const nicheThemeMap: Record<string, string> = {
+    restaurante: "sunset",
+    delivery: "sunset",
+    hamburgueria: "sunset",
+    pizzaria: "sunset",
+    sorveteria: "sunset",
+    confeitaria: "sunset",
+    bebidas: "amber",
+    barbearia: "midnight",
+    beleza: "sunset",
+    salao: "sunset",
+    estetica: "sunset",
+    clinica: "ocean",
+    odontologia: "ocean",
+    medica: "ocean",
+    psicologia: "forest",
+    terapia: "forest",
+    nutricao: "forest",
+    petshop: "forest",
+    veterinaria: "forest",
+    advocacia: "midnight",
+    contabilidade: "forest",
+    oficina: "midnight",
+    marketing: "midnight",
+    loja: "aurora",
+  };
+
+  const resolvedTheme = nicheThemeMap[detectedNicheKey] || (proposal.theme.mode === "dark" ? "midnight" : "ocean");
+
+  const validTemplates = [
+    "restaurant-menu",
+    "clinic-care",
+    "beauty-glow",
+    "beauty-glam",
+    "law-authority",
+    "store-showcase",
+    "therapy-wellbeing",
+    "business-modern",
+    "cinematic-glass",
+    "site-maquina",
+  ];
+
+  let resolvedTemplateId = currentBio?.template_id || "site-maquina";
+  if (
+    proposal.creativeDirection?.id &&
+    validTemplates.includes(proposal.creativeDirection.id)
+  ) {
+    resolvedTemplateId = proposal.creativeDirection.id;
+  }
+
   // 9. Patch do registro canônico bio_pages
   const updatedBio: Partial<Tables<"bio_pages">> = {
     ...currentBio,
@@ -377,8 +439,8 @@ export function adaptProposalToExistingStructures(
     instagram: proposal.pagePatch.instagram || currentBio?.instagram,
     avatar_url: proposal.pagePatch.avatarUrl || currentBio?.avatar_url,
     cover_url: proposal.pagePatch.coverUrl || currentBio?.cover_url,
-    template_id: currentBio?.template_id || "site-maquina",
-    theme: "aurora",
+    template_id: resolvedTemplateId,
+    theme: resolvedTheme,
     motion_enabled: proposal.creativeDirection.motionIntensity !== "off",
     motion_entrance: "gentle",
     motion_cta: "gentle",

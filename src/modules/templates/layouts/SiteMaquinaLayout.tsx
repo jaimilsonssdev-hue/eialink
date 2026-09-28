@@ -52,7 +52,7 @@ export class SiteMaquinaLayout implements TemplateLayoutRenderer {
 /**
  * Retorna o HUE (0-360) padrão do Design System para cada nicho
  */
-function getNicheHue(nicheKey: string): number {
+export function getNicheHue(nicheKey: string): number {
   switch (nicheKey) {
     case "clinica":
     case "odontologia":
@@ -98,7 +98,7 @@ function getNicheHue(nicheKey: string): number {
   }
 }
 
-function hexToHue(hex?: string): number | null {
+export function hexToHue(hex?: string): number | null {
   if (!hex || !hex.startsWith("#")) return null;
   const clean = hex.replace("#", "");
   if (clean.length !== 6) return null;

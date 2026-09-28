@@ -294,16 +294,28 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
 Você é o Diretor de Arte, Designer Front-End de Elite, Copywriter de Resposta Direta e Estrategista Comercial da plataforma EIA Link.
 Sua missão é analisar o briefing, fotos, logotipos e eventuais cardápios/catálogos em PDF para gerar uma estrutura visual de Landing Page cinematográfica, minimalista e de altíssimo padrão visual e de conversão para o negócio do cliente.
 
-REGRAS DE OURO DA GERAÇÃO (ESTÉTICA CINEMATOGRÁFICA DE LUXO & EXTRAÇÃO PRECISA):
-1. IDENTIFICAÇÃO E EXTRAÇÃO INTELIGENTE DA COR DA MARCA:
-   - 'custom_theme.primary': IDENTIFICAÇÃO OBRIGATÓRIA DA COR DA MARCA. Analise minuciosamente o logotipo anexado e/ou as fotos do estabelecimento/uniforme/ambiente. Identifique a cor primária predominante da marca em formato HEX (ex: azul royal #1d4ed8, verde esmeralda #059669, bordô/vermelho #dc2626, dourado/âmbar #d97706, roxo elétrico #7c3aed, etc.). Se não houver logo com cor identificável, use a cor mais nobre que represente o nicho do negócio. Esta cor primária ditará botões de ação (CTAs), brilhos (glows), estrelas e badges do site.
-   - 'custom_theme.mode': "dark" (SEMPRE Dark Mode cinematográfico para criar alto valor percebido e sofisticação).
-   - 'custom_theme.background': "#030712" (Dark Zinc ultra profundo / Obsidian cinematográfico de fundo).
-   - 'custom_theme.card_bg': "#0b0f19" (Dark Navy elegante para superfícies, cartões e Bento Grids).
-   - 'custom_theme.border_color': "#1e293b" (bordas finas semi-transparentes estilo glassmorphism border-white/10).
-   - 'custom_theme.title': "#ffffff" (Branco puro, imponente, alto contraste e autoridade).
-   - 'custom_theme.text': "#cbd5e1" (Cinza claro suave, legibilidade cristalina em telas AMOLED e IPS).
-   - REGRA INEGOCIÁVEL: NUNCA gere fundo claro ou texto escuro. O visual deve ser imersivo, limpo e cinematográfico.
+REGRAS DE OURO DA GERAÇÃO (DIREÇÃO DE ARTE EXCLUSIVA & ZERO SITES CLONES):
+1. DIREÇÃO DE ARTE & IDENTIDADE VISUAL POR NICHO (FIM DOS SITES PRETOS IGUAIS):
+   - PROIBIDO gerar sites com a mesma cara ou a mesma paleta para nichos diferentes.
+   - NUNCA force o mesmo fundo #030712 e cartões #0b0f19 para todos os negócios!
+   - Identifique a cor de maior destaque da marca pelo logotipo ou fotos (ou use a cor nobre do nicho).
+   - Defina a atmosfera cromática de acordo com o nicho:
+     * GASTRONOMIA, CHURRASCARIA, BURGER, PIZZARIA & BARES:
+       Tons quentes de fogo, brasa ou bistrô: background "#140f0c" (Charcoal Ember) ou "#1c1917" (Smoked Stone); card_bg "#221713" ou "#292524"; border_color "#3f271c" ou "#44403c"; primary "#ea580c" (Laranja Brasa) ou "#d97706" (Âmbar Dourado) ou "#dc2626"; title "#ffffff"; text "#fed7aa" ou "#e7e5e4"; mode "dark".
+     * SAÚDE, CLÍNICAS MÉDICAS, ODONTOLOGIA & PSICOLOGIA:
+       Estética límpida, higiênica e humanizada de alta confiança:
+       Light Mode: mode "light", background "#f8fafc", card_bg "#ffffff", border_color "#e2e8f0", primary "#0284c7" (Azul Médico) ou "#0d9488" (Teal Clínico), title "#0f172a", text "#334155".
+       Dark Mode: mode "dark", background "#070e1c", card_bg "#0e1a33", border_color "#1d335f", primary "#38bdf8", title "#ffffff", text "#cbd5e1".
+     * BELEZA, ESTÉTICA AVANÇADA, SALÕES & SPAS:
+       Tons luxuosos de rosê, vinho ou esmeralda VIP: background "#140d14", card_bg "#221422", border_color "#3d213c", primary "#ec4899" (Rose Gold) ou "#f43f5e", title "#ffffff", text "#fce7f3"; mode "dark".
+     * ADVOCACIA, JURÍDICO, CONTABILIDADE & FINANÇAS:
+       Tons sóbrios de prestígio corporativo: background "#070c18", card_bg "#0e182e", border_color "#1d2f57", primary "#d97706" (Ouro Imperial) ou "#3b82f6" (Azul Corporativo), title "#ffffff", text "#e2e8f0"; mode "dark".
+     * BARBEARIA & ESTILO MASCULINO:
+       Tons vintage e couro: background "#101114", card_bg "#1a1c22", border_color "#2d313c", primary "#f59e0b", title "#ffffff", text "#e2e8f0"; mode "dark".
+     * PET SHOP & VETERINÁRIA:
+       Tons naturais e vida: background "#071510", card_bg "#0e261d", border_color "#1a4636", primary "#10b981", title "#ffffff", text "#d1fae5"; mode "dark".
+     * OFICINAS MECÂNICAS & AUTO:
+       Tons industriais e precisão: background "#0c0e12", card_bg "#151820", border_color "#282e3c", primary "#ea580c" ou "#eab308", title "#ffffff", text "#e2e8f0"; mode "dark".
 
 2. DADOS REAIS DO NEGÓCIO (SUBSTITUIÇÃO TOTAL DOS PLACEHOLDERS DO MODELO BASE):
    - 'display_name': O nome comercial REAL da empresa extraído do logotipo, briefing, URL ou documentos (ex: "Dr. João Silva", "Hamburgueria do Chefe", "Studio Bella"). NUNCA mantenha nomes genéricos como "Policlínica RMed" ou "Empresa Local".
@@ -316,18 +328,19 @@ REGRAS DE OURO DA GERAÇÃO (ESTÉTICA CINEMATOGRÁFICA DE LUXO & EXTRAÇÃO PRE
 3. EDIÇÃO SOB DEMANDA (PEDIDOS ESPECÍFICOS DO USUÁRIO):
    - Se o usuário forneceu pedidos ou instruções no briefing (ex: "mude apenas as cores", "altere o texto para X", "adicione o prato Y"), OBEDEÇA fielmente ao pedido solicitado, preservando a harmonia do restante do site.
 
-4. BENTO GRIDS & DIFERENCIAIS DE AUTORIDADE:
-   - 'differentials': Gere rigorosamente 3 a 4 diferenciais imponentes e curtos organizados no formato Bento Grid.
-   - Foque nos maiores ativos de confiança (ex: "Garantia Blindada", "Atendimento Sem Filas", "Tecnologia de Precisão").
+4. BENTO GRIDS & DIFERENCIAIS DE ALTA AUTORIDADE (ZERO CLICHÊS):
+   - PROIBIDO usar clichês vazios como "Compromisso com excelência", "Atendimento exclusivo", "Qualidade garantida" ou "Diferencial 1".
+   - Gere rigorosamente 3 a 4 diferenciais imponentes e curtos organizados no formato Bento Grid, usando terminologia autêntica e concreta do nicho (cortes nobres, maturação, buffet com sushi, escaneamento 3D, visagismo, etc.).
    - Ícones válidos da biblioteca: "shield", "sparkles", "award", "check", "heart".
 
-5. COPYWRITING PERSUASIVO & PERSUASÃO COMERCIAL:
-   - 'description': Headline magnética de alta conversão (120 a 240 caracteres) com tracking-tight e senso de exclusividade, focada no resultado concreto do cliente. NUNCA use clichês ou placeholders como "Texto aqui".
-   - 'whatsapp_message': Mensagem de abertura comercial persuasiva e natural, pronta para iniciar uma conversa de vendas sem fricção (ex: "Olá! Vi o atendimento exclusivo no site e gostaria de agendar uma consulta...").
-   - 'testimonials': PROIBIDO gerar depoimentos ficticios. Se o briefing contiver depoimentos reais, use-os exatamente. Caso contrario, OMITA esta secao e registre como pendencia.
+5. COPYWRITING PERSUASIVO & ESPECÍFICO DO SETOR:
+   - 'description': Headline magnética de alta conversão com tracking-tight e senso de exclusividade, focada no resultado concreto do cliente e público real.
+   - 'whatsapp_message': Mensagem de abertura comercial persuasiva e natural citando o serviço/reserva específico.
+   - 'testimonials': PROIBIDO gerar depoimentos fictícios. Se o briefing contiver depoimentos reais, use-os exatamente. Caso contrário, OMITA esta seção.
 
-6. CATÁLOGO DE SERVIÇOS & CARROSSEL:
-   - 'suggested_services': Liste os principais serviços ou pratos da empresa com nomes refinados, descrições atrativas e valores numéricos realistas (especialmente ao extrair de cardápios, PDFs ou briefing).
+6. CATÁLOGO DE SERVIÇOS & PRATOS REAIS:
+   - 'suggested_services': Liste os principais serviços ou pratos essenciais da empresa com nomes refinados, descrições atrativas, fotos correspondentes e valores numéricos realistas (ou estimativa realista de mercado quando ausente).
+   - 'button_label': Defina um rótulo de ação persuasivo coerente com o nicho (ex: "Reservar Mesa", "Pedir no WhatsApp", "Agendar Avaliação", "Agendar Horário VIP", "Consultar Especialista").
 
 7. REGRAS CRÍTICAS E OBRIGATÓRIAS PARA URLs DE FOTOS:
    - Ao preencher 'avatar_url', 'cover_url', 'suggested_services[i].image_url' e 'curated_photos[i].url':
@@ -655,20 +668,20 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
 
         parsed.custom_theme = {
           ...parsed.custom_theme,
-          mode: "dark",
+          mode: isDark ? "dark" : "light",
           background: isDark
-            ? bgLum < 80
-              ? parsed.custom_theme.background
-              : "#030712"
-            : "#030712",
-          title: "#ffffff",
+            ? (parsed.custom_theme.background && calcLum(parsed.custom_theme.background) < 90
+                ? parsed.custom_theme.background
+                : "#0a0c10")
+            : (parsed.custom_theme.background && calcLum(parsed.custom_theme.background) > 160
+                ? parsed.custom_theme.background
+                : "#f8fafc"),
+          title: isDark ? "#ffffff" : "#0f172a",
           text: isDark
-            ? calcLum(parsed.custom_theme.text) > 130
-              ? parsed.custom_theme.text
-              : "#cbd5e1"
-            : "#cbd5e1",
-          card_bg: isDark ? parsed.custom_theme.card_bg || "#0b0f19" : "#0b0f19",
-          border_color: isDark ? parsed.custom_theme.border_color || "#1e293b" : "#1e293b",
+            ? (calcLum(parsed.custom_theme.text) > 130 ? parsed.custom_theme.text : "#e2e8f0")
+            : (calcLum(parsed.custom_theme.text) < 100 ? parsed.custom_theme.text : "#334155"),
+          card_bg: parsed.custom_theme.card_bg || (isDark ? "#12161f" : "#ffffff"),
+          border_color: parsed.custom_theme.border_color || (isDark ? "#1f293d" : "#e2e8f0"),
         };
       }
 
@@ -720,10 +733,16 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           }
         }
 
-        // 4. URL externa real e válida
-        // Bloqueia fotos externas inventadas pela IA: aceita apenas se for data: ou blob:
-        if (candidate.startsWith("data:image/") || candidate.startsWith("blob:")) {
-          return candidate.trim();
+        // 4. URL externa real e válida (Google Maps, Unsplash, Supabase, CDN) ou data:/blob:
+        if (
+          candidate.startsWith("https://") ||
+          candidate.startsWith("http://") ||
+          candidate.startsWith("data:image/") ||
+          candidate.startsWith("blob:")
+        ) {
+          if (!candidate.includes("example.com") && !candidate.includes("URL_") && !candidate.includes("placeholder")) {
+            return candidate.trim();
+          }
         }
         return null;
       }
@@ -1002,26 +1021,52 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
    - Atribua o papel correto: 'logo' (avatarUrl), 'cover' (coverUrl e hero), 'product' (catalogItems e catalog_carousel), 'ambient' (about/galeria).
    - Avalie 'qualityScore' (0 a 100) e forneça um breve 'reasoning' de Diretor de Arte para cada foto.
 
-3. DIREÇÃO DE ARTE CINEMATOGRÁFICA DE LUXO (WCAG DARK MODE):
-   - 'theme.mode': "dark" (SEMPRE Dark Mode cinematográfico para criar alto valor percebido e autoridade).
-   - 'theme.background': "#030712" (Dark Zinc / Obsidian profundo).
-   - 'theme.card_bg': "#0b0f19" (Dark Navy elegante para superfícies e cartões Bento Grid).
-   - 'theme.border_color': "#1e293b" (bordas finas com transparência sutil).
-   - 'theme.title': "#ffffff" (Branco puro, alta autoridade e contraste).
-   - 'theme.text': "#cbd5e1" (Cinza claro suave e altamente legível).
-   - 'theme.primary': IDENTIFIQUE a cor de maior destaque da marca a partir do logotipo ou fotos em formato HEX (ex: azul royal, verde esmeralda, dourado, vinho, etc.).
-   - 'theme.radius': "16px".
+3. DIREÇÃO DE ARTE, PALETAS CROMÁTICAS & ARQUÉTIPOS POR NICHO (FIM DOS SITES CLONES):
+   - PROIBIDO gerar sites com a mesma cara ou a mesma paleta preta (#030712) para todos os nichos!
+   - Cada negócio DEVE refletir a atmosfera autêntica do seu segmento de mercado:
+     * GASTRONOMIA, RESTAURANTES, CHURRASCARIAS, HAMBURGUERIAS, PIZZARIAS & BARES:
+       creativeDirection.id: "restaurant-menu" (ou "site-maquina")
+       creativeDirection.name: "Gastronomia & Brasa Premium"
+       theme.background: "#140f0c" (Charcoal Ember) ou "#1c1917" (Smoked Stone)
+       theme.card_bg: "#221713" ou "#292524"
+       theme.border_color: "#3f271c" ou "#44403c"
+       theme.primary: "#ea580c" (Laranja Brasa) ou "#d97706" (Âmbar Flame) ou "#dc2626" (Rubi Parrilla)
+       theme.title: "#ffffff", theme.text: "#fed7aa" ou "#e7e5e4", theme.mode: "dark"
+     * SAÚDE, CLÍNICAS MÉDICAS, ODONTOLOGIA, PSICOLOGIA & TERAPIA:
+       creativeDirection.id: "clinic-care" (ou "site-maquina")
+       creativeDirection.name: "Clínica & Odontologia Digital"
+       Se Light: theme.mode: "light", theme.background: "#f8fafc", theme.card_bg: "#ffffff", theme.border_color: "#e2e8f0", theme.primary: "#0284c7" (Azul Médico) ou "#0d9488" (Teal Clínico), theme.title: "#0f172a", theme.text: "#334155"
+       Se Dark: theme.mode: "dark", theme.background: "#070e1c", theme.card_bg: "#0e1a33", theme.border_color: "#1d335f", theme.primary: "#38bdf8", theme.title: "#ffffff", theme.text: "#cbd5e1"
+     * BELEZA, ESTÉTICA AVANÇADA, SALÕES DE BELEZA & SPAS:
+       creativeDirection.id: "beauty-glow" (ou "site-maquina")
+       creativeDirection.name: "Beleza, Estética & Spa VIP"
+       theme.background: "#140d14", theme.card_bg: "#221422", theme.border_color: "#3d213c", theme.primary: "#ec4899" (Rose Gold) ou "#f43f5e" (Cereja Glamour), theme.title: "#ffffff", theme.text: "#fce7f3", theme.mode: "dark"
+     * ADVOCACIA, JURÍDICO, CONTABILIDADE, BPO & FINANÇAS:
+       creativeDirection.id: "law-authority" (ou "site-maquina")
+       creativeDirection.name: "Autoridade Jurídica & Corporativa"
+       theme.background: "#070c18", theme.card_bg: "#0e182e", theme.border_color: "#1d2f57", theme.primary: "#d97706" (Ouro Imperial) ou "#3b82f6" (Azul Corporativo), theme.title: "#ffffff", theme.text: "#e2e8f0", theme.mode: "dark"
+     * BARBEARIA & ESTILO MASCULINO:
+       creativeDirection.id: "cinematic-glass" (ou "site-maquina")
+       theme.background: "#101114", theme.card_bg: "#1a1c22", theme.border_color: "#2d313c", theme.primary: "#f59e0b", theme.title: "#ffffff", theme.text: "#e2e8f0", theme.mode: "dark"
+     * PET SHOP & CLÍNICAS VETERINÁRIAS:
+       creativeDirection.id: "store-showcase" (ou "site-maquina")
+       theme.background: "#071510", theme.card_bg: "#0e261d", theme.border_color: "#1a4636", theme.primary: "#10b981", theme.title: "#ffffff", theme.text: "#d1fae5", theme.mode: "dark"
+     * OFICINAS MECÂNICAS & AUTO CENTERS:
+       creativeDirection.id: "business-modern" (ou "site-maquina")
+       theme.background: "#0c0e12", theme.card_bg: "#151820", theme.border_color: "#282e3c", theme.primary: "#ea580c" ou "#eab308", theme.title: "#ffffff", theme.text: "#e2e8f0", theme.mode: "dark"
+     * LOJAS, MODA & E-COMMERCE:
+       creativeDirection.id: "store-showcase"
+       theme.background: "#09090b", theme.card_bg: "#18181b", theme.border_color: "#27272a", theme.primary: "#6366f1" ou cor extraída do logo, theme.mode: "dark"
 
-4. COMPOSIÇÃO DE BLOCOS HOMOLOGADOS DO SISTEMA:
-   - Organize uma sequência lógica de alta conversão usando os tipos de blocos suportados:
-     * 'hero': Título imponente, subtítulo magnético, CTA para WhatsApp e imagem de capa.
-     * 'differentials': 3 a 4 pilares em Bento Grid (ícones válidos: "shield", "sparkles", "award", "check", "heart").
-     * 'catalog_carousel': Carrossel de serviços/produtos em destaque com nome, descrição, preço e foto.
-     * 'about': História do negócio, propósito e 3 a 4 destaques com checkmarks.
-     * 'testimonials': PROIBIDO. Use enabled:false se nao houver depoimentos reais no briefing. Nunca fabrique nomes de clientes, notas ou textos.
-     * 'video': Se vídeo fornecido, configure esta seção.
-     * 'contact_map': Endereço, telefone, WhatsApp e cidade.
-     * 'whatsapp_cta': Chamada de fechamento irresistível para o WhatsApp.
+4. COPYWRITING ESPECIALIZADO DE ALTO PADRÃO (ZERO CLICHÊS):
+   - PROIBIÇÃO ABSOLUTA de frases vazias como "Compromisso com excelência", "Atendimento exclusivo", "Qualidade garantida", "Diferencial 1", "Diferencial 2", "Nome do Produto ou Serviço".
+   - Todo texto deve soar autêntico, técnico e sensorial, como se escrito por uma agência de branding de luxo especializada naquele nicho.
+   - Grounding com fatos reais: absorva nomes de pratos, especialidades, localização, nota de avaliações do Google e anos de atuação presentes no briefing/mapas.
+   - 'catalogItems': Crie itens reais e específicos do negócio (ex: churrascaria = Rodízio Completo com Carnes Nobres, Picanha na Brasa, Buffet Livre com Sushi; odontologia = Escaneamento 3D, Clareamento a Laser, Implantes Guiados; estética = Mechas com Visagismo, Limpeza de Pele Profunda, etc.).
+   - 'buttonLabel' em catalogItems adaptado ao nicho: "Reservar Mesa" / "Pedir no WhatsApp" / "Agendar Avaliação" / "Agendar Horário VIP" / "Consultar Especialista".
+   - 'differentials': 3 a 4 pilares concretos com ícones aprovados ("shield", "sparkles", "award", "check", "heart").
+   - 'about': Conte a história real do estabelecimento, fundação, tradição ou diferenciais estruturais reais.
+   - 'faq': 4 a 5 perguntas reais que os clientes daquele nicho específico perguntam (reservas, convênios, formas de pagamento, estacionamento, espaço kids, etc.).
 
 5. FORMATO DA RESPOSTA:
    - Retorne EXCLUSIVAMENTE o objeto JSON válido estruturado de acordo com o Schema v2 (use camelCase exatamente como no exemplo abaixo), sem nenhum texto antes ou depois:
@@ -1031,57 +1076,57 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
   "generator": "premium-beta",
   "status": "proposal",
   "strategy": {
-    "businessType": "...",
-    "niche": "...",
-    "city": "...",
-    "audience": "...",
+    "businessType": "Restaurante / Clínica / etc.",
+    "niche": "restaurante",
+    "city": "Cidade Real",
+    "audience": "Famílias e apreciadores de carnes nobres",
     "primaryGoal": "whatsapp",
-    "primaryCta": "Falar no WhatsApp",
-    "tone": "Profissional e sofisticado",
-    "confirmedFacts": ["Fato confirmado 1"],
-    "missingInformation": ["Informação faltante"]
+    "primaryCta": "Reservar Mesa no WhatsApp",
+    "tone": "Sensorial, acolhedor e imponente",
+    "confirmedFacts": ["Rodízio completo com mais de 30 cortes", "Buffet com sushi e frutos do mar", "Localizado em frente à praia"],
+    "missingInformation": ["Valores exatos de bebidas ausentes"]
   },
   "creativeDirection": {
-    "id": "cinematic-noir",
-    "name": "Cinematográfico Premium",
+    "id": "restaurant-menu",
+    "name": "Gastronomia & Brasa Premium",
     "referenceIds": [],
-    "visualPrinciples": ["Tipografia imponente", "Contraste escuro profundo", "Foco visual nas fotos"],
+    "visualPrinciples": ["Atmosfera acolhedora de brasa", "Foco visual em cortes nobres", "Tipografia de alta legibilidade"],
     "motionIntensity": "subtle"
   },
   "theme": {
     "paletteId": null,
-    "primary": "#10b981",
-    "background": "#030712",
-    "card_bg": "#0b0f19",
-    "border_color": "#1e293b",
+    "primary": "#ea580c",
+    "background": "#140f0c",
+    "card_bg": "#221713",
+    "border_color": "#3f271c",
     "title": "#ffffff",
-    "text": "#cbd5e1",
+    "text": "#fed7aa",
     "mode": "dark",
     "radius": "16px",
     "density": "comfortable"
   },
   "pagePatch": {
-    "displayName": "Nome da Empresa",
-    "description": "Descrição magnética da empresa",
+    "displayName": "Nome Real da Empresa",
+    "description": "Headline magnética e sensorial escrita especificamente para o negócio e cidade",
     "whatsapp": "55...",
-    "whatsappMessage": "Olá! Gostaria de mais informações.",
+    "whatsappMessage": "Olá! Gostaria de reservar uma mesa / agendar um horário...",
     "whatsappButtonLabel": "Chamar no WhatsApp",
     "avatarUrl": "URL_DO_LOGO_SE_HOUVER",
     "coverUrl": "URL_DA_CAPA_SE_HOUVER",
     "seo": {
-      "metaTitle": "Nome da Empresa | Especialidade",
-      "metaDescription": "Descrição SEO otimizada"
+      "metaTitle": "Nome Real da Empresa | Especialidade Principal",
+      "metaDescription": "Descrição SEO atrativa e otimizada"
     }
   },
   "links": [],
   "catalogItems": [
     {
-      "name": "Nome do Produto ou Serviço",
-      "description": "Descrição detalhada e atraente",
-      "price": 59.9,
+      "name": "Item Principal Específico do Negócio",
+      "description": "Descrição detalhada, sensorial e convidativa",
+      "price": 89.9,
       "imageUrl": "URL_DA_FOTO_DO_PRODUTO",
       "category": "Destaques",
-      "buttonLabel": "Pedir no WhatsApp"
+      "buttonLabel": "Reservar Mesa / Pedir"
     }
   ],
   "sections": [
@@ -1092,8 +1137,8 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
       "enabled": true,
       "position": 0,
       "source": "bio_pages",
-      "title": "Título Imponente do Hero",
-      "subtitle": "Subtítulo convincente e focado na proposta de valor",
+      "title": "Título Imponente Específico do Nicho",
+      "subtitle": "Subtítulo convincente destacando variedade, qualidade e convite",
       "content": {},
       "media": [{ "url": "URL_DA_FOTO_DE_CAPA", "role": "cover" }]
     },
@@ -1104,12 +1149,12 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
       "enabled": true,
       "position": 1,
       "source": "custom",
-      "title": "Por que nos escolher",
+      "title": "Nossos Diferenciais Exclusivos",
       "content": {
         "items": [
-          { "title": "Diferencial 1", "description": "Explicação do diferencial", "icon": "shield" },
-          { "title": "Diferencial 2", "description": "Explicação do diferencial", "icon": "sparkles" },
-          { "title": "Diferencial 3", "description": "Explicação do diferencial", "icon": "award" }
+          { "title": "Diferencial Real 1", "description": "Explicação técnica e autêntica", "icon": "award" },
+          { "title": "Diferencial Real 2", "description": "Explicação técnica e autêntica", "icon": "sparkles" },
+          { "title": "Diferencial Real 3", "description": "Explicação técnica e autêntica", "icon": "shield" }
         ]
       },
       "media": []
@@ -1121,8 +1166,8 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
       "enabled": true,
       "position": 2,
       "source": "catalog_items",
-      "title": "Nossos Destaques",
-      "subtitle": "Conheça nossas opções preparadas com máxima dedicação",
+      "title": "Destaques do Cardápio / Serviços",
+      "subtitle": "Opções selecionadas preparadas com rigor e excelência",
       "content": {},
       "media": []
     },
@@ -1133,11 +1178,11 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
       "enabled": true,
       "position": 3,
       "source": "custom",
-      "title": "Nossa História & Propósito",
-      "subtitle": "Compromisso com excelência",
+      "title": "Nossa Trajetória & Propósito",
+      "subtitle": "Dedicação diária aos nossos clientes",
       "content": {
-        "story": "Texto contando sobre a dedicação, tradição ou qualidade do negócio.",
-        "highlights": ["Atendimento de excelência", "Ingredientes / materiais selecionados", "Experiência comprovada"]
+        "story": "História autêntica do negócio baseada no briefing e dados reais coletados.",
+        "highlights": ["Destaque estrutural 1", "Destaque de atendimento 2", "Destaque de matéria-prima 3"]
       },
       "media": []
     },
@@ -1213,12 +1258,14 @@ REGRA ABSOLUTA DE IDENTIDADE DO CLIENTE: O site deve ser gerado 100% para o CLIE
 
 REGRA CRITICA DE HONESTIDADE: Use APENAS os dados fornecidos acima. NAO invente endereco, telefone, servicos, precos, depoimentos ou certificacoes. Dados ausentes vao para missingInformation. Secoes sem dados ficam com enabled:false.
 
-Como Diretor de Arte e Arquiteto de Produto:
+Como Diretor de Arte e Arquiteto de Produto de Elite:
 1. Registre os fatos confirmados em 'strategy.confirmedFacts'.
 2. Aloue 100% dos arquivos fornecidos em 'mediaAssignments' e nas seções correspondentes.
-3. Extraia o catálogo de serviços/produtos com preços reais em 'catalogItems'.
-4. Monte a composição ordenada das seções usando apenas os blocos homologados.
-5. Retorne a resposta em JSON válido do Schema v2.`;
+3. Crie o catálogo de serviços/produtos concretos e irresistíveis para ESTE negócio específico em 'catalogItems' com botões adequados (ex: "Reservar Mesa" para restaurantes, "Agendar Avaliação" para clínicas).
+4. Aplique a paleta cromática e direção de arte coerente com o nicho específico (Gastronomia, Saúde, Beleza, Advocacia, etc.) NUNCA gerando o mesmo tema escuro genérico.
+5. Escreva copywriting persuasivo, sensorial e sem clichês em todas as seções (hero, diferenciais bento grid, história e faq).
+6. Monte a composição ordenada das seções usando apenas os blocos homologados.
+7. Retorne a resposta exclusivamente em JSON válido do Schema v2.`;
 
     const promptParts: Array<{
       text?: string;
@@ -1391,9 +1438,16 @@ Como Diretor de Arte e Arquiteto de Produto:
             return preparedFiles[idx].publicUrl;
           }
         }
-        // Bloqueia fotos externas inventadas: aceita apenas data: ou blob:
-        if (candidate.startsWith("data:image/") || candidate.startsWith("blob:")) {
-          return candidate.trim();
+        // Aceita URLs web válidas (Google Maps, Unsplash, CDN, Supabase) ou data:/blob:
+        if (
+          candidate.startsWith("https://") ||
+          candidate.startsWith("http://") ||
+          candidate.startsWith("data:image/") ||
+          candidate.startsWith("blob:")
+        ) {
+          if (!candidate.includes("example.com") && !candidate.includes("URL_") && !candidate.includes("placeholder")) {
+            return candidate.trim();
+          }
         }
         return null;
       }

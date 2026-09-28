@@ -914,6 +914,7 @@ export function UnifiedPageEditor({
     const updatedBio: BioForm = {
       ...bio,
       template_id: targetTemplate || bio.template_id,
+      theme: proposalResp?.adapted?.updatedBio?.theme || bio.theme,
       display_name: newDisplayName,
       description: result.description || bio.description,
       whatsapp_message: result.whatsapp_message || bio.whatsapp_message,
@@ -936,7 +937,7 @@ export function UnifiedPageEditor({
         promotional_price: null,
         image_url: svc.image_url || null,
         category: "Destaques",
-        button_label: "Saiba mais",
+        button_label: (svc as any).button_label || (svc as any).buttonLabel || (isProductCatalogNiche(targetNiche) ? "Pedir no WhatsApp" : "Saiba mais"),
         button_url: null,
         active: true,
         position: idx,
@@ -957,7 +958,7 @@ export function UnifiedPageEditor({
           price: p.price ?? undefined,
           image_url: p.image_url || undefined,
           badge: idx === 0 ? "Destaque" : undefined,
-          button_text: "Pedir no WhatsApp",
+          button_text: p.button_label || "Pedir no WhatsApp",
         })),
       };
     }

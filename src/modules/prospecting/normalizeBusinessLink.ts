@@ -114,3 +114,14 @@ export function toBusinessSearchQuery(input: string): string {
   const result = normalizeBusinessQuery(input);
   return result.query || cleanName(input || "");
 }
+
+/** Compatibilidade e atalho para o extrator universal de links de negócio */
+export function normalizeBusinessLink(input: string) {
+  const q = normalizeBusinessQuery(input);
+  return {
+    searchTerm: q.query || q.name,
+    suggestedCity: q.city,
+    ...q,
+  };
+}
+

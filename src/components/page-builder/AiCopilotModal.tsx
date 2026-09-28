@@ -22,6 +22,7 @@ import {
   Check,
   Info,
   LayoutTemplate,
+  ChevronDown,
 } from "lucide-react";
 import {
   generateCopilotSiteFn,
@@ -82,6 +83,25 @@ const SAMPLE_BRIEFINGS = [
   {
     label: "Marketing Digital",
     text: "Agência Alavanca Digital. Gestão de tráfego pago para negócios locais, criação de páginas de alta conversão e funis de vendas no WhatsApp. Já geramos mais de R$ 2 milhões em faturamento para clientes. Tons de grafite escuro e ciano neon.",
+  },
+];
+
+const STUDIO_QUICK_CHIPS = [
+  {
+    label: "🎨 Mudar Paleta de Cores",
+    prompt: "Mude a paleta de cores para um estilo visual moderno, elegante e de alto contraste ideal para converter clientes.",
+  },
+  {
+    label: "📸 Atualizar Capa e Fotos",
+    prompt: "Atualize as fotos da vitrine e a imagem de capa com fotos em alta definição, iluminação profissional e grande apelo visual.",
+  },
+  {
+    label: "✍️ Ajustar Textos para Conversão",
+    prompt: "Reescreva a headline principal, bio e textos dos serviços com foco em alta conversão e copy persuasiva direta ao ponto.",
+  },
+  {
+    label: "✨ Efeito Parallax Imersivo",
+    prompt: "Aplique efeito parallax cinematográfico de profundidade e elegância nas seções e imagens de destaque.",
   },
 ];
 
@@ -605,6 +625,11 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
       if (abortController.signal.aborted) return;
       setProposalResponse(result);
       setGeneratedResult(result.adapted.copilotResult);
+      // Sincronização em tempo real com a prévia viva do site
+      if (result.adapted?.copilotResult) {
+        onApply(result.adapted.copilotResult, result);
+        toast.success("Site atualizado em tempo real pelo Assistente Criativo!");
+      }
       if (failedUploadsList.length > 0) {
         setFailedUploads(failedUploadsList);
         toast.warning(
@@ -651,53 +676,102 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
   }
 
   return (
-    <div
-      onClick={(e) => {
-        if (e.target === e.currentTarget) handleCancel();
-      }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in overflow-y-auto"
-    >
-      <div className="relative w-full max-w-3xl rounded-3xl border border-border/80 bg-zinc-950 p-6 sm:p-8 shadow-2xl shadow-purple-950/40 text-foreground space-y-6 my-8 max-h-[90vh] overflow-y-auto">
-        {/* Botão Fechar */}
-        <button
-          type="button"
-          onClick={handleCancel}
-          className="absolute top-5 right-5 p-2 rounded-full text-zinc-400 hover:text-white hover:bg-white/10 transition-colors"
-          aria-label="Fechar"
-        >
-          <X className="h-5 w-5" />
-        </button>
+    <div className="fixed inset-0 z-50 flex justify-end pointer-events-none animate-fade-in">
+      {/* Backdrop mobile sutil */}
+      <div
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs md:hidden pointer-events-auto"
+        onClick={handleCancel}
+        aria-hidden="true"
+      />
 
-        {/* Header do Copiloto */}
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-purple-300 text-xs font-bold uppercase tracking-wider">
-            <Sparkles className="h-3.5 w-3.5 text-purple-400 animate-pulse" />
-            <span>Google AI Studio · Gemini • Modo Cinematográfico Premium</span>
+      {/* Drawer lateral retrátil (mantém o preview da página visível no desktop) */}
+      <aside
+        className="pointer-events-auto relative w-full sm:w-[460px] md:w-[480px] lg:w-[500px] h-full max-h-screen bg-zinc-950/95 backdrop-blur-xl border-l border-border/60 shadow-2xl shadow-black/80 text-foreground flex flex-col z-50 transition-all duration-300 overflow-hidden"
+      >
+        {/* Header Sutil: Assistente Criativo com Status Verde */}
+        <div className="flex items-center justify-between p-4 px-5 border-b border-border/40 shrink-0 bg-zinc-900/40">
+          <div className="flex items-center gap-2.5">
+            <div className="relative flex items-center justify-center h-8 w-8 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              <Sparkles className="h-4 w-4 animate-pulse" />
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-zinc-950 animate-pulse" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white">Assistente Criativo</h3>
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" /> Online
+                </span>
+              </div>
+              <p className="text-[11px] text-zinc-400">Direção de arte & IA generativa em tempo real</p>
+            </div>
           </div>
-
-          <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-2">
-            Agente Copiloto IA (Site Cinematográfico)
-          </h2>
-          <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed">
-            Peça alterações ou anexe <b>fotos, logotipo, cardápios em PDF ou links (Google Drive, Instagram, Maps)</b>.
-            O Agente atua como <b>Diretor de Arte & Designer de Elite</b>: identifica as cores reais da sua marca,
-            elimina dados genéricos e monta o site completo em <b>Dark Mode Cinematográfico de luxo</b>.
-          </p>
+          <button
+            type="button"
+            onClick={handleCancel}
+            className="p-1.5 rounded-xl text-zinc-400 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+            aria-label="Fechar assistente"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
-        {/* Banner de Segurança Nível Sênior */}
-        <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 flex items-start gap-3 text-xs text-emerald-300">
-          <ShieldCheck className="h-5 w-5 text-emerald-400 shrink-0 mt-0.5" />
-          <div className="space-y-0.5">
-            <span className="font-bold block text-emerald-200">
-              Processamento Seguro e Confidencial
-            </span>
-            <span className="text-emerald-400/90 text-[11px] leading-relaxed block">
-              Documentos e chaves são processados de ponta a ponta no servidor seguro. Suas
-              credenciais e mídias nunca são expostas publicamente no navegador dos visitantes.
-            </span>
+        {/* Corpo com scroll */}
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4">
+          {/* Seção Principal: Chips Rápidos e Prompt Fluido */}
+          <div className="space-y-3">
+            {/* Chips Rápidos de 1 Clique */}
+            <div className="space-y-1.5">
+              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider block">
+                Ações Rápidas (1 Clique):
+              </span>
+              <div className="grid grid-cols-2 gap-1.5">
+                {STUDIO_QUICK_CHIPS.map((chip, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    onClick={() => setBriefing(chip.prompt)}
+                    className="p-2 text-left rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 text-[11px] font-medium transition-all hover:scale-[1.01] cursor-pointer"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Prompt Fluido */}
+            <div className="space-y-1.5">
+              <label className="text-[11px] font-semibold text-zinc-300 block">
+                Diga o que você quer mudar neste site:
+              </label>
+              <textarea
+                rows={3}
+                value={briefing}
+                onChange={(e) => setBriefing(e.target.value)}
+                placeholder="Diga o que você quer mudar neste site... (ex: altere as cores para azul marinho e dourado, destaque o botão do WhatsApp...)"
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 text-xs text-white placeholder:text-zinc-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all resize-y"
+              />
+            </div>
+
+            {/* Botão de Envio / Geração */}
+            <button
+              type="button"
+              disabled={loading || (!briefing.trim() && mediaItems.length === 0 && !importUrl.trim())}
+              onClick={() => handleGenerate()}
+              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <span>{loadingStep || "Atualizando site com IA..."}</span>
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4 text-purple-200" />
+                  <span>Aplicar Alterações no Site</span>
+                </>
+              )}
+            </button>
           </div>
-        </div>
 
         {/* IMPORTAÇÃO AUTOMÁTICA POR LINK: GOOGLE DRIVE, GOOGLE MAPS OU INSTAGRAM */}
         <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 p-4 space-y-3">
@@ -959,73 +1033,28 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           />
         </div>
 
-        {/* Formulário do Briefing e Chave de API */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span>Instruções ao Agente / Briefing do Negócio</span>
-            </label>
-            <button
-              type="button"
-              onClick={() => setShowKeyConfig(!showKeyConfig)}
-              className="text-[11px] text-purple-400 hover:text-purple-300 flex items-center gap-1 font-medium transition-colors cursor-pointer"
-            >
-              <KeyRound className="h-3 w-3" />
-              {showKeyConfig ? "Ocultar Chave" : "Chave Própria Google AI"}
-            </button>
-          </div>
-
-          {/* Campo opcional de Chave de API */}
-          {showKeyConfig && (
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 space-y-2 animate-fade-in text-xs">
-              <label className="text-zinc-300 font-semibold block">
-                Chave da API do Google AI Studio (Opcional):
-              </label>
-              <input
-                type="password"
-                value={overrideKey}
-                onChange={(e) => setOverrideKey(e.target.value)}
-                placeholder="AIzaSy..."
-                className="w-full rounded-lg border border-zinc-700 bg-black/60 px-3 py-2 text-xs font-mono text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none"
-              />
-              <p className="text-[10px] text-zinc-500">
-                A chave é salva apenas no seu navegador localmente e transmitida por canal
-                criptografado do servidor.
-              </p>
-            </div>
-          )}
-
-          <textarea
-            rows={4}
-            value={briefing}
-            onChange={(e) => setBriefing(e.target.value)}
-            placeholder="Digite aqui o que você deseja (apenas pedindo): Ex: Monte o site completo com as fotos e dados em anexo, mude a cor principal para azul marinho, adicione os pratos do cardápio e configure botão de WhatsApp..."
-            className="w-full rounded-2xl border border-zinc-800 bg-zinc-900/80 p-4 text-xs sm:text-sm text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all resize-y"
-          />
-
-          {/* Chips de Exemplo Rápido */}
-          <div className="space-y-1.5">
-            <span className="text-[11px] text-zinc-500 font-medium block">
-              Sugestões rápidas de briefing:
+        {/* Configuração opcional de Chave de API */}
+        <details className="group rounded-xl border border-border/40 bg-zinc-900/30 p-2.5 transition-all">
+          <summary className="cursor-pointer text-[11px] font-medium text-zinc-400 hover:text-zinc-200 flex items-center justify-between select-none">
+            <span className="flex items-center gap-1.5">
+              <KeyRound className="h-3 w-3 text-purple-400" />
+              <span>Chave Gemini API Própria (Opcional)</span>
             </span>
-            <div className="flex flex-wrap gap-1.5">
-              {SAMPLE_BRIEFINGS.map((sample, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => {
-                    setBriefing(sample.text);
-                    setError(null);
-                  }}
-                  className="px-2.5 py-1 rounded-lg border border-zinc-800 bg-zinc-900 hover:border-purple-500/50 hover:bg-purple-950/30 text-[11px] text-zinc-300 transition-all cursor-pointer"
-                >
-                  {sample.label}
-                </button>
-              ))}
-            </div>
+            <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180 text-zinc-500" />
+          </summary>
+          <div className="pt-2 space-y-1.5">
+            <input
+              type="password"
+              value={overrideKey}
+              onChange={(e) => setOverrideKey(e.target.value)}
+              placeholder="AIzaSy... (opcional)"
+              className="w-full rounded-lg border border-zinc-700 bg-black/60 px-2.5 py-1.5 text-xs font-mono text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none"
+            />
+            <p className="text-[10px] text-zinc-500">
+              Salva apenas localmente no seu navegador. Se não informada, usa a chave configurada no sistema.
+            </p>
           </div>
-        </div>
+        </details>
 
         {/* Mensagem de Erro */}
         {error && (
@@ -1539,74 +1568,48 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           </div>
         ) : null}
 
-        {/* Botões de Ação */}
-        <div className="flex flex-col sm:flex-row items-center justify-end gap-3 pt-2">
+        </div>
+
+        {/* Footer do Drawer Lateral */}
+        <div className="p-3.5 px-4 border-t border-border/40 bg-zinc-900/60 shrink-0 flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={handleCancel}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all cursor-pointer"
+            className="px-3.5 py-2 rounded-xl border border-zinc-800 text-xs font-semibold text-zinc-400 hover:text-white hover:bg-zinc-900 transition-all cursor-pointer"
           >
             Fechar
           </button>
 
-          {(proposalResponse || generatedResult) && (
-            <button
-              type="button"
-              onClick={handleDiscardProposal}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-red-500/30 bg-red-500/10 hover:bg-red-500/20 text-red-300 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-              <span>Descartar Proposta</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            {(proposalResponse || generatedResult) && (
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => {
+                  const prev = (proposalResponse as any)?.proposal?.creativeDirection?.id;
+                  setGeneratedResult(null);
+                  setProposalResponse(null);
+                  void handleGenerate(prev);
+                }}
+                className="px-3 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 font-semibold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <Wand2 className="h-3.5 w-3.5" />
+                <span>Outra versão</span>
+              </button>
+            )}
 
-          {!generatedResult ? (
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => handleGenerate()}
-              className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
-                  <span>{loadingStep || "Processando com Inteligência Artificial..."}</span>
-                </>
-              ) : (
-                <>
-                  <Wand2 className="h-4 w-4" />
-                  <span>Gerar Proposta Premium Beta</span>
-                </>
-              )}
-            </button>
-          ) : (
-            <>
-            <button
-              type="button"
-              disabled={loading}
-              onClick={() => {
-                const prev = (proposalResponse as any)?.proposal?.creativeDirection?.id;
-                setGeneratedResult(null);
-                setProposalResponse(null);
-                void handleGenerate(prev);
-              }}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
-            >
-              <Wand2 className="h-3.5 w-3.5" />
-              <span>Gerar outra versão</span>
-            </button>
             <button
               type="button"
               onClick={handleConfirmApply}
-              className="w-full sm:w-auto px-7 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 transition-all cursor-pointer active:scale-95"
+              disabled={!generatedResult}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-40 text-white font-bold text-xs shadow-lg shadow-emerald-900/30 flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <CheckCircle2 className="h-4 w-4" />
-              <span>Aplicar Proposta ao Editor (Rascunho)</span>
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Concluir</span>
             </button>
-            </>
-          )}
+          </div>
         </div>
-      </div>
+      </aside>
     </div>
   );
 }

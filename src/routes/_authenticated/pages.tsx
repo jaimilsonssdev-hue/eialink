@@ -38,6 +38,8 @@ import {
   UserRound,
   Briefcase,
   Wine,
+  Zap,
+  ChevronDown,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +53,7 @@ import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngi
 import { lookupBusinessProfileFn } from "@/modules/prospecting/prospecting.functions";
 import { getPresetForCompany, getVariantsForNiche } from "@/modules/prospecting/nichePresets";
 import type { ProspectDraft } from "@/modules/prospecting/types";
+import { normalizeBusinessLink } from "@/modules/prospecting/normalizeBusinessLink";
 
 export const Route = createFileRoute("/_authenticated/pages")({
   component: PagesWorkspace,
@@ -264,6 +267,12 @@ function PagesWorkspace() {
   const [wizardCity, setWizardCity] = useState("");
   const [isCreatingWizard, setIsCreatingWizard] = useState(false);
   const [creationEngine, setCreationEngine] = useState<"express" | "premium">("express");
+
+  // Studio Fast State
+  const [fastInput, setFastInput] = useState("");
+  const [isFastCreating, setIsFastCreating] = useState(false);
+  const [fastMode, setFastMode] = useState<"express" | "ai" | null>(null);
+  const [fastFeedback, setFastFeedback] = useState<string | null>(null);
 
   // Auto-importador do Perfil do Google Maps / Link
   const [lookupQuery, setLookupQuery] = useState("");
@@ -496,6 +505,91 @@ function PagesWorkspace() {
     setIsWizardOpen(true);
   }
 
+  async function handleFastCreate(mode: "express" | "ai") {
+    const raw = fastInput.trim();
+    if (!raw) {
+      if (mode === "ai") {
+        navigate({ to: "/builder", search: { copilot: true } });
+        return;
+      }
+      setCreationError("Por favor, cole um link do Google Maps ou digite o nome da empresa.");
+      return;
+    }
+
+    const pageLimit = access.data?.limits.bio_pages ?? 1;
+    if (pageLimit !== -1 && (pages.data?.length ?? 0) >= pageLimit) {
+      setCreationError("Seu plano atingiu o limite de Biolinks. Faça upgrade para criar novas páginas.");
+      return;
+    }
+
+    setIsFastCreating(true);
+    setFastMode(mode);
+    setFastFeedback("Analisando dados do negócio...");
+    setCreationError(null);
+
+    try {
+      const normalized = normalizeBusinessLink(raw);
+      const query = normalized.searchTerm || raw;
+
+      let companyName = query;
+      let city = normalized.suggestedCity || "";
+      let whatsapp: string | null = null;
+      let nicheKey = "odontologia";
+
+      try {
+        setFastFeedback("Identificando perfil e nicho...");
+        let results: ProspectDraft[] = [];
+        try {
+          results = await lookupBusinessProfile(raw);
+        } catch {
+          results = await lookupBusinessProfileFn({ data: { query: raw } });
+        }
+
+        if (results && results.length > 0) {
+          const lead = results[0];
+          companyName = lead.name || companyName;
+          city = lead.city || city;
+          whatsapp = lead.whatsapp || lead.phone || null;
+          const preset = getPresetForCompany(lead.niche, lead.name);
+          nicheKey = preset.nicheKey;
+        } else {
+          const preset = getPresetForCompany(null, companyName);
+          nicheKey = preset.nicheKey;
+        }
+      } catch (err) {
+        console.warn("[FastCreate] Busca remota indisponível, usando inteligência local:", err);
+        const preset = getPresetForCompany(null, companyName);
+        nicheKey = preset.nicheKey;
+      }
+
+      setFastFeedback(mode === "ai" ? "Preparando IA Studio..." : "Construindo página express...");
+
+      const page = await PageService.createProspectDemoPage({
+        companyName,
+        whatsapp,
+        niche: nicheKey,
+        city: city || null,
+        variantIndex: 0,
+        isDemo: false,
+      });
+
+      await pages.refetch();
+
+      if (mode === "ai") {
+        navigate({ to: "/builder", search: { page: page.id, copilot: true } });
+      } else {
+        navigate({ to: "/builder", search: { page: page.id } });
+      }
+    } catch (err: any) {
+      console.error("[FastCreate] Erro ao criar página rápida:", err);
+      setCreationError(err?.message || "Não foi possível criar a página rápida. Tente novamente.");
+    } finally {
+      setIsFastCreating(false);
+      setFastMode(null);
+      setFastFeedback(null);
+    }
+  }
+
   if (pages.isLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
@@ -565,6 +659,135 @@ function PagesWorkspace() {
           </button>
         </div>
       </header>
+
+      {/* PAINEL STUDIO FAST — CRIAÇÃO EXECUTIVA EM 1 CLIQUE */}
+      <section className="relative overflow-hidden rounded-2xl border border-purple-500/30 bg-gradient-to-br from-card via-card to-purple-950/20 p-5 sm:p-6 shadow-xl shadow-purple-950/10">
+        <div className="relative z-10 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-2.5 py-0.5 text-[11px] font-bold text-purple-300 uppercase tracking-wider">
+                <Sparkles className="h-3 w-3" /> Studio Fast
+              </span>
+              <h2 className="font-display text-lg sm:text-xl font-bold text-foreground mt-1">
+                Crie ou importe sua página em segundos
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                Cole o link do Google Maps, busca do Google ou digite o nome do seu negócio para gerar um site profissional com fotos e serviços:
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 rounded-2xl border border-border/80 bg-surface/90 p-2 shadow-inner focus-within:border-[color:var(--primary)] focus-within:ring-2 focus-within:ring-[color:var(--primary)]/20 transition-all">
+              <div className="relative flex-1 flex items-center">
+                <Search className="absolute left-3.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  type="text"
+                  value={fastInput}
+                  onChange={(e) => setFastInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void handleFastCreate("express");
+                    }
+                  }}
+                  placeholder="Cole o link do Google Maps, busca do Google ou nome da empresa..."
+                  className="w-full bg-transparent pl-10 pr-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                  disabled={isFastCreating}
+                />
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => void handleFastCreate("express")}
+                  disabled={isFastCreating || !fastInput.trim()}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-bold px-4 py-2.5 text-xs sm:text-sm shadow-md transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
+                  title="Geração relâmpago baseada em template pronto, sem consumo de tokens"
+                >
+                  {isFastCreating && fastMode === "express" ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-slate-950" />
+                  ) : (
+                    <Zap className="h-4 w-4 fill-slate-950 text-slate-950" />
+                  )}
+                  <span>⚡ Criar Express</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => void handleFastCreate("ai")}
+                  disabled={isFastCreating}
+                  className="flex-1 sm:flex-initial btn-primary inline-flex items-center justify-center gap-1.5 rounded-xl px-4 py-2.5 text-xs sm:text-sm font-semibold shadow-md transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer"
+                  title="Criação guiada com direção de arte e Copiloto de IA"
+                >
+                  {isFastCreating && fastMode === "ai" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4 text-purple-200" />
+                  )}
+                  <span>✨ Criar com IA Studio</span>
+                </button>
+              </div>
+            </div>
+
+            {fastFeedback && (
+              <div className="flex items-center gap-2 text-xs font-medium text-[color:var(--primary)] animate-pulse">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                <span>{fastFeedback}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Efeito de luz decorativo de fundo */}
+        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[color:var(--primary)]/10 blur-3xl" />
+      </section>
+
+      {/* Configuração Manual Passo a Passo (Sanfona recolhida) */}
+      <details className="group rounded-2xl border border-border/70 bg-card/50 overflow-hidden transition-all duration-200">
+        <summary className="cursor-pointer p-4 px-5 text-sm font-semibold text-muted-foreground hover:text-foreground flex items-center justify-between transition-colors select-none">
+          <span className="flex items-center gap-2">
+            <span>Ou configure manualmente passo a passo por nicho</span>
+            <span className="text-xs font-normal text-muted-foreground/70">(opcional)</span>
+          </span>
+          <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180 text-muted-foreground" />
+        </summary>
+
+        <div className="p-5 pt-2 border-t border-border/40 space-y-4">
+          <p className="text-xs text-muted-foreground">
+            Escolha uma das estruturas prontas abaixo para abrir o assistente detalhado com modelos e dados específicos:
+          </p>
+
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+            {NICHE_OPTIONS.map((niche) => {
+              const Icon = niche.icon;
+              return (
+                <button
+                  key={niche.key}
+                  type="button"
+                  onClick={() => openWizardWithNiche(niche.key)}
+                  className="group/item text-left p-3.5 rounded-xl border border-border/70 bg-surface/60 hover:border-[color:var(--primary)]/50 hover:bg-surface-elevated transition-all flex flex-col justify-between space-y-2 cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className={`p-2 rounded-lg border ${niche.bgLight} ${niche.color}`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <ArrowRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover/item:opacity-100 transition-opacity" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-xs text-foreground group-hover/item:text-[color:var(--primary)] transition-colors">
+                      {niche.name}
+                    </h4>
+                    <p className="text-[11px] text-muted-foreground mt-0.5 line-clamp-2">
+                      {niche.description}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </details>
 
       {/* Erros e Alertas */}
       {creationError && (
@@ -766,7 +989,7 @@ function PagesWorkspace() {
                         search={{ page: page.id }}
                         className="flex-1 btn-primary inline-flex items-center justify-center gap-1 rounded-xl py-2 text-xs font-semibold"
                       >
-                        <Pencil className="h-3.5 w-3.5" /> Editar
+                        <Pencil className="h-3.5 w-3.5" /> Editar no Studio
                       </Link>
 
                       <Link
@@ -812,49 +1035,6 @@ function PagesWorkspace() {
             })}
           </div>
         )}
-      </section>
-
-      {/* Galeria de Criação Rápida por Nicho (Zero Barreira Técnica) */}
-      <section className="rounded-2xl border border-border bg-card p-6 space-y-5">
-        <div>
-          <span className="text-xs font-semibold text-[color:var(--primary)] uppercase tracking-wider">
-            Criação Rápida Sem Esforço
-          </span>
-          <h2 className="font-display text-xl font-bold text-foreground mt-0.5">
-            Comece com uma Estrutura Pronta para o Seu Negócio
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Selecione o seu ramo abaixo para gerar uma página com fotos HD, serviços sugeridos e agendamento automático em 1 clique:
-          </p>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {NICHE_OPTIONS.map((niche) => {
-            const Icon = niche.icon;
-            return (
-              <button
-                key={niche.key}
-                onClick={() => openWizardWithNiche(niche.key)}
-                className="group text-left p-4 rounded-xl border border-border bg-surface-elevated/30 hover:border-[color:var(--primary)]/40 hover:bg-surface-elevated/80 transition-all flex flex-col justify-between space-y-3"
-              >
-                <div className="flex items-start justify-between">
-                  <div className={`p-2.5 rounded-xl border ${niche.bgLight} ${niche.color}`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-sm text-foreground group-hover:text-[color:var(--primary)] transition-colors">
-                    {niche.name}
-                  </h4>
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                    {niche.description}
-                  </p>
-                </div>
-              </button>
-            );
-          })}
-        </div>
       </section>
 
       {/* Modal Mágico: Configuração em 30 Segundos */}

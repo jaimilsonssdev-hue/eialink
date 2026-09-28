@@ -62,58 +62,8 @@ function AuthedLayout() {
 
   const canAccessBuilder = isAdmin || Boolean(access?.canAccessBuilder);
   const canAccessComanda = isAdmin || Boolean(access?.canAccessComanda);
-  const canAccessAgenda = isAdmin || access?.canAccessAgenda !== false;
 
-  type NavItem = {
-    to: string;
-    label: string;
-    icon: any;
-    search?: Record<string, any>;
-  };
-
-  const navGroups = useMemo(() => {
-    const groups: Array<{ title: string | null; items: NavItem[] }> = [];
-
-    groups.push({
-      title: null,
-      items: [{ to: "/dashboard", label: "Início", icon: LayoutDashboard }],
-    });
-
-    const presenca: NavItem[] = [];
-    if (canAccessBuilder) {
-      presenca.push(
-        { to: "/pages", label: "Minhas Páginas", icon: PanelsTopLeft },
-        { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
-        { to: "/builder", search: { copilot: true }, label: "Copiloto IA (Sites)", icon: Sparkles },
-        { to: "/builder", search: { tab: "carousel" }, label: "Carrossel Instagram", icon: Flame },
-      );
-    }
-    if (presenca.length) groups.push({ title: "Presença & Páginas", items: presenca });
-
-    const atendimento: NavItem[] = [];
-    if (canAccessAgenda) {
-      atendimento.push({ to: "/agenda", label: "Agenda de Horários", icon: CalendarDays });
-    }
-    if (canAccessComanda) {
-      atendimento.push({ to: "/comanda", label: "Comanda & Cardápio", icon: Utensils });
-    }
-    if (atendimento.length) groups.push({ title: "Atendimento & Vendas", items: atendimento });
-
-    const gestao: NavItem[] = [];
-    if (canAccessBuilder) {
-      gestao.push({ to: "/analytics", label: "Métricas & Resultados", icon: BarChart3 });
-    }
-    gestao.push(
-      { to: "/growth", label: "Assistente IA", icon: Sparkles },
-      { to: "/settings", label: "Dados da Empresa", icon: Settings },
-      { to: "/billing", label: "Plano & Assinatura", icon: CreditCard },
-    );
-    groups.push({ title: "Crescimento & Gestão", items: gestao });
-
-    return groups;
-  }, [canAccessBuilder, canAccessComanda, canAccessAgenda]);
-
-  const mobileNavItems = useMemo(() => {
+  const navItems = useMemo(() => {
     const items: Array<{
       to: string;
       label: string;
@@ -124,26 +74,57 @@ function AuthedLayout() {
     ];
 
     if (canAccessBuilder) {
-      items.push({ to: "/builder", label: "Editor", icon: PanelsTopLeft });
-      items.push({ to: "/builder", search: { copilot: true }, label: "Copiloto IA", icon: Sparkles });
-      items.push({ to: "/builder", search: { tab: "carousel" }, label: "Carrossel", icon: Flame });
+      items.push(
+        { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
+        { to: "/builder", search: { copilot: true }, label: "Copiloto IA (Sites)", icon: Sparkles },
+        { to: "/builder", search: { tab: "carousel" }, label: "Carrossel Instagram", icon: Flame },
+        { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
+      );
     }
 
-    if (canAccessAgenda) {
-      items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
-    }
+    items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
 
+    // Inclui a Comanda Digital APENAS se o Super Admin tiver liberado para este cliente
     if (canAccessComanda) {
-      items.push({ to: "/comanda", label: "Comanda", icon: Utensils });
+      items.push({ to: "/comanda", label: "Comanda & NFC", icon: Utensils });
+    }
+
+    if (canAccessBuilder) {
+      items.push({ to: "/analytics", label: "Resultados", icon: BarChart3 });
     }
 
     items.push(
-      { to: "/growth", label: "IA", icon: Sparkles },
-      { to: "/settings", label: "Empresa", icon: Settings },
+      { to: "/growth", label: "Assistente IA", icon: Sparkles },
+      { to: "/settings", label: "Dados da Empresa", icon: Settings },
+      { to: "/billing", label: "Planos", icon: CreditCard },
     );
 
     return items;
-  }, [canAccessBuilder, canAccessComanda, canAccessAgenda]);
+  }, [canAccessBuilder, canAccessComanda]);
+
+  const mobileNavItems = useMemo(() => {
+    // 1. Início / Páginas
+    const homeItem = { to: "/dashboard", label: "Início", icon: LayoutDashboard };
+
+    // 2. Editor
+    const editorItem = {
+      to: canAccessBuilder ? "/builder" : "/pages",
+      label: "Editor",
+      icon: Sparkles,
+    };
+
+    // 3. Vendas (Condicional: Comanda > Agenda > Analytics)
+    let salesItem = { to: "/agenda", label: "Vendas", icon: CalendarDays };
+    if (canAccessComanda) {
+      salesItem = { to: "/comanda", label: "Vendas", icon: Utensils };
+    } else if (canAccessBuilder) {
+      salesItem = { to: "/agenda", label: "Vendas", icon: CalendarDays };
+    } else {
+      salesItem = { to: "/analytics", label: "Vendas", icon: BarChart3 };
+    }
+
+    return [homeItem, editorItem, salesItem];
+  }, [canAccessBuilder, canAccessComanda]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -152,18 +133,9 @@ function AuthedLayout() {
 
   return (
     <div className="app-shell min-h-screen flex">
-      {/* Backdrop mobile */}
-      {open && (
-        <div
-          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={() => setOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-
       {/* Sidebar */}
       <aside
-        className={`app-sidebar fixed inset-y-0 left-0 z-40 flex h-full w-72 max-w-[85vw] flex-col transform transition-transform md:w-64 md:max-w-none md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`app-sidebar fixed inset-y-0 left-0 z-40 w-64 transform transition-transform md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="app-sidebar-header p-5 flex items-center justify-between">
           <Link
@@ -187,55 +159,46 @@ function AuthedLayout() {
         <div className="px-3 pb-4">
           <ThemeToggle />
         </div>
-        <nav className="min-h-0 flex-1 overflow-y-auto px-3 space-y-1 pb-4">
-          {navGroups.map((group, gi) => (
-            <div key={group.title ?? `group-${gi}`} className={group.title ? "pt-4 space-y-1" : "space-y-1"}>
-              {group.title && (
-                <p className="px-3 pb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  {group.title}
-                </p>
-              )}
-              {group.items.map(({ to, label, icon: Icon, search }) => {
-                const active =
-                  pathname === to &&
-                  (!search || (typeof window !== "undefined" && window.location.search.includes(search.tab)));
-                return (
-                  <Link
-                    key={label}
-                    to={to as any}
-                    search={search as any}
-                    onClick={() => setOpen(false)}
-                    className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${active ? "is-active" : ""}`}
-                  >
-                    <Icon className="h-4 w-4" /> {label}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
+        <nav className="px-3 space-y-1">
+          {navItems.map(({ to, label, icon: Icon, search }) => {
+            const active =
+              pathname === to &&
+              (!search || (typeof window !== "undefined" && window.location.search.includes(search.tab)));
+            return (
+              <Link
+                key={label}
+                to={to as any}
+                search={search as any}
+                onClick={() => setOpen(false)}
+                className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${active ? "is-active" : ""}`}
+              >
+                <Icon className="h-4 w-4" /> {label}
+              </Link>
+            );
+          })}
           {isAdmin && (
             <div className="mt-4 border-t border-border pt-4 space-y-1">
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                Painel Super Admin
+                Administração
               </p>
               <Link
                 to="/admin/prospeccao"
                 onClick={() => setOpen(false)}
                 className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin/prospeccao" ? "is-active" : ""}`}
               >
-                <Target className="h-4 w-4 text-[color:var(--primary)]" /> Prospecção & Auditor
+                <Target className="h-4 w-4 text-[color:var(--primary)]" /> Prospecção
               </Link>
               <Link
                 to="/admin"
                 onClick={() => setOpen(false)}
                 className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin" ? "is-active" : ""}`}
               >
-                <Shield className="h-4 w-4 text-[color:var(--accent)]" /> Painel Geral
+                <Shield className="h-4 w-4 text-[color:var(--accent)]" /> Super Admin
               </Link>
             </div>
           )}
         </nav>
-        <div className="shrink-0 border-t border-border bg-[color:var(--card,transparent)] p-3">
+        <div className="absolute bottom-4 left-3 right-3">
           <button
             onClick={signOut}
             className="app-nav-link flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm"
@@ -259,18 +222,26 @@ function AuthedLayout() {
         <main className={`app-content p-4 pb-24 sm:p-5 md:p-8 md:pb-8 mx-auto ${pathname === "/builder" ? "max-w-[1600px]" : "max-w-7xl"}`}>
           <Outlet />
         </main>
-        <nav className="app-mobile-nav md:hidden" aria-label="Navegação principal">
-          {mobileNavItems.map(({ to, label, icon: Icon, search }) => {
+        <nav className="app-mobile-nav md:hidden h-16" aria-label="Navegação principal">
+          {mobileNavItems.map(({ to, label, icon: Icon }) => {
             const active =
-              pathname === to &&
-              (!search || (typeof window !== "undefined" && window.location.search.includes(search.tab)));
+              pathname === to ||
+              (to === "/dashboard" && pathname === "/pages");
             return (
-              <Link key={label} to={to as any} search={search as any} className={active ? "is-active" : ""}>
+              <Link key={label} to={to as any} className={active ? "is-active" : ""}>
                 <Icon aria-hidden="true" />
                 <span>{label}</span>
               </Link>
             );
           })}
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            aria-label="Abrir menu de opções"
+          >
+            <Menu aria-hidden="true" />
+            <span>Mais</span>
+          </button>
         </nav>
       </div>
     </div>

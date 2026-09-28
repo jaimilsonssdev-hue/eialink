@@ -67,6 +67,7 @@ import { AiCopilotModal } from "./AiCopilotModal";
 import type { AiCopilotResult, PremiumProposalResponse } from "@/modules/ai/copilot.functions";
 import { parsePrice } from "@/lib/utils";
 import { parseSocialLinks } from "@/lib/social-links";
+import { FONT_PAIRS } from "@/lib/font-pairs";
 import {
   freeTemplateBase,
   freeTemplateWithOptions,

@@ -687,6 +687,30 @@ function AdminPage() {
                               <Utensils className="h-3 w-3" />
                               <span>{hasComandaAccess ? "Comanda: Liberada" : "Comanda: Bloqueada"}</span>
                             </button>
+
+                            <button
+                              type="button"
+                              disabled={updateAgendaAccess.isPending}
+                              onClick={() =>
+                                updateAgendaAccess.mutate({
+                                  userId: p.id,
+                                  enabled: !hasAgendaAccess,
+                                })
+                              }
+                              className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-medium transition-all ${
+                                hasAgendaAccess
+                                  ? "bg-sky-500/15 text-sky-300 border border-sky-500/30 hover:bg-sky-500/25"
+                                  : "bg-muted/60 text-muted-foreground border border-border/50 hover:text-foreground hover:bg-muted"
+                              }`}
+                              title={
+                                hasAgendaAccess
+                                  ? "Clique para bloquear a Agenda para este cliente"
+                                  : "Clique para liberar a Agenda para este cliente"
+                              }
+                            >
+                              <CalendarDays className="h-3 w-3" />
+                              <span>{hasAgendaAccess ? "Agenda: Liberada" : "Agenda: Bloqueada"}</span>
+                            </button>
                           </div>
                         )}
                       </TableCell>

@@ -1,4 +1,4 @@
-import { runGosomScraper } from "./gosom.service";
+// gosom.service depende de binários do sistema: carregado sob demanda no servidor.
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
@@ -1794,6 +1794,7 @@ export async function internalFetchBusinessFromUrl(
   // 1. TENTA O SCRAPER LOCAL GOSOM SE HOUVER BINÁRIO (ex: ambiente desktop)
   if (isGoogle) {
     try {
+      const { runGosomScraper } = await import("./gosom.service");
       const gosomData = await runGosomScraper(target, {
         supabase: supabaseAdmin,
         userId,

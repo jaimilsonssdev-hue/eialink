@@ -102,7 +102,10 @@ export function TemplateRenderer({
     layout_esqueleto?: string;
     navigation_bg?: string;
     info_badge_bg?: string;
+    font_pair?: string;
   } | undefined;
+
+  const fontPair = findFontPair(customTheme?.font_pair);
 
   const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
   const customText = customTheme?.text || tokensDesign?.estilo_botoes?.cor_texto;

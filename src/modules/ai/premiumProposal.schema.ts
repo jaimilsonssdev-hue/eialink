@@ -100,6 +100,16 @@ export const ThemeProposalSchema = z.preprocess((val: any) => {
     mode: val.mode === "light" ? "light" : "dark",
     radius: val.radius || val.border_radius || "16px",
     density: ["compact", "comfortable", "spacious"].includes(val.density) ? val.density : "comfortable",
+    parallax:
+      typeof val.parallax === "boolean"
+        ? val.parallax
+        : typeof val.immersive === "boolean"
+          ? val.immersive
+          : val.parallax === "true"
+            ? true
+            : val.parallax === "false"
+              ? false
+              : null,
   };
 }, z.object({
   paletteId: z.string().nullable().default(null),

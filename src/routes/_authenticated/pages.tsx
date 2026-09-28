@@ -988,6 +988,43 @@ function PagesWorkspace() {
                 </div>
               </div>
 
+              {/* Escolha do motor de criação */}
+              <div>
+                <label className="block text-xs font-bold text-foreground mb-1.5">
+                  Como você quer criar esta página?
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCreationEngine("express")}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      creationEngine === "express"
+                        ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 ring-1 ring-[color:var(--primary)]/50"
+                        : "border-border bg-surface-elevated/30 hover:border-border/80"
+                    }`}
+                  >
+                    <p className="text-xs font-bold text-foreground">Máquina Express</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Modelo pronto preenchido com as informações reais do negócio. Fica pronto em segundos.
+                    </p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCreationEngine("premium")}
+                    className={`p-3 rounded-xl border text-left transition-all ${
+                      creationEngine === "premium"
+                        ? "border-purple-500 bg-purple-500/15 ring-1 ring-purple-500/50"
+                        : "border-border bg-surface-elevated/30 hover:border-border/80"
+                    }`}
+                  >
+                    <p className="text-xs font-bold text-foreground">Premium com IA</p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      Cria a página nova e abre o assistente de IA para montar um visual exclusivo com suas fotos.
+                    </p>
+                  </button>
+                </div>
+              </div>
+
               {/* 2. Seleção do Modelo Visual (3 Variantes) */}
               <div>
                 <label className="block text-xs font-bold text-foreground mb-1.5 flex items-center justify-between">

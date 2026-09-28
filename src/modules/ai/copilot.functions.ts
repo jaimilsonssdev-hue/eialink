@@ -140,6 +140,7 @@ const copilotInputSchema = z
     currentContext: copilotContextSchema,
     overrideApiKey: nullableString,
     aiGatewayUrl: nullableString,
+    avoidDirectionId: nullableString,
   })
   .refine(
     (data) =>

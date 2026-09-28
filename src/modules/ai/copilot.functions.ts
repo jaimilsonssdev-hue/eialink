@@ -1098,7 +1098,8 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
     "text": "#HEX_PROPRIO",
     "mode": "dark",
     "radius": "16px",
-    "density": "comfortable"
+    "density": "comfortable",
+    "parallax": true
   },
   "pagePatch": {
     "displayName": "Nome Real da Empresa",

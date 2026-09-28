@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AssinarRouteImport } from './routes/assinar'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CheckoutRouteImport } from './routes/checkout'
+import { Route as HojeRouteImport } from './routes/hoje'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as RefundPolicyRouteImport } from './routes/refund-policy'
 import { Route as ResgatarRouteImport } from './routes/resgatar'
@@ -68,6 +69,11 @@ const AuthRoute = AuthRouteImport.update({
 const CheckoutRoute = CheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HojeRoute = HojeRouteImport.update({
+  id: '/hoje',
+  path: '/hoje',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -234,6 +240,7 @@ export interface FileRoutesByFullPath {
   '/assinar': typeof AssinarRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/hoje': typeof HojeRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/resgatar': typeof ResgatarRoute
@@ -271,6 +278,7 @@ export interface FileRoutesByTo {
   '/assinar': typeof AssinarRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/hoje': typeof HojeRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/resgatar': typeof ResgatarRoute
@@ -310,6 +318,7 @@ export interface FileRoutesById {
   '/assinar': typeof AssinarRoute
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRouteWithChildren
+  '/hoje': typeof HojeRoute
   '/privacy': typeof PrivacyRoute
   '/refund-policy': typeof RefundPolicyRoute
   '/resgatar': typeof ResgatarRoute
@@ -349,6 +358,7 @@ export interface FileRouteTypes {
     | '/assinar'
     | '/auth'
     | '/checkout'
+    | '/hoje'
     | '/privacy'
     | '/refund-policy'
     | '/resgatar'
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
     | '/assinar'
     | '/auth'
     | '/checkout'
+    | '/hoje'
     | '/privacy'
     | '/refund-policy'
     | '/resgatar'
@@ -424,6 +435,7 @@ export interface FileRouteTypes {
     | '/assinar'
     | '/auth'
     | '/checkout'
+    | '/hoje'
     | '/privacy'
     | '/refund-policy'
     | '/resgatar'
@@ -463,6 +475,7 @@ export interface RootRouteChildren {
   AssinarRoute: typeof AssinarRoute
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRouteWithChildren
+  HojeRoute: typeof HojeRoute
   PrivacyRoute: typeof PrivacyRoute
   RefundPolicyRoute: typeof RefundPolicyRoute
   ResgatarRoute: typeof ResgatarRoute
@@ -512,6 +525,13 @@ declare module '@tanstack/react-router' {
       path: '/checkout'
       fullPath: '/checkout'
       preLoaderRoute: typeof CheckoutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/hoje': {
+      id: '/hoje'
+      path: '/hoje'
+      fullPath: '/hoje'
+      preLoaderRoute: typeof HojeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -797,6 +817,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssinarRoute: AssinarRoute,
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRouteWithChildren,
+  HojeRoute: HojeRoute,
   PrivacyRoute: PrivacyRoute,
   RefundPolicyRoute: RefundPolicyRoute,
   ResgatarRoute: ResgatarRoute,

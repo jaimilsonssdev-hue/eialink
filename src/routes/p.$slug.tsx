@@ -22,6 +22,7 @@ import {
 } from "@/lib/public-page.functions";
 import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
 import { ComandaFloatingBar } from "@/components/public/ComandaFloatingBar";
+import { CrossTrafficCard } from "@/components/public-profile/CrossTrafficCard";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -609,6 +610,7 @@ function PublicBio() {
                     hideProductCarouselIfInLayout={isSiteMaquina}
                     hideTestimonialsIfInLayout={isSiteMaquina}
                   />
+                  <CrossTrafficCard bioPageId={bio.id} />
                   {supplementalBlocks.map((block: PageBlock) => (
                     <BlockRenderer key={block.id} block={block} />
                   ))}
@@ -625,6 +627,7 @@ function PublicBio() {
               supplemental={
                 <>
                   <ModularSections bio={bio} onTrack={track} hideProductCarouselIfInLayout={true} />
+                  <CrossTrafficCard bioPageId={bio.id} />
                   {supplementalBlocks.map((block: PageBlock) => (
                     <BlockRenderer key={block.id} block={block} />
                   ))}

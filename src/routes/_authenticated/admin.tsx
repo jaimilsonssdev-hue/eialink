@@ -32,6 +32,7 @@ import { GoogleApiAdminCard } from "@/components/admin/GoogleApiAdminCard";
 import { GooglePlacesAdminCard } from "@/components/admin/GooglePlacesAdminCard";
 
 import { WhatsAppCheckoutLinksCard } from "@/components/admin/WhatsAppCheckoutLinksCard";
+import { DailyDealsBroadcastCard } from "@/components/admin/DailyDealsBroadcastCard";
 import { toPlanLimits, type Plan, type ProfessionalService } from "@/modules/billing/types";
 import {
   Card,
@@ -315,6 +316,9 @@ function AdminPage() {
 
       {/* Links de Checkout Direto para Fechamento no WhatsApp */}
       <WhatsAppCheckoutLinksCard />
+
+      {/* Mural do Dia & Disparo de Ofertas WhatsApp */}
+      <DailyDealsBroadcastCard />
 
       {/* Configurações da Integração Google Agenda */}
       <GoogleApiAdminCard />

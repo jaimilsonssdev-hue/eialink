@@ -14,6 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { detectNicheKey, getSignatureHeroArchitectureForNiche, NICHE_GALLERIES } from "@/modules/prospecting/nichePresets";
+import { CrossTrafficCard } from "@/components/public-profile/CrossTrafficCard";
 
 /* ==========================================================================
    CONTRATO DE DADOS & INTERFACES TYPESCRIPT (ESTRITO)
@@ -1071,6 +1072,11 @@ export function BioLinkView({
               </span>
             </button>
           </div>
+        )}
+
+        {/* PARCERIAS DE TRÁFEGO CRUZADO */}
+        {config.uuid_cliente && (
+          <CrossTrafficCard bioPageId={config.uuid_cliente} />
         )}
 
         {/* RODAPÉ DISCRETO */}

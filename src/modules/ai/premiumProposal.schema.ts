@@ -69,6 +69,10 @@ export const CreativeDirectionSchema = z.preprocess((val: any) => {
         ? val.visual_principles
         : [],
     motionIntensity: motion,
+    concept: typeof val.concept === "string" ? val.concept.slice(0, 80) : null,
+    heroStyle: ["fullscreen-photo", "split", "centered-minimal", "overlay-gradient"].includes(val.heroStyle || val.hero_style)
+      ? (val.heroStyle || val.hero_style)
+      : null,
   };
 }, z.object({
   id: z.string().default("cinematic-noir"),
@@ -76,12 +80,17 @@ export const CreativeDirectionSchema = z.preprocess((val: any) => {
   referenceIds: z.array(z.string()).default([]),
   visualPrinciples: z.array(z.string()).default([]),
   motionIntensity: z.enum(["off", "subtle", "standard", "cinematic"]).default("subtle"),
+  concept: z.string().nullable().default(null),
+  heroStyle: z.enum(["fullscreen-photo", "split", "centered-minimal", "overlay-gradient"]).nullable().default(null),
 }));
 
 export const ThemeProposalSchema = z.preprocess((val: any) => {
   if (!val || typeof val !== "object") return {};
   return {
     paletteId: val.paletteId || val.palette_id || null,
+    fontPair: ["moderna", "elegante", "marcante", "corporativa"].includes(val.fontPair || val.font_pair)
+      ? (val.fontPair || val.font_pair)
+      : null,
     primary: val.primary || val.primary_color || val.primaryColor || "#10b981",
     background: val.background || val.bg || val.bg_color || "#030712",
     card_bg: val.card_bg || val.cardBg || val.card_color || "#0b0f19",
@@ -94,6 +103,7 @@ export const ThemeProposalSchema = z.preprocess((val: any) => {
   };
 }, z.object({
   paletteId: z.string().nullable().default(null),
+  fontPair: z.enum(["moderna", "elegante", "marcante", "corporativa"]).nullable().default(null),
   primary: z.string().default("#10b981"),
   background: z.string().default("#030712"),
   card_bg: z.string().default("#0b0f19"),

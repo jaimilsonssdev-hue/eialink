@@ -51,17 +51,41 @@ export function adaptProposalToExistingStructures(
   const derivedHue = proposal.theme.primary ? hexToHue(proposal.theme.primary) : null;
   const nicheHue = derivedHue ?? getNicheHue(detectedNicheKey);
 
+  // Garante contraste legível (WCAG AA ~4.5) entre texto e fundo
+  const isHex = (c?: string | null) => typeof c === "string" && /^#[0-9a-f]{6}$/i.test(c.trim());
+  const luminance = (hex: string) => {
+    const n = parseInt(hex.slice(1), 16);
+    const ch = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+      const x = v / 255;
+      return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4);
+    });
+    return 0.2126 * ch[0] + 0.7152 * ch[1] + 0.0722 * ch[2];
+  };
+  const contrast = (a: string, b: string) => {
+    const [l1, l2] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (l1 + 0.05) / (l2 + 0.05);
+  };
+  const bg = isHex(proposal.theme.background) ? proposal.theme.background : "#0b0f19";
+  const bgIsDark = luminance(bg) < 0.4;
+  const safeColor = (c: string | null | undefined, min: number) =>
+    isHex(c) && contrast(c!, bg) >= min ? c! : bgIsDark ? "#f8fafc" : "#0f172a";
+  const safeTitle = safeColor(proposal.theme.title, 4.5);
+  const safeText = safeColor(proposal.theme.text, 4.5);
+  const safeMode = bgIsDark ? "dark" : "light";
+
   // 1. Extração e montagem do tema customizado (Design Tokens com contraste WCAG e HUE dinâmico)
   const customTheme = {
     primary: proposal.theme.primary,
-    background: proposal.theme.background,
+    background: bg,
     card_bg: proposal.theme.card_bg,
     border_color: proposal.theme.border_color,
-    title: proposal.theme.title,
-    text: proposal.theme.text,
-    mode: proposal.theme.mode,
+    title: safeTitle,
+    text: safeText,
+    mode: safeMode,
     border_radius: proposal.theme.radius,
     hue: nicheHue,
+    ...(proposal.theme.fontPair ? { font_pair: proposal.theme.fontPair } : {}),
+    ...(proposal.creativeDirection.heroStyle ? { hero_style: proposal.creativeDirection.heroStyle } : {}),
   };
 
   const tokensDesign = {
@@ -373,6 +397,8 @@ export function adaptProposalToExistingStructures(
       confirmedFacts: proposal.strategy.confirmedFacts,
       missingInformation: proposal.strategy.missingInformation,
       creativeDirection: proposal.creativeDirection.name,
+      concept: proposal.creativeDirection.concept,
+      directionId: proposal.creativeDirection.id,
     },
   };
 
@@ -404,7 +430,10 @@ export function adaptProposalToExistingStructures(
     loja: "aurora",
   };
 
-  const resolvedTheme = nicheThemeMap[detectedNicheKey] || (proposal.theme.mode === "dark" ? "midnight" : "ocean");
+  // A paleta própria da IA vive em custom_theme; o tema base só acompanha o modo claro/escuro
+  const resolvedTheme = safeMode === "dark"
+    ? (nicheThemeMap[detectedNicheKey] || "midnight")
+    : "ocean";
 
   const validTemplates = [
     "restaurant-menu",
@@ -442,9 +471,9 @@ export function adaptProposalToExistingStructures(
     template_id: resolvedTemplateId,
     theme: resolvedTheme,
     motion_enabled: proposal.creativeDirection.motionIntensity !== "off",
-    motion_entrance: "gentle",
-    motion_cta: "gentle",
-    motion_ambient: "soft",
+    motion_entrance: proposal.creativeDirection.motionIntensity === "cinematic" ? "dramatic" : "gentle",
+    motion_cta: proposal.creativeDirection.motionIntensity === "subtle" ? "gentle" : "pulse",
+    motion_ambient: proposal.creativeDirection.motionIntensity === "cinematic" ? "rich" : "soft",
     social_links: updatedSocial,
     // REGRA DE SEGURANÇA: nunca força published = true em proposta de IA
     published: currentBio?.published ?? false,

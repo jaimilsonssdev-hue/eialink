@@ -29,6 +29,8 @@ import {
   sanitizePhoneDigits,
 } from "@/modules/settings/services/CommercialSettingsService";
 import { GoogleApiAdminCard } from "@/components/admin/GoogleApiAdminCard";
+import { GooglePlacesAdminCard } from "@/components/admin/GooglePlacesAdminCard";
+
 import { WhatsAppCheckoutLinksCard } from "@/components/admin/WhatsAppCheckoutLinksCard";
 import { toPlanLimits, type Plan, type ProfessionalService } from "@/modules/billing/types";
 import {
@@ -316,6 +318,9 @@ function AdminPage() {
 
       {/* Configurações da Integração Google Agenda */}
       <GoogleApiAdminCard />
+
+      <GooglePlacesAdminCard />
+
 
       {/* Planos da Plataforma */}
       <Card className="rounded-xl border border-border bg-card shadow-xs">

@@ -4,8 +4,11 @@ import {
   fetchGoogleMapsPlaceDetails,
   type GoogleMapsPlaceDetails,
 } from "@/modules/prospecting/LiveProspectingEngine";
+import { resolvePlacesApiKey } from "@/modules/prospecting/places-admin.functions";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
+const DIRECT_URL = "https://places.googleapis.com";
+
 
 const SAFE_TEXT = /^[\p{L}\p{N}\s.,'&()\-/ºª+]{2,120}$/u;
 
@@ -39,14 +42,48 @@ interface PlacesResult {
   reviews?: PlacesReview[];
 }
 
-function gatewayHeaders(apiKey: string, lovableKey: string, fieldMask?: string) {
-  const headers: Record<string, string> = {
-    Authorization: `Bearer ${lovableKey}`,
-    "X-Connection-Api-Key": apiKey,
-    "Content-Type": "application/json",
+interface PlacesTransport {
+  base: string;
+  headers: (fieldMask?: string) => Record<string, string>;
+}
+
+/**
+ * Define como falar com a Places API:
+ * 1º) chave própria salva no painel Super Admin (funciona em qualquer domínio);
+ * 2º) conexão gerenciada da Lovable (apenas em previews *.lovable.app).
+ */
+async function resolveTransport(): Promise<PlacesTransport | null> {
+  const ownKey = await resolvePlacesApiKey();
+  if (ownKey) {
+    return {
+      base: DIRECT_URL,
+      headers: (fieldMask?: string) => {
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          "X-Goog-Api-Key": ownKey,
+        };
+        if (fieldMask) headers["X-Goog-FieldMask"] = fieldMask;
+        return headers;
+      },
+    };
+  }
+
+  const apiKey = process.env["GOOGLE_MAPS_API_KEY"];
+  const lovableKey = process.env["LOVABLE_API_KEY"];
+  if (!apiKey || !lovableKey) return null;
+
+  return {
+    base: `${GATEWAY_URL}/places`,
+    headers: (fieldMask?: string) => {
+      const headers: Record<string, string> = {
+        Authorization: `Bearer ${lovableKey}`,
+        "X-Connection-Api-Key": apiKey,
+        "Content-Type": "application/json",
+      };
+      if (fieldMask) headers["X-Goog-FieldMask"] = fieldMask;
+      return headers;
+    },
   };
-  if (fieldMask) headers["X-Goog-FieldMask"] = fieldMask;
-  return headers;
 }
 
 /**
@@ -54,8 +91,7 @@ function gatewayHeaders(apiKey: string, lovableKey: string, fieldMask?: string) 
  */
 async function resolvePhotoUrls(
   photos: PlacesPhoto[],
-  apiKey: string,
-  lovableKey: string,
+  transport: PlacesTransport,
   limit = 6,
 ): Promise<string[]> {
   const urls: string[] = [];
@@ -63,8 +99,8 @@ async function resolvePhotoUrls(
     if (!photo?.name) continue;
     try {
       const res = await fetch(
-        `${GATEWAY_URL}/places/v1/${photo.name}/media?maxWidthPx=1200&skipHttpRedirect=true`,
-        { headers: gatewayHeaders(apiKey, lovableKey) },
+        `${transport.base}/v1/${photo.name}/media?maxWidthPx=1200&skipHttpRedirect=true`,
+        { headers: transport.headers() },
       );
       if (!res.ok) {
         console.warn(`[places] Foto indisponível [${res.status}]: ${await res.text()}`);
@@ -81,24 +117,21 @@ async function resolvePhotoUrls(
 
 /**
  * Busca a ficha oficial do estabelecimento via Google Places API (New).
- * Retorna null quando a conexão não está configurada ou não há correspondência.
+ * Retorna null quando não há chave configurada ou não há correspondência.
  */
 export async function fetchOfficialPlaceDetails(
   companyName: string,
   city?: string | null,
 ): Promise<(GoogleMapsPlaceDetails & { source: "google_places" }) | null> {
-  const apiKey = process.env["GOOGLE_MAPS_API_KEY"];
-  const lovableKey = process.env["LOVABLE_API_KEY"];
-  if (!apiKey || !lovableKey) return null;
+  const transport = await resolveTransport();
+  if (!transport) return null;
 
   const textQuery = [sanitize(companyName), sanitize(city)].filter(Boolean).join(" ");
   if (!textQuery) return null;
 
-  const searchRes = await fetch(`${GATEWAY_URL}/places/v1/places:searchText`, {
+  const searchRes = await fetch(`${transport.base}/v1/places:searchText`, {
     method: "POST",
-    headers: gatewayHeaders(
-      apiKey,
-      lovableKey,
+    headers: transport.headers(
       "places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.rating,places.userRatingCount",
     ),
     body: JSON.stringify({ textQuery, languageCode: "pt-BR", regionCode: "BR", pageSize: 1 }),
@@ -114,10 +147,8 @@ export async function fetchOfficialPlaceDetails(
   const match = searchBody.places?.[0];
   if (!match?.id) return null;
 
-  const detailsRes = await fetch(`${GATEWAY_URL}/places/v1/places/${match.id}?languageCode=pt-BR`, {
-    headers: gatewayHeaders(
-      apiKey,
-      lovableKey,
+  const detailsRes = await fetch(`${transport.base}/v1/places/${match.id}?languageCode=pt-BR`, {
+    headers: transport.headers(
       "id,displayName,formattedAddress,nationalPhoneNumber,internationalPhoneNumber,rating,userRatingCount,regularOpeningHours.weekdayDescriptions,photos,reviews",
     ),
   });
@@ -131,7 +162,7 @@ export async function fetchOfficialPlaceDetails(
   const details = (await detailsRes.json()) as PlacesResult;
 
   const phoneDigits = (details.nationalPhoneNumber || details.internationalPhoneNumber || "").replace(/\D/g, "");
-  const photos = await resolvePhotoUrls(details.photos ?? [], apiKey, lovableKey);
+  const photos = await resolvePhotoUrls(details.photos ?? [], transport);
 
   const reviews = (details.reviews ?? [])
     .filter((r) => (r.text?.text || r.originalText?.text || "").trim().length > 0)
@@ -155,6 +186,7 @@ export async function fetchOfficialPlaceDetails(
     reviews,
   };
 }
+
 
 /**
  * Ponto único de coleta de dados reais do estabelecimento.

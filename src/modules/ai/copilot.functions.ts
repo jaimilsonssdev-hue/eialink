@@ -45,6 +45,8 @@ export interface AiCopilotResult {
     card_bg: string;
     border_color: string;
     mode: "dark" | "light";
+    /** Efeito imersivo de profundidade ao rolar a página (disponível em qualquer modelo). */
+    parallax?: boolean;
   };
   differentials?: Array<{
     title: string;

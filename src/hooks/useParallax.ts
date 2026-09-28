@@ -52,3 +52,73 @@ export function useParallax<T extends HTMLElement>() {
 
   return ref;
 }
+
+/**
+ * Immersive parallax scene: observes every decorative layer inside the returned
+ * container and keeps a `--parallax` custom property (-1..1) updated while it is
+ * visible. Works on any template because it targets generic depth hooks
+ * (`[data-parallax-layer]`, cover images) instead of layout-specific markup.
+ * Only GPU-friendly transforms are driven from CSS, and it stays off when the
+ * visitor prefers reduced motion.
+ */
+export function useParallaxScene<T extends HTMLElement>(enabled: boolean) {
+  const ref = useRef<T>(null);
+
+  useEffect(() => {
+    const root = ref.current;
+    if (!enabled || !root || typeof window === "undefined") return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const SELECTOR = "[data-parallax-layer], header img, .parallax-layer";
+    let frame = 0;
+    const visible = new Set<HTMLElement>();
+
+    const apply = () => {
+      frame = 0;
+      const viewport = window.innerHeight || 1;
+      visible.forEach((element) => {
+        const rect = element.getBoundingClientRect();
+        const progress = 1 - (rect.top + rect.height / 2) / viewport;
+        element.style.setProperty("--parallax", Math.max(-1, Math.min(1, progress)).toFixed(3));
+      });
+    };
+
+    const onScroll = () => {
+      if (frame || visible.size === 0) return;
+      frame = window.requestAnimationFrame(apply);
+    };
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          const element = entry.target as HTMLElement;
+          if (entry.isIntersecting) visible.add(element);
+          else visible.delete(element);
+        }
+        apply();
+      },
+      { threshold: 0 },
+    );
+
+    const observeAll = () => {
+      root.querySelectorAll<HTMLElement>(SELECTOR).forEach((element) => observer.observe(element));
+    };
+
+    observeAll();
+    const mutations = new MutationObserver(observeAll);
+    mutations.observe(root, { childList: true, subtree: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      mutations.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+      visible.forEach((element) => element.style.removeProperty("--parallax"));
+    };
+  }, [enabled]);
+
+  return ref;
+}

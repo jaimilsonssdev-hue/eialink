@@ -377,23 +377,10 @@ export async function lookupBusinessProfile(queryOrUrl: string): Promise<Prospec
     ];
   }
 
-  // 2. Se for link do Google Maps
-  let searchTerm = trimmed;
-  if (trimmed.includes("google.com/maps") || trimmed.includes("maps.app.goo.gl")) {
-    const qMatch = trimmed.match(/[?&]q=([^&]+)/) || trimmed.match(/\/place\/([^/@?]+)/);
-    if (qMatch) {
-      searchTerm = decodeURIComponent(qMatch[1].replace(/\+/g, " "));
-    }
-  }
-
-  // Extrai cidade se o usuário digitou "em Cidade" ou "- Cidade"
-  let niche = searchTerm;
-  let city = "";
-  const cityMatch = searchTerm.match(/(.+?)\s+(?:em|na|no|-)\s+([A-Za-zÀ-ÿ\s]{3,})$/i);
-  if (cityMatch) {
-    niche = cityMatch[1].trim();
-    city = cityMatch[2].trim();
-  }
+  // 2. Link do Maps, link de busca do celular ou texto simples
+  const normalized = normalizeBusinessQuery(trimmed);
+  const niche = normalized.name || trimmed;
+  const city = normalized.city;
 
   return await searchGoogleMapsAndInstagram(niche, city, 5);
 }

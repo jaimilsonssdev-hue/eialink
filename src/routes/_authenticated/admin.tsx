@@ -604,6 +604,7 @@ function AdminPage() {
                   const sub = data?.subscriptions.find((s) => s.user_id === p.id);
                   const hasBuilderAccess = Boolean(sub?.notes?.includes("builder_access:true"));
                   const hasComandaAccess = Boolean(sub?.notes?.includes("comanda_access:true"));
+                  const hasAgendaAccess = !sub?.notes?.includes("agenda_access:false");
                   const isOwner = p.email?.toLowerCase() === "jaimilsonvendas@gmail.com";
 
                   return (

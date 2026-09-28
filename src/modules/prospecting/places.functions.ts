@@ -4,8 +4,11 @@ import {
   fetchGoogleMapsPlaceDetails,
   type GoogleMapsPlaceDetails,
 } from "@/modules/prospecting/LiveProspectingEngine";
+import { resolvePlacesApiKey } from "@/modules/prospecting/places-admin.functions";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
+const DIRECT_URL = "https://places.googleapis.com";
+
 
 const SAFE_TEXT = /^[\p{L}\p{N}\s.,'&()\-/ºª+]{2,120}$/u;
 

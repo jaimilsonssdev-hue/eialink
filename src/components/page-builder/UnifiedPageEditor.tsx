@@ -823,7 +823,12 @@ export function UnifiedPageEditor({
           ...((result.custom_theme as any).title ? { title: (result.custom_theme as any).title } : {}),
           ...((result.custom_theme as any).border_radius ? { border_radius: (result.custom_theme as any).border_radius } : {}),
           ...((result.custom_theme as any).hue != null ? { hue: (result.custom_theme as any).hue } : {}),
-          ...((result.custom_theme as any).hero_style ? { hero_style: (result.custom_theme as any).hero_style } : {}),
+         ...((result.custom_theme as any).hero_style ? { hero_style: (result.custom_theme as any).hero_style } : {}),
+         ...(typeof (result.custom_theme as any).parallax === "boolean"
+           ? { parallax: (result.custom_theme as any).parallax }
+           : currentSocial.custom_theme?.parallax != null
+             ? { parallax: currentSocial.custom_theme.parallax }
+             : {}),
           font_pair: (result.custom_theme as any).font_pair || currentSocial.custom_theme?.font_pair,
         }
       : currentSocial.custom_theme;
@@ -1961,6 +1966,34 @@ export function UnifiedPageEditor({
                       className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
                     />
                   </label>
+
+                  {(bio.motion_enabled ?? true) && (
+                    <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface-elevated p-3.5 text-sm">
+                      <div>
+                        <b className="block text-sm">Efeito imersivo de profundidade (parallax)</b>
+                        <span className="mt-0.5 block text-xs text-muted-foreground">
+                          A foto de capa e as luzes de fundo se movem em ritmos diferentes ao rolar a página.
+                        </span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(((bio.social_links as Record<string, any>) || {}).custom_theme?.parallax)}
+                        onChange={(event) => {
+                          const currentSocial = (bio.social_links as Record<string, any>) || {};
+                          updateBio({
+                            social_links: {
+                              ...currentSocial,
+                              custom_theme: {
+                                ...(currentSocial.custom_theme || {}),
+                                parallax: event.target.checked,
+                              },
+                            } as any,
+                          });
+                        }}
+                        className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
+                      />
+                    </label>
+                  )}
 
                   {(bio.motion_enabled ?? true) && (
                     <div className="grid grid-cols-3 gap-2">

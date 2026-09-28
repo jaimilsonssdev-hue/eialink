@@ -56,6 +56,7 @@ export class CinematicLayout implements TemplateLayoutRenderer {
       <div className="niche-cinematic max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6 sm:space-y-8 font-sans relative">
         {/* AMBIENT MESH GLOW (Iluminação de Fundo Cinematográfica) */}
         <div
+          data-parallax-layer="deep"
           className="fixed top-12 left-1/2 -translate-x-1/2 w-[340px] sm:w-[600px] h-[340px] sm:h-[420px] rounded-full blur-[110px] pointer-events-none opacity-20 dark:opacity-30 -z-10 bg-gradient-to-tr from-purple-600 via-primary to-amber-500"
           aria-hidden="true"
         />

@@ -4572,3 +4572,40 @@
 
 
 
+
+/* ===========================================================
+   PARALLAX IMERSIVO (aplicável a qualquer modelo de página)
+   O driver JS grava --parallax (-1..1) em cada camada visível.
+   Aqui só usamos transform 3D (GPU) para manter 60 FPS.
+   =========================================================== */
+[data-parallax="on"] header img,
+[data-parallax="on"] .parallax-cover {
+  transform: translate3d(0, calc(var(--parallax, 0) * 22px), 0) scale(1.12);
+  will-change: transform;
+  transition: transform 120ms linear;
+}
+
+[data-parallax="on"] [data-parallax-layer],
+[data-parallax="on"] .parallax-layer {
+  transform: translate3d(0, calc(var(--parallax, 0) * -28px), 0);
+  will-change: transform;
+  transition: transform 120ms linear;
+}
+
+[data-parallax="on"] [data-parallax-layer="deep"] {
+  transform: translate3d(0, calc(var(--parallax, 0) * -54px), 0);
+}
+
+[data-parallax="on"] [data-parallax-layer="near"] {
+  transform: translate3d(0, calc(var(--parallax, 0) * -12px), 0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-parallax="on"] header img,
+  [data-parallax="on"] .parallax-cover,
+  [data-parallax="on"] [data-parallax-layer],
+  [data-parallax="on"] .parallax-layer {
+    transform: none;
+    transition: none;
+  }
+}

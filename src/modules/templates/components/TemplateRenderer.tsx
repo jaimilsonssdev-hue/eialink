@@ -8,6 +8,7 @@ import { Footer } from "@/components/public-profile/Footer";
 import { PublicSocialLinks } from "@/components/public-profile/PublicSocialLinks";
 import { safeExternalUrl } from "@/lib/safe-url";
 import { findFontPair } from "@/lib/font-pairs";
+import { useParallaxScene } from "@/hooks/useParallax";
 
 const NICHE_FALLBACK_COVERS: Record<string, string> = {
   restaurant: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
@@ -103,9 +104,12 @@ export function TemplateRenderer({
     navigation_bg?: string;
     info_badge_bg?: string;
     font_pair?: string;
+    parallax?: boolean;
   } | undefined;
 
   const fontPair = findFontPair(customTheme?.font_pair);
+  const parallaxEnabled = customTheme?.parallax === true && bio.motion_enabled !== false;
+  const parallaxRef = useParallaxScene<HTMLElement>(parallaxEnabled);
 
   const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
   const customText = customTheme?.text || tokensDesign?.estilo_botoes?.cor_texto;
@@ -118,6 +122,8 @@ export function TemplateRenderer({
 
   return (
     <main
+      ref={parallaxRef}
+      data-parallax={parallaxEnabled ? "on" : undefined}
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}
       data-template={bio.template_id ?? "default"}
       data-layout={model.template.layout}

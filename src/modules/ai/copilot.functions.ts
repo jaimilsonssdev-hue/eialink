@@ -45,6 +45,8 @@ export interface AiCopilotResult {
     card_bg: string;
     border_color: string;
     mode: "dark" | "light";
+    /** Efeito imersivo de profundidade ao rolar a página (disponível em qualquer modelo). */
+    parallax?: boolean;
   };
   differentials?: Array<{
     title: string;
@@ -328,6 +330,7 @@ REGRAS DE OURO DA GERAÇÃO (DIREÇÃO DE ARTE EXCLUSIVA & ZERO SITES CLONES):
 
 3. EDIÇÃO SOB DEMANDA (PEDIDOS ESPECÍFICOS DO USUÁRIO):
    - Se o usuário forneceu pedidos ou instruções no briefing (ex: "mude apenas as cores", "altere o texto para X", "adicione o prato Y"), OBEDEÇA fielmente ao pedido solicitado, preservando a harmonia do restante do site.
+   - EFEITO IMERSIVO (PARALLAX): 'custom_theme.parallax' (true | false) liga o efeito de profundidade ao rolar a página e funciona em QUALQUER modelo. Defina true sempre que o usuário pedir algo "imersivo", "com parallax", "cinematográfico" ou "com profundidade", e também em negócios muito visuais com boas fotos (gastronomia, estética, barbearia, moda, arquitetura, academia, eventos). Defina false se o usuário pedir uma página estática, sóbria ou "sem animação".
 
 4. BENTO GRIDS & DIFERENCIAIS DE ALTA AUTORIDADE (ZERO CLICHÊS):
    - PROIBIDO usar clichês vazios como "Compromisso com excelência", "Atendimento exclusivo", "Qualidade garantida" ou "Diferencial 1".
@@ -1045,7 +1048,8 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
    - 'theme.fontPair': um de "moderna" | "elegante" | "marcante" | "corporativa".
    - 'theme.radius': entre "4px" e "28px" coerente com a direção.
    - 'creativeDirection.heroStyle': um de "fullscreen-photo" | "split" | "centered-minimal" | "overlay-gradient".
-   - 'creativeDirection.motionIntensity': "subtle" | "standard" | "cinematic".
+    - 'creativeDirection.motionIntensity': "subtle" | "standard" | "cinematic".
+    - 'theme.parallax': true | false. Ative (true) o efeito imersivo de profundidade quando o negócio for visual e premium (gastronomia, estética, barbearia, moda, arquitetura, academia, eventos) ou quando o usuário pedir algo imersivo/cinematográfico. Use false para páginas sóbrias ou institucionais com poucas fotos.
    - Escolha e ORDENE as seções de forma estratégica para este negócio (não siga sempre a mesma ordem). Desative seções sem dados reais.
 
 4. COPYWRITING ESPECIALIZADO DE ALTO PADRÃO (ZERO CLICHÊS):
@@ -1096,7 +1100,8 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
     "text": "#HEX_PROPRIO",
     "mode": "dark",
     "radius": "16px",
-    "density": "comfortable"
+    "density": "comfortable",
+    "parallax": true
   },
   "pagePatch": {
     "displayName": "Nome Real da Empresa",

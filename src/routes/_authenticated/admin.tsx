@@ -144,6 +144,11 @@ function AdminPage() {
       BillingService.setComandaAccess(userId, enabled),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
   });
+  const updateAgendaAccess = useMutation({
+    mutationFn: ({ userId, enabled }: { userId: string; enabled: boolean }) =>
+      BillingService.setAgendaAccess(userId, enabled),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
+  });
 
   const total = data?.profiles.length ?? 0;
   const hot = data?.profiles.filter((p) => (p.lead_score ?? 0) >= 70).length ?? 0;

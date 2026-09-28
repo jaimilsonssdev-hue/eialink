@@ -1037,9 +1037,9 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
    - Avalie 'qualityScore' (0 a 100) e forneça um breve 'reasoning' de Diretor de Arte para cada foto.
 
 3. DIREÇÃO DE ARTE ÚNICA (FIM DOS SITES CLONES):
-   - DIREÇÃO SORTEADA PARA ESTA GERAÇÃO (obrigatória, adapte ao negócio): \${chosenDirection.brief}
+   - DIREÇÃO SORTEADA PARA ESTA GERAÇÃO (obrigatória, adapte ao negócio): ${chosenDirection.brief}
    - Crie um conceito criativo com nome curto e autoral em 'creativeDirection.concept' (ex.: "Navalha & Couro", "Brasa Noturna", "Sorriso de Vidro").
-   - 'creativeDirection.id' deve ser "\${chosenDirection.id}".
+   - 'creativeDirection.id' deve ser "${chosenDirection.id}".
    - Crie uma PALETA PRÓPRIA em hex (primary, background, card_bg, border_color, title, text). NÃO use paletas genéricas nem o preto #030712. Derive a cor principal do segmento, das fotos e do nome do negócio.
    - Contraste obrigatório: texto e título legíveis sobre o fundo (WCAG AA).
    - 'theme.fontPair': um de "moderna" | "elegante" | "marcante" | "corporativa".
@@ -1077,8 +1077,8 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
     "missingInformation": ["Valores exatos de bebidas ausentes"]
   },
   "creativeDirection": {
-    "id": "restaurant-menu",
-    "name": "Gastronomia & Brasa Premium",
+    "id": "ID_DA_DIRECAO_SORTEADA",
+    "name": "Nome da direção de arte",
     "referenceIds": [],
     "visualPrinciples": ["Atmosfera acolhedora de brasa", "Foco visual em cortes nobres", "Tipografia de alta legibilidade"],
     "motionIntensity": "standard",

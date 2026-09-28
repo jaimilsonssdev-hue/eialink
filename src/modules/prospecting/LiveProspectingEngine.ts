@@ -454,7 +454,12 @@ export async function fetchGoogleMapsPlaceDetails(
   city?: string | null,
   providedCid?: string | null,
 ): Promise<GoogleMapsPlaceDetails> {
-  const cleanName = companyName
+  // Aceita link do Maps, link de busca copiado do celular ou texto simples
+  const normalizedInput = normalizeBusinessQuery(companyName || "");
+  const baseName = normalizedInput.name || companyName || "";
+  if (!city && normalizedInput.city) city = normalizedInput.city;
+
+  const cleanName = baseName
     .replace(/clinical\s+innovate/gi, "Clínica Inove")
     .replace(/^clinical\s+/gi, "Clínica ")
     .replace(/\s*[-–|]\s*(?:Sua Clínica|Especializada|Matriz|Filial|Teixeira de Freitas|BA|Bahia|São Paulo|SP|Rio de Janeiro|RJ).*/i, "")

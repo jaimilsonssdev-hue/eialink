@@ -187,7 +187,7 @@ function AuthedLayout() {
         <div className="px-3 pb-4">
           <ThemeToggle />
         </div>
-        <nav className="px-3 space-y-1 overflow-y-auto pb-20">
+        <nav className="min-h-0 flex-1 overflow-y-auto px-3 space-y-1 pb-4">
           {navGroups.map((group, gi) => (
             <div key={group.title ?? `group-${gi}`} className={group.title ? "pt-4 space-y-1" : "space-y-1"}>
               {group.title && (

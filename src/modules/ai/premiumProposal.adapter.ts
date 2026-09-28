@@ -86,6 +86,13 @@ export function adaptProposalToExistingStructures(
     hue: nicheHue,
     ...(proposal.theme.fontPair ? { font_pair: proposal.theme.fontPair } : {}),
     ...(proposal.creativeDirection.heroStyle ? { hero_style: proposal.creativeDirection.heroStyle } : {}),
+    // Profundidade imersiva: a IA decide, mas nunca com animações desligadas.
+    parallax:
+      proposal.creativeDirection.motionIntensity === "off"
+        ? false
+        : typeof proposal.theme.parallax === "boolean"
+          ? proposal.theme.parallax
+          : proposal.creativeDirection.motionIntensity === "cinematic",
   };
 
   const tokensDesign = {

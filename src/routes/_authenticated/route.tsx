@@ -152,9 +152,18 @@ function AuthedLayout() {
 
   return (
     <div className="app-shell min-h-screen flex">
+      {/* Backdrop mobile */}
+      {open && (
+        <div
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={() => setOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`app-sidebar fixed inset-y-0 left-0 z-40 w-64 transform transition-transform md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
+        className={`app-sidebar fixed inset-y-0 left-0 z-40 flex h-full w-72 max-w-[85vw] flex-col transform transition-transform md:w-64 md:max-w-none md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
       >
         <div className="app-sidebar-header p-5 flex items-center justify-between">
           <Link

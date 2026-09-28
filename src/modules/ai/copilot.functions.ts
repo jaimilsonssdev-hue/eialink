@@ -330,6 +330,7 @@ REGRAS DE OURO DA GERAÇÃO (DIREÇÃO DE ARTE EXCLUSIVA & ZERO SITES CLONES):
 
 3. EDIÇÃO SOB DEMANDA (PEDIDOS ESPECÍFICOS DO USUÁRIO):
    - Se o usuário forneceu pedidos ou instruções no briefing (ex: "mude apenas as cores", "altere o texto para X", "adicione o prato Y"), OBEDEÇA fielmente ao pedido solicitado, preservando a harmonia do restante do site.
+   - EFEITO IMERSIVO (PARALLAX): 'custom_theme.parallax' (true | false) liga o efeito de profundidade ao rolar a página e funciona em QUALQUER modelo. Defina true sempre que o usuário pedir algo "imersivo", "com parallax", "cinematográfico" ou "com profundidade", e também em negócios muito visuais com boas fotos (gastronomia, estética, barbearia, moda, arquitetura, academia, eventos). Defina false se o usuário pedir uma página estática, sóbria ou "sem animação".
 
 4. BENTO GRIDS & DIFERENCIAIS DE ALTA AUTORIDADE (ZERO CLICHÊS):
    - PROIBIDO usar clichês vazios como "Compromisso com excelência", "Atendimento exclusivo", "Qualidade garantida" ou "Diferencial 1".

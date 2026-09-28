@@ -1303,6 +1303,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 
     let rawContent: string | null = null;
     let lastError = "";
+    let fatalError: string | null = null;
     const errorLogs: string[] = [];
 
     for (const modelName of finalModelsToTry) {
@@ -1356,11 +1357,11 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
           errorLogs.push(errItem);
           // Erros de chave/requisição valem para todos os modelos: para aqui e economiza cota
           if ([400, 401, 403].includes(response.status)) {
-            throw new Error(
+            fatalError =
               response.status === 400 && !/api key/i.test(parsedError)
                 ? `Requisição recusada pelo Google AI Studio: ${parsedError}`
-                : "Chave do Google AI Studio inválida ou sem permissão. Confira a chave colada no painel.",
-            );
+                : "Chave do Google AI Studio inválida ou sem permissão. Confira a chave colada no painel.";
+            break;
           }
           if (response.status === 429) {
             lastError = "Cota gratuita do Google AI Studio atingida no momento. Aguarde alguns minutos e tente novamente.";
@@ -1400,6 +1401,8 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
         errorLogs.push(errItem);
       }
     }
+
+    if (fatalError) throw new Error(fatalError);
 
     if (!rawContent) {
       const detailMsg = errorLogs.length > 0 ? errorLogs.join(" | ") : (lastError || "Nenhum modelo respondeu com sucesso");

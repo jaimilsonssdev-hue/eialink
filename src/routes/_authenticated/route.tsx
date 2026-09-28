@@ -83,7 +83,9 @@ function AuthedLayout() {
       );
     }
 
-    items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+    if (canAccessAgenda) {
+      items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+    }
 
     // Inclui a Comanda Digital APENAS se o Super Admin tiver liberado para este cliente
     if (canAccessComanda) {

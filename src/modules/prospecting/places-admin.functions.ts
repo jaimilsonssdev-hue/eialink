@@ -108,7 +108,11 @@ export const savePlacesApiKeyFn = createServerFn({ method: "POST" })
       if (data.apiKey) next[PLACES_KEY_FEATURE] = data.apiKey;
       else delete next[PLACES_KEY_FEATURE];
 
-      await supabase.from("plans").update({ features: next }).eq("id", plan.id);
+      await supabase
+        .from("plans")
+        .update({ features: next as unknown as Database["public"]["Tables"]["plans"]["Update"]["features"] })
+        .eq("id", plan.id);
+
     }
 
     return { success: true, configured: Boolean(data.apiKey) };

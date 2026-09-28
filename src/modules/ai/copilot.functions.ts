@@ -140,6 +140,7 @@ const copilotInputSchema = z
     currentContext: copilotContextSchema,
     overrideApiKey: nullableString,
     aiGatewayUrl: nullableString,
+    avoidDirectionId: nullableString,
   })
   .refine(
     (data) =>
@@ -999,6 +1000,20 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
       })
       .join("\n");
 
+    // Semente criativa: garante variedade entre gerações (e entre "Gerar outra versão")
+    const ART_DIRECTIONS = [
+      { id: "editorial-luxo", brief: "Editorial de luxo: muito respiro, tipografia serifada elegante (fontPair 'elegante'), paleta sóbria com um único acento metálico (ouro, champagne ou cobre), motion 'subtle'." },
+      { id: "neon-noturno", brief: "Neon noturno: fundo quase preto com leve tom da cor principal, acento vibrante saturado (ciano, magenta, lima ou laranja elétrico), fontPair 'marcante', motion 'cinematic'." },
+      { id: "minimal-claro", brief: "Minimal claro: mode 'light', fundo off-white quente ou frio, texto grafite, acento único e contido, fontPair 'moderna', motion 'subtle'." },
+      { id: "organico-quente", brief: "Orgânico quente: tons terrosos (argila, oliva, areia, terracota), sensação artesanal e acolhedora, fontPair 'elegante' ou 'moderna', motion 'standard'." },
+      { id: "brutalista-bold", brief: "Brutalista bold: alto contraste, cores chapadas fortes, bordas retas (radius '4px'), títulos enormes, fontPair 'marcante', motion 'standard'." },
+      { id: "cinematografico", brief: "Cinematográfico: fotos em destaque total, fundo profundo com gradiente da cor principal, acento quente, fontPair 'elegante' ou 'marcante', motion 'cinematic'." },
+      { id: "corporativo-confianca", brief: "Corporativo de confiança: azuis/verdes profundos ou grafite com acento sóbrio, fontPair 'corporativa', layout organizado, motion 'subtle'." },
+      { id: "vibrante-pop", brief: "Vibrante pop: energia jovem, 2 cores complementares alegres, radius '24px', fontPair 'marcante', motion 'standard'." },
+    ];
+    const availableDirections = ART_DIRECTIONS.filter((d) => d.id !== data.avoidDirectionId);
+    const chosenDirection = availableDirections[Math.floor(Math.random() * availableDirections.length)];
+
     const systemPrompt = `[INSTRUÇÃO MESTRE - GERADOR PREMIUM BETA NÍVEL 2 - COMPOSIÇÃO LIVRE CONTROLADA]
 Você é um Arquiteto Sênior de Produto, Diretor de Arte de Elite e Copywriter Especialista da plataforma EIA Link.
 Sua missão é transformar o briefing, fotos e dados do negócio do cliente em uma PROPOSTA ESTRUTURADA DE SITE DE ALTO PADRÃO (Schema Version 2).
@@ -1021,42 +1036,17 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
    - Atribua o papel correto: 'logo' (avatarUrl), 'cover' (coverUrl e hero), 'product' (catalogItems e catalog_carousel), 'ambient' (about/galeria).
    - Avalie 'qualityScore' (0 a 100) e forneça um breve 'reasoning' de Diretor de Arte para cada foto.
 
-3. DIREÇÃO DE ARTE, PALETAS CROMÁTICAS & ARQUÉTIPOS POR NICHO (FIM DOS SITES CLONES):
-   - PROIBIDO gerar sites com a mesma cara ou a mesma paleta preta (#030712) para todos os nichos!
-   - Cada negócio DEVE refletir a atmosfera autêntica do seu segmento de mercado:
-     * GASTRONOMIA, RESTAURANTES, CHURRASCARIAS, HAMBURGUERIAS, PIZZARIAS & BARES:
-       creativeDirection.id: "restaurant-menu" (ou "site-maquina")
-       creativeDirection.name: "Gastronomia & Brasa Premium"
-       theme.background: "#140f0c" (Charcoal Ember) ou "#1c1917" (Smoked Stone)
-       theme.card_bg: "#221713" ou "#292524"
-       theme.border_color: "#3f271c" ou "#44403c"
-       theme.primary: "#ea580c" (Laranja Brasa) ou "#d97706" (Âmbar Flame) ou "#dc2626" (Rubi Parrilla)
-       theme.title: "#ffffff", theme.text: "#fed7aa" ou "#e7e5e4", theme.mode: "dark"
-     * SAÚDE, CLÍNICAS MÉDICAS, ODONTOLOGIA, PSICOLOGIA & TERAPIA:
-       creativeDirection.id: "clinic-care" (ou "site-maquina")
-       creativeDirection.name: "Clínica & Odontologia Digital"
-       Se Light: theme.mode: "light", theme.background: "#f8fafc", theme.card_bg: "#ffffff", theme.border_color: "#e2e8f0", theme.primary: "#0284c7" (Azul Médico) ou "#0d9488" (Teal Clínico), theme.title: "#0f172a", theme.text: "#334155"
-       Se Dark: theme.mode: "dark", theme.background: "#070e1c", theme.card_bg: "#0e1a33", theme.border_color: "#1d335f", theme.primary: "#38bdf8", theme.title: "#ffffff", theme.text: "#cbd5e1"
-     * BELEZA, ESTÉTICA AVANÇADA, SALÕES DE BELEZA & SPAS:
-       creativeDirection.id: "beauty-glow" (ou "site-maquina")
-       creativeDirection.name: "Beleza, Estética & Spa VIP"
-       theme.background: "#140d14", theme.card_bg: "#221422", theme.border_color: "#3d213c", theme.primary: "#ec4899" (Rose Gold) ou "#f43f5e" (Cereja Glamour), theme.title: "#ffffff", theme.text: "#fce7f3", theme.mode: "dark"
-     * ADVOCACIA, JURÍDICO, CONTABILIDADE, BPO & FINANÇAS:
-       creativeDirection.id: "law-authority" (ou "site-maquina")
-       creativeDirection.name: "Autoridade Jurídica & Corporativa"
-       theme.background: "#070c18", theme.card_bg: "#0e182e", theme.border_color: "#1d2f57", theme.primary: "#d97706" (Ouro Imperial) ou "#3b82f6" (Azul Corporativo), theme.title: "#ffffff", theme.text: "#e2e8f0", theme.mode: "dark"
-     * BARBEARIA & ESTILO MASCULINO:
-       creativeDirection.id: "cinematic-glass" (ou "site-maquina")
-       theme.background: "#101114", theme.card_bg: "#1a1c22", theme.border_color: "#2d313c", theme.primary: "#f59e0b", theme.title: "#ffffff", theme.text: "#e2e8f0", theme.mode: "dark"
-     * PET SHOP & CLÍNICAS VETERINÁRIAS:
-       creativeDirection.id: "store-showcase" (ou "site-maquina")
-       theme.background: "#071510", theme.card_bg: "#0e261d", theme.border_color: "#1a4636", theme.primary: "#10b981", theme.title: "#ffffff", theme.text: "#d1fae5", theme.mode: "dark"
-     * OFICINAS MECÂNICAS & AUTO CENTERS:
-       creativeDirection.id: "business-modern" (ou "site-maquina")
-       theme.background: "#0c0e12", theme.card_bg: "#151820", theme.border_color: "#282e3c", theme.primary: "#ea580c" ou "#eab308", theme.title: "#ffffff", theme.text: "#e2e8f0", theme.mode: "dark"
-     * LOJAS, MODA & E-COMMERCE:
-       creativeDirection.id: "store-showcase"
-       theme.background: "#09090b", theme.card_bg: "#18181b", theme.border_color: "#27272a", theme.primary: "#6366f1" ou cor extraída do logo, theme.mode: "dark"
+3. DIREÇÃO DE ARTE ÚNICA (FIM DOS SITES CLONES):
+   - DIREÇÃO SORTEADA PARA ESTA GERAÇÃO (obrigatória, adapte ao negócio): ${chosenDirection.brief}
+   - Crie um conceito criativo com nome curto e autoral em 'creativeDirection.concept' (ex.: "Navalha & Couro", "Brasa Noturna", "Sorriso de Vidro").
+   - 'creativeDirection.id' deve ser "${chosenDirection.id}".
+   - Crie uma PALETA PRÓPRIA em hex (primary, background, card_bg, border_color, title, text). NÃO use paletas genéricas nem o preto #030712. Derive a cor principal do segmento, das fotos e do nome do negócio.
+   - Contraste obrigatório: texto e título legíveis sobre o fundo (WCAG AA).
+   - 'theme.fontPair': um de "moderna" | "elegante" | "marcante" | "corporativa".
+   - 'theme.radius': entre "4px" e "28px" coerente com a direção.
+   - 'creativeDirection.heroStyle': um de "fullscreen-photo" | "split" | "centered-minimal" | "overlay-gradient".
+   - 'creativeDirection.motionIntensity': "subtle" | "standard" | "cinematic".
+   - Escolha e ORDENE as seções de forma estratégica para este negócio (não siga sempre a mesma ordem). Desative seções sem dados reais.
 
 4. COPYWRITING ESPECIALIZADO DE ALTO PADRÃO (ZERO CLICHÊS):
    - PROIBIÇÃO ABSOLUTA de frases vazias como "Compromisso com excelência", "Atendimento exclusivo", "Qualidade garantida", "Diferencial 1", "Diferencial 2", "Nome do Produto ou Serviço".
@@ -1087,20 +1077,23 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
     "missingInformation": ["Valores exatos de bebidas ausentes"]
   },
   "creativeDirection": {
-    "id": "restaurant-menu",
-    "name": "Gastronomia & Brasa Premium",
+    "id": "ID_DA_DIRECAO_SORTEADA",
+    "name": "Nome da direção de arte",
     "referenceIds": [],
     "visualPrinciples": ["Atmosfera acolhedora de brasa", "Foco visual em cortes nobres", "Tipografia de alta legibilidade"],
-    "motionIntensity": "subtle"
+    "motionIntensity": "standard",
+    "concept": "NOME_DO_CONCEITO_AUTORAL",
+    "heroStyle": "overlay-gradient"
   },
   "theme": {
     "paletteId": null,
-    "primary": "#ea580c",
-    "background": "#140f0c",
-    "card_bg": "#221713",
-    "border_color": "#3f271c",
-    "title": "#ffffff",
-    "text": "#fed7aa",
+    "fontPair": "elegante",
+    "primary": "#HEX_PROPRIO",
+    "background": "#HEX_PROPRIO",
+    "card_bg": "#HEX_PROPRIO",
+    "border_color": "#HEX_PROPRIO",
+    "title": "#HEX_PROPRIO",
+    "text": "#HEX_PROPRIO",
     "mode": "dark",
     "radius": "16px",
     "density": "comfortable"
@@ -1310,6 +1303,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 
     let rawContent: string | null = null;
     let lastError = "";
+    let fatalError: string | null = null;
     const errorLogs: string[] = [];
 
     for (const modelName of finalModelsToTry) {
@@ -1345,7 +1339,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
               ],
               generationConfig: {
                 responseMimeType: "application/json",
-                temperature: 0.5,
+                temperature: 0.95,
               },
             }),
           },
@@ -1361,6 +1355,17 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
           const errItem = `Modelo ${modelName} (${response.status}): ${parsedError}`;
           lastError = errItem;
           errorLogs.push(errItem);
+          // Erros de chave/requisição valem para todos os modelos: para aqui e economiza cota
+          if ([400, 401, 403].includes(response.status)) {
+            fatalError =
+              response.status === 400 && !/api key/i.test(parsedError)
+                ? `Requisição recusada pelo Google AI Studio: ${parsedError}`
+                : "Chave do Google AI Studio inválida ou sem permissão. Confira a chave colada no painel.";
+            break;
+          }
+          if (response.status === 429) {
+            lastError = "Cota gratuita do Google AI Studio atingida no momento. Aguarde alguns minutos e tente novamente.";
+          }
           continue;
         }
 
@@ -1396,6 +1401,8 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
         errorLogs.push(errItem);
       }
     }
+
+    if (fatalError) throw new Error(fatalError);
 
     if (!rawContent) {
       const detailMsg = errorLogs.length > 0 ? errorLogs.join(" | ") : (lastError || "Nenhum modelo respondeu com sucesso");

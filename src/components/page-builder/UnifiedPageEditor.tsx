@@ -820,6 +820,11 @@ export function UnifiedPageEditor({
           card_bg: result.custom_theme.card_bg,
           border_color: result.custom_theme.border_color,
           mode: result.custom_theme.mode,
+          ...((result.custom_theme as any).title ? { title: (result.custom_theme as any).title } : {}),
+          ...((result.custom_theme as any).border_radius ? { border_radius: (result.custom_theme as any).border_radius } : {}),
+          ...((result.custom_theme as any).hue != null ? { hue: (result.custom_theme as any).hue } : {}),
+          ...((result.custom_theme as any).hero_style ? { hero_style: (result.custom_theme as any).hero_style } : {}),
+          font_pair: (result.custom_theme as any).font_pair || currentSocial.custom_theme?.font_pair,
         }
       : currentSocial.custom_theme;
 
@@ -837,7 +842,7 @@ export function UnifiedPageEditor({
             cor_borda: customTheme.border_color || "rgba(255, 255, 255, 0.12)",
             cor_texto: customTheme.text || "#ffffff",
             cor_destaque: customTheme.primary || "#6366f1",
-            raio_borda: currentSocial.tokens_design?.estilo_botoes?.raio_borda || "16px",
+            raio_borda: (customTheme as any).border_radius || currentSocial.tokens_design?.estilo_botoes?.raio_borda || "16px",
           },
         }
       : currentSocial.tokens_design;
@@ -901,6 +906,8 @@ export function UnifiedPageEditor({
         confirmedFacts: proposalResp.proposal.strategy.confirmedFacts,
         missingInformation: proposalResp.proposal.strategy.missingInformation,
         creativeDirection: proposalResp.proposal.creativeDirection.name,
+        concept: (proposalResp.proposal.creativeDirection as any).concept ?? null,
+        directionId: proposalResp.proposal.creativeDirection.id,
       };
     }
 
@@ -916,6 +923,10 @@ export function UnifiedPageEditor({
       ...bio,
       template_id: targetTemplate || bio.template_id,
       theme: proposalResp?.adapted?.updatedBio?.theme || bio.theme,
+      motion_enabled: proposalResp?.adapted?.updatedBio?.motion_enabled ?? bio.motion_enabled,
+      motion_entrance: proposalResp?.adapted?.updatedBio?.motion_entrance || bio.motion_entrance,
+      motion_cta: proposalResp?.adapted?.updatedBio?.motion_cta || bio.motion_cta,
+      motion_ambient: proposalResp?.adapted?.updatedBio?.motion_ambient || bio.motion_ambient,
       display_name: newDisplayName,
       description: result.description || bio.description,
       whatsapp_message: result.whatsapp_message || bio.whatsapp_message,

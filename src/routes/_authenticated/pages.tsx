@@ -534,18 +534,14 @@ function PagesWorkspace() {
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             onClick={() => {
-              const firstPage = pages.data?.[0];
-              if (firstPage) {
-                navigate({ to: "/builder", search: { page: firstPage.id, copilot: true } });
-              } else {
-                navigate({ to: "/builder", search: { copilot: true } });
-              }
+              setCreationEngine("premium");
+              setIsWizardOpen(true);
             }}
             className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white text-sm font-bold shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
-            title="Enviar briefing e fotos para gerar proposta de site completa via AI Gateway"
+            title="Criar uma nova página exclusiva com direção de arte gerada por IA"
           >
             <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
-            <span>Gerar Proposta com Fotos (IA Gateway)</span>
+            <span>Criar Página Premium com IA</span>
           </button>
           <button
             onClick={() => setIsWizardOpen(true)}

@@ -62,6 +62,7 @@ function AuthedLayout() {
 
   const canAccessBuilder = isAdmin || Boolean(access?.canAccessBuilder);
   const canAccessComanda = isAdmin || Boolean(access?.canAccessComanda);
+  const canAccessAgenda = isAdmin || access?.canAccessAgenda !== false;
 
   const navItems = useMemo(() => {
     const items: Array<{

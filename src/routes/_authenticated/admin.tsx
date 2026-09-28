@@ -20,6 +20,7 @@ import {
   Sliders,
   Radio,
   Utensils,
+  CalendarDays,
 } from "lucide-react";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import {

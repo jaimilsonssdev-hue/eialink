@@ -1354,6 +1354,17 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
           const errItem = `Modelo ${modelName} (${response.status}): ${parsedError}`;
           lastError = errItem;
           errorLogs.push(errItem);
+          // Erros de chave/requisição valem para todos os modelos: para aqui e economiza cota
+          if ([400, 401, 403].includes(response.status)) {
+            throw new Error(
+              response.status === 400 && !/api key/i.test(parsedError)
+                ? `Requisição recusada pelo Google AI Studio: ${parsedError}`
+                : "Chave do Google AI Studio inválida ou sem permissão. Confira a chave colada no painel.",
+            );
+          }
+          if (response.status === 429) {
+            lastError = "Cota gratuita do Google AI Studio atingida no momento. Aguarde alguns minutos e tente novamente.";
+          }
           continue;
         }
 

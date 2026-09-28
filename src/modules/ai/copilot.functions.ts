@@ -1000,6 +1000,20 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
       })
       .join("\n");
 
+    // Semente criativa: garante variedade entre gerações (e entre "Gerar outra versão")
+    const ART_DIRECTIONS = [
+      { id: "editorial-luxo", brief: "Editorial de luxo: muito respiro, tipografia serifada elegante (fontPair 'elegante'), paleta sóbria com um único acento metálico (ouro, champagne ou cobre), motion 'subtle'." },
+      { id: "neon-noturno", brief: "Neon noturno: fundo quase preto com leve tom da cor principal, acento vibrante saturado (ciano, magenta, lima ou laranja elétrico), fontPair 'marcante', motion 'cinematic'." },
+      { id: "minimal-claro", brief: "Minimal claro: mode 'light', fundo off-white quente ou frio, texto grafite, acento único e contido, fontPair 'moderna', motion 'subtle'." },
+      { id: "organico-quente", brief: "Orgânico quente: tons terrosos (argila, oliva, areia, terracota), sensação artesanal e acolhedora, fontPair 'elegante' ou 'moderna', motion 'standard'." },
+      { id: "brutalista-bold", brief: "Brutalista bold: alto contraste, cores chapadas fortes, bordas retas (radius '4px'), títulos enormes, fontPair 'marcante', motion 'standard'." },
+      { id: "cinematografico", brief: "Cinematográfico: fotos em destaque total, fundo profundo com gradiente da cor principal, acento quente, fontPair 'elegante' ou 'marcante', motion 'cinematic'." },
+      { id: "corporativo-confianca", brief: "Corporativo de confiança: azuis/verdes profundos ou grafite com acento sóbrio, fontPair 'corporativa', layout organizado, motion 'subtle'." },
+      { id: "vibrante-pop", brief: "Vibrante pop: energia jovem, 2 cores complementares alegres, radius '24px', fontPair 'marcante', motion 'standard'." },
+    ];
+    const availableDirections = ART_DIRECTIONS.filter((d) => d.id !== data.avoidDirectionId);
+    const chosenDirection = availableDirections[Math.floor(Math.random() * availableDirections.length)];
+
     const systemPrompt = `[INSTRUÇÃO MESTRE - GERADOR PREMIUM BETA NÍVEL 2 - COMPOSIÇÃO LIVRE CONTROLADA]
 Você é um Arquiteto Sênior de Produto, Diretor de Arte de Elite e Copywriter Especialista da plataforma EIA Link.
 Sua missão é transformar o briefing, fotos e dados do negócio do cliente em uma PROPOSTA ESTRUTURADA DE SITE DE ALTO PADRÃO (Schema Version 2).

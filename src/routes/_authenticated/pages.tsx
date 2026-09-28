@@ -263,6 +263,7 @@ function PagesWorkspace() {
   const [wizardWhatsapp, setWizardWhatsapp] = useState("");
   const [wizardCity, setWizardCity] = useState("");
   const [isCreatingWizard, setIsCreatingWizard] = useState(false);
+  const [creationEngine, setCreationEngine] = useState<"express" | "premium">("express");
 
   // Auto-importador do Perfil do Google Maps / Link
   const [lookupQuery, setLookupQuery] = useState("");
@@ -398,7 +399,13 @@ function PagesWorkspace() {
 
       await pages.refetch();
       setIsWizardOpen(false);
-      navigate({ to: "/builder", search: { page: page.id } });
+      navigate({
+        to: "/builder",
+        search:
+          creationEngine === "premium"
+            ? { page: page.id, copilot: true }
+            : { page: page.id },
+      });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Não foi possível criar a página.";
       setCreationError(message);

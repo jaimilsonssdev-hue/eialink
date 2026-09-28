@@ -1,3 +1,4 @@
+import { getSavedGeminiKey } from "@/modules/prospecting/GeminiAuditorService";
 import { useState, useEffect, useRef } from "react";
 import {
   Sparkles,
@@ -505,7 +506,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
     );
   }
 
-  async function handleGenerate() {
+  async function handleGenerate(avoidDirectionId?: string) {
     const hasText = briefing.trim().length >= 3;
     const hasFiles = mediaItems.length > 0;
     const hasVideo = videoUrl.trim().length > 0;
@@ -580,7 +581,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
       if (abortController.signal.aborted) return;
 
       // 2. Chama a IA Multimodal com Gerador Premium Beta Nível 2
-      setLoadingStep("🧠 Gerador Premium Beta (Gemini 3.5 Flash) estruturando proposta com Grounding...");
+      setLoadingStep("🧠 Diretor de arte criando um visual exclusivo...");
       const finalClientName = identifiedBusiness?.name || currentContext?.displayName?.trim() || undefined;
       const finalClientCity = identifiedBusiness?.city || currentContext?.city?.trim() || undefined;
       const finalClientNiche = identifiedBusiness?.niche || (identifiedBusiness ? undefined : (currentContext?.niche?.trim() || undefined));
@@ -596,7 +597,8 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
             city: finalClientCity,
             servicesCount: currentContext?.servicesCount ?? undefined,
           },
-          overrideApiKey: overrideKey.trim() || undefined,
+          overrideApiKey: overrideKey.trim() || getSavedGeminiKey() || undefined,
+          avoidDirectionId: avoidDirectionId || undefined,
         },
       });
 
@@ -1562,7 +1564,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
             <button
               type="button"
               disabled={loading}
-              onClick={handleGenerate}
+              onClick={() => handleGenerate()}
               className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
             >
               {loading ? (
@@ -1578,6 +1580,21 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               )}
             </button>
           ) : (
+            <>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                const prev = (proposalResponse as any)?.proposal?.creativeDirection?.id;
+                setGeneratedResult(null);
+                setProposalResponse(null);
+                void handleGenerate(prev);
+              }}
+              className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 font-semibold text-xs flex items-center justify-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+            >
+              <Wand2 className="h-3.5 w-3.5" />
+              <span>Gerar outra versão</span>
+            </button>
             <button
               type="button"
               onClick={handleConfirmApply}
@@ -1586,6 +1603,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               <CheckCircle2 className="h-4 w-4" />
               <span>Aplicar Proposta ao Editor (Rascunho)</span>
             </button>
+            </>
           )}
         </div>
       </div>

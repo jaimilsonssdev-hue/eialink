@@ -7,8 +7,8 @@
 
 ## O que vai mudar (só no motor Premium — Máquina Express fica intacto)
 
-**1. IA própria da plataforma, sem chave**
-O Premium passa a usar a IA da Lovable Cloud (já inclusa, cobrada por uso nos créditos). Campo de chave manual deixa de ser obrigatório.
+**1. Google AI Studio (cota gratuita), sem custo de créditos**
+O Premium continua usando o Google AI Studio com a chave que você cola no painel. O Premium passa a ler automaticamente essa chave salva (sem precisar colar de novo no assistente). Se a chave faltar, aparece um aviso claro apontando onde colá-la.
 
 **2. Diretor de arte de verdade**
 A IA recebe os dados reais do Google Maps (nota, avaliações, fotos, endereço) e escolhe, para cada negócio:
@@ -33,7 +33,7 @@ O resultado é salvo no formato do editor atual (cores, fontes, seções), entã
 - Resposta limitada ao essencial; sem novas tentativas automáticas em erros permanentes.
 
 ## Detalhes técnicos
-- `copilot.functions.ts` `generatePremiumProposalFn`: trocar Gemini direto por Lovable AI Gateway `/v1/responses`, modelo `openai/gpt-6-astra`, streaming consumido no servidor, saída estruturada validada por `PremiumBetaProposalSchema`. Tratamento 402/429 com mensagem clara.
+- `copilot.functions.ts` `generatePremiumProposalFn`: manter Google AI Studio (Gemini). `AiCopilotModal` envia a chave salva do painel (`getSavedGeminiKey`) como `overrideApiKey` quando o campo manual estiver vazio; servidor segue aceitando `GEMINI_API_KEY`. Usar `responseMimeType: application/json`, um modelo por vez sem cascata de tentativas em erros 4xx (economiza cota), mensagem clara para 429/cota esgotada.
 - Reescrever o system prompt: remover hex fixos por nicho e o exemplo literal; adicionar catálogo de direções de arte + `creativeSeed` aleatório (ou vindo do botão "outra versão"); incluir dados do Places já presentes na página.
 - Schema: adicionar `theme.fontPair` (enum dos 4 pares) e `creativeDirection.concept`/`heroStyle`.
 - `premiumProposal.adapter.ts`: respeitar `font_pair`, `motionIntensity` e a ordem das seções da IA; não sobrescrever paleta com o mapa por nicho; validação de contraste (WCAG AA) com ajuste automático.

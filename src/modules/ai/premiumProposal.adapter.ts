@@ -471,9 +471,9 @@ export function adaptProposalToExistingStructures(
     template_id: resolvedTemplateId,
     theme: resolvedTheme,
     motion_enabled: proposal.creativeDirection.motionIntensity !== "off",
-    motion_entrance: proposal.creativeDirection.motionIntensity === "cinematic" ? "dramatic" : "gentle",
+    motion_entrance: proposal.creativeDirection.motionIntensity === "subtle" ? "gentle" : "rise",
     motion_cta: proposal.creativeDirection.motionIntensity === "subtle" ? "gentle" : "pulse",
-    motion_ambient: proposal.creativeDirection.motionIntensity === "cinematic" ? "rich" : "soft",
+    motion_ambient: proposal.creativeDirection.motionIntensity === "cinematic" ? "spotlight" : "soft",
     social_links: updatedSocial,
     // REGRA DE SEGURANÇA: nunca força published = true em proposta de IA
     published: currentBio?.published ?? false,

@@ -134,7 +134,10 @@ export function TemplateRenderer({
       data-motion-ambient={bio.motion_enabled === false ? "none" : bio.motion_ambient ?? "soft"}
       style={
         {
-          fontFamily: model.theme.typography.fontFamily,
+          fontFamily: fontPair?.body || model.theme.typography.fontFamily,
+          ...(fontPair
+            ? { "--font-sans": fontPair.body, "--font-display": fontPair.display }
+            : {}),
           // Tailwind v4 Design Tokens Bridge
           "--primary": customPrimary || model.theme.colors.primary,
           "--primary-foreground": "#ffffff",

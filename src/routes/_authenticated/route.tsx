@@ -62,6 +62,7 @@ function AuthedLayout() {
 
   const canAccessBuilder = isAdmin || Boolean(access?.canAccessBuilder);
   const canAccessComanda = isAdmin || Boolean(access?.canAccessComanda);
+  const canAccessAgenda = isAdmin || access?.canAccessAgenda !== false;
 
   const navItems = useMemo(() => {
     const items: Array<{
@@ -82,7 +83,9 @@ function AuthedLayout() {
       );
     }
 
-    items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+    if (canAccessAgenda) {
+      items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+    }
 
     // Inclui a Comanda Digital APENAS se o Super Admin tiver liberado para este cliente
     if (canAccessComanda) {
@@ -100,7 +103,7 @@ function AuthedLayout() {
     );
 
     return items;
-  }, [canAccessBuilder, canAccessComanda]);
+  }, [canAccessBuilder, canAccessComanda, canAccessAgenda]);
 
   const mobileNavItems = useMemo(() => {
     const items: Array<{
@@ -118,7 +121,9 @@ function AuthedLayout() {
       items.push({ to: "/builder", search: { tab: "carousel" }, label: "Carrossel", icon: Flame });
     }
 
-    items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+    if (canAccessAgenda) {
+      items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+    }
 
     if (canAccessComanda) {
       items.push({ to: "/comanda", label: "Comanda", icon: Utensils });
@@ -130,7 +135,7 @@ function AuthedLayout() {
     );
 
     return items;
-  }, [canAccessBuilder, canAccessComanda]);
+  }, [canAccessBuilder, canAccessComanda, canAccessAgenda]);
 
   async function signOut() {
     await supabase.auth.signOut();

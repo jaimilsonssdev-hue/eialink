@@ -7,6 +7,7 @@ import { layoutResolver } from "../layouts/LayoutResolver";
 import { Footer } from "@/components/public-profile/Footer";
 import { PublicSocialLinks } from "@/components/public-profile/PublicSocialLinks";
 import { safeExternalUrl } from "@/lib/safe-url";
+import { findFontPair } from "@/lib/font-pairs";
 
 const NICHE_FALLBACK_COVERS: Record<string, string> = {
   restaurant: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80",
@@ -101,7 +102,10 @@ export function TemplateRenderer({
     layout_esqueleto?: string;
     navigation_bg?: string;
     info_badge_bg?: string;
+    font_pair?: string;
   } | undefined;
+
+  const fontPair = findFontPair(customTheme?.font_pair);
 
   const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
   const customText = customTheme?.text || tokensDesign?.estilo_botoes?.cor_texto;
@@ -130,7 +134,10 @@ export function TemplateRenderer({
       data-motion-ambient={bio.motion_enabled === false ? "none" : bio.motion_ambient ?? "soft"}
       style={
         {
-          fontFamily: model.theme.typography.fontFamily,
+          fontFamily: fontPair?.body || model.theme.typography.fontFamily,
+          ...(fontPair
+            ? { "--font-sans": fontPair.body, "--font-display": fontPair.display }
+            : {}),
           // Tailwind v4 Design Tokens Bridge
           "--primary": customPrimary || model.theme.colors.primary,
           "--primary-foreground": "#ffffff",

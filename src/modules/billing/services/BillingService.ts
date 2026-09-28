@@ -39,6 +39,8 @@ export const BillingService = {
     const canAccessBuilder = isAdmin || hasBuilderAccessNote;
     const hasComandaAccessNote = notes.includes("comanda_access:true");
     const canAccessComanda = isAdmin || hasComandaAccessNote;
+    // A Agenda fica liberada por padrão; o Super Admin pode desligá-la por cliente.
+    const canAccessAgenda = isAdmin || !notes.includes("agenda_access:false");
 
     return {
       plan,
@@ -48,6 +50,7 @@ export const BillingService = {
       isPro,
       canAccessBuilder,
       canAccessComanda,
+      canAccessAgenda,
     };
   },
   async setBuilderAccess(userId: string, enabled: boolean) {
@@ -86,6 +89,28 @@ export const BillingService = {
     const newNotes = currentNotes
       ? `${currentNotes} comanda_access:${enabled}`
       : `comanda_access:${enabled}`;
+
+    const { error } = await supabase
+      .from("subscriptions")
+      .update({ notes: newNotes })
+      .eq("id", sub.id);
+
+    if (error) throw error;
+  },
+  async setAgendaAccess(userId: string, enabled: boolean) {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("id, notes")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (!sub) return;
+
+    let currentNotes = sub.notes || "";
+    currentNotes = currentNotes.replace(/agenda_access:(true|false)/g, "").trim();
+    const newNotes = currentNotes
+      ? `${currentNotes} agenda_access:${enabled}`
+      : `agenda_access:${enabled}`;
 
     const { error } = await supabase
       .from("subscriptions")

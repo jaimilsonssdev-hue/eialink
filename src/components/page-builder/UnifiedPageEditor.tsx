@@ -67,6 +67,7 @@ import { AiCopilotModal } from "./AiCopilotModal";
 import type { AiCopilotResult, PremiumProposalResponse } from "@/modules/ai/copilot.functions";
 import { parsePrice } from "@/lib/utils";
 import { parseSocialLinks } from "@/lib/social-links";
+import { FONT_PAIRS } from "@/lib/font-pairs";
 import {
   freeTemplateBase,
   freeTemplateWithOptions,
@@ -1885,11 +1886,56 @@ export function UnifiedPageEditor({
                   </details>
                 </div>
 
-                {/* 4. Animações e Movimento */}
+                {/* 4. Tipografia, Efeitos e Animações */}
                 <div className="space-y-3 pt-2">
                   <label className="text-sm font-semibold text-foreground">
-                    4. Efeitos e Animações
+                    4. Tipografia, Efeitos e Animações
                   </label>
+
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Estilo das letras da página (títulos e textos).
+                    </p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {FONT_PAIRS.map((pair) => {
+                        const currentSocial = (bio.social_links as Record<string, any>) || {};
+                        const selected = (currentSocial.custom_theme?.font_pair || "moderna") === pair.id;
+                        return (
+                          <button
+                            key={pair.id}
+                            type="button"
+                            onClick={() =>
+                              updateBio({
+                                social_links: {
+                                  ...currentSocial,
+                                  custom_theme: {
+                                    ...(currentSocial.custom_theme || {}),
+                                    font_pair: pair.id,
+                                  },
+                                } as any,
+                              })
+                            }
+                            className={`rounded-xl border p-2.5 text-left transition-all ${
+                              selected
+                                ? "border-2 border-primary bg-primary/15 ring-2 ring-primary/25"
+                                : "border-border bg-card hover:border-primary/40"
+                            }`}
+                          >
+                            <span
+                              className="block text-sm font-bold text-foreground truncate"
+                              style={{ fontFamily: pair.display }}
+                            >
+                              {pair.label}
+                            </span>
+                            <span className="block text-[10px] text-muted-foreground truncate">
+                              {pair.description}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
                   <label className="flex items-center justify-between gap-4 rounded-xl border border-border bg-surface-elevated p-3.5 text-sm">
                     <div>
                       <b className="block text-sm">Ativar animações suaves na página</b>
@@ -1904,6 +1950,40 @@ export function UnifiedPageEditor({
                       className="h-4 w-4 rounded border-border text-[color:var(--primary)]"
                     />
                   </label>
+
+                  {(bio.motion_enabled ?? true) && (
+                    <div className="grid grid-cols-3 gap-2">
+                      {(
+                        [
+                          ["gentle", "Suave", "soft", "none"],
+                          ["slide", "Dinâmica", "soft", "pulse"],
+                          ["cinematic", "Cinematográfica", "strong", "pulse"],
+                        ] as const
+                      ).map(([entrance, label, ambient, cta]) => {
+                        const selected = (bio.motion_entrance || "gentle") === entrance;
+                        return (
+                          <button
+                            key={entrance}
+                            type="button"
+                            onClick={() =>
+                              updateBio({
+                                motion_entrance: entrance,
+                                motion_ambient: ambient,
+                                motion_cta: cta,
+                              })
+                            }
+                            className={`rounded-lg border px-2 py-2 text-xs font-semibold transition-all ${
+                              selected
+                                ? "border-2 border-primary bg-primary/15 text-primary"
+                                : "border-border text-muted-foreground hover:border-primary/40"
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Se for página Free, exibe opções adicionais de personalização */}

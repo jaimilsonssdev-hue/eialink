@@ -64,45 +64,53 @@ function AuthedLayout() {
   const canAccessComanda = isAdmin || Boolean(access?.canAccessComanda);
   const canAccessAgenda = isAdmin || access?.canAccessAgenda !== false;
 
-  const navItems = useMemo(() => {
-    const items: Array<{
-      to: string;
-      label: string;
-      icon: any;
-      search?: Record<string, any>;
-    }> = [
-      { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-    ];
+  type NavItem = {
+    to: string;
+    label: string;
+    icon: any;
+    search?: Record<string, any>;
+  };
 
+  const navGroups = useMemo(() => {
+    const groups: Array<{ title: string | null; items: NavItem[] }> = [];
+
+    groups.push({
+      title: null,
+      items: [{ to: "/dashboard", label: "Início", icon: LayoutDashboard }],
+    });
+
+    const presenca: NavItem[] = [];
     if (canAccessBuilder) {
-      items.push(
+      presenca.push(
+        { to: "/pages", label: "Minhas Páginas", icon: PanelsTopLeft },
         { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
         { to: "/builder", search: { copilot: true }, label: "Copiloto IA (Sites)", icon: Sparkles },
         { to: "/builder", search: { tab: "carousel" }, label: "Carrossel Instagram", icon: Flame },
-        { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
       );
     }
+    if (presenca.length) groups.push({ title: "Presença & Páginas", items: presenca });
 
+    const atendimento: NavItem[] = [];
     if (canAccessAgenda) {
-      items.push({ to: "/agenda", label: "Agenda", icon: CalendarDays });
+      atendimento.push({ to: "/agenda", label: "Agenda de Horários", icon: CalendarDays });
     }
-
-    // Inclui a Comanda Digital APENAS se o Super Admin tiver liberado para este cliente
     if (canAccessComanda) {
-      items.push({ to: "/comanda", label: "Comanda & NFC", icon: Utensils });
+      atendimento.push({ to: "/comanda", label: "Comanda & Cardápio", icon: Utensils });
     }
+    if (atendimento.length) groups.push({ title: "Atendimento & Vendas", items: atendimento });
 
+    const gestao: NavItem[] = [];
     if (canAccessBuilder) {
-      items.push({ to: "/analytics", label: "Resultados", icon: BarChart3 });
+      gestao.push({ to: "/analytics", label: "Métricas & Resultados", icon: BarChart3 });
     }
-
-    items.push(
+    gestao.push(
       { to: "/growth", label: "Assistente IA", icon: Sparkles },
       { to: "/settings", label: "Dados da Empresa", icon: Settings },
-      { to: "/billing", label: "Planos", icon: CreditCard },
+      { to: "/billing", label: "Plano & Assinatura", icon: CreditCard },
     );
+    groups.push({ title: "Crescimento & Gestão", items: gestao });
 
-    return items;
+    return groups;
   }, [canAccessBuilder, canAccessComanda, canAccessAgenda]);
 
   const mobileNavItems = useMemo(() => {

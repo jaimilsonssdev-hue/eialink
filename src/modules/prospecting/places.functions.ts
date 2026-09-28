@@ -5,6 +5,7 @@ import {
   type GoogleMapsPlaceDetails,
 } from "@/modules/prospecting/LiveProspectingEngine";
 import { resolvePlacesApiKey } from "@/modules/prospecting/places-admin.functions";
+import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 const DIRECT_URL = "https://places.googleapis.com";
@@ -126,7 +127,11 @@ export async function fetchOfficialPlaceDetails(
   const transport = await resolveTransport();
   if (!transport) return null;
 
-  const textQuery = [sanitize(companyName), sanitize(city)].filter(Boolean).join(" ");
+  const normalized = normalizeBusinessQuery(companyName || "");
+  const textQuery = [
+    sanitize(normalized.name || companyName),
+    sanitize(city || normalized.city),
+  ].filter(Boolean).join(" ");
   if (!textQuery) return null;
 
   const searchRes = await fetch(`${transport.base}/v1/places:searchText`, {

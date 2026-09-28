@@ -10,6 +10,7 @@ import {
 } from "./scoring";
 import { detectNicheKey } from "./nichePresets";
 import type { ProspectDraft } from "./types";
+import { normalizeBusinessQuery } from "./normalizeBusinessLink";
 
 interface RawScrapedLead {
   name: string;
@@ -377,23 +378,10 @@ export async function lookupBusinessProfile(queryOrUrl: string): Promise<Prospec
     ];
   }
 
-  // 2. Se for link do Google Maps
-  let searchTerm = trimmed;
-  if (trimmed.includes("google.com/maps") || trimmed.includes("maps.app.goo.gl")) {
-    const qMatch = trimmed.match(/[?&]q=([^&]+)/) || trimmed.match(/\/place\/([^/@?]+)/);
-    if (qMatch) {
-      searchTerm = decodeURIComponent(qMatch[1].replace(/\+/g, " "));
-    }
-  }
-
-  // Extrai cidade se o usuário digitou "em Cidade" ou "- Cidade"
-  let niche = searchTerm;
-  let city = "";
-  const cityMatch = searchTerm.match(/(.+?)\s+(?:em|na|no|-)\s+([A-Za-zÀ-ÿ\s]{3,})$/i);
-  if (cityMatch) {
-    niche = cityMatch[1].trim();
-    city = cityMatch[2].trim();
-  }
+  // 2. Link do Maps, link de busca do celular ou texto simples
+  const normalized = normalizeBusinessQuery(trimmed);
+  const niche = normalized.name || trimmed;
+  const city = normalized.city;
 
   return await searchGoogleMapsAndInstagram(niche, city, 5);
 }
@@ -466,7 +454,12 @@ export async function fetchGoogleMapsPlaceDetails(
   city?: string | null,
   providedCid?: string | null,
 ): Promise<GoogleMapsPlaceDetails> {
-  const cleanName = companyName
+  // Aceita link do Maps, link de busca copiado do celular ou texto simples
+  const normalizedInput = normalizeBusinessQuery(companyName || "");
+  const baseName = normalizedInput.name || companyName || "";
+  if (!city && normalizedInput.city) city = normalizedInput.city;
+
+  const cleanName = baseName
     .replace(/clinical\s+innovate/gi, "Clínica Inove")
     .replace(/^clinical\s+/gi, "Clínica ")
     .replace(/\s*[-–|]\s*(?:Sua Clínica|Especializada|Matriz|Filial|Teixeira de Freitas|BA|Bahia|São Paulo|SP|Rio de Janeiro|RJ).*/i, "")

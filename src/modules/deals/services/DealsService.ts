@@ -197,21 +197,16 @@ export const DealsService = {
     const cleanWhatsapp = whatsapp.replace(/\D/g, "");
     if (!cleanWhatsapp) return 0;
 
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const { count, error } = await (supabase as any)
-      .from("deal_claims")
-      .select("*", { count: "exact", head: true })
-      .eq("customer_whatsapp", cleanWhatsapp)
-      .gte("created_at", startOfDay.toISOString());
+    const { data, error } = await (supabase as any).rpc("count_customer_daily_claims", {
+      p_whatsapp: cleanWhatsapp,
+    });
 
     if (error) {
       console.error("[DealsService] Erro ao consultar limite diário do cliente:", error);
       return 0;
     }
 
-    return count ?? 0;
+    return Number(data) || 0;
   },
 
   /**

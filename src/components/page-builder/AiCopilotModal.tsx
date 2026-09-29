@@ -65,6 +65,11 @@ interface UploadedMediaItem {
 
 const SAMPLE_BRIEFINGS = [
   {
+    label: "Cafeteria Especial & Scrollytelling",
+    text: "Cafeteria e Torrefação Grão Nobre em Salvador. Cafés especiais colhidos a 1.200m de altitude, torra fresca artesanal, métodos filtrados e confeitaria autoral. Queremos uma experiência cinematográfica estilo scrollytelling contando o ritual do grão até a xícara, tons café carvão e dourado âmbar.",
+    prompt: "Cafeteria e Torrefação Grão Nobre em Salvador. Cafés especiais colhidos a 1.200m de altitude, torra fresca artesanal, métodos filtrados e confeitaria autoral. Queremos uma experiência cinematográfica estilo scrollytelling contando o ritual do grão até a xícara, tons café carvão e dourado âmbar.",
+  },
+  {
     label: "Clínica & Odonto",
     text: "Clínica Odontológica Oral Arte em Salvador. Especializada em implantes dentários, facetas de resina e harmonização facial. Queremos passar autoridade médica com atendimento humanizado. Cores azul royal escuro e detalhes em dourado elegante.",
   },
@@ -87,6 +92,10 @@ const SAMPLE_BRIEFINGS = [
 ];
 
 const STUDIO_QUICK_CHIPS = [
+  {
+    label: "🎬 Experiência Cinematográfica (Scrollytelling)",
+    prompt: "Transforme este site em uma Landing Page Cinematográfica de Luxo com Scrollytelling narrativo em capítulos, efeito Parallax GPU na capa, atmosfera sensorial imersiva e tipografia nobre (modelo cinematic-glass).",
+  },
   {
     label: "🎨 Mudar Paleta de Cores",
     prompt: "Mude a paleta de cores para um estilo visual moderno, elegante e de alto contraste ideal para converter clientes.",

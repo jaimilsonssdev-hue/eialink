@@ -445,10 +445,21 @@ export function adaptProposalToExistingStructures(
   let resolvedTemplateId = "";
   if (proposal.creativeDirection?.id) {
     const dirId = proposal.creativeDirection.id.toLowerCase().trim();
-    if (validTemplates.includes(dirId)) {
-      resolvedTemplateId = dirId;
-    } else if (dirId === "cinematografico" || dirId === "neon-noturno" || dirId === "spotlight-neon") {
+    if (
+      dirId === "cinematic-glass" ||
+      dirId.includes("cinematic") ||
+      dirId.includes("scrollytelling") ||
+      dirId.includes("narrativa") ||
+      dirId.includes("cafe-estilo") ||
+      dirId.includes("apple-style") ||
+      dirId.includes("imersivo") ||
+      dirId === "cinematografico" ||
+      dirId === "neon-noturno" ||
+      dirId === "spotlight-neon"
+    ) {
       resolvedTemplateId = "cinematic-glass";
+    } else if (validTemplates.includes(dirId)) {
+      resolvedTemplateId = dirId;
     } else if (dirId === "brutalista-bold" || dirId === "vibrante-pop") {
       resolvedTemplateId = "impact-showcase";
     } else if (dirId === "editorial-luxo" || dirId === "minimal-claro") {
@@ -469,6 +480,19 @@ export function adaptProposalToExistingStructures(
       resolvedTemplateId = "therapy-wellbeing";
     } else if (dirId.includes("academia") || dirId.includes("fitness")) {
       resolvedTemplateId = "academy-performance";
+    }
+  }
+
+  // Se a direção criativa contiver termos explícitos de Scrollytelling / Narrativa Cinematográfica
+  if (!resolvedTemplateId) {
+    const cdKeywords = `${proposal.creativeDirection?.name || ""} ${proposal.creativeDirection?.concept || ""}`.toLowerCase();
+    if (
+      cdKeywords.includes("scrollytelling") ||
+      cdKeywords.includes("cinematogr") ||
+      cdKeywords.includes("cafe-estilo") ||
+      cdKeywords.includes("narrativa sensorial")
+    ) {
+      resolvedTemplateId = "cinematic-glass";
     }
   }
 
@@ -497,6 +521,11 @@ export function adaptProposalToExistingStructures(
     resolvedTemplateId = (currentBio?.template_id && validTemplates.includes(currentBio.template_id))
       ? currentBio.template_id
       : "site-maquina";
+  }
+
+  // Garante parallax ativo em experiências cinematográficas ou sob intensidade de movimento cinematográfica
+  if (resolvedTemplateId === "cinematic-glass" || proposal.creativeDirection?.motionIntensity === "cinematic") {
+    customTheme.parallax = true;
   }
 
   const resolvedCoverUrl =

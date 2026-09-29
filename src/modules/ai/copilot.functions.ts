@@ -336,8 +336,15 @@ REGRAS DE OURO DA GERAÇÃO (DIREÇÃO DE ARTE EXCLUSIVA & ZERO SITES CLONES):
    - 'whatsapp_message': Mensagem personalizada de abertura no WhatsApp direcionada ao nome e serviço do negócio.
 
 3. EDIÇÃO SOB DEMANDA (PEDIDOS ESPECÍFICOS DO USUÁRIO):
-   - Se o usuário forneceu pedidos ou instruções no briefing (ex: "mude apenas as cores", "altere o texto para X", "adicione o prato Y"), OBEDEÇA fielmente ao pedido solicitado, preservando a harmonia do restante do site.
-   - EFEITO IMERSIVO (PARALLAX): 'custom_theme.parallax' (true | false) liga o efeito de profundidade ao rolar a página e funciona em QUALQUER modelo. Defina true sempre que o usuário pedir algo "imersivo", "com parallax", "cinematográfico" ou "com profundidade", e também em negócios muito visuais com boas fotos (gastronomia, estética, barbearia, moda, arquitetura, academia, eventos). Defina false se o usuário pedir uma página estática, sóbria ou "sem animação".
+   - EFEITO IMERSIVO (PARALLAX) & SCROLLYTELLING CINEMATOGRÁFICO:
+     * Quando o usuário pedir um site "cinematográfico", "scrollytelling", "narrativa", "capítulos", "história", "imersivo", "estilo café estilo/apple" ou for um nicho sensorial de prestígio (alta gastronomia, cafeteria especial, estética VIP, studios, marcas exclusivas):
+       - Defina 'creativeDirection.id': "cinematic-glass".
+       - Defina 'creativeDirection.heroStyle': "cinematic".
+       - Defina 'creativeDirection.motionIntensity': "cinematic".
+       - Defina 'custom_theme.parallax': true.
+       - Defina a tipografia ('custom_theme.font_pair'): "elegante" (serifas nobres com itálico na headline) ou "moderna".
+       - Escreva copies narrativas, sensoriais e poéticas nos blocos de história, diferenciais e serviços, dividindo a jornada em momentos de ritual, origem, processo e consagração, evitando clichês vazios.
+     * 'custom_theme.parallax' (true | false) liga o efeito de profundidade ao rolar a página e funciona em QUALQUER modelo. Defina true sempre que o usuário pedir algo "imersivo", "com parallax", "cinematográfico" ou "com profundidade". Defina false se o usuário pedir uma página estática ou sóbria.
 
 4. BENTO GRIDS & DIFERENCIAIS DE ALTA AUTORIDADE (ZERO CLICHÊS):
    - PROIBIDO usar clichês vazios como "Compromisso com excelência", "Atendimento exclusivo", "Qualidade garantida" ou "Diferencial 1".
@@ -1268,9 +1275,10 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 2. Aloue 100% dos arquivos fornecidos em 'mediaAssignments' e nas seções correspondentes.
 3. Crie o catálogo de serviços/produtos concretos e irresistíveis para ESTE negócio específico em 'catalogItems' com botões adequados (ex: "Reservar Mesa" para restaurantes, "Agendar Avaliação" para clínicas).
 4. Aplique a paleta cromática e direção de arte coerente com o nicho específico (Gastronomia, Saúde, Beleza, Advocacia, etc.) NUNCA gerando o mesmo tema escuro genérico.
-5. Escreva copywriting persuasivo, sensorial e sem clichês em todas as seções (hero, diferenciais bento grid, história e faq).
-6. Monte a composição ordenada das seções usando apenas os blocos homologados.
-7. Retorne a resposta exclusivamente em JSON válido do Schema v2.`;
+5. HABILIDADE SCROLLYTELLING CINEMATOGRÁFICO: Se o usuário pedir estilo "cinematográfico", "scrollytelling", "narrativa", "capítulos", "história", "imersivo", "café estilo" ou for nicho de alta experiência sensorial/gastronomia/beleza VIP, defina creativeDirection.id="cinematic-glass", heroStyle="cinematic", motionIntensity="cinematic", custom_theme.parallax=true e font_pair="elegante".
+6. Escreva copywriting persuasivo, sensorial e sem clichês em todas as seções (hero, diferenciais bento grid, história e faq).
+7. Monte a composição ordenada das seções usando apenas os blocos homologados.
+8. Retorne a resposta exclusivamente em JSON válido do Schema v2.`;
 
     const promptParts: Array<{
       text?: string;

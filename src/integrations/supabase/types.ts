@@ -744,6 +744,45 @@ export type Database = {
           },
         ]
       }
+      payment_gateway_settings: {
+        Row: {
+          asaas_api_key: string | null
+          asaas_environment: string
+          asaas_webhook_token: string | null
+          created_at: string
+          id: string
+          pix_key: string | null
+          pix_key_type: string | null
+          pix_receiver_name: string | null
+          updated_at: string
+          whatsapp_support: string | null
+        }
+        Insert: {
+          asaas_api_key?: string | null
+          asaas_environment?: string
+          asaas_webhook_token?: string | null
+          created_at?: string
+          id?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          pix_receiver_name?: string | null
+          updated_at?: string
+          whatsapp_support?: string | null
+        }
+        Update: {
+          asaas_api_key?: string | null
+          asaas_environment?: string
+          asaas_webhook_token?: string | null
+          created_at?: string
+          id?: string
+          pix_key?: string | null
+          pix_key_type?: string | null
+          pix_receiver_name?: string | null
+          updated_at?: string
+          whatsapp_support?: string | null
+        }
+        Relationships: []
+      }
       payment_subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -1232,6 +1271,10 @@ export type Database = {
           p_referred_by_page_id?: string
         }
         Returns: Json
+      }
+      count_customer_daily_claims: {
+        Args: { p_whatsapp: string }
+        Returns: number
       }
       create_public_appointment: {
         Args: {

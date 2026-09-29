@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+﻿import { supabase } from "@/integrations/supabase/client";
 import type { CrossTrafficPartnership } from "../types";
 
 export const CrossTrafficService = {
@@ -44,6 +44,31 @@ export const CrossTrafficService = {
   },
 
   /**
+   * Lista páginas publicadas disponíveis na rede para formação de parceria.
+   */
+  async listAvailablePartnerPages(currentPageId: string): Promise<{ id: string; display_name: string; slug: string; avatar_url: string | null; city?: string | null }[]> {
+    const { data, error } = await supabase
+      .from("bio_pages")
+      .select("id, display_name, slug, avatar_url, social_links")
+      .eq("published", true)
+      .neq("id", currentPageId)
+      .limit(60);
+
+    if (error) {
+      console.error("[CrossTrafficService] Erro ao listar páginas parceiras disponíveis:", error);
+      return [];
+    }
+
+    return (data || []).map((p: any) => ({
+      id: p.id,
+      display_name: p.display_name,
+      slug: p.slug,
+      avatar_url: p.avatar_url,
+      city: p.social_links?.city || null,
+    }));
+  },
+
+  /**
    * Cadastra parceria mútua entre duas páginas.
    */
   async createPartnership(
@@ -61,14 +86,14 @@ export const CrossTrafficService = {
         host_page_id: hostPageId,
         partner_page_id: partnerPageId,
         benefit_text: benefitText.trim(),
-        badge_label: badgeLabel.trim(),
+        badge_label: badgeLabel.trim() || "Parceiro da Rede",
         status: "active",
       },
       {
         host_page_id: partnerPageId,
         partner_page_id: hostPageId,
         benefit_text: benefitText.trim(),
-        badge_label: badgeLabel.trim(),
+        badge_label: badgeLabel.trim() || "Parceiro da Rede",
         status: "active",
       },
     ];
@@ -87,6 +112,21 @@ export const CrossTrafficService = {
   },
 
   /**
+   * Exclui ou revoga uma parceria de tráfego cruzado.
+   */
+  async deletePartnership(partnershipId: string): Promise<void> {
+    const { error } = await (supabase as any)
+      .from("cross_traffic_partnerships")
+      .delete()
+      .eq("id", partnershipId);
+
+    if (error) {
+      console.error("[CrossTrafficService] Erro ao excluir parceria:", error);
+      throw error;
+    }
+  },
+
+  /**
    * Registra clique no link do parceiro de tráfego cruzado.
    */
   async trackPartnershipClick(partnershipId: string): Promise<void> {
@@ -99,4 +139,3 @@ export const CrossTrafficService = {
     }
   },
 };
-

@@ -1,19 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+﻿import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Sparkles,
-  Clock,
   ExternalLink,
-  MessageCircle,
-  Building2,
-  ChevronRight,
   Flame,
   Zap,
   ShoppingBag,
-  ShieldCheck,
   MapPin,
   ArrowRight,
+  Ticket,
+  AlertCircle,
+  CheckCircle2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { DealsService, type DailyDeal } from "@/modules/deals";
 
 export const Route = createFileRoute("/hoje")({
@@ -22,7 +21,7 @@ export const Route = createFileRoute("/hoje")({
       { title: "Mural de Oportunidades de Hoje | EIA Link" },
       {
         name: "description",
-        content: "Ofertas exclusivas e válidas apenas hoje no comércio local. Economize com benefícios reais no WhatsApp.",
+        content: "Ofertas exclusivas e válidas apenas hoje no comércio local com cupons e descontos reais no WhatsApp.",
       },
       { property: "og:title", content: "Mural de Oportunidades de Hoje | EIA Link" },
       {
@@ -69,6 +68,7 @@ function HojePage() {
   const [deals, setDeals] = useState<DailyDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(getTimeLeftToday());
+  const [claimingId, setClaimingId] = useState<string | null>(null);
 
   // Relógio regressivo em tempo real até 23:59:59
   useEffect(() => {
@@ -103,25 +103,64 @@ function HojePage() {
     };
   }, [selectedCity]);
 
-  const handleClaim = (deal: DailyDeal) => {
-    void DealsService.trackDealClick(deal.id);
+  const handleClaim = async (deal: DailyDeal) => {
+    const maxClaims = deal.max_claims;
+    const currentClaims = deal.claims_count || 0;
 
-    const message = `Olá! Vi a oferta "${deal.title}" no Mural do EIA Link e quero resgatar!`;
-
-    if (deal.claim_action_url) {
-      window.open(deal.claim_action_url, "_blank", "noopener,noreferrer");
+    if (maxClaims != null && currentClaims >= maxClaims) {
+      toast.error("Ops! Os cupons desta oferta estão esgotados para hoje.");
       return;
     }
 
-    const cleanPhone = deal.whatsapp_number ? deal.whatsapp_number.replace(/\D/g, "") : "";
-    if (cleanPhone) {
-      const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-      window.open(waUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
+    setClaimingId(deal.id);
+    const toastId = toast.loading("Resgatando seu cupom exclusivo...");
 
-    if (deal.slug) {
-      window.open(`/p/${deal.slug}`, "_blank", "noopener,noreferrer");
+    try {
+      const res = await DealsService.claimDailyDeal(deal.id);
+
+      if (!res.success) {
+        toast.dismiss(toastId);
+        toast.error(res.error || "Não foi possível resgatar o cupom.");
+
+        if (res.error?.includes("esgotado")) {
+          setDeals((prev) =>
+            prev.map((d) => (d.id === deal.id ? { ...d, claims_count: d.max_claims || 1 } : d))
+          );
+        }
+        return;
+      }
+
+      // Atualiza localmente a contagem de resgates
+      if (res.claims_count != null) {
+        setDeals((prev) =>
+          prev.map((d) => (d.id === deal.id ? { ...d, claims_count: res.claims_count! } : d))
+        );
+      }
+
+      toast.success("🎉 Cupom reservado com sucesso! Abrindo WhatsApp...", { id: toastId });
+
+      const message = `Olá! Vi a oferta "${deal.title}" no Mural do EIA Link e acabei de resgatar meu cupom! Gostaria de aproveitar a condição de hoje.`;
+
+      if (deal.claim_action_url) {
+        window.open(deal.claim_action_url, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      const cleanPhone = deal.whatsapp_number ? deal.whatsapp_number.replace(/\D/g, "") : "";
+      if (cleanPhone) {
+        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+        window.open(waUrl, "_blank", "noopener,noreferrer");
+        return;
+      }
+
+      if (deal.slug) {
+        window.open(`/p/${deal.slug}`, "_blank", "noopener,noreferrer");
+      }
+    } catch (err: any) {
+      toast.dismiss(toastId);
+      toast.error(err.message || "Erro inesperado ao resgatar.");
+    } finally {
+      setClaimingId(null);
     }
   };
 
@@ -186,7 +225,7 @@ function HojePage() {
         </h1>
 
         <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
-          Condições exclusivas negociadas diretamente com lojistas locais. Resgate seu desconto pelo WhatsApp sem intermediários.
+          Cupons limitados negociados diretamente com empresas da região. Garanta seu benefício antes que esgote.
         </p>
 
         {/* Seletor de Cidades em Chips Modernos */}
@@ -241,10 +280,23 @@ function HojePage() {
               const companyUrl = deal.slug ? `/p/${deal.slug}` : "#";
               const discountText = deal.discount_badge || (deal.original_price ? "CONDIÇÃO DO DIA" : "OFERTA VIP");
 
+              const maxClaims = deal.max_claims;
+              const claimsCount = deal.claims_count || 0;
+              const isSoldOut = maxClaims != null && claimsCount >= maxClaims;
+              const remaining = maxClaims != null ? Math.max(0, maxClaims - claimsCount) : null;
+              const isUrgent = remaining != null && remaining > 0 && remaining <= 5;
+              const percentage = maxClaims != null ? Math.min(100, Math.round((claimsCount / maxClaims) * 100)) : null;
+
               return (
                 <div
                   key={deal.id}
-                  className="group relative flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#10081d]/90 backdrop-blur-xl shadow-xl hover:border-emerald-500/40 hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-300"
+                  className={`group relative flex flex-col overflow-hidden rounded-3xl border transition-all duration-300 shadow-xl ${
+                    isSoldOut
+                      ? "border-white/5 bg-[#10081d]/50 opacity-80"
+                      : isUrgent
+                        ? "border-amber-500/50 bg-[#10081d]/95 hover:border-amber-400 hover:shadow-amber-500/10"
+                        : "border-white/10 bg-[#10081d]/90 hover:border-emerald-500/40 hover:shadow-emerald-500/10"
+                  }`}
                 >
                   {/* Foto do Produto/Serviço ou Imagem Padrão */}
                   <div className="relative aspect-video w-full overflow-hidden bg-white/[0.03]">
@@ -252,7 +304,9 @@ function HojePage() {
                       <img
                         src={deal.image_url}
                         alt={deal.title}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        className={`h-full w-full object-cover transition-transform duration-500 ${
+                          isSoldOut ? "grayscale filter brightness-75" : "group-hover:scale-105"
+                        }`}
                         loading="lazy"
                       />
                     ) : (
@@ -267,13 +321,37 @@ function HojePage() {
                     {/* Gradiente Escuro de Sobreposição para Leitura */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#10081d] via-[#10081d]/30 to-transparent" />
 
-                    {/* Badge de Desconto / Destaque */}
+                    {/* Badge de Desconto / Destaque Superior Direito */}
                     <div className="absolute top-3 right-3">
                       <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wide bg-emerald-500 text-black shadow-lg shadow-emerald-500/30">
                         <Sparkles className="h-3 w-3 fill-black" />
                         {discountText}
                       </span>
                     </div>
+
+                    {/* Gatilho de Escassez Superior Esquerdo */}
+                    {isSoldOut ? (
+                      <div className="absolute top-3 left-3">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-rose-500/90 text-white backdrop-blur-md shadow-lg shadow-rose-900/40 border border-rose-400/50">
+                          <AlertCircle className="h-3 w-3" />
+                          Esgotado Hoje
+                        </span>
+                      </div>
+                    ) : isUrgent ? (
+                      <div className="absolute top-3 left-3 animate-pulse">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-extrabold tracking-wide bg-amber-500 text-black shadow-lg shadow-amber-500/30">
+                          <Flame className="h-3.5 w-3.5 fill-black" />
+                          Resta apenas {remaining}!
+                        </span>
+                      </div>
+                    ) : remaining != null ? (
+                      <div className="absolute top-3 left-3">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-semibold bg-black/60 text-emerald-300 backdrop-blur-md border border-emerald-500/30">
+                          <Ticket className="h-3 w-3" />
+                          {remaining} cupons
+                        </span>
+                      </div>
+                    ) : null}
 
                     {/* Cidade & Nicho */}
                     <div className="absolute bottom-2.5 left-3.5 flex items-center gap-2 text-[11px] font-medium text-white/80">
@@ -329,6 +407,41 @@ function HojePage() {
                       )}
                     </div>
 
+                    {/* Barra de Progresso de Cupons */}
+                    {maxClaims != null && (
+                      <div className="space-y-1.5 pt-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-muted-foreground flex items-center gap-1">
+                            <Ticket className="h-3 w-3 text-emerald-400" />
+                            {isSoldOut ? (
+                              <strong className="text-rose-400">100% dos cupons resgatados</strong>
+                            ) : (
+                              <>
+                                <strong className="text-white">{claimsCount}</strong> de {maxClaims} cupons resgatados
+                              </>
+                            )}
+                          </span>
+                          {remaining != null && !isSoldOut && (
+                            <span className={isUrgent ? "text-amber-400 font-bold" : "text-muted-foreground"}>
+                              Restam {remaining}
+                            </span>
+                          )}
+                        </div>
+                        <div className="h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-500 ${
+                              isSoldOut
+                                ? "bg-rose-500"
+                                : isUrgent
+                                  ? "bg-gradient-to-r from-amber-500 to-rose-500"
+                                  : "bg-gradient-to-r from-emerald-500 to-teal-400"
+                            }`}
+                            style={{ width: `${percentage}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
                     {/* Preços e Botão de Resgate */}
                     <div className="pt-2 border-t border-white/10 space-y-3">
                       <div className="flex items-baseline gap-2.5">
@@ -352,10 +465,29 @@ function HojePage() {
                       <button
                         type="button"
                         onClick={() => handleClaim(deal)}
-                        className="w-full h-11 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 text-black font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all cursor-pointer"
+                        disabled={isSoldOut || claimingId === deal.id}
+                        className={`w-full h-11 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
+                          isSoldOut
+                            ? "bg-white/10 text-muted-foreground cursor-not-allowed border border-white/10 shadow-none"
+                            : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 text-black shadow-emerald-500/20 cursor-pointer"
+                        }`}
                       >
-                        <Zap className="h-4 w-4 fill-black" />
-                        <span>Resgatar Oferta no WhatsApp</span>
+                        {claimingId === deal.id ? (
+                          <>
+                            <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                            <span>Reservando Cupom...</span>
+                          </>
+                        ) : isSoldOut ? (
+                          <>
+                            <AlertCircle className="h-4 w-4" />
+                            <span>Cupons Esgotados para Hoje</span>
+                          </>
+                        ) : (
+                          <>
+                            <Zap className="h-4 w-4 fill-black" />
+                            <span>Resgatar Cupom no WhatsApp</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -389,4 +521,3 @@ function HojePage() {
 }
 
 export default HojePage;
-

@@ -30,6 +30,7 @@ import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
 import { publicPageUrl } from "@/lib/public-page-url";
 import { QuickBusinessEditor } from "@/components/dashboard/QuickBusinessEditor";
 import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselManager";
+import { CrossTrafficManager } from "@/components/dashboard/CrossTrafficManager";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -550,6 +551,10 @@ function Dashboard() {
             </a>
           </div>
         </div>
+      )}
+
+      {bio && (
+        <CrossTrafficManager bioPageId={bio.id} pageTitle={bio.display_name} className="mt-6" />
       )}
 
       <div className="premium-section-heading">

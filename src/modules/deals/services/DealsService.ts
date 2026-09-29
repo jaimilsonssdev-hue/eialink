@@ -1,5 +1,5 @@
-import { supabase } from "@/integrations/supabase/client";
-import type { DailyDeal, CreateDailyDealInput } from "../types";
+﻿import { supabase } from "@/integrations/supabase/client";
+import type { DailyDeal, CreateDailyDealInput, ClaimDealResult } from "../types";
 import { formatPrice } from "@/lib/utils";
 
 export const DealsService = {
@@ -24,7 +24,7 @@ export const DealsService = {
       .gt("expires_at", new Date().toISOString())
       .order("created_at", { ascending: false });
 
-    if (city && city.trim()) {
+    if (city && city.trim() !== "" && city !== "Todas as Cidades") {
       query = query.ilike("city", `%${city.trim()}%`);
     }
 
@@ -52,6 +52,8 @@ export const DealsService = {
       starts_at: row.starts_at,
       expires_at: row.expires_at,
       clicks_count: row.clicks_count || 0,
+      max_claims: row.max_claims != null ? Number(row.max_claims) : null,
+      claims_count: row.claims_count || 0,
       is_active: Boolean(row.is_active),
       created_at: row.created_at,
       business_name: row.bio_pages?.display_name,
@@ -84,6 +86,8 @@ export const DealsService = {
       niche: dealData.niche?.trim() || null,
       starts_at: dealData.starts_at || new Date().toISOString(),
       expires_at: dealData.expires_at,
+      max_claims: dealData.max_claims != null ? Number(dealData.max_claims) : null,
+      claims_count: 0,
       is_active: dealData.is_active !== false,
       clicks_count: 0,
     };
@@ -124,6 +128,8 @@ export const DealsService = {
       starts_at: data.starts_at,
       expires_at: data.expires_at,
       clicks_count: data.clicks_count || 0,
+      max_claims: data.max_claims != null ? Number(data.max_claims) : null,
+      claims_count: data.claims_count || 0,
       is_active: Boolean(data.is_active),
       created_at: data.created_at,
       business_name: data.bio_pages?.display_name,
@@ -131,6 +137,63 @@ export const DealsService = {
       avatar_url: data.bio_pages?.avatar_url,
       whatsapp_number: data.bio_pages?.whatsapp,
     };
+  },
+
+  /**
+   * Resgata um cupom de forma atômica utilizando a RPC claim_daily_deal.
+   * Possui fallback defensivo caso a RPC remota ainda não tenha sido aplicada.
+   */
+  async claimDailyDeal(dealId: string): Promise<ClaimDealResult> {
+    try {
+      // 1. Tenta chamar a RPC segura do PostgreSQL
+      const { data, error } = await (supabase as any).rpc("claim_daily_deal", {
+        p_deal_id: dealId,
+      });
+
+      if (!error && data) {
+        return data as ClaimDealResult;
+      }
+
+      // 2. Fallback resiliente no cliente caso a RPC não esteja disponível
+      console.warn("[DealsService] RPC claim_daily_deal indisponível, executando fallback:", error?.message);
+
+      const { data: deal } = await (supabase as any)
+        .from("daily_deals")
+        .select("id, max_claims, claims_count, clicks_count, is_active, expires_at")
+        .eq("id", dealId)
+        .single();
+
+      if (!deal) {
+        return { success: false, error: "Oferta não encontrada" };
+      }
+
+      if (!deal.is_active || new Date(deal.expires_at) <= new Date()) {
+        return { success: false, error: "Oferta expirada ou inativa" };
+      }
+
+      const currentClaims = deal.claims_count || 0;
+      if (deal.max_claims != null && currentClaims >= deal.max_claims) {
+        return { success: false, error: "Cupons esgotados para hoje" };
+      }
+
+      const nextClaims = currentClaims + 1;
+      await (supabase as any)
+        .from("daily_deals")
+        .update({
+          claims_count: nextClaims,
+          clicks_count: (deal.clicks_count || 0) + 1,
+        })
+        .eq("id", dealId);
+
+      return {
+        success: true,
+        claims_count: nextClaims,
+        remaining: deal.max_claims != null ? Math.max(0, deal.max_claims - nextClaims) : null,
+      };
+    } catch (err: any) {
+      console.error("[DealsService] Erro ao resgatar oferta:", err);
+      return { success: false, error: err.message || "Erro inesperado ao resgatar cupom" };
+    }
   },
 
   /**
@@ -174,6 +237,16 @@ export const DealsService = {
         priceDetail += ` (${deal.discount_badge})`;
       }
 
+      // Indicador de escassez no texto do WhatsApp se houver limite
+      if (deal.max_claims != null) {
+        const remaining = Math.max(0, deal.max_claims - (deal.claims_count || 0));
+        if (remaining > 0 && remaining <= 5) {
+          priceDetail += ` ⚠️ _(Apenas ${remaining} restantes!)_`;
+        } else if (remaining === 0) {
+          priceDetail += ` ❌ _(Esgotado)_`;
+        }
+      }
+
       lines.push(`${numEmoji} *${company}*${priceDetail}`);
       lines.push(`👉 Resgatar: eialink.com.br/hoje\n`);
     });
@@ -181,4 +254,3 @@ export const DealsService = {
     return lines.join("\n").trim();
   },
 };
-

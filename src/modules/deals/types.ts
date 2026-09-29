@@ -15,7 +15,7 @@
   expires_at: string;
   clicks_count: number;
   max_claims?: number | null;
-  claims_count?: number;
+  claims_count: number;
   is_active: boolean;
   created_at: string;
 

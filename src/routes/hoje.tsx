@@ -1,4 +1,4 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Sparkles,
@@ -134,6 +134,11 @@ function HojePage() {
       if (res.claims_count != null) {
         setDeals((prev) =>
           prev.map((d) => (d.id === deal.id ? { ...d, claims_count: res.claims_count! } : d))
+        );
+      } else if (res.remaining != null && deal.max_claims != null) {
+        const newClaims = deal.max_claims - res.remaining;
+        setDeals((prev) =>
+          prev.map((d) => (d.id === deal.id ? { ...d, claims_count: newClaims } : d))
         );
       }
 

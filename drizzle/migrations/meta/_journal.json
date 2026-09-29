@@ -8,6 +8,13 @@
       "when": 1790135658908,
       "tag": "0000_secure_analytics_and_published_bio_media",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790641060494,
+      "tag": "0001_daily_deals_and_cross_traffic",
+      "breakpoints": true
     }
   ]
 }

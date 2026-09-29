@@ -257,7 +257,7 @@ function Dashboard() {
                     className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
                   >
                     <Zap className="h-4 w-4 fill-black text-black" />
-                    <span>⚡ Oferta Flash (Ociosidade)</span>
+                    <span>⚡ Publicar Oferta (Flash / Mural)</span>
                   </button>
                 }
               />

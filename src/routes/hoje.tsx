@@ -154,7 +154,7 @@ function HojePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#07070d] text-foreground flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
+    <div className="dark min-h-screen bg-[#07070d] text-slate-100 flex flex-col selection:bg-emerald-500/30 selection:text-emerald-200">
       {/* Glow de Iluminação Superior */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-b from-purple-900/15 via-emerald-950/10 to-transparent pointer-events-none blur-3xl -z-10" />
 
@@ -179,19 +179,19 @@ function HojePage() {
                   Hoje
                 </span>
               </span>
-              <span className="text-[10px] text-muted-foreground -mt-0.5 hidden sm:inline">
+              <span className="text-[10px] text-slate-400 -mt-0.5 hidden sm:inline">
                 Mural Local de Oportunidades
               </span>
             </div>
           </Link>
 
           {/* Badge de Contagem Regressiva */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.04] border border-white/10 text-xs text-muted-foreground shadow-sm">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/15 text-xs text-slate-200 shadow-sm">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="hidden sm:inline font-medium text-foreground">Ofertas válidas até 23:59:</span>
+            <span className="hidden sm:inline font-medium text-slate-200">Ofertas válidas até 23:59:</span>
             <span className="font-mono font-bold text-emerald-400">
               {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
             </span>
@@ -213,7 +213,7 @@ function HojePage() {
           </span>
         </h1>
 
-        <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto">
+        <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto">
           Cupons limitados negociados diretamente com empresas da região. Garanta seu benefício antes que esgote.
         </p>
 
@@ -227,7 +227,7 @@ function HojePage() {
               className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer ${
                 selectedCity === cityName
                   ? "bg-emerald-500 text-black font-bold shadow-lg shadow-emerald-500/25 scale-105"
-                  : "bg-white/[0.05] hover:bg-white/[0.1] text-muted-foreground hover:text-white border border-white/10"
+                  : "bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/15"
               }`}
             >
               <MapPin className="h-3 w-3" />
@@ -242,22 +242,22 @@ function HojePage() {
         {loading ? (
           <div className="py-20 text-center space-y-3">
             <div className="inline-flex h-10 w-10 animate-spin items-center justify-center rounded-full border-2 border-emerald-500 border-t-transparent" />
-            <p className="text-sm text-muted-foreground">Buscando as oportunidades ativas de hoje...</p>
+            <p className="text-sm text-slate-400">Buscando as oportunidades ativas de hoje...</p>
           </div>
         ) : deals.length === 0 ? (
           <div className="py-16 px-4 text-center max-w-md mx-auto rounded-3xl border border-dashed border-white/10 bg-white/[0.02] space-y-4">
-            <div className="h-14 w-14 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center mx-auto text-muted-foreground">
+            <div className="h-14 w-14 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center mx-auto text-slate-400">
               <ShoppingBag className="h-7 w-7 text-emerald-400/80" />
             </div>
             <div className="space-y-1.5">
               <h3 className="text-base font-bold text-white">Nenhuma oferta ativa hoje em {selectedCity}</h3>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <p className="text-xs text-slate-300 leading-relaxed">
                 Novas oportunidades são cadastradas pelos lojistas todas as manhãs. Volte mais tarde ou anuncie o seu negócio!
               </p>
             </div>
             <Link
               to="/pages"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 text-xs font-semibold text-white border border-white/15 transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold text-white border border-white/20 transition-all"
             >
               <span>Cadastrar Minha Loja</span>
               <ArrowRight className="h-3.5 w-3.5" />
@@ -379,7 +379,7 @@ function HojePage() {
                                     {(deal.business_name || "L").slice(0, 1).toUpperCase()}
                                   </div>
                                 )}
-                                <span className="text-xs font-semibold text-muted-foreground group-hover/company:text-amber-300 transition-colors flex items-center gap-1">
+                                <span className="text-xs font-semibold text-white group-hover/company:text-amber-300 transition-colors flex items-center gap-1">
                                   {deal.business_name || "Empresa Verificada"}
                                   <ExternalLink className="h-3 w-3 opacity-60" />
                                 </span>
@@ -391,7 +391,7 @@ function HojePage() {
                               </h3>
 
                               {deal.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                                <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
                                   {deal.description}
                                 </p>
                               )}
@@ -401,7 +401,7 @@ function HojePage() {
                             {deal.max_claims != null && (
                               <div className="space-y-1.5 pt-1">
                                 <div className="flex items-center justify-between text-[11px]">
-                                  <span className="text-muted-foreground flex items-center gap-1">
+                                  <span className="text-slate-300 flex items-center gap-1">
                                     <Ticket className="h-3 w-3 text-amber-400" />
                                     {isSoldOut ? (
                                       <strong className="text-rose-400">Cupons Esgotados</strong>
@@ -412,7 +412,7 @@ function HojePage() {
                                     )}
                                   </span>
                                   {remaining != null && !isSoldOut && (
-                                    <span className="text-amber-400 font-bold">
+                                    <span className="text-amber-300 font-bold">
                                       Restam apenas {remaining}!
                                     </span>
                                   )}
@@ -435,8 +435,8 @@ function HojePage() {
                               <div className="flex items-baseline gap-2.5">
                                 {deal.original_price != null && deal.original_price > deal.deal_price && (
                                   <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">De</span>
-                                    <span className="text-xs line-through text-muted-foreground">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400">De</span>
+                                    <span className="text-xs line-through text-slate-400">
                                       {formatPrice(deal.original_price)}
                                     </span>
                                   </div>
@@ -606,7 +606,7 @@ function HojePage() {
                                     {(deal.business_name || "L").slice(0, 1).toUpperCase()}
                                   </div>
                                 )}
-                                <span className="text-xs font-semibold text-muted-foreground group-hover/company:text-emerald-300 transition-colors flex items-center gap-1">
+                                <span className="text-xs font-semibold text-white group-hover/company:text-emerald-300 transition-colors flex items-center gap-1">
                                   {deal.business_name || "Empresa Verificada"}
                                   <ExternalLink className="h-3 w-3 opacity-60" />
                                 </span>
@@ -619,7 +619,7 @@ function HojePage() {
 
                               {/* Descrição */}
                               {deal.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                                <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed">
                                   {deal.description}
                                 </p>
                               )}
@@ -629,7 +629,7 @@ function HojePage() {
                             {deal.max_claims != null && (
                               <div className="space-y-1.5 pt-1">
                                 <div className="flex items-center justify-between text-[11px]">
-                                  <span className="text-muted-foreground flex items-center gap-1">
+                                  <span className="text-slate-300 flex items-center gap-1">
                                     <Ticket className="h-3 w-3 text-emerald-400" />
                                     {isSoldOut ? (
                                       <strong className="text-rose-400">Cupons Esgotados</strong>
@@ -640,7 +640,7 @@ function HojePage() {
                                     )}
                                   </span>
                                   {remaining != null && !isSoldOut && (
-                                    <span className={isUrgent ? "text-amber-400 font-bold" : "text-muted-foreground"}>
+                                    <span className={isUrgent ? "text-amber-300 font-bold" : "text-slate-400"}>
                                       Restam {remaining}
                                     </span>
                                   )}
@@ -665,8 +665,8 @@ function HojePage() {
                               <div className="flex items-baseline gap-2.5">
                                 {deal.original_price != null && deal.original_price > deal.deal_price && (
                                   <div className="flex flex-col">
-                                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">De</span>
-                                    <span className="text-xs line-through text-muted-foreground">
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-400">De</span>
+                                    <span className="text-xs line-through text-slate-400">
                                       {formatPrice(deal.original_price)}
                                     </span>
                                   </div>
@@ -726,7 +726,7 @@ function HojePage() {
       {/* RODAPÉ EXECUTIVO */}
       <footer className="mt-auto border-t border-white/10 bg-[#050508] py-8 px-4 text-center">
         <div className="max-w-2xl mx-auto space-y-3">
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-300">
             É lojista ou prestador de serviços e quer divulgar sua oferta aqui?{" "}
             <Link
               to="/pages"
@@ -736,7 +736,7 @@ function HojePage() {
             </Link>{" "}
             e anuncie para milhares de pessoas na sua cidade.
           </p>
-          <p className="text-[11px] text-muted-foreground/60">
+          <p className="text-[11px] text-slate-400">
             © {new Date().getFullYear()} EIA Link — O ecossistema de alta conversão para o comércio local.
           </p>
         </div>

@@ -1,4 +1,4 @@
-﻿export interface DailyDeal {
+export interface DailyDeal {
   id: string;
   bio_page_id: string;
   user_id: string;
@@ -19,6 +19,11 @@
   is_active: boolean;
   created_at: string;
 
+  // Flash deals (relâmpago)
+  is_flash?: boolean;
+  start_time?: string | null;
+  end_time?: string | null;
+
   // Campos opcionais do join com bio_pages
   business_name?: string;
   slug?: string;
@@ -29,8 +34,67 @@
 export interface ClaimDealResult {
   success: boolean;
   error?: string;
+  claim_code?: string;
+  remaining_global_today?: number;
+  deal_title?: string;
   claims_count?: number;
   remaining?: number | null;
+}
+
+export interface DealClaim {
+  id: string;
+  deal_id: string;
+  business_page_id: string;
+  customer_whatsapp: string;
+  customer_name?: string | null;
+  claim_code: string;
+  status: "claimed" | "used" | "expired";
+  created_at: string;
+  used_at?: string | null;
+  referred_by_page_id?: string | null;
+
+  // Campos opcionais de join
+  deal_title?: string;
+  business_name?: string;
+  business_slug?: string;
+}
+
+export interface StoreCashbackSettings {
+  business_page_id: string;
+  is_active: boolean;
+  percentage: number;
+  validity_days: number;
+  allow_first_purchase_discount: boolean;
+  prevent_double_discount: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface CustomerCashback {
+  id: string;
+  business_page_id: string;
+  customer_whatsapp: string;
+  balance: number;
+  last_visit: string;
+  expires_at?: string | null;
+}
+
+export interface AddCashbackTransactionResult {
+  success: boolean;
+  message?: string;
+  earnedCashback: number;
+  newBalance: number;
+  immediateDiscountApplied: boolean;
+  discountAmount: number;
+  finalPurchaseAmount: number;
+  expiresAt?: string | null;
+}
+
+export interface UseCashbackResult {
+  success: boolean;
+  message?: string;
+  usedAmount: number;
+  remainingBalance: number;
 }
 
 export interface CrossTrafficPartnership {
@@ -64,6 +128,9 @@ export interface CreateDailyDealInput {
   expires_at: string;
   max_claims?: number | null;
   is_active?: boolean;
+  is_flash?: boolean;
+  start_time?: string | null;
+  end_time?: string | null;
 }
 
 export interface CreatePartnershipInput {

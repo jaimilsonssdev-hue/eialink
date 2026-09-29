@@ -1,5 +1,5 @@
-﻿import { supabase } from "@/integrations/supabase/client";
-import type { DailyDeal, CreateDailyDealInput } from "../types";
+import { supabase } from "@/integrations/supabase/client";
+import type { DailyDeal, CreateDailyDealInput, ClaimDealResult } from "../types";
 import { formatPrice } from "@/lib/utils";
 
 export const DealsService = {
@@ -55,6 +55,9 @@ export const DealsService = {
       max_claims: row.max_claims != null ? Number(row.max_claims) : null,
       claims_count: row.claims_count ?? 0,
       is_active: Boolean(row.is_active),
+      is_flash: Boolean(row.is_flash),
+      start_time: row.start_time,
+      end_time: row.end_time,
       created_at: row.created_at,
       business_name: row.bio_pages?.display_name,
       slug: row.bio_pages?.slug,
@@ -89,6 +92,9 @@ export const DealsService = {
       max_claims: dealData.max_claims ?? null,
       claims_count: 0,
       is_active: dealData.is_active !== false,
+      is_flash: Boolean(dealData.is_flash),
+      start_time: dealData.start_time || null,
+      end_time: dealData.end_time || null,
       clicks_count: 0,
     };
 
@@ -131,6 +137,9 @@ export const DealsService = {
       max_claims: data.max_claims != null ? Number(data.max_claims) : null,
       claims_count: data.claims_count ?? 0,
       is_active: Boolean(data.is_active),
+      is_flash: Boolean(data.is_flash),
+      start_time: data.start_time,
+      end_time: data.end_time,
       created_at: data.created_at,
       business_name: data.bio_pages?.display_name,
       slug: data.bio_pages?.slug,
@@ -140,7 +149,7 @@ export const DealsService = {
   },
 
   /**
-   * Resgata um cupom de forma atômica utilizando a RPC claim_daily_deal.
+   * Resgata um cupom de forma atômica utilizando a RPC claim_daily_deal legada.
    */
   async claimDailyDeal(dealId: string): Promise<{ success: boolean; error?: string; remaining?: number | null; claims_count?: number }> {
     const { data, error } = await (supabase as any).rpc("claim_daily_deal", { p_deal_id: dealId });
@@ -149,6 +158,60 @@ export const DealsService = {
       throw error;
     }
     return data;
+  },
+
+  /**
+   * Resgate avançado com travas globais diárias (máx 2 cupons/dia na rede,
+   * 1 por oferta por cliente e estoque seguro com geração de código curto EIA-XXXX).
+   */
+  async claimDealWithLimits(
+    dealId: string,
+    whatsapp: string,
+    name?: string,
+    refPageId?: string
+  ): Promise<ClaimDealResult> {
+    const cleanWhatsapp = whatsapp.replace(/\D/g, "");
+    if (!cleanWhatsapp || cleanWhatsapp.length < 8) {
+      return { success: false, error: "Número de WhatsApp inválido." };
+    }
+
+    const { data, error } = await (supabase as any).rpc("claim_deal_with_limits", {
+      p_deal_id: dealId,
+      p_customer_whatsapp: cleanWhatsapp,
+      p_customer_name: name?.trim() || null,
+      p_referred_by_page_id: refPageId || null,
+    });
+
+    if (error) {
+      console.error("[DealsService] Erro ao resgatar oferta com limites:", error);
+      throw error;
+    }
+
+    return data as ClaimDealResult;
+  },
+
+  /**
+   * Consulta a quantidade de cupons resgatados pelo cliente hoje em toda a rede (0, 1 ou 2).
+   */
+  async checkCustomerDailyClaimsCount(whatsapp: string): Promise<number> {
+    const cleanWhatsapp = whatsapp.replace(/\D/g, "");
+    if (!cleanWhatsapp) return 0;
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const { count, error } = await (supabase as any)
+      .from("deal_claims")
+      .select("*", { count: "exact", head: true })
+      .eq("customer_whatsapp", cleanWhatsapp)
+      .gte("created_at", startOfDay.toISOString());
+
+    if (error) {
+      console.error("[DealsService] Erro ao consultar limite diário do cliente:", error);
+      return 0;
+    }
+
+    return count ?? 0;
   },
 
   /**
@@ -220,3 +283,5 @@ export const DealsService = {
     return lines.join("\n").trim();
   },
 };
+
+export default DealsService;

@@ -1,4 +1,5 @@
 import {
+  AlertCircle,
   CheckCircle2,
   Circle,
   Eye,
@@ -1250,12 +1251,21 @@ export function UnifiedPageEditor({
       setSaveState("success");
       toast.success("Tudo salvo e publicado com sucesso!");
     } catch (error) {
-      if (import.meta.env.DEV) console.error("Save failed", error);
-      const errorMsg =
-        error instanceof Error ? error.message : "Não foi possível salvar. Tente novamente.";
-      setValidationMessage(errorMsg);
+      const rawMessage =
+        error instanceof Error
+          ? error.message
+          : "Ocorreu um erro inesperado ao salvar.";
+
+      const message = rawMessage.includes("duplicate key") ||
+        rawMessage.includes("23505")
+        ? "Este endereço já está sendo usado. Escolha outro endereço para sua página."
+        : rawMessage;
+
+      console.error("[UnifiedPageEditor] Falha ao salvar", error);
+
+      setValidationMessage(message);
+      toast.error(message);
       setSaveState("error");
-      toast.error(`Erro ao salvar: ${errorMsg}`);
     } finally {
       setSaving(false);
     }
@@ -1384,6 +1394,16 @@ export function UnifiedPageEditor({
             </button>
           </div>
         </div>
+
+        {saveState === "error" && validationMessage && (
+          <div
+            role="alert"
+            className="mt-3 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive flex items-center gap-2"
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span>{validationMessage}</span>
+          </div>
+        )}
       </header>
 
       {/* Layout Principal: Painel de Controle (4 Abas) + Prévia Celular */}

@@ -70,16 +70,19 @@ export const ProductService = {
     });
   },
   async sync(bioPageId: string, items: CatalogItem[]): Promise<CatalogItem[]> {
-    const invalid = items.find(
-      (item) => !item.name.trim() || !["product", "service"].includes(item.type),
+    const validItems = items.filter(
+      (item) =>
+        Boolean(item.name?.trim()) &&
+        ["product", "service"].includes(item.type),
     );
-    if (invalid) throw new Error("Existem itens do catálogo sem nome ou tipo válido.");
+
     const existing = await ProductService.list(bioPageId);
     const existingIds = new Set(existing.map((item) => item.id));
 
-    // Somente atualiza itens que realmente existem no banco (possuem UUID persistido)
-    const savedItems = items.filter((item) => existingIds.has(item.id));
-    for (const [position, item] of savedItems.entries()) {
+    // Somente atualiza itens válidos que realmente existem no banco (possuem UUID persistido)
+    const savedItems = validItems.filter((item) => existingIds.has(item.id));
+    for (const item of savedItems) {
+      const position = validItems.indexOf(item);
       const { error } = await catalogStore
         .from("catalog_items")
         .update(toPayload(item, position))
@@ -88,19 +91,19 @@ export const ProductService = {
       if (error) throw new Error(`Falha ao atualizar ${item.name}: ${error.message}`);
     }
 
-    // Qualquer item sem UUID persistido no banco é tratado como inserção
-    const newItems = items.filter((item) => !existingIds.has(item.id));
+    // Qualquer item válido sem UUID persistido no banco é tratado como inserção
+    const newItems = validItems.filter((item) => !existingIds.has(item.id));
     if (newItems.length) {
       const { error } = await catalogStore.from("catalog_items").insert(
         newItems.map((item) => ({
-          ...toPayload(item, items.indexOf(item)),
+          ...toPayload(item, validItems.indexOf(item)),
           bio_page_id: bioPageId,
         })),
       );
       if (error) throw new Error(`Falha ao criar item: ${error.message}`);
     }
 
-    const retained = new Set(items.map((item) => item.id));
+    const retained = new Set(validItems.map((item) => item.id));
     const removedIds = existing.filter((item) => !retained.has(item.id)).map((item) => item.id);
     if (removedIds.length) {
       const { error } = await catalogStore

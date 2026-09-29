@@ -200,66 +200,108 @@ function BuilderPage() {
         niche: profile?.niche ?? "Outro",
       }}
       onSave={async ({ bio: form, links: editedLinks, products: editedProducts, niche }) => {
-        const { error: profileError } = await supabase
-          .from("profiles")
-          .update({ niche })
-          .eq("id", userId);
-        if (profileError) throw new Error(profileError.message);
+        try {
+          console.info("[Builder save] Iniciando salvamento", {
+            hasBioId: Boolean(bio?.id),
+            linksCount: editedLinks.length,
+            productsCount: editedProducts.length,
+          });
 
-        const payload = { ...form, user_id: userId };
-        delete (payload as any).id;
-        let bioPageId = bio?.id;
-        if (bioPageId) {
-          const { error } = await supabase.from("bio_pages").update(payload).eq("id", bioPageId);
-          if (error)
-            throw new Error(
-              error.code === "23505"
-                ? "Este endereço já está sendo usado. Escolha outro nome para sua página."
-                : error.message,
-            );
-        } else {
-          const { data, error } = await supabase
-            .from("bio_pages")
-            .insert(payload)
-            .select("id")
-            .single();
-          if (error || !data)
-            throw new Error(
-              error?.code === "23505"
-                ? "Este endereço já está sendo usado. Escolha outro nome para sua página."
-                : (error?.message ?? "Não foi possível criar sua página."),
-            );
-          bioPageId = data.id;
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .update({ niche })
+            .eq("id", userId);
+          if (profileError) {
+            console.error("[Builder save] Erro ao salvar perfil:", profileError);
+            throw new Error(`Não foi possível salvar os dados da empresa: ${profileError.message}`);
+          }
+
+          const payload = { ...form, user_id: userId };
+          delete (payload as any).id;
+          let bioPageId = bio?.id;
+          if (bioPageId) {
+            const { error } = await supabase.from("bio_pages").update(payload).eq("id", bioPageId);
+            if (error) {
+              console.error("[Builder save] Erro ao atualizar bio_pages:", error);
+              throw new Error(
+                error.code === "23505"
+                  ? "Este endereço já está sendo usado. Escolha outro nome para sua página."
+                  : `Não foi possível atualizar sua página: ${error.message}`,
+              );
+            }
+          } else {
+            const { data, error } = await supabase
+              .from("bio_pages")
+              .insert(payload)
+              .select("id")
+              .single();
+            if (error || !data) {
+              console.error("[Builder save] Erro ao criar bio_pages:", error);
+              throw new Error(
+                error?.code === "23505"
+                  ? "Este endereço já está sendo usado. Escolha outro nome para sua página."
+                  : (error?.message ?? "Não foi possível criar sua página."),
+              );
+            }
+            bioPageId = data.id;
+          }
+
+          // A downgrade keeps catalog data intact, but only Pro can change it.
+          const savedProducts = planAccess.data?.features.catalog
+            ? await ProductService.sync(bioPageId!, editedProducts)
+            : products;
+
+          const savedLinks = editedLinks.map((link, position) => ({
+            ...link,
+            bio_page_id: bioPageId!,
+            position,
+          }));
+          if (savedLinks.length) {
+            const { error: upsertError } = await supabase
+              .from("bio_links")
+              .upsert(savedLinks, { onConflict: "id" });
+            if (upsertError) {
+              console.error("[Builder save] Erro ao salvar links:", upsertError);
+              throw new Error(`Não foi possível salvar os links: ${upsertError.message}`);
+            }
+
+            const savedLinkIds = savedLinks
+              .map((link) => link.id)
+              .filter((id): id is string => Boolean(id));
+
+            if (savedLinkIds.length > 0) {
+              const { error: cleanupError } = await supabase
+                .from("bio_links")
+                .delete()
+                .eq("bio_page_id", bioPageId)
+                .not("id", "in", `(${savedLinkIds.join(",")})`);
+              if (cleanupError) {
+                console.error("[Builder save] Erro ao remover links antigos:", cleanupError);
+                throw new Error(`Não foi possível remover links antigos: ${cleanupError.message}`);
+              }
+            }
+          } else {
+            const { error: deleteError } = await supabase
+              .from("bio_links")
+              .delete()
+              .eq("bio_page_id", bioPageId);
+            if (deleteError) {
+              console.error("[Builder save] Erro ao limpar links:", deleteError);
+              throw new Error(`Não foi possível limpar os links: ${deleteError.message}`);
+            }
+          }
+
+          await page.refetch();
+          console.info("[Builder save] Salvamento concluído com sucesso");
+          return { products: savedProducts };
+        } catch (error) {
+          console.error("[Builder save] Falha ao salvar página", error);
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Ocorreu um erro inesperado ao salvar a página.";
+          throw new Error(message);
         }
-
-        // A downgrade keeps catalog data intact, but only Pro can change it.
-        const savedProducts = planAccess.data?.features.catalog
-          ? await ProductService.sync(bioPageId!, editedProducts)
-          : products;
-
-        const savedLinks = editedLinks.map((link, position) => ({
-          ...link,
-          bio_page_id: bioPageId!,
-          position,
-        }));
-        if (savedLinks.length) {
-          const { error: upsertError } = await supabase
-            .from("bio_links")
-            .upsert(savedLinks, { onConflict: "id" });
-          if (upsertError) throw new Error(upsertError.message);
-          const ids = savedLinks.map((link) => `"${link.id}"`).join(",");
-          const { error: cleanupError } = await supabase
-            .from("bio_links")
-            .delete()
-            .eq("bio_page_id", bioPageId)
-            .not("id", "in", `(${ids})`);
-          if (cleanupError) throw new Error(cleanupError.message);
-        } else {
-          const { error } = await supabase.from("bio_links").delete().eq("bio_page_id", bioPageId);
-          if (error) throw new Error(error.message);
-        }
-        await page.refetch();
-        return { products: savedProducts };
       }}
     />
   );

@@ -31,6 +31,8 @@ import { publicPageUrl } from "@/lib/public-page-url";
 import { QuickBusinessEditor } from "@/components/dashboard/QuickBusinessEditor";
 import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselManager";
 import { CrossTrafficManager } from "@/components/dashboard/CrossTrafficManager";
+import { CashbackSettingsCard } from "@/components/dashboard/CashbackSettingsCard";
+import { CounterValidationCard } from "@/components/dashboard/CounterValidationCard";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -555,6 +557,13 @@ function Dashboard() {
 
       {bio && (
         <CrossTrafficManager bioPageId={bio.id} pageTitle={bio.display_name} className="mt-6" />
+      )}
+
+      {bio && (
+        <div className="space-y-6 mt-6">
+          <CashbackSettingsCard bioPageId={bio.id} />
+          <CounterValidationCard bioPageId={bio.id} />
+        </div>
       )}
 
       <div className="premium-section-heading">

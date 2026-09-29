@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Gift, ExternalLink, Sparkles } from "lucide-react";
 import { CrossTrafficService, type CrossTrafficPartnership } from "@/modules/deals";
 
@@ -51,18 +51,19 @@ export function CrossTrafficCard({ bioPageId, className = "" }: CrossTrafficCard
   return (
     <div className={`w-full max-w-xl mx-auto space-y-4 my-6 ${className}`}>
       {partnerships.map((partnership) => {
+        // TAREFA 7: Link com indicação ?ref=<host_page_id> para rastreamento de parceria cruzada
         const partnerUrl = partnership.partner_slug
-          ? `/p/${partnership.partner_slug}`
+          ? `/p/${partnership.partner_slug}?ref=${encodeURIComponent(bioPageId)}`
           : "#";
         const badgeLabel = partnership.badge_label || "Cortesia de Parceiro da Rede";
 
         return (
           <div
             key={partnership.id}
-            className="group relative overflow-hidden rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-card/80 to-purple-500/10 p-4 sm:p-5 shadow-xl backdrop-blur-md transition-all duration-300 hover:border-amber-500/40 hover:shadow-2xl"
+            className="group relative overflow-hidden rounded-2xl border border-amber-500/25 bg-card/90 p-4 sm:p-5 shadow-xl backdrop-blur-md transition-all duration-300 hover:border-amber-500/50 hover:shadow-2xl"
           >
             {/* Linha decorativa superior */}
-            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-emerald-400 to-purple-500 opacity-60" />
+            <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-amber-400 via-emerald-400 to-purple-500 opacity-70" />
 
             {/* Cabeçalho do Card */}
             <div className="flex items-center gap-2 mb-3">
@@ -82,10 +83,10 @@ export function CrossTrafficCard({ bioPageId, className = "" }: CrossTrafficCard
                   <img
                     src={partnership.partner_avatar}
                     alt={partnership.partner_name || "Parceiro"}
-                    className="h-11 w-11 shrink-0 rounded-xl object-cover border border-white/10 shadow-sm"
+                    className="h-11 w-11 shrink-0 rounded-xl object-cover border border-border shadow-sm"
                   />
                 ) : (
-                  <div className="h-11 w-11 shrink-0 rounded-xl bg-gradient-to-br from-amber-500/30 to-purple-500/30 border border-white/15 flex items-center justify-center text-xs font-bold text-white shadow-sm">
+                  <div className="h-11 w-11 shrink-0 rounded-xl bg-muted border border-border flex items-center justify-center text-xs font-bold text-foreground shadow-sm">
                     {(partnership.partner_name || "P").slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -100,11 +101,11 @@ export function CrossTrafficCard({ bioPageId, className = "" }: CrossTrafficCard
                 </div>
               </div>
 
-              {/* Botão de Ação */}
+              {/* Botão de Ação com ref */}
               <a
                 href={partnerUrl}
                 onClick={() => handlePartnerClick(partnership)}
-                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/15 active:scale-95 text-foreground border border-white/15 hover:border-amber-400/30 transition-all shrink-0 cursor-pointer shadow-sm"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 active:scale-95 text-foreground border border-border hover:border-amber-400/40 transition-all shrink-0 cursor-pointer shadow-sm"
               >
                 <span>Ver Perfil do Parceiro</span>
                 <ExternalLink className="h-3.5 w-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />

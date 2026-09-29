@@ -1,4 +1,4 @@
-﻿import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   Sparkles,
@@ -12,7 +12,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { DealsService, type DailyDeal } from "@/modules/deals";
+import { DealsService, type DailyDeal, type ClaimDealResult } from "@/modules/deals";
+import { ClaimDealModal } from "@/components/public-profile/ClaimDealModal";
 
 export const Route = createFileRoute("/hoje")({
   head: () => ({
@@ -67,7 +68,7 @@ function HojePage() {
   const [deals, setDeals] = useState<DailyDeal[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeLeft, setTimeLeft] = useState(getTimeLeftToday());
-  const [claimingId, setClaimingId] = useState<string | null>(null);
+  const [selectedDealForModal, setSelectedDealForModal] = useState<DailyDeal | null>(null);
 
   // Relógio regressivo em tempo real até 23:59:59
   useEffect(() => {
@@ -102,73 +103,26 @@ function HojePage() {
     };
   }, [selectedCity]);
 
-  const handleClaim = async (deal: DailyDeal) => {
+  const handleOpenClaimModal = (deal: DailyDeal) => {
     const isSoldOut = deal.max_claims != null && deal.claims_count >= deal.max_claims;
-
     if (isSoldOut) {
       toast.error("Ops! Os cupons desta oferta estão esgotados para hoje.");
       return;
     }
+    setSelectedDealForModal(deal);
+  };
 
-    setClaimingId(deal.id);
-    const toastId = toast.loading("Resgatando seu cupom exclusivo...");
-
-    try {
-      const res = await DealsService.claimDailyDeal(deal.id);
-
-      if (res && res.success === false) {
-        toast.dismiss(toastId);
-        toast.error(res.error || "Não foi possível resgatar o cupom.");
-
-        if (res.error?.includes("esgotado")) {
-          setDeals((prev) =>
-            prev.map((d) => (d.id === deal.id ? { ...d, claims_count: d.max_claims || 1 } : d))
-          );
+  const handleClaimSuccess = (_res: ClaimDealResult) => {
+    if (!selectedDealForModal) return;
+    setDeals((prev) =>
+      prev.map((d) => {
+        if (d.id === selectedDealForModal.id) {
+          const newCount = (d.claims_count || 0) + 1;
+          return { ...d, claims_count: newCount };
         }
-        return;
-      }
-
-      // Atualiza localmente a contagem de resgates
-      if (res?.claims_count != null) {
-        setDeals((prev) =>
-          prev.map((d) => (d.id === deal.id ? { ...d, claims_count: res.claims_count! } : d))
-        );
-      } else if (res?.remaining != null && deal.max_claims != null) {
-        const newClaims = deal.max_claims - res.remaining;
-        setDeals((prev) =>
-          prev.map((d) => (d.id === deal.id ? { ...d, claims_count: newClaims } : d))
-        );
-      } else {
-        setDeals((prev) =>
-          prev.map((d) => (d.id === deal.id ? { ...d, claims_count: (d.claims_count || 0) + 1 } : d))
-        );
-      }
-
-      toast.success("🎉 Cupom reservado com sucesso! Abrindo WhatsApp...", { id: toastId });
-
-      const message = `Olá! Vi a oferta '${deal.title}' no Mural do Dia do EIA Link e quero garantir meu cupom promocional!`;
-
-      if (deal.claim_action_url) {
-        window.open(deal.claim_action_url, "_blank", "noopener,noreferrer");
-        return;
-      }
-
-      const cleanPhone = deal.whatsapp_number ? deal.whatsapp_number.replace(/\D/g, "") : "";
-      if (cleanPhone) {
-        const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
-        window.open(waUrl, "_blank", "noopener,noreferrer");
-        return;
-      }
-
-      if (deal.slug) {
-        window.open(`/p/${deal.slug}`, "_blank", "noopener,noreferrer");
-      }
-    } catch (err: any) {
-      toast.dismiss(toastId);
-      toast.error(err.message || "Erro inesperado ao resgatar.");
-    } finally {
-      setClaimingId(null);
-    }
+        return d;
+      })
+    );
   };
 
   return (
@@ -464,31 +418,26 @@ function HojePage() {
                         </div>
                       </div>
 
-                      {/* Botão de Ação: Resgatar no WhatsApp */}
+                      {/* Botão de Ação: Resgatar Cupom Real com Travas de Limite */}
                       <button
                         type="button"
-                        onClick={() => handleClaim(deal)}
-                        disabled={isSoldOut || claimingId === deal.id}
+                        onClick={() => handleOpenClaimModal(deal)}
+                        disabled={isSoldOut}
                         className={`w-full h-11 rounded-2xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
                           isSoldOut
-                            ? "bg-white/10 text-muted-foreground cursor-not-allowed border border-white/10 shadow-none opacity-60"
-                            : "bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 text-black shadow-emerald-500/20 cursor-pointer"
+                            ? "bg-muted/40 text-muted-foreground cursor-not-allowed border border-border shadow-none opacity-60"
+                            : "bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white shadow-emerald-500/20 cursor-pointer"
                         }`}
                       >
-                        {claimingId === deal.id ? (
-                          <>
-                            <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                            <span>Garantindo Cupom...</span>
-                          </>
-                        ) : isSoldOut ? (
+                        {isSoldOut ? (
                           <>
                             <AlertCircle className="h-4 w-4 text-muted-foreground" />
                             <span>Cupons Esgotados Hoje</span>
                           </>
                         ) : (
                           <>
-                            <Zap className="h-4 w-4 fill-black" />
-                            <span>Resgatar Oferta no WhatsApp</span>
+                            <Zap className="h-4 w-4 fill-white" />
+                            <span>Pegar Cupom com Desconto</span>
                           </>
                         )}
                       </button>
@@ -500,6 +449,14 @@ function HojePage() {
           </div>
         )}
       </main>
+
+      {/* Modal Inteligente de Resgate com Travas de Limite e Código EIA-XXXX */}
+      <ClaimDealModal
+        isOpen={!!selectedDealForModal}
+        onClose={() => setSelectedDealForModal(null)}
+        deal={selectedDealForModal}
+        onSuccess={handleClaimSuccess}
+      />
 
       {/* RODAPÉ EXECUTIVO */}
       <footer className="mt-auto border-t border-white/10 bg-[#050508] py-8 px-4 text-center">

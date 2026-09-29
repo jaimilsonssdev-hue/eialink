@@ -23,6 +23,7 @@ import {
 import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
 import { ComandaFloatingBar } from "@/components/public/ComandaFloatingBar";
 import { CrossTrafficCard } from "@/components/public-profile/CrossTrafficCard";
+import { DealPopup } from "@/components/public-profile/DealPopup";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -306,6 +307,18 @@ const VALID_THEMES = new Set(["aurora", "sunset", "ocean", "midnight", "mono", "
 
 function PublicBio() {
   const { bio, links, blocks, products, hasProPlan, bookingActive } = Route.useLoaderData();
+  const [refPageId, setRefPageId] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const ref = params.get("ref");
+      if (ref) {
+        setRefPageId(ref);
+      }
+    }
+  }, []);
+
   const theme = VALID_THEMES.has(bio.theme) ? bio.theme : "aurora";
   // The established bio page remains the canonical source for the public
   // profile. Only additive layout blocks are rendered here, preventing an
@@ -692,6 +705,9 @@ function PublicBio() {
 
       {/* Comanda Digital e Chamar Garçom (Ativo apenas se acessado via QR Code / NFC com mesa ou garçom) */}
       <ComandaFloatingBar bioPageId={bio.id} products={products} />
+
+      {/* Pop-up inteligente de cupom com escassez e travas de limite */}
+      <DealPopup bioPageId={bio.id} businessName={bio.display_name} refPageId={refPageId} />
     </div>
   );
 }

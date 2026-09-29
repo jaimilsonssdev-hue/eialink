@@ -33,6 +33,8 @@ import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselMa
 import { CrossTrafficManager } from "@/components/dashboard/CrossTrafficManager";
 import { CashbackSettingsCard } from "@/components/dashboard/CashbackSettingsCard";
 import { CounterValidationCard } from "@/components/dashboard/CounterValidationCard";
+import { RetentionGuardianCard } from "@/components/dashboard/RetentionGuardianCard";
+import { FlashDealModal } from "@/components/dashboard/FlashDealModal";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -243,6 +245,23 @@ function Dashboard() {
               <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
               <span>Gerar Proposta com Fotos (IA Gateway)</span>
             </Link>
+            {bio && (
+              <FlashDealModal
+                bioPageId={bio.id}
+                businessName={bio.display_name}
+                city={profile?.city || undefined}
+                niche={profile?.niche || undefined}
+                triggerButton={
+                  <button
+                    type="button"
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+                  >
+                    <Zap className="h-4 w-4 fill-black text-black" />
+                    <span>⚡ Oferta Flash (Ociosidade)</span>
+                  </button>
+                }
+              />
+            )}
             {bio && (
               <a href={publicUrl} target="_blank" rel="noopener" className="premium-text-action">
                 Ver página <ExternalLink className="h-4 w-4" />
@@ -563,6 +582,7 @@ function Dashboard() {
         <div className="space-y-6 mt-6">
           <CashbackSettingsCard bioPageId={bio.id} />
           <CounterValidationCard bioPageId={bio.id} />
+          <RetentionGuardianCard bioPageId={bio.id} businessName={bio.display_name} />
         </div>
       )}
 

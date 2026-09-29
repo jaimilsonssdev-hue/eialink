@@ -139,3 +139,18 @@ export interface CreatePartnershipInput {
   benefit_text: string;
   badge_label?: string;
 }
+
+export interface AtRiskCustomer {
+  customer_whatsapp: string;
+  customer_name?: string;
+  balance: number;
+  last_visit: string;
+  days_since_visit: number;
+  expires_at?: string | null;
+  status: "expiring_soon" | "at_risk" | "lost" | "active";
+}
+
+export interface ReactivationMessageResult {
+  text: string;
+  whatsappUrl: string;
+}

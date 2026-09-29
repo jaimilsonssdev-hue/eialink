@@ -184,9 +184,15 @@ export const PageService = {
           google_rating: realRating,
           reviews_count: realReviewsCount,
           model_variant:
-            preferredTemplateId === "site-maquina" || !preferredTemplateId
-              ? "Site Institucional Máquina de Sites"
-              : preset.modelName,
+            preferredTemplateId === "cinematic-glass"
+              ? "Landing Page Cinematográfica (Scrollytelling)"
+              : preferredTemplateId === "site-maquina" || !preferredTemplateId
+                ? "Site Institucional Máquina de Sites"
+                : preset.modelName,
+          custom_theme:
+            preferredTemplateId === "cinematic-glass"
+              ? { parallax: true, hero_style: "cinematic", font_pair: "elegante" }
+              : undefined,
           address: realAddress,
           opening_hours: realHours,
           testimonials: realReviews,

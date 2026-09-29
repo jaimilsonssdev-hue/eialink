@@ -35,10 +35,14 @@ function decodePlus(value: string): string {
 }
 
 function cleanName(raw: string): string {
+  if (!raw) return "";
   return raw
-    .replace(/[#?].*$/, "")
+    .replace(/https?:\/\/[^\s]+/gi, "") // Remove qualquer URL embutida
+    .replace(/[#?].*$/, "")             // Remove hashes e query strings restantes
+    .replace(/@[-0-9.,zZ+]+/gi, "")     // Remove coordenadas de zoom do Maps (@-17.5342921,-39.7397753,17z)
+    .replace(/\b(?:entry|g_ep|shorturl|g_st|hl|gl|ved|sa)=[^&\s]+/gi, "") // Remove parâmetros de tracking
     .replace(/\s{2,}/g, " ")
-    .replace(/^["'\s]+|["'\s]+$/g, "")
+    .replace(/^["'\s\-–|:]+|["'\s\-–|:]+$/g, "")
     .slice(0, 120)
     .trim();
 }
@@ -55,36 +59,54 @@ export function normalizeBusinessQuery(input: string): NormalizedBusinessQuery {
   const trimmed = (input || "").trim();
   if (!trimmed) return { name: "", city: "", query: "", fromLink: false };
 
-  const isLink = /^https?:\/\//i.test(trimmed) || /^(www\.)?(google\.[a-z.]+|maps\.app\.goo\.gl|g\.co)\//i.test(trimmed);
+  // Decodifica componentes codificados imediatamente (ex: Ateli%C3%AA+J%C3%A9ssica -> Ateliê Jéssica)
+  const decodedInput = decodePlus(trimmed);
+
+  const isLink =
+    /^https?:\/\//i.test(trimmed) ||
+    /^(www\.)?(google\.[a-z.]+|maps\.app\.goo\.gl|g\.co)\//i.test(trimmed) ||
+    /\/maps\/place\//i.test(trimmed);
 
   if (!isLink) {
-    const { name, city } = splitCity(cleanName(trimmed));
+    const { name, city } = splitCity(cleanName(decodedInput));
     return { name, city, query: [name, city].filter(Boolean).join(" "), fromLink: false };
   }
 
-  const url = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
+  const url = decodedInput.startsWith("http") ? decodedInput : `https://${decodedInput}`;
   let extracted = "";
 
-  // 1. /maps/place/Nome+Do+Negocio
-  const placeMatch = url.match(/\/maps\/place\/([^/@?#]+)/i);
-  if (placeMatch) extracted = decodePlus(placeMatch[1]);
+  // 1. /maps/place/Nome+Do+Negocio ou /maps/place/Nome/@...
+  const placeMatch = url.match(/\/maps\/place\/([^/?#]+)/i);
+  if (placeMatch) {
+    let segment = placeMatch[1];
+    if (segment.includes("@")) {
+      segment = segment.split("@")[0];
+    }
+    extracted = cleanName(segment);
+  }
 
   // 2. /maps/search/Nome
   if (!extracted) {
-    const searchPath = url.match(/\/maps\/search\/([^/@?#]+)/i);
-    if (searchPath) extracted = decodePlus(searchPath[1]);
+    const searchPath = url.match(/\/maps\/search\/([^/?#]+)/i);
+    if (searchPath) {
+      let segment = searchPath[1];
+      if (segment.includes("@")) segment = segment.split("@")[0];
+      extracted = cleanName(segment);
+    }
   }
 
-  // 3. Parâmetro q= (busca do celular, busca do Maps, links encurtados expandidos)
+  // 3. Parâmetro q= ou query= (busca do celular, busca do Maps, links encurtados expandidos)
   if (!extracted) {
-    const qMatch = url.match(/[?&]q=([^&#]+)/i);
-    if (qMatch) extracted = decodePlus(qMatch[1]);
+    const qMatch = url.match(/[?&](?:q|query)=([^&#]+)/i);
+    if (qMatch) extracted = cleanName(qMatch[1]);
   }
 
-  // 4. Parâmetro query= (Maps api=1)
+  // 4. Se a URL veio acompanhada de texto antes ou depois (ex: "Ateliê Jéssica https://maps.app.goo.gl/...")
   if (!extracted) {
-    const queryMatch = url.match(/[?&]query=([^&#]+)/i);
-    if (queryMatch) extracted = decodePlus(queryMatch[1]);
+    const textWithoutUrl = cleanName(decodedInput);
+    if (textWithoutUrl && !/^https?:/i.test(textWithoutUrl) && textWithoutUrl.length >= 3) {
+      extracted = textWithoutUrl;
+    }
   }
 
   // 5. Último recurso: qualquer parâmetro textual que não seja rastreador
@@ -92,12 +114,17 @@ export function normalizeBusinessQuery(input: string): NormalizedBusinessQuery {
     const params = [...url.matchAll(/[?&]([a-z_]+)=([^&#]+)/gi)];
     for (const [, key, value] of params) {
       if (TRACKING_PARAMS.has(key.toLowerCase())) continue;
-      const candidate = decodePlus(value);
+      const candidate = cleanName(value);
       if (/[A-Za-zÀ-ÿ]{3,}/.test(candidate) && !/^https?:/i.test(candidate)) {
         extracted = candidate;
         break;
       }
     }
+  }
+
+  // REGRA CRÍTICA: Nunca permitir que uma URL HTTP/HTTPS seja considerada nome
+  if (/^https?:\/\//i.test(extracted) || /^www\./i.test(extracted)) {
+    extracted = "";
   }
 
   const { name, city } = splitCity(cleanName(extracted));

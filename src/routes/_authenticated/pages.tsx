@@ -40,6 +40,7 @@ import {
   Wine,
   Zap,
   ChevronDown,
+  Clapperboard,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -53,7 +54,7 @@ import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngi
 import { lookupBusinessProfileFn } from "@/modules/prospecting/prospecting.functions";
 import { getPresetForCompany, getVariantsForNiche } from "@/modules/prospecting/nichePresets";
 import type { ProspectDraft } from "@/modules/prospecting/types";
-import { normalizeBusinessLink } from "@/modules/prospecting/normalizeBusinessLink";
+import { normalizeBusinessLink, normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 
 export const Route = createFileRoute("/_authenticated/pages")({
   component: PagesWorkspace,
@@ -266,7 +267,7 @@ function PagesWorkspace() {
   const [wizardWhatsapp, setWizardWhatsapp] = useState("");
   const [wizardCity, setWizardCity] = useState("");
   const [isCreatingWizard, setIsCreatingWizard] = useState(false);
-  const [creationEngine, setCreationEngine] = useState<"express" | "premium">("express");
+  const [creationEngine, setCreationEngine] = useState<"express" | "premium" | "cinematic">("express");
 
   // Studio Fast State
   const [fastInput, setFastInput] = useState("");
@@ -277,6 +278,7 @@ function PagesWorkspace() {
   // Auto-importador do Perfil do Google Maps / Link
   const [lookupQuery, setLookupQuery] = useState("");
   const [isLookingUp, setIsLookingUp] = useState(false);
+  const [lookupStatus, setLookupStatus] = useState<"idle" | "loading" | "found_full" | "found_name" | "error">("idle");
   const [lookupResults, setLookupResults] = useState<ProspectDraft[]>([]);
   const [lookupFeedback, setLookupFeedback] = useState<string | null>(null);
 
@@ -404,6 +406,7 @@ function PagesWorkspace() {
         city: wizardCity.trim() || null,
         variantIndex: selectedVariantIndex,
         isDemo: false, // Página definitiva do cliente
+        preferredTemplateId: creationEngine === "cinematic" ? "cinematic-glass" : null,
       });
 
       await pages.refetch();
@@ -413,7 +416,9 @@ function PagesWorkspace() {
         search:
           creationEngine === "premium"
             ? { page: page.id, copilot: true }
-            : { page: page.id },
+            : creationEngine === "cinematic"
+              ? { page: page.id, copilot: true }
+              : { page: page.id },
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Não foi possível criar a página.";
@@ -450,7 +455,15 @@ function PagesWorkspace() {
     const q = lookupQuery.trim();
     if (!q) return;
 
+    // Extração e normalização reativa imediata do link
+    const cleanExtracted = normalizeBusinessQuery(q);
+    if (cleanExtracted.name && cleanExtracted.fromLink) {
+      setWizardName(cleanExtracted.name);
+      if (cleanExtracted.city) setWizardCity(cleanExtracted.city);
+    }
+
     setIsLookingUp(true);
+    setLookupStatus("loading");
     setLookupFeedback(null);
     setLookupResults([]);
 
@@ -465,19 +478,44 @@ function PagesWorkspace() {
 
       if (results.length === 1) {
         applyProfileData(results[0]);
-        setLookupFeedback(`Perfil de "${results[0].name}" carregado com sucesso!`);
+        setLookupStatus("found_full");
+        setLookupFeedback(`Perfil completo de "${results[0].name}" carregado com sucesso!`);
       } else if (results.length > 1) {
         setLookupResults(results);
+        setLookupStatus("found_full");
         setLookupFeedback(`${results.length} empresas encontradas. Clique na sua abaixo para preencher.`);
       } else {
-        // Se não encontrou no Maps, usa o texto digitado pelo usuário como nome
-        setWizardName(q);
-        const preset = getPresetForCompany(null, q);
-        setSelectedNiche(preset.nicheKey);
-        setLookupFeedback("Nome preenchido! Complete os campos abaixo para gerar sua página.");
+        // Se a busca remota não encontrou, utiliza o nome extraído limpo como fallback (nunca URL)
+        const fallbackName = cleanExtracted.name || (!/^https?:\/\//i.test(q) ? q : "");
+        if (fallbackName) {
+          setWizardName(fallbackName);
+          if (cleanExtracted.city) setWizardCity(cleanExtracted.city);
+          const preset = getPresetForCompany(null, fallbackName);
+          setSelectedNiche(preset.nicheKey);
+          setLookupStatus("found_name");
+          setLookupFeedback(
+            cleanExtracted.fromLink
+              ? `Nome "${fallbackName}" identificado a partir do link!`
+              : "Nome preenchido! Complete os campos abaixo para gerar sua página."
+          );
+        } else {
+          setLookupStatus("error");
+          setLookupFeedback("Link reconhecido, mas não foi possível extrair o perfil. Digite o nome da empresa abaixo.");
+        }
       }
     } catch (err) {
-      setLookupFeedback(err instanceof Error ? err.message : "Erro ao pesquisar perfil.");
+      const fallbackName = cleanExtracted.name || (!/^https?:\/\//i.test(q) ? q : "");
+      if (fallbackName) {
+        setWizardName(fallbackName);
+        if (cleanExtracted.city) setWizardCity(cleanExtracted.city);
+        const preset = getPresetForCompany(null, fallbackName);
+        setSelectedNiche(preset.nicheKey);
+        setLookupStatus("found_name");
+        setLookupFeedback(`Nome "${fallbackName}" aproveitado do link.`);
+      } else {
+        setLookupStatus("error");
+        setLookupFeedback(err instanceof Error ? err.message : "Erro ao pesquisar perfil.");
+      }
     } finally {
       setIsLookingUp(false);
     }
@@ -494,6 +532,7 @@ function PagesWorkspace() {
     const preset = getPresetForCompany(profile.niche, profile.name);
     setSelectedNiche(preset.nicheKey);
     setLookupResults([]);
+    setLookupStatus("found_full");
   }
 
   function openWizardWithNiche(nicheKey: string) {
@@ -502,6 +541,7 @@ function PagesWorkspace() {
     setLookupQuery("");
     setLookupResults([]);
     setLookupFeedback(null);
+    setLookupStatus("idle");
     setIsWizardOpen(true);
   }
 
@@ -1039,277 +1079,407 @@ function PagesWorkspace() {
 
       {/* Modal Mágico: Configuração em 30 Segundos */}
       {isWizardOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="relative w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-2xl space-y-5">
-            <div className="flex items-start justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 md:p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col rounded-3xl border border-border/80 bg-card shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-border/60 bg-muted/20 shrink-0">
               <div>
-                <span className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--primary)]">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-[color:var(--primary)] uppercase tracking-wider">
                   <Sparkles className="h-3.5 w-3.5" /> Criador Inteligente em 30 Segundos
                 </span>
-                <h3 className="font-display text-xl font-bold text-foreground mt-1">
+                <h3 className="font-display text-lg sm:text-xl font-bold text-foreground mt-0.5">
                   Gerar Minha Página Pronta
                 </h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Preencha apenas o básico. Criaremos as fotos, textos e serviços para você!
+                <p className="text-xs text-muted-foreground">
+                  Preencha os dados ou cole o link do Google Maps para gerar fotos, textos e serviços automaticamente.
                 </p>
               </div>
               <button
+                type="button"
                 onClick={() => setIsWizardOpen(false)}
-                className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted"
+                className="rounded-xl p-2 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors cursor-pointer"
+                title="Fechar"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleMagicCreate} className="space-y-4">
-              {/* Preenchimento Inteligente via Google Maps / Link */}
-              <div className="rounded-2xl border border-[color:var(--primary)]/30 bg-[color:var(--primary)]/5 p-3.5 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-[color:var(--primary)]">
-                    <Search className="h-4 w-4 shrink-0" />
-                    <span>Puxar Perfil Automático (Google Maps ou Link)</span>
+            <form onSubmit={handleMagicCreate} className="flex flex-col flex-1 overflow-hidden">
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1">
+                {/* Preenchimento Inteligente via Google Maps / Link (Barra Expandida no Topo) */}
+                <div className="rounded-2xl border border-[color:var(--primary)]/30 bg-[color:var(--primary)]/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-bold text-[color:var(--primary)]">
+                      <Search className="h-4 w-4 shrink-0" />
+                      <span>Puxar Perfil Automático (Google Maps ou Link)</span>
+                    </div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider bg-[color:var(--primary)]/20 text-[color:var(--primary)] px-2.5 py-0.5 rounded-full">
+                      Mágico
+                    </span>
                   </div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider bg-[color:var(--primary)]/15 text-[color:var(--primary)] px-2 py-0.5 rounded-full">
-                    Mágico
-                  </span>
-                </div>
-                <p className="text-[11px] text-muted-foreground leading-snug">
-                  Digite o nome da sua empresa (ex: <i>Clínica Sorriso Salvador</i>) ou cole o link do Google Maps / Instagram:
-                </p>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <input
-                      value={lookupQuery}
-                      onChange={(e) => setLookupQuery(e.target.value)}
-                      placeholder="Nome da empresa ou link..."
-                      className="input-field w-full pl-8 text-xs py-2"
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          void handleLookupProfile();
-                        }
-                      }}
-                    />
-                    <Search className="h-3.5 w-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleLookupProfile}
-                    disabled={isLookingUp || !lookupQuery.trim()}
-                    className="btn-primary shrink-0 px-3.5 py-1.5 rounded-xl text-xs font-semibold shadow hover:opacity-90 disabled:opacity-50 flex items-center gap-1.5 transition-all"
-                  >
-                    {isLookingUp ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Buscando...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="h-3.5 w-3.5" /> Puxar Dados
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                {lookupFeedback && (
-                  <p className="text-xs font-medium text-[color:var(--primary)] animate-fade-in">
-                    {lookupFeedback}
+                  <p className="text-xs text-muted-foreground leading-snug">
+                    Cole o link do Google Maps (ex: <i>maps.app.goo.gl/...</i> ou <i>/maps/place/...</i>) ou digite o nome do negócio:
                   </p>
-                )}
-
-                {lookupResults.length > 0 && (
-                  <div className="space-y-1.5 pt-1 max-h-36 overflow-y-auto pr-1">
-                    {lookupResults.map((lead, idx) => (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => applyProfileData(lead)}
-                        className="w-full text-left p-2 rounded-xl border border-border/70 bg-card hover:border-[color:var(--primary)] hover:bg-[color:var(--primary)]/10 transition-all flex items-center justify-between gap-2 text-xs"
-                      >
-                        <div className="truncate">
-                          <span className="font-bold text-foreground block truncate">{lead.name}</span>
-                          <span className="text-[11px] text-muted-foreground">
-                            {[lead.city, lead.phone || lead.whatsapp, lead.rating ? `⭐ ${lead.rating}` : null].filter(Boolean).join(" · ")}
-                          </span>
-                        </div>
-                        <span className="shrink-0 text-[10px] font-bold text-[color:var(--primary)] bg-[color:var(--primary)]/15 px-2 py-1 rounded-lg">
-                          Usar este
-                        </span>
-                      </button>
-                    ))}
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        value={lookupQuery}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setLookupQuery(val);
+                          const clean = normalizeBusinessQuery(val);
+                          if (clean.name && clean.fromLink) {
+                            setWizardName(clean.name);
+                            if (clean.city) setWizardCity(clean.city);
+                          }
+                        }}
+                        placeholder="Cole o link do Google Maps ou nome da empresa..."
+                        className="input-field w-full pl-9 pr-3 text-xs sm:text-sm py-2.5"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            void handleLookupProfile();
+                          }
+                        }}
+                      />
+                      <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleLookupProfile}
+                      disabled={isLookingUp || !lookupQuery.trim()}
+                      className={`shrink-0 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold shadow-md flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 ${
+                        lookupStatus === "found_full"
+                          ? "bg-emerald-600 hover:bg-emerald-500 text-white"
+                          : lookupStatus === "found_name"
+                            ? "bg-amber-600 hover:bg-amber-500 text-slate-950"
+                            : "btn-primary hover:scale-[1.02]"
+                      }`}
+                    >
+                      {isLookingUp ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
+                        </>
+                      ) : lookupStatus === "found_full" ? (
+                        <>
+                          <CheckCircle className="h-4 w-4 text-white" /> Perfil Puxado!
+                        </>
+                      ) : lookupStatus === "found_name" ? (
+                        <>
+                          <Check className="h-4 w-4 text-slate-950" /> Nome Aproveitado
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-4 w-4" /> Puxar Dados
+                        </>
+                      )}
+                    </button>
                   </div>
-                )}
-              </div>
 
-              {/* Seleção de Nicho */}
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1.5">
-                  1. Qual é o nicho do seu negócio?
-                </label>
-                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-                  {NICHE_OPTIONS.map((niche) => {
-                    const isSelected = selectedNiche === niche.key;
-                    const Icon = niche.icon;
-                    return (
-                      <button
-                        key={niche.key}
-                        type="button"
-                        onClick={() => setSelectedNiche(niche.key)}
-                        className={`p-2.5 rounded-xl border text-left flex items-center gap-2 text-xs font-semibold transition-all ${
-                          isSelected
-                            ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)]"
-                            : "border-border bg-surface-elevated/20 text-muted-foreground hover:border-border/80"
-                        }`}
-                      >
-                        <Icon className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{niche.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+                  {lookupFeedback && (
+                    <div
+                      className={`p-2.5 rounded-xl text-xs flex items-center gap-2 transition-all ${
+                        lookupStatus === "found_full"
+                          ? "bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-medium"
+                          : lookupStatus === "found_name"
+                            ? "bg-amber-500/15 border border-amber-500/30 text-amber-200 font-medium"
+                            : lookupStatus === "error"
+                              ? "bg-rose-500/15 border border-rose-500/30 text-rose-300"
+                              : "bg-surface-elevated/40 text-foreground"
+                      }`}
+                    >
+                      {lookupStatus === "found_full" && <CheckCircle className="h-4 w-4 shrink-0 text-emerald-400" />}
+                      {lookupStatus === "found_name" && <Sparkles className="h-4 w-4 shrink-0 text-amber-400" />}
+                      <span>{lookupFeedback}</span>
+                    </div>
+                  )}
 
-              {/* Escolha do motor de criação */}
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1.5">
-                  Como você quer criar esta página?
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCreationEngine("express")}
-                    className={`p-3 rounded-xl border text-left transition-all ${
-                      creationEngine === "express"
-                        ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 ring-1 ring-[color:var(--primary)]/50"
-                        : "border-border bg-surface-elevated/30 hover:border-border/80"
-                    }`}
-                  >
-                    <p className="text-xs font-bold text-foreground">Máquina Express</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Modelo pronto preenchido com as informações reais do negócio. Fica pronto em segundos.
-                    </p>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCreationEngine("premium")}
-                    className={`p-3 rounded-xl border text-left transition-all ${
-                      creationEngine === "premium"
-                        ? "border-purple-500 bg-purple-500/15 ring-1 ring-purple-500/50"
-                        : "border-border bg-surface-elevated/30 hover:border-border/80"
-                    }`}
-                  >
-                    <p className="text-xs font-bold text-foreground">Premium com IA</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Cria a página nova e abre o assistente de IA para montar um visual exclusivo com suas fotos.
-                    </p>
-                  </button>
-                </div>
-              </div>
-
-              {/* 2. Seleção do Modelo Visual (3 Variantes) */}
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1.5 flex items-center justify-between">
-                  <span>2. Identidade & Estilo (3 Modelos do Nicho)</span>
-                  <span className="text-[11px] font-semibold text-[color:var(--primary)]">
-                    Modelo {selectedVariantIndex + 1} de 3
-                  </span>
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                  {getVariantsForNiche(selectedNiche).map((variant, idx) => {
-                    const isSelected = selectedVariantIndex === idx;
-                    return (
-                      <button
-                        key={idx}
-                        type="button"
-                        onClick={() => setSelectedVariantIndex(idx)}
-                        className={`p-2.5 rounded-xl border text-left transition-all relative flex flex-col justify-between ${
-                          isSelected
-                            ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 ring-1 ring-[color:var(--primary)]/50 shadow-2xs"
-                            : "border-border bg-surface-elevated/30 hover:border-border/80 hover:bg-muted/30"
-                        }`}
-                      >
-                        <div>
-                          <div className="flex items-center justify-between gap-1 mb-1">
-                            <span className="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[color:var(--primary)]/20 text-[color:var(--primary)]">
-                              Modelo {idx + 1}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground capitalize font-medium">
-                              {variant.theme}
+                  {lookupResults.length > 0 && (
+                    <div className="space-y-1.5 pt-1 max-h-36 overflow-y-auto pr-1">
+                      {lookupResults.map((lead, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            applyProfileData(lead);
+                            setLookupStatus("found_full");
+                          }}
+                          className="w-full text-left p-2.5 rounded-xl border border-border/70 bg-card hover:border-[color:var(--primary)] hover:bg-[color:var(--primary)]/10 transition-all flex items-center justify-between gap-2 text-xs cursor-pointer"
+                        >
+                          <div className="truncate">
+                            <span className="font-bold text-foreground block truncate">{lead.name}</span>
+                            <span className="text-[11px] text-muted-foreground">
+                              {[lead.city, lead.phone || lead.whatsapp, lead.rating ? `⭐ ${lead.rating}` : null].filter(Boolean).join(" · ")}
                             </span>
                           </div>
-                          <p className="text-xs font-bold text-foreground line-clamp-1">
-                            {variant.modelName}
+                          <span className="shrink-0 text-[10px] font-bold text-[color:var(--primary)] bg-[color:var(--primary)]/15 px-2.5 py-1 rounded-lg">
+                            Usar este
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Grid Organizado de 2 Colunas no Desktop */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                  {/* Coluna 1: Ramo & Dados do Negócio */}
+                  <div className="space-y-4">
+                    {/* Seleção de Nicho */}
+                    <div>
+                      <label className="block text-xs font-bold text-foreground mb-1.5">
+                        1. Qual é o nicho do seu negócio?
+                      </label>
+                      <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
+                        {NICHE_OPTIONS.map((niche) => {
+                          const isSelected = selectedNiche === niche.key;
+                          const Icon = niche.icon;
+                          return (
+                            <button
+                              key={niche.key}
+                              type="button"
+                              onClick={() => setSelectedNiche(niche.key)}
+                              className={`p-2.5 rounded-xl border text-left flex items-center gap-2 text-xs font-semibold transition-all cursor-pointer ${
+                                isSelected
+                                  ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 text-[color:var(--primary)] shadow-sm"
+                                  : "border-border bg-surface-elevated/20 text-muted-foreground hover:border-border/80 hover:text-foreground"
+                              }`}
+                            >
+                              <Icon className="h-4 w-4 shrink-0" />
+                              <span className="truncate">{niche.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Nome do Negócio */}
+                    <div>
+                      <label className="block text-xs font-bold text-foreground mb-1.5">
+                        2. Nome da sua Empresa ou Marca <span className="text-rose-400">*</span>
+                      </label>
+                      <input
+                        value={wizardName}
+                        onChange={(e) => setWizardName(e.target.value)}
+                        placeholder="Ex: Dra. Juliana Estética, Barbearia Vintage..."
+                        className="input-field w-full text-xs sm:text-sm"
+                        required
+                      />
+                    </div>
+
+                    {/* WhatsApp & Cidade */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-foreground mb-1.5">
+                          3. WhatsApp de Atendimento
+                        </label>
+                        <input
+                          value={wizardWhatsapp}
+                          onChange={(e) => setWizardWhatsapp(e.target.value)}
+                          placeholder="(11) 99999-9999"
+                          className="input-field w-full text-xs sm:text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-foreground mb-1.5">
+                          4. Cidade (opcional)
+                        </label>
+                        <input
+                          value={wizardCity}
+                          onChange={(e) => setWizardCity(e.target.value)}
+                          placeholder="Ex: Salvador, BA"
+                          className="input-field w-full text-xs sm:text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Coluna 2: Formato de Criação & Estilo Visual */}
+                  <div className="space-y-4">
+                    {/* Escolha do motor de criação */}
+                    <div>
+                      <label className="block text-xs font-bold text-foreground mb-1.5">
+                        5. Formato & Experiência de Criação
+                      </label>
+                      <div className="grid grid-cols-1 gap-2.5">
+                        <button
+                          type="button"
+                          onClick={() => setCreationEngine("express")}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                            creationEngine === "express"
+                              ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 ring-2 ring-[color:var(--primary)]/40 shadow-sm"
+                              : "border-border bg-surface-elevated/20 hover:border-border/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-foreground">
+                              <Zap className="h-3.5 w-3.5 text-amber-400 fill-amber-400" /> Máquina Express
+                            </span>
+                            <span className="text-[10px] font-semibold text-muted-foreground uppercase px-2 py-0.5 rounded bg-muted">
+                              Rápido
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            Modelo pronto preenchido com as informações e fotos reais do negócio em segundos.
                           </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setCreationEngine("premium")}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer ${
+                            creationEngine === "premium"
+                              ? "border-purple-500 bg-purple-500/15 ring-2 ring-purple-500/40 shadow-sm"
+                              : "border-border bg-surface-elevated/20 hover:border-border/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-purple-300">
+                              <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Premium com IA
+                            </span>
+                            <span className="text-[10px] font-semibold text-purple-300 uppercase px-2 py-0.5 rounded bg-purple-500/20">
+                              Copiloto
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            Cria a página e abre o assistente de IA com curadoria e direção de arte sob medida.
+                          </p>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setCreationEngine("cinematic")}
+                          className={`p-3 rounded-2xl border text-left transition-all cursor-pointer relative overflow-hidden ${
+                            creationEngine === "cinematic"
+                              ? "border-amber-500 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-transparent ring-2 ring-amber-500/50 shadow-md"
+                              : "border-border bg-surface-elevated/20 hover:border-amber-500/40 hover:bg-amber-500/5"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-300">
+                              <Clapperboard className="h-3.5 w-3.5 text-amber-400" /> 🎬 Scrollytelling Cinematográfico
+                            </span>
+                            <span className="text-[9px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-sm">
+                              Luxo & Parallax
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">
+                            Narrativa imersiva em 4 capítulos em tela cheia, efeito Parallax GPU a 60 FPS e iluminação de estúdio no padrão Apple.
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Seleção do Modelo Visual ou Preview do Scrollytelling */}
+                    <div>
+                      {creationEngine === "cinematic" ? (
+                        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 p-3.5 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                              <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Estrutura Narrativa em 4 Capítulos
+                            </span>
+                            <span className="text-[10px] text-amber-400 font-medium">60 FPS GPU</span>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                            <div className="p-2 rounded-xl bg-black/40 border border-white/5">
+                              <span className="font-bold text-amber-200 block">Capítulo I</span>
+                              <span className="text-muted-foreground">A Origem & Paixão</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-black/40 border border-white/5">
+                              <span className="font-bold text-amber-200 block">Capítulo II</span>
+                              <span className="text-muted-foreground">O Preparo Artesanal</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-black/40 border border-white/5">
+                              <span className="font-bold text-amber-200 block">Capítulo III</span>
+                              <span className="text-muted-foreground">A Extração Nobre</span>
+                            </div>
+                            <div className="p-2 rounded-xl bg-black/40 border border-white/5">
+                              <span className="font-bold text-amber-200 block">Capítulo IV</span>
+                              <span className="text-muted-foreground">Pedir no WhatsApp</span>
+                            </div>
+                          </div>
                         </div>
-                        <span className="text-[10px] text-muted-foreground mt-1.5 block">
-                          {variant.services?.length || 3} serviços inclusos
-                        </span>
-                      </button>
-                    );
-                  })}
+                      ) : (
+                        <div>
+                          <label className="block text-xs font-bold text-foreground mb-1.5 flex items-center justify-between">
+                            <span>6. Estilo Visual (3 Modelos do Nicho)</span>
+                            <span className="text-[11px] font-semibold text-[color:var(--primary)]">
+                              Modelo {selectedVariantIndex + 1} de 3
+                            </span>
+                          </label>
+                          <div className="grid grid-cols-3 gap-2">
+                            {getVariantsForNiche(selectedNiche).map((variant, idx) => {
+                              const isSelected = selectedVariantIndex === idx;
+                              return (
+                                <button
+                                  key={idx}
+                                  type="button"
+                                  onClick={() => setSelectedVariantIndex(idx)}
+                                  className={`p-2.5 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                                    isSelected
+                                      ? "border-[color:var(--primary)] bg-[color:var(--primary)]/15 ring-2 ring-[color:var(--primary)]/40 shadow-sm"
+                                      : "border-border bg-surface-elevated/20 hover:border-border/80"
+                                  }`}
+                                >
+                                  <div>
+                                    <div className="flex items-center justify-between gap-1 mb-1">
+                                      <span className="text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-[color:var(--primary)]/20 text-[color:var(--primary)]">
+                                        Mod. {idx + 1}
+                                      </span>
+                                    </div>
+                                    <p className="text-[11px] font-bold text-foreground line-clamp-1">
+                                      {variant.modelName}
+                                    </p>
+                                  </div>
+                                  <span className="text-[9px] text-muted-foreground capitalize mt-1 block">
+                                    {variant.theme}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Nome do Negócio */}
-              <div>
-                <label className="block text-xs font-bold text-foreground mb-1.5">
-                  3. Nome da sua Empresa ou Marca
-                </label>
-                <input
-                  value={wizardName}
-                  onChange={(e) => setWizardName(e.target.value)}
-                  placeholder="Ex: Dra. Juliana Estética, Barbearia Vintage..."
-                  className="input-field w-full"
-                  required
-                  autoFocus
-                />
-              </div>
-
-              {/* WhatsApp & Cidade */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-foreground mb-1.5">
-                    4. WhatsApp de Atendimento
-                  </label>
-                  <input
-                    value={wizardWhatsapp}
-                    onChange={(e) => setWizardWhatsapp(e.target.value)}
-                    placeholder="(11) 99999-9999"
-                    className="input-field w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-foreground mb-1.5">
-                    5. Cidade (opcional)
-                  </label>
-                  <input
-                    value={wizardCity}
-                    onChange={(e) => setWizardCity(e.target.value)}
-                    placeholder="Ex: São Paulo, SP"
-                    className="input-field w-full"
-                  />
-                </div>
-              </div>
-
-              <div className="pt-2 flex items-center justify-end gap-2">
+              {/* Footer Fixo */}
+              <div className="flex items-center justify-between p-4 sm:p-5 border-t border-border/60 bg-muted/20 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsWizardOpen(false)}
-                  className="rounded-xl border border-border px-4 py-2 text-sm text-muted-foreground hover:text-foreground"
+                  className="rounded-xl border border-border px-4 py-2 text-xs sm:text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors cursor-pointer"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={isCreatingWizard || !wizardName.trim()}
-                  className="btn-primary inline-flex items-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold shadow-lg shadow-[color:var(--primary)]/20"
+                  className={`inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs sm:text-sm font-bold shadow-lg transition-all hover:scale-[1.02] disabled:opacity-50 disabled:hover:scale-100 cursor-pointer ${
+                    creationEngine === "cinematic"
+                      ? "bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 shadow-amber-500/20"
+                      : creationEngine === "premium"
+                        ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/20"
+                        : "btn-primary shadow-[color:var(--primary)]/20"
+                  }`}
                 >
                   {isCreatingWizard ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" /> Gerando Página...
                     </>
+                  ) : creationEngine === "cinematic" ? (
+                    <>
+                      <Clapperboard className="h-4 w-4" /> Gerar Scrollytelling de Luxo
+                    </>
+                  ) : creationEngine === "premium" ? (
+                    <>
+                      <Sparkles className="h-4 w-4" /> Criar com IA Studio
+                    </>
                   ) : (
                     <>
-                      <Sparkles className="h-4 w-4" /> Criar Minha Página Pronta
+                      <Zap className="h-4 w-4 fill-current" /> Criar Minha Página Pronta
                     </>
                   )}
                 </button>

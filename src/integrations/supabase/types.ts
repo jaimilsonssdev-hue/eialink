@@ -526,6 +526,7 @@ export type Database = {
           bio_page_id: string
           city: string
           claim_action_url: string | null
+          claims_count: number
           clicks_count: number
           created_at: string
           deal_price: number
@@ -535,6 +536,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          max_claims: number | null
           niche: string | null
           original_price: number | null
           starts_at: string
@@ -546,6 +548,7 @@ export type Database = {
           bio_page_id: string
           city?: string
           claim_action_url?: string | null
+          claims_count?: number
           clicks_count?: number
           created_at?: string
           deal_price: number
@@ -555,6 +558,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          max_claims?: number | null
           niche?: string | null
           original_price?: number | null
           starts_at?: string
@@ -566,6 +570,7 @@ export type Database = {
           bio_page_id?: string
           city?: string
           claim_action_url?: string | null
+          claims_count?: number
           clicks_count?: number
           created_at?: string
           deal_price?: number
@@ -575,6 +580,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          max_claims?: number | null
           niche?: string | null
           original_price?: number | null
           starts_at?: string
@@ -1071,6 +1077,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_daily_deal: { Args: { p_deal_id: string }; Returns: Json }
       create_public_appointment: {
         Args: {
           _bio_page_id: string

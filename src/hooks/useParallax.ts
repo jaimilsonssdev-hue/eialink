@@ -69,7 +69,7 @@ export function useParallaxScene<T extends HTMLElement>(enabled: boolean) {
     if (!enabled || !root || typeof window === "undefined") return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const SELECTOR = "[data-parallax-layer], header img, .parallax-layer";
+    const SELECTOR = "[data-parallax-layer], header img, .parallax-hero-image, .parallax-layer";
     let frame = 0;
     const visible = new Set<HTMLElement>();
 

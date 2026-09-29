@@ -62,21 +62,25 @@ export class CinematicLayout implements TemplateLayoutRenderer {
         />
 
         {/* HERO CINEMATOGRÁFICO COM PROFUNDIDADE */}
-        <header className="relative rounded-3xl overflow-hidden border border-white/15 dark:border-white/10 bg-card/85 backdrop-blur-2xl shadow-2xl">
+        <header className="relative rounded-3xl overflow-hidden glass-card-premium shadow-2xl">
           {/* Capa Imersiva com Vinheta */}
           <div className="relative w-full h-52 sm:h-72 overflow-hidden bg-black/40">
             <img
+              data-parallax-layer="hero"
               src={defaultCover}
               alt={bio.display_name}
-              className="w-full h-full object-cover object-center transform scale-105 transition-transform duration-1000 ease-out"
+              className="parallax-hero-image w-full h-full object-cover object-center transform scale-105 transition-transform duration-1000 ease-out"
               loading="eager"
             />
-            {/* Gradiente Cinematográfico Escuro */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/40" />
+            {/* Gradiente Cinematográfico Escuro de Alto Contraste */}
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-black/50" />
 
             {/* Topbar Flutuante com Glassmorphism */}
             <div className="absolute top-3 inset-x-3 sm:top-4 sm:inset-x-4 flex items-center justify-between z-10">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-black/60 backdrop-blur-md text-white border border-white/20 shadow-lg">
+              <span
+                data-parallax-layer="float"
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase bg-black/60 backdrop-blur-md text-white border border-white/20 shadow-lg"
+              >
                 <Sparkles className="h-3.5 w-3.5 text-amber-400" />
                 <span>Experiência Exclusiva</span>
               </span>
@@ -121,7 +125,10 @@ export class CinematicLayout implements TemplateLayoutRenderer {
             {/* Badges de Confiança & Estrelas Reais do Google */}
             <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/50 text-xs">
               {rating ? (
-                <span className="inline-flex items-center gap-1 font-extrabold text-amber-600 dark:text-amber-400 bg-amber-500/15 px-3 py-1 rounded-xl border border-amber-500/25 shadow-2xs">
+                <span
+                  data-parallax-layer="float"
+                  className="inline-flex items-center gap-1 font-extrabold text-amber-600 dark:text-amber-400 bg-amber-500/15 px-3 py-1 rounded-xl border border-amber-500/25 shadow-2xs"
+                >
                   <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
                   <span>
                     {rating} no Google {reviewsCount ? `(${reviewsCount} avaliações)` : ""}
@@ -242,7 +249,7 @@ export class CinematicLayout implements TemplateLayoutRenderer {
               {testimonials.map((t: any, i: number) => (
                 <div
                   key={i}
-                  className="p-4 rounded-2xl border border-white/10 dark:border-white/10 bg-card/75 backdrop-blur-xl shadow-sm space-y-2.5 hover:border-white/20 transition-colors"
+                  className="p-4 rounded-2xl glass-card-premium shadow-sm space-y-2.5 hover:border-white/20 transition-colors"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1">
@@ -278,7 +285,7 @@ export class CinematicLayout implements TemplateLayoutRenderer {
                   target="_blank"
                   rel="noreferrer"
                   onClick={() => onTrack("link_click")}
-                  className="flex items-center justify-between p-3.5 rounded-2xl border border-border/70 bg-card/80 backdrop-blur-md hover:border-primary/50 hover:bg-muted/40 text-foreground font-semibold text-xs sm:text-sm transition-all"
+                  className="flex items-center justify-between p-3.5 rounded-2xl glass-card-premium hover:border-primary/50 hover:bg-muted/40 text-foreground font-semibold text-xs sm:text-sm transition-all"
                 >
                   <span className="truncate">{link.title}</span>
                   <ArrowUpRight className="h-4 w-4 text-muted-foreground shrink-0" />

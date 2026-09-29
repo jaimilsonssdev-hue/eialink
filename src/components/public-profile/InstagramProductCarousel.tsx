@@ -171,7 +171,7 @@ export const InstagramProductCarousel = memo(function InstagramProductCarousel({
                   className="pl-3 basis-[84%] sm:basis-[72%] md:basis-[62%]"
                 >
                   <div
-                    className="relative rounded-2xl overflow-hidden bg-card border border-border/80 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group/card"
+                    className="relative rounded-2xl overflow-hidden bg-card border border-border/40 dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300 flex flex-col group/card"
                   >
                     {/* Imagem do Produto com Aspect Ratio Instagram */}
                     <div className={`relative w-full ${aspectRatioClass} overflow-hidden bg-muted`}>

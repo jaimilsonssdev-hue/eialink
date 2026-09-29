@@ -108,7 +108,12 @@ export function TemplateRenderer({
   } | undefined;
 
   const fontPair = findFontPair(customTheme?.font_pair);
-  const parallaxEnabled = customTheme?.parallax === true && bio.motion_enabled !== false;
+  const parallaxEnabled =
+    (customTheme?.parallax === true ||
+      socialData?.custom_theme?.parallax === true ||
+      (bio as any)?.custom_theme?.parallax === true ||
+      (bio as any)?.parallax === true) &&
+    bio.motion_enabled !== false;
   const parallaxRef = useParallaxScene<HTMLElement>(parallaxEnabled);
 
   const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;

@@ -11,6 +11,8 @@ import {
   adaptProposalToExistingStructures,
   type AdaptedProposalResult,
 } from "./premiumProposal.adapter";
+import { detectNicheKey, NICHE_GALLERIES } from "@/modules/prospecting/nichePresets";
+import { generateAiImage } from "@/modules/media/services/AiImageService";
 
 function getSupabaseServerClient() {
   const url =
@@ -37,6 +39,7 @@ export interface AiCopilotResult {
   whatsapp_message?: string;
   avatar_url?: string | null;
   cover_url?: string | null;
+  template_id?: string;
   custom_theme?: {
     primary: string;
     background: string;
@@ -47,6 +50,10 @@ export interface AiCopilotResult {
     mode: "dark" | "light";
     /** Efeito imersivo de profundidade ao rolar a página (disponível em qualquer modelo). */
     parallax?: boolean;
+    hero_style?: "split" | "cinematic" | "editorial" | "bento" | string;
+    border_radius?: string;
+    hue?: number;
+    font_pair?: string;
   };
   differentials?: Array<{
     title: string;
@@ -1466,16 +1473,78 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 
       const validatedProposal = PremiumBetaProposalSchema.parse(parsedJson);
 
+      const briefingLower = (data.briefing || "").toLowerCase();
+      const wantsPhotoChange =
+        briefingLower.includes("trocar as fotos") ||
+        briefingLower.includes("trocar foto") ||
+        briefingLower.includes("novas fotos") ||
+        briefingLower.includes("nova foto") ||
+        briefingLower.includes("fotos melhores") ||
+        briefingLower.includes("foto melhor") ||
+        briefingLower.includes("mudar foto") ||
+        briefingLower.includes("mudar as fotos") ||
+        briefingLower.includes("gerar foto") ||
+        briefingLower.includes("gerar fotos") ||
+        briefingLower.includes("outras fotos") ||
+        briefingLower.includes("imagem nova") ||
+        briefingLower.includes("imagens novas");
+
+      const detectedNicheKey = detectNicheKey(
+        validatedProposal.strategy?.niche || data.currentContext?.niche,
+        validatedProposal.pagePatch?.displayName || data.currentContext?.displayName,
+      );
+      const nicheGallery = NICHE_GALLERIES[detectedNicheKey] || NICHE_GALLERIES.geral || NICHE_GALLERIES.loja;
+
       if (validatedProposal.pagePatch) {
-        validatedProposal.pagePatch.avatarUrl = resolveFileUrl(validatedProposal.pagePatch.avatarUrl);
-        validatedProposal.pagePatch.coverUrl = resolveFileUrl(validatedProposal.pagePatch.coverUrl);
+        let avatar = resolveFileUrl(validatedProposal.pagePatch.avatarUrl);
+        let cover = resolveFileUrl(validatedProposal.pagePatch.coverUrl);
+
+        if (wantsPhotoChange || !cover) {
+          if (nicheGallery?.covers && nicheGallery.covers.length > 0) {
+            cover = nicheGallery.covers[Math.floor(Math.random() * nicheGallery.covers.length)].url;
+          } else {
+            try {
+              const aiImg = await generateAiImage({
+                niche: detectedNicheKey,
+                companyName: validatedProposal.pagePatch.displayName || "Empresa",
+                currentUsageCount: 0,
+                type: "cover",
+              });
+              cover = aiImg.url;
+            } catch {
+              // fallback
+            }
+          }
+        }
+
+        validatedProposal.pagePatch.avatarUrl = avatar;
+        validatedProposal.pagePatch.coverUrl = cover;
       }
 
       if (Array.isArray(validatedProposal.catalogItems)) {
-        validatedProposal.catalogItems = validatedProposal.catalogItems.map((item: any) => ({
-          ...item,
-          imageUrl: resolveFileUrl(item.imageUrl),
-        }));
+        for (let i = 0; i < validatedProposal.catalogItems.length; i++) {
+          const item = validatedProposal.catalogItems[i];
+          let itemImg = resolveFileUrl(item.imageUrl);
+          if (wantsPhotoChange || !itemImg) {
+            const covers = nicheGallery?.covers || [];
+            if (covers.length > 0) {
+              itemImg = covers[(i + 1) % covers.length]?.url || covers[0]?.url;
+            } else {
+              try {
+                const aiImg = await generateAiImage({
+                  niche: detectedNicheKey,
+                  companyName: `${validatedProposal.pagePatch?.displayName || "Empresa"} ${item.name}`,
+                  currentUsageCount: 0,
+                  type: "product",
+                });
+                itemImg = aiImg.url;
+              } catch {
+                // fallback
+              }
+            }
+          }
+          item.imageUrl = itemImg;
+        }
       }
 
       if (Array.isArray(validatedProposal.sections)) {

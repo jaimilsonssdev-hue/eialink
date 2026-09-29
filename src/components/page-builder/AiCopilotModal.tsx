@@ -133,7 +133,7 @@ async function getOptimizedImage(file: File): Promise<{ optimizedFile: File; bas
     const url = URL.createObjectURL(file);
     img.onload = () => {
       URL.revokeObjectURL(url);
-      const MAX_DIM = 800;
+      const MAX_DIM = 640;
       let { width, height } = img;
       if (width > MAX_DIM || height > MAX_DIM) {
         if (width > height) {
@@ -154,7 +154,7 @@ async function getOptimizedImage(file: File): Promise<{ optimizedFile: File; bas
         return;
       }
       ctx.drawImage(img, 0, 0, width, height);
-      const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.65);
 
       canvas.toBlob(
         (blob) => {
@@ -167,7 +167,7 @@ async function getOptimizedImage(file: File): Promise<{ optimizedFile: File; bas
           }
         },
         "image/jpeg",
-        0.75,
+        0.65,
       );
     };
     img.onerror = () => {
@@ -539,6 +539,10 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
 
+    const timeoutId = setTimeout(() => {
+      abortController.abort(new Error("TIMEOUT_45S"));
+    }, 45000);
+
     setError(null);
     setFailedUploads([]);
     setLoading(true);
@@ -591,7 +595,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           return {
             name: item.name,
             mimeType: item.type.startsWith("image/") ? "image/jpeg" : item.type,
-            base64: base64Data,
+            base64: publicUrl ? "" : base64Data, // Não envia base64 pesado quando a URL pública já existe
             publicUrl: publicUrl || undefined,
             role: item.role,
           };
@@ -638,20 +642,23 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         );
       }
     } catch (err: any) {
-      if (abortController.signal.aborted || err?.name === "AbortError") {
-        return;
+      if (abortController.signal.aborted && abortController.signal.reason?.message !== "TIMEOUT_45S" && err?.message !== "TIMEOUT_45S") {
+        if (err?.name === "AbortError") return;
       }
       console.error("Erro no Copiloto IA Multimodal:", err);
       let msg =
         err?.message ||
         "Ocorreu um erro ao comunicar com a IA do Google AI Studio. Verifique os dados e tente novamente.";
-      if (
+      if (err?.message === "TIMEOUT_45S" || abortController.signal.reason?.message === "TIMEOUT_45S") {
+        msg =
+          "A requisição ao Google AI Studio demorou mais de 45 segundos e expirou. Isso costuma ocorrer quando a rede está instável ou os servidores do Google estão sobrecarregados. Tente novamente em instantes ou reduza a quantidade de fotos anexadas.";
+      } else if (
         msg.toLowerCase().includes("failed to fetch") ||
         msg.toLowerCase().includes("networkerror") ||
         msg.toLowerCase().includes("load failed")
       ) {
         msg =
-          "Falha de conexão com o servidor (Failed to fetch). Verifique se o servidor de desenvolvimento está rodando (npm run dev) ou se a conexão está ativa.";
+          "Falha de comunicação com o servidor ou com a API do Google AI Studio (Failed to fetch). Verifique sua conexão com a internet ou se a chave de API do Gemini está configurada corretamente.";
       }
       setError(msg);
       if (
@@ -663,6 +670,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         setShowKeyConfig(true);
       }
     } finally {
+      clearTimeout(timeoutId);
       abortControllerRef.current = null;
       setLoading(false);
       setLoadingStep("");

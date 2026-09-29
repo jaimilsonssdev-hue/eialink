@@ -506,69 +506,50 @@ function PublicBio() {
   // 7. Nichos de produto/delivery (açaí, sorveteria, bebidas, delivery, etc.) renderizam cinematic-glass ou catálogo
   let effectiveTemplateId = bio.template_id;
 
-  if (
-    effectiveTemplateId !== "site-maquina" &&
-    effectiveTemplateId !== "storefront" &&
-    effectiveTemplateId !== "store-showcase"
-  ) {
-  if (effectiveTemplateId === "therapy-wellbeing" && nicheKey !== "psicologia") {
-    effectiveTemplateId = isProduct
-      ? "cinematic-glass"
-      : isHealth
-        ? "clinic-care"
-        : nicheKey === "beleza"
-          ? "beauty-glam"
-          : nicheKey === "advocacia"
-            ? "law-authority"
-            : "business-modern";
-  }
+  // Preserva templates universais e explícitos definidos pelo usuário ou pela IA
+  const isExplicitUniversalTemplate =
+    effectiveTemplateId === "site-maquina" ||
+    effectiveTemplateId === "cinematic-glass" ||
+    effectiveTemplateId === "storefront" ||
+    effectiveTemplateId === "store-showcase" ||
+    effectiveTemplateId === "business-modern" ||
+    effectiveTemplateId === "impact-showcase";
 
-  if (effectiveTemplateId === "clinic-care" && !isHealth) {
-    effectiveTemplateId = isProduct
-      ? "cinematic-glass"
-      : nicheKey === "beleza"
-        ? "beauty-glam"
-        : nicheKey === "advocacia"
-          ? "law-authority"
-          : "business-modern";
-  }
-
-  if (effectiveTemplateId === "beauty-glam" && nicheKey !== "beleza") {
-    effectiveTemplateId = isProduct || nicheKey === "barbearia" ? "cinematic-glass" : "business-modern";
-  }
-
-  if (nicheKey !== "advocacia" && effectiveTemplateId === "law-authority") {
-    effectiveTemplateId = isProduct ? "cinematic-glass" : "business-modern";
-  }
-
-  if (effectiveTemplateId === "academy-performance" && nicheKey !== "fitness") {
-    effectiveTemplateId = isProduct
-      ? "cinematic-glass"
-      : isHealth
-        ? "clinic-care"
-        : nicheKey === "beleza"
-          ? "beauty-glam"
-          : nicheKey === "advocacia"
-            ? "law-authority"
-            : "business-modern";
-  }
-
-  const isGastronomyNiche = isProduct || ["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nicheKey);
-  if (effectiveTemplateId === "restaurant-menu" && !isGastronomyNiche) {
-    effectiveTemplateId = isHealth
-      ? "clinic-care"
-      : nicheKey === "beleza"
-        ? "beauty-glam"
-        : nicheKey === "advocacia"
-          ? "law-authority"
-          : nicheKey === "fitness"
-            ? "academy-performance"
-            : "business-modern";
-  }
-
-  if (isProduct && (effectiveTemplateId === "business-modern" || effectiveTemplateId === "restaurant-menu" || !effectiveTemplateId)) {
-    effectiveTemplateId = "cinematic-glass";
-  }
+  if (!isExplicitUniversalTemplate && effectiveTemplateId) {
+    if (effectiveTemplateId === "therapy-wellbeing" && nicheKey !== "psicologia") {
+      effectiveTemplateId = "business-modern";
+    } else if (effectiveTemplateId === "clinic-care" && !isHealth) {
+      effectiveTemplateId = "business-modern";
+    } else if (effectiveTemplateId === "beauty-glam" && nicheKey !== "beleza") {
+      effectiveTemplateId = "business-modern";
+    } else if (nicheKey !== "advocacia" && effectiveTemplateId === "law-authority") {
+      effectiveTemplateId = "business-modern";
+    } else if (effectiveTemplateId === "academy-performance" && nicheKey !== "fitness") {
+      effectiveTemplateId = "business-modern";
+    } else {
+      const isGastronomyNiche = isProduct || ["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nicheKey);
+      if (effectiveTemplateId === "restaurant-menu" && !isGastronomyNiche) {
+        effectiveTemplateId = "business-modern";
+      }
+    }
+  } else if (!effectiveTemplateId || effectiveTemplateId === "default") {
+    if (isProduct) {
+      effectiveTemplateId = "cinematic-glass";
+    } else if (nicheKey === "psicologia") {
+      effectiveTemplateId = "therapy-wellbeing";
+    } else if (isHealth) {
+      effectiveTemplateId = "clinic-care";
+    } else if (nicheKey === "beleza") {
+      effectiveTemplateId = "beauty-glam";
+    } else if (nicheKey === "advocacia") {
+      effectiveTemplateId = "law-authority";
+    } else if (nicheKey === "fitness") {
+      effectiveTemplateId = "academy-performance";
+    } else if (["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nicheKey)) {
+      effectiveTemplateId = "restaurant-menu";
+    } else {
+      effectiveTemplateId = "site-maquina";
+    }
   }
 
   if (effectiveTemplateId === "storefront") {

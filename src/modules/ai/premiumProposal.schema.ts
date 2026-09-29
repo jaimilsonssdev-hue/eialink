@@ -70,7 +70,7 @@ export const CreativeDirectionSchema = z.preprocess((val: any) => {
         : [],
     motionIntensity: motion,
     concept: typeof val.concept === "string" ? val.concept.slice(0, 80) : null,
-    heroStyle: ["fullscreen-photo", "split", "centered-minimal", "overlay-gradient"].includes(val.heroStyle || val.hero_style)
+    heroStyle: ["fullscreen-photo", "split", "centered-minimal", "overlay-gradient", "cinematic", "editorial", "bento"].includes(val.heroStyle || val.hero_style)
       ? (val.heroStyle || val.hero_style)
       : null,
   };
@@ -81,7 +81,7 @@ export const CreativeDirectionSchema = z.preprocess((val: any) => {
   visualPrinciples: z.array(z.string()).default([]),
   motionIntensity: z.enum(["off", "subtle", "standard", "cinematic"]).default("subtle"),
   concept: z.string().nullable().default(null),
-  heroStyle: z.enum(["fullscreen-photo", "split", "centered-minimal", "overlay-gradient"]).nullable().default(null),
+  heroStyle: z.enum(["fullscreen-photo", "split", "centered-minimal", "overlay-gradient", "cinematic", "editorial", "bento"]).nullable().default(null),
 }));
 
 export const ThemeProposalSchema = z.preprocess((val: any) => {

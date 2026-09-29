@@ -4,7 +4,7 @@ import type { CatalogItem } from "@/modules/products/types";
 import type { PublicLink } from "@/components/public-profile/types";
 import type { AiCopilotResult } from "./copilot.functions";
 import type { PremiumBetaProposal } from "./premiumProposal.schema";
-import { detectNicheKey } from "@/modules/prospecting/nichePresets";
+import { detectNicheKey, NICHE_GALLERIES } from "@/modules/prospecting/nichePresets";
 import { hexToHue, getNicheHue } from "@/modules/templates/layouts/SiteMaquinaLayout";
 
 /**
@@ -73,6 +73,26 @@ export function adaptProposalToExistingStructures(
   const safeText = safeColor(proposal.theme.text, 4.5);
   const safeMode = bgIsDark ? "dark" : "light";
 
+  const nicheGallery = NICHE_GALLERIES[detectedNicheKey] || NICHE_GALLERIES.geral || NICHE_GALLERIES.loja;
+
+  const rawHeroStyle = (proposal.creativeDirection?.heroStyle || "").toLowerCase();
+  let normalizedHeroStyle: "split" | "cinematic" | "editorial" | "bento" = "split";
+  let heroArch: "split" | "immersive" | "asymmetric" | "typographic" = "split";
+
+  if (rawHeroStyle.includes("fullscreen") || rawHeroStyle.includes("cinematic") || rawHeroStyle.includes("overlay")) {
+    normalizedHeroStyle = "cinematic";
+    heroArch = "immersive";
+  } else if (rawHeroStyle.includes("minimal") || rawHeroStyle.includes("editorial") || rawHeroStyle.includes("centered")) {
+    normalizedHeroStyle = "editorial";
+    heroArch = "typographic";
+  } else if (rawHeroStyle.includes("bento") || rawHeroStyle.includes("asymmetric")) {
+    normalizedHeroStyle = "bento";
+    heroArch = "asymmetric";
+  } else {
+    normalizedHeroStyle = "split";
+    heroArch = "split";
+  }
+
   // 1. Extração e montagem do tema customizado (Design Tokens com contraste WCAG e HUE dinâmico)
   const customTheme = {
     primary: proposal.theme.primary,
@@ -85,7 +105,7 @@ export function adaptProposalToExistingStructures(
     border_radius: proposal.theme.radius,
     hue: nicheHue,
     ...(proposal.theme.fontPair ? { font_pair: proposal.theme.fontPair } : {}),
-    ...(proposal.creativeDirection.heroStyle ? { hero_style: proposal.creativeDirection.heroStyle } : {}),
+    hero_style: normalizedHeroStyle,
     // Profundidade imersiva: a IA decide, mas nunca com animações desligadas.
     parallax:
       proposal.creativeDirection.motionIntensity === "off"
@@ -97,11 +117,12 @@ export function adaptProposalToExistingStructures(
 
   const tokensDesign = {
     ...(currentSocial.tokens_design || {}),
+    hero_architecture: heroArch,
     fundo_valores: {
       cor_gradiente_1: customTheme.background,
       cor_gradiente_2: customTheme.primary,
       blur_sobreposicao: "8px",
-      imagem_url: proposal.pagePatch.coverUrl || currentBio?.cover_url || "",
+      imagem_url: proposal.pagePatch.coverUrl || currentBio?.cover_url || (nicheGallery.covers?.[0]?.url || ""),
     },
     estilo_botoes: {
       cor_fundo_card: customTheme.card_bg,
@@ -209,20 +230,26 @@ export function adaptProposalToExistingStructures(
   }
 
   // 3. Catálogo de Serviços e Produtos (Canônico)
-  const updatedProducts: Array<Partial<CatalogItem>> = proposal.catalogItems.map((item, idx) => ({
-    id: item.id || crypto.randomUUID(),
-    bio_page_id: currentBio?.id || "draft",
-    name: item.name,
-    description: item.description,
-    price: item.price,
-    image_url: item.imageUrl,
-    category: item.category || "Destaques",
-    button_label: item.buttonLabel || "Pedir no WhatsApp",
-    button_url: item.buttonUrl || null,
-    active: item.active !== false,
-    position: idx,
-    type: "service",
-  }));
+  const updatedProducts: Array<Partial<CatalogItem>> = proposal.catalogItems.map((item, idx) => {
+    let itemImg = item.imageUrl;
+    if (!itemImg && nicheGallery?.covers && nicheGallery.covers.length > 0) {
+      itemImg = nicheGallery.covers[(idx + 1) % nicheGallery.covers.length]?.url || null;
+    }
+    return {
+      id: item.id || crypto.randomUUID(),
+      bio_page_id: currentBio?.id || "draft",
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      image_url: itemImg,
+      category: item.category || "Destaques",
+      button_label: item.buttonLabel || "Pedir no WhatsApp",
+      button_url: item.buttonUrl || null,
+      active: item.active !== false,
+      position: idx,
+      type: "service",
+    };
+  });
 
   // 4. Carrossel estilo Instagram em social_links (para compatibilidade reversa com ModularSections)
   const productCarousel =
@@ -255,7 +282,7 @@ export function adaptProposalToExistingStructures(
   }));
 
   // 6. Curadoria e Atribuição de Fotos (para visualização no editor)
-  const curatedPhotos = proposal.mediaAssignments.map((assignment) => ({
+  let curatedPhotos = proposal.mediaAssignments.map((assignment) => ({
     url: assignment.assignedUrl,
     scores: {
       authority: assignment.qualityScore,
@@ -264,6 +291,18 @@ export function adaptProposalToExistingStructures(
     },
     critique: assignment.reasoning || `Foto atribuída à seção ${assignment.assignedRole}.`,
   }));
+
+  if (curatedPhotos.length === 0 && nicheGallery?.covers && nicheGallery.covers.length > 0) {
+    curatedPhotos = nicheGallery.covers.map((c) => ({
+      url: c.url,
+      scores: {
+        authority: 95,
+        quality: 95,
+        positioning: 95,
+      },
+      critique: `Foto profissional curada para o nicho ${detectedNicheKey}: ${c.label}`,
+    }));
+  }
 
   // 7. Mapeamento dinâmico da ordem das seções homologadas
   const mappedSectionsOrder: string[] = [];
@@ -330,6 +369,7 @@ export function adaptProposalToExistingStructures(
       title: proposal.pagePatch.displayName || currentBio?.display_name,
       subtitle: proposal.pagePatch.description || currentBio?.description,
       visible: true,
+      style: normalizedHeroStyle,
     },
     product_carousel: {
       ...(currentSocial.section_styles?.product_carousel || {}),
@@ -382,11 +422,46 @@ export function adaptProposalToExistingStructures(
     },
   };
 
+  const validTemplates = [
+    "restaurant-menu",
+    "clinic-care",
+    "beauty-glow",
+    "beauty-glam",
+    "law-authority",
+    "store-showcase",
+    "therapy-wellbeing",
+    "business-modern",
+    "cinematic-glass",
+    "site-maquina",
+    "impact-showcase",
+  ];
+
+  let resolvedTemplateId = currentBio?.template_id || "site-maquina";
+  if (proposal.creativeDirection?.id) {
+    const dirId = proposal.creativeDirection.id.toLowerCase();
+    if (validTemplates.includes(dirId)) {
+      resolvedTemplateId = dirId;
+    } else if (dirId === "cinematografico" || dirId === "neon-noturno") {
+      resolvedTemplateId = "cinematic-glass";
+    } else if (dirId === "brutalista-bold" || dirId === "vibrante-pop") {
+      resolvedTemplateId = "impact-showcase";
+    } else if (dirId === "editorial-luxo" || dirId === "minimal-claro" || dirId === "corporativo-confianca") {
+      resolvedTemplateId = "business-modern";
+    }
+  }
+
+  const resolvedCoverUrl =
+    proposal.pagePatch.coverUrl ||
+    currentBio?.cover_url ||
+    nicheGallery?.covers?.[0]?.url ||
+    "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1600&q=85";
+
   // 8. Objeto social_links de compatibilidade (preservando legados)
   const updatedSocial: Record<string, any> = {
     ...currentSocial,
     niche: proposal.strategy.niche || currentSocial.niche || "geral",
     city: proposal.strategy.city || currentSocial.city,
+    template_id: resolvedTemplateId,
     custom_theme: customTheme,
     tokens_design: tokensDesign,
     sections_order: mappedSectionsOrder,
@@ -442,27 +517,6 @@ export function adaptProposalToExistingStructures(
     ? (nicheThemeMap[detectedNicheKey] || "midnight")
     : "ocean";
 
-  const validTemplates = [
-    "restaurant-menu",
-    "clinic-care",
-    "beauty-glow",
-    "beauty-glam",
-    "law-authority",
-    "store-showcase",
-    "therapy-wellbeing",
-    "business-modern",
-    "cinematic-glass",
-    "site-maquina",
-  ];
-
-  let resolvedTemplateId = currentBio?.template_id || "site-maquina";
-  if (
-    proposal.creativeDirection?.id &&
-    validTemplates.includes(proposal.creativeDirection.id)
-  ) {
-    resolvedTemplateId = proposal.creativeDirection.id;
-  }
-
   // 9. Patch do registro canônico bio_pages
   const updatedBio: Partial<Tables<"bio_pages">> = {
     ...currentBio,
@@ -474,7 +528,7 @@ export function adaptProposalToExistingStructures(
     pix_key: proposal.pagePatch.pixKey || currentBio?.pix_key,
     instagram: proposal.pagePatch.instagram || currentBio?.instagram,
     avatar_url: proposal.pagePatch.avatarUrl || currentBio?.avatar_url,
-    cover_url: proposal.pagePatch.coverUrl || currentBio?.cover_url,
+    cover_url: resolvedCoverUrl,
     template_id: resolvedTemplateId,
     theme: resolvedTheme,
     motion_enabled: proposal.creativeDirection.motionIntensity !== "off",
@@ -509,7 +563,8 @@ export function adaptProposalToExistingStructures(
     description: updatedBio.description,
     whatsapp_message: updatedBio.whatsapp_message,
     avatar_url: updatedBio.avatar_url,
-    cover_url: updatedBio.cover_url,
+    cover_url: resolvedCoverUrl,
+    template_id: resolvedTemplateId,
     custom_theme: customTheme,
     differentials: extractedDifferentials,
     testimonials: extractedTestimonials,

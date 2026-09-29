@@ -21,13 +21,25 @@ import {
   Radio,
   Utensils,
   CalendarDays,
+  QrCode,
+  Eye,
+  EyeOff,
+  Copy,
+  KeyRound,
+  Zap,
 } from "lucide-react";
+import { toast } from "sonner";
 import { BillingService } from "@/modules/billing/services/BillingService";
 import {
   CommercialSettingsService,
   formatPhoneDisplay,
   sanitizePhoneDigits,
 } from "@/modules/settings/services/CommercialSettingsService";
+import {
+  savePaymentGatewaySettingsFn,
+  getAdminPaymentSettingsFn,
+} from "@/utils/asaas.functions";
+import type { AsaasEnvironment } from "@/modules/billing/services/AsaasService";
 import { GoogleApiAdminCard } from "@/components/admin/GoogleApiAdminCard";
 import { GooglePlacesAdminCard } from "@/components/admin/GooglePlacesAdminCard";
 
@@ -152,6 +164,33 @@ function AdminPage() {
     mutationFn: ({ userId, enabled }: { userId: string; enabled: boolean }) =>
       BillingService.setAgendaAccess(userId, enabled),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
+  });
+
+  const activateProMonthlyMutation = useMutation({
+    mutationFn: (userId: string) => BillingService.activateProMonthly(userId),
+    onSuccess: () => {
+      toast.success("Plano Pro (1 Mês) ativado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["super-admin"] });
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao ativar plano Pro mensal."),
+  });
+
+  const activateProYearlyMutation = useMutation({
+    mutationFn: (userId: string) => BillingService.activateProYearly(userId),
+    onSuccess: () => {
+      toast.success("Plano Pro (1 Ano) ativado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["super-admin"] });
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao ativar plano Pro anual."),
+  });
+
+  const revokeProMutation = useMutation({
+    mutationFn: (userId: string) => BillingService.revokePro(userId),
+    onSuccess: () => {
+      toast.success("Acesso Pro revogado com sucesso!");
+      queryClient.invalidateQueries({ queryKey: ["super-admin"] });
+    },
+    onError: (err: any) => toast.error(err.message || "Erro ao revogar plano Pro."),
   });
 
   const total = data?.profiles.length ?? 0;
@@ -314,6 +353,9 @@ function AdminPage() {
       {/* WhatsApp Comercial da Plataforma */}
       <PlatformWhatsAppAdminCard />
 
+      {/* Gateway de Pagamentos: Asaas, Pix Direto & Webhook */}
+      <PaymentGatewaySettingsCard />
+
       {/* Links de Checkout Direto para Fechamento no WhatsApp */}
       <WhatsAppCheckoutLinksCard />
 
@@ -474,6 +516,7 @@ function AdminPage() {
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Cliente</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Plano</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Status</TableHead>
+                  <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Ações Rápidas</TableHead>
                   <TableHead className="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Sincronização</TableHead>
                 </TableRow>
               </TableHeader>
@@ -526,6 +569,41 @@ function AdminPage() {
                           <option value="cancelled">Cancelada</option>
                           <option value="expired">Expirada</option>
                         </select>
+                      </TableCell>
+                      <TableCell className="py-3.5 px-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => activateProMonthlyMutation.mutate(profile.id)}
+                            disabled={activateProMonthlyMutation.isPending}
+                            className="px-2 py-1 rounded bg-violet-600/20 hover:bg-violet-600/30 text-violet-300 border border-violet-500/30 text-[11px] font-semibold transition cursor-pointer disabled:opacity-50"
+                            title="Ativar Pro por 30 dias (Mensal)"
+                          >
+                            + 1 Mês
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => activateProYearlyMutation.mutate(profile.id)}
+                            disabled={activateProYearlyMutation.isPending}
+                            className="px-2 py-1 rounded bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-semibold transition cursor-pointer disabled:opacity-50"
+                            title="Ativar Pro por 12 meses (Anual)"
+                          >
+                            + 1 Ano
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (confirm(`Tem certeza que deseja revogar o plano Pro de ${profile.full_name}?`)) {
+                                revokeProMutation.mutate(profile.id);
+                              }
+                            }}
+                            disabled={revokeProMutation.isPending}
+                            className="px-2 py-1 rounded bg-rose-600/20 hover:bg-rose-600/30 text-rose-300 border border-rose-500/30 text-[11px] font-semibold transition cursor-pointer disabled:opacity-50"
+                            title="Revogar e reverter para Essential"
+                          >
+                            Revogar
+                          </button>
+                        </div>
                       </TableCell>
                       <TableCell className="py-3.5 px-4 text-xs text-muted-foreground whitespace-nowrap">
                         {updateSubscription.isPending ? (
@@ -1085,6 +1163,297 @@ function PlatformWhatsAppAdminCard() {
             </span>
           </div>
         </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PaymentGatewaySettingsCard() {
+  const [apiKey, setApiKey] = useState("");
+  const [showKey, setShowKey] = useState(false);
+  const [environment, setEnvironment] = useState<AsaasEnvironment>("sandbox");
+  const [pixKey, setPixKey] = useState("");
+  const [pixKeyType, setPixKeyType] = useState("email");
+  const [pixReceiverName, setPixReceiverName] = useState("");
+  const [whatsappSupport, setWhatsappSupport] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [copiedWebhook, setCopiedWebhook] = useState(false);
+
+  const webhookUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/api/public/payments/asaas-webhook`
+      : "https://eialink.com.br/api/public/payments/asaas-webhook";
+
+  useEffect(() => {
+    let isMounted = true;
+    getAdminPaymentSettingsFn()
+      .then((cfg) => {
+        if (!isMounted) return;
+        setApiKey(cfg.asaasApiKey || "");
+        setEnvironment(cfg.asaasEnvironment || "sandbox");
+        setPixKey(cfg.pixKey || "");
+        setPixKeyType(cfg.pixKeyType || "email");
+        setPixReceiverName(cfg.pixReceiverName || "EIA Digital Plataforma");
+        setWhatsappSupport(cfg.whatsappSupport || "");
+      })
+      .catch((err) => {
+        console.warn("Aviso ao carregar configurações do Asaas:", err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      await savePaymentGatewaySettingsFn({
+        data: {
+          asaasApiKey: apiKey,
+          asaasEnvironment: environment,
+          pixKey,
+          pixKeyType,
+          pixReceiverName,
+          whatsappSupport,
+        },
+      });
+      toast.success("Configurações do Checkout Asaas e Pix salvas com sucesso!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar configurações do gateway.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function handleCopyWebhook() {
+    navigator.clipboard.writeText(webhookUrl);
+    setCopiedWebhook(true);
+    toast.success("URL do Webhook copiada!");
+    setTimeout(() => setCopiedWebhook(false), 3000);
+  }
+
+  return (
+    <Card className="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
+      <CardHeader className="p-5 pb-3 bg-muted/20 border-b border-border/60">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-500/10 text-violet-400">
+              <CreditCard className="h-5 w-5" />
+            </span>
+            <div>
+              <div className="flex items-center gap-2">
+                <CardTitle className="text-base font-semibold tracking-tight text-foreground">
+                  Gateway de Pagamento Asaas, Pix Oficial & Webhook
+                </CardTitle>
+                <Badge
+                  variant="outline"
+                  className="text-[11px] font-medium border-violet-500/40 bg-violet-500/10 text-violet-400"
+                >
+                  Checkout Híbrido
+                </Badge>
+              </div>
+              <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                Gerencie credenciais da API Asaas v3, o modo Sandbox/Produção, a chave Pix oficial e a URL de retorno automático.
+              </CardDescription>
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="p-5">
+        {loading ? (
+          <div className="flex items-center justify-center py-8 gap-2 text-xs text-muted-foreground">
+            <div className="h-4 w-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+            Carregando credenciais de pagamento...
+          </div>
+        ) : (
+          <form onSubmit={handleSave} className="space-y-6">
+            {/* Bloco 1: Integração Asaas API */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                <Zap className="h-3.5 w-3.5 text-amber-400" />
+                <span>Integração Asaas v3 (Pix Dinâmico & Cartão)</span>
+              </div>
+
+              <div className="grid sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-8 space-y-1.5">
+                  <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                    <span>Chave de API do Asaas (API Key / Access Token)</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowKey(!showKey)}
+                      className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+                    >
+                      {showKey ? (
+                        <>
+                          <EyeOff className="h-3 w-3" /> Ocultar
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-3 w-3" /> Exibir
+                        </>
+                      )}
+                    </button>
+                  </label>
+                  <div className="relative">
+                    <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                      <KeyRound className="h-4 w-4" />
+                    </span>
+                    <input
+                      type={showKey ? "text" : "password"}
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="$aact_YTU5YTE0M2M6N2Z..."
+                      className="w-full h-10 pl-9 pr-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 font-mono transition-colors"
+                    />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">
+                    Obtida no painel do Asaas em <strong>Configurações da Conta &gt; Integrações &gt; Gerar Chave de API</strong>.
+                  </p>
+                </div>
+
+                <div className="sm:col-span-4 space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Ambiente de Operação</label>
+                  <select
+                    value={environment}
+                    onChange={(e) => setEnvironment(e.target.value as AsaasEnvironment)}
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  >
+                    <option value="sandbox">🧪 Sandbox (Ambiente de Testes)</option>
+                    <option value="production">🚀 Produção (Cobrança Real)</option>
+                  </select>
+                  <p className="text-[11px] text-muted-foreground">
+                    Alterne para Produção quando sua conta Asaas estiver aprovada.
+                  </p>
+                </div>
+              </div>
+
+              {/* Webhook do Asaas */}
+              <div className="space-y-1.5 pt-2">
+                <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                  <span>URL do Webhook para Confirmação Automática</span>
+                  <span className="text-[10px] text-muted-foreground font-mono">POST /api/public/payments/asaas-webhook</span>
+                </label>
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    readOnly
+                    value={webhookUrl}
+                    className="w-full h-10 px-3 pr-24 rounded-lg border border-border bg-muted/40 text-xs text-muted-foreground font-mono select-all focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleCopyWebhook}
+                    className="absolute right-1.5 h-7 px-3 rounded bg-primary hover:bg-primary/90 text-white text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    {copiedWebhook ? (
+                      <>
+                        <CheckCircle2 className="h-3 w-3" /> Copiado
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-3 w-3" /> Copiar
+                      </>
+                    )}
+                  </button>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Cadastre esta URL em <strong>Integrações &gt; Webhooks para Cobranças</strong> no Asaas com os eventos <em>Pagamento Recebido</em> e <em>Pagamento Confirmado</em>.
+                </p>
+              </div>
+            </div>
+
+            {/* Divisor */}
+            <div className="border-t border-border" />
+
+            {/* Bloco 2: Pix Direto Oficial com Comprovante */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-xs font-bold text-foreground uppercase tracking-wider">
+                <QrCode className="h-3.5 w-3.5 text-emerald-400" />
+                <span>Pix Direto com Comprovante (WhatsApp)</span>
+              </div>
+
+              <div className="grid sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-6 space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Chave Pix Oficial da Empresa</label>
+                  <input
+                    type="text"
+                    value={pixKey}
+                    onChange={(e) => setPixKey(e.target.value)}
+                    placeholder="jaimilsonvendas@gmail.com"
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 font-mono transition-colors"
+                  />
+                </div>
+
+                <div className="sm:col-span-3 space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Tipo da Chave</label>
+                  <select
+                    value={pixKeyType}
+                    onChange={(e) => setPixKeyType(e.target.value)}
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  >
+                    <option value="email">E-mail</option>
+                    <option value="cpf">CPF</option>
+                    <option value="cnpj">CNPJ</option>
+                    <option value="phone">Celular</option>
+                    <option value="random">Chave Aleatória</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-3 space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">WhatsApp de Suporte</label>
+                  <input
+                    type="text"
+                    value={whatsappSupport}
+                    onChange={(e) => setWhatsappSupport(e.target.value)}
+                    placeholder="5581999999999"
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 font-mono transition-colors"
+                  />
+                </div>
+
+                <div className="sm:col-span-12 space-y-1.5">
+                  <label className="text-xs font-medium text-foreground">Nome do Titular / Razão Social</label>
+                  <input
+                    type="text"
+                    value={pixReceiverName}
+                    onChange={(e) => setPixReceiverName(e.target.value)}
+                    placeholder="EIA Digital Plataforma"
+                    className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Exibido no checkout como o beneficiário oficial para dar segurança ao cliente durante a transferência bancária.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-2 flex items-center justify-end">
+              <button
+                type="submit"
+                disabled={saving}
+                className="inline-flex items-center justify-center gap-2 h-10 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-medium shadow-sm transition-all cursor-pointer disabled:opacity-50"
+              >
+                {saving ? (
+                  <>
+                    <div className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <span>Salvando Configurações...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    <span>Salvar Configurações de Pagamento</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        )}
       </CardContent>
     </Card>
   );

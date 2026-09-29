@@ -33,7 +33,12 @@ export const BillingService = {
       .select("role")
       .eq("user_id", auth.user.id);
     const isAdmin = isOwner || Boolean(roles?.some((r) => r.role === "admin"));
-    const isPro = Boolean(active && plan && ["pro", "essential"].includes(plan.slug));
+    const isPro = Boolean(
+      active &&
+        plan &&
+        (["pro", "pro-monthly", "pro-yearly", "catalog"].includes(plan.slug) ||
+          (plan.price_cents > 0 && plan.slug !== "essential")),
+    );
     const notes = subscription?.notes || "";
     const hasBuilderAccessNote = notes.includes("builder_access:true");
     const canAccessBuilder = isAdmin || hasBuilderAccessNote;
@@ -204,6 +209,90 @@ export const BillingService = {
       .eq("id", id)
       .select()
       .single();
+    if (error) throw error;
+    return data;
+  },
+
+  async activateProMonthly(userId: string) {
+    const { data: plans } = await supabase.from("plans").select("id, slug");
+    const proPlan = plans?.find((p) => p.slug === "pro-monthly" || p.slug === "pro") || plans?.[0];
+    if (!proPlan) throw new Error("Plano Pro não encontrado.");
+
+    const periodEnd = new Date();
+    periodEnd.setDate(periodEnd.getDate() + 30);
+
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: userId,
+          plan_id: proPlan.id,
+          status: "active",
+          billing_interval: "monthly",
+          current_period_end: periodEnd.toISOString(),
+          notes: "Ativação manual Pro (1 Mês) via Super Admin",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async activateProYearly(userId: string) {
+    const { data: plans } = await supabase.from("plans").select("id, slug");
+    const proPlan = plans?.find((p) => p.slug === "pro-yearly" || p.slug === "pro") || plans?.[0];
+    if (!proPlan) throw new Error("Plano Pro não encontrado.");
+
+    const periodEnd = new Date();
+    periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: userId,
+          plan_id: proPlan.id,
+          status: "active",
+          billing_interval: "yearly",
+          current_period_end: periodEnd.toISOString(),
+          notes: "Ativação manual Pro (1 Ano) via Super Admin",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async revokePro(userId: string) {
+    const { data: plans } = await supabase.from("plans").select("id, slug");
+    const freePlan = plans?.find((p) => p.slug === "essential" || p.slug === "free") || plans?.[0];
+    if (!freePlan) throw new Error("Plano Essencial não encontrado.");
+
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .upsert(
+        {
+          user_id: userId,
+          plan_id: freePlan.id,
+          status: "cancelled",
+          billing_interval: "monthly",
+          current_period_end: null,
+          notes: "Assinatura Pro revogada manualmente via Super Admin",
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      )
+      .select()
+      .single();
+
     if (error) throw error;
     return data;
   },

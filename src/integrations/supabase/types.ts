@@ -521,22 +521,62 @@ export type Database = {
           },
         ]
       }
+      customer_store_cashback: {
+        Row: {
+          balance: number | null
+          business_page_id: string
+          customer_whatsapp: string
+          expires_at: string | null
+          id: string
+          last_visit: string | null
+        }
+        Insert: {
+          balance?: number | null
+          business_page_id: string
+          customer_whatsapp: string
+          expires_at?: string | null
+          id?: string
+          last_visit?: string | null
+        }
+        Update: {
+          balance?: number | null
+          business_page_id?: string
+          customer_whatsapp?: string
+          expires_at?: string | null
+          id?: string
+          last_visit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_store_cashback_business_page_id_fkey"
+            columns: ["business_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_deals: {
         Row: {
           bio_page_id: string
           city: string
           claim_action_url: string | null
+          claims_count: number
           clicks_count: number
           created_at: string
           deal_price: number
           description: string | null
           discount_badge: string | null
+          end_time: string | null
           expires_at: string
           id: string
           image_url: string | null
           is_active: boolean
+          is_flash: boolean | null
+          max_claims: number | null
           niche: string | null
           original_price: number | null
+          start_time: string | null
           starts_at: string
           title: string
           updated_at: string
@@ -546,17 +586,22 @@ export type Database = {
           bio_page_id: string
           city?: string
           claim_action_url?: string | null
+          claims_count?: number
           clicks_count?: number
           created_at?: string
           deal_price: number
           description?: string | null
           discount_badge?: string | null
+          end_time?: string | null
           expires_at: string
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_flash?: boolean | null
+          max_claims?: number | null
           niche?: string | null
           original_price?: number | null
+          start_time?: string | null
           starts_at?: string
           title: string
           updated_at?: string
@@ -566,17 +611,22 @@ export type Database = {
           bio_page_id?: string
           city?: string
           claim_action_url?: string | null
+          claims_count?: number
           clicks_count?: number
           created_at?: string
           deal_price?: number
           description?: string | null
           discount_badge?: string | null
+          end_time?: string | null
           expires_at?: string
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_flash?: boolean | null
+          max_claims?: number | null
           niche?: string | null
           original_price?: number | null
+          start_time?: string | null
           starts_at?: string
           title?: string
           updated_at?: string
@@ -586,6 +636,67 @@ export type Database = {
           {
             foreignKeyName: "daily_deals_bio_page_id_fkey"
             columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      deal_claims: {
+        Row: {
+          business_page_id: string
+          claim_code: string
+          created_at: string | null
+          customer_name: string | null
+          customer_whatsapp: string
+          deal_id: string
+          id: string
+          referred_by_page_id: string | null
+          status: string | null
+          used_at: string | null
+        }
+        Insert: {
+          business_page_id: string
+          claim_code: string
+          created_at?: string | null
+          customer_name?: string | null
+          customer_whatsapp: string
+          deal_id: string
+          id?: string
+          referred_by_page_id?: string | null
+          status?: string | null
+          used_at?: string | null
+        }
+        Update: {
+          business_page_id?: string
+          claim_code?: string
+          created_at?: string | null
+          customer_name?: string | null
+          customer_whatsapp?: string
+          deal_id?: string
+          id?: string
+          referred_by_page_id?: string | null
+          status?: string | null
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_claims_business_page_id_fkey"
+            columns: ["business_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_claims_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "daily_deals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deal_claims_referred_by_page_id_fkey"
+            columns: ["referred_by_page_id"]
             isOneToOne: false
             referencedRelation: "bio_pages"
             referencedColumns: ["id"]
@@ -995,6 +1106,47 @@ export type Database = {
           },
         ]
       }
+      store_cashback_settings: {
+        Row: {
+          allow_first_purchase_discount: boolean | null
+          business_page_id: string
+          created_at: string | null
+          is_active: boolean | null
+          percentage: number | null
+          prevent_double_discount: boolean | null
+          updated_at: string | null
+          validity_days: number | null
+        }
+        Insert: {
+          allow_first_purchase_discount?: boolean | null
+          business_page_id: string
+          created_at?: string | null
+          is_active?: boolean | null
+          percentage?: number | null
+          prevent_double_discount?: boolean | null
+          updated_at?: string | null
+          validity_days?: number | null
+        }
+        Update: {
+          allow_first_purchase_discount?: boolean | null
+          business_page_id?: string
+          created_at?: string | null
+          is_active?: boolean | null
+          percentage?: number | null
+          prevent_double_discount?: boolean | null
+          updated_at?: string | null
+          validity_days?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "store_cashback_settings_business_page_id_fkey"
+            columns: ["business_page_id"]
+            isOneToOne: true
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscriptions: {
         Row: {
           billing_interval: string
@@ -1071,6 +1223,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      claim_daily_deal: { Args: { p_deal_id: string }; Returns: Json }
+      claim_deal_with_limits: {
+        Args: {
+          p_customer_name?: string
+          p_customer_whatsapp: string
+          p_deal_id: string
+          p_referred_by_page_id?: string
+        }
+        Returns: Json
+      }
       create_public_appointment: {
         Args: {
           _bio_page_id: string

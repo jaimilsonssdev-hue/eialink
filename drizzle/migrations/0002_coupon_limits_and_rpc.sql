@@ -1,4 +1,4 @@
-﻿-- Adiciona controle de limite e contagem de resgates em daily_deals
+-- Adiciona controle de limite e contagem de resgates em daily_deals
 ALTER TABLE public.daily_deals 
 ADD COLUMN IF NOT EXISTS max_claims integer DEFAULT NULL,
 ADD COLUMN IF NOT EXISTS claims_count integer NOT NULL DEFAULT 0,

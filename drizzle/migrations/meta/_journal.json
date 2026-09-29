@@ -15,6 +15,20 @@
       "when": 1790641060494,
       "tag": "0001_daily_deals_and_cross_traffic",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790683063365,
+      "tag": "0002_coupon_limits_and_rpc",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790683111377,
+      "tag": "0003_coupons_cashback_system",
+      "breakpoints": true
     }
   ]
 }

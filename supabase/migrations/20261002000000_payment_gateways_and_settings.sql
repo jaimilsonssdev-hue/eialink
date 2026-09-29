@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS public.payment_gateway_settings (
     id TEXT PRIMARY KEY DEFAULT 'default',
     asaas_api_key TEXT NULL,
     asaas_environment TEXT NOT NULL DEFAULT 'sandbox',
+    asaas_webhook_token TEXT NULL,
     pix_key TEXT NULL,
     pix_key_type TEXT NULL DEFAULT 'email',
     pix_receiver_name TEXT NULL DEFAULT 'EIA Digital Plataforma',
@@ -13,6 +14,14 @@ CREATE TABLE IF NOT EXISTS public.payment_gateway_settings (
     created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Garante a coluna se a tabela já existia anteriormente
+ALTER TABLE public.payment_gateway_settings ADD COLUMN IF NOT EXISTS asaas_webhook_token TEXT NULL;
+
+-- Permissões essenciais
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.payment_gateway_settings TO authenticated;
+GRANT ALL ON public.payment_gateway_settings TO service_role;
+GRANT SELECT ON public.payment_gateway_settings TO anon;
 
 -- Habilita RLS
 ALTER TABLE public.payment_gateway_settings ENABLE ROW LEVEL SECURITY;

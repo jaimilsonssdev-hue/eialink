@@ -1172,6 +1172,8 @@ function PaymentGatewaySettingsCard() {
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
   const [environment, setEnvironment] = useState<AsaasEnvironment>("sandbox");
+  const [webhookToken, setWebhookToken] = useState("");
+  const [showWebhookToken, setShowWebhookToken] = useState(false);
   const [pixKey, setPixKey] = useState("");
   const [pixKeyType, setPixKeyType] = useState("email");
   const [pixReceiverName, setPixReceiverName] = useState("");
@@ -1192,6 +1194,7 @@ function PaymentGatewaySettingsCard() {
         if (!isMounted) return;
         setApiKey(cfg.asaasApiKey || "");
         setEnvironment(cfg.asaasEnvironment || "sandbox");
+        setWebhookToken(cfg.asaasWebhookToken || "");
         setPixKey(cfg.pixKey || "");
         setPixKeyType(cfg.pixKeyType || "email");
         setPixReceiverName(cfg.pixReceiverName || "EIA Digital Plataforma");
@@ -1217,6 +1220,7 @@ function PaymentGatewaySettingsCard() {
         data: {
           asaasApiKey: apiKey,
           asaasEnvironment: environment,
+          asaasWebhookToken: webhookToken,
           pixKey,
           pixKeyType,
           pixReceiverName,
@@ -1365,6 +1369,43 @@ function PaymentGatewaySettingsCard() {
                 </div>
                 <p className="text-[11px] text-muted-foreground">
                   Cadastre esta URL em <strong>Integrações &gt; Webhooks para Cobranças</strong> no Asaas com os eventos <em>Pagamento Recebido</em> e <em>Pagamento Confirmado</em>.
+                </p>
+              </div>
+
+              {/* Token de Autenticação do Webhook */}
+              <div className="space-y-1.5 pt-2">
+                <label className="text-xs font-medium text-foreground flex items-center justify-between">
+                  <span>Token de Autenticação do Webhook (asaas-access-token)</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowWebhookToken(!showWebhookToken)}
+                    className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+                  >
+                    {showWebhookToken ? (
+                      <>
+                        <EyeOff className="h-3 w-3" /> Ocultar
+                      </>
+                    ) : (
+                      <>
+                        <Eye className="h-3 w-3" /> Exibir
+                      </>
+                    )}
+                  </button>
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-muted-foreground">
+                    <KeyRound className="h-4 w-4" />
+                  </span>
+                  <input
+                    type={showWebhookToken ? "text" : "password"}
+                    value={webhookToken}
+                    onChange={(e) => setWebhookToken(e.target.value)}
+                    placeholder="Cole o token de autenticação configurado no Asaas"
+                    className="w-full h-10 pl-9 pr-3 rounded-lg border border-border bg-background text-sm text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 font-mono transition-colors"
+                  />
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Opcional, porém recomendado. Se preenchido, o sistema valida se a requisição contém o cabeçalho <code>asaas-access-token</code> exato para impedir chamadas não autorizadas.
                 </p>
               </div>
             </div>

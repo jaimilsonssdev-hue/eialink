@@ -55,6 +55,7 @@ export interface PaymentGatewaySettings {
   id: string;
   asaas_api_key?: string | null;
   asaas_environment: AsaasEnvironment;
+  asaas_webhook_token?: string | null;
   pix_key?: string | null;
   pix_key_type?: string | null;
   pix_receiver_name?: string | null;
@@ -86,13 +87,18 @@ export const AsaasService = {
     return "https://sandbox.asaas.com/api/v3";
   },
 
-  async resolveConfig(): Promise<{ apiKey: string; environment: AsaasEnvironment; isConfigured: boolean }> {
+  async resolveConfig(): Promise<{
+    apiKey: string;
+    environment: AsaasEnvironment;
+    isConfigured: boolean;
+    webhookToken?: string | null;
+  }> {
     // 1. Tenta carregar do banco de dados (payment_gateway_settings)
     try {
       const supabase = getSupabaseAdmin();
       const { data } = await (supabase as any)
         .from("payment_gateway_settings")
-        .select("asaas_api_key, asaas_environment")
+        .select("asaas_api_key, asaas_environment, asaas_webhook_token")
         .eq("id", "default")
         .maybeSingle();
 
@@ -102,6 +108,7 @@ export const AsaasService = {
           apiKey: String(row.asaas_api_key).trim(),
           environment: (row.asaas_environment as AsaasEnvironment) || "sandbox",
           isConfigured: true,
+          webhookToken: row.asaas_webhook_token ? String(row.asaas_webhook_token).trim() : (process.env.ASAAS_WEBHOOK_TOKEN || null),
         };
       }
     } catch (e) {
@@ -115,11 +122,17 @@ export const AsaasService = {
       (process.env as any).VITE_ASAAS_ENVIRONMENT ||
       "sandbox"
     ).trim() as AsaasEnvironment;
+    const envWebhookToken = (
+      process.env.ASAAS_WEBHOOK_TOKEN ||
+      (process.env as any).VITE_ASAAS_WEBHOOK_TOKEN ||
+      ""
+    ).trim() || null;
 
     return {
       apiKey: envKey,
       environment: envMode === "production" ? "production" : "sandbox",
       isConfigured: Boolean(envKey),
+      webhookToken: envWebhookToken,
     };
   },
 
@@ -128,7 +141,7 @@ export const AsaasService = {
       const supabase = getSupabaseAdmin();
       const { data } = await (supabase as any)
         .from("payment_gateway_settings")
-        .select("id, asaas_environment, pix_key, pix_key_type, pix_receiver_name, whatsapp_support, updated_at")
+        .select("id, asaas_environment, asaas_webhook_token, pix_key, pix_key_type, pix_receiver_name, whatsapp_support, updated_at")
         .eq("id", "default")
         .maybeSingle();
 
@@ -137,6 +150,7 @@ export const AsaasService = {
         return {
           id: row.id,
           asaas_environment: (row.asaas_environment as AsaasEnvironment) || "sandbox",
+          asaas_webhook_token: row.asaas_webhook_token || null,
           pix_key: row.pix_key || "jaimilsonvendas@gmail.com",
           pix_key_type: row.pix_key_type || "email",
           pix_receiver_name: row.pix_receiver_name || "EIA Digital Plataforma",
@@ -151,6 +165,7 @@ export const AsaasService = {
     return {
       id: "default",
       asaas_environment: "sandbox",
+      asaas_webhook_token: null,
       pix_key: "jaimilsonvendas@gmail.com",
       pix_key_type: "email",
       pix_receiver_name: "EIA Digital Plataforma",

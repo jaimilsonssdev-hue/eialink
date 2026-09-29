@@ -267,6 +267,7 @@ export const savePaymentGatewaySettingsFn = createServerFn({ method: "POST" })
     (data: {
       asaasApiKey?: string;
       asaasEnvironment: AsaasEnvironment;
+      asaasWebhookToken?: string;
       pixKey?: string;
       pixKeyType?: string;
       pixReceiverName?: string;
@@ -289,6 +290,10 @@ export const savePaymentGatewaySettingsFn = createServerFn({ method: "POST" })
 
     if (data.asaasApiKey !== undefined && data.asaasApiKey !== null) {
       updatePayload.asaas_api_key = data.asaasApiKey.trim() || null;
+    }
+
+    if (data.asaasWebhookToken !== undefined && data.asaasWebhookToken !== null) {
+      updatePayload.asaas_webhook_token = data.asaasWebhookToken.trim() || null;
     }
 
     const { error } = await supabase
@@ -321,6 +326,7 @@ export const getAdminPaymentSettingsFn = createServerFn({ method: "GET" })
     return {
       asaasApiKey: (data as any)?.asaas_api_key || "",
       asaasEnvironment: ((data as any)?.asaas_environment as AsaasEnvironment) || "sandbox",
+      asaasWebhookToken: (data as any)?.asaas_webhook_token || "",
       pixKey: (data as any)?.pix_key || "",
       pixKeyType: (data as any)?.pix_key_type || "email",
       pixReceiverName: (data as any)?.pix_receiver_name || "EIA Digital Plataforma",

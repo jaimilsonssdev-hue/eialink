@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { AsaasService } from "@/modules/billing/services/AsaasService";
 
 let _supabase: ReturnType<typeof createClient<Database>> | null = null;
 function getSupabase() {
@@ -148,6 +149,16 @@ export const Route = (createFileRoute as any)("/api/public/payments/asaas-webhoo
       },
       POST: async ({ request }: { request: Request }) => {
         try {
+          // Validação de segurança: token do webhook configurado no Asaas
+          const tokenHeader = request.headers.get("asaas-access-token");
+          const asaasConfig = await AsaasService.resolveConfig();
+          const configuredToken = asaasConfig.webhookToken;
+
+          if (configuredToken && configuredToken !== tokenHeader) {
+            console.warn("[Asaas Webhook] Token inválido ou ausente recebido:", tokenHeader);
+            return Response.json({ error: "Unauthorized token" }, { status: 401 });
+          }
+
           const body = await request.json();
           const result = await handleAsaasEvent(body);
           return Response.json(result, { status: 200 });

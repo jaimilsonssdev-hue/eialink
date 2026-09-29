@@ -1272,6 +1272,10 @@ export type Database = {
         }
         Returns: Json
       }
+      count_customer_daily_claims: {
+        Args: { p_whatsapp: string }
+        Returns: number
+      }
       create_public_appointment: {
         Args: {
           _bio_page_id: string

@@ -91,18 +91,9 @@ export const CrossTrafficService = {
    */
   async trackPartnershipClick(partnershipId: string): Promise<void> {
     try {
-      const { data } = await (supabase as any)
-        .from("cross_traffic_partnerships")
-        .select("clicks_count")
-        .eq("id", partnershipId)
-        .single();
-
-      if (data) {
-        await (supabase as any)
-          .from("cross_traffic_partnerships")
-          .update({ clicks_count: (data.clicks_count || 0) + 1 })
-          .eq("id", partnershipId);
-      }
+      await (supabase as any).rpc("increment_partnership_click", {
+        _partnership_id: partnershipId,
+      });
     } catch (err) {
       console.warn("[CrossTrafficService] Falha ao registrar clique de parceria:", err);
     }

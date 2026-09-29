@@ -470,6 +470,128 @@ export type Database = {
           },
         ]
       }
+      cross_traffic_partnerships: {
+        Row: {
+          badge_label: string
+          benefit_text: string
+          clicks_count: number
+          created_at: string
+          host_page_id: string
+          id: string
+          partner_page_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          badge_label?: string
+          benefit_text: string
+          clicks_count?: number
+          created_at?: string
+          host_page_id: string
+          id?: string
+          partner_page_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          badge_label?: string
+          benefit_text?: string
+          clicks_count?: number
+          created_at?: string
+          host_page_id?: string
+          id?: string
+          partner_page_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cross_traffic_partnerships_host_page_id_fkey"
+            columns: ["host_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cross_traffic_partnerships_partner_page_id_fkey"
+            columns: ["partner_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_deals: {
+        Row: {
+          bio_page_id: string
+          city: string
+          claim_action_url: string | null
+          clicks_count: number
+          created_at: string
+          deal_price: number
+          description: string | null
+          discount_badge: string | null
+          expires_at: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          niche: string | null
+          original_price: number | null
+          starts_at: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio_page_id: string
+          city?: string
+          claim_action_url?: string | null
+          clicks_count?: number
+          created_at?: string
+          deal_price: number
+          description?: string | null
+          discount_badge?: string | null
+          expires_at: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          niche?: string | null
+          original_price?: number | null
+          starts_at?: string
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio_page_id?: string
+          city?: string
+          claim_action_url?: string | null
+          clicks_count?: number
+          created_at?: string
+          deal_price?: number
+          description?: string | null
+          discount_badge?: string | null
+          expires_at?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          niche?: string | null
+          original_price?: number | null
+          starts_at?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_deals_bio_page_id_fkey"
+            columns: ["bio_page_id"]
+            isOneToOne: false
+            referencedRelation: "bio_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       page_blocks: {
         Row: {
           bio_page_id: string
@@ -982,6 +1104,11 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_deal_click: { Args: { _deal_id: string }; Returns: undefined }
+      increment_partnership_click: {
+        Args: { _partnership_id: string }
+        Returns: undefined
       }
       owns_bio_page: { Args: { _page_id: string }; Returns: boolean }
     }

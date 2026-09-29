@@ -17,7 +17,7 @@ export const DealsService = {
           display_name,
           slug,
           avatar_url,
-          whatsapp_number
+          whatsapp
         )
       `)
       .eq("is_active", true)
@@ -57,7 +57,7 @@ export const DealsService = {
       business_name: row.bio_pages?.display_name,
       slug: row.bio_pages?.slug,
       avatar_url: row.bio_pages?.avatar_url,
-      whatsapp_number: row.bio_pages?.whatsapp_number,
+      whatsapp_number: row.bio_pages?.whatsapp,
     }));
   },
 
@@ -98,7 +98,7 @@ export const DealsService = {
           display_name,
           slug,
           avatar_url,
-          whatsapp_number
+          whatsapp
         )
       `)
       .single();
@@ -129,7 +129,7 @@ export const DealsService = {
       business_name: data.bio_pages?.display_name,
       slug: data.bio_pages?.slug,
       avatar_url: data.bio_pages?.avatar_url,
-      whatsapp_number: data.bio_pages?.whatsapp_number,
+      whatsapp_number: data.bio_pages?.whatsapp,
     };
   },
 
@@ -138,18 +138,7 @@ export const DealsService = {
    */
   async trackDealClick(dealId: string): Promise<void> {
     try {
-      const { data } = await (supabase as any)
-        .from("daily_deals")
-        .select("clicks_count")
-        .eq("id", dealId)
-        .single();
-
-      if (data) {
-        await (supabase as any)
-          .from("daily_deals")
-          .update({ clicks_count: (data.clicks_count || 0) + 1 })
-          .eq("id", dealId);
-      }
+      await (supabase as any).rpc("increment_deal_click", { _deal_id: dealId });
     } catch (err) {
       console.warn("[DealsService] Falha ao rastrear clique da oferta:", err);
     }

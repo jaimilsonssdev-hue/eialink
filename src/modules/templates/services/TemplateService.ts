@@ -6,6 +6,7 @@ import type { PageData } from "../types";
 function resolveTemplateId(id?: string): string | undefined {
   if (!id) return undefined;
   if (id === "storefront") return "store-showcase";
+  if (id === "beauty-glam") return "beauty-glow";
   return id;
 }
 

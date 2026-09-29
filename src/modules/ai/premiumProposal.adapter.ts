@@ -434,20 +434,69 @@ export function adaptProposalToExistingStructures(
     "cinematic-glass",
     "site-maquina",
     "impact-showcase",
+    "spotlight-neon",
+    "academy-performance",
+    "ai-chat-agent",
+    "portfolio-studio",
+    "creator-bold",
+    "creator-soft",
   ];
 
-  let resolvedTemplateId = currentBio?.template_id || "site-maquina";
+  let resolvedTemplateId = "";
   if (proposal.creativeDirection?.id) {
-    const dirId = proposal.creativeDirection.id.toLowerCase();
+    const dirId = proposal.creativeDirection.id.toLowerCase().trim();
     if (validTemplates.includes(dirId)) {
       resolvedTemplateId = dirId;
-    } else if (dirId === "cinematografico" || dirId === "neon-noturno") {
+    } else if (dirId === "cinematografico" || dirId === "neon-noturno" || dirId === "spotlight-neon") {
       resolvedTemplateId = "cinematic-glass";
     } else if (dirId === "brutalista-bold" || dirId === "vibrante-pop") {
       resolvedTemplateId = "impact-showcase";
-    } else if (dirId === "editorial-luxo" || dirId === "minimal-claro" || dirId === "corporativo-confianca") {
+    } else if (dirId === "editorial-luxo" || dirId === "minimal-claro") {
+      resolvedTemplateId = "site-maquina";
+    } else if (dirId === "corporativo-confianca") {
       resolvedTemplateId = "business-modern";
+    } else if (dirId.includes("loja") || dirId.includes("vitrine") || dirId.includes("catalogo") || dirId.includes("store") || dirId.includes("varejo")) {
+      resolvedTemplateId = "store-showcase";
+    } else if (dirId.includes("restaurante") || dirId.includes("cardapio") || dirId.includes("menu") || dirId.includes("delivery") || dirId.includes("gastronomia") || dirId.includes("pizzaria") || dirId.includes("hamburgueria") || dirId.includes("comida")) {
+      resolvedTemplateId = "restaurant-menu";
+    } else if (dirId.includes("clinica") || dirId.includes("saude") || dirId.includes("medico") || dirId.includes("odonto") || dirId.includes("hospital")) {
+      resolvedTemplateId = "clinic-care";
+    } else if (dirId.includes("beleza") || dirId.includes("estetica") || dirId.includes("glam") || dirId.includes("salao") || dirId.includes("barbearia")) {
+      resolvedTemplateId = "beauty-glam";
+    } else if (dirId.includes("direito") || dirId.includes("advocacia") || dirId.includes("juridico")) {
+      resolvedTemplateId = "law-authority";
+    } else if (dirId.includes("psicologia") || dirId.includes("terapia")) {
+      resolvedTemplateId = "therapy-wellbeing";
+    } else if (dirId.includes("academia") || dirId.includes("fitness")) {
+      resolvedTemplateId = "academy-performance";
     }
+  }
+
+  // Se não foi resolvido pela direção criativa, resolve pelo nicho
+  if (!resolvedTemplateId) {
+    const niche = (proposal.strategy?.niche || detectedNicheKey || "").toLowerCase();
+    if (["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones", "confeitaria", "gastronomia", "comida"].some(n => niche.includes(n))) {
+      resolvedTemplateId = "restaurant-menu";
+    } else if (["clinica", "odontologia", "medica", "saude", "medico", "dentista", "fisioterapia"].some(n => niche.includes(n))) {
+      resolvedTemplateId = "clinic-care";
+    } else if (["beleza", "salao", "estetica", "barbearia", "unhas", "cabelo", "maquiagem"].some(n => niche.includes(n))) {
+      resolvedTemplateId = "beauty-glam";
+    } else if (["loja", "varejo", "roupas", "calcados", "moda", "comercio", "produto"].some(n => niche.includes(n))) {
+      resolvedTemplateId = "store-showcase";
+    } else if (["advocacia", "direito", "juridico", "advogado"].some(n => niche.includes(n))) {
+      resolvedTemplateId = "law-authority";
+    } else if (["psicologia", "terapia", "psicanalise"].some(n => niche.includes(n))) {
+      resolvedTemplateId = "therapy-wellbeing";
+    } else if (["academia", "fitness", "treino", "crossfit", "personal"].some(n => niche.includes(n))) {
+      resolvedTemplateId = "academy-performance";
+    }
+  }
+
+  // Fallback: se a página atual já tiver um template válido do sistema, preserva; se não, usa site-maquina
+  if (!resolvedTemplateId) {
+    resolvedTemplateId = (currentBio?.template_id && validTemplates.includes(currentBio.template_id))
+      ? currentBio.template_id
+      : "site-maquina";
   }
 
   const resolvedCoverUrl =

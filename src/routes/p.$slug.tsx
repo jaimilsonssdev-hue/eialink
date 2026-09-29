@@ -504,42 +504,48 @@ function PublicBio() {
   // 5. Template de academia (academy-performance) é ESTRITAMENTE reservado para fitness/academia
   // 6. Template de cardápio/restaurante (restaurant-menu) é exclusivo para gastronomia/alimentação
   // 7. Nichos de produto/delivery (açaí, sorveteria, bebidas, delivery, etc.) renderizam cinematic-glass ou catálogo
+  // Respeita estritamente templates válidos gravados no banco (escolhidos pelo usuário ou pelo Copiloto IA)
+  const validSystemTemplates = new Set([
+    "site-maquina",
+    "cinematic-glass",
+    "impact-showcase",
+    "spotlight-neon",
+    "store-showcase",
+    "storefront",
+    "business-modern",
+    "business-classic",
+    "restaurant-menu",
+    "clinic-care",
+    "beauty-glam",
+    "beauty-glow",
+    "law-authority",
+    "therapy-wellbeing",
+    "academy-performance",
+    "ai-chat-agent",
+    "portfolio-studio",
+    "creator-bold",
+    "creator-soft",
+    "minimal-light",
+    "minimal-ink",
+    "biolink-tokens",
+  ]);
+
   let effectiveTemplateId = bio.template_id;
 
-  // Preserva templates universais e explícitos definidos pelo usuário ou pela IA
-  const isExplicitUniversalTemplate =
-    effectiveTemplateId === "site-maquina" ||
-    effectiveTemplateId === "cinematic-glass" ||
-    effectiveTemplateId === "storefront" ||
-    effectiveTemplateId === "store-showcase" ||
-    effectiveTemplateId === "business-modern" ||
-    effectiveTemplateId === "impact-showcase";
-
-  if (!isExplicitUniversalTemplate && effectiveTemplateId) {
-    if (effectiveTemplateId === "therapy-wellbeing" && nicheKey !== "psicologia") {
-      effectiveTemplateId = "business-modern";
-    } else if (effectiveTemplateId === "clinic-care" && !isHealth) {
-      effectiveTemplateId = "business-modern";
-    } else if (effectiveTemplateId === "beauty-glam" && nicheKey !== "beleza") {
-      effectiveTemplateId = "business-modern";
-    } else if (nicheKey !== "advocacia" && effectiveTemplateId === "law-authority") {
-      effectiveTemplateId = "business-modern";
-    } else if (effectiveTemplateId === "academy-performance" && nicheKey !== "fitness") {
-      effectiveTemplateId = "business-modern";
-    } else {
-      const isGastronomyNiche = isProduct || ["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nicheKey);
-      if (effectiveTemplateId === "restaurant-menu" && !isGastronomyNiche) {
-        effectiveTemplateId = "business-modern";
-      }
+  // Se o template gravado for válido e não for "default", preserva sem rebaixamento
+  if (effectiveTemplateId && validSystemTemplates.has(effectiveTemplateId) && effectiveTemplateId !== "default") {
+    if (effectiveTemplateId === "storefront") {
+      effectiveTemplateId = "store-showcase";
     }
-  } else if (!effectiveTemplateId || effectiveTemplateId === "default") {
+  } else {
+    // Apenas se não houver template definido ou for "default", deduz pelo nicho do negócio
     if (isProduct) {
       effectiveTemplateId = "cinematic-glass";
     } else if (nicheKey === "psicologia") {
       effectiveTemplateId = "therapy-wellbeing";
     } else if (isHealth) {
       effectiveTemplateId = "clinic-care";
-    } else if (nicheKey === "beleza") {
+    } else if (nicheKey === "beleza" || nicheKey === "barbearia") {
       effectiveTemplateId = "beauty-glam";
     } else if (nicheKey === "advocacia") {
       effectiveTemplateId = "law-authority";
@@ -552,13 +558,8 @@ function PublicBio() {
     }
   }
 
-  if (effectiveTemplateId === "storefront") {
-    effectiveTemplateId = "store-showcase";
-  }
-
-  // Se for uma demonstração de prospecção com template default/business-modern, promove automaticamente
-  // para o Site Institucional Máquina de Sites (Landing Page completa)
-  if (isDemo && (!effectiveTemplateId || effectiveTemplateId === "business-modern" || effectiveTemplateId === "default")) {
+  // Se for uma demonstração de prospecção sem template definido ou com "default", promove para o Site Institucional Máquina de Sites
+  if (isDemo && (!bio.template_id || bio.template_id === "default")) {
     effectiveTemplateId = "site-maquina";
   }
 

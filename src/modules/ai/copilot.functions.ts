@@ -1489,6 +1489,22 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
         briefingLower.includes("imagem nova") ||
         briefingLower.includes("imagens novas");
 
+      const isRestructure =
+        briefingLower.includes("reestruturar") ||
+        briefingLower.includes("refazer") ||
+        briefingLower.includes("novo site") ||
+        briefingLower.includes("mudar tudo") ||
+        briefingLower.includes("transformar") ||
+        briefingLower.includes("redesenhar") ||
+        briefingLower.includes("novo modelo") ||
+        briefingLower.includes("outro modelo") ||
+        briefingLower.includes("mudar modelo") ||
+        briefingLower.includes("novo layout") ||
+        briefingLower.includes("mudar layout") ||
+        briefingLower.includes("layout");
+
+      const shouldRegeneratePhotos = wantsPhotoChange || isRestructure;
+
       const detectedNicheKey = detectNicheKey(
         validatedProposal.strategy?.niche || data.currentContext?.niche,
         validatedProposal.pagePatch?.displayName || data.currentContext?.displayName,
@@ -1499,20 +1515,19 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
         let avatar = resolveFileUrl(validatedProposal.pagePatch.avatarUrl);
         let cover = resolveFileUrl(validatedProposal.pagePatch.coverUrl);
 
-        if (wantsPhotoChange || !cover) {
-          if (nicheGallery?.covers && nicheGallery.covers.length > 0) {
-            cover = nicheGallery.covers[Math.floor(Math.random() * nicheGallery.covers.length)].url;
-          } else {
-            try {
-              const aiImg = await generateAiImage({
-                niche: detectedNicheKey,
-                companyName: validatedProposal.pagePatch.displayName || "Empresa",
-                currentUsageCount: 0,
-                type: "cover",
-              });
-              cover = aiImg.url;
-            } catch {
-              // fallback
+        if (shouldRegeneratePhotos || !cover) {
+          try {
+            const aiImg = await generateAiImage({
+              niche: detectedNicheKey,
+              companyName: validatedProposal.pagePatch.displayName || data.currentContext?.displayName || "Empresa",
+              currentUsageCount: 0,
+              type: "cover",
+            });
+            cover = aiImg.url;
+          } catch (err) {
+            console.warn("[Copilot] Falha ao gerar imagem de capa por IA, usando fallback da galeria:", err);
+            if (nicheGallery?.covers && nicheGallery.covers.length > 0) {
+              cover = nicheGallery.covers[Math.floor(Math.random() * nicheGallery.covers.length)].url;
             }
           }
         }
@@ -1525,21 +1540,22 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
         for (let i = 0; i < validatedProposal.catalogItems.length; i++) {
           const item = validatedProposal.catalogItems[i];
           let itemImg = resolveFileUrl(item.imageUrl);
-          if (wantsPhotoChange || !itemImg) {
-            const covers = nicheGallery?.covers || [];
-            if (covers.length > 0) {
-              itemImg = covers[(i + 1) % covers.length]?.url || covers[0]?.url;
-            } else {
-              try {
-                const aiImg = await generateAiImage({
-                  niche: detectedNicheKey,
-                  companyName: `${validatedProposal.pagePatch?.displayName || "Empresa"} ${item.name}`,
-                  currentUsageCount: 0,
-                  type: "product",
-                });
-                itemImg = aiImg.url;
-              } catch {
-                // fallback
+          if (shouldRegeneratePhotos || !itemImg) {
+            try {
+              const aiImg = await generateAiImage({
+                niche: detectedNicheKey,
+                companyName: validatedProposal.pagePatch?.displayName || data.currentContext?.displayName || "Empresa",
+                currentUsageCount: 0,
+                type: "product",
+                itemName: item.name || `Item ${i + 1}`,
+                details: item.description,
+              });
+              itemImg = aiImg.url;
+            } catch (err) {
+              console.warn(`[Copilot] Falha ao gerar imagem IA para o item ${item.name}:`, err);
+              const covers = nicheGallery?.covers || [];
+              if (covers.length > 0) {
+                itemImg = covers[(i + 1) % covers.length]?.url || covers[0]?.url;
               }
             }
           }

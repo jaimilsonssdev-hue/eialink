@@ -45,6 +45,7 @@ import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedAdminNfcRouteImport } from './routes/_authenticated/admin_.nfc'
 import { Route as AuthenticatedAdminProspeccaoRouteImport } from './routes/_authenticated/admin_.prospeccao'
+import { Route as ApiPublicPaymentsAsaasWebhookRouteImport } from './routes/api/public/payments/asaas-webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
 const IndexRoute = IndexRouteImport.update({
@@ -228,6 +229,12 @@ const AuthenticatedAdminProspeccaoRoute =
     path: '/admin/prospeccao',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ApiPublicPaymentsAsaasWebhookRoute =
+  ApiPublicPaymentsAsaasWebhookRouteImport.update({
+    id: '/api/public/payments/asaas-webhook',
+    path: '/api/public/payments/asaas-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -271,6 +278,7 @@ export interface FileRoutesByFullPath {
   '/r/$code': typeof RCodeRoute
   '/admin/nfc': typeof AuthenticatedAdminNfcRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
+  '/api/public/payments/asaas-webhook': typeof ApiPublicPaymentsAsaasWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesByTo {
@@ -309,6 +317,7 @@ export interface FileRoutesByTo {
   '/r/$code': typeof RCodeRoute
   '/admin/nfc': typeof AuthenticatedAdminNfcRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
+  '/api/public/payments/asaas-webhook': typeof ApiPublicPaymentsAsaasWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRoutesById {
@@ -349,6 +358,7 @@ export interface FileRoutesById {
   '/r/$code': typeof RCodeRoute
   '/_authenticated/admin_/nfc': typeof AuthenticatedAdminNfcRoute
   '/_authenticated/admin_/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
+  '/api/public/payments/asaas-webhook': typeof ApiPublicPaymentsAsaasWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
 export interface FileRouteTypes {
@@ -389,6 +399,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/admin/nfc'
     | '/admin/prospeccao'
+    | '/api/public/payments/asaas-webhook'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -427,6 +438,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/admin/nfc'
     | '/admin/prospeccao'
+    | '/api/public/payments/asaas-webhook'
     | '/api/public/payments/webhook'
   id:
     | '__root__'
@@ -466,6 +478,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/_authenticated/admin_/nfc'
     | '/_authenticated/admin_/prospeccao'
+    | '/api/public/payments/asaas-webhook'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
 }
@@ -487,6 +500,7 @@ export interface RootRouteChildren {
   ComandaGarcomRoute: typeof ComandaGarcomRoute
   PSlugRoute: typeof PSlugRoute
   RCodeRoute: typeof RCodeRoute
+  ApiPublicPaymentsAsaasWebhookRoute: typeof ApiPublicPaymentsAsaasWebhookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
 }
 
@@ -744,6 +758,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminProspeccaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/payments/asaas-webhook': {
+      id: '/api/public/payments/asaas-webhook'
+      path: '/api/public/payments/asaas-webhook'
+      fullPath: '/api/public/payments/asaas-webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsAsaasWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -829,6 +850,7 @@ const rootRouteChildren: RootRouteChildren = {
   ComandaGarcomRoute: ComandaGarcomRoute,
   PSlugRoute: PSlugRoute,
   RCodeRoute: RCodeRoute,
+  ApiPublicPaymentsAsaasWebhookRoute: ApiPublicPaymentsAsaasWebhookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
 }
 export const routeTree = rootRouteImport

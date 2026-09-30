@@ -4,10 +4,13 @@ export class TemplateRegistry {
   constructor(private readonly defaultId: string) {}
   register(template: TemplateDefinition) {
     if (this.templates.has(template.id)) {
-      throw new Error(`Template '${template.id}' is already registered.`);
+      console.warn(`Template '${template.id}' was already registered. Overwriting with latest definition.`);
+      this.templates.set(template.id, template);
+      return this;
     }
-    if (this.list().some((registered) => registered.slug === template.slug)) {
-      throw new Error(`Template slug '${template.slug}' is already registered.`);
+    const duplicateSlug = this.list().find((registered) => registered.slug === template.slug);
+    if (duplicateSlug) {
+      console.warn(`Template slug '${template.slug}' was already registered under id '${duplicateSlug.id}'.`);
     }
     this.templates.set(template.id, template);
     return this;

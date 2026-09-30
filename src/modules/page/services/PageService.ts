@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { getPresetForCompany, isProductCatalogNiche, isHealthBookingNiche } from "@/modules/prospecting/nichePresets";
+import { generateAiPageBlueprintFromScrapedData } from "@/modules/prospecting/aiDemoGenerator.service";
 import { formatCatalogDescription } from "@/modules/products/services/ProductService";
 import { type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspectingEngine";
 import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
@@ -130,10 +131,6 @@ export const PageService = {
     const suffix = crypto.randomUUID().slice(0, 4);
     const slug = `${cleanSlug}-${suffix}`;
 
-    // Identifica preset Pro completo de alta conversão
-    const preset = getPresetForCompany(niche, sanitizedCompanyName, variantIndex);
-    const description = preset.generateDescription(sanitizedCompanyName, city || "sua região");
-
     // Busca dados 100% reais do Google Maps se não fornecidos
     let realPlace = placeDetails;
     if (!realPlace) {
@@ -148,6 +145,30 @@ export const PageService = {
 
     const realRating = realPlace?.rating ?? rating ?? null;
     const realReviewsCount = realPlace?.reviewsCount ?? reviewsCount ?? null;
+    const finalWhatsapp = whatsapp || realPlace?.whatsapp || null;
+    const realAddress = realPlace?.address || null;
+    const realHours = realPlace?.openingHours || null;
+    const realReviews = realPlace?.reviews || [];
+
+    // Esteira Inteligente: Análise profunda da ficha e reviews com IA Gemini
+    const aiBlueprint = await generateAiPageBlueprintFromScrapedData({
+      companyName: sanitizedCompanyName,
+      city: city ?? null,
+      niche: niche ?? null,
+      address: realAddress,
+      rating: realRating,
+      reviewsCount: realReviewsCount,
+      openingHours: realHours,
+      whatsapp: finalWhatsapp,
+      phone: finalWhatsapp,
+      reviews: realReviews,
+      photos: realPlace?.photos || null,
+    });
+
+    // Identifica preset Pro de alta conversão correspondente à especialidade autêntica detectada
+    const effectiveNicheKey = aiBlueprint.nicheKey || niche || "geral";
+    const preset = getPresetForCompany(effectiveNicheKey, sanitizedCompanyName, variantIndex);
+
     // BLINDAGEM VISUAL (Zero Vergonha):
     // A capa da demonstração sempre utiliza a foto curada em HD do nicho (preset.cover_url)
     // para garantir apresentação profissional e impecável, evitando fotos aleatórias de calçadas ou papéis do Maps.
@@ -155,10 +176,9 @@ export const PageService = {
     const realCover = preset.cover_url;
     // Avatar: utiliza o monograma oficial vetorial da empresa ou avatar curado do nicho
     const realAvatar = preset.avatar_url;
-    const finalWhatsapp = whatsapp || realPlace?.whatsapp || null;
-    const realAddress = realPlace?.address || null;
-    const realHours = realPlace?.openingHours || null;
-    const realReviews = realPlace?.reviews || [];
+
+    // Copywriting inteligente estruturado pela IA
+    const description = `${aiBlueprint.headline}\n\n${aiBlueprint.manifesto}`;
 
     const { data, error } = await supabase
       .from("bio_pages")
@@ -168,10 +188,10 @@ export const PageService = {
         slug,
         whatsapp: finalWhatsapp,
         whatsapp_button_label: preset.whatsapp_button_label,
-        whatsapp_message: preset.whatsapp_message(sanitizedCompanyName),
+        whatsapp_message: aiBlueprint.whatsappMessage || preset.whatsapp_message(sanitizedCompanyName),
         instagram: instagram ?? null,
         template_id: preferredTemplateId || "site-maquina",
-        theme: preset.theme,
+        theme: aiBlueprint.theme || preset.theme,
         cover_url: realCover,
         avatar_url: realAvatar,
         description,
@@ -179,7 +199,8 @@ export const PageService = {
           instagram: instagram ?? undefined,
           is_demo: isDemo,
           triage_enabled: true,
-          niche: preset.nicheKey,
+          niche: effectiveNicheKey,
+          specialty: aiBlueprint.detectedSpecialty,
           city: city || null,
           google_rating: realRating,
           reviews_count: realReviewsCount,
@@ -195,7 +216,8 @@ export const PageService = {
               : undefined,
           address: realAddress,
           opening_hours: realHours,
-          testimonials: realReviews,
+          testimonials: aiBlueprint.testimonials.length > 0 ? aiBlueprint.testimonials : realReviews,
+          differentials: aiBlueprint.differentials,
           google_photos: realPlace?.photos || [],
         },
         published: true,
@@ -206,10 +228,15 @@ export const PageService = {
     if (error || !data) throw new Error(error?.message ?? "Não foi possível criar a página demonstrativa.");
 
     // 1. Cadastra Vitrine de Serviços Premium ou Produtos de Loja (catalog_items)
-    const isProduct = isProductCatalogNiche(preset.nicheKey);
-    const isHealth = isHealthBookingNiche(preset.nicheKey);
+    const isProduct = isProductCatalogNiche(effectiveNicheKey);
+    const isHealth = isHealthBookingNiche(effectiveNicheKey);
 
-    if (preset.services.length > 0) {
+    // Prioriza os serviços gerados pela IA (3 a 5 itens específicos e coerentes)
+    const activeServices = aiBlueprint.services.length > 0
+      ? aiBlueprint.services
+      : preset.services;
+
+    if (activeServices.length > 0) {
       const getProductBtnLabel = (nicheKey: string) => {
         switch (nicheKey) {
           case "sorveteria": return "Pedir no WhatsApp";
@@ -223,14 +250,14 @@ export const PageService = {
       };
 
       const defaultBtnLabel = isProduct
-        ? getProductBtnLabel(preset.nicheKey)
+        ? getProductBtnLabel(effectiveNicheKey)
         : isHealth
           ? "Agendar Procedimento"
           : "Solicitar Orçamento";
 
       const defaultBtnUrl = isHealth ? `/agendar/${data.slug}` : null;
 
-      const catalogInserts = preset.services.map((srv, idx) => ({
+      const catalogInserts = activeServices.map((srv, idx) => ({
         bio_page_id: data.id,
         name: srv.name,
         description: formatCatalogDescription(srv.description, srv.category),

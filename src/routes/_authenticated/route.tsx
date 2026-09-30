@@ -212,7 +212,7 @@ function AuthedLayout() {
       {/* Content */}
       <div
         className={`min-w-0 flex-1 md:ml-64 ${
-          isStudio ? "bg-zinc-950 h-[100dvh] overflow-hidden" : ""
+          isStudio ? "bg-zinc-950 h-[100dvh] max-h-[100dvh] overflow-hidden" : ""
         }`}
       >
         {!isStudio && (
@@ -227,9 +227,10 @@ function AuthedLayout() {
           </header>
         )}
         <main
+          style={isStudio ? { paddingBottom: 0, height: "100dvh", maxHeight: "100dvh" } : undefined}
           className={`app-content mx-auto ${
             isStudio
-              ? "p-0 max-w-none w-full h-[100dvh] min-h-0 overflow-hidden bg-zinc-950"
+              ? "studio-mode p-0 !pb-0 max-w-none w-full h-[100dvh] max-h-[100dvh] min-h-0 overflow-hidden bg-zinc-950"
               : pathname === "/builder"
               ? "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-[1600px]"
               : "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-7xl"

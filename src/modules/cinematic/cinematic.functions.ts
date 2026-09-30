@@ -96,8 +96,8 @@ export const refineCinematicWithAiFn = createServerFn({ method: "POST" })
 
     if (apiKey) {
       try {
-        const prompt = `Você é um Diretor de Arte e Copywriter de Luxo internacional para marcas de prestígio.
-O usuário está construindo uma Landing Page Cinematográfica com narrativa de Scrollytelling para o negócio "${currentData.businessName}" (Nicho: "${currentData.niche}").
+        const prompt = `Você é um Diretor Criativo e Copywriter Editorial Internacional para marcas de ultra-luxo e alta gastronomia (estilo Monocle, Architectural Digest, Kinfolk).
+O usuário está refinando a Landing Page Cinematográfica com narrativa de Scrollytelling para o negócio "${currentData.businessName}" (Nicho: "${currentData.niche}").
 
 DADOS ATUAIS DA PÁGINA:
 ${JSON.stringify(currentData, null, 2)}
@@ -107,13 +107,27 @@ INSTRUÇÃO DE DIREÇÃO DE ARTE DO USUÁRIO:
 ${instruction}
 """
 
-SUA MISSÃO:
-Reescreva e refine os textos da página (hero, manifesto com headline e citação, destaques com títulos e descrições nobres, cores e tipografia) para atender com perfeição ao pedido do usuário.
-- Se o usuário pedir um tom específico (ex: "intimista noturno", "minimalista solar", "rústico artesanal", "moda italiana"), adeque a paleta de cores (accent hexadecimal e bg escuro), a tipografia ('serif' para luxo/clássico, 'sans' para moderno/minimalista, 'display' para imponente/impacto) e todo o vocabulário sensorial.
-- Mantenha imagens existentes a menos que não façam sentido, ou sugira URLs de imagens de alta resolução do Unsplash pertinentes ao nicho se apropriado.
-- NÃO invente telefones ou endereços; preserve whatsapp e endereço existentes.
+BÍBLIA DE DIREÇÃO DE ARTE & REGRAS INEGOCIÁVEIS:
+1. COPYWRITING SENSORIAL & POÉTICO (ZERO CLICHÊS):
+   - Proibido terminantemente: "o melhor da cidade", "qualidade garantida", "venha conferir", "excelência no atendimento".
+   - Substitua por vocabulário tátil, olfativo, visual e de herança: textura, aroma da brasa, silêncio, precisão milimétrica, tempo de maturação, luz natural, hospitalidade autoral.
+2. RITMO NARRATIVO EM 4 ATOS:
+   - Hero: Tagline curta e imponente em caixa alta (ex: "O TEMPO COMO MATÉRIA-PRIMA") + Título magnético e poético + Subtítulo envolvente que transporta a pessoa para dentro do ambiente.
+   - Manifesto: Headline que desafia o comum + Texto que soa como uma declaração de amor ao ofício + Citação inspiradora de mestre/fundador.
+   - Galeria: Cada foto ganha uma legenda curta que soa como catálogo de museu ou livro de arte.
+   - Destaques da Casa: Títulos nobres e descrições dos ingredientes, técnicas ou atmosfera de cada item.
+3. PSICOLOGIA CROMÁTICA & ATMOSFERA:
+   - Harmonize a paleta de cores (bg escuro e accent refinado) de acordo com o pedido:
+     * Gastronomia / Carnes / Vinho: bg #0c0a09, accent âmbar (#f59e0b) ou dourado queimado (#d97706).
+     * Cafés / Torrefação: bg #0a0908, accent cobre (#ea580c) ou canela nobre.
+     * Estética / Dermatologia / Spa: bg #090c0b, accent esmeralda suave (#10b981) ou champagne (#fb7185).
+     * Tecnologia / Consultoria / Arquitetura: bg #09090b, accent platina (#e2e8f0) ou azul titânio (#38bdf8).
+   - Tipografia: 'serif' para luxo clássico/tradição, 'sans' para minimalismo puro contemporâneo, 'display' para impacto visual arquitetônico.
+4. RIGOR FACTUAL (ZERO ALUCINAÇÃO):
+   - Mantenha estritamente o whatsapp, endereço, nota de avaliações e dados do negócio. Apenas eleve a copy ao nível máximo de sofisticação.
+   - Preserve 'backgroundVideo' no hero se já existir, ou se o usuário pedir para remover passe vazio.
 
-RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO, SEM TEXTO ADICIONAL OU MARKDOWN CODEBLOCK:
+RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (SEM BLOCOS DE CÓDIGO MARKDOWN OU COMENTÁRIOS):
 {
   "businessName": "${currentData.businessName}",
   "niche": "${currentData.niche}",
@@ -131,7 +145,8 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO, S
     "title": "string",
     "subtitle": "string",
     "tagline": "string",
-    "backgroundImage": "string",
+    "backgroundImage": "${currentData.hero.backgroundImage}",
+    ${currentData.hero.backgroundVideo ? `"backgroundVideo": "${currentData.hero.backgroundVideo}",` : ""}
     "ctaText": "string",
     "ctaLink": "#manifesto"
   },

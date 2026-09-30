@@ -456,6 +456,54 @@ export default function CinematicStudioPage() {
               </div>
             </div>
 
+            {/* VÍDEO DE FUNDO CINEMATOGRÁFICO */}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-md space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-300">
+                  <Sparkles className="h-4 w-4" />
+                  <span>Vídeo de Fundo no Hero (Loop Opcional)</span>
+                </label>
+                {data.hero.backgroundVideo && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData((prev: CinematicPageData) => ({
+                        ...prev,
+                        hero: { ...prev.hero, backgroundVideo: undefined },
+                      }));
+                      toast.info("Vídeo de fundo removido. Usando foto de capa.");
+                    }}
+                    className="text-[10px] text-red-400 hover:underline"
+                  >
+                    Remover Vídeo
+                  </button>
+                )}
+              </div>
+              <p className="text-[11px] text-zinc-400">
+                Cole a URL direta de um vídeo em alta definição (.mp4 ou .webm) ou reel sem áudio para transformar a capa em cinema vivo.
+              </p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="url"
+                  value={data.hero.backgroundVideo || ""}
+                  onChange={(e) => {
+                    const val = e.target.value.trim();
+                    setData((prev: CinematicPageData) => ({
+                      ...prev,
+                      hero: { ...prev.hero, backgroundVideo: val || undefined },
+                    }));
+                  }}
+                  placeholder="https://exemplo.com/video-ambiente.mp4"
+                  className="flex-1 rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-400 focus:outline-hidden"
+                />
+              </div>
+              {data.hero.backgroundVideo && (
+                <p className="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
+                  <CheckCircle2 className="h-3 w-3" /> Vídeo ativo na prévia ao vivo
+                </p>
+              )}
+            </div>
+
             {/* 3. CHAT DE DIREÇÃO DE ARTE (IA GEMINI) */}
             <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-md space-y-3">
               <div className="flex items-center justify-between">

@@ -62,9 +62,10 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
   const accentColor = data.theme.accent || "#f59e0b";
   const bgColor = data.theme.bg || "#0a0a0c";
 
-  // Cálculo de deslocamento parallax para a capa e elementos
-  const parallaxOffset = data.theme.parallaxEnabled ? Math.min(scrollY * 0.35, 200) : 0;
-  const parallaxScale = data.theme.parallaxEnabled ? 1 + Math.min(scrollY * 0.0004, 0.12) : 1;
+  // Profundidade aprofundada: o fundo desce com parallax amplo enquanto o texto sobe sutilmente em 3D
+  const backgroundParallaxY = data.theme.parallaxEnabled ? Math.min(scrollY * 0.42, 280) : 0;
+  const backgroundZoom = data.theme.parallaxEnabled ? 1 + Math.min(scrollY * 0.0005, 0.15) : 1;
+  const foregroundParallaxY = data.theme.parallaxEnabled ? -Math.min(scrollY * 0.12, 60) : 0;
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -170,27 +171,51 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
       {/* 1. SEÇÃO HERO CINEMATOGRÁFICO COM PARALLAX GPU */}
       <section id="hero" className="relative flex min-h-[92vh] items-center justify-center overflow-hidden px-4 sm:px-8 py-20">
-        {/* Capa com Parallax 3D */}
+        {/* Capa com Vídeo de Fundo ou Foto com Parallax 3D */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          <img
-            src={data.hero.backgroundImage}
-            alt={data.businessName}
-            className="h-full w-full object-cover object-center will-change-transform"
-            style={{
-              transform: `translate3d(0, ${parallaxOffset}px, 0) scale(${parallaxScale})`,
-              transition: "transform 0.1s cubic-bezier(0.25, 1, 0.5, 1)",
-            }}
-          />
-          {/* Gradients cinematográficos (escuro nas pontas para legibilidade absoluta) */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-black/60 to-black/70" />
+          {data.hero.backgroundVideo ? (
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="h-full w-full object-cover object-center will-change-transform"
+              style={{
+                transform: `translate3d(0, ${backgroundParallaxY}px, 0) scale(${backgroundZoom})`,
+                transition: "transform 0.08s cubic-bezier(0.2, 0.9, 0.3, 1)",
+              }}
+            >
+              <source src={data.hero.backgroundVideo} type="video/mp4" />
+              <source src={data.hero.backgroundVideo} type="video/webm" />
+            </video>
+          ) : (
+            <img
+              src={data.hero.backgroundImage}
+              alt={data.businessName}
+              className="h-full w-full object-cover object-center will-change-transform"
+              style={{
+                transform: `translate3d(0, ${backgroundParallaxY}px, 0) scale(${backgroundZoom})`,
+                transition: "transform 0.08s cubic-bezier(0.2, 0.9, 0.3, 1)",
+              }}
+            />
+          )}
+
+          {/* Vinheta Escura de Cinema e Iluminação Mesh nas Bordas */}
+          <div className="absolute inset-0 bg-radial-[circle_at_center,transparent_30%,#0a0a0c_90%] opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-black/60 to-black/75" />
           <div
-            className="absolute inset-0 opacity-40 mix-blend-color"
+            className="absolute inset-0 opacity-30 mix-blend-color pointer-events-none"
             style={{ backgroundColor: accentColor }}
           />
         </div>
 
         {/* Conteúdo Central Hero */}
-        <div className="relative z-10 mx-auto max-w-4xl text-center">
+        <div
+          className="relative z-10 mx-auto max-w-4xl text-center will-change-transform"
+          style={{
+            transform: `translate3d(0, ${foregroundParallaxY}px, 0)`,
+          }}
+        >
           {/* Badge Refinado */}
           {data.hero.tagline && (
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white shadow-2xl backdrop-blur-md">

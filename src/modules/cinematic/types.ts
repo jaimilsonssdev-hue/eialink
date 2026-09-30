@@ -5,6 +5,7 @@ export interface CinematicHero {
   subtitle: string;
   tagline: string;
   backgroundImage: string;
+  backgroundVideo?: string; // Vídeo em loop de alta definição (MP4/WebM)
   ctaText: string;
   ctaLink: string;
 }

@@ -127,8 +127,11 @@ BÍBLIA DE DIREÇÃO DE ARTE, ARQUÉTIPOS & REGRAS DE OURO (QA ESTÉTICO):
 3. COPYWRITING SENSORIAL & QA RESTRITIVO (ZERO CLICHÊS):
    - Proibido terminantemente: "o melhor da cidade", "qualidade garantida", "venha conferir", "excelência no atendimento".
    - Substitua por vocabulário tátil, de herança e precisão: aroma da brasa, silêncio acústico, colheita seletiva, calibragem milimétrica, tempo de maturação, luz natural.
-   - Preserve estritamente WhatsApp, endereço, nota de avaliações, nome da empresa e fotos reais enviadas.
-   - Preserve 'backgroundVideo' no hero se já existir.
+   
+4. MODO DELTA INTELIGENTE (PRESERVAÇÃO ESTRITA DE DADOS REAIS):
+   - Mantenha RIGOROSAMENTE INALTERADOS: "whatsapp", "address", "rating", "openingHours", "businessName" e fotos reais já carregadas ("gallery", "hero.backgroundImage" e "hero.backgroundVideo").
+   - NUNCA invente telefones falsos, novos endereços ou substitua fotos reais por placeholders caso fotos reais já existam.
+   - Modifique APENAS os campos solicitados pelo usuário (ex: cores do tema, copy de manifesto, headline, tipografia ou lista de serviços).
 
 RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (SEM BLOCOS DE CÓDIGO MARKDOWN OU COMENTÁRIOS):
 {
@@ -470,6 +473,9 @@ SUA MISSÃO:
    - Opção A (option_a): Linha mais clássica, profunda, sensorial, acolhedora ou editorial nobre (ex: tons de madeira/âmbar/ouro ou esmeralda, fontes serifadas, foco na história e tempo).
    - Opção B (option_b): Linha mais arrojada, de vanguarda, moderna, minimalista ou de alta voltagem (ex: tons neon/grafite/titânio ou cyber, fontes sans/display/mono, foco no impacto visual e velocidade).
 3. Cada opção deve ter um previewData completo (hero, manifesto, destaques, bentoGrid, marquee, comparison, faq, theme) pronto para ser inspecionado ou aplicado com 1 clique pelo usuário.
+4. MODO DELTA INTELIGENTE (PRESERVAÇÃO ESTRITA):
+   - Mantenha rigorosamente intactos e inalterados em ambos previewData: "whatsapp", "address", "rating", "openingHours", e as fotos reais já carregadas ("gallery", "hero.backgroundImage", "hero.backgroundVideo").
+   - Modifique e inove nas paletas, tipografia, seções e textos de copywriting sem remover as fotos reais ou dados de contato da empresa.
 
 RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENTÁRIOS):
 {
@@ -698,6 +704,166 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
         ],
         options: [optionA, optionB],
       },
+    };
+  });
+
+export interface ExtractedServiceItem {
+  title: string;
+  description: string;
+  price?: string;
+  badge?: string;
+}
+
+export interface ExtractedPdfDocumentResult {
+  summary: string;
+  items: ExtractedServiceItem[];
+}
+
+/**
+ * 5. Extração e Estruturação de Cardápios, Tabelas de Preços e Catálogos de Documentos PDF
+ */
+export const extractServicesFromPdfTextFn = createServerFn({ method: "POST" })
+  .validator((d: { text: string; businessName?: string; niche?: string }) => d)
+  .handler(async ({ data }): Promise<ExtractedPdfDocumentResult> => {
+    const { text, businessName = "Empresa", niche = "Geral" } = data;
+    const cleanText = (text || "").trim();
+
+    if (!cleanText) {
+      return {
+        summary: "Documento sem texto legível detectado.",
+        items: [],
+      };
+    }
+
+    const apiKey = (
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_AI_STUDIO_KEY ||
+      (process.env as any).VITE_GEMINI_API_KEY ||
+      ""
+    ).trim();
+
+    if (apiKey) {
+      try {
+        const prompt = `Você é um Especialista em Extração e Estruturação de Cardápios, Tabelas de Preços e Catálogos Comerciais da EIA Digital.
+Analise com atenção o texto abaixo, extraído diretamente de um documento comercial (cardápio, tabela de procedimentos, folder ou catálogo):
+
+TEXTO DO DOCUMENTO:
+"""
+${cleanText.slice(0, 16000)}
+"""
+
+DADOS DA EMPRESA:
+- Nome: "${businessName}"
+- Nicho: "${niche}"
+
+SUA MISSÃO:
+1. Identifique os 3 a 6 principais itens ou serviços de maior valor comercial no documento.
+2. Para cada item, extraia:
+   - "title": Nome claro, profissional e comercial do prato, serviço ou procedimento (sem códigos numéricos soltos).
+   - "description": Descrição atraente e sensorial em 1 a 2 frases concisas destacando o benefício ou os ingredientes/técnica.
+   - "price": Preço formatado em moeda (ex: "R$ 150,00", "R$ 49,90", "A partir de R$ 90,00" ou "Sob Consulta" se não houver valor explícito).
+   - "badge": Selo curto de destaque de 1 a 2 palavras (ex: "Mais Pedido", "Especialidade", "Destaque", "Exclusivo", "Novo").
+3. "summary": Uma frase síntese descrevendo o que foi lido do documento (ex: "Cardápio com foco em cortes nobres e entradas artesanais" ou "Tabela de procedimentos estéticos faciais e corporais").
+
+RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS ADICIONAIS):
+{
+  "summary": "string",
+  "items": [
+    {
+      "title": "string",
+      "description": "string",
+      "price": "string",
+      "badge": "string"
+    }
+  ]
+}`;
+
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 14000);
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.2,
+              responseMimeType: "application/json",
+            },
+          }),
+        });
+
+        clearTimeout(timeoutId);
+
+        if (response.ok) {
+          const json = await response.json();
+          const raw = json.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (raw) {
+            const cleanJson = raw
+              .replace(/^```json\s*/i, "")
+              .replace(/^```\s*/i, "")
+              .replace(/\s*```$/i, "")
+              .trim();
+            const parsed = JSON.parse(cleanJson);
+            if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0) {
+              return {
+                summary: parsed.summary || `Serviços extraídos do documento de ${businessName}.`,
+                items: parsed.items.map((it: any) => ({
+                  title: String(it.title || "Item Especializado").trim(),
+                  description: String(it.description || "Atendimento e experiência de alta qualidade.").trim(),
+                  price: it.price ? String(it.price).trim() : "Sob Consulta",
+                  badge: it.badge ? String(it.badge).trim() : "Destaque",
+                })),
+              };
+            }
+          }
+        }
+      } catch (geminiErr) {
+        console.warn("[cinematic.functions] Falha na síntese do documento com Gemini:", geminiErr);
+      }
+    }
+
+    // Fallback heurístico inteligente caso não haja API ou ocorra falha de rede
+    const lines = cleanText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter((l) => l.length > 3);
+
+    const pricePattern = /(?:R\$\s*[\d.,]+|\b\d+[,.]\d{2}\b)/i;
+    const candidates: ExtractedServiceItem[] = [];
+
+    for (let i = 0; i < lines.length && candidates.length < 5; i++) {
+      const line = lines[i];
+      const priceMatch = line.match(pricePattern);
+      if (priceMatch) {
+        const titleCandidate = line.replace(pricePattern, "").replace(/[-–|:.]+/g, " ").trim();
+        if (titleCandidate.length >= 3 && titleCandidate.length <= 60) {
+          candidates.push({
+            title: titleCandidate,
+            description: lines[i + 1] && lines[i + 1].length < 120 ? lines[i + 1] : "Procedimento e experiência de padrão exclusivo.",
+            price: priceMatch[0].startsWith("R$") ? priceMatch[0] : `R$ ${priceMatch[0]}`,
+            badge: "Destaque",
+          });
+        }
+      }
+    }
+
+    return {
+      summary: candidates.length > 0
+        ? `Identificados ${candidates.length} itens comerciais no documento.`
+        : "Documento processado com sucesso.",
+      items: candidates.length > 0
+        ? candidates
+        : [
+            {
+              title: "Procedimento Especializado",
+              description: "Atendimento completo com rigor e excelência técnica.",
+              price: "Sob Consulta",
+              badge: "Principal",
+            },
+          ],
     };
   });
 

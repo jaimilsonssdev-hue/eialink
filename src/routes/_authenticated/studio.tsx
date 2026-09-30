@@ -32,6 +32,7 @@ import type {
   CinematicGalleryItem,
   StudioChatMessage,
   CinematicConceptOption,
+  CinematicHighlight,
 } from "@/modules/cinematic/types";
 import { createDefaultCinematicData, LUXURY_PALETTES } from "@/modules/cinematic/defaults";
 import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
@@ -39,7 +40,9 @@ import {
   lookupMapsForCinematicFn,
   createCreativePitchFn,
   saveCinematicPageFn,
+  extractServicesFromPdfTextFn,
 } from "@/modules/cinematic/cinematic.functions";
+import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
 
 export const Route = createFileRoute("/_authenticated/studio")({
   component: CinematicStudioPage,
@@ -136,25 +139,28 @@ export default function CinematicStudioPage() {
     });
   }, []);
 
-  // 1. Extração Google Maps
-  const handleLookupMaps = async () => {
-    if (!mapsQuery.trim()) {
+  // 1. Extração Google Maps Unificada
+  const handleLookupMaps = async (targetQuery?: string) => {
+    const currentQuery = (targetQuery || mapsQuery).trim();
+    if (!currentQuery) {
       toast.error("Cole um link do Google Maps ou o nome do local.");
       return;
     }
 
-    const currentQuery = mapsQuery;
     setIsLookingUpMaps(true);
     try {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `user-maps-${Date.now()}`,
-          sender: "user",
-          text: `Extrair dados do Google Maps: ${currentQuery}`,
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
+      // Se não veio pelo chat (veio pelo popover), adiciona a mensagem do usuário
+      if (!targetQuery) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `user-maps-${Date.now()}`,
+            sender: "user",
+            text: `Importar ficha do Google Maps: ${currentQuery}`,
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          },
+        ]);
+      }
 
       const result = await lookupMapsForCinematicFn({ data: { urlOrQuery: currentQuery } });
 
@@ -172,14 +178,14 @@ export default function CinematicStudioPage() {
         if (result.openingHours) updated.openingHours = result.openingHours;
 
         if (result.photos && result.photos.length > 0) {
-          pulledPhotos = result.photos.slice(0, 6);
+          pulledPhotos = result.photos.slice(0, 8);
           const newGallery: CinematicGalleryItem[] = pulledPhotos.map((url: string, i: number) => ({
-            id: `g-maps-${i}`,
+            id: `g-maps-${Date.now()}-${i}`,
             url,
             caption: `Ambiente e detalhes da ${result.name}`,
             category: "Espaço",
           }));
-          updated.gallery = newGallery;
+          updated.gallery = [...newGallery, ...prev.gallery.filter((g) => !g.id.startsWith("g-maps-"))];
           if (newGallery[0]) {
             updated.hero.backgroundImage = newGallery[0].url;
           }
@@ -193,7 +199,7 @@ export default function CinematicStudioPage() {
         {
           id: `agent-maps-${Date.now()}`,
           sender: "agent",
-          text: `Dados de "${result.name}" importados com sucesso! Integrei os dados e as fotos reais. Como deseja posicionar a marca? Descreva a atmosfera ou escolha uma proposta abaixo.`,
+          text: `Importei os dados e fotos reais de "${result.name}". O site já está atualizado!\n\n• Endereço: ${result.address || "Confirmado"}\n• WhatsApp: ${result.whatsapp || "Configurado"}\n• Avaliação Google: ${result.rating ? `${result.rating} ★ (${result.reviewsCount || "várias"} avaliações)` : "4.9 ★"}\n\nComo deseja posicionar a marca agora? Você pode pedir ajustes de atmosfera visual, anexar cardápios/PDFs ou aprovar uma das propostas conceituais.`,
           meta: {
             name: result.name,
             rating: result.rating || 4.9,
@@ -207,7 +213,7 @@ export default function CinematicStudioPage() {
 
       setMapsQuery("");
       setShowMapsInput(false);
-      toast.success(`Dados de "${result.name}" integrados!`);
+      toast.success(`Dados e fotos reais de "${result.name}" integrados!`);
     } catch (err: any) {
       toast.error(err.message || "Não foi possível puxar os dados do link.");
     } finally {
@@ -215,77 +221,155 @@ export default function CinematicStudioPage() {
     }
   };
 
-  // 2. Upload de Fotos Reais
+  // 2. Upload de Fotos Reais e Leitura Inteligente de Documentos PDF (Cardápio / Tabela de Preços)
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    toast.info("Processando fotos reais em alta definição...");
-    const newItems: CinematicGalleryItem[] = [];
+    const fileList = Array.from(files);
+    const pdfFiles = fileList.filter((f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
+    const imageFiles = fileList.filter((f) => f.type.startsWith("image/"));
 
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      try {
-        let finalUrl = "";
-        if (userId) {
-          const ext = file.name.split(".").pop() || "jpg";
-          const path = `cinematic/${userId}/${crypto.randomUUID()}.${ext}`;
-          const { error: upErr } = await supabase.storage.from("bio-media").upload(path, file, {
-            upsert: true,
-          });
-
-          if (!upErr) {
-            const { data: pubData } = supabase.storage.from("bio-media").getPublicUrl(path);
-            if (pubData?.publicUrl) finalUrl = pubData.publicUrl;
-          }
-        }
-
-        if (!finalUrl) {
-          finalUrl = await new Promise<string>((resolve) => {
-            const reader = new FileReader();
-            reader.onload = () => resolve(reader.result as string);
-            reader.readAsDataURL(file);
-          });
-        }
-
-        newItems.push({
-          id: `upload-${Date.now()}-${i}`,
-          url: finalUrl,
-          caption: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
-          category: "Exclusivo",
-        });
-      } catch (err) {
-        console.warn("Erro ao carregar foto:", err);
-      }
-    }
-
-    if (newItems.length > 0) {
-      setData((prev: CinematicPageData) => ({
-        ...prev,
-        gallery: [...newItems, ...prev.gallery],
-        hero: {
-          ...prev.hero,
-          backgroundImage: prev.hero.backgroundImage.includes("unsplash.com/photo-1501339847302")
-            ? newItems[0].url
-            : prev.hero.backgroundImage,
-        },
-      }));
-
+    // A) Processamento Inteligente de Documentos PDF
+    for (const pdfFile of pdfFiles) {
       setMessages((prev) => [
         ...prev,
         {
-          id: `agent-photos-${Date.now()}`,
-          sender: "agent",
-          text: `${newItems.length} foto(s) em alta resolução foram adicionadas ao acervo. Já posso criar um plano criativo destacando essas imagens.`,
-          meta: {
-            photoCount: newItems.length,
-            thumbnails: newItems.map((n) => n.url),
-          },
+          id: `user-pdf-${Date.now()}`,
+          sender: "user",
+          text: `📎 Documento enviado: ${pdfFile.name}`,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
 
-      toast.success(`${newItems.length} foto(s) integradas com sucesso!`);
+      const toastId = toast.loading(`Lendo documento "${pdfFile.name}" com IA...`);
+
+      try {
+        const extracted = await extractAssetsFromPdf(pdfFile);
+
+        if (!extracted.extractedText || extracted.extractedText.trim().length < 10) {
+          toast.dismiss(toastId);
+          toast.error(`Não foi possível extrair texto legível do arquivo "${pdfFile.name}".`);
+          continue;
+        }
+
+        const res = await extractServicesFromPdfTextFn({
+          data: {
+            text: extracted.extractedText,
+            businessName: data.businessName,
+            niche: data.niche,
+          },
+        });
+
+        if (res.items && res.items.length > 0) {
+          const newHighlights: CinematicHighlight[] = res.items.map((it, idx) => ({
+            id: `hl-pdf-${Date.now()}-${idx}`,
+            title: it.title,
+            description: it.description,
+            price: it.price,
+            badge: it.badge || "Destaque",
+          }));
+
+          setData((prev) => ({
+            ...prev,
+            highlights: newHighlights,
+          }));
+
+          const itemsFormatted = res.items
+            .map((it) => `• **${it.title}**${it.price ? ` (${it.price})` : ""}\n  _${it.description}_`)
+            .join("\n\n");
+
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `agent-pdf-${Date.now()}`,
+              sender: "agent",
+              text: `Li o documento "${pdfFile.name}" e extraí os seguintes serviços para o site:\n\n${itemsFormatted}\n\nJá atualizei a vitrine e catálogo da sua página com esses dados!`,
+              timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+            },
+          ]);
+
+          toast.dismiss(toastId);
+          toast.success(`Catálogo atualizado com ${res.items.length} itens do documento!`);
+        } else {
+          toast.dismiss(toastId);
+          toast.info("Documento lido, mas nenhum item comercial explícito foi identificado.");
+        }
+      } catch (pdfErr: any) {
+        toast.dismiss(toastId);
+        toast.error(`Erro ao ler PDF: ${pdfErr?.message || "falha na leitura"}`);
+      }
+    }
+
+    // B) Processamento de Fotos em Alta Definição
+    if (imageFiles.length > 0) {
+      toast.info(`Processando ${imageFiles.length} foto(s) reais em alta definição...`);
+      const newItems: CinematicGalleryItem[] = [];
+
+      for (let i = 0; i < imageFiles.length; i++) {
+        const file = imageFiles[i];
+        try {
+          let finalUrl = "";
+          if (userId) {
+            const ext = file.name.split(".").pop() || "jpg";
+            const path = `cinematic/${userId}/${crypto.randomUUID()}.${ext}`;
+            const { error: upErr } = await supabase.storage.from("bio-media").upload(path, file, {
+              upsert: true,
+            });
+
+            if (!upErr) {
+              const { data: pubData } = supabase.storage.from("bio-media").getPublicUrl(path);
+              if (pubData?.publicUrl) finalUrl = pubData.publicUrl;
+            }
+          }
+
+          if (!finalUrl) {
+            finalUrl = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.readAsDataURL(file);
+            });
+          }
+
+          newItems.push({
+            id: `upload-${Date.now()}-${i}`,
+            url: finalUrl,
+            caption: file.name.replace(/\.[^/.]+$/, "").replace(/[-_]/g, " "),
+            category: "Exclusivo",
+          });
+        } catch (err) {
+          console.warn("Erro ao carregar foto:", err);
+        }
+      }
+
+      if (newItems.length > 0) {
+        setData((prev: CinematicPageData) => ({
+          ...prev,
+          gallery: [...newItems, ...prev.gallery],
+          hero: {
+            ...prev.hero,
+            backgroundImage: prev.hero.backgroundImage.includes("unsplash.com/photo-1501339847302")
+              ? newItems[0].url
+              : prev.hero.backgroundImage,
+          },
+        }));
+
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `agent-photos-${Date.now()}`,
+            sender: "agent",
+            text: `${newItems.length} foto(s) em alta resolução foram adicionadas ao acervo e à galeria da página.`,
+            meta: {
+              photoCount: newItems.length,
+              thumbnails: newItems.map((n) => n.url),
+            },
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          },
+        ]);
+
+        toast.success(`${newItems.length} foto(s) integradas com sucesso!`);
+      }
     }
 
     if (fileInputRef.current) fileInputRef.current.value = "";
@@ -295,10 +379,36 @@ export default function CinematicStudioPage() {
   const handleSendMessage = async (promptOverride?: string) => {
     const promptToUse = promptOverride || aiPrompt;
     if (!promptToUse.trim()) {
-      toast.error("Digite o que você deseja mudar ou escolha uma sugestão.");
+      toast.error("Digite o que você deseja mudar ou cole um link do Google Maps.");
       return;
     }
 
+    const trimmedPrompt = promptToUse.trim();
+
+    // 3.1. Detecção Inteligente de Link ou Comando do Google Maps no Chat
+    const mapsUrlMatch = trimmedPrompt.match(/https?:\/\/(?:maps\.app\.goo\.gl|[a-z0-9.]*google\.[a-z.]+\/maps|goo\.gl\/maps)[^\s]*/i) ||
+      trimmedPrompt.match(/https?:\/\/(?:www\.)?google\.[a-z.]+\/search[^\s]*/i);
+    const mapsCommandMatch = /^(?:importar|puxar|extrair|buscar dados|ficha do google|google maps)\s*[:\-]?\s*(.+)/i.exec(trimmedPrompt);
+
+    if (mapsUrlMatch || mapsCommandMatch) {
+      const queryToLookup = mapsUrlMatch ? mapsUrlMatch[0] : (mapsCommandMatch ? mapsCommandMatch[1].trim() : trimmedPrompt);
+
+      const userMsg: StudioChatMessage = {
+        id: `user-${Date.now()}`,
+        sender: "user",
+        text: promptToUse,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+
+      setMessages((prev) => [...prev, userMsg]);
+      if (!promptOverride) setAiPrompt("");
+      if (textareaRef.current) textareaRef.current.style.height = "auto";
+
+      await handleLookupMaps(queryToLookup);
+      return;
+    }
+
+    // 3.2. Fluxo Normal de Direção Criativa e Delta Inteligente
     const userMsg: StudioChatMessage = {
       id: `user-${Date.now()}`,
       sender: "user",
@@ -830,7 +940,7 @@ export default function CinematicStudioPage() {
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept="image/*"
+                  accept="image/*,application/pdf"
                   onChange={handleFileUpload}
                   className="hidden"
                 />
@@ -862,7 +972,7 @@ export default function CinematicStudioPage() {
                       />
                       <button
                         type="button"
-                        onClick={handleLookupMaps}
+                        onClick={() => handleLookupMaps()}
                         disabled={isLookingUpMaps || !mapsQuery.trim()}
                         className="rounded-lg bg-zinc-100 text-zinc-950 font-medium text-xs px-3 py-1.5 hover:bg-white transition-colors disabled:opacity-40"
                       >
@@ -890,7 +1000,7 @@ export default function CinematicStudioPage() {
                         handleSendMessage();
                       }
                     }}
-                    placeholder="Descreva a atmosfera sensorial, estilo visual ou produtos..."
+                    placeholder="Cole um link do Maps, anexe um PDF/fotos ou descreva alterações..."
                     className="w-full resize-none bg-transparent px-2.5 py-1.5 text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none [scrollbar-width:none]"
                   />
 
@@ -901,7 +1011,7 @@ export default function CinematicStudioPage() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        title="Anexar fotos"
+                        title="Anexar fotos ou documento PDF (cardápio, tabela)"
                         className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
                       >
                         <Plus className="h-4 w-4" />

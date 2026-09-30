@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import type { CinematicPageData } from "./types";
+import type { CinematicPageData, CreativePlan, CinematicConceptOption } from "./types";
 import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
 import type { ProspectDraft } from "@/modules/prospecting/types";
@@ -425,4 +425,280 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
       publicUrl: `/p/${savedSlug}`,
     };
   });
+
+/**
+ * 4. Elaboração de Plano Criativo & Pitch de Conceitos (Opções A e B)
+ */
+export const createCreativePitchFn = createServerFn({ method: "POST" })
+  .validator(
+    (d: {
+      businessName: string;
+      niche: string;
+      userMessage: string;
+      currentData: CinematicPageData;
+      conversationHistory?: Array<{ sender: "user" | "agent"; text: string }>;
+    }) => d
+  )
+  .handler(async ({ data: input }) => {
+    const { businessName, niche, userMessage, currentData, conversationHistory = [] } = input;
+    const instruction = (userMessage || "").trim();
+
+    const apiKey = (
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_AI_STUDIO_KEY ||
+      (process.env as any).VITE_GEMINI_API_KEY ||
+      ""
+    ).trim();
+
+    if (apiKey) {
+      try {
+        const prompt = `Você é um Diretor de Arte e Consultor de Branding Internacional (padrão v0, Lovable, Pentagram, Awwwards).
+O usuário está cocriando a experiência digital cinematográfica e interativa para o negócio "${businessName}" (Nicho: "${niche}").
+
+MENSAGEM DO USUÁRIO:
+"""${instruction}"""
+
+HISTÓRICO DA CONVERSA RECENTE:
+${JSON.stringify(conversationHistory.slice(-4), null, 2)}
+
+DADOS ATUAIS DA PÁGINA:
+${JSON.stringify(currentData, null, 2)}
+
+SUA MISSÃO:
+1. NÃO sobrescreva o site diretamente. Em vez disso, atue como um Diretor de Arte empático, sofisticado e parceiro.
+2. Elabore um plano estratégico e apresente DUAS opções conceituais distintas em forma de cards de conceito (Moodboard):
+   - Opção A (option_a): Linha mais clássica, profunda, sensorial, acolhedora ou editorial nobre (ex: tons de madeira/âmbar/ouro ou esmeralda, fontes serifadas, foco na história e tempo).
+   - Opção B (option_b): Linha mais arrojada, de vanguarda, moderna, minimalista ou de alta voltagem (ex: tons neon/grafite/titânio ou cyber, fontes sans/display/mono, foco no impacto visual e velocidade).
+3. Cada opção deve ter um previewData completo (hero, manifesto, destaques, bentoGrid, marquee, comparison, faq, theme) pronto para ser inspecionado ou aplicado com 1 clique pelo usuário.
+
+RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENTÁRIOS):
+{
+  "agentMessage": "Mensagem empática, inspiradora e detalhada do Diretor de Arte (2 a 3 parágrafos curtos) explicando a visão estética e convidando o usuário a espiar a prévia ou aprovar uma das propostas...",
+  "plan": {
+    "id": "plan_${Date.now()}",
+    "conceptSummary": "Resumo de 1 a 2 frases da direção artística proposta",
+    "rationale": "Justificativa estratégica do porquê dessas abordagens funcionarem para o público desse nicho",
+    "recommendedSections": ["Hero Imersivo com Parallax", "Marquee Contínuo", "Bento Grid de Autoridade", "Manifesto de Origem", "Menu de Criações", "Comparativo vs. Mercado", "FAQ & Ação VIP no WhatsApp"],
+    "options": [
+      {
+        "id": "option_a",
+        "name": "Nome Poético da Opção A",
+        "tagline": "TAGLINE DO CONCEITO A",
+        "palette": {
+          "bg": "#0a0a0c",
+          "accent": "#f59e0b",
+          "cardBg": "#121217"
+        },
+        "typography": "serif",
+        "vibe": "Sensorial, Intimista & Herança Nobre",
+        "heroHeadline": "Título do Hero para o Conceito A",
+        "previewData": {
+          "archetype": "luxury-editorial",
+          "theme": {
+            "bg": "#0a0a0c",
+            "accent": "#f59e0b",
+            "secondaryAccent": "#fbbf24",
+            "fontHeading": "serif",
+            "parallaxEnabled": true,
+            "borderStyle": "glass"
+          },
+          "hero": {
+            "title": "string",
+            "subtitle": "string",
+            "tagline": "string",
+            "floatingBadge": "★ 4.9 NO GOOGLE",
+            "backgroundImage": "${currentData.hero.backgroundImage}",
+            ${currentData.hero.backgroundVideo ? `"backgroundVideo": "${currentData.hero.backgroundVideo}",` : ""}
+            "ctaText": "Solicitar Atendimento VIP",
+            "ctaLink": "#manifesto"
+          },
+          "marquee": [...],
+          "bentoGrid": [...],
+          "manifesto": {
+            "headline": "string",
+            "bodyText": "string",
+            "quote": "string",
+            "author": "string"
+          },
+          "highlights": [...]
+        }
+      },
+      {
+        "id": "option_b",
+        "name": "Nome Arrojado da Opção B",
+        "tagline": "TAGLINE DO CONCEITO B",
+        "palette": {
+          "bg": "#070709",
+          "accent": "#ccff00",
+          "cardBg": "#0e0e13"
+        },
+        "typography": "display",
+        "vibe": "Contemporâneo, Pulsante & Neo-Pop",
+        "heroHeadline": "Título do Hero para o Conceito B",
+        "previewData": {
+          "archetype": "neo-pop-d2c",
+          "theme": {
+            "bg": "#070709",
+            "accent": "#ccff00",
+            "secondaryAccent": "#ff0055",
+            "fontHeading": "display",
+            "parallaxEnabled": true,
+            "borderStyle": "pill"
+          },
+          "hero": {
+            "title": "string",
+            "subtitle": "string",
+            "tagline": "string",
+            "floatingBadge": "⚡ EDIÇÃO AUTORAL 2026",
+            "backgroundImage": "${currentData.hero.backgroundImage}",
+            ${currentData.hero.backgroundVideo ? `"backgroundVideo": "${currentData.hero.backgroundVideo}",` : ""}
+            "ctaText": "Explorar Agora",
+            "ctaLink": "#diferenciais"
+          },
+          "marquee": [...],
+          "bentoGrid": [...],
+          "manifesto": {
+            "headline": "string",
+            "bodyText": "string",
+            "quote": "string",
+            "author": "string"
+          },
+          "highlights": [...]
+        }
+      }
+    ]
+  }
+}`;
+
+        const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
+        for (const model of models) {
+          try {
+            const resp = await fetch(
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
+                apiKey
+              )}`,
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  contents: [{ role: "user", parts: [{ text: prompt }] }],
+                  generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
+                }),
+              }
+            );
+
+            if (resp.ok) {
+              const resJson = await resp.json();
+              const textOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
+              if (textOutput) {
+                const parsed = JSON.parse(textOutput);
+                if (parsed.agentMessage && parsed.plan && parsed.plan.options && parsed.plan.options.length >= 2) {
+                  return {
+                    agentMessage: parsed.agentMessage as string,
+                    plan: parsed.plan as CreativePlan,
+                  };
+                }
+              }
+            }
+          } catch (modelErr) {
+            console.warn(`[CreativePitch] Falha com modelo ${model}:`, modelErr);
+          }
+        }
+      } catch (err) {
+        console.warn("[CreativePitch] Erro na chamada com IA:", err);
+      }
+    }
+
+    // Heurística Fallback inteligente para garantir plano criativo mesmo sem chave/offline
+    const planId = `plan_${Date.now()}`;
+    const nameA = `Atmosfera Nobre & Herança`;
+    const nameB = `Vanguarda Urbana & Impacto`;
+
+    const optionA: CinematicConceptOption = {
+      id: "option_a",
+      name: nameA,
+      tagline: "CLÁSSICO SENSORIAL",
+      palette: {
+        bg: "#0a0a0c",
+        accent: "#f59e0b",
+        cardBg: "#121217",
+      },
+      typography: "serif",
+      vibe: "Elegante, intimista com iluminação acolhedora e acabamento de alta gastronomia.",
+      heroHeadline: `O Ritual Inesquecível da ${businessName}`,
+      previewData: {
+        ...currentData,
+        archetype: "luxury-editorial",
+        theme: {
+          ...currentData.theme,
+          bg: "#0a0a0c",
+          accent: "#f59e0b",
+          secondaryAccent: "#fbbf24",
+          fontHeading: "serif",
+          borderStyle: "glass",
+        },
+        hero: {
+          ...currentData.hero,
+          title: `O Ritual Inesquecível da ${businessName}`,
+          subtitle: "Onde o tempo desacelera para dar lugar à contemplação dos sentidos e à excelência autoral.",
+          tagline: "EXPERIÊNCIA EXCLUSIVA",
+          floatingBadge: "★ 4.9 NO GOOGLE",
+        },
+      },
+    };
+
+    const optionB: CinematicConceptOption = {
+      id: "option_b",
+      name: nameB,
+      tagline: "MINIMALISMO ARROJADO",
+      palette: {
+        bg: "#070709",
+        accent: "#e2e8f0",
+        cardBg: "#0f0f14",
+      },
+      typography: "sans",
+      vibe: "Estética pura, formas arquitetônicas contemporâneas e alta autoridade.",
+      heroHeadline: `A Nova Assinatura da ${businessName}`,
+      previewData: {
+        ...currentData,
+        archetype: "clean-biotech",
+        theme: {
+          ...currentData.theme,
+          bg: "#070709",
+          accent: "#e2e8f0",
+          secondaryAccent: "#38bdf8",
+          fontHeading: "sans",
+          borderStyle: "pill",
+        },
+        hero: {
+          ...currentData.hero,
+          title: `A Nova Assinatura da ${businessName}`,
+          subtitle: "Design contemporâneo, rigor milimétrico e precisão para quem não aceita o comum.",
+          tagline: "ESTÉTICA PURA 2026",
+          floatingBadge: "ALTA AUTORIDADE",
+        },
+      },
+    };
+
+    return {
+      agentMessage: `Analisei o posicionamento da ${businessName} e estruturei duas abordagens conceituais exclusivas. A Opção A traz uma narrativa contemplativa e calorosa com tipografia editorial. A Opção B aposta em contraste contemporâneo e linhas puras. Você pode espiar a prévia de qualquer uma no canvas ao vivo ou aprovar a sua favorita para aplicá-la em definitivo.`,
+      plan: {
+        id: planId,
+        conceptSummary: `Direção de arte sob medida com 2 variações conceituais para a ${businessName}.`,
+        rationale: `Harmonização entre estética visual de padrão internacional e gatilhos de conversão VIP.`,
+        recommendedSections: [
+          "Hero Cinematográfico com Parallax GPU",
+          "Marquee Contínuo",
+          "Bento Grid de Pilares de Distinção",
+          "Manifesto de Essência",
+          "Galeria em Tela Cheia com Lightbox",
+          "Criações em Destaque",
+          "Comparativo de Vantagens",
+          "FAQ & Ação VIP no WhatsApp",
+        ],
+        options: [optionA, optionB],
+      },
+    };
+  });
+
 

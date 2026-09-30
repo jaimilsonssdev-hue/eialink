@@ -3,12 +3,12 @@ import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
   MapPin,
-  Upload,
   Send,
   Save,
   ExternalLink,
   Copy,
   Check,
+  CheckCheck,
   Smartphone,
   Monitor,
   Palette,
@@ -20,46 +20,30 @@ import {
   Bot,
   Plus,
   X,
-  Type,
   Video,
   FileText,
-  Phone,
-  Layers,
   ChevronDown,
+  Eye,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import type { CinematicPageData, CinematicGalleryItem } from "@/modules/cinematic/types";
+import type {
+  CinematicPageData,
+  CinematicGalleryItem,
+  StudioChatMessage,
+  CinematicConceptOption,
+} from "@/modules/cinematic/types";
 import { createDefaultCinematicData, LUXURY_PALETTES } from "@/modules/cinematic/defaults";
 import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
 import {
   lookupMapsForCinematicFn,
-  refineCinematicWithAiFn,
+  createCreativePitchFn,
   saveCinematicPageFn,
 } from "@/modules/cinematic/cinematic.functions";
 
 export const Route = createFileRoute("/_authenticated/studio")({
   component: CinematicStudioPage,
 });
-
-interface ChatMessage {
-  id: string;
-  sender: "ai" | "user";
-  text?: string;
-  type?: "text" | "maps_extracted" | "photos_uploaded" | "art_direction";
-  meta?: {
-    name?: string;
-    rating?: number;
-    address?: string;
-    openingHours?: string;
-    photoCount?: number;
-    thumbnails?: string[];
-    tagline?: string;
-    paletteName?: string;
-    fontName?: string;
-  };
-  timestamp: string;
-}
 
 export default function CinematicStudioPage() {
   const [data, setData] = useState<CinematicPageData>(() => createDefaultCinematicData());
@@ -72,17 +56,24 @@ export default function CinematicStudioPage() {
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [mobileTab, setMobileTab] = useState<"controls" | "preview">("controls");
 
-  // Estados de Chat e IA
+  // Estados de Chat e IA (Fluxo de Plano Criativo & Aprovação)
   const [aiPrompt, setAiPrompt] = useState("");
   const [isRefiningAi, setIsRefiningAi] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
+  const [messages, setMessages] = useState<StudioChatMessage[]>([
     {
       id: "welcome",
-      sender: "ai",
-      text: "Olá! Sou sua Diretora Criativa de Arte e Scrollytelling. Cole um link do Google Maps, anexe fotos reais em alta definição ou descreva a atmosfera sensorial desejada para moldarmos uma experiência cinematográfica de ultra-luxo.",
+      sender: "agent",
+      text: "Olá! Sou seu Diretor de Arte. Envie fotos, cole o link do Google Maps ou me conte sobre o negócio para eu criar um plano exclusivo para você.",
       timestamp: "Agora",
     },
   ]);
+
+  // Prévia Temporária de Opção (Espiar antes de aprovar)
+  const [temporaryPreview, setTemporaryPreview] = useState<{
+    optionId: "option_a" | "option_b";
+    optionName: string;
+    data: CinematicPageData;
+  } | null>(null);
 
   // Popover rápido de Google Maps
   const [showMapsInput, setShowMapsInput] = useState(false);
@@ -125,7 +116,6 @@ export default function CinematicStudioPage() {
     const currentQuery = mapsQuery;
     setIsLookingUpMaps(true);
     try {
-      // Adiciona mensagem do usuário
       setMessages((prev) => [
         ...prev,
         {
@@ -168,14 +158,12 @@ export default function CinematicStudioPage() {
         return updated;
       });
 
-      // Adiciona evento rico no feed de mensagens
       setMessages((prev) => [
         ...prev,
         {
-          id: `ai-maps-${Date.now()}`,
-          sender: "ai",
-          type: "maps_extracted",
-          text: `Dados de "${result.name}" importados com sucesso! Integrei as informações oficiais e preparei as fotos reais para o Scrollytelling.`,
+          id: `agent-maps-${Date.now()}`,
+          sender: "agent",
+          text: `Dados de "${result.name}" importados com sucesso! Integrei os dados e as fotos reais. Como deseja posicionar a marca? Descreva a atmosfera ou escolha uma proposta abaixo.`,
           meta: {
             name: result.name,
             rating: result.rating || 4.9,
@@ -253,14 +241,12 @@ export default function CinematicStudioPage() {
         },
       }));
 
-      // Adiciona mensagem rica no feed
       setMessages((prev) => [
         ...prev,
         {
-          id: `ai-photos-${Date.now()}`,
-          sender: "ai",
-          type: "photos_uploaded",
-          text: `${newItems.length} foto(s) em alta resolução foram adicionadas ao acervo. A primeira foto foi definida como capa principal.`,
+          id: `agent-photos-${Date.now()}`,
+          sender: "agent",
+          text: `${newItems.length} foto(s) em alta resolução foram adicionadas ao acervo. Já posso criar um plano criativo destacando essas imagens.`,
           meta: {
             photoCount: newItems.length,
             thumbnails: newItems.map((n) => n.url),
@@ -275,25 +261,22 @@ export default function CinematicStudioPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  // 3. Direção de Arte com IA
-  const handleRefineWithAi = async (promptOverride?: string) => {
+  // 3. Diálogo e Plano Criativo com o Agente Diretor de Arte
+  const handleSendMessage = async (promptOverride?: string) => {
     const promptToUse = promptOverride || aiPrompt;
     if (!promptToUse.trim()) {
-      toast.error("Digite o que você deseja mudar ou escolha uma inspiração.");
+      toast.error("Digite o que você deseja mudar ou escolha uma sugestão.");
       return;
     }
 
-    // Adiciona pergunta do usuário ao chat
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: `user-prompt-${Date.now()}`,
-        sender: "user",
-        text: promptToUse,
-        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      },
-    ]);
+    const userMsg: StudioChatMessage = {
+      id: `user-${Date.now()}`,
+      sender: "user",
+      text: promptToUse,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
 
+    setMessages((prev) => [...prev, userMsg]);
     if (!promptOverride) setAiPrompt("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -301,49 +284,85 @@ export default function CinematicStudioPage() {
 
     setIsRefiningAi(true);
     try {
-      const updated = await refineCinematicWithAiFn({
+      const history = [...messages, userMsg].map((m) => ({
+        sender: m.sender,
+        text: m.text,
+      }));
+
+      const pitch = await createCreativePitchFn({
         data: {
+          businessName: data.businessName,
+          niche: data.niche,
+          userMessage: promptToUse,
           currentData: data,
-          userInstruction: promptToUse,
+          conversationHistory: history,
         },
       });
 
-      setData(updated);
+      const agentMsg: StudioChatMessage = {
+        id: `agent-${Date.now()}`,
+        sender: "agent",
+        text: pitch.agentMessage,
+        plan: pitch.plan,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
 
-      // Adiciona resposta poética da IA
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: `ai-response-${Date.now()}`,
-          sender: "ai",
-          type: "art_direction",
-          text: `Direção de arte aplicada com elegância! Elevei a narrativa do Hero para "${updated.hero.title}", refinei o manifesto e adequei a atmosfera cromática ao tom solicitado.`,
-          meta: {
-            tagline: updated.hero.tagline,
-            fontName: updated.theme.fontHeading,
-          },
-          timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-        },
-      ]);
-
-      toast.success("✨ Direção de arte cinematográfica aplicada!");
+      setMessages((prev) => [...prev, agentMsg]);
+      toast.success("🎨 Plano criativo elaborado com 2 propostas conceituais!");
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
         {
-          id: `ai-err-${Date.now()}`,
-          sender: "ai",
-          text: "Houve uma instabilidade temporária ao conectar com a IA, mas tentei ajustar os parâmetros principais com base na sua instrução.",
+          id: `agent-err-${Date.now()}`,
+          sender: "agent",
+          text: "Houve uma instabilidade temporária ao conectar com a IA, mas você pode continuar ajustando na aba de Ajustes manuais.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
-      toast.error(err.message || "Erro ao processar instrução de IA.");
+      toast.error(err.message || "Erro ao processar plano criativo.");
     } finally {
       setIsRefiningAi(false);
     }
   };
 
-  // 4. Salvar & Publicar
+  // 4. Aplicação e Aprovação do Conceito
+  const handleApplyOption = (messageId: string, option: CinematicConceptOption) => {
+    setData((prev) => ({
+      ...prev,
+      ...option.previewData,
+      theme: {
+        ...prev.theme,
+        ...(option.previewData.theme || {}),
+      },
+      hero: {
+        ...prev.hero,
+        ...(option.previewData.hero || {}),
+        backgroundImage: prev.hero.backgroundImage || option.previewData.hero?.backgroundImage || "",
+      },
+    }));
+
+    setTemporaryPreview(null);
+
+    // Marca a opção aprovada na mensagem correspondente
+    setMessages((prev) =>
+      prev.map((m) => (m.id === messageId ? { ...m, appliedOptionId: option.id } : m))
+    );
+
+    // Envia confirmação carinhosa do Agente
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `agent-confirm-${Date.now()}`,
+        sender: "agent",
+        text: `✨ O conceito "${option.name}" foi aprovado e aplicado com sucesso na sua página! Os títulos, paleta e blocos foram atualizados ao vivo. O que achou do resultado?`,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      },
+    ]);
+
+    toast.success(`Conceito "${option.name}" aprovado e aplicado!`);
+  };
+
+  // 5. Salvar & Publicar
   const handleSaveAndPublish = async () => {
     if (!userId) {
       toast.error("Sessão de usuário não identificada. Faça login novamente.");
@@ -386,6 +405,9 @@ export default function CinematicStudioPage() {
     setTimeout(() => setCopiedLink(false), 2500);
   };
 
+  // Dados em exibição no Canvas (se estiver espiando, renderiza a prévia temporária)
+  const activeCanvasData = temporaryPreview ? temporaryPreview.data : data;
+
   return (
     <div className="cinematic-studio flex h-screen w-full flex-col overflow-hidden bg-[#070709] text-zinc-100 font-sans">
       {/* TOPBAR UNIFICADA DO COCKPIT */}
@@ -397,7 +419,7 @@ export default function CinematicStudioPage() {
           <div className="flex items-center gap-2">
             <span className="font-bold text-sm text-white tracking-wide">Cinematic Studio</span>
             <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[9px] font-bold text-amber-300 uppercase tracking-wider">
-              Lovable Engine
+              Creative Director Flow
             </span>
           </div>
         </div>
@@ -476,7 +498,7 @@ export default function CinematicStudioPage() {
 
       {/* CORPO DO COCKPIT */}
       <div className="flex flex-1 overflow-hidden">
-        {/* COLUNA ESQUERDA (440px): CHAT IA + AJUSTES MANUAIS */}
+        {/* COLUNA ESQUERDA (440px): CHAT CONVERSACIONAL COM PLANO CRIATIVO + AJUSTES */}
         <aside
           className={`w-full lg:w-[440px] shrink-0 flex flex-col border-r border-white/10 bg-[#0a0a0d] z-20 ${
             mobileTab === "preview" ? "hidden lg:flex" : "flex"
@@ -510,36 +532,36 @@ export default function CinematicStudioPage() {
             </button>
           </div>
 
-          {/* 2. Conteúdo da Aba 1: COPILOTO IA CONVERSACIONAL (Estilo Lovable) */}
+          {/* 2. Conteúdo da Aba 1: FLUXO DE PLANO CRIATIVO & APROVAÇÃO */}
           {activeTab === "chat" && (
             <div className="flex flex-1 flex-col overflow-hidden">
               {/* Feed de Mensagens Rolável */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 overflow-y-auto p-4 space-y-5">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
                   >
                     <div
-                      className={`max-w-[92%] rounded-2xl p-3.5 text-xs leading-relaxed shadow-lg ${
+                      className={`max-w-[95%] rounded-2xl p-4 text-xs leading-relaxed shadow-lg ${
                         msg.sender === "user"
                           ? "bg-amber-500 text-black font-medium rounded-tr-xs"
                           : "bg-white/[0.05] border border-white/10 text-zinc-200 rounded-tl-xs backdrop-blur-md"
                       }`}
                     >
                       {/* Cabeçalho da Mensagem */}
-                      {msg.sender === "ai" && (
-                        <div className="flex items-center gap-1.5 mb-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                          <Sparkles className="h-3 w-3" />
-                          <span>Diretora Criativa IA</span>
+                      {msg.sender === "agent" && (
+                        <div className="flex items-center gap-1.5 mb-2 text-[10px] font-bold uppercase tracking-wider text-amber-300">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span>Diretor de Arte IA</span>
                         </div>
                       )}
 
                       {/* Texto Principal */}
-                      {msg.text && <p className="whitespace-pre-line">{msg.text}</p>}
+                      {msg.text && <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>}
 
                       {/* Card de Google Maps Extraído */}
-                      {msg.type === "maps_extracted" && msg.meta && (
+                      {msg.meta && msg.meta.name && (
                         <div className="mt-3 rounded-xl border border-white/10 bg-black/60 p-3 space-y-2">
                           <div className="flex items-center justify-between font-bold text-white">
                             <span>{msg.meta.name}</span>
@@ -572,7 +594,7 @@ export default function CinematicStudioPage() {
                       )}
 
                       {/* Card de Fotos Enviadas */}
-                      {msg.type === "photos_uploaded" && msg.meta && (
+                      {msg.meta && msg.meta.photoCount && (
                         <div className="mt-2.5 flex gap-1.5 overflow-x-auto pt-1">
                           {msg.meta.thumbnails?.slice(0, 4).map((thumb, idx) => (
                             <img
@@ -585,10 +607,150 @@ export default function CinematicStudioPage() {
                         </div>
                       )}
 
-                      {/* Tagline / Art Direction Preview */}
-                      {msg.type === "art_direction" && msg.meta?.tagline && (
-                        <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-500/10 px-2.5 py-0.5 text-[10px] font-bold text-amber-300">
-                          <span>Tagline: {msg.meta.tagline}</span>
+                      {/* CARTOES DE CONCEITO INTERATIVOS DO PLANO CRIATIVO (Opções A e B) */}
+                      {msg.plan && (
+                        <div className="mt-4 rounded-2xl border border-white/10 bg-black/60 p-3.5 sm:p-4 space-y-4 shadow-xl">
+                          {/* Resumo e Rationale */}
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-[10px] font-bold text-amber-300 uppercase tracking-wider">
+                              <Sparkles className="h-3 w-3" />
+                              <span>Proposta Conceitual</span>
+                            </div>
+                            <p className="text-xs text-white font-medium">{msg.plan.conceptSummary}</p>
+                            {msg.plan.rationale && (
+                              <p className="text-[11px] text-zinc-400 leading-relaxed">{msg.plan.rationale}</p>
+                            )}
+                          </div>
+
+                          {/* Seções Recomendadas */}
+                          {msg.plan.recommendedSections && msg.plan.recommendedSections.length > 0 && (
+                            <div className="flex flex-wrap gap-1 pt-0.5">
+                              {msg.plan.recommendedSections.map((sec, idx) => (
+                                <span
+                                  key={idx}
+                                  className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-medium text-zinc-300"
+                                >
+                                  {sec}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* Grade de 2 Colunas para Opção A e Opção B */}
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                            {msg.plan.options.map((opt) => {
+                              const isApplied = msg.appliedOptionId === opt.id;
+                              const isPreviewing = temporaryPreview?.optionId === opt.id;
+
+                              return (
+                                <div
+                                  key={opt.id}
+                                  className={`relative rounded-xl border p-3 flex flex-col justify-between space-y-3 transition-all ${
+                                    isApplied
+                                      ? "border-emerald-500/60 bg-emerald-950/20 ring-1 ring-emerald-500/40"
+                                      : isPreviewing
+                                      ? "border-amber-400 bg-amber-950/20 ring-1 ring-amber-400/40"
+                                      : "border-white/10 bg-white/[0.02] hover:border-white/20"
+                                  }`}
+                                >
+                                  <div className="space-y-2">
+                                    {/* Header do Card com Tagline e Paleta */}
+                                    <div className="flex items-center justify-between">
+                                      <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400">
+                                        {opt.id === "option_a" ? "Opção A • " : "Opção B • "}
+                                        {opt.tagline}
+                                      </span>
+                                      {/* Amostra de Cores */}
+                                      <div className="flex items-center gap-1">
+                                        <span
+                                          className="h-3 w-3 rounded-full border border-white/20 shadow-xs"
+                                          style={{ backgroundColor: opt.palette.bg }}
+                                          title={`Fundo: ${opt.palette.bg}`}
+                                        />
+                                        <span
+                                          className="h-3 w-3 rounded-full border border-white/20 shadow-xs"
+                                          style={{ backgroundColor: opt.palette.accent }}
+                                          title={`Destaque: ${opt.palette.accent}`}
+                                        />
+                                      </div>
+                                    </div>
+
+                                    {/* Nome e Título de Impacto */}
+                                    <div>
+                                      <h4 className="text-xs font-bold text-white leading-snug">{opt.name}</h4>
+                                      <p className="mt-1 text-[11px] text-zinc-300 italic line-clamp-2">
+                                        "{opt.heroHeadline}"
+                                      </p>
+                                    </div>
+
+                                    {/* Vibe e Tipografia */}
+                                    <div className="text-[10px] text-zinc-400 flex items-center justify-between pt-1 border-t border-white/5">
+                                      <span className="line-clamp-1">{opt.vibe}</span>
+                                      <span className="shrink-0 uppercase font-mono text-[9px] text-amber-300/80">
+                                        {opt.typography}
+                                      </span>
+                                    </div>
+                                  </div>
+
+                                  {/* Ações: Espiar Prévia e Aprovar */}
+                                  <div className="flex items-center gap-1.5 pt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        if (isPreviewing) {
+                                          setTemporaryPreview(null);
+                                        } else {
+                                          setTemporaryPreview({
+                                            optionId: opt.id,
+                                            optionName: opt.name,
+                                            data: {
+                                              ...data,
+                                              ...opt.previewData,
+                                              theme: {
+                                                ...data.theme,
+                                                ...(opt.previewData.theme || {}),
+                                              },
+                                              hero: {
+                                                ...data.hero,
+                                                ...(opt.previewData.hero || {}),
+                                              },
+                                            },
+                                          });
+                                          toast.info(`Prévia da "${opt.name}" carregada no canvas!`);
+                                        }
+                                      }}
+                                      className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-semibold border transition-all ${
+                                        isPreviewing
+                                          ? "border-amber-400/60 bg-amber-500/20 text-amber-300 font-bold"
+                                          : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
+                                      }`}
+                                    >
+                                      <Eye className="h-3 w-3" />
+                                      <span>{isPreviewing ? "Ocultar" : "Espiar"}</span>
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => handleApplyOption(msg.id, opt)}
+                                      disabled={isApplied}
+                                      className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${
+                                        isApplied
+                                          ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 cursor-default"
+                                          : "bg-gradient-to-r from-amber-500 to-amber-400 text-black hover:scale-102 shadow-xs"
+                                      }`}
+                                    >
+                                      {isApplied ? (
+                                        <CheckCheck className="h-3 w-3 text-emerald-300" />
+                                      ) : (
+                                        <Check className="h-3 w-3" />
+                                      )}
+                                      <span>{isApplied ? "Aprovado" : "Aprovar"}</span>
+                                    </button>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -601,7 +763,7 @@ export default function CinematicStudioPage() {
                   <div className="flex flex-col items-start">
                     <div className="flex items-center gap-2 rounded-2xl rounded-tl-xs border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
                       <Sparkles className="h-4 w-4 animate-spin text-amber-400" />
-                      <span>Lapidando narrativa de scrollytelling e atmosfera...</span>
+                      <span>O Diretor de Arte está elaborando a proposta conceitual...</span>
                     </div>
                   </div>
                 )}
@@ -647,19 +809,18 @@ export default function CinematicStudioPage() {
               )}
 
               {/* Pílulas de Inspiração Flutuantes */}
-              {/* Pílulas de Inspiração Flutuantes com os 5 Arquétipos */}
               <div className="border-t border-white/5 bg-[#0a0a0d] px-3.5 pt-2.5 pb-1.5 flex gap-1.5 overflow-x-auto scrollbar-none">
                 {[
-                  { label: "⚡ Neo-Pop D2C", prompt: "Transforme no estilo Neo-Pop D2C (estilo Gigi Energy): alta energia, neon volt pulsante, marquee veloz, contraste arrojado e blocos bento dinâmicos." },
-                  { label: "👑 Luxo Editorial", prompt: "Crie uma experiência de Luxo Editorial (estilo Evasion): tons ébano e ouro, fontes serifadas nobres, vídeo imersivo e narrativa contemplativa." },
-                  { label: "🌿 Clean Biotech", prompt: "Adote a estética Clean Biotech (estilo Biometic): vidro fosco acetinado, tons esmeralda e ciano, tabela comparativa e FAQ rigoroso." },
-                  { label: "💻 Cyber High-Tech", prompt: "Transforme em Cyber High-Tech (estilo Compute-11): grid sutil, tags mono [SYS::01], acentos ciano e titânio, layout de alta precisão." },
-                  { label: "🌑 Dark Brutalist", prompt: "Adote a estética Dark Brutalist (estilo Void): tipografia display gigante, contraste preto e branco, linhas finas de corte e atitude crua." },
+                  { label: "⚡ Neo-Pop D2C", prompt: "Quero uma direção criativa no estilo Neo-Pop D2C (como Gigi Energy): alta voltagem, neon pulsante, marquee veloz e contraste pulsante." },
+                  { label: "👑 Luxo Editorial", prompt: "Quero uma direção criativa de Luxo Editorial (como Evasion): tons ébano e ouro, fontes serifadas nobres e narrativa contemplativa." },
+                  { label: "🌿 Clean Biotech", prompt: "Proponha um conceito Clean Biotech (como Biometic): vidro fosco acetinado, tons esmeralda e ciano, tabela comparativa e FAQ rigoroso." },
+                  { label: "💻 Cyber High-Tech", prompt: "Crie uma proposta Cyber High-Tech (como Compute-11): grid sutil, tags mono [SYS::01], acentos ciano e titânio, layout de alta precisão." },
+                  { label: "🌑 Dark Brutalist", prompt: "Crie uma proposta Dark Brutalist (como Void): tipografia display gigante, contraste preto e branco, linhas finas de corte e atitude crua." },
                 ].map((chip) => (
                   <button
                     key={chip.label}
                     type="button"
-                    onClick={() => handleRefineWithAi(chip.prompt)}
+                    onClick={() => handleSendMessage(chip.prompt)}
                     disabled={isRefiningAi}
                     className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-medium text-zinc-300 hover:border-amber-400/40 hover:text-white transition-colors disabled:opacity-50"
                   >
@@ -715,17 +876,17 @@ export default function CinematicStudioPage() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
-                        handleRefineWithAi();
+                        handleSendMessage();
                       }
                     }}
-                    placeholder="Descreva a atmosfera desejada, estilo ou produtos..."
+                    placeholder="Converse com o Diretor de Arte (ex: 'Quero um tom mais clássico' ou 'Gostei da Opção A, mas mude a fonte')..."
                     className="max-h-24 flex-1 resize-none bg-transparent py-2 text-xs text-white placeholder-zinc-500 focus:outline-hidden"
                   />
 
                   {/* Botão de Envio */}
                   <button
                     type="button"
-                    onClick={() => handleRefineWithAi()}
+                    onClick={() => handleSendMessage()}
                     disabled={isRefiningAi || !aiPrompt.trim()}
                     className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black hover:bg-amber-400 transition-all disabled:opacity-40"
                   >
@@ -754,7 +915,9 @@ export default function CinematicStudioPage() {
                     <FileText className="h-4 w-4" />
                     <span>1. Textos & Identidade</span>
                   </div>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${openSection === "identity" ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${openSection === "identity" ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {openSection === "identity" && (
@@ -848,7 +1011,9 @@ export default function CinematicStudioPage() {
                     <ImageIcon className="h-4 w-4" />
                     <span>2. Mídia, Vídeo e Fotos ({data.gallery.length})</span>
                   </div>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${openSection === "media" ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${openSection === "media" ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {openSection === "media" && (
@@ -950,41 +1115,15 @@ export default function CinematicStudioPage() {
                 >
                   <div className="flex items-center gap-2">
                     <Palette className="h-4 w-4" />
-                    <span>3. Paleta de Luxo & Tipografia</span>
+                    <span>3. Arquétipo, Paleta & Tipografia</span>
                   </div>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${openSection === "styling" ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${openSection === "styling" ? "rotate-180" : ""}`}
+                  />
                 </button>
 
                 {openSection === "styling" && (
                   <div className="p-4 pt-0 space-y-4 text-xs">
-                    {/* Seletor de Paleta */}
-                    <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Paletas de Luxo:</span>
-                      <div className="grid grid-cols-5 gap-2">
-                        {LUXURY_PALETTES.map((pal) => (
-                          <button
-                            key={pal.id}
-                            type="button"
-                            onClick={() =>
-                              setData((prev) => ({
-                                ...prev,
-                                theme: { ...prev.theme, bg: pal.bg, accent: pal.accent },
-                              }))
-                            }
-                            title={pal.name}
-                            className={`h-9 rounded-xl border flex items-center justify-center transition-all ${
-                              data.theme.accent === pal.accent
-                                ? "border-white ring-2 ring-white/40 scale-105"
-                                : "border-white/10 hover:border-white/30"
-                            }`}
-                            style={{ backgroundColor: pal.bg }}
-                          >
-                            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: pal.accent }} />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* Seletor de Arquétipo Visual */}
                     <div className="space-y-1.5">
                       <span className="text-[10px] text-zinc-400 uppercase font-semibold">Arquétipo Visual (Bento Engine):</span>
@@ -1013,6 +1152,34 @@ export default function CinematicStudioPage() {
                           >
                             <span className="block text-xs font-bold text-amber-200">{arq.label}</span>
                             <span className="block text-[9px] text-zinc-400 mt-0.5">{arq.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Seletor de Paleta */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Paletas de Cores:</span>
+                      <div className="grid grid-cols-5 gap-2">
+                        {LUXURY_PALETTES.map((pal) => (
+                          <button
+                            key={pal.id}
+                            type="button"
+                            onClick={() =>
+                              setData((prev) => ({
+                                ...prev,
+                                theme: { ...prev.theme, bg: pal.bg, accent: pal.accent },
+                              }))
+                            }
+                            title={pal.name}
+                            className={`h-9 rounded-xl border flex items-center justify-center transition-all ${
+                              data.theme.accent === pal.accent
+                                ? "border-white ring-2 ring-white/40 scale-105"
+                                : "border-white/10 hover:border-white/30"
+                            }`}
+                            style={{ backgroundColor: pal.bg }}
+                          >
+                            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: pal.accent }} />
                           </button>
                         ))}
                       </div>
@@ -1095,12 +1262,44 @@ export default function CinematicStudioPage() {
             mobileTab === "controls" ? "hidden lg:flex" : "flex"
           }`}
         >
+          {/* Banner Flutuante de Modo "Espiar Prévia" */}
+          {temporaryPreview && (
+            <div className="shrink-0 flex items-center justify-between border-b border-amber-500/40 bg-gradient-to-r from-amber-950/80 via-black/80 to-amber-950/80 px-4 py-2.5 text-xs text-amber-200 backdrop-blur-xl z-20">
+              <div className="flex items-center gap-2">
+                <Eye className="h-4 w-4 text-amber-400 animate-pulse shrink-0" />
+                <span>
+                  Espiando Prévia: <b>{temporaryPreview.optionName}</b> (Modo Demonstração)
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setTemporaryPreview(null)}
+                  className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  Fechar Prévia
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setData(temporaryPreview.data);
+                    setTemporaryPreview(null);
+                    toast.success(`Conceito "${temporaryPreview.optionName}" aprovado e aplicado!`);
+                  }}
+                  className="rounded-lg bg-amber-500 px-3 py-1 text-[11px] font-bold text-black hover:bg-amber-400 transition-colors shadow-xs"
+                >
+                  Aprovar & Fixar
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Container do Preview */}
           <div className="relative flex-1 overflow-hidden flex items-center justify-center p-0 lg:p-4">
             {previewMode === "desktop" ? (
               /* Prévia Desktop de Tela Cheia */
               <div className="h-full w-full overflow-hidden lg:rounded-2xl border-0 lg:border border-white/10 shadow-2xl">
-                <CinematicViewer data={data} isEmbedded={true} />
+                <CinematicViewer data={activeCanvasData} isEmbedded={true} />
               </div>
             ) : (
               /* Prévia Simulando Moldura de iPhone Pro */
@@ -1111,7 +1310,7 @@ export default function CinematicStudioPage() {
                 </div>
                 {/* Tela do Celular */}
                 <div className="flex-1 overflow-hidden pt-4">
-                  <CinematicViewer data={data} isEmbedded={true} />
+                  <CinematicViewer data={activeCanvasData} isEmbedded={true} />
                 </div>
               </div>
             )}
@@ -1179,4 +1378,3 @@ export default function CinematicStudioPage() {
     </div>
   );
 }
-

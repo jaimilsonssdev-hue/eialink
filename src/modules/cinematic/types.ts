@@ -101,3 +101,44 @@ export interface CinematicPageData {
   gallery: CinematicGalleryItem[];
   faq?: FaqItem[];
 }
+
+export interface CinematicConceptOption {
+  id: "option_a" | "option_b";
+  name: string;
+  tagline: string;
+  palette: {
+    bg: string;
+    accent: string;
+    cardBg: string;
+  };
+  typography: "serif" | "sans" | "display" | "mono";
+  vibe: string;
+  heroHeadline: string;
+  previewData: Partial<CinematicPageData>;
+}
+
+export interface CreativePlan {
+  id: string;
+  conceptSummary: string;
+  rationale: string;
+  recommendedSections: string[];
+  options: [CinematicConceptOption, CinematicConceptOption];
+}
+
+export interface StudioChatMessage {
+  id: string;
+  sender: "user" | "agent";
+  text: string;
+  timestamp: string;
+  plan?: CreativePlan; // Presente quando o agente faz uma proposta de design
+  appliedOptionId?: string; // Registra qual opção o usuário aprovou
+  meta?: {
+    name?: string;
+    rating?: number;
+    address?: string;
+    openingHours?: string;
+    photoCount?: number;
+    thumbnails?: string[];
+  };
+}
+

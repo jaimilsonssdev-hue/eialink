@@ -2074,17 +2074,38 @@ export function UnifiedPageEditor({
 
                   {(bio.motion_enabled ?? true) && (
                     <div className="grid grid-cols-3 gap-2">
-                      {(
-                        [
-                          ["gentle", "Suave", "soft", "none"],
-                          ["slide", "Dinâmica", "soft", "pulse"],
-                          ["cinematic", "Cinematográfica", "strong", "pulse"],
-                        ] as const
-                      ).map(([entrance, label, ambient, cta]) => {
-                        const selected = (bio.motion_entrance || "gentle") === entrance;
+                      {[
+                        {
+                          id: "gentle",
+                          label: "Suave",
+                          entrance: "gentle" as const,
+                          ambient: "soft" as const,
+                          cta: "none" as const,
+                        },
+                        {
+                          id: "dynamic",
+                          label: "Dinâmica",
+                          entrance: "rise" as const,
+                          ambient: "soft" as const,
+                          cta: "pulse" as const,
+                        },
+                        {
+                          id: "cinematic",
+                          label: "Cinematográfica",
+                          entrance: "rise" as const,
+                          ambient: "spotlight" as const,
+                          cta: "glow" as const,
+                        },
+                      ].map(({ id, label, entrance, ambient, cta }) => {
+                        const selected =
+                          id === "cinematic"
+                            ? bio.motion_ambient === "spotlight"
+                            : id === "dynamic"
+                            ? bio.motion_entrance === "rise" && bio.motion_ambient !== "spotlight"
+                            : (bio.motion_entrance === "gentle" || !bio.motion_entrance) && bio.motion_ambient !== "spotlight";
                         return (
                           <button
-                            key={entrance}
+                            key={id}
                             type="button"
                             onClick={() =>
                               updateBio({

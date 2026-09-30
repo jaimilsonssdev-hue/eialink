@@ -216,7 +216,40 @@ function BuilderPage() {
             throw new Error(`Não foi possível salvar os dados da empresa: ${profileError.message}`);
           }
 
-          const payload = { ...form, user_id: userId };
+          // Higienização defensiva de campos com check constraint no PostgreSQL:
+          // bio_pages_motion_entrance_check: ('gentle', 'rise', 'none')
+          // bio_pages_motion_ambient_check: ('none', 'soft', 'spotlight')
+          // bio_pages_motion_cta_check: ('none', 'pulse', 'glow')
+          const allowedEntrance = ["gentle", "rise", "none"] as const;
+          const allowedAmbient = ["none", "soft", "spotlight"] as const;
+          const allowedCta = ["none", "pulse", "glow"] as const;
+
+          const rawEntrance = (form as any).motion_entrance;
+          const sanitizedMotionEntrance = allowedEntrance.includes(rawEntrance)
+            ? rawEntrance
+            : rawEntrance === "slide" || rawEntrance === "cinematic"
+            ? "rise"
+            : "gentle";
+
+          const rawAmbient = (form as any).motion_ambient;
+          const sanitizedMotionAmbient = allowedAmbient.includes(rawAmbient)
+            ? rawAmbient
+            : rawAmbient === "strong" || rawAmbient === "cinematic"
+            ? "spotlight"
+            : "soft";
+
+          const rawCta = (form as any).motion_cta;
+          const sanitizedMotionCta = allowedCta.includes(rawCta)
+            ? rawCta
+            : "none";
+
+          const payload = {
+            ...form,
+            motion_entrance: sanitizedMotionEntrance,
+            motion_ambient: sanitizedMotionAmbient,
+            motion_cta: sanitizedMotionCta,
+            user_id: userId,
+          };
           delete (payload as any).id;
           let bioPageId = bio?.id;
           if (bioPageId) {

@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
@@ -24,6 +24,7 @@ import {
   ChevronDown,
   Eye,
   ArrowUp,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -549,43 +550,59 @@ export default function CinematicStudioPage() {
   const activeCanvasData = temporaryPreview ? temporaryPreview.data : data;
 
   return (
-    <div className="cinematic-studio flex h-screen w-full flex-col overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
+    <div className="cinematic-studio flex h-[100dvh] w-full min-h-0 flex-col overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
       {/* TOPBAR UNIFICADA DO COCKPIT */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/80 px-4 backdrop-blur-md z-30">
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span className="text-sm font-semibold tracking-tight text-zinc-100">Cinematic Studio</span>
-            <span className="rounded-full bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
-              Direção Criativa
-            </span>
-          </div>
+      <header className="flex h-14 shrink-0 items-center justify-between gap-2 border-b border-zinc-800/80 bg-zinc-950/80 px-3 sm:px-4 backdrop-blur-md z-30">
+        <div className="flex min-w-0 items-center gap-2">
+          <Link
+            to="/pages"
+            aria-label="Voltar para páginas"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100 transition-colors lg:hidden"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <span className="relative hidden h-2 w-2 shrink-0 sm:flex">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+          </span>
+          <span className="truncate text-sm font-semibold tracking-tight text-zinc-100">Studio</span>
+          <span className="hidden rounded-full bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400 xl:inline">
+            Direção Criativa
+          </span>
         </div>
 
         {/* Alternador Mobile (Abas de Navegação Pequenas) */}
-        <div className="flex lg:hidden items-center gap-1 rounded-lg bg-zinc-900 p-0.5 border border-zinc-800">
+        <div className="flex lg:hidden shrink-0 items-center gap-1 rounded-lg bg-zinc-900 p-0.5 border border-zinc-800">
           <button
             type="button"
             onClick={() => setMobileTab("controls")}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
               mobileTab === "controls" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Cockpit
+            Chat
           </button>
           <button
             type="button"
             onClick={() => setMobileTab("preview")}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
               mobileTab === "preview" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Visualizar
+            Prévia
           </button>
         </div>
+
+        {/* Publicar (Mobile) */}
+        <button
+          type="button"
+          onClick={handleSaveAndPublish}
+          disabled={isSaving}
+          aria-label="Salvar e publicar"
+          className="flex lg:hidden h-8 shrink-0 items-center gap-1.5 rounded-lg bg-zinc-100 px-2.5 text-xs font-medium text-zinc-950 hover:bg-white disabled:opacity-50 transition-colors"
+        >
+          {isSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+        </button>
 
         {/* Ações do Topo Desktop */}
         <div className="hidden lg:flex items-center gap-3">
@@ -638,7 +655,7 @@ export default function CinematicStudioPage() {
       </header>
 
       {/* CORPO DO COCKPIT */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* COLUNA ESQUERDA: CHAT CONVERSACIONAL COM PLANO CRIATIVO + AJUSTES (REDIMENSIONÁVEL) */}
         <aside
           style={{ ["--chat-width" as any]: `${chatWidth}px` }}
@@ -1000,7 +1017,7 @@ export default function CinematicStudioPage() {
                         handleSendMessage();
                       }
                     }}
-                    placeholder="Cole um link do Maps, anexe um PDF/fotos ou descreva alterações..."
+                    placeholder="Mensagem, link do Maps ou anexo..."
                     className="w-full resize-none bg-transparent px-2.5 py-1.5 text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none [scrollbar-width:none]"
                   />
 

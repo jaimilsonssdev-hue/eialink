@@ -47,6 +47,7 @@ function AuthedLayout() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false);
   const { data: access } = usePlanAccess();
+  const isStudio = pathname.startsWith("/studio");
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -209,20 +210,26 @@ function AuthedLayout() {
       </aside>
 
       {/* Content */}
-      <div className={`min-w-0 flex-1 md:ml-64 ${pathname === "/studio" ? "bg-zinc-950" : ""}`}>
-        <header className={`app-mobile-header md:hidden sticky top-0 z-30 glass flex items-center justify-between px-4 h-14 ${pathname === "/studio" ? "hidden" : ""}`}>
-          <button onClick={() => setOpen(true)} aria-label="Abrir menu">
-            <Menu className="h-5 w-5" />
-          </button>
-          <span className="font-display font-bold">
-            EIA <b>LINK</b>
-          </span>
-          <ThemeToggle compact />
-        </header>
+      <div
+        className={`min-w-0 flex-1 md:ml-64 ${
+          isStudio ? "bg-zinc-950 h-[100dvh] overflow-hidden" : ""
+        }`}
+      >
+        {!isStudio && (
+          <header className="app-mobile-header md:hidden sticky top-0 z-30 glass flex items-center justify-between px-4 h-14">
+            <button onClick={() => setOpen(true)} aria-label="Abrir menu">
+              <Menu className="h-5 w-5" />
+            </button>
+            <span className="font-display font-bold">
+              EIA <b>LINK</b>
+            </span>
+            <ThemeToggle compact />
+          </header>
+        )}
         <main
           className={`app-content mx-auto ${
-            pathname === "/studio"
-              ? "p-0 max-w-none w-full h-screen overflow-hidden bg-zinc-950"
+            isStudio
+              ? "p-0 max-w-none w-full h-[100dvh] min-h-0 overflow-hidden bg-zinc-950"
               : pathname === "/builder"
               ? "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-[1600px]"
               : "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-7xl"
@@ -230,27 +237,29 @@ function AuthedLayout() {
         >
           <Outlet />
         </main>
-        <nav className={`app-mobile-nav md:hidden h-16 ${pathname === "/studio" ? "hidden" : ""}`} aria-label="Navegação principal">
-          {mobileNavItems.map(({ to, label, icon: Icon }) => {
-            const active =
-              pathname === to ||
-              (to === "/dashboard" && pathname === "/pages");
-            return (
-              <Link key={label} to={to as any} className={active ? "is-active" : ""}>
-                <Icon aria-hidden="true" />
-                <span>{label}</span>
-              </Link>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label="Abrir menu de opções"
-          >
-            <Menu aria-hidden="true" />
-            <span>Mais</span>
-          </button>
-        </nav>
+        {!isStudio && (
+          <nav className="app-mobile-nav md:hidden h-16" aria-label="Navegação principal">
+            {mobileNavItems.map(({ to, label, icon: Icon }) => {
+              const active =
+                pathname === to ||
+                (to === "/dashboard" && pathname === "/pages");
+              return (
+                <Link key={label} to={to as any} className={active ? "is-active" : ""}>
+                  <Icon aria-hidden="true" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              aria-label="Abrir menu de opções"
+            >
+              <Menu aria-hidden="true" />
+              <span>Mais</span>
+            </button>
+          </nav>
+        )}
       </div>
     </div>
   );

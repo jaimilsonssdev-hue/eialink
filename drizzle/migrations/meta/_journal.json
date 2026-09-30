@@ -43,6 +43,13 @@
       "when": 1790706097965,
       "tag": "0005_harden_deal_claims_and_cashback_rls",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790786558434,
+      "tag": "0006_restrict_payment_gateway_settings_read",
+      "breakpoints": true
     }
   ]
 }

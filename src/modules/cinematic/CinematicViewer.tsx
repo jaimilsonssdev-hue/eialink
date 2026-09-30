@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import type { CinematicPageData, CinematicGalleryItem, CinematicHighlight } from "./types";
+import type {
+  CinematicPageData,
+  CinematicGalleryItem,
+  CinematicHighlight,
+  BentoCard,
+  FaqItem,
+} from "./types";
 import {
   MessageCircle,
   MapPin,
@@ -10,7 +16,10 @@ import {
   X,
   ChevronRight,
   Maximize2,
-  Compass,
+  Check,
+  ChevronDown,
+  ShieldCheck,
+  Zap,
 } from "lucide-react";
 
 interface CinematicViewerProps {
@@ -21,6 +30,7 @@ interface CinematicViewerProps {
 
 export function CinematicViewer({ data, isEmbedded = false, className = "" }: CinematicViewerProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<CinematicGalleryItem | null>(null);
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [scrollY, setScrollY] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -52,17 +62,37 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
     ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Olá! Gostaria de vivenciar a experiência da ${data.businessName}.`)}`
     : "#";
 
+  // Tokens de Tipografia e Estilo com fallbacks resilientes
+  const fontHeading = data.theme?.fontHeading || "serif";
+  const borderStyle = data.theme?.borderStyle || "glass";
+  const archetype = data.archetype || "luxury-editorial";
+
   const fontHeadingClass =
-    data.theme.fontHeading === "serif"
+    fontHeading === "serif"
       ? "font-serif tracking-tight"
-      : data.theme.fontHeading === "display"
-      ? "font-display uppercase tracking-wider"
-      : "font-sans font-extrabold tracking-tight";
+      : fontHeading === "display"
+      ? "font-sans font-black tracking-tighter uppercase"
+      : fontHeading === "mono"
+      ? "font-mono tracking-wide uppercase"
+      : "font-sans font-bold tracking-tight";
 
-  const accentColor = data.theme.accent || "#f59e0b";
-  const bgColor = data.theme.bg || "#0a0a0c";
+  // Tokens de Borda / Estilo
+  const cardBorderClass =
+    borderStyle === "sharp"
+      ? "rounded-none border border-white/20 bg-black/60"
+      : borderStyle === "pill"
+      ? "rounded-3xl border border-white/20 bg-white/[0.04]"
+      : borderStyle === "subtle"
+      ? "rounded-xl border border-white/5 bg-zinc-950/80"
+      : "rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-2xl";
 
-  // Profundidade aprofundada: o fundo desce com parallax amplo enquanto o texto sobe sutilmente em 3D
+  const accentColor = data.theme?.accent || "#f59e0b";
+  const secondaryAccent = data.theme?.secondaryAccent || "#fbbf24";
+  const bgColor = data.theme?.bg || "#0a0a0c";
+  const isNeoPop = archetype === "neo-pop-d2c";
+  const isCyber = archetype === "cyber-tech";
+
+  // Profundidade do Parallax
   const backgroundParallaxY = data.theme.parallaxEnabled ? Math.min(scrollY * 0.42, 280) : 0;
   const backgroundZoom = data.theme.parallaxEnabled ? 1 + Math.min(scrollY * 0.0005, 0.15) : 1;
   const foregroundParallaxY = data.theme.parallaxEnabled ? -Math.min(scrollY * 0.12, 60) : 0;
@@ -82,11 +112,27 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       } ${className}`}
       style={{
         backgroundColor: bgColor,
-        fontFamily: "system-ui, -apple-system, sans-serif",
+        fontFamily: data.theme.fontHeading === "mono" ? "monospace, sans-serif" : "system-ui, -apple-system, sans-serif",
       }}
     >
+      {/* Estilos Scoped de Animação do Marquee */}
+      <style>{`
+        @keyframes cinematicMarquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .animate-marquee-infinite {
+          display: flex;
+          width: max-content;
+          animation: cinematicMarquee ${isNeoPop ? "16s" : isCyber ? "20s" : "28s"} linear infinite;
+        }
+        .animate-marquee-infinite:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+
       {/* Luzes Volumétricas de Fundo (Mesh Glows 60 FPS) */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-60">
+      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-50">
         <div
           className="absolute -top-[20%] left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full blur-[140px] transition-all duration-1000"
           style={{
@@ -95,9 +141,9 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           }}
         />
         <div
-          className="absolute top-[40%] -left-[10%] h-[500px] w-[500px] rounded-full blur-[160px] transition-all duration-1000"
+          className="absolute top-[45%] -left-[10%] h-[500px] w-[500px] rounded-full blur-[160px] transition-all duration-1000"
           style={{
-            background: `radial-gradient(circle, ${accentColor}18 0%, transparent 70%)`,
+            background: `radial-gradient(circle, ${secondaryAccent}18 0%, transparent 70%)`,
             transform: `translate3d(0, ${scrollY * -0.08}px, 0)`,
           }}
         />
@@ -125,20 +171,31 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           </a>
 
           {/* Links de navegação interna */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-medium uppercase tracking-widest text-zinc-400">
-            <button
-              type="button"
-              onClick={() => scrollToSection("manifesto")}
-              className="hover:text-white transition-colors"
-            >
-              O Manifesto
-            </button>
+          <nav className="hidden md:flex items-center gap-7 text-xs font-medium uppercase tracking-widest text-zinc-400">
+            {data.bentoGrid && data.bentoGrid.length > 0 && (
+              <button
+                type="button"
+                onClick={() => scrollToSection("diferenciais")}
+                className="hover:text-white transition-colors"
+              >
+                Diferenciais
+              </button>
+            )}
+            {data.manifesto && (
+              <button
+                type="button"
+                onClick={() => scrollToSection("manifesto")}
+                className="hover:text-white transition-colors"
+              >
+                O Manifesto
+              </button>
+            )}
             <button
               type="button"
               onClick={() => scrollToSection("galeria")}
               className="hover:text-white transition-colors"
             >
-              A Experiência
+              Galeria
             </button>
             <button
               type="button"
@@ -147,13 +204,24 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             >
               Destaques
             </button>
-            <button
-              type="button"
-              onClick={() => scrollToSection("localizacao")}
-              className="hover:text-white transition-colors"
-            >
-              Localização
-            </button>
+            {data.comparison && (
+              <button
+                type="button"
+                onClick={() => scrollToSection("comparativo")}
+                className="hover:text-white transition-colors"
+              >
+                Comparativo
+              </button>
+            )}
+            {data.faq && data.faq.length > 0 && (
+              <button
+                type="button"
+                onClick={() => scrollToSection("faq")}
+                className="hover:text-white transition-colors"
+              >
+                FAQ
+              </button>
+            )}
           </nav>
 
           <a
@@ -164,7 +232,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             style={{ borderColor: `${accentColor}50` }}
           >
             <MessageCircle className="h-3.5 w-3.5" style={{ color: accentColor }} />
-            <span>Falar no WhatsApp</span>
+            <span>WhatsApp VIP</span>
           </a>
         </div>
       </header>
@@ -201,10 +269,10 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           )}
 
           {/* Vinheta Escura de Cinema e Iluminação Mesh nas Bordas */}
-          <div className="absolute inset-0 bg-radial-[circle_at_center,transparent_30%,#0a0a0c_90%] opacity-90" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-black/60 to-black/75" />
+          <div className="absolute inset-0 bg-radial-[circle_at_center,transparent_25%,#070709_90%] opacity-90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-black/60 to-black/75" />
           <div
-            className="absolute inset-0 opacity-30 mix-blend-color pointer-events-none"
+            className="absolute inset-0 opacity-25 mix-blend-color pointer-events-none"
             style={{ backgroundColor: accentColor }}
           />
         </div>
@@ -216,15 +284,20 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             transform: `translate3d(0, ${foregroundParallaxY}px, 0)`,
           }}
         >
-          {/* Badge Refinado */}
-          {data.hero.tagline && (
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white shadow-2xl backdrop-blur-md">
-              <Sparkles className="h-3 w-3" style={{ color: accentColor }} />
-              <span className="tracking-widest" style={{ color: accentColor }}>
-                {data.hero.tagline}
-              </span>
-            </div>
-          )}
+          {/* Badges do Hero */}
+          <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
+            {data.hero.tagline && (
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white shadow-2xl backdrop-blur-md">
+                <Sparkles className="h-3 w-3" style={{ color: accentColor }} />
+                <span style={{ color: accentColor }}>{data.hero.tagline}</span>
+              </div>
+            )}
+            {data.hero.floatingBadge && (
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-300 backdrop-blur-md">
+                <span>{data.hero.floatingBadge}</span>
+              </div>
+            )}
+          </div>
 
           {/* Título Principal Imponente */}
           <h1
@@ -257,10 +330,10 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
             <button
               type="button"
-              onClick={() => scrollToSection("manifesto")}
+              onClick={() => scrollToSection(data.bentoGrid ? "diferenciais" : "manifesto")}
               className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-4 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/15"
             >
-              <span>Conhecer o Manifesto</span>
+              <span>Descobrir Detalhes</span>
               <ArrowDown className="h-4 w-4 text-zinc-400" />
             </button>
           </div>
@@ -280,51 +353,151 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
         </div>
       </section>
 
-      {/* 2. SEÇÃO ORIGEM & MANIFESTO NARRATIVO */}
-      <section id="manifesto" className="relative z-10 mx-auto max-w-5xl px-4 sm:px-8 py-24 sm:py-32">
-        <div className="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-white/[0.02] p-8 sm:p-14 md:p-16 backdrop-blur-2xl shadow-2xl">
-          {/* Detalhe de iluminação no card */}
-          <div
-            className="absolute -top-12 left-1/2 h-24 w-64 -translate-x-1/2 rounded-full blur-2xl"
-            style={{ backgroundColor: `${accentColor}30` }}
-          />
+      {/* 2. BLOCO MARQUEE INFINITO */}
+      {data.marquee && data.marquee.length > 0 && (
+        <section className="relative z-20 w-full overflow-hidden border-y border-white/10 bg-black/60 py-3.5 backdrop-blur-md">
+          <div className="animate-marquee-infinite gap-8 items-center">
+            {[...data.marquee, ...data.marquee, ...data.marquee].map((item, idx) => (
+              <div key={idx} className="flex items-center gap-3 text-xs md:text-sm font-bold tracking-widest uppercase">
+                {item.icon && <span>{item.icon}</span>}
+                <span style={{ color: accentColor }}>{item.text}</span>
+                <span className="text-zinc-600">•</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
-          <div className="flex flex-col items-center text-center">
+      {/* 3. BLOCO BENTO GRID ASSIMÉTRICO */}
+      {data.bentoGrid && data.bentoGrid.length > 0 && (
+        <section id="diferenciais" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 py-24 sm:py-32">
+          <div className="text-center mb-14">
             <span
               className="text-[11px] font-bold uppercase tracking-widest"
               style={{ color: accentColor }}
             >
-              Capítulo I — A Essência
+              Arquitetura & Engenharia
             </span>
-
-            <h2 className={`mt-3 text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-white ${fontHeadingClass}`}>
-              {data.manifesto.headline}
+            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+              Pilares de Distinção
             </h2>
-
-            <div className="my-6 h-px w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
-
-            <p className="max-w-3xl text-base sm:text-lg leading-relaxed text-zinc-300">
-              {data.manifesto.bodyText}
+            <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+              Cada dimensão desenhada para superar padrões com consistência comprovada.
             </p>
-
-            {/* Citação em Destaque */}
-            {data.manifesto.quote && (
-              <blockquote className="mt-10 border-l-2 border-amber-500/60 pl-6 text-left max-w-2xl bg-black/30 p-6 rounded-r-2xl">
-                <p className="italic text-base sm:text-lg text-zinc-200">
-                  "{data.manifesto.quote}"
-                </p>
-                {data.manifesto.author && (
-                  <footer className="mt-3 text-xs font-semibold uppercase tracking-wider text-amber-400">
-                    — {data.manifesto.author}
-                  </footer>
-                )}
-              </blockquote>
-            )}
           </div>
-        </div>
-      </section>
 
-      {/* 3. SEÇÃO A EXPERIÊNCIA (GALERIA COM LIGHTBOX) */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
+            {data.bentoGrid.map((card: BentoCard, idx: number) => {
+              const colSpan =
+                card.size === "large"
+                  ? "md:col-span-2"
+                  : card.size === "full"
+                  ? "md:col-span-3"
+                  : "md:col-span-1";
+
+              return (
+                <div
+                  key={card.id || idx}
+                  className={`group relative overflow-hidden p-6 sm:p-8 transition-all duration-300 hover:border-white/30 hover:-translate-y-1 ${cardBorderClass} ${colSpan}`}
+                >
+                  {/* Imagem de Fundo se houver */}
+                  {card.imageUrl && (
+                    <div className="absolute inset-0 z-0 overflow-hidden">
+                      <img
+                        src={card.imageUrl}
+                        alt=""
+                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-35"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+                    </div>
+                  )}
+
+                  <div className="relative z-10 flex h-full flex-col justify-between space-y-6">
+                    <div className="flex items-center justify-between">
+                      {card.badge ? (
+                        <span
+                          className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
+                          style={{ backgroundColor: `${accentColor}20`, borderColor: `${accentColor}40` }}
+                        >
+                          {card.badge}
+                        </span>
+                      ) : <span />}
+                      {card.metric && (
+                        <span
+                          className="text-2xl sm:text-3xl font-black tracking-tight"
+                          style={{ color: card.accentBg ? accentColor : "#ffffff" }}
+                        >
+                          {card.metric}
+                        </span>
+                      )}
+                    </div>
+
+                    <div>
+                      {card.subtitle && (
+                        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
+                          {card.subtitle}
+                        </p>
+                      )}
+                      <h3 className={`text-xl sm:text-2xl font-bold text-white ${fontHeadingClass}`}>
+                        {card.title}
+                      </h3>
+                      <p className="mt-2 text-xs sm:text-sm leading-relaxed text-zinc-300">
+                        {card.description}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* 4. SEÇÃO MANIFESTO NARRATIVO */}
+      {data.manifesto && (
+        <section id="manifesto" className="relative z-10 mx-auto max-w-5xl px-4 sm:px-8 py-20 sm:py-28">
+          <div className={`relative p-8 sm:p-14 md:p-16 ${cardBorderClass}`}>
+            <div
+              className="absolute -top-12 left-1/2 h-24 w-64 -translate-x-1/2 rounded-full blur-2xl pointer-events-none"
+              style={{ backgroundColor: `${accentColor}25` }}
+            />
+
+            <div className="flex flex-col items-center text-center">
+              <span
+                className="text-[11px] font-bold uppercase tracking-widest"
+                style={{ color: accentColor }}
+              >
+                Capítulo I — A Essência
+              </span>
+
+              <h2 className={`mt-3 text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-white ${fontHeadingClass}`}>
+                {data.manifesto.headline}
+              </h2>
+
+              <div className="my-6 h-px w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+
+              <p className="max-w-3xl text-base sm:text-lg leading-relaxed text-zinc-300">
+                {data.manifesto.bodyText}
+              </p>
+
+              {data.manifesto.quote && (
+                <blockquote className="mt-10 border-l-2 border-amber-500/60 pl-6 text-left max-w-2xl bg-black/40 p-6 rounded-r-2xl">
+                  <p className="italic text-base sm:text-lg text-zinc-200">
+                    "{data.manifesto.quote}"
+                  </p>
+                  {data.manifesto.author && (
+                    <footer className="mt-3 text-xs font-semibold uppercase tracking-wider text-amber-400">
+                      — {data.manifesto.author}
+                    </footer>
+                  )}
+                </blockquote>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 5. SEÇÃO A EXPERIÊNCIA (GALERIA COM LIGHTBOX) */}
       <section id="galeria" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 py-20">
         <div className="text-center mb-14">
           <span
@@ -352,253 +525,342 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               <img
                 src={item.url}
                 alt={item.caption || data.businessName}
-                loading="lazy"
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 transition-opacity group-hover:opacity-95" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
 
-              {/* Botão de expansão no canto superior */}
-              <div className="absolute top-4 right-4 h-8 w-8 rounded-full bg-black/60 backdrop-blur-md flex items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
-                <Maximize2 className="h-4 w-4 text-white" />
-              </div>
-
-              {/* Legenda inferior */}
-              <div className="absolute bottom-0 inset-x-0 p-5">
+              <div className="absolute bottom-0 left-0 right-0 p-5 transform transition-transform duration-300">
                 {item.category && (
                   <span
-                    className="inline-block text-[10px] font-bold uppercase tracking-wider mb-1"
+                    className="text-[10px] font-bold uppercase tracking-wider"
                     style={{ color: accentColor }}
                   >
                     {item.category}
                   </span>
                 )}
-                <p className="text-xs sm:text-sm font-medium text-zinc-200 line-clamp-2">
-                  {item.caption || "Contemplar detalhes"}
-                </p>
+                {item.caption && (
+                  <p className="mt-1 text-sm font-medium leading-snug text-white drop-shadow">
+                    {item.caption}
+                  </p>
+                )}
+                <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  <span>Ampliar</span>
+                </div>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* 4. SEÇÃO DESTAQUES DA CASA / CARDÁPIO ASSINATURA */}
-      {data.highlights && data.highlights.length > 0 && (
-        <section id="destaques" className="relative z-10 mx-auto max-w-6xl px-4 sm:px-8 py-24">
-          <div className="text-center mb-14">
+      {/* 6. SEÇÃO DESTAQUES & MENU DE LUXO */}
+      <section id="destaques" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 py-20">
+        <div className="text-center mb-14">
+          <span
+            className="text-[11px] font-bold uppercase tracking-widest"
+            style={{ color: accentColor }}
+          >
+            Capítulo III — Assinatura
+          </span>
+          <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+            Criações em Destaque
+          </h2>
+          <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+            Cada item carrega a dedicação de processos artesanais e ingredientes rigorosamente selecionados.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          {data.highlights.map((item: CinematicHighlight, index: number) => (
+            <div
+              key={item.id || index}
+              className={`group overflow-hidden transition-all duration-300 hover:border-white/30 hover:-translate-y-1 ${cardBorderClass}`}
+            >
+              {item.image && (
+                <div className="relative h-56 sm:h-64 w-full overflow-hidden">
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                  {item.badge && (
+                    <span
+                      className="absolute top-4 right-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-black shadow-lg"
+                      style={{ backgroundColor: accentColor }}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className="p-6 sm:p-8 space-y-3">
+                <div className="flex items-start justify-between gap-4">
+                  <h3 className={`text-xl font-bold text-white ${fontHeadingClass}`}>
+                    {item.title}
+                  </h3>
+                  {item.price && (
+                    <span
+                      className="text-base sm:text-lg font-bold shrink-0 font-mono"
+                      style={{ color: accentColor }}
+                    >
+                      {item.price}
+                    </span>
+                  )}
+                </div>
+
+                <p className="text-xs sm:text-sm leading-relaxed text-zinc-300">
+                  {item.description}
+                </p>
+
+                <a
+                  href={`${whatsappHref}&text=${encodeURIComponent(`Olá! Gostaria de pedir/reservar "${item.title}".`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-4 inline-flex items-center gap-2 text-xs font-semibold transition-colors hover:underline"
+                  style={{ color: accentColor }}
+                >
+                  <span>Pedir ou Reservar este item</span>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 7. SEÇÃO COMPARATIVO (CHECKLIST DE VANTAGENS) */}
+      {data.comparison && data.comparison.rows && data.comparison.rows.length > 0 && (
+        <section id="comparativo" className="relative z-10 mx-auto max-w-5xl px-4 sm:px-8 py-20">
+          <div className="text-center mb-12">
             <span
               className="text-[11px] font-bold uppercase tracking-widest"
               style={{ color: accentColor }}
             >
-              Capítulo III — Assinaturas
+              Transparência & Rigor
             </span>
-            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
-              Destaques Selecionados
+            <h2 className={`mt-2 text-3xl sm:text-4xl font-bold text-white ${fontHeadingClass}`}>
+              {data.comparison.headline || "O Nosso Padrão vs. O Convencional"}
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
-              Criações autorais e serviços nobres com ingredientes de alta proveniência.
-            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {data.highlights.map((item: CinematicHighlight, index: number) => (
-              <div
-                key={item.id || index}
-                className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl transition-all duration-300 hover:border-white/30 hover:bg-white/[0.06] hover:shadow-2xl"
-              >
-                {item.image && (
-                  <div className="relative h-56 w-full overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
-                    {item.price && (
-                      <div className="absolute bottom-3 right-3 rounded-full bg-black/70 backdrop-blur-md px-3 py-1 text-xs font-bold text-amber-300 border border-amber-500/30">
-                        {item.price}
-                      </div>
+          <div className={`overflow-hidden ${cardBorderClass}`}>
+            <div className="grid grid-cols-12 border-b border-white/10 bg-white/[0.04] p-4 text-xs font-bold uppercase tracking-wider">
+              <div className="col-span-6 text-zinc-400">Critério / Diferencial</div>
+              <div className="col-span-3 text-center" style={{ color: accentColor }}>
+                {data.comparison.usLabel}
+              </div>
+              <div className="col-span-3 text-center text-zinc-500">
+                {data.comparison.othersLabel}
+              </div>
+            </div>
+
+            <div className="divide-y divide-white/5 text-xs sm:text-sm">
+              {data.comparison.rows.map((row, idx) => (
+                <div key={idx} className="grid grid-cols-12 p-4 items-center hover:bg-white/[0.02]">
+                  <div className="col-span-6 font-medium text-zinc-200">
+                    {row.feature}
+                  </div>
+                  <div className="col-span-3 flex justify-center text-center">
+                    {typeof row.us === "boolean" ? (
+                      row.us ? (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                          <Check className="h-3.5 w-3.5" />
+                        </div>
+                      ) : (
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/20 text-red-400">
+                          <X className="h-3.5 w-3.5" />
+                        </div>
+                      )
+                    ) : (
+                      <span className="font-bold" style={{ color: accentColor }}>{row.us}</span>
                     )}
                   </div>
-                )}
-
-                <div className="flex flex-1 flex-col justify-between p-6">
-                  <div>
-                    <h3 className={`text-lg font-bold text-white ${fontHeadingClass}`}>
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-xs sm:text-sm leading-relaxed text-zinc-400">
-                      {item.description}
-                    </p>
+                  <div className="col-span-3 flex justify-center text-center text-zinc-500">
+                    {typeof row.others === "boolean" ? (
+                      row.others ? (
+                        <Check className="h-4 w-4 text-zinc-400" />
+                      ) : (
+                        <X className="h-4 w-4 text-zinc-600" />
+                      )
+                    ) : (
+                      <span className="text-zinc-500 text-xs">{row.others}</span>
+                    )}
                   </div>
-
-                  <a
-                    href={whatsappHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/5 py-2.5 text-xs font-semibold text-white transition-all hover:bg-white/15 hover:border-white/30"
-                  >
-                    <MessageCircle className="h-3.5 w-3.5" style={{ color: accentColor }} />
-                    <span>Pedir / Reservar</span>
-                  </a>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </section>
       )}
 
-      {/* 5. SEÇÃO LOCALIZAÇÃO & RODAPÉ VIP */}
-      <section id="localizacao" className="relative z-10 mx-auto max-w-5xl px-4 sm:px-8 py-20">
-        <div className="overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.05] to-black/60 p-8 sm:p-12 backdrop-blur-2xl">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
+      {/* 8. SEÇÃO FAQ ACCORDION */}
+      {data.faq && data.faq.length > 0 && (
+        <section id="faq" className="relative z-10 mx-auto max-w-4xl px-4 sm:px-8 py-20">
+          <div className="text-center mb-12">
+            <span
+              className="text-[11px] font-bold uppercase tracking-widest"
+              style={{ color: accentColor }}
+            >
+              Esclarecimentos
+            </span>
+            <h2 className={`mt-2 text-3xl sm:text-4xl font-bold text-white ${fontHeadingClass}`}>
+              Perguntas Frequentes
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {data.faq.map((item: FaqItem, idx: number) => {
+              const isOpen = openFaq === idx;
+              return (
+                <div
+                  key={idx}
+                  className={`overflow-hidden transition-all ${cardBorderClass}`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenFaq(isOpen ? null : idx)}
+                    className="flex w-full items-center justify-between p-5 text-left text-sm sm:text-base font-bold text-white hover:bg-white/[0.02]"
+                  >
+                    <span>{item.question}</span>
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 transition-transform duration-200 text-zinc-400 ${
+                        isOpen ? "rotate-180 text-amber-400" : ""
+                      }`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="px-5 pb-5 text-xs sm:text-sm leading-relaxed text-zinc-300 border-t border-white/5 pt-3">
+                      {item.answer}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* 9. SEÇÃO LOCALIZAÇÃO & AÇÃO VIP */}
+      <section id="localizacao" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 py-24 sm:py-32">
+        <div className={`p-8 sm:p-14 md:p-20 ${cardBorderClass}`}>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            <div className="lg:col-span-7 space-y-6">
               <span
                 className="text-[11px] font-bold uppercase tracking-widest"
                 style={{ color: accentColor }}
               >
-                Capítulo IV — O Encontro
+                Capítulo Final — O Convite
               </span>
-              <h2 className={`mt-2 text-2xl sm:text-4xl font-bold text-white ${fontHeadingClass}`}>
-                Visite Nosso Espaço
+              <h2 className={`text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+                Viva a Experiência Pessoalmente na {data.businessName}
               </h2>
-              <p className="mt-3 text-sm text-zinc-400">
-                Uma atmosfera criada exclusivamente para desconectar da rotina e apreciar cada instante.
+              <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-xl">
+                Nossa equipe de especialistas está pronta para proporcionar um momento único e inesquecível.
               </p>
 
-              <div className="mt-8 space-y-4">
-                {data.address && (
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-white/5 p-2.5 border border-white/10">
-                      <MapPin className="h-5 w-5" style={{ color: accentColor }} />
-                    </div>
-                    <div>
-                      <span className="block text-xs uppercase font-bold text-zinc-400 tracking-wider">Endereço</span>
-                      <span className="text-sm font-medium text-white">{data.address}</span>
-                    </div>
-                  </div>
-                )}
-
-                {data.openingHours && (
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-lg bg-white/5 p-2.5 border border-white/10">
-                      <Clock className="h-5 w-5" style={{ color: accentColor }} />
-                    </div>
-                    <div>
-                      <span className="block text-xs uppercase font-bold text-zinc-400 tracking-wider">Horário</span>
-                      <span className="text-sm font-medium text-white">{data.openingHours}</span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="mt-8">
+              <div className="pt-2 flex flex-col sm:flex-row gap-4">
                 <a
                   href={whatsappHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-3 rounded-full px-7 py-3 text-sm font-bold text-black shadow-xl transition-all hover:scale-105"
-                  style={{ backgroundColor: accentColor }}
+                  className="flex items-center justify-center gap-3 rounded-full px-8 py-4 text-sm font-bold text-black shadow-2xl transition-all hover:scale-105"
+                  style={{
+                    backgroundColor: accentColor,
+                    boxShadow: `0 0 35px ${accentColor}60`,
+                  }}
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  <span>Agendar Experiência</span>
+                  <MessageCircle className="h-5 w-5" />
+                  <span>Iniciar Atendimento no WhatsApp</span>
                 </a>
               </div>
             </div>
 
-            {/* Card Visual de Localização */}
-            <div className="relative h-64 sm:h-80 overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 flex flex-col justify-end p-6">
-              <img
-                src={data.gallery[0]?.url || data.hero.backgroundImage}
-                alt="Ambiente"
-                className="absolute inset-0 h-full w-full object-cover opacity-50"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-              <div className="relative z-10">
-                <span className="text-xs uppercase font-bold tracking-widest text-amber-300">Presença VIP</span>
-                <h4 className="text-lg font-bold text-white mt-1">{data.businessName}</h4>
-                <p className="text-xs text-zinc-300 mt-1">{data.niche}</p>
-                {data.address && (
-                  <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${data.businessName} ${data.address}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-400 hover:underline"
-                  >
-                    <Compass className="h-3.5 w-3.5" />
-                    <span>Abrir rota no Google Maps</span>
-                  </a>
-                )}
-              </div>
+            <div className="lg:col-span-5 rounded-2xl border border-white/10 bg-black/60 p-6 space-y-5">
+              {data.address && (
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 shrink-0 mt-0.5" style={{ color: accentColor }} />
+                  <div>
+                    <span className="block text-xs font-bold uppercase tracking-wider text-white">
+                      Endereço
+                    </span>
+                    <p className="mt-0.5 text-xs text-zinc-300 leading-relaxed">
+                      {data.address}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {data.openingHours && (
+                <div className="flex items-start gap-3">
+                  <Clock className="h-5 w-5 shrink-0 mt-0.5" style={{ color: accentColor }} />
+                  <div>
+                    <span className="block text-xs font-bold uppercase tracking-wider text-white">
+                      Horário de Funcionamento
+                    </span>
+                    <p className="mt-0.5 text-xs text-zinc-300">
+                      {data.openingHours}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {data.rating && (
+                <div className="border-t border-white/10 pt-4 flex items-center justify-between text-xs">
+                  <span className="text-zinc-400 font-medium">Reputação Comprovada:</span>
+                  <span className="font-bold text-amber-400 flex items-center gap-1">
+                    ★ {data.rating.toFixed(1)} / 5.0
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </div>
-
-        {/* Assinatura Rodapé */}
-        <footer className="mt-14 border-t border-white/10 pt-8 text-center text-xs text-zinc-500">
-          <p>© {new Date().getFullYear()} {data.businessName}. Todos os direitos reservados.</p>
-          <p className="mt-1 text-[11px] text-zinc-600">
-            Landing Page Cinematográfica desenvolvida no Cinematic Studio • Powered by EIA Digital
-          </p>
-        </footer>
       </section>
 
-      {/* Botão Flutuante de WhatsApp Fixo no Mobile/Desktop */}
-      <aside className="fixed bottom-6 right-6 z-40">
-        <a
-          href={whatsappHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="group flex items-center gap-3 rounded-full border border-white/20 bg-black/80 px-4 py-3 text-xs font-bold text-white shadow-2xl backdrop-blur-xl transition-all duration-300 hover:scale-105 hover:bg-black"
-          style={{ borderColor: `${accentColor}70` }}
-        >
-          <span
-            className="flex h-3 w-3 rounded-full animate-ping"
-            style={{ backgroundColor: accentColor }}
-          />
-          <MessageCircle className="h-4 w-4" style={{ color: accentColor }} />
-          <span className="hidden sm:inline">Atendimento Imediato</span>
-        </a>
-      </aside>
+      {/* Footer Simples e Nobre */}
+      <footer className="border-t border-white/10 py-10 text-center text-xs text-zinc-500">
+        <p>© {new Date().getFullYear()} {data.businessName}. Todos os direitos reservados.</p>
+        <p className="mt-1 text-[11px] text-zinc-600">Experiência Cinematográfica desenvolvida na plataforma EIA Digital.</p>
+      </footer>
 
-      {/* Modal Lightbox de Foto em Tela Cheia */}
+      {/* LIGHTBOX MODAL (IMAGEM EM TELA CHEIA) */}
       {selectedPhoto && (
         <div
           role="dialog"
           aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 sm:p-8 backdrop-blur-2xl"
           onClick={() => setSelectedPhoto(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/95 p-4 backdrop-blur-xl animate-fade-in"
         >
           <button
             type="button"
             onClick={() => setSelectedPhoto(null)}
-            className="absolute top-6 right-6 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20"
+            className="absolute top-5 right-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors"
           >
             <X className="h-5 w-5" />
           </button>
 
           <div
+            className="relative max-h-[90vh] max-w-5xl overflow-hidden rounded-2xl border border-white/20 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
-            className="relative max-h-[90vh] max-w-5xl overflow-hidden rounded-2xl border border-white/10 bg-zinc-950"
           >
             <img
               src={selectedPhoto.url}
-              alt={selectedPhoto.caption || "Visualização ampliada"}
-              className="max-h-[75vh] w-auto object-contain mx-auto"
+              alt=""
+              className="max-h-[80vh] w-auto object-contain"
             />
             {selectedPhoto.caption && (
-              <div className="p-4 sm:p-6 bg-zinc-900/90 border-t border-white/10 text-center">
+              <div className="bg-black/90 p-4 text-center">
+                <p className="text-sm font-medium text-white">{selectedPhoto.caption}</p>
                 {selectedPhoto.category && (
                   <span
-                    className="block text-[10px] font-bold uppercase tracking-wider mb-1"
+                    className="mt-1 inline-block text-[10px] font-bold uppercase tracking-wider"
                     style={{ color: accentColor }}
                   >
                     {selectedPhoto.category}
                   </span>
                 )}
-                <p className="text-sm font-medium text-zinc-200">
-                  {selectedPhoto.caption}
-                </p>
               </div>
             )}
           </div>

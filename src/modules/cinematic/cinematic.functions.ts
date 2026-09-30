@@ -96,8 +96,8 @@ export const refineCinematicWithAiFn = createServerFn({ method: "POST" })
 
     if (apiKey) {
       try {
-        const prompt = `Você é um Diretor Criativo e Copywriter Editorial Internacional para marcas de ultra-luxo e alta gastronomia (estilo Monocle, Architectural Digest, Kinfolk).
-O usuário está refinando a Landing Page Cinematográfica com narrativa de Scrollytelling para o negócio "${currentData.businessName}" (Nicho: "${currentData.niche}").
+        const prompt = `Você é um Arquiteto de Software e Diretor Criativo Sênior internacional (padrão v0, Lovable, Awwwards) para marcas de alto impacto e ultra-luxo.
+O usuário está refinando a Landing Page Cinematográfica com narrativa de Scrollytelling e arquitetura modular Bento para o negócio "${currentData.businessName}" (Nicho: "${currentData.niche}").
 
 DADOS ATUAIS DA PÁGINA:
 ${JSON.stringify(currentData, null, 2)}
@@ -107,25 +107,28 @@ INSTRUÇÃO DE DIREÇÃO DE ARTE DO USUÁRIO:
 ${instruction}
 """
 
-BÍBLIA DE DIREÇÃO DE ARTE & REGRAS INEGOCIÁVEIS:
-1. COPYWRITING SENSORIAL & POÉTICO (ZERO CLICHÊS):
+BÍBLIA DE DIREÇÃO DE ARTE, ARQUÉTIPOS & REGRAS DE OURO (QA ESTÉTICO):
+
+1. CLASSIFICAÇÃO AUTÔNOMA DO ARQUÉTIPO VISUAL ("archetype"):
+   Analise o nicho e o pedido do usuário e escolha com precisão cirúrgica um dos 5 arquétipos:
+   - "neo-pop-d2c": Bebidas, energéticos, suplementos, hamburguerias, fitness, streetwear. Paleta: bg #070709, accent #ccff00 (volt neon) ou #ff0055, fontHeading: "display", borderStyle: "pill".
+   - "luxury-editorial": Alta gastronomia, cafés especiais, bistrôs, vinhedos, joalherias, arquitetura de luxo. Paleta: bg #0a0a0c, accent #f59e0b (âmbar nobre) ou #d97706, fontHeading: "serif", borderStyle: "glass".
+   - "clean-biotech": Clínicas estéticas, dermatologia, odontologia de precisão, spas, longevidade. Paleta: bg #070b0c, accent #10b981 (esmeralda suave) ou #06b6d4, fontHeading: "sans", borderStyle: "glass".
+   - "cyber-tech": Software, inteligência artificial, barbearias industriais, estúdios de engenharia. Paleta: bg #06090e, accent #00f0ff (cyan) ou #38bdf8, fontHeading: "mono", borderStyle: "sharp".
+   - "dark-brutalist": Tatuagem, arte autoral, moda avant-garde, advocacia disruptiva. Paleta: bg #09090b, accent #ffffff (titânio P&B), fontHeading: "display", borderStyle: "subtle".
+
+2. GERAÇÃO DOS NOVOS BLOCOS MODULARES:
+   - "marquee": 4 a 6 frases curtas de alta vibração com ícones ("⚡", "💎", "🌿", "🔥", "★") rolando em loop.
+   - "bentoGrid": 3 a 5 cartões assimétricos (1 large, 2 medium, 1-2 small) com métricas reais ou de posicionamento (ex: "Nota 4.9 no Google", "Produção 100% Artesanal", "Mais de 12 mil atendimentos").
+   - "comparison": tabela comparativa destacando o diferencial inegociável do negócio vs. concorrência padrão.
+   - "faq": 3 a 4 perguntas reais e esclarecedoras que clientes desse nicho fazem com respostas diretas e sofisticadas.
+   - "hero": Tagline curta e imponente em caixa alta + Título magnético e poético + Subtítulo envolvente + floatingBadge (ex: "★ 4.9 NO GOOGLE").
+
+3. COPYWRITING SENSORIAL & QA RESTRITIVO (ZERO CLICHÊS):
    - Proibido terminantemente: "o melhor da cidade", "qualidade garantida", "venha conferir", "excelência no atendimento".
-   - Substitua por vocabulário tátil, olfativo, visual e de herança: textura, aroma da brasa, silêncio, precisão milimétrica, tempo de maturação, luz natural, hospitalidade autoral.
-2. RITMO NARRATIVO EM 4 ATOS:
-   - Hero: Tagline curta e imponente em caixa alta (ex: "O TEMPO COMO MATÉRIA-PRIMA") + Título magnético e poético + Subtítulo envolvente que transporta a pessoa para dentro do ambiente.
-   - Manifesto: Headline que desafia o comum + Texto que soa como uma declaração de amor ao ofício + Citação inspiradora de mestre/fundador.
-   - Galeria: Cada foto ganha uma legenda curta que soa como catálogo de museu ou livro de arte.
-   - Destaques da Casa: Títulos nobres e descrições dos ingredientes, técnicas ou atmosfera de cada item.
-3. PSICOLOGIA CROMÁTICA & ATMOSFERA:
-   - Harmonize a paleta de cores (bg escuro e accent refinado) de acordo com o pedido:
-     * Gastronomia / Carnes / Vinho: bg #0c0a09, accent âmbar (#f59e0b) ou dourado queimado (#d97706).
-     * Cafés / Torrefação: bg #0a0908, accent cobre (#ea580c) ou canela nobre.
-     * Estética / Dermatologia / Spa: bg #090c0b, accent esmeralda suave (#10b981) ou champagne (#fb7185).
-     * Tecnologia / Consultoria / Arquitetura: bg #09090b, accent platina (#e2e8f0) ou azul titânio (#38bdf8).
-   - Tipografia: 'serif' para luxo clássico/tradição, 'sans' para minimalismo puro contemporâneo, 'display' para impacto visual arquitetônico.
-4. RIGOR FACTUAL (ZERO ALUCINAÇÃO):
-   - Mantenha estritamente o whatsapp, endereço, nota de avaliações e dados do negócio. Apenas eleve a copy ao nível máximo de sofisticação.
-   - Preserve 'backgroundVideo' no hero se já existir, ou se o usuário pedir para remover passe vazio.
+   - Substitua por vocabulário tátil, de herança e precisão: aroma da brasa, silêncio acústico, colheita seletiva, calibragem milimétrica, tempo de maturação, luz natural.
+   - Preserve estritamente WhatsApp, endereço, nota de avaliações, nome da empresa e fotos reais enviadas.
+   - Preserve 'backgroundVideo' no hero se já existir.
 
 RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (SEM BLOCOS DE CÓDIGO MARKDOWN OU COMENTÁRIOS):
 {
@@ -135,29 +138,50 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
   "address": "${currentData.address || ""}",
   "rating": ${currentData.rating || 4.9},
   "openingHours": "${currentData.openingHours || ""}",
+  "archetype": "luxury-editorial",
   "theme": {
     "bg": "#0a0a0c",
     "accent": "#f59e0b",
+    "secondaryAccent": "#fbbf24",
     "fontHeading": "serif",
-    "parallaxEnabled": true
+    "parallaxEnabled": true,
+    "borderStyle": "glass"
   },
   "hero": {
     "title": "string",
     "subtitle": "string",
     "tagline": "string",
+    "floatingBadge": "string",
     "backgroundImage": "${currentData.hero.backgroundImage}",
     ${currentData.hero.backgroundVideo ? `"backgroundVideo": "${currentData.hero.backgroundVideo}",` : ""}
     "ctaText": "string",
     "ctaLink": "#manifesto"
   },
+  "marquee": [
+    { "id": "m1", "text": "string", "icon": "⚡" }
+  ],
+  "bentoGrid": [
+    { "id": "b1", "title": "string", "subtitle": "string", "description": "string", "size": "large", "metric": "string", "badge": "string" }
+  ],
   "manifesto": {
     "headline": "string",
     "bodyText": "string",
     "quote": "string",
     "author": "string"
   },
+  "comparison": {
+    "headline": "string",
+    "usLabel": "string",
+    "othersLabel": "string",
+    "rows": [
+      { "feature": "string", "us": true, "others": false }
+    ]
+  },
+  "highlights": [...],
   "gallery": [...],
-  "highlights": [...]
+  "faq": [
+    { "question": "string", "answer": "string" }
+  ]
 }`;
 
         const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
@@ -182,7 +206,7 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
               const textOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
               if (textOutput) {
                 const parsed = JSON.parse(textOutput) as CinematicPageData;
-                if (parsed.hero && parsed.manifesto) {
+                if (parsed.hero) {
                   return {
                     ...currentData,
                     ...parsed,
@@ -190,6 +214,13 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
                     businessName: currentData.businessName || parsed.businessName,
                     whatsapp: currentData.whatsapp || parsed.whatsapp,
                     address: currentData.address || parsed.address,
+                    hero: {
+                      ...currentData.hero,
+                      ...parsed.hero,
+                      backgroundImage: currentData.hero.backgroundImage || parsed.hero.backgroundImage,
+                      backgroundVideo: currentData.hero.backgroundVideo || parsed.hero.backgroundVideo,
+                    },
+                    gallery: (parsed.gallery && parsed.gallery.length > 0) ? parsed.gallery : currentData.gallery,
                   };
                 }
               }
@@ -203,42 +234,90 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
       }
     }
 
-    // Heurística Fallback elegante caso a IA esteja offline ou sem chave
+    // Heurística Fallback inteligente com Matriz de Arquétipos
     const lower = instruction.toLowerCase();
     const updated = JSON.parse(JSON.stringify(currentData)) as CinematicPageData;
 
-    if (lower.includes("rústico") || lower.includes("vinho") || lower.includes("madeira") || lower.includes("noturno")) {
-      updated.theme.accent = "#d97706";
-      updated.theme.bg = "#0c0a09";
-      updated.theme.fontHeading = "serif";
-      updated.hero.tagline = "ATMOSFERA ÍNTIMA & ARTESANAL";
-      updated.hero.title = `O Resgate das Raízes na ${updated.businessName}`;
-      updated.hero.subtitle =
-        "Cozinha autoral de fogo e tempo, rótulos selecionados e um ambiente acolhedor talhado em madeira nobre e pedra.";
-      updated.manifesto.headline = "A Tradição do Tempo e o Calor da Terra.";
-      updated.manifesto.bodyText =
-        "Acreditamos que os melhores momentos nascem ao redor de uma mesa bem posta, onde o aroma da brasa e o tinir das taças criam memórias indeléveis. Cada ingrediente carrega a assinatura de pequenos produtores dedicados.";
-      updated.manifesto.quote = "Na simplicidade da terra encontramos a mais alta sofisticação.";
-    } else if (lower.includes("minimalista") || lower.includes("solar") || lower.includes("claro") || lower.includes("clean")) {
-      updated.theme.accent = "#e2e8f0";
-      updated.theme.bg = "#09090b";
+    if (lower.includes("neo") || lower.includes("pop") || lower.includes("jovem") || lower.includes("burger") || lower.includes("bebida") || lower.includes("fitness")) {
+      updated.archetype = "neo-pop-d2c";
+      updated.theme.accent = "#ccff00";
+      updated.theme.secondaryAccent = "#ff0055";
+      updated.theme.bg = "#070709";
+      updated.theme.fontHeading = "display";
+      updated.theme.borderStyle = "pill";
+      updated.hero.tagline = "ENERGY & HIGH VIBE";
+      updated.hero.title = `Sabor de Alta Voltagem na ${updated.businessName}`;
+      updated.hero.subtitle = "Fórmulas puras, intensidade máxima e atitude autêntica sem concessões.";
+      updated.hero.floatingBadge = "⚡ EDIÇÃO LIMITADA 2026";
+      updated.marquee = [
+        { id: "m1", text: "ZERO COMPROMISSOS COM O MEDÍOCRE", icon: "⚡" },
+        { id: "m2", text: "INTENSIDADE MÁXIMA 24/7", icon: "🔥" },
+        { id: "m3", text: "DESIGN QUE PULSA", icon: "💎" },
+        { id: "m4", text: "ENERGIA LIMPA E DIRETA", icon: "🚀" },
+      ];
+    } else if (lower.includes("tech") || lower.includes("cyber") || lower.includes("software") || lower.includes("dados") || lower.includes("barbearia")) {
+      updated.archetype = "cyber-tech";
+      updated.theme.accent = "#00f0ff";
+      updated.theme.secondaryAccent = "#38bdf8";
+      updated.theme.bg = "#06090e";
+      updated.theme.fontHeading = "mono";
+      updated.theme.borderStyle = "sharp";
+      updated.hero.tagline = "[SYS::01] HIGH PRECISION ENGINE";
+      updated.hero.title = `A Nova Dimensão da ${updated.businessName}`;
+      updated.hero.subtitle = "Arquitetura avançada, corte milimétrico e velocidade computacional aplicada ao mundo real.";
+      updated.hero.floatingBadge = "STATUS: ONLINE 99.99%";
+      updated.marquee = [
+        { id: "m1", text: "SISTEMAS CALIBRADOS", icon: "⚙️" },
+        { id: "m2", text: "LATÊNCIA ULTRA-BAIXA", icon: "⚡" },
+        { id: "m3", text: "PRECISÃO MILIMÉTRICA", icon: "📐" },
+        { id: "m4", text: "SEGURANÇA CRIPTOGRAFADA", icon: "🛡️" },
+      ];
+    } else if (lower.includes("clínica") || lower.includes("estética") || lower.includes("dermatologia") || lower.includes("odonto") || lower.includes("spa")) {
+      updated.archetype = "clean-biotech";
+      updated.theme.accent = "#10b981";
+      updated.theme.secondaryAccent = "#06b6d4";
+      updated.theme.bg = "#070b0c";
       updated.theme.fontHeading = "sans";
-      updated.hero.tagline = "ESTÉTICA PURA & CONTEMPORÂNEA";
-      updated.hero.title = `O Minimalismo em Sua Forma Mais Serena`;
-      updated.manifesto.headline = "Menos Ruído, Mais Essência.";
-      updated.manifesto.quote = "O essencial não precisa gritar para ser inesquecível.";
-    } else if (lower.includes("moda") || lower.includes("ateliê") || lower.includes("costura") || lower.includes("estética")) {
-      updated.theme.accent = "#fb7185";
-      updated.theme.bg = "#0d090a";
-      updated.theme.fontHeading = "serif";
-      updated.hero.tagline = "ALTA COSTURA & VISAGISMO EXCLUSIVO";
-      updated.hero.title = `A Assinatura da Sua Própria Elegância`;
-      updated.manifesto.headline = "Cada Traço, Uma Obra de Arte.";
-      updated.manifesto.quote = "A verdadeira elegância consiste em permanecer você mesmo com distinção.";
+      updated.theme.borderStyle = "glass";
+      updated.hero.tagline = "CIÊNCIA, LONGEVIDADE & EQUILÍBRIO";
+      updated.hero.title = `A Harmonização Natural na ${updated.businessName}`;
+      updated.hero.subtitle = "Protocolos regenerativos de ponta desenhados para realçar sua essência com sutileza e rigor biomédico.";
+      updated.hero.floatingBadge = "CERTIFICAÇÃO INTERNACIONAL";
+      updated.marquee = [
+        { id: "m1", text: "TECNOLOGIA BIOCELULAR", icon: "🌿" },
+        { id: "m2", text: "SEGURANÇA FARMACOLÓGICA", icon: "🧪" },
+        { id: "m3", text: "RESULTADOS PREVISÍVEIS", icon: "✨" },
+        { id: "m4", text: "ATENDIMENTO INDIVIDUALIZADO", icon: "🩺" },
+      ];
+    } else if (lower.includes("brutal") || lower.includes("tatuagem") || lower.includes("tattoo") || lower.includes("arte") || lower.includes("preto")) {
+      updated.archetype = "dark-brutalist";
+      updated.theme.accent = "#ffffff";
+      updated.theme.secondaryAccent = "#a1a1aa";
+      updated.theme.bg = "#09090b";
+      updated.theme.fontHeading = "display";
+      updated.theme.borderStyle = "subtle";
+      updated.hero.tagline = "ESTÉTICA CRUA & SEM FILTROS";
+      updated.hero.title = `A Marca Perpétua da ${updated.businessName}`;
+      updated.hero.subtitle = "Sem ornamentos descartáveis. Apenas contraste visceral, técnica implacável e assinatura única.";
+      updated.hero.floatingBadge = "ZERO COMPLACÊNCIA";
+      updated.marquee = [
+        { id: "m1", text: "TRAÇO DEFINITIVO", icon: "⚔️" },
+        { id: "m2", text: "PIGMENTO PURO", icon: "🌑" },
+        { id: "m3", text: "SEM ILUSÕES", icon: "👁️" },
+        { id: "m4", text: "AUTENTICIDADE CRUA", icon: "⚡" },
+      ];
     } else {
-      updated.hero.title = `A Experiência Definitiva em ${updated.businessName}`;
-      updated.hero.subtitle = `${instruction.slice(0, 1).toUpperCase() + instruction.slice(1)}. Criado com maestria para encantar seus sentidos.`;
-      updated.manifesto.bodyText = `${updated.manifesto.bodyText} Nosso compromisso permanente: ${instruction}.`;
+      updated.archetype = "luxury-editorial";
+      updated.theme.accent = "#f59e0b";
+      updated.theme.secondaryAccent = "#fbbf24";
+      updated.theme.bg = "#0a0a0c";
+      updated.theme.fontHeading = "serif";
+      updated.theme.borderStyle = "glass";
+      updated.hero.title = `A Experiência Autêntica na ${updated.businessName}`;
+      updated.hero.subtitle = `${instruction.slice(0, 1).toUpperCase() + instruction.slice(1)}. Onde cada detalhe sensorial é lapidado com maestria.`;
+      if (updated.manifesto) {
+        updated.manifesto.bodyText = `${updated.manifesto.bodyText} Nosso compromisso permanente: ${instruction}.`;
+      }
     }
 
     return updated;

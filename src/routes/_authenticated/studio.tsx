@@ -647,12 +647,14 @@ export default function CinematicStudioPage() {
               )}
 
               {/* Pílulas de Inspiração Flutuantes */}
+              {/* Pílulas de Inspiração Flutuantes com os 5 Arquétipos */}
               <div className="border-t border-white/5 bg-[#0a0a0d] px-3.5 pt-2.5 pb-1.5 flex gap-1.5 overflow-x-auto scrollbar-none">
                 {[
-                  { label: "🍷 Intimista & Vinhos", prompt: "Experiência intimista noturna, realçando luzes baixas, alta gastronomia e carta de vinhos nobres." },
-                  { label: "☀️ Minimalista Solar", prompt: "Atmosfera minimalista contemporânea com estética pura, formas elegantes e textos poéticos sobre bem-estar." },
-                  { label: "☕ Cafeteria Sensorial", prompt: "Cafés especiais colhidos a 1.200m, torra artesanal fresca, métodos filtrados e confeitaria autoral." },
-                  { label: "✂️ Ateliê Sob Medida", prompt: "Alta costura, alfaiataria sob medida, tecidos nobres, exclusividade de peças e atendimento personalizado." },
+                  { label: "⚡ Neo-Pop D2C", prompt: "Transforme no estilo Neo-Pop D2C (estilo Gigi Energy): alta energia, neon volt pulsante, marquee veloz, contraste arrojado e blocos bento dinâmicos." },
+                  { label: "👑 Luxo Editorial", prompt: "Crie uma experiência de Luxo Editorial (estilo Evasion): tons ébano e ouro, fontes serifadas nobres, vídeo imersivo e narrativa contemplativa." },
+                  { label: "🌿 Clean Biotech", prompt: "Adote a estética Clean Biotech (estilo Biometic): vidro fosco acetinado, tons esmeralda e ciano, tabela comparativa e FAQ rigoroso." },
+                  { label: "💻 Cyber High-Tech", prompt: "Transforme em Cyber High-Tech (estilo Compute-11): grid sutil, tags mono [SYS::01], acentos ciano e titânio, layout de alta precisão." },
+                  { label: "🌑 Dark Brutalist", prompt: "Adote a estética Dark Brutalist (estilo Void): tipografia display gigante, contraste preto e branco, linhas finas de corte e atitude crua." },
                 ].map((chip) => (
                   <button
                     key={chip.label}
@@ -983,14 +985,48 @@ export default function CinematicStudioPage() {
                       </div>
                     </div>
 
+                    {/* Seletor de Arquétipo Visual */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Arquétipo Visual (Bento Engine):</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        {[
+                          { id: "luxury-editorial", label: "👑 Luxo Editorial", desc: "Monocle, Vinhos & Alta Gastronomia" },
+                          { id: "neo-pop-d2c", label: "⚡ Neo-Pop D2C", desc: "Gigi Energy, Alta Voltagem & Neon" },
+                          { id: "clean-biotech", label: "🌿 Clean Biotech", desc: "Biometic, Vidro Fosco & Clínicas" },
+                          { id: "cyber-tech", label: "💻 Cyber High-Tech", desc: "Compute-11, Grid Escuro & Tags" },
+                          { id: "dark-brutalist", label: "🌑 Dark Brutalist", desc: "Void, Tipografia Gigante & P&B" },
+                        ].map((arq) => (
+                          <button
+                            key={arq.id}
+                            type="button"
+                            onClick={() =>
+                              setData((prev) => ({
+                                ...prev,
+                                archetype: arq.id as any,
+                              }))
+                            }
+                            className={`rounded-xl border p-2.5 text-left transition-all ${
+                              data.archetype === arq.id
+                                ? "border-amber-400 bg-amber-500/15 text-white ring-1 ring-amber-400/40"
+                                : "border-white/10 bg-black/30 text-zinc-400 hover:text-white"
+                            }`}
+                          >
+                            <span className="block text-xs font-bold text-amber-200">{arq.label}</span>
+                            <span className="block text-[9px] text-zinc-400 mt-0.5">{arq.desc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
                     {/* Seletor de Tipografia */}
                     <div className="space-y-1.5">
                       <span className="text-[10px] text-zinc-400 uppercase font-semibold">Tipografia dos Títulos:</span>
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         {[
                           { id: "serif", label: "Editorial", font: "font-serif" },
                           { id: "sans", label: "Moderna", font: "font-sans" },
                           { id: "display", label: "Marcante", font: "font-display" },
+                          { id: "mono", label: "Cyber Mono", font: "font-mono" },
                         ].map((f) => (
                           <button
                             key={f.id}

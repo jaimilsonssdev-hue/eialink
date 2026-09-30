@@ -68,7 +68,13 @@ function AuthedLayout() {
         title: "Criação & Destaque",
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-          { to: "/studio", label: "Cinematic Studio", icon: Clapperboard, badge: "VIP" },
+          {
+            to: "/studio",
+            label: "Cinematic Studio",
+            icon: Clapperboard,
+            badge: "VIP",
+            badgeClassName: "bg-white/10 text-zinc-300 border border-white/10 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
+          },
           { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
         ],
       },
@@ -144,7 +150,7 @@ function AuthedLayout() {
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
                 {group.title}
               </p>
-              {group.items.map(({ to, label, icon: Icon, badge }) => {
+              {group.items.map(({ to, label, icon: Icon, badge, badgeClassName }) => {
                 const active = pathname === to;
                 return (
                   <Link
@@ -158,7 +164,7 @@ function AuthedLayout() {
                       <span className="truncate">{label}</span>
                     </div>
                     {badge && (
-                      <span className="rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-medium px-2 py-0.5 border border-white/10">
+                      <span className={badgeClassName || "rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-medium px-2 py-0.5 border border-white/10"}>
                         {badge}
                       </span>
                     )}
@@ -203,8 +209,8 @@ function AuthedLayout() {
       </aside>
 
       {/* Content */}
-      <div className="min-w-0 flex-1 md:ml-64">
-        <header className="app-mobile-header md:hidden sticky top-0 z-30 glass flex items-center justify-between px-4 h-14">
+      <div className={`min-w-0 flex-1 md:ml-64 ${pathname === "/studio" ? "bg-zinc-950" : ""}`}>
+        <header className={`app-mobile-header md:hidden sticky top-0 z-30 glass flex items-center justify-between px-4 h-14 ${pathname === "/studio" ? "hidden" : ""}`}>
           <button onClick={() => setOpen(true)} aria-label="Abrir menu">
             <Menu className="h-5 w-5" />
           </button>
@@ -213,10 +219,18 @@ function AuthedLayout() {
           </span>
           <ThemeToggle compact />
         </header>
-        <main className={`app-content p-4 pb-24 sm:p-5 md:p-8 md:pb-8 mx-auto ${pathname === "/builder" ? "max-w-[1600px]" : "max-w-7xl"}`}>
+        <main
+          className={`app-content mx-auto ${
+            pathname === "/studio"
+              ? "p-0 max-w-none w-full h-screen overflow-hidden bg-zinc-950"
+              : pathname === "/builder"
+              ? "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-[1600px]"
+              : "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-7xl"
+          }`}
+        >
           <Outlet />
         </main>
-        <nav className="app-mobile-nav md:hidden h-16" aria-label="Navegação principal">
+        <nav className={`app-mobile-nav md:hidden h-16 ${pathname === "/studio" ? "hidden" : ""}`} aria-label="Navegação principal">
           {mobileNavItems.map(({ to, label, icon: Icon }) => {
             const active =
               pathname === to ||

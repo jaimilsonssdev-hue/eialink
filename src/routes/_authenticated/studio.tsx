@@ -501,7 +501,7 @@ export default function CinematicStudioPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* COLUNA ESQUERDA (440px): CHAT CONVERSACIONAL COM PLANO CRIATIVO + AJUSTES */}
         <aside
-          className={`w-full lg:w-[440px] shrink-0 flex flex-col border-r border-zinc-800/80 bg-zinc-950 z-20 ${
+          className={`w-full lg:w-[440px] shrink-0 h-full flex flex-col min-h-0 border-r border-zinc-800/80 bg-zinc-950 z-20 ${
             mobileTab === "preview" ? "hidden lg:flex" : "flex"
           }`}
         >
@@ -535,9 +535,9 @@ export default function CinematicStudioPage() {
 
           {/* 2. Conteúdo da Aba 1: FLUXO DE PLANO CRIATIVO & APROVAÇÃO */}
           {activeTab === "chat" && (
-            <div className="flex flex-1 flex-col overflow-hidden bg-zinc-950">
+            <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-zinc-950">
               {/* Feed de Mensagens Rolável */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -772,8 +772,8 @@ export default function CinematicStudioPage() {
                 <div ref={chatEndRef} />
               </div>
 
-              {/* Pílulas de Inspiração Flutuantes */}
-              <div className="border-t border-zinc-800/80 bg-zinc-950 px-3.5 pt-2.5 pb-1.5 flex gap-1.5 overflow-x-auto scrollbar-none">
+              {/* Pílulas de Sugestão/Arquétipos (Sem scrollbar nativa) */}
+              <div className="flex items-center gap-1.5 overflow-x-auto px-4 py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden border-t border-zinc-800/80 bg-zinc-950">
                 {[
                   { label: "Neo-Pop D2C", prompt: "Quero uma direção criativa no estilo Neo-Pop D2C (como Gigi Energy): alta voltagem, neon pulsante, marquee veloz e contraste pulsante." },
                   { label: "Luxo Editorial", prompt: "Quero uma direção criativa de Luxo Editorial (como Evasion): tons ébano e ouro, fontes serifadas nobres e narrativa contemplativa." },
@@ -786,7 +786,7 @@ export default function CinematicStudioPage() {
                     type="button"
                     onClick={() => handleSendMessage(chip.prompt)}
                     disabled={isRefiningAi}
-                    className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:border-zinc-700 px-3 py-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-200 transition-all disabled:opacity-40"
+                    className="shrink-0 rounded-full border border-white/10 bg-zinc-900/80 px-2.5 py-1 text-[11px] font-medium text-zinc-400 hover:border-white/25 hover:text-white transition-all disabled:opacity-40"
                   >
                     {chip.label}
                   </button>
@@ -794,7 +794,7 @@ export default function CinematicStudioPage() {
               </div>
 
               {/* Barra de Entrada no Rodapé (Footer Chat Bar estilo Lovable) */}
-              <div className="bg-zinc-950 p-3.5 border-t border-zinc-800/80">
+              <div className="shrink-0 bg-zinc-950 p-3 border-t border-zinc-800/80">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -842,7 +842,7 @@ export default function CinematicStudioPage() {
                 )}
 
                 {/* Cápsula de Entrada Estilo Lovable */}
-                <div className="relative flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/90 shadow-lg shadow-black/40 focus-within:border-zinc-700 transition-all p-2">
+                <div className="relative flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/90 shadow-lg shadow-black/40 focus-within:border-zinc-600 transition-all p-2">
                   {/* Área de Texto Auto-expansível */}
                   <textarea
                     ref={textareaRef}
@@ -860,17 +860,17 @@ export default function CinematicStudioPage() {
                       }
                     }}
                     placeholder="Descreva a atmosfera sensorial, estilo visual ou produtos..."
-                    className="w-full resize-none bg-transparent px-2.5 py-1.5 text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none scrollbar-none"
+                    className="w-full resize-none bg-transparent px-2.5 py-1.5 text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none [scrollbar-width:none]"
                   />
 
                   {/* Barra Inferior Interna da Cápsula com Botões */}
                   <div className="flex items-center justify-between pt-1 px-1">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       {/* Botão de Anexo */}
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        title="Anexar fotos reais"
+                        title="Anexar fotos"
                         className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
                       >
                         <Plus className="h-4 w-4" />
@@ -883,7 +883,7 @@ export default function CinematicStudioPage() {
                         title="Importar do Google Maps"
                         className={`flex h-7 px-2 items-center gap-1.5 rounded-lg text-xs transition-colors ${
                           showMapsInput
-                            ? "bg-zinc-800 text-zinc-200 font-medium"
+                            ? "bg-zinc-800 text-white font-medium"
                             : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
                         }`}
                       >
@@ -897,7 +897,7 @@ export default function CinematicStudioPage() {
                       type="button"
                       onClick={() => handleSendMessage()}
                       disabled={isRefiningAi || !aiPrompt.trim()}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-950 hover:bg-white disabled:opacity-30 disabled:hover:bg-zinc-100 transition-all"
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-30 transition-all"
                     >
                       {isRefiningAi ? (
                         <RefreshCw className="h-3.5 w-3.5 animate-spin" />

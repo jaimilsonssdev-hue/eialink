@@ -107,8 +107,8 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
   return (
     <div
       ref={containerRef}
-      className={`cinematic-experience relative w-full text-zinc-100 selection:bg-amber-500/30 selection:text-white ${
-        isEmbedded ? "h-full overflow-y-auto" : "min-h-screen overflow-x-hidden"
+      className={`cinematic-experience relative w-full text-zinc-100 selection:bg-white/20 selection:text-white ${
+        isEmbedded ? "h-full overflow-y-auto overflow-x-hidden" : "min-h-screen overflow-x-hidden"
       } ${className}`}
       style={{
         backgroundColor: bgColor,
@@ -158,20 +158,20 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       {/* TopBar Flutuante de Luxo (Glassmorphism) */}
       <header className="sticky top-0 z-40 border-b border-white/10 bg-black/40 backdrop-blur-xl transition-all">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
-          <a href="#hero" className="group flex items-center gap-2.5">
+          <a href="#hero" className="group flex items-center gap-2.5 min-w-0">
             <span
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-xs font-bold transition-transform group-hover:scale-105"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-xs font-bold transition-transform group-hover:scale-105"
               style={{ color: accentColor }}
             >
               {data.businessName.slice(0, 2).toUpperCase()}
             </span>
-            <span className={`text-sm sm:text-base font-bold tracking-wide text-white ${fontHeadingClass}`}>
+            <span className={`text-sm sm:text-base font-bold tracking-wide text-white truncate max-w-[160px] sm:max-w-xs ${fontHeadingClass}`}>
               {data.businessName}
             </span>
           </a>
 
           {/* Links de navegação interna */}
-          <nav className="hidden md:flex items-center gap-7 text-xs font-medium uppercase tracking-widest text-zinc-400">
+          <nav className={`${isEmbedded ? "hidden" : "hidden md:flex"} items-center gap-6 text-xs font-medium uppercase tracking-widest text-zinc-400`}>
             {data.bentoGrid && data.bentoGrid.length > 0 && (
               <button
                 type="button"

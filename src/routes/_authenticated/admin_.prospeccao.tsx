@@ -182,10 +182,7 @@ function buildInstagramPitch(company: ProspectedCompany) {
 
 function ProspectingPage() {
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState<"all" | ProspectStatus>("all");
-  const [priorityFilter, setPriorityFilter] = useState<"all" | ProspectPriority>("all");
-  const [siteFilter, setSiteFilter] = useState<"all" | "no_website" | "has_website">("all");
-  const [nicheFilter, setNicheFilter] = useState<string>("all");
+  const [quickFilter, setQuickFilter] = useState<"all" | "no_website" | "high_priority" | "ready_pages">("all");
   const [viewMode, setViewMode] = useState<"kanban" | "table">(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("prospecting_view_mode");
@@ -434,21 +431,27 @@ function ProspectingPage() {
   const filtered = useMemo(() => {
     const term = search.trim().toLowerCase();
     return companies.filter((company) => {
-      const matchStatus = statusFilter === "all" || company.status === statusFilter;
-      const matchPriority = priorityFilter === "all" || company.priority === priorityFilter;
-      const matchSite =
-        siteFilter === "all" ||
-        (siteFilter === "no_website" ? !company.has_website : company.has_website);
-      const companyNicheKey = detectNicheKey(company.niche, company.name);
-      const matchNiche = nicheFilter === "all" || companyNicheKey === nicheFilter;
+      // 1. Filtro rápido em pílulas deslizantes
+      if (quickFilter === "no_website" && company.has_website) return false;
+      if (quickFilter === "high_priority" && company.priority !== "alta" && company.score < 70) return false;
+      if (quickFilter === "ready_pages") {
+        const hasDemo = Boolean(
+          company.notes?.includes("http") ||
+          demoPagesByName.has(company.name.toLowerCase().trim())
+        );
+        if (!hasDemo) return false;
+      }
+
+      // 2. Campo de busca inteligente único (empresa, nicho, cidade ou telefone)
       const matchTerm =
         !term ||
-        [company.name, company.niche, company.city, company.whatsapp]
+        [company.name, company.niche, company.city, company.whatsapp, company.phone]
           .filter(Boolean)
           .some((value) => String(value).toLowerCase().includes(term));
-      return matchStatus && matchPriority && matchSite && matchNiche && matchTerm;
+
+      return matchTerm;
     });
-  }, [companies, priorityFilter, search, statusFilter, siteFilter, nicheFilter]);
+  }, [companies, search, quickFilter, demoPagesByName]);
 
   const metrics = useMemo(() => {
     const untouched = companies.filter((item) => item.status === "novo");
@@ -2282,162 +2285,160 @@ function ProspectingPage() {
       </section>
 
       {/* Pipeline */}
-      <Card className="rounded-xl border border-border bg-card shadow-xs">
-        <CardHeader className="p-5 pb-3">
+      <Card className="rounded-2xl border border-border/70 bg-card/60 backdrop-blur-sm shadow-xs overflow-hidden">
+        <CardHeader className="p-4 sm:p-5 pb-3 border-b border-border/50 space-y-3">
+          {/* Linha Superior: Título & Contagem + Ações Rápidas + Alternador [Kanban / Lista] */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <CardTitle className="text-base font-semibold tracking-tight text-foreground flex items-center gap-2">
-                Pipeline de Prospecção
-                <span className="text-xs font-normal text-muted-foreground bg-muted px-2.5 py-0.5 rounded-full border border-border/60">
+            <div className="flex items-center gap-2 flex-wrap">
+              <CardTitle className="text-base font-bold tracking-tight text-foreground flex items-center gap-2">
+                <span>Pipeline de Prospecção</span>
+                <span className="text-xs font-semibold text-muted-foreground bg-muted/60 px-2.5 py-0.5 rounded-full border border-border/60 tabular-nums">
                   {companies.length} {companies.length === 1 ? "lead" : "leads"}
                 </span>
               </CardTitle>
+
               {companies.length > 0 && (
-                <>
+                <div className="flex items-center gap-1.5 ml-1">
                   <button
                     type="button"
                     onClick={() => autoTagMutation.mutate()}
                     disabled={autoTagMutation.isPending}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 px-2.5 py-1 text-xs font-medium transition-colors"
-                    title="Identificar e etiquetar automaticamente os nichos de todas as empresas prospectadas"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/70 px-2 py-1 text-xs font-medium transition-colors"
+                    title="Etiquetar nichos automaticamente"
                   >
-                    <Tag className="h-3.5 w-3.5" />
-                    {autoTagMutation.isPending ? "Etiquetando..." : "Etiquetar Nichos"}
+                    <Tag className="h-3 w-3" />
+                    <span className="hidden md:inline">{autoTagMutation.isPending ? "Etiquetando..." : "Etiquetar"}</span>
                   </button>
 
                   <button
+                    type="button"
                     onClick={handleClearAllRadar}
                     disabled={clearRadarMutation.isPending}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-500/30 bg-red-500/10 text-red-400 hover:bg-red-500/20 px-2.5 py-1 text-xs font-medium transition-colors"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/30 px-2 py-1 text-xs font-medium transition-colors"
                     title="Limpar toda a lista de prospecção"
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    {clearRadarMutation.isPending ? "Limpando..." : "Limpar Radar"}
+                    <Trash2 className="h-3 w-3" />
+                    <span className="hidden md:inline">{clearRadarMutation.isPending ? "Limpando..." : "Limpar"}</span>
                   </button>
-                </>
+                </div>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {/* Seletor de Modo: Kanban ou Tabela */}
-              <div className="inline-flex items-center rounded-lg border border-border/80 bg-background/80 p-0.5 shadow-xs shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleToggleViewMode("kanban")}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
-                    viewMode === "kanban"
-                      ? "bg-primary text-white shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  title="Visualização em Quadro Kanban"
-                >
-                  <Kanban className="h-3.5 w-3.5" />
-                  <span>Kanban</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleToggleViewMode("table")}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all ${
-                    viewMode === "table"
-                      ? "bg-primary text-white shadow-xs"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                  title="Visualização em Lista / Tabela Clássica"
-                >
-                  <LayoutList className="h-3.5 w-3.5" />
-                  <span>Tabela</span>
-                </button>
-              </div>
 
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar empresa, nicho..."
-                className="h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-48 transition-colors"
-              />
-              <select
-                className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
-                value={statusFilter}
-                onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+            {/* Alternador sutil [Kanban / Lista] */}
+            <div className="inline-flex items-center rounded-xl border border-border/70 bg-muted/30 p-0.5 shadow-2xs shrink-0 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => handleToggleViewMode("kanban")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
+                  viewMode === "kanban"
+                    ? "bg-zinc-800 text-zinc-100 font-semibold shadow-xs border border-zinc-700/70"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="Visualização em Quadro Kanban"
               >
-                <option value="all">Todas as etapas</option>
-                {STATUS_OPTIONS.map((status) => (
-                  <option key={status} value={status}>
-                    {STATUS_LABEL[status]}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
-                value={priorityFilter}
-                onChange={(event) => setPriorityFilter(event.target.value as typeof priorityFilter)}
+                <Kanban className="h-3.5 w-3.5" />
+                <span>Kanban</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleToggleViewMode("table")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all ${
+                  viewMode === "table"
+                    ? "bg-zinc-800 text-zinc-100 font-semibold shadow-xs border border-zinc-700/70"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+                title="Visualização em Lista"
               >
-                <option value="all">Todas as prioridades</option>
-                {(Object.keys(PRIORITY_LABEL) as ProspectPriority[]).map((priority) => (
-                  <option key={priority} value={priority}>
-                    {PRIORITY_LABEL[priority]}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors"
-                value={siteFilter}
-                onChange={(event) => setSiteFilter(event.target.value as typeof siteFilter)}
-              >
-                <option value="all">Todos os sites</option>
-                <option value="no_website">🔥 Apenas Sem Site</option>
-                <option value="has_website">🌐 Apenas Com Site</option>
-              </select>
-              <select
-                className="h-8 rounded-lg border border-border bg-background px-2.5 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 sm:w-auto transition-colors font-medium"
-                value={nicheFilter}
-                onChange={(event) => setNicheFilter(event.target.value)}
-              >
-                <option value="all">🎯 Todos os nichos</option>
-                {CANONICAL_NICHES.map((niche) => (
-                  <option key={niche.key} value={niche.key}>
-                    {niche.icon} {niche.label}
-                  </option>
-                ))}
-              </select>
+                <LayoutList className="h-3.5 w-3.5" />
+                <span>Lista</span>
+              </button>
             </div>
           </div>
 
-          {/* Pílulas de Filtro Rápido por Nicho */}
-          {companies.length > 0 && (
-            <div className="flex items-center gap-1.5 overflow-x-auto pt-2.5 pb-0.5 text-xs border-t border-border/40 mt-3 no-scrollbar">
+          {/* Barra Unificada: Busca Inteligente Única + Pílulas Deslizantes Monocromáticas */}
+          <div className="flex flex-col md:flex-row md:items-center gap-2.5 pt-1">
+            {/* Campo de Busca Inteligente Único */}
+            <div className="relative flex-1 min-w-[240px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar por empresa, nicho ou telefone..."
+                className="h-9 w-full rounded-xl border border-border/70 bg-background/60 pl-8 pr-7 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/30 transition-all"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
+                  title="Limpar busca"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Filtro Rápido em Pílulas Deslizantes */}
+            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 py-0.5">
               <button
                 type="button"
-                onClick={() => setNicheFilter("all")}
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold shrink-0 transition-all ${
-                  nicheFilter === "all"
-                    ? "bg-primary text-white shadow-xs"
-                    : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                onClick={() => setQuickFilter("all")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all shrink-0 ${
+                  quickFilter === "all"
+                    ? "bg-zinc-800 text-zinc-100 font-semibold border border-zinc-700 shadow-2xs"
+                    : "border border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/50"
                 }`}
               >
-                Todos ({companies.length})
+                <span>Todos</span>
+                <span className="text-[10px] opacity-75 tabular-nums">({companies.length})</span>
               </button>
-              {CANONICAL_NICHES.filter((n) => companies.some((c) => detectNicheKey(c.niche, c.name) === n.key)).map((niche) => {
-                const count = companies.filter((c) => detectNicheKey(c.niche, c.name) === niche.key).length;
-                const isSelected = nicheFilter === niche.key;
-                return (
-                  <button
-                    key={niche.key}
-                    type="button"
-                    onClick={() => setNicheFilter(isSelected ? "all" : niche.key)}
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium shrink-0 transition-all border ${
-                      isSelected
-                        ? `${niche.color} font-bold ring-2 ring-primary/40`
-                        : "border-border/60 bg-card hover:bg-muted/40 text-foreground"
-                    }`}
-                  >
-                    <span>{niche.icon}</span>
-                    <span>{niche.label}</span>
-                    <span className="text-[10px] opacity-75">({count})</span>
-                  </button>
-                );
-              })}
+
+              <button
+                type="button"
+                onClick={() => setQuickFilter("no_website")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all shrink-0 ${
+                  quickFilter === "no_website"
+                    ? "bg-rose-500/15 text-rose-300 font-semibold border border-rose-500/30 shadow-2xs"
+                    : "border border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                <span>🔥 Sem Site</span>
+                <span className="text-[10px] opacity-75 tabular-nums">
+                  ({companies.filter((c) => !c.has_website).length})
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQuickFilter("high_priority")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all shrink-0 ${
+                  quickFilter === "high_priority"
+                    ? "bg-amber-500/15 text-amber-300 font-semibold border border-amber-500/30 shadow-2xs"
+                    : "border border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                <span>⚡ Alta Prioridade</span>
+                <span className="text-[10px] opacity-75 tabular-nums">
+                  ({companies.filter((c) => c.priority === "alta" || c.score >= 70).length})
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setQuickFilter("ready_pages")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs transition-all shrink-0 ${
+                  quickFilter === "ready_pages"
+                    ? "bg-purple-500/15 text-purple-300 font-semibold border border-purple-500/30 shadow-2xs"
+                    : "border border-border/60 bg-muted/20 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
+              >
+                <span>Páginas Prontas</span>
+                <span className="text-[10px] opacity-75 tabular-nums">
+                  ({companies.filter((c) => c.notes?.includes("http") || demoPagesByName.has(c.name.toLowerCase().trim())).length})
+                </span>
+              </button>
             </div>
-          )}
+          </div>
         </CardHeader>
 
         <CardContent className="p-0">

@@ -8,6 +8,7 @@ import {
   Instagram,
   Bot,
   MoreHorizontal,
+  MoreVertical,
   ChevronLeft,
   ChevronRight,
   RotateCcw,
@@ -292,251 +293,219 @@ export function ProspectingKanban({
                               : "border-border/70 hover:border-primary/50"
                           }`}
                         >
-                          {/* Topo do Card: Temperatura + Setas Rápidas de Avanço */}
-                          <div className="flex items-center justify-between gap-1 mb-2.5">
-                            <LeadTemperatureBadge score={company.score} />
-
-                            <div className="flex items-center gap-1">
-                              {prevStatus && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onStatusChange(company.id, prevStatus);
-                                  }}
-                                  className="h-6 w-6 inline-flex items-center justify-center rounded-md border border-border/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                                  title={`Voltar para: ${prevStatus}`}
-                                >
-                                  <ChevronLeft className="h-3.5 w-3.5" />
-                                </button>
-                              )}
-                              {nextStatus && (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onStatusChange(company.id, nextStatus);
-                                  }}
-                                  className="h-6 w-6 inline-flex items-center justify-center rounded-md border border-primary/30 bg-primary/10 text-primary hover:bg-primary/20 transition-colors font-bold"
-                                  title={`Avançar para: ${nextStatus}`}
-                                >
-                                  <ChevronRight className="h-3.5 w-3.5" />
-                                </button>
+                          {/* Topo do Card: Badge de Prioridade / Lead Score à esquerda + Menu MoreVertical à direita */}
+                          <div className="flex items-center justify-between gap-1 mb-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              {!company.has_website ? (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-full border border-rose-500/20 shrink-0">
+                                  🔥 Sem Site
+                                </span>
+                              ) : company.score >= 70 ? (
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 shrink-0">
+                                  ⚡ Quente
+                                </span>
+                              ) : (
+                                <LeadTemperatureBadge score={company.score} />
                               )}
                             </div>
+
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <button
+                                  type="button"
+                                  className="h-6 w-6 inline-flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors shrink-0"
+                                  title="Opções do lead"
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-52">
+                                <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                  Mover de Etapa
+                                </div>
+                                {PIPELINE_COLUMNS.map((pCol) => (
+                                  <DropdownMenuItem
+                                    key={pCol.key}
+                                    disabled={company.status === pCol.key}
+                                    onClick={() => onStatusChange(company.id, pCol.key)}
+                                    className="cursor-pointer text-xs"
+                                  >
+                                    <span className={`h-2 w-2 rounded-full ${pCol.dotColor} mr-2`} />
+                                    <span>{pCol.label}</span>
+                                    {company.status === pCol.key && <Check className="h-3 w-3 ml-auto text-primary" />}
+                                  </DropdownMenuItem>
+                                ))}
+
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuItem
+                                  onClick={() => onAuditCompany(company)}
+                                  className="cursor-pointer text-xs text-purple-400 font-medium"
+                                >
+                                  <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                  <span>Auditoria com IA</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onClick={() => void onInstagramApproach(company)}
+                                  className="cursor-pointer text-xs text-pink-400 font-medium"
+                                >
+                                  {copiedInstagramCompanyId === company.id ? (
+                                    <Check className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                  ) : (
+                                    <Instagram className="h-3.5 w-3.5 mr-2 text-pink-400" />
+                                  )}
+                                  <span>{copiedInstagramCompanyId === company.id ? "Copiado!" : "Direct Instagram"}</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onClick={() => onRegenerateDemo(company)}
+                                  disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                                  className="cursor-pointer text-xs text-purple-300 font-medium"
+                                >
+                                  <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                  <span>{demo.url ? "Trocar Modelo da Página" : "Gerar Modelo"}</span>
+                                </DropdownMenuItem>
+
+                                {demo.pageId && (
+                                  <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                    <Link to="/builder" search={{ page: demo.pageId }}>
+                                      <Pencil className="h-3.5 w-3.5 mr-2 text-blue-400" />
+                                      <span>Editar no Construtor</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                )}
+
+                                {demo.url && demo.pageId && (
+                                  <DropdownMenuItem
+                                    onClick={() => onMakeOfficial(company, demo.pageId!)}
+                                    disabled={actionLoadingId === demo.pageId || isOfficial}
+                                    className="cursor-pointer text-xs"
+                                  >
+                                    <CheckCircle
+                                      className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`}
+                                    />
+                                    <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
+                                  </DropdownMenuItem>
+                                )}
+
+                                <DropdownMenuItem
+                                  onClick={() => onRegisterApproach(company)}
+                                  className="cursor-pointer text-xs"
+                                >
+                                  <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                  <span>Registrar Histórico</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuSeparator />
+
+                                <DropdownMenuItem
+                                  onClick={() => onStatusChange(company.id, "descartado")}
+                                  className="cursor-pointer text-xs text-amber-500"
+                                >
+                                  <Ban className="h-3.5 w-3.5 mr-2 text-amber-500" />
+                                  <span>Descartar Lead</span>
+                                </DropdownMenuItem>
+
+                                <DropdownMenuItem
+                                  onClick={() => onDeleteCompany(company)}
+                                  className="cursor-pointer text-xs text-rose-400"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
+                                  <span>Remover do Radar</span>
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
 
-                          {/* Nome da Empresa & Local */}
-                          <div className="mb-2.5">
-                            <h4 className="text-[13px] font-bold text-foreground leading-snug line-clamp-2" title={company.name}>
+                          {/* Corpo: Nome da Empresa em Destaque + Cidade e Especialidade em Pílula Monocromática */}
+                          <div className="mb-3 space-y-1.5">
+                            <h4 className="font-semibold text-sm text-foreground line-clamp-1 leading-tight" title={company.name}>
                               {company.name}
                             </h4>
-                            <div className="flex items-center gap-1.5 mt-1.5 text-xs text-muted-foreground flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               {(() => {
                                 const nicheKey = detectNicheKey(company.niche, company.name);
                                 const nicheMeta = getCanonicalNicheMeta(nicheKey);
-                                return nicheMeta ? (
-                                  <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border ${nicheMeta.color} font-semibold shrink-0`}>
-                                    <span>{nicheMeta.icon}</span>
-                                    <span>{nicheMeta.label}</span>
+                                const nicheLabel = nicheMeta?.label || company.niche || "Geral";
+                                return (
+                                  <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium">
+                                    {nicheMeta?.icon && <span className="opacity-80 text-[10px]">{nicheMeta.icon}</span>}
+                                    <span className="truncate max-w-[130px]">{nicheLabel}</span>
                                   </span>
-                                ) : null;
+                                );
                               })()}
                               {company.city && (
-                                <span className="truncate max-w-[120px] opacity-80 text-[11px]">
+                                <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-md bg-muted text-muted-foreground font-medium truncate max-w-[110px]">
                                   {company.city}
                                 </span>
                               )}
                             </div>
                           </div>
 
-                          {/* Badges de Presença Web e Modelo */}
-                          <div className="flex items-center gap-1.5 mb-3 flex-wrap">
-                            {company.has_website ? (
-                              <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/40 px-2 py-0.5 rounded-md border border-border/40 whitespace-nowrap">
-                                <Globe2 className="h-3 w-3 text-blue-400" /> Tem site
-                              </span>
+                          {/* Rodapé de Ação Direta (Apenas 2 botões claros: WhatsApp e Ver Demo/Gerar Site) */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-border/50">
+                            {waHref ? (
+                              <a
+                                href={waHref}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400 border border-emerald-800/40 text-xs font-semibold transition-all whitespace-nowrap"
+                                title={`WhatsApp: ${formatPhone(phone)}`}
+                              >
+                                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                                <span>WhatsApp</span>
+                              </a>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-rose-500 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/20 whitespace-nowrap">
-                                🔥 Sem site
-                              </span>
-                            )}
-                            {demo.url && (
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded-md border border-purple-500/20 whitespace-nowrap truncate max-w-[130px]" title={demo.modelName || "Demo Pronta"}>
-                                ✨ {demo.modelName ? demo.modelName.slice(0, 14) : "Demo Pronta"}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Botões de Ação */}
-                          <div className="space-y-1.5 pt-2.5 border-t border-border/50">
-                            {/* Linha 1: WhatsApp + Demo */}
-                            <div className="grid grid-cols-2 gap-1.5">
-                              {waHref ? (
-                                <a
-                                  href={waHref}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-semibold transition-all whitespace-nowrap"
-                                  title={`WhatsApp: ${formatPhone(phone)}`}
-                                >
-                                  <MessageCircle className="h-3.5 w-3.5 shrink-0" />
-                                  <span>WhatsApp</span>
-                                </a>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onSetWhatsApp(company);
-                                  }}
-                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-muted/40 hover:bg-muted/70 text-muted-foreground text-xs font-medium transition-colors whitespace-nowrap"
-                                >
-                                  <MessageCircle className="h-3.5 w-3.5 shrink-0" />
-                                  <span>+ WhatsApp</span>
-                                </button>
-                              )}
-
-                              {demo.url ? (
-                                <a
-                                  href={demo.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 border border-purple-500/25 text-xs font-semibold transition-all whitespace-nowrap"
-                                  title="Ver página demonstrativa"
-                                >
-                                  <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                                  <span>Ver Demo</span>
-                                </a>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onGenerateDemo(company);
-                                  }}
-                                  disabled={creatingPageId === company.id}
-                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:text-white border border-primary/25 text-xs font-bold transition-all whitespace-nowrap"
-                                >
-                                  {creatingPageId === company.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
-                                  ) : (
-                                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-purple-400" />
-                                  )}
-                                  <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo"}</span>
-                                </button>
-                              )}
-                            </div>
-
-                            {/* Linha 2: Auditoria IA + Menu Mais Opções */}
-                            <div className="flex items-center gap-1.5">
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  onAuditCompany(company);
+                                  onSetWhatsApp(company);
                                 }}
-                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-muted/40 hover:bg-purple-500/15 hover:text-purple-400 text-muted-foreground border border-border/50 text-xs font-medium transition-all whitespace-nowrap"
-                                title="Auditoria de Presença & Pitch com IA"
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg bg-muted/60 hover:bg-muted text-muted-foreground text-xs font-medium transition-colors whitespace-nowrap"
                               >
-                                <Bot className="h-3.5 w-3.5 shrink-0 text-purple-400" />
-                                <span>Auditoria IA</span>
+                                <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                                <span>+ WhatsApp</span>
                               </button>
+                            )}
 
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                  <button
-                                    type="button"
-                                    className="h-7 w-8 inline-flex items-center justify-center rounded-lg border border-border/50 bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted/70 text-xs transition-colors shrink-0"
-                                    title="Mais opções"
-                                  >
-                                    <MoreHorizontal className="h-3.5 w-3.5" />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-52">
-                                  <DropdownMenuItem
-                                    onClick={() => onAuditCompany(company)}
-                                    className="cursor-pointer text-xs text-purple-400 font-medium"
-                                  >
-                                    <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
-                                    <span>Auditoria com IA</span>
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => void onInstagramApproach(company)}
-                                    className="cursor-pointer text-xs text-pink-400 font-medium"
-                                  >
-                                    {copiedInstagramCompanyId === company.id ? (
-                                      <Check className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                    ) : (
-                                      <Instagram className="h-3.5 w-3.5 mr-2 text-pink-400" />
-                                    )}
-                                    <span>{copiedInstagramCompanyId === company.id ? "Copiado!" : "Direct Instagram"}</span>
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => onRegenerateDemo(company)}
-                                    disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                                    className="cursor-pointer text-xs text-purple-300 font-medium"
-                                  >
-                                    <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
-                                    <span>{demo.url ? "Trocar Modelo da Página" : "Gerar Modelo"}</span>
-                                  </DropdownMenuItem>
-
-                                  {demo.pageId && (
-                                    <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                      <Link to="/builder" search={{ page: demo.pageId }}>
-                                        <Pencil className="h-3.5 w-3.5 mr-2 text-blue-400" />
-                                        <span>Editar no Construtor</span>
-                                      </Link>
-                                    </DropdownMenuItem>
-                                  )}
-
-                                  {demo.url && demo.pageId && (
-                                    <DropdownMenuItem
-                                      onClick={() => onMakeOfficial(company, demo.pageId!)}
-                                      disabled={actionLoadingId === demo.pageId || isOfficial}
-                                      className="cursor-pointer text-xs"
-                                    >
-                                      <CheckCircle
-                                        className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`}
-                                      />
-                                      <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
-                                    </DropdownMenuItem>
-                                  )}
-
-                                  <DropdownMenuSeparator />
-
-                                  <DropdownMenuItem
-                                    onClick={() => onRegisterApproach(company)}
-                                    className="cursor-pointer text-xs"
-                                  >
-                                    <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                    <span>Registrar Histórico</span>
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuItem
-                                    onClick={() => onStatusChange(company.id, "descartado")}
-                                    className="cursor-pointer text-xs text-amber-500"
-                                  >
-                                    <Ban className="h-3.5 w-3.5 mr-2 text-amber-500" />
-                                    <span>Mover para Descartados</span>
-                                  </DropdownMenuItem>
-
-                                  <DropdownMenuSeparator />
-
-                                  <DropdownMenuItem
-                                    onClick={() => onDeleteCompany(company)}
-                                    className="cursor-pointer text-xs text-rose-400"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
-                                    <span>Remover do Radar</span>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
+                            {demo.url ? (
+                              <a
+                                href={demo.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-200 border border-zinc-700/60 text-xs font-semibold transition-all whitespace-nowrap"
+                                title="Ver demonstração da página"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5 shrink-0 text-zinc-400" />
+                                <span>Ver Demo</span>
+                              </a>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onGenerateDemo(company);
+                                }}
+                                disabled={creatingPageId === company.id}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/25 text-xs font-bold transition-all whitespace-nowrap disabled:opacity-50"
+                              >
+                                {creatingPageId === company.id ? (
+                                  <>
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                    <span>Gerando...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                    <span>Gerar Site</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
                           </div>
                         </div>
                       );

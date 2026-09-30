@@ -230,7 +230,7 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
 
   if (estiloLayout === "glassmorphism") {
     // Sub-divisão entre Saúde/Clínicas vs Estética/VIP/Beleza
-    const isBeautyVip = /estet|beleza|salao|spa|nail|unha|sobrancelha|cabelo|harmoniz|massagem/i.test(normalizedCategory);
+    const isBeautyVip = /estet|beleza|salao|spa|nail|unha|sobrancelha|cabelo|harmoniz|massagem|corporal|facial/i.test(normalizedCategory);
     if (isBeautyVip) {
       // Tons de Dourado Nobre / Rosé / Preto Absoluto
       corDestaque = "#FEF08A"; // Dourado Nobre Champagne
@@ -310,6 +310,8 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
   }
 
   // 5. Normalização do Telefone & Botão de Conversão WhatsApp
+  const preset = getPresetForCompany(canonicalNiche, cleanCompanyName);
+
   const rawPhone =
     raw.whatsapp ||
     raw.phone ||
@@ -319,18 +321,22 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
     extractBrazilianPhone(raw.description);
 
   const normalizedPhoneDigits = normalizePhone(rawPhone);
+  const whatsappInitialMessage = preset.whatsapp_message
+    ? preset.whatsapp_message(cleanCompanyName)
+    : `Olá! Encontrei o perfil de ${cleanCompanyName} e gostaria de mais informações.`;
+
   const whatsappUrl = normalizedPhoneDigits
-    ? `https://wa.me/${normalizedPhoneDigits}?text=${encodeURIComponent(
-        `Olá! Encontrei o perfil de ${cleanCompanyName} e gostaria de mais informações.`
-      )}`
-    : `https://wa.me/55?text=${encodeURIComponent(`Olá! Gostaria de falar com ${cleanCompanyName}.`)}`;
+    ? `https://wa.me/${normalizedPhoneDigits}?text=${encodeURIComponent(whatsappInitialMessage)}`
+    : `https://wa.me/55?text=${encodeURIComponent(whatsappInitialMessage)}`;
+
+  const whatsappLabel = preset.whatsapp_button_label || "Falar no WhatsApp";
 
   const links: LinkItem[] = [];
 
   // Botão Fixo de Destaque (WhatsApp Oficial)
   links.push({
-    titulo: "Fale Conosco no WhatsApp",
-    subtitulo: "Atendimento imediato e orçamentos",
+    titulo: whatsappLabel,
+    subtitulo: "Atendimento imediato e agendamentos",
     url: whatsappUrl,
     icone: "💬",
     destacado: true,
@@ -364,7 +370,6 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
 
   // Se não vieram serviços nos dados brutos do scraper, busca do preset curado do nicho
   if (rawServicesList.length === 0) {
-    const preset = getPresetForCompany(canonicalNiche, cleanCompanyName);
     if (preset.services && preset.services.length > 0) {
       preset.services.forEach((s) => {
         rawServicesList.push({
@@ -458,8 +463,15 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
   const subtituloPerfil = city ? `${categoryLabel} • ${city}` : categoryLabel;
 
   let bioCurta = raw.bio || raw.description || raw.about;
+  if (["estetica_corporal", "estetica_facial", "spa"].includes(canonicalNiche) && bioCurta) {
+    bioCurta = bioCurta
+      .replace(/•?\s*(?:manicure|pedicure|alongamento\s*de\s*unhas?|unhas?\s*em\s*gel|lash\s*lifting|unhas?)\s*/gi, "")
+      .trim();
+  }
   if (!bioCurta && rating) {
     bioCurta = `⭐ ${rating.toFixed(1)} no Google (${reviewsCount || 10}+ avaliações) • Atendimento com excelência e qualidade garantida.`;
+  } else if (!bioCurta && preset.generateDescription) {
+    bioCurta = preset.generateDescription(cleanCompanyName, city);
   }
 
   // 9. Montagem do Objeto BioLinkConfig Estrito
@@ -501,7 +513,7 @@ export function enrichAndParseScrapedData(googleRawData: any): BioLinkConfig {
       nota_google: rating ? rating.toFixed(1) : "5.0",
       total_avaliacoes: reviewsCount ? `${reviewsCount}+` : "50+",
       whatsapp_url: whatsappUrl,
-      whatsapp_label: "Falar no WhatsApp",
+      whatsapp_label: whatsappLabel,
       links,
     },
   };

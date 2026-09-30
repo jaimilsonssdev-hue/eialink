@@ -1,23 +1,27 @@
-import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2, Wand2, Palette, Crop } from "lucide-react";
+import { Check, ImagePlus, LinkIcon, Loader2, Sparkles, Trash2, Wand2, Palette, Crop, Search } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { PageService } from "@/modules/page/services/PageService";
 import { detectNicheKey, getGalleryForNiche, type CuratedPhoto } from "@/modules/prospecting/nichePresets";
 import { generateSvgCover, generateSvgAvatar } from "@/lib/HtmlGraphicGenerator";
 import { generateAiImage, MAX_AI_IMAGES_PER_PAGE } from "@/modules/media/services/AiImageService";
+import { searchUnsplashPhotosFn, type UnsplashPhotoItem } from "@/modules/media/unsplash.functions";
 import { ImageCropModal } from "./ImageCropModal";
 
 const ACCEPTED_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const DEFAULT_MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 const NICHE_GALLERY_LABELS: Record<string, string> = {
+  estetica_corporal: "Estética Corporal & Avançada",
+  estetica_facial: "Estética Facial & Harmonização",
+  spa: "Spa & Bem-Estar",
   loja: "Lojas & E-commerce",
   delivery: "Delivery & Lanches",
   restaurante: "Restaurantes & Gastronomia",
   sorveteria: "Sorveteria, Açaí & Gelateria",
   bebidas: "Adega, Bebidas & Distribuidora",
   barbearia: "Barbearia & Barber Shop",
-  beleza: "Salão de Beleza & Estética",
+  beleza: "Salão de Beleza & Manicure",
   oficina: "Oficina Mecânica & Auto",
   clinica: "Saúde & Clínica Médica",
   psicologia: "Terapeutas & Psicólogos",
@@ -76,6 +80,11 @@ export function MediaUploader({
   const initialKey = detectNicheKey(niche || templateId, null);
   const [activeGalleryNiche, setActiveGalleryNiche] = useState<string>(initialKey);
 
+  const [galleryTab, setGalleryTab] = useState<"curated" | "unsplash">("curated");
+  const [unsplashQuery, setUnsplashQuery] = useState("");
+  const [unsplashResults, setUnsplashResults] = useState<UnsplashPhotoItem[]>([]);
+  const [isSearchingUnsplash, setIsSearchingUnsplash] = useState(false);
+
   useEffect(() => {
     if (niche || templateId) {
       setActiveGalleryNiche(detectNicheKey(niche || templateId, null));
@@ -85,6 +94,25 @@ export function MediaUploader({
   const gallery = getGalleryForNiche(activeGalleryNiche);
   const curatedPhotos = isCover ? gallery.covers : gallery.avatars;
   const remainingAiQuota = Math.max(0, MAX_AI_IMAGES_PER_PAGE - aiUsageCount);
+
+  async function handleSearchUnsplash(q?: string) {
+    const term = (q ?? unsplashQuery).trim();
+    if (!term) return;
+    setIsSearchingUnsplash(true);
+    try {
+      const results = await searchUnsplashPhotosFn({
+        data: {
+          query: term,
+          perPage: 12,
+        },
+      });
+      setUnsplashResults(results || []);
+    } catch (err) {
+      toast.error("Falha ao buscar fotos no Unsplash");
+    } finally {
+      setIsSearchingUnsplash(false);
+    }
+  }
 
   async function validate(file: File) {
     if (!ACCEPTED_TYPES.includes(file.type)) {
@@ -366,14 +394,44 @@ export function MediaUploader({
         </p>
       )}
 
-      {/* Galeria Curada de Alta Resolução por Nicho */}
-      {curatedPhotos.length > 0 && (
-        <div className="space-y-2 pt-2 border-t border-border/40">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
-            <span className="text-[11px] font-semibold text-muted-foreground inline-flex items-center gap-1.5">
+      {/* Bancos de Imagem: Galeria Curada e Unsplash Aberto */}
+      <div className="space-y-3 pt-2 border-t border-border/40">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 p-0.5 rounded-xl bg-muted/40 border border-border/40">
+            <button
+              type="button"
+              onClick={() => setGalleryTab("curated")}
+              className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 ${
+                galleryTab === "curated"
+                  ? "bg-surface-elevated text-foreground shadow-2xs border border-border/60"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
               <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span>Fotos Curadas por Nicho (1 Clique):</span>
-            </span>
+              <span>Fotos por Nicho</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setGalleryTab("unsplash");
+                if (unsplashResults.length === 0 && !isSearchingUnsplash) {
+                  const initialSearch = NICHE_GALLERY_LABELS[activeGalleryNiche] || "estética corporal";
+                  setUnsplashQuery(initialSearch);
+                  void handleSearchUnsplash(initialSearch);
+                }
+              }}
+              className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-all flex items-center gap-1.5 ${
+                galleryTab === "unsplash"
+                  ? "bg-surface-elevated text-foreground shadow-2xs border border-border/60"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Search className="h-3.5 w-3.5 text-primary" />
+              <span>Buscar no Unsplash (Banco Aberto)</span>
+            </button>
+          </div>
+
+          {galleryTab === "curated" && (
             <div className="flex items-center gap-1.5">
               <span className="text-[10px] uppercase font-bold text-muted-foreground">Nicho:</span>
               <select
@@ -388,8 +446,10 @@ export function MediaUploader({
                 ))}
               </select>
             </div>
-          </div>
+          )}
+        </div>
 
+        {galleryTab === "curated" && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {curatedPhotos.map((photo) => {
               const isSelected = value === photo.url;
@@ -422,8 +482,97 @@ export function MediaUploader({
               );
             })}
           </div>
-        </div>
-      )}
+        )}
+
+        {galleryTab === "unsplash" && (
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  value={unsplashQuery}
+                  onChange={(e) => setUnsplashQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void handleSearchUnsplash();
+                    }
+                  }}
+                  placeholder="Buscar fotos em alta definição (ex: drenagem, clínica, luxo, cafeteria)..."
+                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-surface-elevated border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => void handleSearchUnsplash()}
+                disabled={isSearchingUnsplash || !unsplashQuery.trim()}
+                className="btn-primary text-xs px-3 py-1.5 shrink-0 rounded-xl inline-flex items-center gap-1.5"
+              >
+                {isSearchingUnsplash ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Search className="h-3.5 w-3.5" />
+                )}
+                <span>Buscar</span>
+              </button>
+            </div>
+
+            {isSearchingUnsplash ? (
+              <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+                <span className="text-xs">Buscando fotos no Unsplash...</span>
+              </div>
+            ) : unsplashResults.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-80 overflow-y-auto pr-1">
+                {unsplashResults.map((photo) => {
+                  const isSelected = value === photo.url;
+                  return (
+                    <button
+                      key={photo.id}
+                      type="button"
+                      onClick={() => onChange(photo.url)}
+                      className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
+                        isCover ? "h-24" : "h-20"
+                      } ${
+                        isSelected
+                          ? "border-[color:var(--primary)] ring-2 ring-[color:var(--primary)]/50"
+                          : "border-border/60 hover:border-border hover:opacity-90"
+                      }`}
+                      title={photo.label}
+                    >
+                      <img
+                        src={photo.thumbUrl || photo.url}
+                        alt={photo.label}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent p-1.5 flex flex-col justify-end">
+                        <span className="text-[10px] font-medium text-white line-clamp-1 leading-tight">
+                          {photo.label}
+                        </span>
+                        {photo.photographerName && (
+                          <span className="text-[8px] text-zinc-300 line-clamp-1">
+                            Foto: {photo.photographerName}
+                          </span>
+                        )}
+                      </div>
+                      {isSelected && (
+                        <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-[color:var(--primary)] text-white flex items-center justify-center shadow-xs">
+                          <Check className="h-2.5 w-2.5 stroke-[3]" />
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6 text-xs text-muted-foreground border border-dashed border-border/60 rounded-xl">
+                Digite um termo e clique em "Buscar" para explorar milhões de fotos gratuitas do Unsplash.
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <ImageCropModal
         open={isCropOpen}

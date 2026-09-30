@@ -123,14 +123,53 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   beleza: {
     covers: [
       { id: "bel-1", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80", label: "Salão de Beleza & Bancada Iluminada" },
-      { id: "bel-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Studio de Estética & Skincare" },
+      { id: "bel-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Studio de Beleza & Cabelos" },
       { id: "bel-3", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1200&q=80", label: "Nail Studio & Unhas em Gel" },
-      { id: "bel-4", url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80", label: "Spa Relaxante & Cuidados Faciais" },
-      { id: "bel-5", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80", label: "Clínica Estética & Procedimentos Faciais" },
+      { id: "bel-4", url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1200&q=80", label: "Hair Stylist & Escova Modelada" },
+      { id: "bel-5", url: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80", label: "Design de Olhar & Lash Lifting" },
     ],
     avatars: [
       { id: "bel-av-1", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=400&q=80", label: "Emblema Studio de Beleza" },
-      { id: "bel-av-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80", label: "Emblema Estética & Glow" },
+      { id: "bel-av-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80", label: "Emblema Hair & Nails" },
+    ],
+  },
+  estetica_corporal: {
+    covers: [
+      { id: "ec-1", url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80", label: "Drenagem Linfática & Massoterapia Corporal" },
+      { id: "ec-2", url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=80", label: "Tratamento Corporal & Bem-Estar" },
+      { id: "ec-3", url: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=1200&q=80", label: "Massagem Modeladora & Redutora" },
+      { id: "ec-4", url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80", label: "Protocolos Corporais & Relaxamento" },
+      { id: "ec-5", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80", label: "Clínica Estética & Alta Tecnologia" },
+    ],
+    avatars: [
+      { id: "ec-av-1", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80", label: "Especialista em Estética Corporal" },
+      { id: "ec-av-2", url: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80", label: "Clínica Corporal & Saúde" },
+    ],
+  },
+  estetica_facial: {
+    covers: [
+      { id: "ef-1", url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=1200&q=80", label: "Limpeza de Pele Profunda & Glow" },
+      { id: "ef-2", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80", label: "Estética Facial & Harmonização" },
+      { id: "ef-3", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Rejuvenescimento & Skincare" },
+      { id: "ef-4", url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80", label: "Cuidados Faciais Personalizados" },
+      { id: "ef-5", url: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=1200&q=80", label: "Protocolos Estéticos Faciais" },
+    ],
+    avatars: [
+      { id: "ef-av-1", url: "https://images.unsplash.com/photo-1594824813524-42b8e3e488fb?auto=format&fit=crop&w=400&q=80", label: "Dra. Esteta Facial" },
+      { id: "ef-av-2", url: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=400&q=80", label: "Clínica de Harmonização Facial" },
+    ],
+  },
+  spa: {
+    covers: [
+      { id: "spa-1", url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80", label: "Ambiente de Spa & Aromaterapia" },
+      { id: "spa-2", url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=1200&q=80", label: "Massagem com Pedras Quentes" },
+      { id: "spa-3", url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80", label: "Day Spa & Rituais de Relaxamento" },
+      { id: "spa-4", url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1200&q=80", label: "Massoterapia & Bem-Estar Corporal" },
+      { id: "spa-5", url: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=80", label: "Refúgio de Bem-Estar & Paz" },
+    ],
+    avatars: [
+      { id: "spa-av-1", url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=400&q=80", label: "Terapeuta Spa & Massagem" },
+      { id: "spa-av-2", url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=400&q=80", label: "Emblema Spa & Equilíbrio" },
     ],
   },
   oficina: {
@@ -408,6 +447,24 @@ function getNicheWhatsappConfig(key: string, idx: number) {
       message: (name: string) => `Olá! Vi a barbearia ${name} e gostaria de agendar um horário para corte/barba.`,
     };
   }
+  if (key === "estetica_corporal") {
+    return {
+      label: idx === 0 ? "Agendar Avaliação Corporal" : idx === 1 ? "Ver Tratamentos Corporais" : "Falar no WhatsApp",
+      message: (name: string) => `Olá! Vi a clínica ${name} e gostaria de agendar uma avaliação para tratamentos corporais.`,
+    };
+  }
+  if (key === "estetica_facial") {
+    return {
+      label: idx === 0 ? "Agendar Procedimento Facial" : idx === 1 ? "Ver Protocolos Faciais" : "Falar no WhatsApp",
+      message: (name: string) => `Olá! Vi a ${name} e gostaria de agendar uma avaliação estética facial.`,
+    };
+  }
+  if (key === "spa") {
+    return {
+      label: idx === 0 ? "Reservar Sessão no Spa" : idx === 1 ? "Ver Rituais & Massagens" : "Falar no WhatsApp",
+      message: (name: string) => `Olá! Vi o ${name} e gostaria de reservar uma experiência de spa e relaxamento.`,
+    };
+  }
   if (key === "beleza") {
     return {
       label: idx === 0 ? "Agendar Procedimento no WhatsApp" : idx === 1 ? "Ver Tabela & Procedimentos" : "Falar com Especialista",
@@ -529,6 +586,9 @@ export function getSignatureHeroArchitectureForNiche(
 
     case "fitness":
     case "beleza":
+    case "estetica_corporal":
+    case "estetica_facial":
+    case "spa":
     case "barbearia":
     case "oficina":
       return "asymmetric";
@@ -814,14 +874,14 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     "beleza",
     ["beauty-glam", "cinematic-glass", "spotlight-neon"],
     ["sunset", "aurora", "midnight"],
-    ["Studio Beauty Glam & Nails", "Estética Facial & Procedimentos VIP", "Dark Showcase Estética & Glamour"],
+    ["Studio Beauty Glam & Nails", "Salão de Beleza & Cabelos VIP", "Dark Showcase Nails & Estilo"],
     [
       (name, city) => `Realce sua beleza natural com procedimentos exclusivos e unhas perfeitas em ${city}`,
-      (name, city) => `Design de sobrancelhas, estética avançada e cuidados capilares na ${name}`,
+      (name, city) => `Design de sobrancelhas, corte, mechas e cuidados capilares na ${name}`,
       (name, city) => `Seu momento de autocuidado com conforto e excelência na ${name}`,
     ],
     [
-      (name, city) => `No ${name} você conta com manicure e pedicure em gel, lash lifting, design de sobrancelhas e tratamentos faciais de alto padrão em ${city}. Agende seu horário pelo WhatsApp.`,
+      (name, city) => `No ${name} você conta com manicure e pedicure em gel, lash lifting, design de sobrancelhas e tratamentos capilares de alto padrão em ${city}. Agende seu horário pelo WhatsApp.`,
       (name, city) => `Técnicas modernas para valorizar sua beleza com produtos de alta performance na ${name}.`,
       (name, city) => `Ambiente acolhedor e atendimento personalizado para transformar sua autoestima na ${name} em ${city}.`,
     ],
@@ -832,11 +892,111 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
         { name: "Escova Modelada & Hidratação Profunda", category: "Cabelos", description: "Nutrição intensiva com reposição de massa capilar e escovação impecável.", price: 90.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Limpeza de Pele Profunda & Glow Facial", category: "Estética", description: "Extração de impurezas, peeling de diamante e máscara calmante regeneradora.", price: 140.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=400&q=80" },
-        { name: "Drenagem Linfática & Massagem Relaxante", category: "Corpo", description: "Manobras suaves para desinchar o corpo e aliviar tensões musculares.", price: 130.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=400&q=80" },
+        { name: "Manicure & Alongamento em Gel", category: "Nails", description: "Alongamento com fibra ou gel moldado, cuticulagem russa e esmaltação duradoura.", price: 120.0, duration_minutes: 90, image_url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=400&q=80" },
+        { name: "Escova Modelada & Hidratação Profunda", category: "Cabelos", description: "Nutrição intensiva com reposição de massa capilar e escovação impecável.", price: 90.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80" },
       ],
       [
         { name: "Mechas Iluminadas & Cronograma Capilar", category: "Cabelos", description: "Clareamento saudável com proteção dos fios e reconstrução profunda imediata.", price: 220.0, duration_minutes: 120, image_url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=400&q=80" },
+        { name: "Manicure & Alongamento em Gel", category: "Nails", description: "Alongamento com fibra ou gel moldado, cuticulagem russa e esmaltação duradoura.", price: 120.0, duration_minutes: 90, image_url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
+  estetica_corporal: buildNicheVariants(
+    "estetica_corporal",
+    ["cinematic-glass", "impact-showcase", "beauty-glam"],
+    ["emerald", "midnight", "aurora"],
+    ["Clínica Corporal & Drenagem", "Estética Avançada VIP", "Massoterapia & Bem-Estar"],
+    [
+      (name, city) => `Tratamentos corporais de alta performance e bem-estar na ${name} em ${city}.`,
+      (name, city) => `Drenagem linfática pós-operatório e protocolos corporais avançados na ${name}`,
+      (name, city) => `Redução de medidas, saúde corporal e bem-estar exclusivo na ${name} em ${city}`,
+    ],
+    [
+      (name, city) => `Na ${name} você conta com drenagem linfática especializada, pós-operatório e protocolos corporais de alta tecnologia em ${city}. Agende sua avaliação personalizada pelo WhatsApp.`,
+      (name, city) => `Tecnologia estética de ponta, criolipólise e massoterapia para esculpir seu corpo e renovar sua saúde na ${name}.`,
+      (name, city) => `Ambiente acolhedor, protocolos corporais integrados e atendimento de excelência na ${name} em ${city}.`,
+    ],
+    [
+      [
+        { name: "Drenagem Linfática & Pós-Operatório", category: "Corporal", description: "Eliminação de toxinas, redução de edemas e aceleração da recuperação pós-cirúrgica.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Massagem Modeladora & Redutora", category: "Corporal", description: "Manobras firmes para redução de medidas, combate à celulite e melhora da circulação.", price: 140.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=400&q=80" },
+        { name: "Tratamentos Corporais Avançados", category: "Tecnologia", description: "Protocolos personalizados com criolipólise, radiofrequência e bioestimulação corporal.", price: 250.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Drenagem Linfática & Pós-Operatório", category: "Corporal", description: "Eliminação de toxinas, redução de edemas e aceleração da recuperação pós-cirúrgica.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Tratamentos Corporais Avançados", category: "Tecnologia", description: "Protocolos personalizados com criolipólise, radiofrequência e bioestimulação corporal.", price: 250.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Massagem Modeladora & Redutora", category: "Corporal", description: "Manobras firmes para redução de medidas, combate à celulite e melhora da circulação.", price: 140.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=400&q=80" },
+        { name: "Drenagem Linfática & Pós-Operatório", category: "Corporal", description: "Eliminação de toxinas, redução de edemas e aceleração da recuperação pós-cirúrgica.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Tratamentos Corporais Avançados", category: "Tecnologia", description: "Protocolos personalizados com criolipólise, radiofrequência e bioestimulação corporal.", price: 250.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
+  estetica_facial: buildNicheVariants(
+    "estetica_facial",
+    ["cinematic-glass", "beauty-glam", "impact-showcase"],
+    ["aurora", "sunset", "midnight"],
+    ["Estética Facial & Glow", "Harmonização Facial VIP", "Protocolos de Rejuvenescimento"],
+    [
+      (name, city) => `Rejuvenescimento, harmonia e cuidados faciais personalizados na ${name}.`,
+      (name, city) => `Harmonização facial e protocolos estéticos de alta precisão na ${name}`,
+      (name, city) => `Pele radiante, rejuvenescimento e autoestima renovada em ${city}`,
+    ],
+    [
+      (name, city) => `Na ${name} você encontra procedimentos faciais modernos, limpeza de pele profunda e harmonização personalizada em ${city}. Agende seu horário pelo WhatsApp.`,
+      (name, city) => `Realce a beleza e harmonia do seu rosto com técnicas seguras, bioestimuladores e atendimento de alto padrão na ${name}.`,
+      (name, city) => `Cosmetologia avançada, cuidados faciais individualizados e resultados naturais na ${name} em ${city}.`,
+    ],
+    [
+      [
+        { name: "Limpeza de Pele Profunda & Glow", category: "Facial", description: "Remoção de impurezas, peeling ultrassônico e hidratação profunda regeneradora.", price: 150.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Protocolos de Rejuvenescimento Facial", category: "Facial", description: "Estímulo de colágeno, prevenção do envelhecimento e revitalização celular da pele.", price: 220.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Harmonização & Estética Facial", category: "Avançada", description: "Procedimentos minimamente invasivos para equilíbrio estético e contorno facial harmônico.", price: 350.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Limpeza de Pele Profunda & Glow", category: "Facial", description: "Remoção de impurezas, peeling ultrassônico e hidratação profunda regeneradora.", price: 150.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Harmonização & Estética Facial", category: "Avançada", description: "Procedimentos minimamente invasivos para equilíbrio estético e contorno facial harmônico.", price: 350.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Protocolos de Rejuvenescimento Facial", category: "Facial", description: "Estímulo de colágeno, prevenção do envelhecimento e revitalização celular da pele.", price: 220.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Limpeza de Pele Profunda & Glow", category: "Facial", description: "Remoção de impurezas, peeling ultrassônico e hidratação profunda regeneradora.", price: 150.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Harmonização & Estética Facial", category: "Avançada", description: "Procedimentos minimamente invasivos para equilíbrio estético e contorno facial harmônico.", price: 350.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80" },
+      ],
+    ]
+  ),
+
+  spa: buildNicheVariants(
+    "spa",
+    ["cinematic-glass", "beauty-glam", "impact-showcase"],
+    ["emerald", "ocean", "midnight"],
+    ["Spa & Bem-Estar Terapêutico", "Day Spa & Rituais Exclusivos", "Massagens & Aromaterapia VIP"],
+    [
+      (name, city) => `Seu refúgio de relaxamento e equilíbrio corporal na ${name}.`,
+      (name, city) => `Rituais de bem-estar, terapias manuais e alívio do estresse na ${name}`,
+      (name, city) => `Desconecte-se da rotina e renove suas energias em ${city}`,
+    ],
+    [
+      (name, city) => `No ${name} você encontra uma experiência completa de relaxamento, massagens terapêuticas e rituais de bem-estar em ${city}. Reserve seu momento pelo WhatsApp.`,
+      (name, city) => `Aromaterapia, pedras quentes e day spa personalizado para revigorar corpo e mente na ${name}.`,
+      (name, city) => `Ambiente relaxante com som ambiente, óleos nobres e terapeutas dedicados na ${name} em ${city}.`,
+    ],
+    [
+      [
+        { name: "Massagem Relaxante com Aromaterapia", category: "Relaxamento", description: "Óleos essenciais selecionados e toques suaves para alívio imediato do estresse.", price: 160.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=400&q=80" },
+        { name: "Day Spa & Revitalização", category: "Experiência", description: "Pacote completo com esfoliação corporal, banho de imersão e massagem revigorante.", price: 320.0, duration_minutes: 120, image_url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=400&q=80" },
+        { name: "Terapia de Pedras Quentes", category: "Terapia", description: "Termoterapia com pedras vulcânicas para relaxamento muscular profundo e equilíbrio energético.", price: 180.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Massagem Relaxante com Aromaterapia", category: "Relaxamento", description: "Óleos essenciais selecionados e toques suaves para alívio imediato do estresse.", price: 160.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=400&q=80" },
+        { name: "Terapia de Pedras Quentes", category: "Terapia", description: "Termoterapia com pedras vulcânicas para relaxamento muscular profundo e equilíbrio energético.", price: 180.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Day Spa & Revitalização", category: "Experiência", description: "Pacote completo com esfoliação corporal, banho de imersão e massagem revigorante.", price: 320.0, duration_minutes: 120, image_url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=400&q=80" },
+        { name: "Massagem Relaxante com Aromaterapia", category: "Relaxamento", description: "Óleos essenciais selecionados e toques suaves para alívio imediato do estresse.", price: 160.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=400&q=80" },
+        { name: "Terapia de Pedras Quentes", category: "Terapia", description: "Termoterapia com pedras vulcânicas para relaxamento muscular profundo e equilíbrio energético.", price: 180.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=400&q=80" },
       ],
     ]
   ),
@@ -1449,10 +1609,18 @@ export const PRESETS: Record<string, NichePreset> = {
   bebidas: NICHE_PRESETS_VARIANTS.bebidas[0],
   barbearia: NICHE_PRESETS_VARIANTS.barbearia[0],
   beleza: NICHE_PRESETS_VARIANTS.beleza[0],
+  estetica_corporal: NICHE_PRESETS_VARIANTS.estetica_corporal[0],
+  estetica_facial: NICHE_PRESETS_VARIANTS.estetica_facial[0],
+  spa: NICHE_PRESETS_VARIANTS.spa[0],
   // Mapeamentos complementares para sinônimos e links legados:
   adega: NICHE_PRESETS_VARIANTS.bebidas[0],
   distribuidora: NICHE_PRESETS_VARIANTS.bebidas[0],
-  estetica: NICHE_PRESETS_VARIANTS.beleza[0],
+  estetica: NICHE_PRESETS_VARIANTS.estetica_corporal[0],
+  drenagem: NICHE_PRESETS_VARIANTS.estetica_corporal[0],
+  criolipolise: NICHE_PRESETS_VARIANTS.estetica_corporal[0],
+  harmonizacao: NICHE_PRESETS_VARIANTS.estetica_facial[0],
+  facial: NICHE_PRESETS_VARIANTS.estetica_facial[0],
+  massagem: NICHE_PRESETS_VARIANTS.spa[0],
   salao: NICHE_PRESETS_VARIANTS.beleza[0],
   manicure: NICHE_PRESETS_VARIANTS.beleza[0],
   academia: NICHE_PRESETS_VARIANTS.fitness[0],
@@ -1476,7 +1644,10 @@ export interface CanonicalNicheMeta {
 export const CANONICAL_NICHES: CanonicalNicheMeta[] = [
   { key: "marketing", label: "Marketing Digital & Tráfego", icon: "📢", color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/30" },
   { key: "barbearia", label: "Barbearia", icon: "💈", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30" },
-  { key: "beleza", label: "Salão & Estética", icon: "✨", color: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/30" },
+  { key: "beleza", label: "Salão & Manicure", icon: "✨", color: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/30" },
+  { key: "estetica_corporal", label: "Estética Corporal & Avançada", icon: "💎", color: "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/30" },
+  { key: "estetica_facial", label: "Estética Facial & Harmonização", icon: "🌸", color: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30" },
+  { key: "spa", label: "Spa & Bem-Estar", icon: "🌿", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
   { key: "bebidas", label: "Bebidas & Distribuidora", icon: "🍷", color: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/30" },
   { key: "odontologia", label: "Odontologia", icon: "🦷", color: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/30" },
   { key: "clinica", label: "Clínica & Saúde", icon: "🏥", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30" },
@@ -1519,7 +1690,18 @@ export const NICHE_ALIASES: Record<string, string> = {
   barbershop: "barbearia",
   barbeiro: "barbearia",
   salao: "beleza",
-  estetica: "beleza",
+  estetica: "estetica_corporal",
+  estetica_corporal: "estetica_corporal",
+  drenagem: "estetica_corporal",
+  criolipolise: "estetica_corporal",
+  corporal: "estetica_corporal",
+  massoterapia: "estetica_corporal",
+  estetica_facial: "estetica_facial",
+  harmonizacao: "estetica_facial",
+  facial: "estetica_facial",
+  spa: "spa",
+  massagem: "spa",
+  shiatsu: "spa",
   manicure: "beleza",
   nails: "beleza",
   cabelereiro: "beleza",
@@ -1625,9 +1807,30 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
     return "barbearia";
   }
 
-  // 6. Salão de Beleza, Estética & Manicure
-  if (/(?:sal[aã]o\s*de\s*beleza|est[eé]tica|manicure|pedicure|unhas?\b|nail|lash|alongamento|sobrancelha|cabelereir|cabeleireir|escova|mechas|depila[çc][aã]o|esteticista|spa\b|massagem|massoterapia|terapia\s*capilar|ozonioterapia|harmoniza|limpeza\s*de\s*pele)/i.test(combined)) {
+  // 6. Subdivisão de Estética, Beleza e Spa:
+  // 6.a Estética Corporal & Avançada
+  if (/(?:corpus|corporal|drenagem|criolipolise|emagrecimento\s*estet|est[eé]tica\s*avan[çc]ada|p[oó]s-?operat[oó]rio|massoterapia|lipo\b|lipocavita[çc][aã]o|radiofrequ[eê]ncia|modeladora|endermologia)/i.test(combined)) {
+    return "estetica_corporal";
+  }
+
+  // 6.b Estética Facial & Harmonização
+  if (/(?:facial|harmoniza[çc][aã]o|botox|toxina\s*botul[ií]nica|bioestimulador|peeling|limpeza\s*de\s*pele|preenchimento|fios\s*de\s*pdo|microagulhamento|rejuvenescimento|dermato\s*funcional)/i.test(combined)) {
+    return "estetica_facial";
+  }
+
+  // 6.c Spa, Massagens & Bem-Estar
+  if (/(?:spa\b|massagem\s*relaxante|shiatsu|aromaterapia|pedras\s*quentes|reflexologia|day\s*spa|banho\s*de\s*imers[aã]o|relaxamento)/i.test(combined)) {
+    return "spa";
+  }
+
+  // 6.d Salão Tradicional, Manicure & Cabelo
+  if (/(?:sal[aã]o|manicure|pedicure|unhas?\b|nail|lash|alongamento|cabelo|cabelereir|cabeleireir|escova|mechas|sobrancelha|depila[çc][aã]o)/i.test(combined)) {
     return "beleza";
+  }
+
+  // Fallback para termos genéricos de "estética" ou "esteticista" sem manicure
+  if (/(?:est[eé]tica|esteticista)/i.test(combined)) {
+    return "estetica_corporal";
   }
 
   // 7. Lojas / E-commerce

@@ -782,5 +782,34 @@ export const templateManifest: TemplateDefinition[] = [
     },
     supportedFeatures: ["profile", "links", "socials", "whatsapp", "products", "catalog", "faq"],
   }),
+  define({
+    id: "cinematic-glass",
+    slug: "cinematic-glass",
+    name: "Landing Page Cinematográfica (Scrollytelling)",
+    description:
+      "Experiência cinematográfica imersiva de altíssimo padrão: 4 capítulos narrativos em tela cheia, efeito Parallax GPU a 60 FPS, iluminação de estúdio escura, tipografia nobre editorial e alta conversão para WhatsApp.",
+    category: "premium",
+    badge: "Premium",
+    bestFor: "marcas exclusivas, alta gastronomia, estética de luxo, estúdios nobres e negócios que exigem presença visual de classe mundial",
+    theme: {
+      colors: {
+        background: "#050508",
+        surface: "rgba(255, 255, 255, 0.05)",
+        text: "#ffffff",
+        muted: "#94a3b8",
+        primary: "#f59e0b",
+      },
+      typography: { fontFamily: displayFont, headingSize: "2.4rem", bodySize: "1rem" },
+    },
+    layout: "cinematic",
+    components: ["banner", "profile", "links", "footer"],
+    componentVariants: {
+      banner: "default",
+      profile: "editorial",
+      links: "cards",
+      footer: "refined",
+    },
+    supportedFeatures: ["profile", "links", "socials", "whatsapp", "products", "catalog", "video"],
+  }),
 ];
 

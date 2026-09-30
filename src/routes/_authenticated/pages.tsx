@@ -406,7 +406,10 @@ function PagesWorkspace() {
         city: wizardCity.trim() || null,
         variantIndex: selectedVariantIndex,
         isDemo: false, // Página definitiva do cliente
-        preferredTemplateId: creationEngine === "cinematic" ? "cinematic-glass" : null,
+        preferredTemplateId:
+          creationEngine === "premium" || creationEngine === "cinematic"
+            ? "cinematic-glass"
+            : "site-maquina",
       });
 
       await pages.refetch();
@@ -611,6 +614,7 @@ function PagesWorkspace() {
         city: city || null,
         variantIndex: 0,
         isDemo: false,
+        preferredTemplateId: mode === "ai" ? "cinematic-glass" : "site-maquina",
       });
 
       await pages.refetch();

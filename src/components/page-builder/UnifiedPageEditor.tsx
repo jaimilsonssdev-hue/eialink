@@ -920,19 +920,39 @@ export function UnifiedPageEditor({
     const newDisplayName = result.display_name || bio.display_name;
     const newNormalizedSlug = normalizePageSlug(bio.slug || newDisplayName);
 
-    const targetTemplate = proposalResp?.adapted?.updatedBio?.template_id;
+    const cdText = `${proposalResp?.proposal?.creativeDirection?.id || ""} ${proposalResp?.proposal?.creativeDirection?.name || ""} ${result.template_id || ""}`.toLowerCase();
+    const isCinematicProposal =
+      cdText.includes("cinematic") ||
+      cdText.includes("scrollytelling") ||
+      cdText.includes("narrativa") ||
+      cdText.includes("cinema") ||
+      result.template_id === "cinematic-glass" ||
+      proposalResp?.adapted?.updatedBio?.template_id === "cinematic-glass";
+
+    let targetTemplate = proposalResp?.adapted?.updatedBio?.template_id || result.template_id;
+    if (isCinematicProposal) {
+      targetTemplate = "cinematic-glass";
+    }
     if (targetTemplate) {
       setDraftTemplate(targetTemplate);
+    }
+
+    if (targetTemplate === "cinematic-glass") {
+      updatedSocial.custom_theme = {
+        ...updatedSocial.custom_theme,
+        parallax: true,
+        hero_style: "cinematic",
+      };
     }
 
     const updatedBio: BioForm = {
       ...bio,
       template_id: targetTemplate || bio.template_id,
-      theme: proposalResp?.adapted?.updatedBio?.theme || bio.theme,
+      theme: targetTemplate === "cinematic-glass" ? "midnight" : (proposalResp?.adapted?.updatedBio?.theme || bio.theme),
       motion_enabled: proposalResp?.adapted?.updatedBio?.motion_enabled ?? bio.motion_enabled,
       motion_entrance: proposalResp?.adapted?.updatedBio?.motion_entrance || bio.motion_entrance,
       motion_cta: proposalResp?.adapted?.updatedBio?.motion_cta || bio.motion_cta,
-      motion_ambient: proposalResp?.adapted?.updatedBio?.motion_ambient || bio.motion_ambient,
+      motion_ambient: targetTemplate === "cinematic-glass" ? "spotlight" : (proposalResp?.adapted?.updatedBio?.motion_ambient || bio.motion_ambient),
       display_name: newDisplayName,
       description: result.description || bio.description,
       whatsapp_message: result.whatsapp_message || bio.whatsapp_message,
@@ -1466,15 +1486,17 @@ export function UnifiedPageEditor({
                   </p>
                 </div>
 
-                {/* 0. Seletor de Formato da Página: Site Institucional vs BioLink vs Loja */}
+                {/* 0. Seletor de Formato da Página: Site Institucional vs BioLink vs Loja vs Cinematográfico */}
                 <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-sm font-bold text-foreground flex items-center gap-1.5">
                       <Globe2 className="h-4 w-4 text-primary" />
                       <span>Formato da Presença Comercial</span>
                     </label>
-                    <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-primary/20 text-primary">
-                      {bio.template_id === "site-maquina"
+                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-primary/20 text-primary">
+                      {bio.template_id === "cinematic-glass"
+                        ? "🎬 Cinematográfico (Scrollytelling)"
+                        : bio.template_id === "site-maquina"
                         ? "Site Institucional Completo"
                         : bio.template_id === "storefront" || bio.template_id === "store-showcase"
                         ? "Loja / Delivery App"
@@ -1484,7 +1506,40 @@ export function UnifiedPageEditor({
                   <p className="text-xs text-muted-foreground">
                     Escolha o objetivo principal desta página. O motor do Máquina de Sites oferece presença completa, enquanto o BioLink foca em conversão rápida.
                   </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        updateBio({
+                          template_id: "cinematic-glass",
+                          theme: "dark",
+                          social_links: {
+                            ...(bio.social_links as any),
+                            custom_theme: {
+                              ...(bio.social_links as any)?.custom_theme,
+                              parallax: true,
+                              hero_style: "cinematic",
+                            },
+                          },
+                        });
+                        toast.success("Formato alterado para: Experiência Cinematográfica (Scrollytelling)");
+                      }}
+                      className={`p-3 rounded-xl border text-left transition-all ${
+                        bio.template_id === "cinematic-glass"
+                          ? "border-2 border-amber-500 bg-amber-500/15 text-foreground shadow-md font-bold ring-2 ring-amber-500/30"
+                          : "border-border bg-card hover:border-amber-500/50 text-foreground"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-base">🎬</span>
+                        {bio.template_id === "cinematic-glass" && (
+                          <span className="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 text-[10px] font-bold">✓ Ativo</span>
+                        )}
+                      </div>
+                      <div className="text-xs font-bold text-amber-300">Landing Cinematográfica</div>
+                      <div className="text-[10px] opacity-80 mt-0.5">Scrollytelling imersivo, atos narrativos, parallax e visual de alto luxo</div>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {
@@ -1515,6 +1570,7 @@ export function UnifiedPageEditor({
                       }}
                       className={`p-3 rounded-xl border text-left transition-all ${
                         bio.template_id !== "site-maquina" &&
+                        bio.template_id !== "cinematic-glass" &&
                         bio.template_id !== "storefront" &&
                         bio.template_id !== "store-showcase"
                           ? "border-2 border-primary bg-primary/15 text-foreground shadow-md font-bold ring-2 ring-primary/30"
@@ -1524,6 +1580,7 @@ export function UnifiedPageEditor({
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-base">📱</span>
                         {bio.template_id !== "site-maquina" &&
+                         bio.template_id !== "cinematic-glass" &&
                          bio.template_id !== "storefront" &&
                          bio.template_id !== "store-showcase" && (
                           <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-bold">✓ Ativo</span>
@@ -2865,8 +2922,8 @@ export function UnifiedPageEditor({
                           <ModularSections
                             bio={previewBio}
                             onTrack={() => undefined}
-                            hideProductCarouselIfInLayout={previewBio.template_id === "site-maquina"}
-                            hideTestimonialsIfInLayout={previewBio.template_id === "site-maquina"}
+                            hideProductCarouselIfInLayout={previewBio.template_id === "site-maquina" || previewBio.template_id === "cinematic-glass"}
+                            hideTestimonialsIfInLayout={previewBio.template_id === "site-maquina" || previewBio.template_id === "cinematic-glass"}
                           />
                         }
                       />

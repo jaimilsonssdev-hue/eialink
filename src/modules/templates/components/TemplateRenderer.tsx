@@ -197,7 +197,7 @@ export function TemplateRenderer({
       }
     >
       {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, bookingUrl, supplemental })}
-      {model.template.layout !== "site-maquina" && <PublicSocialLinks bio={renderedBio} onTrack={onTrack} />}
+      {model.template.layout !== "site-maquina" && model.template.layout !== "cinematic" && <PublicSocialLinks bio={renderedBio} onTrack={onTrack} />}
       {!model.template.components.includes("footer") && <Footer />}
     </main>
   );

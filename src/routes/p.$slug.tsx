@@ -574,14 +574,15 @@ function PublicBio() {
   }
 
   const isSiteMaquina = effectiveTemplateId === "site-maquina";
+  const isCinematic = effectiveTemplateId === "cinematic-glass";
   const isStore = effectiveTemplateId === "store-showcase" || effectiveTemplateId === "storefront";
   const isFullPageChat = effectiveTemplateId === "ai-chat-agent";
-  const shouldShowMobileSticky = !isSiteMaquina && !isStore && !isFullPageChat;
+  const shouldShowMobileSticky = !isSiteMaquina && !isCinematic && !isStore && !isFullPageChat;
 
   return (
     <div className={`min-h-screen flex flex-col w-full overflow-x-hidden ${shouldShowMobileSticky ? "pb-16 sm:pb-0" : ""}`}>
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
-      {!isStore && (
+      {!isStore && !isCinematic && (
         <div className="w-full max-w-2xl mx-auto px-3 pt-2">
           <PwaInstallBanner companyName={bio.display_name} avatarUrl={effectiveAvatarUrl || bio.avatar_url} />
         </div>
@@ -602,8 +603,8 @@ function PublicBio() {
                   <ModularSections
                     bio={{ ...bio, template_id: effectiveTemplateId }}
                     onTrack={track}
-                    hideProductCarouselIfInLayout={isSiteMaquina}
-                    hideTestimonialsIfInLayout={isSiteMaquina}
+                    hideProductCarouselIfInLayout={isSiteMaquina || isCinematic}
+                    hideTestimonialsIfInLayout={isSiteMaquina || isCinematic}
                   />
                   <CrossTrafficCard bioPageId={bio.id} />
                   {supplementalBlocks.map((block: PageBlock) => (

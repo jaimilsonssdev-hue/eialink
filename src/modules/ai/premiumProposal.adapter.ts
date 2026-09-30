@@ -454,6 +454,9 @@ export function adaptProposalToExistingStructures(
       dirId.includes("apple-style") ||
       dirId.includes("imersivo") ||
       dirId === "cinematografico" ||
+      dirId.includes("cinema") ||
+      dirId.includes("luxo") ||
+      dirId.includes("premium") ||
       dirId === "neon-noturno" ||
       dirId === "spotlight-neon"
     ) {
@@ -483,14 +486,32 @@ export function adaptProposalToExistingStructures(
     }
   }
 
-  // Se a direção criativa contiver termos explícitos de Scrollytelling / Narrativa Cinematográfica
+  // Se a direção criativa contiver termos explícitos de Scrollytelling / Narrativa Cinematográfica / Luxo / Premium
   if (!resolvedTemplateId) {
-    const cdKeywords = `${proposal.creativeDirection?.name || ""} ${proposal.creativeDirection?.concept || ""}`.toLowerCase();
+    const cdKeywords = `${proposal.creativeDirection?.name || ""} ${proposal.creativeDirection?.concept || ""} ${proposal.pagePatch?.description || ""}`.toLowerCase();
     if (
       cdKeywords.includes("scrollytelling") ||
       cdKeywords.includes("cinematogr") ||
+      cdKeywords.includes("cinematic") ||
+      cdKeywords.includes("cinema") ||
+      cdKeywords.includes("luxo") ||
+      cdKeywords.includes("premium") ||
+      cdKeywords.includes("historia") ||
+      cdKeywords.includes("história") ||
+      cdKeywords.includes("narrativa") ||
       cdKeywords.includes("cafe-estilo") ||
+      cdKeywords.includes("apple-style") ||
       cdKeywords.includes("narrativa sensorial")
+    ) {
+      resolvedTemplateId = "cinematic-glass";
+    }
+  }
+
+  // Se a proposta indicar hero cinematográfico ou movimento cinematográfico
+  if (!resolvedTemplateId) {
+    if (
+      proposal.creativeDirection?.heroStyle === "cinematic" ||
+      proposal.creativeDirection?.motionIntensity === "cinematic"
     ) {
       resolvedTemplateId = "cinematic-glass";
     }
@@ -516,11 +537,15 @@ export function adaptProposalToExistingStructures(
     }
   }
 
-  // Fallback: se a página atual já tiver um template válido do sistema, preserva; se não, usa site-maquina
+  // Fallback: experiência Premium de IA prioriza "cinematic-glass" em vez de prender no "site-maquina"
   if (!resolvedTemplateId) {
-    resolvedTemplateId = (currentBio?.template_id && validTemplates.includes(currentBio.template_id))
-      ? currentBio.template_id
-      : "site-maquina";
+    if (currentBio?.template_id === "cinematic-glass") {
+      resolvedTemplateId = "cinematic-glass";
+    } else if (currentBio?.template_id && currentBio.template_id !== "site-maquina" && validTemplates.includes(currentBio.template_id)) {
+      resolvedTemplateId = currentBio.template_id;
+    } else {
+      resolvedTemplateId = "cinematic-glass";
+    }
   }
 
   // Garante parallax ativo em experiências cinematográficas ou sob intensidade de movimento cinematográfica

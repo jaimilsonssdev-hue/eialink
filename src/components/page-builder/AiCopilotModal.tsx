@@ -93,23 +93,23 @@ const SAMPLE_BRIEFINGS = [
 
 const STUDIO_QUICK_CHIPS = [
   {
-    label: "🎬 Experiência Cinematográfica (Scrollytelling)",
+    label: "Experiência Cinematográfica",
     prompt: "Transforme este site em uma Landing Page Cinematográfica de Luxo com Scrollytelling narrativo em capítulos, efeito Parallax GPU na capa, atmosfera sensorial imersiva e tipografia nobre (modelo cinematic-glass).",
   },
   {
-    label: "🎨 Mudar Paleta de Cores",
+    label: "Mudar Paleta de Cores",
     prompt: "Mude a paleta de cores para um estilo visual moderno, elegante e de alto contraste ideal para converter clientes.",
   },
   {
-    label: "📸 Atualizar Capa e Fotos",
+    label: "Atualizar Fotos e Capa",
     prompt: "Atualize as fotos da vitrine e a imagem de capa com fotos em alta definição, iluminação profissional e grande apelo visual.",
   },
   {
-    label: "✍️ Ajustar Textos para Conversão",
+    label: "Ajustar Textos para Conversão",
     prompt: "Reescreva a headline principal, bio e textos dos serviços com foco em alta conversão e copy persuasiva direta ao ponto.",
   },
   {
-    label: "✨ Efeito Parallax Imersivo",
+    label: "Efeito Parallax Imersivo",
     prompt: "Aplique efeito parallax cinematográfico de profundidade e elegância nas seções e imagens de destaque.",
   },
 ];
@@ -708,9 +708,9 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         {/* Header Sutil: Assistente Criativo com Status Verde */}
         <div className="flex items-center justify-between p-4 px-5 border-b border-border/40 shrink-0 bg-zinc-900/40">
           <div className="flex items-center gap-2.5">
-            <div className="relative flex items-center justify-center h-8 w-8 rounded-xl bg-purple-500/10 text-purple-400 border border-purple-500/20">
-              <Sparkles className="h-4 w-4 animate-pulse" />
-              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-zinc-950 animate-pulse" />
+            <div className="relative flex items-center justify-center h-8 w-8 rounded-xl bg-zinc-900 text-zinc-300 border border-zinc-800">
+              <Sparkles className="h-4 w-4" />
+              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-400 ring-2 ring-zinc-950" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -747,7 +747,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                     key={idx}
                     type="button"
                     onClick={() => setBriefing(chip.prompt)}
-                    className="p-2 text-left rounded-lg border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 text-[11px] font-medium transition-all hover:scale-[1.01] cursor-pointer"
+                    className="p-2 text-left rounded-lg border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs py-2 px-3 transition-all hover:scale-[1.01] cursor-pointer"
                   >
                     {chip.label}
                   </button>
@@ -765,7 +765,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                 value={briefing}
                 onChange={(e) => setBriefing(e.target.value)}
                 placeholder="Diga o que você quer mudar neste site... (ex: altere as cores para azul marinho e dourado, destaque o botão do WhatsApp...)"
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 text-xs text-white placeholder:text-zinc-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all resize-y"
+                className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 text-xs text-white placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none focus:ring-0 transition-all resize-y"
               />
             </div>
 
@@ -774,16 +774,16 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               type="button"
               disabled={loading || (!briefing.trim() && mediaItems.length === 0 && !importUrl.trim())}
               onClick={() => handleGenerate()}
-              className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
+              className="w-full py-2.5 rounded-xl bg-zinc-100 hover:bg-white text-zinc-950 font-semibold text-xs shadow-md flex items-center justify-center gap-2 transition-all disabled:opacity-50 cursor-pointer active:scale-95"
             >
               {loading ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin text-white" />
+                  <Loader2 className="h-4 w-4 animate-spin text-zinc-950" />
                   <span>{loadingStep || "Atualizando site com IA..."}</span>
                 </>
               ) : (
                 <>
-                  <Wand2 className="h-4 w-4 text-purple-200" />
+                  <Wand2 className="h-4 w-4 text-zinc-950" />
                   <span>Aplicar Alterações no Site</span>
                 </>
               )}
@@ -791,14 +791,14 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           </div>
 
         {/* IMPORTAÇÃO AUTOMÁTICA POR LINK: GOOGLE DRIVE, GOOGLE MAPS OU INSTAGRAM */}
-        <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 p-4 space-y-3">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <label className="text-xs font-bold text-purple-200 uppercase tracking-wider flex items-center gap-2">
-              <Globe2 className="h-4 w-4 text-purple-400" />
+            <label className="text-xs font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
+              <Globe2 className="h-4 w-4 text-zinc-400" />
               <span>Importar por Link (Google Drive, Instagram ou Maps)</span>
             </label>
-            <span className="text-[10px] text-purple-400/80 bg-purple-500/10 px-2 py-0.5 rounded-full border border-purple-500/20">
-              ⚡ Extração Inteligente
+            <span className="text-[10px] text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded-full border border-zinc-700">
+              Extração Inteligente
             </span>
           </div>
           <p className="text-[11px] text-zinc-400">
@@ -814,7 +814,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                 onChange={(e) => setImportUrl(e.target.value)}
                 placeholder="Ex: drive.google.com/drive/folders/... ou instagram.com/empresa ou link do Maps"
                 disabled={isImportingUrl}
-                className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                className="w-full rounded-xl border border-zinc-700 bg-zinc-900 px-3.5 py-2.5 text-xs text-white placeholder-zinc-500 focus:border-zinc-600 focus:outline-none focus:ring-0"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -827,7 +827,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               type="button"
               onClick={handleImportFromUrl}
               disabled={isImportingUrl || !importUrl.trim()}
-              className="px-4 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all shadow-md shrink-0 cursor-pointer"
+              className="px-4 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 disabled:opacity-40 text-zinc-100 text-xs font-medium border border-zinc-700 flex items-center justify-center gap-1.5 transition-all shadow-sm shrink-0 cursor-pointer"
             >
               {isImportingUrl ? (
                 <>
@@ -867,7 +867,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-              <UploadCloud className="h-4 w-4 text-purple-400" />
+              <UploadCloud className="h-4 w-4 text-zinc-400" />
               <span>Fotos & Documentos PDF (Cardápio / Tabela / Fachada)</span>
             </label>
             <span className="text-[11px] text-zinc-500">
@@ -891,8 +891,8 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
             onClick={() => fileInputRef.current?.click()}
             className={`rounded-2xl border-2 border-dashed p-5 sm:p-6 text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
               isDragging
-                ? "border-purple-400 bg-purple-950/30 scale-[1.01]"
-                : "border-zinc-800 bg-zinc-900/40 hover:border-purple-500/40 hover:bg-zinc-900/70"
+                ? "border-zinc-500 bg-zinc-800/40 scale-[1.01]"
+                : "border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70"
             }`}
           >
             <input
@@ -908,13 +908,13 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                 }
               }}
             />
-            <div className="p-3 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400">
+            <div className="p-3 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-300">
               <FileUp className="h-6 w-6" />
             </div>
             <div>
               <p className="text-xs sm:text-sm font-semibold text-zinc-200">
                 Arraste fotos e PDFs aqui, ou{" "}
-                <span className="text-purple-400 underline underline-offset-2">
+                <span className="text-zinc-200 underline underline-offset-2">
                   clique para escolher
                 </span>
               </p>
@@ -992,7 +992,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                           onClick={() => handleSetRole(item.id, "logo")}
                           className={`px-1.5 py-0.5 rounded text-[9px] font-semibold transition-colors cursor-pointer ${
                             item.role === "logo"
-                              ? "bg-purple-600 text-white font-bold"
+                              ? "bg-zinc-700 text-white font-bold"
                               : "bg-zinc-800 text-zinc-400 hover:text-white"
                           }`}
                         >
@@ -1003,7 +1003,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                           onClick={() => handleSetRole(item.id, "cover")}
                           className={`px-1.5 py-0.5 rounded text-[9px] font-semibold transition-colors cursor-pointer ${
                             item.role === "cover"
-                              ? "bg-indigo-600 text-white font-bold"
+                              ? "bg-zinc-700 text-white font-bold"
                               : "bg-zinc-800 text-zinc-400 hover:text-white"
                           }`}
                         >
@@ -1038,7 +1038,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         {/* Link de Vídeo Opcional */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-zinc-200 uppercase tracking-wider flex items-center gap-2">
-            <Film className="h-3.5 w-3.5 text-purple-400" />
+            <Film className="h-3.5 w-3.5 text-zinc-400" />
             <span>Vídeo Institucional (Opcional)</span>
           </label>
           <input
@@ -1046,7 +1046,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
             placeholder="Link do YouTube, Vimeo ou vídeo institucional (ex: https://youtube.com/watch?v=...)"
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/80 px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 transition-all"
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/80 px-3.5 py-2.5 text-xs text-white placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none focus:ring-0 transition-all"
           />
         </div>
 
@@ -1054,7 +1054,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
         <details className="group rounded-xl border border-border/40 bg-zinc-900/30 p-2.5 transition-all">
           <summary className="cursor-pointer text-[11px] font-medium text-zinc-400 hover:text-zinc-200 flex items-center justify-between select-none">
             <span className="flex items-center gap-1.5">
-              <KeyRound className="h-3 w-3 text-purple-400" />
+              <KeyRound className="h-3 w-3 text-zinc-400" />
               <span>Chave Gemini API Própria (Opcional)</span>
             </span>
             <ChevronDown className="h-3 w-3 transition-transform group-open:rotate-180 text-zinc-500" />
@@ -1065,7 +1065,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               value={overrideKey}
               onChange={(e) => setOverrideKey(e.target.value)}
               placeholder="AIzaSy... (opcional)"
-              className="w-full rounded-lg border border-zinc-700 bg-black/60 px-2.5 py-1.5 text-xs font-mono text-white placeholder:text-zinc-600 focus:border-purple-500 focus:outline-none"
+              className="w-full rounded-lg border border-zinc-700 bg-black/60 px-2.5 py-1.5 text-xs font-mono text-white placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
             />
             <p className="text-[10px] text-zinc-500">
               Salva apenas localmente no seu navegador. Se não informada, usa a chave configurada no sistema.
@@ -1098,12 +1098,12 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
 
         {/* Prévia da Proposta Premium Beta (Nível 2) ou Fallback */}
         {proposalResponse ? (
-          <div className="rounded-2xl border border-purple-500/40 bg-purple-950/20 p-4 sm:p-5 space-y-4 animate-fade-in">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5 space-y-4 animate-fade-in">
             {/* Header da Proposta */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-purple-500/20 pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-zinc-800 pb-3">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="px-3 py-1 rounded-full bg-gradient-to-r from-purple-600/30 to-indigo-600/30 border border-purple-500/40 text-purple-200 text-xs font-bold tracking-wide uppercase flex items-center gap-1.5 shadow-xs">
-                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                <span className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-700 text-zinc-200 text-xs font-bold tracking-wide uppercase flex items-center gap-1.5 shadow-xs">
+                  <Sparkles className="h-3.5 w-3.5 text-zinc-400" />
                   Gerador Premium Beta (Nível 2)
                 </span>
                 <span className="px-2.5 py-0.5 rounded-md bg-zinc-900 border border-zinc-800 text-zinc-400 text-[11px] font-medium">
@@ -1124,7 +1124,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                     Negócio Validado:
                   </span>
                   {proposalResponse.proposal.strategy.primaryGoal && (
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800/40 text-purple-300 font-mono">
+                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-zinc-800/80 border border-zinc-700 text-zinc-300 font-mono">
                       Foco: {proposalResponse.proposal.strategy.primaryGoal}
                     </span>
                   )}
@@ -1132,9 +1132,9 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                 <b className="text-white block text-sm sm:text-base font-bold">
                   {proposalResponse.proposal.pagePatch.displayName || generatedResult?.display_name || "Seu Negócio"}
                 </b>
-                <div className="flex flex-wrap gap-1.5 text-[10px] text-purple-300">
+                <div className="flex flex-wrap gap-1.5 text-[10px] text-zinc-300">
                   {proposalResponse.proposal.strategy.niche && (
-                    <span className="px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800/40">
+                    <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 border border-zinc-700">
                       Nicho: {proposalResponse.proposal.strategy.niche}
                     </span>
                   )}
@@ -1155,7 +1155,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                   <span className="text-zinc-500 block font-semibold text-[10px] uppercase tracking-wider">
                     Direção Criativa & Estilo
                   </span>
-                  <span className="text-[10px] text-purple-300 font-medium">
+                  <span className="text-[10px] text-zinc-400 font-medium">
                     Movimento: {proposalResponse.proposal.creativeDirection.motionIntensity}
                   </span>
                 </div>
@@ -1248,10 +1248,10 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
 
             {/* Alocação Exclusiva de Mídias (mediaAssignments) */}
             {proposalResponse.proposal.mediaAssignments.length > 0 && (
-              <div className="p-3.5 rounded-xl bg-purple-950/20 border border-purple-500/30 space-y-2.5 text-xs">
+              <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-purple-300 font-bold uppercase tracking-wider text-[11px]">
-                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  <div className="flex items-center gap-1.5 text-zinc-300 font-bold uppercase tracking-wider text-[11px]">
+                    <Sparkles className="h-3.5 w-3.5 text-zinc-400" />
                     <span>Curadoria & Alocação de Fotos ({proposalResponse.proposal.mediaAssignments.length})</span>
                   </div>
                   <span className="text-[10px] text-zinc-400">100% das fotos direcionadas estrategicamente</span>
@@ -1264,9 +1264,9 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                     const isProduct = assignment.assignedRole === "product";
 
                     const badgeColor = isCover
-                      ? "bg-indigo-600/30 text-indigo-300 border-indigo-500/40"
+                      ? "bg-zinc-700/80 text-zinc-200 border-zinc-600"
                       : isLogo
-                        ? "bg-purple-600/30 text-purple-300 border-purple-500/40"
+                        ? "bg-zinc-700/60 text-zinc-200 border-zinc-600"
                         : isProduct
                           ? "bg-emerald-600/30 text-emerald-300 border-emerald-500/40"
                           : "bg-zinc-800 text-zinc-400 border-zinc-700";
@@ -1323,7 +1323,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
                   <span className="text-zinc-400 font-bold block uppercase tracking-wider text-[10px] flex items-center gap-1.5">
-                    <Layers className="h-3.5 w-3.5 text-purple-400" />
+                    <Layers className="h-3.5 w-3.5 text-zinc-400" />
                     <span>Composição de Seções Homologadas ({proposalResponse.proposal.sections.length} blocos)</span>
                   </span>
                   <span className="text-[10px] text-zinc-500">Zero código arbitrário</span>
@@ -1352,7 +1352,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                         key={sec.id || sIdx}
                         className="px-2.5 py-1 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 text-[11px] flex items-center gap-1"
                       >
-                        <span className="text-purple-400 font-bold">#</span>
+                        <span className="text-zinc-500 font-bold">#</span>
                         <span>{secLabel}</span>
                       </span>
                     );
@@ -1404,8 +1404,8 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           </div>
         ) : generatedResult ? (
           /* Fallback Clássico */
-          <div className="rounded-2xl border border-purple-500/30 bg-purple-950/20 p-4 space-y-3.5 animate-fade-in">
-            <div className="flex items-center gap-2 text-xs font-bold text-purple-300 uppercase tracking-wider">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 space-y-3.5 animate-fade-in">
+            <div className="flex items-center gap-2 text-xs font-bold text-zinc-300 uppercase tracking-wider">
               <CheckCircle2 className="h-4 w-4 text-emerald-400" />
               <span>Análise Concluída com Sucesso!</span>
             </div>
@@ -1414,9 +1414,9 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
               <div className="space-y-1.5 p-3 rounded-xl bg-zinc-900/80 border border-zinc-800">
                 <span className="text-zinc-500 block font-semibold">Negócio Real Identificado:</span>
                 <b className="text-white block text-sm">{generatedResult.display_name}</b>
-                <div className="flex flex-wrap gap-2 text-[10px] text-purple-300">
+                <div className="flex flex-wrap gap-2 text-[10px] text-zinc-300">
                   {generatedResult.niche && (
-                    <span className="px-2 py-0.5 rounded-md bg-purple-950/80 border border-purple-800/40">
+                    <span className="px-2 py-0.5 rounded-md bg-zinc-800/80 border border-zinc-700">
                       Nicho: {generatedResult.niche}
                     </span>
                   )}
@@ -1473,7 +1473,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                       <img
                         src={generatedResult.avatar_url}
                         alt="Avatar"
-                        className="w-8 h-8 rounded-full object-cover border border-purple-500/40"
+                        className="w-8 h-8 rounded-full object-cover border border-zinc-700"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}
@@ -1486,7 +1486,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                       <img
                         src={generatedResult.cover_url}
                         alt="Capa"
-                        className="w-12 h-8 rounded-md object-cover border border-purple-500/40"
+                        className="w-12 h-8 rounded-md object-cover border border-zinc-700"
                         onError={(e) => {
                           e.currentTarget.style.display = "none";
                         }}
@@ -1495,7 +1495,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                     </div>
                   )}
                   {generatedResult.video_embed?.enabled && (
-                    <div className="flex items-center gap-1.5 text-purple-300 text-[11px]">
+                    <div className="flex items-center gap-1.5 text-zinc-300 text-[11px]">
                       <Film className="h-4 w-4" />
                       <span>Vídeo Institucional configurado</span>
                     </div>
@@ -1506,10 +1506,10 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
 
             {/* Curadoria Visual por IA */}
             {generatedResult.curated_photos && generatedResult.curated_photos.length > 0 && (
-              <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-500/30 space-y-2.5 text-xs">
+              <div className="p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2.5 text-xs">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-purple-300 font-bold uppercase tracking-wider text-[11px]">
-                    <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                  <div className="flex items-center gap-1.5 text-zinc-300 font-bold uppercase tracking-wider text-[11px]">
+                    <Sparkles className="h-3.5 w-3.5 text-zinc-400" />
                     <span>Curadoria Visual de Fotos</span>
                   </div>
                   <span className="text-[10px] text-zinc-400">
@@ -1531,7 +1531,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                         />
                       )}
                       <div className="min-w-0 flex-1 space-y-1">
-                        <span className="text-[9px] px-1.5 py-0.5 rounded-md border font-semibold bg-purple-600/30 text-purple-300 border-purple-500/40">
+                        <span className="text-[9px] px-1.5 py-0.5 rounded-md border font-semibold bg-zinc-700/60 text-zinc-200 border-zinc-600">
                           {item.role || "Foto"}
                         </span>
                         <p className="text-[11px] text-zinc-300 leading-snug line-clamp-2">
@@ -1608,7 +1608,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
                   setProposalResponse(null);
                   void handleGenerate(prev);
                 }}
-                className="px-3 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-200 font-semibold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
+                className="px-3 py-2 rounded-xl border border-zinc-800 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 font-semibold text-xs flex items-center gap-1.5 transition-all disabled:opacity-50 cursor-pointer"
               >
                 <Wand2 className="h-3.5 w-3.5" />
                 <span>Outra versão</span>

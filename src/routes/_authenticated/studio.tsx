@@ -56,6 +56,36 @@ export default function CinematicStudioPage() {
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
   const [mobileTab, setMobileTab] = useState<"controls" | "preview">("controls");
 
+  // Painel Redimensionável do Studio (Chat)
+  const [chatWidth, setChatWidth] = useState<number>(440);
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const isResizingRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizingRef.current) return;
+      // Limita a largura entre 320px e 720px
+      const newWidth = Math.min(Math.max(e.clientX, 320), 720);
+      setChatWidth(newWidth);
+    };
+
+    const handleMouseUp = () => {
+      if (isResizingRef.current) {
+        isResizingRef.current = false;
+        setIsDragging(false);
+        document.body.style.cursor = "default";
+        document.body.style.userSelect = "auto";
+      }
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, []);
+
   // Estados de Chat e IA (Fluxo de Plano Criativo & Aprovação)
   const [aiPrompt, setAiPrompt] = useState("");
   const [isRefiningAi, setIsRefiningAi] = useState(false);
@@ -499,9 +529,10 @@ export default function CinematicStudioPage() {
 
       {/* CORPO DO COCKPIT */}
       <div className="flex flex-1 overflow-hidden">
-        {/* COLUNA ESQUERDA (440px): CHAT CONVERSACIONAL COM PLANO CRIATIVO + AJUSTES */}
+        {/* COLUNA ESQUERDA: CHAT CONVERSACIONAL COM PLANO CRIATIVO + AJUSTES (REDIMENSIONÁVEL) */}
         <aside
-          className={`w-full lg:w-[440px] shrink-0 h-full flex flex-col min-h-0 border-r border-zinc-800/80 bg-zinc-950 z-20 ${
+          style={{ ["--chat-width" as any]: `${chatWidth}px` }}
+          className={`w-full lg:w-[var(--chat-width,440px)] shrink-0 h-full flex flex-col min-h-0 border-r border-zinc-800/80 bg-zinc-950 z-20 ${
             mobileTab === "preview" ? "hidden lg:flex" : "flex"
           }`}
         >
@@ -1266,11 +1297,28 @@ export default function CinematicStudioPage() {
           )}
         </aside>
 
+        {/* Divisória Arrastável (Splitter) */}
+        <div
+          onMouseDown={(e) => {
+            e.preventDefault();
+            isResizingRef.current = true;
+            setIsDragging(true);
+            document.body.style.cursor = "col-resize";
+            document.body.style.userSelect = "none";
+          }}
+          className={`group relative hidden lg:flex w-1.5 hover:w-2 cursor-col-resize items-center justify-center bg-zinc-900 hover:bg-zinc-700 transition-all select-none z-30 ${
+            isDragging ? "bg-zinc-700 w-2" : ""
+          }`}
+          title="Arraste para redimensionar o chat"
+        >
+          <div className="h-8 w-0.5 rounded-full bg-zinc-600 group-hover:bg-zinc-300 transition-colors" />
+        </div>
+
         {/* COLUNA DIREITA: LIVE PREVIEW 100% IMERSIVO (CANVAS DOMINANTE) */}
         <main
           className={`flex-1 overflow-hidden flex flex-col bg-zinc-950 ${
             mobileTab === "controls" ? "hidden lg:flex" : "flex"
-          }`}
+          } ${isDragging ? "select-none" : ""}`}
         >
           {/* Banner Flutuante de Modo "Espiar Prévia" */}
           {temporaryPreview && (
@@ -1305,22 +1353,26 @@ export default function CinematicStudioPage() {
           )}
 
           {/* Container do Preview */}
-          <div className="relative flex-1 overflow-hidden flex items-center justify-center p-0 lg:p-4">
+          <div className="relative flex-1 overflow-hidden flex items-center justify-center p-0">
             {previewMode === "desktop" ? (
-              /* Prévia Desktop de Tela Cheia */
-              <div className="h-full w-full overflow-hidden lg:rounded-2xl border-0 lg:border border-zinc-800/80 shadow-2xl">
-                <CinematicViewer data={activeCanvasData} isEmbedded={true} />
+              /* Prévia Desktop de Tela Cheia com Escala 100% Real e Scroll Natural */
+              <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-zinc-950 p-2 sm:p-6 flex justify-center [scrollbar-width:none]">
+                <div className="w-full max-w-[1400px] min-h-full bg-black rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden">
+                  <CinematicViewer data={activeCanvasData} isEmbedded={true} />
+                </div>
               </div>
             ) : (
-              /* Prévia Simulando Moldura de iPhone Pro */
-              <div className="relative h-[844px] max-h-[92vh] w-[390px] overflow-hidden rounded-[50px] border-[10px] border-[#1c1c1f] bg-black shadow-[0_0_60px_rgba(0,0,0,0.9)] ring-1 ring-white/10 flex flex-col">
-                {/* Dynamic Island */}
-                <div className="absolute top-3 left-1/2 -translate-x-1/2 h-6 w-28 rounded-full bg-black z-50 flex items-center justify-center">
-                  <div className="h-2.5 w-2.5 rounded-full bg-zinc-900 border border-zinc-800" />
-                </div>
-                {/* Tela do Celular */}
-                <div className="flex-1 overflow-hidden pt-4">
-                  <CinematicViewer data={activeCanvasData} isEmbedded={true} />
+              /* Prévia Simulando Moldura de iPhone com Proporção Real */
+              <div className="h-full w-full overflow-y-auto flex items-center justify-center p-4 [scrollbar-width:none]">
+                <div className="relative h-[780px] w-[390px] shrink-0 overflow-hidden rounded-[48px] border-[8px] border-zinc-800 bg-black shadow-[0_0_60px_rgba(0,0,0,0.8)] ring-1 ring-white/10 flex flex-col">
+                  {/* Dynamic Island */}
+                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 h-5 w-24 rounded-full bg-black z-50 flex items-center justify-center">
+                    <div className="h-2 w-2 rounded-full bg-zinc-900 border border-zinc-800" />
+                  </div>
+                  {/* Tela do Celular */}
+                  <div className="flex-1 overflow-hidden pt-3">
+                    <CinematicViewer data={activeCanvasData} isEmbedded={true} />
+                  </div>
                 </div>
               </div>
             )}

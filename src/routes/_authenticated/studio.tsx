@@ -3,7 +3,6 @@ import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
   MapPin,
-  Send,
   Save,
   ExternalLink,
   Copy,
@@ -24,6 +23,7 @@ import {
   FileText,
   ChevronDown,
   Eye,
+  ArrowUp,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -308,7 +308,7 @@ export default function CinematicStudioPage() {
       };
 
       setMessages((prev) => [...prev, agentMsg]);
-      toast.success("🎨 Plano criativo elaborado com 2 propostas conceituais!");
+      toast.success("Plano criativo elaborado com 2 propostas conceituais!");
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
@@ -354,7 +354,7 @@ export default function CinematicStudioPage() {
       {
         id: `agent-confirm-${Date.now()}`,
         sender: "agent",
-        text: `✨ O conceito "${option.name}" foi aprovado e aplicado com sucesso na sua página! Os títulos, paleta e blocos foram atualizados ao vivo. O que achou do resultado?`,
+        text: `O conceito "${option.name}" foi aprovado e aplicado com sucesso na sua página! Os títulos, paleta e blocos foram atualizados ao vivo. O que achou do resultado?`,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
@@ -384,7 +384,7 @@ export default function CinematicStudioPage() {
         setPageId(result.pageId);
         setSavedSlug(result.slug);
         setPublishedModalOpen(true);
-        toast.success("🎬 Landing Page Cinematográfica publicada!");
+        toast.success("Landing Page publicada com sucesso!");
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar página cinematográfica.");
@@ -409,28 +409,29 @@ export default function CinematicStudioPage() {
   const activeCanvasData = temporaryPreview ? temporaryPreview.data : data;
 
   return (
-    <div className="cinematic-studio flex h-screen w-full flex-col overflow-hidden bg-[#070709] text-zinc-100 font-sans">
+    <div className="cinematic-studio flex h-screen w-full flex-col overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
       {/* TOPBAR UNIFICADA DO COCKPIT */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-white/10 bg-black/70 px-4 backdrop-blur-xl z-30">
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/80 px-4 backdrop-blur-md z-30">
         <div className="flex items-center gap-3">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-tr from-amber-600 to-amber-400 text-black font-bold text-sm shadow-lg shadow-amber-500/20">
-            🎬
-          </span>
           <div className="flex items-center gap-2">
-            <span className="font-bold text-sm text-white tracking-wide">Cinematic Studio</span>
-            <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[9px] font-bold text-amber-300 uppercase tracking-wider">
-              Creative Director Flow
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+            </span>
+            <span className="text-sm font-semibold tracking-tight text-zinc-100">Cinematic Studio</span>
+            <span className="rounded-full bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+              Direção Criativa
             </span>
           </div>
         </div>
 
         {/* Alternador Mobile (Abas de Navegação Pequenas) */}
-        <div className="flex lg:hidden items-center gap-1 rounded-xl bg-white/5 p-1 border border-white/10">
+        <div className="flex lg:hidden items-center gap-1 rounded-lg bg-zinc-900 p-0.5 border border-zinc-800">
           <button
             type="button"
             onClick={() => setMobileTab("controls")}
-            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
-              mobileTab === "controls" ? "bg-amber-500 text-black font-bold" : "text-zinc-400 hover:text-white"
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+              mobileTab === "controls" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
             Cockpit
@@ -438,33 +439,33 @@ export default function CinematicStudioPage() {
           <button
             type="button"
             onClick={() => setMobileTab("preview")}
-            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors ${
-              mobileTab === "preview" ? "bg-amber-500 text-black font-bold" : "text-zinc-400 hover:text-white"
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+              mobileTab === "preview" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Ver Site
+            Visualizar
           </button>
         </div>
 
         {/* Ações do Topo Desktop */}
         <div className="hidden lg:flex items-center gap-3">
           {/* Seletor de visualização Desktop / iPhone */}
-          <div className="flex items-center gap-1 rounded-xl bg-white/5 p-1 border border-white/10">
+          <div className="flex items-center gap-1 rounded-lg bg-zinc-900 p-0.5 border border-zinc-800">
             <button
               type="button"
               onClick={() => setPreviewMode("desktop")}
-              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
-                previewMode === "desktop" ? "bg-white/15 text-white shadow-xs font-bold" : "text-zinc-400 hover:text-white"
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                previewMode === "desktop" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               <Monitor className="h-3.5 w-3.5" />
-              <span>100vw Desktop</span>
+              <span>Desktop</span>
             </button>
             <button
               type="button"
               onClick={() => setPreviewMode("mobile")}
-              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-lg transition-colors ${
-                previewMode === "mobile" ? "bg-white/15 text-white shadow-xs font-bold" : "text-zinc-400 hover:text-white"
+              className={`flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                previewMode === "mobile" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               <Smartphone className="h-3.5 w-3.5" />
@@ -477,7 +478,7 @@ export default function CinematicStudioPage() {
               href={publicUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 text-xs text-amber-300 hover:underline px-2"
+              className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors px-2"
             >
               <ExternalLink className="h-3.5 w-3.5" />
               <span>Abrir no ar</span>
@@ -488,7 +489,7 @@ export default function CinematicStudioPage() {
             type="button"
             onClick={handleSaveAndPublish}
             disabled={isSaving}
-            className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 px-4 py-2 text-xs font-bold text-black shadow-lg shadow-amber-500/25 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 bg-zinc-100 text-zinc-950 hover:bg-white font-medium text-xs px-4 py-2 rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
           >
             {isSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             <span>{isSaving ? "Publicando..." : "Salvar & Publicar"}</span>
@@ -500,60 +501,60 @@ export default function CinematicStudioPage() {
       <div className="flex flex-1 overflow-hidden">
         {/* COLUNA ESQUERDA (440px): CHAT CONVERSACIONAL COM PLANO CRIATIVO + AJUSTES */}
         <aside
-          className={`w-full lg:w-[440px] shrink-0 flex flex-col border-r border-white/10 bg-[#0a0a0d] z-20 ${
+          className={`w-full lg:w-[440px] shrink-0 flex flex-col border-r border-zinc-800/80 bg-zinc-950 z-20 ${
             mobileTab === "preview" ? "hidden lg:flex" : "flex"
           }`}
         >
           {/* 1. Header das 2 Abas Superiores */}
-          <div className="flex items-center border-b border-white/10 bg-black/40 px-3 pt-2">
+          <div className="flex items-center gap-6 border-b border-zinc-800/80 bg-zinc-950 px-4 pt-2">
             <button
               type="button"
               onClick={() => setActiveTab("chat")}
-              className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition-all ${
+              className={`flex items-center gap-2 border-b-2 pb-2 text-xs transition-colors ${
                 activeTab === "chat"
-                  ? "border-amber-400 text-amber-300"
-                  : "border-transparent text-zinc-400 hover:text-white"
+                  ? "border-zinc-100 text-zinc-100 font-medium"
+                  : "border-transparent text-zinc-500 hover:text-zinc-300 font-normal"
               }`}
             >
-              <Bot className="h-4 w-4" />
+              <Bot className="h-3.5 w-3.5" />
               <span>Copiloto IA</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("adjustments")}
-              className={`flex items-center gap-2 border-b-2 px-4 py-2.5 text-xs font-bold transition-all ${
+              className={`flex items-center gap-2 border-b-2 pb-2 text-xs transition-colors ${
                 activeTab === "adjustments"
-                  ? "border-amber-400 text-amber-300"
-                  : "border-transparent text-zinc-400 hover:text-white"
+                  ? "border-zinc-100 text-zinc-100 font-medium"
+                  : "border-transparent text-zinc-500 hover:text-zinc-300 font-normal"
               }`}
             >
-              <Sliders className="h-4 w-4" />
-              <span>Ajustes (Custo R$ 0)</span>
+              <Sliders className="h-3.5 w-3.5" />
+              <span>Ajustes Manuais</span>
             </button>
           </div>
 
           {/* 2. Conteúdo da Aba 1: FLUXO DE PLANO CRIATIVO & APROVAÇÃO */}
           {activeTab === "chat" && (
-            <div className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex flex-1 flex-col overflow-hidden bg-zinc-950">
               {/* Feed de Mensagens Rolável */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-5">
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
                     className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
                   >
                     <div
-                      className={`max-w-[95%] rounded-2xl p-4 text-xs leading-relaxed shadow-lg ${
+                      className={`text-[13px] leading-relaxed shadow-sm ${
                         msg.sender === "user"
-                          ? "bg-amber-500 text-black font-medium rounded-tr-xs"
-                          : "bg-white/[0.05] border border-white/10 text-zinc-200 rounded-tl-xs backdrop-blur-md"
+                          ? "bg-zinc-800 text-zinc-100 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[88%] border border-zinc-700/50"
+                          : "bg-zinc-900/60 border border-zinc-800/80 text-zinc-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[92%] backdrop-blur-xs"
                       }`}
                     >
-                      {/* Cabeçalho da Mensagem */}
+                      {/* Cabeçalho da Mensagem da IA */}
                       {msg.sender === "agent" && (
-                        <div className="flex items-center gap-1.5 mb-2 text-[10px] font-bold uppercase tracking-wider text-amber-300">
-                          <Sparkles className="h-3.5 w-3.5" />
-                          <span>Diretor de Arte IA</span>
+                        <div className="flex items-center gap-1.5 mb-2 text-[11px] font-medium tracking-wide text-zinc-400">
+                          <Sparkles className="h-3.5 w-3.5 text-zinc-300" />
+                          <span>Direção Criativa</span>
                         </div>
                       )}
 
@@ -562,12 +563,12 @@ export default function CinematicStudioPage() {
 
                       {/* Card de Google Maps Extraído */}
                       {msg.meta && msg.meta.name && (
-                        <div className="mt-3 rounded-xl border border-white/10 bg-black/60 p-3 space-y-2">
-                          <div className="flex items-center justify-between font-bold text-white">
+                        <div className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900/90 p-3 space-y-2">
+                          <div className="flex items-center justify-between text-xs font-semibold text-zinc-100">
                             <span>{msg.meta.name}</span>
                             {msg.meta.rating && (
-                              <span className="flex items-center gap-1 text-[11px] text-amber-400">
-                                <Star className="h-3 w-3 fill-amber-400" />
+                              <span className="flex items-center gap-1 text-[11px] text-amber-200/90 font-medium">
+                                <Star className="h-3 w-3 fill-amber-300/80 text-amber-300" />
                                 {msg.meta.rating.toFixed(1)}
                               </span>
                             )}
@@ -585,7 +586,7 @@ export default function CinematicStudioPage() {
                                   key={idx}
                                   src={thumb}
                                   alt=""
-                                  className="h-10 w-10 rounded-lg object-cover border border-white/10 shrink-0"
+                                  className="h-10 w-10 rounded-lg object-cover border border-zinc-800 shrink-0"
                                 />
                               ))}
                             </div>
@@ -601,7 +602,7 @@ export default function CinematicStudioPage() {
                               key={idx}
                               src={thumb}
                               alt=""
-                              className="h-12 w-12 rounded-lg object-cover border border-amber-400/40 shrink-0 shadow-md"
+                              className="h-12 w-12 rounded-lg object-cover border border-zinc-800 shrink-0 shadow-sm"
                             />
                           ))}
                         </div>
@@ -609,14 +610,14 @@ export default function CinematicStudioPage() {
 
                       {/* CARTOES DE CONCEITO INTERATIVOS DO PLANO CRIATIVO (Opções A e B) */}
                       {msg.plan && (
-                        <div className="mt-4 rounded-2xl border border-white/10 bg-black/60 p-3.5 sm:p-4 space-y-4 shadow-xl">
+                        <div className="mt-3.5 rounded-2xl border border-zinc-800/90 bg-zinc-900/80 p-3.5 space-y-3.5 shadow-xl">
                           {/* Resumo e Rationale */}
                           <div className="space-y-1">
-                            <div className="flex items-center gap-2 text-[10px] font-bold text-amber-300 uppercase tracking-wider">
-                              <Sparkles className="h-3 w-3" />
+                            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">
+                              <Sparkles className="h-3 w-3 text-zinc-300" />
                               <span>Proposta Conceitual</span>
                             </div>
-                            <p className="text-xs text-white font-medium">{msg.plan.conceptSummary}</p>
+                            <p className="text-xs text-zinc-200 font-medium">{msg.plan.conceptSummary}</p>
                             {msg.plan.rationale && (
                               <p className="text-[11px] text-zinc-400 leading-relaxed">{msg.plan.rationale}</p>
                             )}
@@ -628,7 +629,7 @@ export default function CinematicStudioPage() {
                               {msg.plan.recommendedSections.map((sec, idx) => (
                                 <span
                                   key={idx}
-                                  className="rounded-full border border-white/10 bg-white/[0.04] px-2 py-0.5 text-[9px] font-medium text-zinc-300"
+                                  className="rounded-full border border-zinc-800 bg-zinc-800/60 px-2 py-0.5 text-[9px] font-medium text-zinc-400"
                                 >
                                   {sec}
                                 </span>
@@ -647,16 +648,16 @@ export default function CinematicStudioPage() {
                                   key={opt.id}
                                   className={`relative rounded-xl border p-3 flex flex-col justify-between space-y-3 transition-all ${
                                     isApplied
-                                      ? "border-emerald-500/60 bg-emerald-950/20 ring-1 ring-emerald-500/40"
+                                      ? "border-zinc-500 bg-zinc-800/90 ring-1 ring-zinc-500/40"
                                       : isPreviewing
-                                      ? "border-amber-400 bg-amber-950/20 ring-1 ring-amber-400/40"
-                                      : "border-white/10 bg-white/[0.02] hover:border-white/20"
+                                      ? "border-zinc-400 bg-zinc-800/60 ring-1 ring-zinc-400/40"
+                                      : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-700"
                                   }`}
                                 >
                                   <div className="space-y-2">
                                     {/* Header do Card com Tagline e Paleta */}
                                     <div className="flex items-center justify-between">
-                                      <span className="text-[9px] font-bold uppercase tracking-wider text-amber-400">
+                                      <span className="text-[9px] font-semibold uppercase tracking-wider text-zinc-400">
                                         {opt.id === "option_a" ? "Opção A • " : "Opção B • "}
                                         {opt.tagline}
                                       </span>
@@ -677,16 +678,16 @@ export default function CinematicStudioPage() {
 
                                     {/* Nome e Título de Impacto */}
                                     <div>
-                                      <h4 className="text-xs font-bold text-white leading-snug">{opt.name}</h4>
+                                      <h4 className="text-xs font-semibold text-zinc-100 leading-snug">{opt.name}</h4>
                                       <p className="mt-1 text-[11px] text-zinc-300 italic line-clamp-2">
                                         "{opt.heroHeadline}"
                                       </p>
                                     </div>
 
                                     {/* Vibe e Tipografia */}
-                                    <div className="text-[10px] text-zinc-400 flex items-center justify-between pt-1 border-t border-white/5">
+                                    <div className="text-[10px] text-zinc-400 flex items-center justify-between pt-1 border-t border-zinc-800/80">
                                       <span className="line-clamp-1">{opt.vibe}</span>
-                                      <span className="shrink-0 uppercase font-mono text-[9px] text-amber-300/80">
+                                      <span className="shrink-0 uppercase font-mono text-[9px] text-zinc-400">
                                         {opt.typography}
                                       </span>
                                     </div>
@@ -716,13 +717,13 @@ export default function CinematicStudioPage() {
                                               },
                                             },
                                           });
-                                          toast.info(`Prévia da "${opt.name}" carregada no canvas!`);
+                                          toast.info(`Prévia da "${opt.name}" carregada no canvas`);
                                         }
                                       }}
-                                      className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-semibold border transition-all ${
+                                      className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition-colors ${
                                         isPreviewing
-                                          ? "border-amber-400/60 bg-amber-500/20 text-amber-300 font-bold"
-                                          : "border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10 hover:text-white"
+                                          ? "border border-zinc-500 bg-zinc-700 text-zinc-100"
+                                          : "border border-zinc-700/80 bg-zinc-800/60 text-zinc-300 hover:text-zinc-100 hover:bg-zinc-800"
                                       }`}
                                     >
                                       <Eye className="h-3 w-3" />
@@ -733,14 +734,14 @@ export default function CinematicStudioPage() {
                                       type="button"
                                       onClick={() => handleApplyOption(msg.id, opt)}
                                       disabled={isApplied}
-                                      className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${
+                                      className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition-all ${
                                         isApplied
-                                          ? "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 cursor-default"
-                                          : "bg-gradient-to-r from-amber-500 to-amber-400 text-black hover:scale-102 shadow-xs"
+                                          ? "bg-zinc-800 text-zinc-400 border border-zinc-700/50 cursor-default"
+                                          : "bg-zinc-100 text-zinc-950 hover:bg-white hover:scale-[1.02] active:scale-[0.98] shadow-xs"
                                       }`}
                                     >
                                       {isApplied ? (
-                                        <CheckCheck className="h-3 w-3 text-emerald-300" />
+                                        <CheckCheck className="h-3 w-3 text-zinc-300" />
                                       ) : (
                                         <Check className="h-3 w-3" />
                                       )}
@@ -754,16 +755,16 @@ export default function CinematicStudioPage() {
                         </div>
                       )}
                     </div>
-                    <span className="mt-1 px-1 text-[9px] text-zinc-500">{msg.timestamp}</span>
+                    <span className="mt-1 px-1 text-[10px] text-zinc-500">{msg.timestamp}</span>
                   </div>
                 ))}
 
                 {/* Indicador de Carregamento da IA */}
                 {isRefiningAi && (
                   <div className="flex flex-col items-start">
-                    <div className="flex items-center gap-2 rounded-2xl rounded-tl-xs border border-amber-400/30 bg-amber-500/10 px-4 py-3 text-xs text-amber-200">
-                      <Sparkles className="h-4 w-4 animate-spin text-amber-400" />
-                      <span>O Diretor de Arte está elaborando a proposta conceitual...</span>
+                    <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm border border-zinc-800/80 bg-zinc-900/60 px-4 py-3 text-[13px] text-zinc-300 backdrop-blur-xs">
+                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-zinc-400" />
+                      <span>Elaborando proposta de direção criativa...</span>
                     </div>
                   </div>
                 )}
@@ -771,66 +772,29 @@ export default function CinematicStudioPage() {
                 <div ref={chatEndRef} />
               </div>
 
-              {/* Popover Inline do Google Maps */}
-              {showMapsInput && (
-                <div className="border-t border-white/10 bg-zinc-950 p-3.5 space-y-2">
-                  <div className="flex items-center justify-between text-xs font-bold text-amber-300">
-                    <div className="flex items-center gap-1.5">
-                      <MapPin className="h-3.5 w-3.5" />
-                      <span>Importar do Google Maps</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowMapsInput(false)}
-                      className="text-zinc-500 hover:text-white"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={mapsQuery}
-                      onChange={(e) => setMapsQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && handleLookupMaps()}
-                      placeholder="Cole o link do Google Maps ou nome da empresa..."
-                      className="flex-1 rounded-xl border border-white/10 bg-black px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-400 focus:outline-hidden"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleLookupMaps}
-                      disabled={isLookingUpMaps || !mapsQuery.trim()}
-                      className="rounded-xl bg-amber-500 px-3 py-2 text-xs font-bold text-black hover:bg-amber-400 transition-colors disabled:opacity-50"
-                    >
-                      {isLookingUpMaps ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : "Puxar"}
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Pílulas de Inspiração Flutuantes */}
-              <div className="border-t border-white/5 bg-[#0a0a0d] px-3.5 pt-2.5 pb-1.5 flex gap-1.5 overflow-x-auto scrollbar-none">
+              <div className="border-t border-zinc-800/80 bg-zinc-950 px-3.5 pt-2.5 pb-1.5 flex gap-1.5 overflow-x-auto scrollbar-none">
                 {[
-                  { label: "⚡ Neo-Pop D2C", prompt: "Quero uma direção criativa no estilo Neo-Pop D2C (como Gigi Energy): alta voltagem, neon pulsante, marquee veloz e contraste pulsante." },
-                  { label: "👑 Luxo Editorial", prompt: "Quero uma direção criativa de Luxo Editorial (como Evasion): tons ébano e ouro, fontes serifadas nobres e narrativa contemplativa." },
-                  { label: "🌿 Clean Biotech", prompt: "Proponha um conceito Clean Biotech (como Biometic): vidro fosco acetinado, tons esmeralda e ciano, tabela comparativa e FAQ rigoroso." },
-                  { label: "💻 Cyber High-Tech", prompt: "Crie uma proposta Cyber High-Tech (como Compute-11): grid sutil, tags mono [SYS::01], acentos ciano e titânio, layout de alta precisão." },
-                  { label: "🌑 Dark Brutalist", prompt: "Crie uma proposta Dark Brutalist (como Void): tipografia display gigante, contraste preto e branco, linhas finas de corte e atitude crua." },
+                  { label: "Neo-Pop D2C", prompt: "Quero uma direção criativa no estilo Neo-Pop D2C (como Gigi Energy): alta voltagem, neon pulsante, marquee veloz e contraste pulsante." },
+                  { label: "Luxo Editorial", prompt: "Quero uma direção criativa de Luxo Editorial (como Evasion): tons ébano e ouro, fontes serifadas nobres e narrativa contemplativa." },
+                  { label: "Clean Biotech", prompt: "Proponha um conceito Clean Biotech (como Biometic): vidro fosco acetinado, tons esmeralda e ciano, tabela comparativa e FAQ rigoroso." },
+                  { label: "Cyber High-Tech", prompt: "Crie uma proposta Cyber High-Tech (como Compute-11): grid sutil, tags mono [SYS::01], acentos ciano e titânio, layout de alta precisão." },
+                  { label: "Dark Brutalist", prompt: "Crie uma proposta Dark Brutalist (como Void): tipografia display gigante, contraste preto e branco, linhas finas de corte e atitude crua." },
                 ].map((chip) => (
                   <button
                     key={chip.label}
                     type="button"
                     onClick={() => handleSendMessage(chip.prompt)}
                     disabled={isRefiningAi}
-                    className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-medium text-zinc-300 hover:border-amber-400/40 hover:text-white transition-colors disabled:opacity-50"
+                    className="shrink-0 rounded-full border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-800 hover:border-zinc-700 px-3 py-1 text-[11px] font-medium text-zinc-400 hover:text-zinc-200 transition-all disabled:opacity-40"
                   >
                     {chip.label}
                   </button>
                 ))}
               </div>
 
-              {/* Barra de Entrada Única no Rodapé (Footer Chat Bar) */}
-              <div className="border-t border-white/10 bg-black/60 p-3.5">
+              {/* Barra de Entrada no Rodapé (Footer Chat Bar estilo Lovable) */}
+              <div className="bg-zinc-950 p-3.5 border-t border-zinc-800/80">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -840,30 +804,46 @@ export default function CinematicStudioPage() {
                   className="hidden"
                 />
 
-                <div className="flex items-end gap-2 rounded-2xl border border-white/15 bg-white/[0.03] p-1.5 focus-within:border-amber-400/70 transition-all">
-                  {/* Botão de Anexo de Fotos */}
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    title="Adicionar fotos em alta resolução"
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-zinc-400 hover:bg-white/10 hover:text-white transition-colors"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </button>
+                {/* Popover Inline do Google Maps */}
+                {showMapsInput && (
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-2.5 mb-2 shadow-lg">
+                    <div className="flex items-center justify-between text-xs font-medium text-zinc-300 mb-2">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-zinc-400" />
+                        <span>Importar do Google Maps</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowMapsInput(false)}
+                        className="text-zinc-500 hover:text-zinc-300 transition-colors"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={mapsQuery}
+                        onChange={(e) => setMapsQuery(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleLookupMaps()}
+                        placeholder="Cole o link do Google Maps ou nome da empresa..."
+                        className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleLookupMaps}
+                        disabled={isLookingUpMaps || !mapsQuery.trim()}
+                        className="rounded-lg bg-zinc-100 text-zinc-950 font-medium text-xs px-3 py-1.5 hover:bg-white transition-colors disabled:opacity-40"
+                      >
+                        {isLookingUpMaps ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : "Importar"}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                  {/* Botão de Link do Google Maps */}
-                  <button
-                    type="button"
-                    onClick={() => setShowMapsInput((prev) => !prev)}
-                    title="Extrair dados do Google Maps"
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
-                      showMapsInput ? "bg-amber-500/20 text-amber-300" : "text-zinc-400 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <MapPin className="h-4 w-4" />
-                  </button>
-
-                  {/* Campo de Texto Auto-ajustável */}
+                {/* Cápsula de Entrada Estilo Lovable */}
+                <div className="relative flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/90 shadow-lg shadow-black/40 focus-within:border-zinc-700 transition-all p-2">
+                  {/* Área de Texto Auto-expansível */}
                   <textarea
                     ref={textareaRef}
                     rows={1}
@@ -871,7 +851,7 @@ export default function CinematicStudioPage() {
                     onChange={(e) => {
                       setAiPrompt(e.target.value);
                       e.target.style.height = "auto";
-                      e.target.style.height = `${Math.min(e.target.scrollHeight, 100)}px`;
+                      e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
@@ -879,56 +859,86 @@ export default function CinematicStudioPage() {
                         handleSendMessage();
                       }
                     }}
-                    placeholder="Converse com o Diretor de Arte (ex: 'Quero um tom mais clássico' ou 'Gostei da Opção A, mas mude a fonte')..."
-                    className="max-h-24 flex-1 resize-none bg-transparent py-2 text-xs text-white placeholder-zinc-500 focus:outline-hidden"
+                    placeholder="Descreva a atmosfera sensorial, estilo visual ou produtos..."
+                    className="w-full resize-none bg-transparent px-2.5 py-1.5 text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none scrollbar-none"
                   />
 
-                  {/* Botão de Envio */}
-                  <button
-                    type="button"
-                    onClick={() => handleSendMessage()}
-                    disabled={isRefiningAi || !aiPrompt.trim()}
-                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-black hover:bg-amber-400 transition-all disabled:opacity-40"
-                  >
-                    {isRefiningAi ? (
-                      <RefreshCw className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </button>
+                  {/* Barra Inferior Interna da Cápsula com Botões */}
+                  <div className="flex items-center justify-between pt-1 px-1">
+                    <div className="flex items-center gap-1">
+                      {/* Botão de Anexo */}
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Anexar fotos reais"
+                        className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </button>
+
+                      {/* Botão de Google Maps */}
+                      <button
+                        type="button"
+                        onClick={() => setShowMapsInput((prev) => !prev)}
+                        title="Importar do Google Maps"
+                        className={`flex h-7 px-2 items-center gap-1.5 rounded-lg text-xs transition-colors ${
+                          showMapsInput
+                            ? "bg-zinc-800 text-zinc-200 font-medium"
+                            : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                        }`}
+                      >
+                        <MapPin className="h-3.5 w-3.5" />
+                        <span className="text-[11px]">Maps</span>
+                      </button>
+                    </div>
+
+                    {/* Botão de Envio (Circular Minimalista estilo Lovable) */}
+                    <button
+                      type="button"
+                      onClick={() => handleSendMessage()}
+                      disabled={isRefiningAi || !aiPrompt.trim()}
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-100 text-zinc-950 hover:bg-white disabled:opacity-30 disabled:hover:bg-zinc-100 transition-all"
+                    >
+                      {isRefiningAi ? (
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <ArrowUp className="h-3.5 w-3.5 stroke-[2.5]" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          {/* 3. Conteúdo da Aba 2: AJUSTES MANUAIS (Custo R$ 0) */}
+          {/* 3. Conteúdo da Aba 2: AJUSTES MANUAIS */}
           {activeTab === "adjustments" && (
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Acordeão 1: Textos & Identidade */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+              {/* Acordeão 1: Identidade & Conteúdo */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setOpenSection(openSection === "identity" ? ("" as any) : "identity")}
-                  className="flex w-full items-center justify-between p-4 text-left text-xs font-bold text-amber-300 uppercase tracking-wider hover:bg-white/[0.02]"
+                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4" />
-                    <span>1. Textos & Identidade</span>
+                    <FileText className="h-3.5 w-3.5 text-zinc-400" />
+                    <span>Identidade & Conteúdo</span>
                   </div>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform ${openSection === "identity" ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "identity" ? "rotate-180" : ""}`}
                   />
                 </button>
 
                 {openSection === "identity" && (
-                  <div className="p-4 pt-0 space-y-3 text-xs">
+                  <div className="p-3.5 pt-0 space-y-3 text-xs border-t border-zinc-800/60">
                     <div>
                       <label className="text-[10px] text-zinc-400 uppercase font-semibold">Nome do Negócio</label>
                       <input
                         type="text"
                         value={data.businessName}
                         onChange={(e) => setData({ ...data, businessName: e.target.value })}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white focus:border-amber-400 focus:outline-hidden"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
                     <div>
@@ -939,7 +949,7 @@ export default function CinematicStudioPage() {
                         onChange={(e) =>
                           setData({ ...data, hero: { ...data.hero, tagline: e.target.value } })
                         }
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white focus:border-amber-400 focus:outline-hidden"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
                     <div>
@@ -950,7 +960,7 @@ export default function CinematicStudioPage() {
                         onChange={(e) =>
                           setData({ ...data, hero: { ...data.hero, title: e.target.value } })
                         }
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white focus:border-amber-400 focus:outline-hidden"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
                     <div>
@@ -961,7 +971,7 @@ export default function CinematicStudioPage() {
                         onChange={(e) =>
                           setData({ ...data, hero: { ...data.hero, subtitle: e.target.value } })
                         }
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-black/50 p-2.5 text-white focus:border-amber-400 focus:outline-hidden resize-none"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none resize-none"
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
@@ -972,7 +982,7 @@ export default function CinematicStudioPage() {
                           value={data.whatsapp}
                           onChange={(e) => setData({ ...data, whatsapp: e.target.value })}
                           placeholder="DDD + Número"
-                          className="mt-1 w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white focus:border-amber-400 focus:outline-hidden"
+                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -983,7 +993,7 @@ export default function CinematicStudioPage() {
                           max="5.0"
                           value={data.rating || 4.9}
                           onChange={(e) => setData({ ...data, rating: parseFloat(e.target.value) })}
-                          className="mt-1 w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white focus:border-amber-400 focus:outline-hidden"
+                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                         />
                       </div>
                     </div>
@@ -993,36 +1003,36 @@ export default function CinematicStudioPage() {
                         type="text"
                         value={data.address || ""}
                         onChange={(e) => setData({ ...data, address: e.target.value })}
-                        className="mt-1 w-full rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-white focus:border-amber-400 focus:outline-hidden"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Acordeão 2: Mídia & Fotos da Galeria */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+              {/* Acordeão 2: Mídia & Fotos */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setOpenSection(openSection === "media" ? ("" as any) : "media")}
-                  className="flex w-full items-center justify-between p-4 text-left text-xs font-bold text-amber-300 uppercase tracking-wider hover:bg-white/[0.02]"
+                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4" />
-                    <span>2. Mídia, Vídeo e Fotos ({data.gallery.length})</span>
+                    <ImageIcon className="h-3.5 w-3.5 text-zinc-400" />
+                    <span>Mídia & Fotos ({data.gallery.length})</span>
                   </div>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform ${openSection === "media" ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "media" ? "rotate-180" : ""}`}
                   />
                 </button>
 
                 {openSection === "media" && (
-                  <div className="p-4 pt-0 space-y-4 text-xs">
+                  <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
                     {/* Vídeo em Loop */}
-                    <div className="rounded-xl border border-white/10 bg-black/40 p-3 space-y-2">
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold uppercase text-amber-300 flex items-center gap-1.5">
-                          <Video className="h-3.5 w-3.5" />
+                        <label className="text-[10px] font-semibold uppercase text-zinc-400 flex items-center gap-1.5">
+                          <Video className="h-3.5 w-3.5 text-zinc-400" />
                           <span>Vídeo de Fundo no Hero (Opcional)</span>
                         </label>
                         {data.hero.backgroundVideo && (
@@ -1035,7 +1045,7 @@ export default function CinematicStudioPage() {
                               }));
                               toast.info("Vídeo removido. Usando foto de capa.");
                             }}
-                            className="text-[10px] text-red-400 hover:underline"
+                            className="text-[10px] text-zinc-400 hover:text-zinc-200 transition-colors"
                           >
                             Remover
                           </button>
@@ -1052,10 +1062,10 @@ export default function CinematicStudioPage() {
                           }));
                         }}
                         placeholder="https://exemplo.com/video-ambiente.mp4"
-                        className="w-full rounded-xl border border-white/10 bg-black/60 px-3 py-2 text-xs text-white placeholder-zinc-500 focus:border-amber-400 focus:outline-hidden"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                       {data.hero.backgroundVideo && (
-                        <p className="text-[10px] text-emerald-400 flex items-center gap-1 font-semibold">
+                        <p className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
                           <CheckCircle2 className="h-3 w-3" /> Vídeo ativo em loop no Hero
                         </p>
                       )}
@@ -1070,7 +1080,7 @@ export default function CinematicStudioPage() {
                         <button
                           type="button"
                           onClick={() => fileInputRef.current?.click()}
-                          className="text-[10px] text-amber-300 font-bold hover:underline"
+                          className="text-[10px] text-zinc-300 font-medium hover:text-white transition-colors"
                         >
                           + Adicionar Fotos
                         </button>
@@ -1088,13 +1098,13 @@ export default function CinematicStudioPage() {
                             }}
                             className={`relative h-14 rounded-lg overflow-hidden border cursor-pointer group transition-all ${
                               data.hero.backgroundImage === photo.url
-                                ? "border-amber-400 ring-2 ring-amber-400/40"
-                                : "border-white/10 hover:border-white/40"
+                                ? "border-zinc-300 ring-2 ring-zinc-300/40"
+                                : "border-zinc-800 hover:border-zinc-600"
                             }`}
                           >
                             <img src={photo.url} alt="" className="h-full w-full object-cover" />
                             {data.hero.backgroundImage === photo.url && (
-                              <span className="absolute top-1 right-1 rounded-full bg-amber-500 text-black text-[8px] font-bold px-1">
+                              <span className="absolute top-1 right-1 rounded-full bg-zinc-100 text-zinc-950 text-[8px] font-bold px-1.5">
                                 Capa
                               </span>
                             )}
@@ -1106,34 +1116,34 @@ export default function CinematicStudioPage() {
                 )}
               </div>
 
-              {/* Acordeão 3: Estilo Visual & Paleta */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] overflow-hidden">
+              {/* Acordeão 3: Arquétipo, Paleta & Tipografia */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setOpenSection(openSection === "styling" ? ("" as any) : "styling")}
-                  className="flex w-full items-center justify-between p-4 text-left text-xs font-bold text-amber-300 uppercase tracking-wider hover:bg-white/[0.02]"
+                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
                 >
                   <div className="flex items-center gap-2">
-                    <Palette className="h-4 w-4" />
-                    <span>3. Arquétipo, Paleta & Tipografia</span>
+                    <Palette className="h-3.5 w-3.5 text-zinc-400" />
+                    <span>Arquétipo, Paleta & Tipografia</span>
                   </div>
                   <ChevronDown
-                    className={`h-4 w-4 transition-transform ${openSection === "styling" ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "styling" ? "rotate-180" : ""}`}
                   />
                 </button>
 
                 {openSection === "styling" && (
-                  <div className="p-4 pt-0 space-y-4 text-xs">
+                  <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
                     {/* Seletor de Arquétipo Visual */}
                     <div className="space-y-1.5">
                       <span className="text-[10px] text-zinc-400 uppercase font-semibold">Arquétipo Visual (Bento Engine):</span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {[
-                          { id: "luxury-editorial", label: "👑 Luxo Editorial", desc: "Monocle, Vinhos & Alta Gastronomia" },
-                          { id: "neo-pop-d2c", label: "⚡ Neo-Pop D2C", desc: "Gigi Energy, Alta Voltagem & Neon" },
-                          { id: "clean-biotech", label: "🌿 Clean Biotech", desc: "Biometic, Vidro Fosco & Clínicas" },
-                          { id: "cyber-tech", label: "💻 Cyber High-Tech", desc: "Compute-11, Grid Escuro & Tags" },
-                          { id: "dark-brutalist", label: "🌑 Dark Brutalist", desc: "Void, Tipografia Gigante & P&B" },
+                          { id: "luxury-editorial", label: "Luxo Editorial", desc: "Monocle, Vinhos & Alta Gastronomia" },
+                          { id: "neo-pop-d2c", label: "Neo-Pop D2C", desc: "Gigi Energy, Alta Voltagem & Neon" },
+                          { id: "clean-biotech", label: "Clean Biotech", desc: "Biometic, Vidro Fosco & Clínicas" },
+                          { id: "cyber-tech", label: "Cyber High-Tech", desc: "Compute-11, Grid Escuro & Tags" },
+                          { id: "dark-brutalist", label: "Dark Brutalist", desc: "Void, Tipografia Gigante & P&B" },
                         ].map((arq) => (
                           <button
                             key={arq.id}
@@ -1144,13 +1154,13 @@ export default function CinematicStudioPage() {
                                 archetype: arq.id as any,
                               }))
                             }
-                            className={`rounded-xl border p-2.5 text-left transition-all ${
+                            className={`rounded-lg border p-2.5 text-left transition-all ${
                               data.archetype === arq.id
-                                ? "border-amber-400 bg-amber-500/15 text-white ring-1 ring-amber-400/40"
-                                : "border-white/10 bg-black/30 text-zinc-400 hover:text-white"
+                                ? "border-zinc-300 bg-zinc-800 text-zinc-100 ring-1 ring-zinc-300/30"
+                                : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
                             }`}
                           >
-                            <span className="block text-xs font-bold text-amber-200">{arq.label}</span>
+                            <span className="block text-xs font-semibold text-zinc-200">{arq.label}</span>
                             <span className="block text-[9px] text-zinc-400 mt-0.5">{arq.desc}</span>
                           </button>
                         ))}
@@ -1175,7 +1185,7 @@ export default function CinematicStudioPage() {
                             className={`h-9 rounded-xl border flex items-center justify-center transition-all ${
                               data.theme.accent === pal.accent
                                 ? "border-white ring-2 ring-white/40 scale-105"
-                                : "border-white/10 hover:border-white/30"
+                                : "border-zinc-800 hover:border-zinc-600"
                             }`}
                             style={{ backgroundColor: pal.bg }}
                           >
@@ -1204,10 +1214,10 @@ export default function CinematicStudioPage() {
                                 theme: { ...prev.theme, fontHeading: f.id as any },
                               }))
                             }
-                            className={`rounded-xl border py-2 text-xs font-semibold transition-all ${
+                            className={`rounded-lg border py-2 text-xs font-medium transition-all ${
                               data.theme.fontHeading === f.id
-                                ? "border-amber-400 bg-amber-500/15 text-amber-300 font-bold"
-                                : "border-white/10 bg-black/30 text-zinc-400 hover:text-white"
+                                ? "border-zinc-300 bg-zinc-800 text-zinc-100 font-semibold"
+                                : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
                             } ${f.font}`}
                           >
                             {f.label}
@@ -1217,9 +1227,9 @@ export default function CinematicStudioPage() {
                     </div>
 
                     {/* Toggle de Parallax GPU */}
-                    <label className="flex items-center justify-between rounded-xl border border-white/10 bg-black/40 p-3 cursor-pointer">
+                    <label className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 cursor-pointer">
                       <div>
-                        <span className="block text-xs font-bold text-white">Efeito Parallax GPU (60 FPS)</span>
+                        <span className="block text-xs font-semibold text-zinc-200">Efeito Parallax GPU (60 FPS)</span>
                         <span className="block text-[10px] text-zinc-400">
                           Profundidade 3D suave acelerada por hardware.
                         </span>
@@ -1233,7 +1243,7 @@ export default function CinematicStudioPage() {
                             theme: { ...prev.theme, parallaxEnabled: e.target.checked },
                           }))
                         }
-                        className="h-4 w-4 rounded border-white/20 text-amber-500 focus:ring-0"
+                        className="h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-zinc-100 focus:ring-0"
                       />
                     </label>
                   </div>
@@ -1246,7 +1256,7 @@ export default function CinematicStudioPage() {
                   type="button"
                   onClick={handleSaveAndPublish}
                   disabled={isSaving}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 py-3.5 text-sm font-bold text-black shadow-xl"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-zinc-100 py-3 text-xs font-medium text-zinc-950 shadow-md hover:bg-white transition-all disabled:opacity-50"
                 >
                   {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   <span>Salvar & Publicar Página</span>
@@ -1258,24 +1268,24 @@ export default function CinematicStudioPage() {
 
         {/* COLUNA DIREITA: LIVE PREVIEW 100% IMERSIVO (CANVAS DOMINANTE) */}
         <main
-          className={`flex-1 overflow-hidden flex flex-col bg-[#050507] ${
+          className={`flex-1 overflow-hidden flex flex-col bg-zinc-950 ${
             mobileTab === "controls" ? "hidden lg:flex" : "flex"
           }`}
         >
           {/* Banner Flutuante de Modo "Espiar Prévia" */}
           {temporaryPreview && (
-            <div className="shrink-0 flex items-center justify-between border-b border-amber-500/40 bg-gradient-to-r from-amber-950/80 via-black/80 to-amber-950/80 px-4 py-2.5 text-xs text-amber-200 backdrop-blur-xl z-20">
+            <div className="shrink-0 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/90 px-4 py-2 text-xs text-zinc-200 backdrop-blur-md z-20">
               <div className="flex items-center gap-2">
-                <Eye className="h-4 w-4 text-amber-400 animate-pulse shrink-0" />
+                <Eye className="h-3.5 w-3.5 text-zinc-400 shrink-0" />
                 <span>
-                  Espiando Prévia: <b>{temporaryPreview.optionName}</b> (Modo Demonstração)
+                  Espiando Prévia: <b>{temporaryPreview.optionName}</b> (Demonstração)
                 </span>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setTemporaryPreview(null)}
-                  className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-semibold text-zinc-300 hover:text-white hover:bg-white/10 transition-colors"
+                  className="rounded-lg border border-zinc-800 bg-zinc-800/60 px-2.5 py-1 text-[11px] font-medium text-zinc-300 hover:text-white transition-colors"
                 >
                   Fechar Prévia
                 </button>
@@ -1286,7 +1296,7 @@ export default function CinematicStudioPage() {
                     setTemporaryPreview(null);
                     toast.success(`Conceito "${temporaryPreview.optionName}" aprovado e aplicado!`);
                   }}
-                  className="rounded-lg bg-amber-500 px-3 py-1 text-[11px] font-bold text-black hover:bg-amber-400 transition-colors shadow-xs"
+                  className="rounded-lg bg-zinc-100 px-3 py-1 text-[11px] font-medium text-zinc-950 hover:bg-white transition-colors shadow-xs"
                 >
                   Aprovar & Fixar
                 </button>
@@ -1298,12 +1308,12 @@ export default function CinematicStudioPage() {
           <div className="relative flex-1 overflow-hidden flex items-center justify-center p-0 lg:p-4">
             {previewMode === "desktop" ? (
               /* Prévia Desktop de Tela Cheia */
-              <div className="h-full w-full overflow-hidden lg:rounded-2xl border-0 lg:border border-white/10 shadow-2xl">
+              <div className="h-full w-full overflow-hidden lg:rounded-2xl border-0 lg:border border-zinc-800/80 shadow-2xl">
                 <CinematicViewer data={activeCanvasData} isEmbedded={true} />
               </div>
             ) : (
               /* Prévia Simulando Moldura de iPhone Pro */
-              <div className="relative h-[844px] max-h-[92vh] w-[390px] overflow-hidden rounded-[50px] border-[10px] border-[#222226] bg-black shadow-[0_0_60px_rgba(0,0,0,0.8)] ring-1 ring-white/20 flex flex-col">
+              <div className="relative h-[844px] max-h-[92vh] w-[390px] overflow-hidden rounded-[50px] border-[10px] border-[#1c1c1f] bg-black shadow-[0_0_60px_rgba(0,0,0,0.9)] ring-1 ring-white/10 flex flex-col">
                 {/* Dynamic Island */}
                 <div className="absolute top-3 left-1/2 -translate-x-1/2 h-6 w-28 rounded-full bg-black z-50 flex items-center justify-center">
                   <div className="h-2.5 w-2.5 rounded-full bg-zinc-900 border border-zinc-800" />
@@ -1325,27 +1335,27 @@ export default function CinematicStudioPage() {
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
         >
-          <div className="w-full max-w-md rounded-3xl border border-white/15 bg-zinc-950 p-6 sm:p-8 text-center shadow-2xl space-y-6">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-amber-500 to-amber-300 text-black font-bold text-2xl shadow-xl shadow-amber-500/20">
-              ✨
+          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-950 p-6 sm:p-8 text-center shadow-2xl space-y-6">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100 shadow-sm">
+              <Check className="h-6 w-6 text-zinc-100" />
             </div>
 
             <div>
-              <h3 className="text-xl font-bold text-white">Landing Page no Ar!</h3>
+              <h3 className="text-xl font-bold text-white tracking-tight">Landing Page no Ar!</h3>
               <p className="mt-1 text-xs text-zinc-400">
                 Sua experiência cinematográfica está ativa com alta velocidade e aceleração GPU.
               </p>
             </div>
 
             {/* Campo do Link */}
-            <div className="flex items-center gap-2 rounded-2xl border border-white/10 bg-black/60 p-2 text-xs">
-              <span className="flex-1 truncate px-2 text-left text-zinc-300 font-mono">
+            <div className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 p-2 text-xs">
+              <span className="flex-1 truncate px-2 text-left text-zinc-300 font-mono text-[11px]">
                 {publicUrl}
               </span>
               <button
                 type="button"
                 onClick={handleCopyLink}
-                className="flex items-center gap-1 rounded-xl bg-white/10 px-3 py-1.5 font-bold text-white hover:bg-white/20 transition-colors"
+                className="flex items-center gap-1 rounded-lg bg-zinc-800 px-3 py-1.5 font-medium text-xs text-zinc-200 hover:text-white hover:bg-zinc-700 transition-colors"
               >
                 {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
                 <span>{copiedLink ? "Copiado!" : "Copiar"}</span>
@@ -1358,16 +1368,16 @@ export default function CinematicStudioPage() {
                 href={publicUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-400 py-3 text-xs font-bold text-black shadow-lg"
+                className="flex items-center justify-center gap-2 rounded-xl bg-zinc-100 py-2.5 text-xs font-medium text-zinc-950 hover:bg-white shadow-sm transition-all"
               >
-                <ExternalLink className="h-4 w-4" />
+                <ExternalLink className="h-3.5 w-3.5" />
                 <span>Visualizar Site em Nova Aba</span>
               </a>
 
               <button
                 type="button"
                 onClick={() => setPublishedModalOpen(false)}
-                className="rounded-xl border border-white/10 bg-white/5 py-2.5 text-xs font-semibold text-zinc-300 hover:text-white"
+                className="rounded-xl border border-zinc-800 bg-zinc-900/60 py-2.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors"
               >
                 Continuar Editando no Studio
               </button>

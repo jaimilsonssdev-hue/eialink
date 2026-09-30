@@ -68,25 +68,25 @@ function AuthedLayout() {
         title: "Criação & Destaque",
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-          { to: "/studio", label: "🎬 Cinematic Studio", icon: Clapperboard, badge: "VIP" },
-          { to: "/pages", label: "📄 Páginas & Links", icon: PanelsTopLeft },
+          { to: "/studio", label: "Cinematic Studio", icon: Clapperboard, badge: "VIP" },
+          { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
         ],
       },
       {
         title: "Operação",
         items: [
-          { to: "/agenda", label: "📅 Agenda", icon: CalendarDays },
+          { to: "/agenda", label: "Agenda", icon: CalendarDays },
           ...(canAccessComanda
-            ? [{ to: "/comanda", label: "🍽️ Comanda & NFC", icon: Utensils }]
+            ? [{ to: "/comanda", label: "Comanda & NFC", icon: Utensils }]
             : []),
         ],
       },
       {
         title: "Gestão",
         items: [
-          { to: "/analytics", label: "📊 Resultados & Métricas", icon: BarChart3 },
-          { to: "/settings", label: "🏢 Dados da Empresa", icon: Settings },
-          { to: "/billing", label: "💳 Assinatura", icon: CreditCard },
+          { to: "/analytics", label: "Métricas & Vendas", icon: BarChart3 },
+          { to: "/settings", label: "Empresa", icon: Settings },
+          { to: "/billing", label: "Assinatura", icon: CreditCard },
         ],
       },
     ];
@@ -158,7 +158,7 @@ function AuthedLayout() {
                       <span className="truncate">{label}</span>
                     </div>
                     {badge && (
-                      <span className="rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-2 py-0.5 text-[9px] font-bold text-black uppercase tracking-wider shadow-xs shadow-amber-500/20">
+                      <span className="rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-medium px-2 py-0.5 border border-white/10">
                         {badge}
                       </span>
                     )}
@@ -178,14 +178,16 @@ function AuthedLayout() {
                 onClick={() => setOpen(false)}
                 className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin" ? "is-active" : ""}`}
               >
-                <Shield className="h-4 w-4 text-[color:var(--accent)]" /> 🛡️ Painel Admin
+                <Shield className="h-4 w-4 shrink-0 text-zinc-400" />
+                <span>Painel Admin</span>
               </Link>
               <Link
                 to="/admin/prospeccao"
                 onClick={() => setOpen(false)}
                 className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin/prospeccao" ? "is-active" : ""}`}
               >
-                <Target className="h-4 w-4 text-[color:var(--primary)]" /> 🎯 Prospecção
+                <Target className="h-4 w-4 shrink-0 text-zinc-400" />
+                <span>Prospecção</span>
               </Link>
             </div>
           )}

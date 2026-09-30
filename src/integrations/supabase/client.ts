@@ -33,18 +33,18 @@ function createSupabaseClient() {
   const SUPABASE_URL =
     import.meta.env.VITE_SUPABASE_URL ||
     process.env.SUPABASE_URL ||
-    "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+    "https://nitzhrmcbotdriajaxhw.supabase.co";
   const SUPABASE_PUBLISHABLE_KEY =
     import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
     process.env.SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_7cbVuf-q1wh7nqSeCXM1Ag_FMhRT2fS";
+    "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     const missing = [
       ...(!SUPABASE_URL ? ['SUPABASE_URL'] : []),
       ...(!SUPABASE_PUBLISHABLE_KEY ? ['SUPABASE_PUBLISHABLE_KEY'] : []),
     ];
-    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Connect Supabase in Lovable Cloud.`;
+    const message = `Missing Supabase environment variable(s): ${missing.join(', ')}. Configure your Supabase project credentials.`;
     console.error(`[Supabase] ${message}`);
     throw new Error(message);
   }

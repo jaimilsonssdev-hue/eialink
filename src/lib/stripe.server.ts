@@ -18,24 +18,31 @@ export function getConnectionApiKey(env: StripeEnv): string {
 
 export function createStripeClient(env: StripeEnv): Stripe {
   const connectionApiKey = getConnectionApiKey(env);
-  const lovableApiKey = getEnv('LOVABLE_API_KEY');
+  const lovableApiKey = process.env.LOVABLE_API_KEY;
 
+  if (lovableApiKey) {
+    return new Stripe(connectionApiKey, {
+      apiVersion: '2026-03-25.dahlia',
+      httpClient: Stripe.createFetchHttpClient((input, init) => {
+        const stripeUrl = input instanceof Request ? input.url : input.toString();
+        const gatewayUrl = stripeUrl.replace('https://api.stripe.com', GATEWAY_STRIPE_BASE);
+        return fetch(gatewayUrl, {
+          ...init,
+          headers: {
+            ...Object.fromEntries(
+              new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).entries(),
+            ),
+            'X-Connection-Api-Key': connectionApiKey,
+            'Lovable-API-Key': lovableApiKey,
+          },
+        });
+      }),
+    });
+  }
+
+  // Direct native Stripe API integration (independente do Lovable)
   return new Stripe(connectionApiKey, {
     apiVersion: '2026-03-25.dahlia',
-    httpClient: Stripe.createFetchHttpClient((input, init) => {
-      const stripeUrl = input instanceof Request ? input.url : input.toString();
-      const gatewayUrl = stripeUrl.replace('https://api.stripe.com', GATEWAY_STRIPE_BASE);
-      return fetch(gatewayUrl, {
-        ...init,
-        headers: {
-          ...Object.fromEntries(
-            new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined)).entries(),
-          ),
-          'X-Connection-Api-Key': connectionApiKey,
-          'Lovable-API-Key': lovableApiKey,
-        },
-      });
-    }),
   });
 }
 

@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
@@ -24,7 +24,6 @@ import {
   ChevronDown,
   Eye,
   ArrowUp,
-  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -58,7 +57,7 @@ export default function CinematicStudioPage() {
   // Navegação do Cockpit
   const [activeTab, setActiveTab] = useState<"chat" | "adjustments">("chat");
   const [previewMode, setPreviewMode] = useState<"desktop" | "mobile">("desktop");
-  const [mobileTab, setMobileTab] = useState<"chat" | "preview" | "adjustments">("chat");
+  const [mobileTab, setMobileTab] = useState<"controls" | "preview">("controls");
 
   // Painel Redimensionável do Studio (Chat)
   const [chatWidth, setChatWidth] = useState<number>(440);
@@ -123,18 +122,12 @@ export default function CinematicStudioPage() {
   const [openSection, setOpenSection] = useState<"identity" | "media" | "styling">("identity");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const chatContainerRef = useRef<HTMLDivElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Rola suavemente apenas o container do chat, sem empurrar o header do celular para fora
+  // Rola para a mensagem mais recente
   useEffect(() => {
-    if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTo({
-        top: chatContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isRefiningAi, showMapsInput]);
 
   // Identifica o usuário
@@ -556,80 +549,43 @@ export default function CinematicStudioPage() {
   const activeCanvasData = temporaryPreview ? temporaryPreview.data : data;
 
   return (
-    <div className="cinematic-studio flex h-[100dvh] max-h-[100dvh] min-h-0 w-full flex-col overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
+    <div className="cinematic-studio flex h-screen w-full flex-col overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
       {/* TOPBAR UNIFICADA DO COCKPIT */}
-      <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/95 px-3 sm:px-4 backdrop-blur-md">
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Botão Voltar para Minhas Páginas no Mobile */}
-          <Link
-            to="/pages"
-            className="flex lg:hidden items-center justify-center h-8 w-8 rounded-lg border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-100 transition-colors"
-            title="Voltar para Minhas Páginas"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/80 px-4 backdrop-blur-md z-30">
+        <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-xs sm:text-sm font-semibold tracking-tight text-zinc-100 truncate max-w-[120px] sm:max-w-none">
-              Cinematic Studio
-            </span>
-            <span className="hidden sm:inline-block rounded-full bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+            <span className="text-sm font-semibold tracking-tight text-zinc-100">Cinematic Studio</span>
+            <span className="rounded-full bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
               Direção Criativa
             </span>
           </div>
         </div>
 
-        {/* Alternador Mobile (Abas de Navegação: Copiloto | Ver Site | Ajustes) */}
-        <div className="flex lg:hidden items-center gap-0.5 rounded-lg bg-zinc-900/90 p-1 border border-zinc-800/80">
+        {/* Alternador Mobile (Abas de Navegação Pequenas) */}
+        <div className="flex lg:hidden items-center gap-1 rounded-lg bg-zinc-900 p-0.5 border border-zinc-800">
           <button
             type="button"
-            onClick={() => {
-              setMobileTab("chat");
-              setActiveTab("chat");
-            }}
-            className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors ${
-              mobileTab === "chat" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
+            onClick={() => setMobileTab("controls")}
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+              mobileTab === "controls" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Copiloto
+            Cockpit
           </button>
           <button
             type="button"
             onClick={() => setMobileTab("preview")}
-            className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors ${
+            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
               mobileTab === "preview" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Ver Site
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMobileTab("adjustments");
-              setActiveTab("adjustments");
-            }}
-            className={`px-2 py-1 text-[11px] font-medium rounded-md transition-colors ${
-              mobileTab === "adjustments" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
-            }`}
-          >
-            Ajustes
+            Visualizar
           </button>
         </div>
-
-        {/* Publicar (Mobile) */}
-        <button
-          type="button"
-          onClick={handleSaveAndPublish}
-          disabled={isSaving}
-          aria-label="Salvar e publicar"
-          className="flex lg:hidden h-8 shrink-0 items-center gap-1.5 rounded-lg bg-zinc-100 px-2.5 text-xs font-medium text-zinc-950 hover:bg-white disabled:opacity-50 transition-colors"
-        >
-          {isSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-        </button>
 
         {/* Ações do Topo Desktop */}
         <div className="hidden lg:flex items-center gap-3">
@@ -682,7 +638,7 @@ export default function CinematicStudioPage() {
       </header>
 
       {/* CORPO DO COCKPIT */}
-      <div className="flex flex-1 min-h-0 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden">
         {/* COLUNA ESQUERDA: CHAT CONVERSACIONAL COM PLANO CRIATIVO + AJUSTES (REDIMENSIONÁVEL) */}
         <aside
           style={{ ["--chat-width" as any]: `${chatWidth}px` }}
@@ -694,10 +650,7 @@ export default function CinematicStudioPage() {
           <div className="flex items-center gap-6 border-b border-zinc-800/80 bg-zinc-950 px-4 pt-2">
             <button
               type="button"
-              onClick={() => {
-                setActiveTab("chat");
-                setMobileTab("chat");
-              }}
+              onClick={() => setActiveTab("chat")}
               className={`flex items-center gap-2 border-b-2 pb-2 text-xs transition-colors ${
                 activeTab === "chat"
                   ? "border-zinc-100 text-zinc-100 font-medium"
@@ -709,10 +662,7 @@ export default function CinematicStudioPage() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setActiveTab("adjustments");
-                setMobileTab("adjustments");
-              }}
+              onClick={() => setActiveTab("adjustments")}
               className={`flex items-center gap-2 border-b-2 pb-2 text-xs transition-colors ${
                 activeTab === "adjustments"
                   ? "border-zinc-100 text-zinc-100 font-medium"
@@ -728,7 +678,7 @@ export default function CinematicStudioPage() {
           {activeTab === "chat" && (
             <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-zinc-950">
               {/* Feed de Mensagens Rolável */}
-              <div ref={chatContainerRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
+              <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
@@ -1050,7 +1000,7 @@ export default function CinematicStudioPage() {
                         handleSendMessage();
                       }
                     }}
-                    placeholder="Mensagem, link do Maps ou anexo..."
+                    placeholder="Cole um link do Maps, anexe um PDF/fotos ou descreva alterações..."
                     className="w-full resize-none bg-transparent px-2.5 py-1.5 text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none [scrollbar-width:none]"
                   />
 
@@ -1476,8 +1426,8 @@ export default function CinematicStudioPage() {
 
         {/* COLUNA DIREITA: LIVE PREVIEW 100% IMERSIVO (CANVAS DOMINANTE) */}
         <main
-          className={`relative flex-1 overflow-hidden flex flex-col bg-zinc-950 ${
-            mobileTab !== "preview" ? "hidden lg:flex" : "flex"
+          className={`flex-1 overflow-hidden flex flex-col bg-zinc-950 ${
+            mobileTab === "controls" ? "hidden lg:flex" : "flex"
           } ${isDragging ? "select-none" : ""}`}
         >
           {/* Banner Flutuante de Modo "Espiar Prévia" */}
@@ -1514,62 +1464,28 @@ export default function CinematicStudioPage() {
 
           {/* Container do Preview */}
           <div className="relative flex-1 overflow-hidden flex items-center justify-center p-0">
-            {/* Visualização Mobile no próprio Celular (Fidelidade 100% Nativa sem Moldura Artificial) */}
-            <div className="lg:hidden h-full w-full overflow-y-auto overflow-x-hidden bg-black [scrollbar-width:none]">
-              <div className="min-h-full pb-24">
-                <CinematicViewer data={activeCanvasData} isEmbedded={true} />
+            {previewMode === "desktop" ? (
+              /* Prévia Desktop de Tela Cheia com Escala 100% Real e Scroll Natural */
+              <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-zinc-950 p-2 sm:p-6 flex justify-center [scrollbar-width:none]">
+                <div className="w-full max-w-[1400px] min-h-full bg-black rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden">
+                  <CinematicViewer data={activeCanvasData} isEmbedded={true} />
+                </div>
               </div>
-            </div>
-
-            {/* Visualização Desktop */}
-            <div className="hidden lg:flex h-full w-full items-center justify-center overflow-hidden">
-              {previewMode === "desktop" ? (
-                /* Prévia Desktop de Tela Cheia com Escala 100% Real e Scroll Natural */
-                <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-zinc-950 p-2 sm:p-6 flex justify-center [scrollbar-width:none]">
-                  <div className="w-full max-w-[1400px] min-h-full bg-black rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden">
+            ) : (
+              /* Prévia Simulando Moldura de iPhone com Proporção Real */
+              <div className="h-full w-full overflow-y-auto flex items-center justify-center p-4 [scrollbar-width:none]">
+                <div className="relative h-[780px] w-[390px] shrink-0 overflow-hidden rounded-[48px] border-[8px] border-zinc-800 bg-black shadow-[0_0_60px_rgba(0,0,0,0.8)] ring-1 ring-white/10 flex flex-col">
+                  {/* Dynamic Island */}
+                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 h-5 w-24 rounded-full bg-black z-50 flex items-center justify-center">
+                    <div className="h-2 w-2 rounded-full bg-zinc-900 border border-zinc-800" />
+                  </div>
+                  {/* Tela do Celular */}
+                  <div className="flex-1 overflow-hidden pt-3">
                     <CinematicViewer data={activeCanvasData} isEmbedded={true} />
                   </div>
                 </div>
-              ) : (
-                /* Prévia Simulando Moldura de iPhone no Desktop */
-                <div className="h-full w-full overflow-y-auto flex items-center justify-center p-4 [scrollbar-width:none]">
-                  <div className="relative h-[780px] w-[390px] shrink-0 overflow-hidden rounded-[48px] border-[8px] border-zinc-800 bg-black shadow-[0_0_60px_rgba(0,0,0,0.8)] ring-1 ring-white/10 flex flex-col">
-                    {/* Dynamic Island */}
-                    <div className="absolute top-2.5 left-1/2 -translate-x-1/2 h-5 w-24 rounded-full bg-black z-50 flex items-center justify-center">
-                      <div className="h-2 w-2 rounded-full bg-zinc-900 border border-zinc-800" />
-                    </div>
-                    {/* Tela do Celular */}
-                    <div className="flex-1 overflow-hidden pt-3">
-                      <CinematicViewer data={activeCanvasData} isEmbedded={true} />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Barra Flutuante de Ação no Mobile quando estiver vendo o Site */}
-          <div className="lg:hidden fixed bottom-3 left-3 right-3 z-40 flex items-center gap-2 p-2 rounded-2xl border border-zinc-800 bg-zinc-950/95 backdrop-blur-md shadow-2xl">
-            <button
-              type="button"
-              onClick={() => {
-                setMobileTab("chat");
-                setActiveTab("chat");
-              }}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/90 py-2.5 text-xs font-medium text-zinc-200 hover:text-white transition-colors"
-            >
-              <Bot className="h-4 w-4 text-zinc-400" />
-              <span>Voltar ao Copiloto</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleSaveAndPublish}
-              disabled={isSaving}
-              className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-zinc-100 py-2.5 text-xs font-semibold text-zinc-950 hover:bg-white shadow-sm transition-all disabled:opacity-50"
-            >
-              {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-              <span>{isSaving ? "Salvando..." : "Salvar & Publicar"}</span>
-            </button>
+              </div>
+            )}
           </div>
         </main>
       </div>

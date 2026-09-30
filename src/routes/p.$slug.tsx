@@ -24,6 +24,8 @@ import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
 import { ComandaFloatingBar } from "@/components/public/ComandaFloatingBar";
 import { CrossTrafficCard } from "@/components/public-profile/CrossTrafficCard";
 import { DealPopup } from "@/components/public-profile/DealPopup";
+import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
+import type { CinematicPageData } from "@/modules/cinematic/types";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -577,6 +579,27 @@ function PublicBio() {
   const isCinematic = effectiveTemplateId === "cinematic-glass";
   const isStore = effectiveTemplateId === "store-showcase" || effectiveTemplateId === "storefront";
   const isFullPageChat = effectiveTemplateId === "ai-chat-agent";
+  const cinematicData = (bio.social_links as Record<string, any>)?.cinematic_data as CinematicPageData | undefined;
+
+  if (isCinematic && cinematicData) {
+    return (
+      <div className="min-h-screen w-full overflow-x-hidden bg-[#0a0a0c]">
+        {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
+        <CinematicViewer data={cinematicData} />
+        {isTriageActive && bio.whatsapp && (
+          <WhatsAppTriageModal
+            isOpen={isTriageOpen}
+            onClose={() => setIsTriageOpen(false)}
+            phone={bio.whatsapp}
+            config={triageConfig}
+            baseMessage={bio.whatsapp_message}
+            bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
+          />
+        )}
+      </div>
+    );
+  }
+
   const shouldShowMobileSticky = !isSiteMaquina && !isCinematic && !isStore && !isFullPageChat;
 
   return (

@@ -23,6 +23,7 @@ import {
   Target,
   Utensils,
   Flame,
+  Clapperboard,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
@@ -69,6 +70,7 @@ function AuthedLayout() {
       label: string;
       icon: any;
       search?: Record<string, any>;
+      badge?: string;
     }> = [
       { to: "/dashboard", label: "Início", icon: LayoutDashboard },
     ];
@@ -77,6 +79,7 @@ function AuthedLayout() {
       items.push(
         { to: "/builder", label: "Editor Visual", icon: PanelsTopLeft },
         { to: "/builder", search: { copilot: true }, label: "Copiloto IA (Sites)", icon: Sparkles },
+        { to: "/studio", label: "🎬 Cinematic Studio", icon: Clapperboard, badge: "Novo" },
         { to: "/builder", search: { tab: "carousel" }, label: "Carrossel Instagram", icon: Flame },
         { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
       );
@@ -160,7 +163,7 @@ function AuthedLayout() {
           <ThemeToggle />
         </div>
         <nav className="px-3 space-y-1">
-          {navItems.map(({ to, label, icon: Icon, search }) => {
+          {navItems.map(({ to, label, icon: Icon, search, badge }) => {
             const active =
               pathname === to &&
               (!search || (typeof window !== "undefined" && window.location.search.includes(search.tab)));
@@ -170,9 +173,16 @@ function AuthedLayout() {
                 to={to as any}
                 search={search as any}
                 onClick={() => setOpen(false)}
-                className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${active ? "is-active" : ""}`}
+                className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2.5 text-sm ${active ? "is-active" : ""}`}
               >
-                <Icon className="h-4 w-4" /> {label}
+                <div className="flex items-center gap-3">
+                  <Icon className="h-4 w-4" /> {label}
+                </div>
+                {badge && (
+                  <span className="rounded-full bg-gradient-to-r from-amber-500 to-amber-400 px-1.5 py-0.5 text-[9px] font-bold text-black uppercase tracking-wider">
+                    {badge}
+                  </span>
+                )}
               </Link>
             );
           })}

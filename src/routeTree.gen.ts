@@ -36,6 +36,7 @@ import { Route as AuthenticatedLinksRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedPagesRouteImport } from './routes/_authenticated/pages'
 import { Route as AuthenticatedRequestsRouteImport } from './routes/_authenticated/requests'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedStudioRouteImport } from './routes/_authenticated/studio'
 import { Route as AgendarSlugRouteImport } from './routes/agendar.$slug'
 import { Route as ApiManifestRouteImport } from './routes/api/manifest'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
@@ -183,6 +184,11 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStudioRoute = AuthenticatedStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AgendarSlugRoute = AgendarSlugRouteImport.update({
   id: '/agendar/$slug',
   path: '/agendar/$slug',
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/pages': typeof AuthenticatedPagesRoute
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/studio': typeof AuthenticatedStudioRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -308,6 +315,7 @@ export interface FileRoutesByTo {
   '/pages': typeof AuthenticatedPagesRoute
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/studio': typeof AuthenticatedStudioRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -349,6 +357,7 @@ export interface FileRoutesById {
   '/_authenticated/pages': typeof AuthenticatedPagesRoute
   '/_authenticated/requests': typeof AuthenticatedRequestsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/studio': typeof AuthenticatedStudioRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -390,6 +399,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/requests'
     | '/settings'
+    | '/studio'
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/pages'
     | '/requests'
     | '/settings'
+    | '/studio'
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'
@@ -469,6 +480,7 @@ export interface FileRouteTypes {
     | '/_authenticated/pages'
     | '/_authenticated/requests'
     | '/_authenticated/settings'
+    | '/_authenticated/studio'
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'
@@ -695,6 +707,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/studio': {
+      id: '/_authenticated/studio'
+      path: '/studio'
+      fullPath: '/studio'
+      preLoaderRoute: typeof AuthenticatedStudioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/agendar/$slug': {
       id: '/agendar/$slug'
       path: '/agendar/$slug'
@@ -792,6 +811,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
   AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedStudioRoute: typeof AuthenticatedStudioRoute
   AuthenticatedAdminNfcRoute: typeof AuthenticatedAdminNfcRoute
   AuthenticatedAdminProspeccaoRoute: typeof AuthenticatedAdminProspeccaoRoute
 }
@@ -813,6 +833,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPagesRoute: AuthenticatedPagesRoute,
   AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedStudioRoute: AuthenticatedStudioRoute,
   AuthenticatedAdminNfcRoute: AuthenticatedAdminNfcRoute,
   AuthenticatedAdminProspeccaoRoute: AuthenticatedAdminProspeccaoRoute,
 }

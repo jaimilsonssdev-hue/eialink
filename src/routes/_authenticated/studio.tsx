@@ -655,7 +655,7 @@ export default function CinematicStudioPage() {
       </header>
 
       {/* CORPO DO COCKPIT */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* COLUNA ESQUERDA: CHAT CONVERSACIONAL COM PLANO CRIATIVO + AJUSTES (REDIMENSIONÁVEL) */}
         <aside
           style={{ ["--chat-width" as any]: `${chatWidth}px` }}

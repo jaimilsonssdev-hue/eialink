@@ -212,7 +212,7 @@ function AuthedLayout() {
       {(() => {
         const isStudio = pathname.startsWith("/studio");
         return (
-          <div className={`min-w-0 flex-1 ${isStudio ? "bg-zinc-950 md:ml-64 h-[100dvh] max-h-[100dvh] overflow-hidden" : "md:ml-64"}`}>
+          <div className={`min-w-0 flex-1 ${isStudio ? "bg-zinc-950 md:ml-64 h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden" : "md:ml-64"}`}>
             {!isStudio && (
               <header className="app-mobile-header md:hidden sticky top-0 z-30 glass flex items-center justify-between px-4 h-14">
                 <button onClick={() => setOpen(true)} aria-label="Abrir menu">
@@ -227,7 +227,7 @@ function AuthedLayout() {
             <main
               className={`app-content mx-auto ${
                 isStudio
-                  ? "p-0 max-w-none w-full h-[100dvh] max-h-[100dvh] overflow-hidden bg-zinc-950"
+                  ? "p-0 max-w-none w-full flex-1 h-full min-h-0 overflow-hidden bg-zinc-950 flex flex-col"
                   : pathname === "/builder"
                   ? "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-[1600px]"
                   : "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-7xl"

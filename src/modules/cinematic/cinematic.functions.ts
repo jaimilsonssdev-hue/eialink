@@ -455,7 +455,7 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
 
     if (apiKey) {
       try {
-        const prompt = `Você é um Diretor de Arte e Consultor de Branding Internacional (padrão v0, Lovable, Pentagram, Awwwards).
+        const prompt = `Você é um Diretor de Arte e Consultor de Branding Internacional (padrão v0, Lovable, Pentagram, Awwwards) focado em alta conversão e estética nobre (como Atelier Lumi, Maísa Furtado e Insight Sites).
 O usuário está cocriando a experiência digital cinematográfica e interativa para o negócio "${businessName}" (Nicho: "${niche}").
 
 MENSAGEM DO USUÁRIO:
@@ -467,15 +467,22 @@ ${JSON.stringify(conversationHistory.slice(-4), null, 2)}
 DADOS ATUAIS DA PÁGINA:
 ${JSON.stringify(currentData, null, 2)}
 
-SUA MISSÃO:
-1. NÃO sobrescreva o site diretamente. Em vez disso, atue como um Diretor de Arte empático, sofisticado e parceiro.
-2. Elabore um plano estratégico e apresente DUAS opções conceituais distintas em forma de cards de conceito (Moodboard):
-   - Opção A (option_a): Linha mais clássica, profunda, sensorial, acolhedora ou editorial nobre (ex: tons de madeira/âmbar/ouro ou esmeralda, fontes serifadas, foco na história e tempo).
-   - Opção B (option_b): Linha mais arrojada, de vanguarda, moderna, minimalista ou de alta voltagem (ex: tons neon/grafite/titânio ou cyber, fontes sans/display/mono, foco no impacto visual e velocidade).
-3. Cada opção deve ter um previewData completo (hero, manifesto, destaques, bentoGrid, marquee, comparison, faq, theme) pronto para ser inspecionado ou aplicado com 1 clique pelo usuário.
-4. MODO DELTA INTELIGENTE (PRESERVAÇÃO ESTRITA):
-   - Mantenha rigorosamente intactos e inalterados em ambos previewData: "whatsapp", "address", "rating", "openingHours", e as fotos reais já carregadas ("gallery", "hero.backgroundImage", "hero.backgroundVideo").
-   - Modifique e inove nas paletas, tipografia, seções e textos de copywriting sem remover as fotos reais ou dados de contato da empresa.
+DIRETRIZES DE ALTA CONVERSÃO & DESIGN EDITORIAL (PADRÃO ATELIER LUMI & INSIGHT SITES):
+1. STATUS & CONFIANÇA IMEDIATA:
+   - Em "hero.floatingBadge", gere status realista e acolhedor (ex: "● ABERTO AGORA • HORA MARCADA" ou "● ATENDIMENTO EXCLUSIVO • VAGAS PARA ESTA SEMANA" ou "★ 4.9 NO GOOGLE (180+ AVALIAÇÕES)").
+2. CARDÁPIO / MENU DE SERVIÇOS COM PREÇO E DURAÇÃO ("highlights"):
+   - Crie 3 a 4 serviços desejáveis com nome sofisticado.
+   - Sempre defina "price" realista (ex: "A partir de R$ 180", "R$ 390", "Consulte").
+   - Sempre defina "badge" com tempo de cadeira ou exclusividade (ex: "1h 30m • Mais Pedido", "45 min", "Pacote Completo").
+   - Inclua pelo menos 1 serviço ou pacote de alto valor / ticket premium.
+3. POLÍTICAS TRANSPARENTES & COMBINADOS ("faq"):
+   - Inclua 3 a 4 perguntas reais que clientes desse nicho valorizam: tolerância de atraso (ex: 15 min), cancelamento/reagendamento com 24h, formas de pagamento (Pix/Cartão/Parcelamento) e atendimento com hora marcada.
+4. BENTO GRID DE AUTORIDADE:
+   - Cartões assimétricos com métricas concretas (ex: "Nota 4.9 no Google", "+2.500 Atendimentos", "Ambiente Climatizado & Café Barista").
+5. COMPARATIVO TRANSPARENTE ("comparison"):
+   - Destaque o padrão de excelência deste negócio vs o mercado tradicional (sem espera, insumos de alta linha, ambiente privativo).
+6. MODO DELTA INTELIGENTE (PRESERVAÇÃO ESTRITA):
+   - Mantenha rigorosamente intactos em ambos previewData: "whatsapp", "address", "rating", "openingHours" e fotos reais já carregadas.
 
 RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENTÁRIOS):
 {
@@ -484,7 +491,7 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
     "id": "plan_${Date.now()}",
     "conceptSummary": "Resumo de 1 a 2 frases da direção artística proposta",
     "rationale": "Justificativa estratégica do porquê dessas abordagens funcionarem para o público desse nicho",
-    "recommendedSections": ["Hero Imersivo com Parallax", "Marquee Contínuo", "Bento Grid de Autoridade", "Manifesto de Origem", "Menu de Criações", "Comparativo vs. Mercado", "FAQ & Ação VIP no WhatsApp"],
+    "recommendedSections": ["Hero Imersivo com Status Ativo", "Marquee Contínuo", "Bento Grid de Autoridade", "Manifesto de Essência", "Menu de Serviços com Preço e Duração", "Comparativo vs Mercado", "Combinados & Políticas (FAQ)", "Ação VIP no WhatsApp"],
     "options": [
       {
         "id": "option_a",
@@ -646,10 +653,58 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
         hero: {
           ...currentData.hero,
           title: `O Ritual Inesquecível da ${businessName}`,
-          subtitle: "Onde o tempo desacelera para dar lugar à contemplação dos sentidos e à excelência autoral.",
+          subtitle: "Onde o tempo desacelera para dar lugar à contemplação dos sentidos, atendimento com hora marcada e à excelência autoral.",
           tagline: "EXPERIÊNCIA EXCLUSIVA",
-          floatingBadge: "★ 4.9 NO GOOGLE",
+          floatingBadge: "● ABERTO AGORA • HORA MARCADA",
         },
+        highlights: currentData.highlights && currentData.highlights.length > 0 ? currentData.highlights : [
+          {
+            id: "h1",
+            title: "Experiência Signature",
+            description: "Atendimento completo e individualizado, respeitando o tempo de cadeira e a personalização de cada detalhe.",
+            price: "A partir de R$ 180",
+            badge: "1h 30m • Mais Pedido",
+          },
+          {
+            id: "h2",
+            title: "Protocolo Revitalizante",
+            description: "Diagnóstico preciso com aplicação de técnicas e insumos de padrão internacional de alta performance.",
+            price: "R$ 290",
+            badge: "1h • Exclusivo",
+          },
+          {
+            id: "h3",
+            title: "Pacote VIP Completo",
+            description: "Imersão premium sob medida com consultoria de estilo e comodidades especiais para ocasiões inesquecíveis.",
+            price: "Consulte",
+            badge: "Edição Premium",
+          },
+        ],
+        comparison: {
+          headline: "Nosso Padrão vs. O Mercado Tradicional",
+          usLabel: businessName,
+          othersLabel: "Convencional",
+          rows: [
+            { feature: "Atendimento individual com hora marcada (zero filas)", us: true, others: false },
+            { feature: "Insumos e produtos originais de alta performance", us: true, others: false },
+            { feature: "Ambiente reservado com acústica e café especial", us: true, others: false },
+            { feature: "Tempo de cadeira respeitado com rigor", us: true, others: false },
+          ],
+        },
+        faq: [
+          {
+            question: "Como funciona a tolerância de horário e pontualidade?",
+            answer: "Trabalhamos com agenda rigorosamente pontual e tolerância de 15 minutos para garantir que cada cliente usufrua de sua experiência sem pressa.",
+          },
+          {
+            question: "Qual a política para cancelamentos ou reagendamentos?",
+            answer: "Solicitamos aviso prévio de até 24 horas para que possamos realocar a vaga sem comprometer a sua reserva ou a de outros clientes.",
+          },
+          {
+            question: "Quais formas de pagamento são aceitas?",
+            answer: "Aceitamos Pix, cartões de crédito e débito com parcelamento facilitado em procedimentos de maior valor.",
+          },
+        ],
       },
     };
 
@@ -679,10 +734,46 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
         hero: {
           ...currentData.hero,
           title: `A Nova Assinatura da ${businessName}`,
-          subtitle: "Design contemporâneo, rigor milimétrico e precisão para quem não aceita o comum.",
+          subtitle: "Design contemporâneo, rigor milimétrico e precisão para quem não aceita o comum. Atendimento com agendamento direto.",
           tagline: "ESTÉTICA PURA 2026",
-          floatingBadge: "ALTA AUTORIDADE",
+          floatingBadge: "● VAGAS PARA ESTA SEMANA",
         },
+        highlights: currentData.highlights && currentData.highlights.length > 0 ? currentData.highlights : [
+          {
+            id: "hb1",
+            title: "Procedimento Estrutural",
+            description: "Calibragem e acabamento com rigor técnico, garantindo resultado duradouro e previsível.",
+            price: "A partir de R$ 220",
+            badge: "45 min",
+          },
+          {
+            id: "hb2",
+            title: "Tratamento de Precisão",
+            description: "Metodologia rápida, assertiva e sem excessos para clientes que valorizam agilidade e sofisticação.",
+            price: "R$ 380",
+            badge: "1h 15m",
+          },
+        ],
+        comparison: {
+          headline: "Metodologia de Precisão vs. O Comum",
+          usLabel: businessName,
+          othersLabel: "Mercado Padrão",
+          rows: [
+            { feature: "Metodologia autoral testada e comprovada", us: true, others: false },
+            { feature: "Agendamento ágil diretamente pelo WhatsApp", us: true, others: false },
+            { feature: "Transparência total em valores e etapas", us: true, others: false },
+          ],
+        },
+        faq: [
+          {
+            question: "Como agendar um horário?",
+            answer: "Basta clicar no botão de WhatsApp. Nossa equipe confirma a disponibilidade em poucos minutos.",
+          },
+          {
+            question: "Há estacionamento ou fácil acesso no local?",
+            answer: "Sim, estamos em localização estratégica com fácil estacionamento nas proximidades.",
+          },
+        ],
       },
     };
 

@@ -351,14 +351,22 @@ REGRAS DE OURO DA GERAÇÃO (DIREÇÃO DE ARTE EXCLUSIVA & ZERO SITES CLONES):
    - Gere rigorosamente 3 a 4 diferenciais imponentes e curtos organizados no formato Bento Grid, usando terminologia autêntica e concreta do nicho (cortes nobres, maturação, buffet com sushi, escaneamento 3D, visagismo, etc.).
    - Ícones válidos da biblioteca: "shield", "sparkles", "award", "check", "heart".
 
-5. COPYWRITING PERSUASIVO & ESPECÍFICO DO SETOR:
-   - 'description': Headline magnética de alta conversão com tracking-tight e senso de exclusividade, focada no resultado concreto do cliente e público real.
-   - 'whatsapp_message': Mensagem de abertura comercial persuasiva e natural citando o serviço/reserva específico.
-   - 'testimonials': PROIBIDO gerar depoimentos fictícios. Se o briefing contiver depoimentos reais, use-os exatamente. Caso contrário, OMITA esta seção.
+5. COPYWRITING BRASILEIRO DE ALTA CONVERSÃO (ZERO FORMALISMO ROBÓTICO):
+   - PROIBIÇÃO TOTAL de clichês corporativos vazios como "Compromisso com excelência", "Atendimento personalizado", "Qualidade garantida", "Ambiente acolhedor" ou "Tradição e modernidade".
+   - Todo texto deve usar princípios de Resposta Direta (Direct Response) adaptados ao mercado brasileiro:
+     * HEADLINE ('description'): 1 ou 2 frases magnéticas combinando desejo imediato + quebra de objeção principal + menção à cidade se houver.
+       Exemplos reais vencedores:
+       - Gastronomia/Burger: "Picanha e smash artesanal na brasa viva, queijo derretendo e entrega rápida e quentinha na sua porta."
+       - Odontologia/Clínica: "Volte a sorrir com confiança: implantes sem dor e alinhadores invisíveis com os melhores especialistas da região."
+       - Estética/Beleza: "Realce sua beleza natural com protocolos modernos e atendimento VIP focado na sua autoestima."
+       - Advocacia/Serviços: "Seus direitos defendidos com agilidade e clareza, sem termos complicados e com suporte direto no WhatsApp."
+     * WHATSAPP ('whatsapp_message'): Mensagem natural, cordial e sem atrito, pronta para o cliente só apertar 'enviar'.
+       Exemplo: "Olá! Vi o site de vocês e gostaria de agendar um horário / tirar uma dúvida sobre [Serviço Principal]. Pode me ajudar?"
+     * BOTÃO PRINCIPAL: Rótulos de ação diretos e atraentes: "Chamar no WhatsApp", "Reservar Minha Mesa", "Pedir Agora no WhatsApp", "Agendar Avaliação", "Consultar Horários".
+   - 'testimonials': PROIBIDO inventar depoimentos fictícios. Se o briefing contiver depoimentos reais do Google Maps, use-os com as palavras reais do cliente. Caso contrário, omita.
 
-6. CATÁLOGO DE SERVIÇOS & PRATOS REAIS:
-   - 'suggested_services': Liste os principais serviços ou pratos essenciais da empresa com nomes refinados, descrições atrativas, fotos correspondentes e valores numéricos realistas (ou estimativa realista de mercado quando ausente).
-   - 'button_label': Defina um rótulo de ação persuasivo coerente com o nicho (ex: "Reservar Mesa", "Pedir no WhatsApp", "Agendar Avaliação", "Agendar Horário VIP", "Consultar Especialista").
+6. CATÁLOGO DE SERVIÇOS & PRATOS COM APELO SENSORIAL:
+   - 'suggested_services': Liste os itens reais da empresa com nomes saborosos e atraentes, descrições vendedoras que explicam o que está incluso, fotos reais e preços realistas.
 
 7. REGRAS CRÍTICAS E OBRIGATÓRIAS PARA URLs DE FOTOS:
    - Ao preencher 'avatar_url', 'cover_url', 'suggested_services[i].image_url' e 'curated_photos[i].url':
@@ -466,12 +474,11 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     const apiBase = customGateway || defaultEndpoint;
 
     // Modelos Google Gemini de alta performance em ordem estrita de velocidade, compatibilidade e suporte ativo:
-    // gemini-3.5-flash é o modelo padrão recomendado pelo Google AI Studio
+    // gemini-2.5-flash e gemini-2.0-flash são os modelos padrão recomendados pelo Google AI Studio
     const finalModelsToTry = [
-      "gemini-3.5-flash",
-      "gemini-3.5-flash-lite",
-      "gemini-3.6-flash",
       "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
       "gemini-2.5-flash-lite",
     ];
 
@@ -571,9 +578,9 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     // 2. Fallback: Interactions API caso generateContent falhe
     if (!rawContent) {
       const interactionModels = [
-        "gemini-3.5-flash",
-        "gemini-3.5-flash-lite",
         "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
       ];
       for (const modelName of interactionModels) {
         try {
@@ -1066,15 +1073,17 @@ REGRAS INEGOCIÁVEIS DE ANCORAGEM (GROUNDING RIGOROSO):
     - 'theme.parallax': true | false. Ative (true) o efeito imersivo de profundidade quando o negócio for visual e premium (gastronomia, estética, barbearia, moda, arquitetura, academia, eventos) ou quando o usuário pedir algo imersivo/cinematográfico. Use false para páginas sóbrias ou institucionais com poucas fotos.
    - Escolha e ORDENE as seções de forma estratégica para este negócio (não siga sempre a mesma ordem). Desative seções sem dados reais.
 
-4. COPYWRITING ESPECIALIZADO DE ALTO PADRÃO (ZERO CLICHÊS):
+4. COPYWRITING BRASILEIRO DE ALTA CONVERSÃO (ZERO CLICHÊS CORPORATIVOS):
    - PROIBIÇÃO ABSOLUTA de frases vazias como "Compromisso com excelência", "Atendimento exclusivo", "Qualidade garantida", "Diferencial 1", "Diferencial 2", "Nome do Produto ou Serviço".
-   - Todo texto deve soar autêntico, técnico e sensorial, como se escrito por uma agência de branding de luxo especializada naquele nicho.
+   - Todo texto deve usar princípios de Resposta Direta (Direct Response) adaptados ao mercado brasileiro:
+     * Headline magnética, humana e direta ao ponto, focada no resultado concreto do cliente (ex: "Sua mesa reservada e os melhores cortes na brasa", "Volte a sorrir sem medo: implantes e próteses sem dor").
+     * Mensagem de WhatsApp pré-configurada amigável, sem frieza corporativa.
+     * Rótulos de botão comerciais e atraentes ("Chamar no WhatsApp", "Reservar Mesa no WhatsApp", "Pedir Agora", "Agendar Avaliação Gratuita").
    - Grounding com fatos reais: absorva nomes de pratos, especialidades, localização, nota de avaliações do Google e anos de atuação presentes no briefing/mapas.
-   - 'catalogItems': Crie itens reais e específicos do negócio (ex: churrascaria = Rodízio Completo com Carnes Nobres, Picanha na Brasa, Buffet Livre com Sushi; odontologia = Escaneamento 3D, Clareamento a Laser, Implantes Guiados; estética = Mechas com Visagismo, Limpeza de Pele Profunda, etc.).
-   - 'buttonLabel' em catalogItems adaptado ao nicho: "Reservar Mesa" / "Pedir no WhatsApp" / "Agendar Avaliação" / "Agendar Horário VIP" / "Consultar Especialista".
-   - 'differentials': 3 a 4 pilares concretos com ícones aprovados ("shield", "sparkles", "award", "check", "heart").
-   - 'about': Conte a história real do estabelecimento, fundação, tradição ou diferenciais estruturais reais.
-   - 'faq': 4 a 5 perguntas reais que os clientes daquele nicho específico perguntam (reservas, convênios, formas de pagamento, estacionamento, espaço kids, etc.).
+   - 'catalogItems': Crie itens reais e específicos do negócio com descrições apetitosas ou explicativas do benefício real.
+   - 'differentials': 3 a 4 pilares concretos com ícones aprovados ("shield", "sparkles", "award", "check", "heart") destacando conveniência, segurança, velocidade ou exclusividade.
+   - 'about': Conte a história real do estabelecimento ou os pilares práticos de atendimento.
+   - 'faq': 4 a 5 perguntas reais que quebram as principais dúvidas do cliente final (reservas, prazos, formas de pagamento, estacionamento, etc.).
 
 5. FORMATO DA RESPOSTA:
    - Retorne EXCLUSIVAMENTE o objeto JSON válido estruturado de acordo com o Schema v2 (use camelCase exatamente como no exemplo abaixo), sem nenhum texto antes ou depois:
@@ -1314,10 +1323,9 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
     const apiBase = customGateway || defaultEndpoint;
 
     const finalModelsToTry = [
-      "gemini-3.5-flash",
-      "gemini-3.5-flash-lite",
-      "gemini-3.6-flash",
       "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
       "gemini-2.5-flash-lite",
     ];
 
@@ -1686,6 +1694,8 @@ export async function extractGoogleMapsSearchUniversal(
       headers: {
         "Accept-Language": "pt-BR,pt;q=0.9",
         "x-timeout": "25",
+        "x-with-images-summary": "true",
+        "x-with-links-summary": "true",
       },
       signal: AbortSignal.timeout(28000),
     });
@@ -1696,7 +1706,7 @@ export async function extractGoogleMapsSearchUniversal(
     console.warn("[UniversalMaps] Falha ao consultar Jina Reader para Google Maps Search:", jinaErr);
   }
 
-  // 3. Extração dos Campos
+  // 3. Extração dos Campos Estruturados sem depender de glifos especiais
   let name = "";
   const placeLinkMatch = text.match(/\[([^\n\r\]]+)\]\(https:\/\/www\.google\.com\/maps\/place\//);
   if (placeLinkMatch && placeLinkMatch[1]) {
@@ -1718,35 +1728,50 @@ export async function extractGoogleMapsSearchUniversal(
   if (!name && searchQuery) name = searchQuery;
 
   let rating: number | undefined;
+  let reviewsCount: number | undefined;
   let niche: string | undefined;
-  const ratingBlockMatch = text.match(/(\d[.,]\d)\s*\n+([^\n\r·]+)·/);
+
+  const ratingBlockMatch =
+    text.match(/(\d[.,]\d)\s*\n+([^\n\r·]+)·/i) ||
+    text.match(/(\d[.,]\d)\s*(?:estrelas|stars|★|⭐)/i) ||
+    text.match(/\b([3-5][.,]\d)\b/);
+
   if (ratingBlockMatch) {
     rating = parseFloat(ratingBlockMatch[1].replace(",", "."));
-    niche = ratingBlockMatch[2].trim();
-  } else {
-    const rSolo = text.match(/\b(\d[.,]\d)\b/);
-    if (rSolo) rating = parseFloat(rSolo[1].replace(",", "."));
+    if (ratingBlockMatch[2]) {
+      niche = ratingBlockMatch[2].replace(/[^\w\sÀ-ÿ]/g, "").trim();
+    }
+  }
+
+  const reviewsMatch =
+    text.match(/\(([0-9.,]+)\s*(?:avaliações|reviews|comentários)/i) ||
+    text.match(/([0-9.,]+)\s+avaliações/i);
+  if (reviewsMatch) {
+    reviewsCount = parseInt(reviewsMatch[1].replace(/\D/g, ""), 10);
   }
 
   let address: string | undefined;
   const addrMatch =
     text.match(/\s*\n+([^\n\r]+)/) ||
-    text.match(/(?:Av\.|Rua|Alameda|Travessa|Praça|Estrada|Rodovia)[^\n\r]+/i);
+    text.match(/(?:Endereço|Localização)?[:\s]*((?:Av\.|Rua|Alameda|Travessa|Praça|Estrada|Rodovia|Rod\.|Av\b|R\.)\s*[^,\n\r]+(?:,\s*[^,\n\r]+){1,4})/i) ||
+    text.match(/([^\n\r,]+,\s*\d+[^,\n\r]*(?:,\s*[^\n\r]+)?\s*-\s*[A-Z]{2})/i);
+
   if (addrMatch) {
-    address = (addrMatch[1] || addrMatch[0]).trim();
+    address = (addrMatch[1] || addrMatch[0]).replace(/^(?:Endereço|Localização)[:\s]*/i, "").trim();
   }
 
   let phone: string | undefined;
   const telMatch =
     text.match(/tel:([+\d]+)/) ||
     text.match(/\s*\n+([+\d\s-]+)/) ||
-    text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
+    text.match(/(?:Telefone|Contato|Tel|WhatsApp|Ligar)?[:\s]*(\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)?(?:9\s*)?(\d{4,5})[-\s]?(\d{4})/i);
+
   if (telMatch) {
-    phone = (telMatch[1] || telMatch[0]).trim();
+    phone = (telMatch[1] || telMatch[0]).replace(/^(?:Telefone|Contato|Tel|WhatsApp|Ligar)[:\s]*/i, "").trim();
   }
 
   let description: string | undefined;
-  const descMatch = text.match(/Compartilhar\s*\n+([^\n\r]+)/);
+  const descMatch = text.match(/Compartilhar\s*\n+([^\n\r]+)/) || text.match(/Visão geral\s*\n+([^\n\r]+)/);
   if (descMatch) {
     const rawDesc = descMatch[1].trim();
     if (!rawDesc.startsWith("[") && rawDesc.length > 10) {
@@ -1754,25 +1779,29 @@ export async function extractGoogleMapsSearchUniversal(
     }
   }
 
-  // Fotos reais em HD
+  // Extração e Otimização de Fotos Reais em Ultra Alta Resolução (1600x1200)
   const rawPhotos =
-    text.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|googleapis\.com\/v1\/thumbnail)[^\s\)\"']*/gi) || [];
-  const blocked = ["/a/", "/a-/", "/al/", "default_user", "loader", "mapslogo", "tactile"];
+    text.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|googleapis\.com\/v1\/thumbnail|ggpht\.com)[^\s\)\"']*/gi) || [];
+  const blocked = ["/a/", "/a-/", "/al/", "default_user", "loader", "mapslogo", "tactile", "cleardot"];
   const candidatePhotos: string[] = [];
+
   for (const p of rawPhotos) {
     if (blocked.some((b) => p.includes(b))) continue;
     let hd = p;
     if (p.includes("googleapis.com/v1/thumbnail")) {
-      hd = p.replace(/&w=\d+&h=\d+/, "&w=1200&h=800");
+      hd = p.replace(/&w=\d+&h=\d+/, "&w=1600&h=1200");
     } else if (p.includes("googleusercontent.com")) {
-      hd = p.replace(/=w\d+.*$/, "=w1200-h800-k-no");
-      if (!hd.includes("=w1200")) hd += "=w1200-h800-k-no";
+      hd = p.replace(/=w\d+.*$/, "=w1600-h1200-k-no");
+      if (!hd.includes("=w1600")) hd += "=w1600-h1200-k-no";
     }
     if (!candidatePhotos.includes(hd)) candidatePhotos.push(hd);
   }
 
-  // 4. Download & Persistência das Fotos
+  // 4. Download & Persistência das Fotos com Redundância de Bucket
   const importedImages: NonNullable<FetchedBusinessData["importedImages"]> = [];
+  const targetBucket = "bio_media";
+  const fallbackBucket = "bio-media";
+
   for (let i = 0; i < Math.min(candidatePhotos.length, 6); i++) {
     const photoUrl = candidatePhotos[i];
     try {
@@ -1787,15 +1816,31 @@ export async function extractGoogleMapsSearchUniversal(
           try {
             const ext = mime.includes("png") ? "png" : mime.includes("webp") ? "webp" : "jpg";
             const storagePath = `${userId}/${crypto.randomUUID()}.${ext}`;
-            const { error: upErr } = await supabaseAdmin.storage
-              .from("bio-media")
+
+            let { error: upErr } = await supabaseAdmin.storage
+              .from(targetBucket)
               .upload(storagePath, Buffer.from(buf), {
                 contentType: mime,
                 upsert: true,
               });
+
+            let usedBucket = targetBucket;
+            if (upErr) {
+              const retry = await supabaseAdmin.storage
+                .from(fallbackBucket)
+                .upload(storagePath, Buffer.from(buf), {
+                  contentType: mime,
+                  upsert: true,
+                });
+              if (!retry.error) {
+                upErr = null;
+                usedBucket = fallbackBucket;
+              }
+            }
+
             if (!upErr) {
               const { data: pubData } = supabaseAdmin.storage
-                .from("bio-media")
+                .from(usedBucket)
                 .getPublicUrl(storagePath);
               if (pubData?.publicUrl) {
                 publicUrl = pubData.publicUrl;
@@ -2596,3 +2641,193 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
   .handler(async ({ data, context }: any): Promise<FetchedBusinessData> => {
     return internalFetchBusinessFromUrl(data.url, context);
   });
+
+export const chatCopilotEditInputSchema = z.object({
+  currentBio: z.record(z.any()),
+  messages: z.array(
+    z.object({
+      role: z.enum(["user", "assistant"]),
+      content: z.string(),
+    })
+  ).default([]),
+  instruction: z.string().min(1),
+  overrideApiKey: z.string().optional(),
+  aiGatewayUrl: z.string().optional(),
+});
+
+export interface ChatCopilotEditResponse {
+  assistantReply: string;
+  patch: Record<string, any>;
+  suggestions?: string[];
+}
+
+export const chatCopilotEditFn = createServerFn({ method: "POST" })
+  .inputValidator((data: z.infer<typeof chatCopilotEditInputSchema>) =>
+    chatCopilotEditInputSchema.parse(data)
+  )
+  .handler(async ({ data }: any): Promise<ChatCopilotEditResponse> => {
+    const serverKey =
+      process.env.GEMINI_API_KEY ||
+      process.env.GOOGLE_AI_STUDIO_KEY ||
+      (process.env as any).VITE_GEMINI_API_KEY;
+
+    const resolvedKey = (data.overrideApiKey || serverKey || "").trim();
+
+    if (!resolvedKey) {
+      throw new Error(
+        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto.",
+      );
+    }
+
+    const currentBio = data.currentBio || {};
+    const socialLinks = (currentBio.social_links as Record<string, any>) || {};
+
+    const simplifiedState = {
+      display_name: currentBio.display_name,
+      description: currentBio.description,
+      whatsapp: currentBio.whatsapp,
+      whatsapp_message: currentBio.whatsapp_message || socialLinks.whatsapp_message,
+      niche: currentBio.niche || socialLinks.niche,
+      custom_theme: socialLinks.custom_theme || currentBio.custom_theme,
+      differentials: socialLinks.differentials || [],
+      about_section: socialLinks.about_section || null,
+      suggested_services: socialLinks.suggested_services || [],
+      video_embed: socialLinks.video_embed || null,
+      links: (currentBio.links || []).map((l: any) => ({ title: l.title, url: l.url })),
+    };
+
+    const systemPrompt = `[COPILOTO CRIATIVO EIALINK - CHAT DE EDIÇÃO CIRÚRGICA AO VIVO]
+Você é o Copiloto Criativo e Designer de Elite do EiaLink em uma conversa direta com o usuário.
+O usuário está visualizando a página dele ao vivo enquanto conversa com você.
+
+ESTADO ATUAL DA PÁGINA DO USUÁRIO:
+${JSON.stringify(simplifiedState, null, 2)}
+
+SUAS REGRAS DE OURO:
+1. Responda em Português do Brasil com entusiasmo, simpatia e brevidade (1 a 3 frases amigáveis) em 'assistantReply'.
+2. EDIÇÃO CIRÚRGICA (ZERO PERDA DE DADOS):
+   - Altere RIGOROSAMENTE APENAS o que o usuário pediu para mudar.
+   - NUNCA reinicie o site e NUNCA apague dados que o usuário não mencionou.
+   - Se o usuário pediu para mudar a cor, altere apenas 'custom_theme'.
+   - Se o usuário pediu para mudar o texto/headline, altere apenas 'description'.
+   - Se pediu para mudar o WhatsApp, altere apenas 'whatsapp' ou 'whatsapp_message'.
+   - Se pediu para adicionar ou alterar um serviço, faça a alteração em 'suggested_services'.
+3. COPYWRITING BRASILEIRO DE ALTA CONVERSÃO:
+   - Se o usuário pedir para melhorar textos, use linguagem magnética, direta, humana e vendedora (Direct Response), sem jargões corporativos chatos.
+4. RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON VÁLIDO:
+{
+  "assistantReply": "Mensagem simpática explicando de forma clara o que você ajustou na página...",
+  "patch": {
+    // APENAS OS CAMPOS QUE MUDARAM. Exemplos:
+    // "display_name": "Novo Nome",
+    // "description": "Nova Headline Magnética",
+    // "whatsapp": "5511999999999",
+    // "whatsapp_message": "Nova mensagem de WhatsApp",
+    // "custom_theme": { "primary": "#f59e0b", "background": "#0b0c10", "mode": "dark" },
+    // "suggested_services": [ ... ],
+    // "differentials": [ ... ]
+  },
+  "suggestions": ["Sugestão rápida 1 para o usuário clicar", "Sugestão rápida 2"]
+}`;
+
+    const conversationHistory = (data.messages || []).slice(-6).map((m: any) => ({
+      role: m.role === "assistant" ? "model" : "user",
+      parts: [{ text: m.content }],
+    }));
+
+    const contents = [
+      ...conversationHistory,
+      {
+        role: "user",
+        parts: [{ text: `INSTRUÇÃO ATUAL DO USUÁRIO: "${data.instruction}"\n\nAplique a alteração necessária e responda com o JSON de patch.` }],
+      },
+    ];
+
+    const defaultEndpoint = "https://generativelanguage.googleapis.com";
+    const customGateway = (
+      data.aiGatewayUrl ||
+      process.env.AI_GATEWAY_URL ||
+      process.env.CLOUDFLARE_AI_GATEWAY ||
+      process.env.CF_AI_GATEWAY ||
+      ""
+    ).trim().replace(/\/+$/, "");
+
+    const apiBase = customGateway || defaultEndpoint;
+
+    const modelsToTry = [
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-2.5-flash-lite",
+    ];
+
+    let rawContent: string | null = null;
+    let lastError = "";
+
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await fetch(
+          `${apiBase}/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
+            resolvedKey,
+          )}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": resolvedKey,
+            },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemPrompt }],
+              },
+              contents,
+              generationConfig: {
+                temperature: 0.5,
+                maxOutputTokens: 3000,
+                responseMimeType: "application/json",
+              },
+            }),
+          },
+        );
+
+        if (response.ok) {
+          const resJson = await response.json();
+          const candidate = resJson.candidates?.[0];
+          const part = candidate?.content?.parts?.find((p: any) => p.text && !p.thought);
+          if (part?.text) {
+            rawContent = part.text.trim();
+            break;
+          }
+        } else {
+          const errText = await response.text();
+          lastError = `Modelo ${modelName} retornou status ${response.status}: ${errText}`;
+        }
+      } catch (err: any) {
+        lastError = `Falha no modelo ${modelName}: ${err?.message || err}`;
+      }
+    }
+
+    if (!rawContent) {
+      throw new Error(`Não foi possível obter resposta do Assistente de IA: ${lastError}`);
+    }
+
+    try {
+      const parsed = JSON.parse(rawContent);
+      return {
+        assistantReply: parsed.assistantReply || "Ajustei os detalhes da sua página conforme solicitado! Veja como ficou na prévia ao lado.",
+        patch: parsed.patch || {},
+        suggestions: parsed.suggestions || [
+          "Mudar paleta para tons dourados",
+          "Tornar a headline mais vendedora",
+          "Adicionar botão com WhatsApp",
+        ],
+      };
+    } catch {
+      return {
+        assistantReply: "Fiz o ajuste solicitado! Veja a atualização ao lado.",
+        patch: {},
+        suggestions: [],
+      };
+    }
+  });
+

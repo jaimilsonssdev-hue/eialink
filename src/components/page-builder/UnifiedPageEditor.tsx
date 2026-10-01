@@ -65,6 +65,7 @@ import { ChatFlowEditor } from "./ChatFlowEditor";
 import { ProductCarouselManager } from "@/components/dashboard/ProductCarouselManager";
 import { SeoEditor } from "./SeoEditor";
 import { AiCopilotModal } from "./AiCopilotModal";
+import { CopilotChatDrawer } from "./CopilotChatDrawer";
 import type { AiCopilotResult, PremiumProposalResponse } from "@/modules/ai/copilot.functions";
 import { parsePrice } from "@/lib/utils";
 import { parseSocialLinks } from "@/lib/social-links";
@@ -689,6 +690,7 @@ export function UnifiedPageEditor({
   const [validationMessage, setValidationMessage] = useState<string>();
   const [previewOpen, setPreviewOpen] = useState(false);
   const [isCopilotOpen, setIsCopilotOpen] = useState(() => Boolean(initialCopilotOpen));
+  const [isChatDrawerOpen, setIsChatDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (initialCopilotOpen) {
@@ -1031,6 +1033,84 @@ export function UnifiedPageEditor({
     );
   };
 
+  const handleApplyPatch = (patch: Record<string, any>) => {
+    setIsDirty(true);
+    setBio((prev) => {
+      const prevSocial = (prev.social_links as Record<string, any>) || {};
+      const nextSocial = { ...prevSocial };
+
+      if (patch.custom_theme) {
+        nextSocial.custom_theme = {
+          ...(prevSocial.custom_theme || {}),
+          ...patch.custom_theme,
+        };
+        const ct = nextSocial.custom_theme;
+        nextSocial.tokens_design = {
+          ...(prevSocial.tokens_design || {}),
+          fundo_valores: {
+            cor_gradiente_1: ct.background || "#0b0c10",
+            cor_gradiente_2: ct.primary || "#1f2937",
+            blur_sobreposicao: "8px",
+            imagem_url: prev.cover_url || "",
+          },
+          estilo_botoes: {
+            cor_fundo_card: ct.card_bg || "rgba(255, 255, 255, 0.04)",
+            cor_borda: ct.border_color || "rgba(255, 255, 255, 0.12)",
+            cor_texto: ct.text || "#ffffff",
+            cor_destaque: ct.primary || "#6366f1",
+            raio_borda: ct.border_radius || "16px",
+          },
+        };
+      }
+
+      if (patch.differentials) {
+        nextSocial.differentials = patch.differentials;
+      }
+      if (patch.about_section) {
+        nextSocial.about_section = patch.about_section;
+      }
+      if (patch.whatsapp_message) {
+        nextSocial.whatsapp_message = patch.whatsapp_message;
+      }
+      if (patch.niche) {
+        nextSocial.niche = patch.niche;
+        setNiche(patch.niche);
+      }
+
+      return {
+        ...prev,
+        display_name: patch.display_name !== undefined ? patch.display_name : prev.display_name,
+        description: patch.description !== undefined ? patch.description : prev.description,
+        whatsapp: patch.whatsapp !== undefined ? patch.whatsapp : prev.whatsapp,
+        avatar_url: patch.avatar_url !== undefined ? patch.avatar_url : prev.avatar_url,
+        cover_url: patch.cover_url !== undefined ? patch.cover_url : prev.cover_url,
+        social_links: nextSocial,
+      };
+    });
+
+    if (patch.suggested_services && Array.isArray(patch.suggested_services) && patch.suggested_services.length > 0) {
+      setProducts(
+        patch.suggested_services.map((svc: any, idx: number) => ({
+          id: svc.id || `patch-svc-${idx}-${Date.now()}`,
+          bio_page_id: bio.id || "preview",
+          type: "service",
+          name: svc.name,
+          description: svc.description || "",
+          price: parsePrice(svc.price),
+          promotional_price: null,
+          image_url: svc.image_url || null,
+          category: svc.category || "Destaques",
+          button_label: svc.button_label || "Pedir no WhatsApp",
+          button_url: null,
+          active: true,
+          position: idx,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }))
+      );
+    }
+  };
+
   const addLink = () => {
     if ((planAccess?.limits.links ?? 4) !== -1 && links.length >= (planAccess?.limits.links ?? 4)) {
       setValidationMessage(
@@ -1363,12 +1443,12 @@ export function UnifiedPageEditor({
 
             <button
               type="button"
-              onClick={() => setIsCopilotOpen(true)}
+              onClick={() => setIsChatDrawerOpen(true)}
               className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
-              title="Editar textos, cores da marca, fotos e serviços com Inteligência Artificial"
+              title="Conversar e editar o site em tempo real com Inteligência Artificial"
             >
               <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
-              <span>Editar com IA</span>
+              <span>Copiloto IA (Chat)</span>
             </button>
 
             <a
@@ -2995,6 +3075,21 @@ export function UnifiedPageEditor({
           city: (((bio.social_links as any)?.address || (bio.social_links as any)?.city) as string)?.trim() || undefined,
         }}
         onApply={handleApplyCopilotResult}
+      />
+
+      <CopilotChatDrawer
+        isOpen={isChatDrawerOpen}
+        onClose={() => setIsChatDrawerOpen(false)}
+        currentBio={{
+          ...bio,
+          links,
+          products,
+        }}
+        onApplyPatch={handleApplyPatch}
+        onOpenQuickGenerator={() => {
+          setIsChatDrawerOpen(false);
+          setIsCopilotOpen(true);
+        }}
       />
     </div>
   );

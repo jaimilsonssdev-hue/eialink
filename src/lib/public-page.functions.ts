@@ -85,21 +85,26 @@ export const recordPublicAnalyticsEventFn = createServerFn({ method: "POST" })
 export const signPublishedBioMediaFn = createServerFn({ method: "POST" })
   .inputValidator((input) => mediaRequestSchema.parse(input))
   .handler(async ({ data }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: page } = await supabaseAdmin
-      .from("bio_pages")
-      .select("user_id, avatar_url, cover_url")
-      .eq("id", data.bioPageId)
-      .eq("published", true)
-      .maybeSingle();
-    if (!page) throw new Error("Página não disponível.");
+    if (!data.paths || data.paths.length === 0) return { signedUrls: [] as string[] };
 
-    if (data.paths.length === 0) return { signedUrls: [] as string[] };
-
-    const urls = data.paths.map((path) => {
-      const { data: pub } = supabaseAdmin.storage.from("bio-media").getPublicUrl(path);
-      return pub.publicUrl;
-    });
-
-    return { signedUrls: urls };
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const urls = data.paths.map((path) => {
+        try {
+          const { data: pub } = supabaseAdmin.storage.from("bio-media").getPublicUrl(path);
+          return pub?.publicUrl || path;
+        } catch {
+          return path;
+        }
+      });
+      return { signedUrls: urls };
+    } catch (err) {
+      // Fallback seguro caso o runtime do Cloudflare não possua a SUPABASE_SERVICE_ROLE_KEY
+      const supabaseUrl =
+        process.env.VITE_SUPABASE_URL ||
+        process.env.SUPABASE_URL ||
+        "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+      const urls = data.paths.map((path) => `${supabaseUrl}/storage/v1/object/public/bio-media/${path}`);
+      return { signedUrls: urls };
+    }
   });

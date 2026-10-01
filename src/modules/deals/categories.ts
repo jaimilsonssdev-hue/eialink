@@ -115,4 +115,3 @@ export function findCategoryByKeyword(term?: string): DirectoryCategory {
   return DIRECTORY_CATEGORIES[0];
 }
 
-

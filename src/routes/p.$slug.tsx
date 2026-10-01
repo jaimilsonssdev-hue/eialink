@@ -100,12 +100,20 @@ export const Route = createFileRoute("/p/$slug")({
     ];
     const mediaPaths = mediaValues.map(bioMediaPath);
     const storedPaths = mediaPaths.filter((path): path is string => Boolean(path));
-    const { signedUrls } = await signPublishedBioMediaFn({
-      data: { bioPageId: bio.id, paths: storedPaths },
-    });
+    let signedUrls: string[] = [];
+    try {
+      if (storedPaths.length > 0) {
+        const res = await signPublishedBioMediaFn({
+          data: { bioPageId: bio.id, paths: storedPaths },
+        });
+        signedUrls = res.signedUrls || [];
+      }
+    } catch (e) {
+      console.warn("[p.$slug] Aviso ao resolver mídias:", e);
+    }
     let signedIndex = 0;
     const resolvedMedia = mediaValues.map((value, index) =>
-      mediaPaths[index] ? signedUrls[signedIndex++] ?? null : value,
+      mediaPaths[index] && signedUrls[signedIndex] ? signedUrls[signedIndex++] : value,
     );
     const [avatarUrl, coverUrl, ...productImageUrls] = resolvedMedia;
 

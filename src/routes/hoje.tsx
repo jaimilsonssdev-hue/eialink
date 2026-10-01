@@ -17,40 +17,10 @@ import {
   Instagram,
   Wrench,
   X,
-  UtensilsCrossed,
-  Scissors,
-  HeartPulse,
-  Car,
-  Dumbbell,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-
-function getCategoryIcon(iconName: string) {
-  switch (iconName) {
-    case "Sparkles":
-      return <Sparkles className="h-3.5 w-3.5 text-amber-400" />;
-    case "UtensilsCrossed":
-      return <UtensilsCrossed className="h-3.5 w-3.5 text-orange-400" />;
-    case "Scissors":
-      return <Scissors className="h-3.5 w-3.5 text-pink-400" />;
-    case "Wrench":
-      return <Wrench className="h-3.5 w-3.5 text-blue-400" />;
-    case "HeartPulse":
-      return <HeartPulse className="h-3.5 w-3.5 text-rose-400" />;
-    case "Car":
-      return <Car className="h-3.5 w-3.5 text-sky-400" />;
-    case "Briefcase":
-      return <Briefcase className="h-3.5 w-3.5 text-indigo-400" />;
-    case "Dumbbell":
-      return <Dumbbell className="h-3.5 w-3.5 text-emerald-400" />;
-    case "ShoppingBag":
-      return <ShoppingBag className="h-3.5 w-3.5 text-violet-400" />;
-    default:
-      return <Sparkles className="h-3.5 w-3.5 text-amber-400" />;
-  }
-}
 import {
   DealsService,
   CATEGORIES,
@@ -367,7 +337,7 @@ function HojePage() {
                       : "bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/10"
                   }`}
                 >
-                  <span>{getCategoryIcon(cat.icon)}</span>
+                  <span>{cat.icon}</span>
                   <span>{cat.label}</span>
                 </button>
               );
@@ -1051,3 +1021,4 @@ function HojePage() {
 }
 
 export default HojePage;
+

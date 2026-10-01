@@ -1636,6 +1636,50 @@ export interface FetchedBusinessData {
   }>;
 }
 
+export async function resolveGoogleMapsTargetUrl(rawUrl: string): Promise<string> {
+  let current = rawUrl.trim();
+  if (current.includes("maps.app.goo.gl") || current.includes("goo.gl/maps")) {
+    try {
+      const manualHead = await fetch(current, {
+        method: "HEAD",
+        redirect: "manual",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        },
+        signal: AbortSignal.timeout(5000),
+      });
+      const loc = manualHead.headers.get("location");
+      if (loc) {
+        current = loc;
+      } else {
+        const followRes = await fetch(current, {
+          method: "GET",
+          redirect: "follow",
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          },
+          signal: AbortSignal.timeout(7000),
+        });
+        if (followRes.url && followRes.url !== current) {
+          current = followRes.url;
+        }
+      }
+
+      if (current.includes("consent.google.com") || current.includes("continue=")) {
+        const match = current.match(/continue=([^&]+)/i);
+        if (match && match[1]) {
+          current = decodeURIComponent(match[1]);
+        }
+      }
+    } catch (e) {
+      console.warn("[resolveGoogleMapsTargetUrl] Aviso ao resolver link curto:", e);
+    }
+  }
+  return current;
+}
+
 export async function extractGoogleMapsSearchUniversal(
   target: string,
   context?: any,
@@ -1643,28 +1687,9 @@ export async function extractGoogleMapsSearchUniversal(
   const supabaseAdmin = (context as any)?.supabase || getSupabaseServerClient();
   const userId = (context as any)?.userId || "maps-assets";
 
-  let urlOrQuery = target.trim();
+  let urlOrQuery = await resolveGoogleMapsTargetUrl(target);
 
-  // 1. Expande links encurtados do Maps (maps.app.goo.gl ou goo.gl/maps)
-  if (urlOrQuery.includes("maps.app.goo.gl") || urlOrQuery.includes("goo.gl/maps")) {
-    try {
-      const headRes = await fetch(urlOrQuery, {
-        redirect: "follow",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        },
-        signal: AbortSignal.timeout(6000),
-      });
-      if (headRes.url && headRes.url !== urlOrQuery) {
-        urlOrQuery = headRes.url;
-      }
-    } catch (e) {
-      console.warn("[UniversalMaps] Erro ao expandir link curto:", e);
-    }
-  }
-
-  // 2. Extrai termo de busca do Maps
+  // 2. Extrai termo de busca do Maps ou detecta se já é URL de Place
   let searchQuery = "";
   const placeMatch = urlOrQuery.match(/\/maps\/place\/([^/@?&]+)/i);
   const qMatch = urlOrQuery.match(/[?&]q=([^&]+)/i);
@@ -1683,10 +1708,16 @@ export async function extractGoogleMapsSearchUniversal(
   if (searchQuery.startsWith("@")) searchQuery = "";
   const queryToSearch = searchQuery || urlOrQuery;
 
-  console.log(`[UniversalMaps] Buscando termo no Google Maps Search: "${queryToSearch}"`);
-
-  const mapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(queryToSearch)}?hl=pt-BR`;
-  const jinaUrl = `https://r.jina.ai/${mapsSearchUrl}`;
+  // Se já temos a URL completa de um Place específico, usamos ela diretamente no Jina Reader!
+  let jinaUrl = "";
+  if (urlOrQuery.includes("google.com/maps/place/") || urlOrQuery.includes("google.com.br/maps/place/")) {
+    console.log(`[UniversalMaps] Acessando Place direto no Google Maps: "${urlOrQuery}"`);
+    jinaUrl = `https://r.jina.ai/${urlOrQuery}`;
+  } else {
+    console.log(`[UniversalMaps] Buscando termo no Google Maps Search: "${queryToSearch}"`);
+    const mapsSearchUrl = `https://www.google.com/maps/search/${encodeURIComponent(queryToSearch)}?hl=pt-BR`;
+    jinaUrl = `https://r.jina.ai/${mapsSearchUrl}`;
+  }
 
   let text = "";
   try {
@@ -1708,10 +1739,25 @@ export async function extractGoogleMapsSearchUniversal(
 
   // 3. Extração dos Campos Estruturados sem depender de glifos especiais
   let name = "";
-  const placeLinkMatch = text.match(/\[([^\n\r\]]+)\]\(https:\/\/www\.google\.com\/maps\/place\//);
-  if (placeLinkMatch && placeLinkMatch[1]) {
-    name = placeLinkMatch[1].trim();
+  const titleHeaderMatch = text.match(/Title:\s*([^-\n\r]+)(?: - Google Maps)?/i);
+  if (titleHeaderMatch && titleHeaderMatch[1]) {
+    const raw = titleHeaderMatch[1].trim();
+    if (
+      !raw.toLowerCase().includes("google maps") &&
+      !raw.toLowerCase().includes("pesquisa google") &&
+      !raw.toLowerCase().includes("resultados")
+    ) {
+      name = raw;
+    }
   }
+
+  if (!name) {
+    const placeLinkMatch = text.match(/\[([^\n\r\]]+)\]\(https:\/\/www\.google\.com\/maps\/place\//);
+    if (placeLinkMatch && placeLinkMatch[1]) {
+      name = placeLinkMatch[1].trim();
+    }
+  }
+
   if (!name) {
     const h1Match = text.match(/#\s*([^\n\r]+)/);
     if (h1Match) {
@@ -1923,22 +1969,8 @@ export async function internalFetchBusinessFromUrl(
 
   // Expande links curtos do Google Maps para obter coordenadas e nome do local
   if (target.includes("maps.app.goo.gl") || target.includes("goo.gl/maps")) {
-    try {
-      const headRes = await fetch(target, {
-        redirect: "follow",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        },
-        signal: AbortSignal.timeout(6000),
-      });
-      if (headRes.url && headRes.url !== target) {
-        target = headRes.url;
-        isGoogle = true;
-      }
-    } catch (redirectErr) {
-      console.warn("Aviso ao expandir link curto do Google Maps:", redirectErr);
-    }
+    target = await resolveGoogleMapsTargetUrl(target);
+    isGoogle = true;
   }
 
   // 1. TENTA O SCRAPER LOCAL GOSOM SE HOUVER BINÁRIO (ex: ambiente desktop)
@@ -2665,7 +2697,7 @@ export const chatCopilotEditFn = createServerFn({ method: "POST" })
   .inputValidator((data: z.infer<typeof chatCopilotEditInputSchema>) =>
     chatCopilotEditInputSchema.parse(data)
   )
-  .handler(async ({ data }: any): Promise<ChatCopilotEditResponse> => {
+  .handler(async ({ data, context }: any): Promise<ChatCopilotEditResponse> => {
     const serverKey =
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_AI_STUDIO_KEY ||
@@ -2685,6 +2717,8 @@ export const chatCopilotEditFn = createServerFn({ method: "POST" })
     const simplifiedState = {
       display_name: currentBio.display_name,
       description: currentBio.description,
+      avatar_url: currentBio.avatar_url,
+      cover_url: currentBio.cover_url,
       whatsapp: currentBio.whatsapp,
       whatsapp_message: currentBio.whatsapp_message || socialLinks.whatsapp_message,
       niche: currentBio.niche || socialLinks.niche,
@@ -2696,6 +2730,79 @@ export const chatCopilotEditFn = createServerFn({ method: "POST" })
       links: (currentBio.links || []).map((l: any) => ({ title: l.title, url: l.url })),
     };
 
+    // 1. EXTRAÇÃO INTELIGENTE DE LINKS ENVIADOS NO CHAT
+    const urlRegex = /(https?:\/\/[^\s]+)/gi;
+    const urlMatch = data.instruction.match(urlRegex);
+    let extractedContextInfo = "";
+    let extractedImages: Array<{ publicUrl: string; name?: string; role?: string }> = [];
+
+    if (urlMatch && urlMatch.length > 0) {
+      const foundUrl = urlMatch[0];
+      try {
+        console.log(`[chatCopilotEditFn] Link detectado na instrução: ${foundUrl}`);
+        const extracted = await internalFetchBusinessFromUrl(foundUrl, context);
+        if (extracted) {
+          if (extracted.importedImages && extracted.importedImages.length > 0) {
+            extractedImages = extracted.importedImages.map((img) => ({
+              publicUrl: img.publicUrl,
+              name: img.name,
+              role: img.role,
+            }));
+          }
+          extractedContextInfo = `
+[DADOS REAIS EXTRAÍDOS DO LINK ENVIADO (${foundUrl})]:
+- Nome do Estabelecimento: ${extracted.name || "Não identificado"}
+- Nicho / Categoria: ${extracted.niche || "Comércio Local"}
+- Cidade / Região: ${extracted.city || "Região local"}
+- Endereço Completo: ${extracted.address || "Local não especificado"}
+- Telefone / WhatsApp: ${extracted.phone || "Não informado"}
+- Avaliação Google: ${extracted.rating ? `${extracted.rating} estrelas (${extracted.reviewsCount || 0} avaliações)` : "Sem avaliações"}
+- Resumo / Descrição: ${extracted.description || extracted.formattedBriefing || ""}
+- Fotos Reais Importadas em Alta Resolução (${extractedImages.length}): ${extractedImages.map((img) => img.publicUrl).join(", ")}
+`;
+        }
+      } catch (scrapeErr) {
+        console.warn("[chatCopilotEditFn] Aviso ao extrair dados do link enviado:", scrapeErr);
+      }
+    } else {
+      // 2. DETECÇÃO DE PEDIDOS DE BUSCA DE EMPRESA/LOCAL SEM LINK EXPLÍCITO
+      const isSearchIntent =
+        /(?:puxa|busca|procure|pesquise|pega|procura|extrai|encontre)\s+(?:as\s+informaç|os\s+dados|fotos?|informações|sobre|da\s+empresa|do\s+restaurante|da\s+loja)/i.test(
+          data.instruction
+        );
+      if (isSearchIntent) {
+        try {
+          const queryClean = data.instruction
+            .replace(/(?:puxa|busca|procure|pesquise|pega|procura|extrai|encontre)\s+(?:as\s+informaç[^\s]*|os\s+dados|fotos?|informações|sobre|da\s+empresa|do\s+restaurante|da\s+loja)?/gi, "")
+            .trim();
+          if (queryClean.length >= 3) {
+            console.log(`[chatCopilotEditFn] Intenção de busca detectada: "${queryClean}"`);
+            const extracted = await extractGoogleMapsSearchUniversal(queryClean, context);
+            if (extracted && extracted.name) {
+              if (extracted.importedImages && extracted.importedImages.length > 0) {
+                extractedImages = extracted.importedImages.map((img) => ({
+                  publicUrl: img.publicUrl,
+                  name: img.name,
+                  role: img.role,
+                }));
+              }
+              extractedContextInfo = `
+[DADOS ENCONTRADOS NO GOOGLE MAPS PARA "${queryClean}"]:
+- Nome do Estabelecimento: ${extracted.name}
+- Nicho / Categoria: ${extracted.niche || "Comércio Local"}
+- Endereço: ${extracted.address || ""}
+- Telefone / WhatsApp: ${extracted.phone || ""}
+- Avaliação: ${extracted.rating ? `${extracted.rating} estrelas` : ""}
+- Fotos Reais Importadas (${extractedImages.length}): ${extractedImages.map((img) => img.publicUrl).join(", ")}
+`;
+            }
+          }
+        } catch (searchErr) {
+          console.warn("[chatCopilotEditFn] Falha na busca automática:", searchErr);
+        }
+      }
+    }
+
     const systemPrompt = `[COPILOTO CRIATIVO EIALINK - CHAT DE EDIÇÃO CIRÚRGICA AO VIVO]
 Você é o Copiloto Criativo e Designer de Elite do EiaLink em uma conversa direta com o usuário.
 O usuário está visualizando a página dele ao vivo enquanto conversa com você.
@@ -2706,14 +2813,14 @@ ${JSON.stringify(simplifiedState, null, 2)}
 SUAS REGRAS DE OURO:
 1. Responda em Português do Brasil com entusiasmo, simpatia e brevidade (1 a 3 frases amigáveis) em 'assistantReply'.
 2. EDIÇÃO CIRÚRGICA (ZERO PERDA DE DADOS):
-   - Altere RIGOROSAMENTE APENAS o que o usuário pediu para mudar.
+   - Altere RIGOROSAMENTE APENAS o que o usuário pediu para mudar ou os dados da empresa extraídos.
    - NUNCA reinicie o site e NUNCA apague dados que o usuário não mencionou.
    - Se o usuário pediu para mudar a cor, altere apenas 'custom_theme'.
    - Se o usuário pediu para mudar o texto/headline, altere apenas 'description'.
    - Se pediu para mudar o WhatsApp, altere apenas 'whatsapp' ou 'whatsapp_message'.
    - Se pediu para adicionar ou alterar um serviço, faça a alteração em 'suggested_services'.
 3. COPYWRITING BRASILEIRO DE ALTA CONVERSÃO:
-   - Se o usuário pedir para melhorar textos, use linguagem magnética, direta, humana e vendedora (Direct Response), sem jargões corporativos chatos.
+   - Se o usuário pedir para melhorar textos ou fornecer dados de empresa, use linguagem magnética, direta, humana e vendedora (Direct Response), sem jargões corporativos chatos.
 4. RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON VÁLIDO:
 {
   "assistantReply": "Mensagem simpática explicando de forma clara o que você ajustou na página...",
@@ -2723,6 +2830,8 @@ SUAS REGRAS DE OURO:
     // "description": "Nova Headline Magnética",
     // "whatsapp": "5511999999999",
     // "whatsapp_message": "Nova mensagem de WhatsApp",
+    // "avatar_url": "https://...",
+    // "cover_url": "https://...",
     // "custom_theme": { "primary": "#f59e0b", "background": "#0b0c10", "mode": "dark" },
     // "suggested_services": [ ... ],
     // "differentials": [ ... ]
@@ -2735,11 +2844,21 @@ SUAS REGRAS DE OURO:
       parts: [{ text: m.content }],
     }));
 
+    const userPromptText = extractedContextInfo
+      ? `INSTRUÇÃO ATUAL DO USUÁRIO: "${data.instruction}"\n\n${extractedContextInfo}\n\nIMPORTANTE: Foram obtidos dados reais e fotos da empresa. Atualize a página do usuário aplicando esses dados:
+- Altere 'display_name' para o nome da empresa.
+- Crie uma headline vendedora e atraente em 'description'.
+- Se houver telefone/WhatsApp, atualize 'whatsapp' e crie uma mensagem de contato em 'whatsapp_message'.
+- Se houver fotos reais importadas, defina a foto de logo em 'avatar_url' e a melhor foto de capa/ambiente em 'cover_url'. Se houver mais fotos, adicione ou atualize 'suggested_services' com essas fotos e nomes reais.
+- Adicione 3 diferenciais competitivos em 'differentials'.
+- No 'assistantReply', responda com entusiasmo e simpatia explicando detalhadamente que você puxou as informações e fotos reais do estabelecimento direto do Google e aplicou na página dele!`
+      : `INSTRUÇÃO ATUAL DO USUÁRIO: "${data.instruction}"\n\nAplique a alteração necessária e responda com o JSON de patch.`;
+
     const contents = [
       ...conversationHistory,
       {
         role: "user",
-        parts: [{ text: `INSTRUÇÃO ATUAL DO USUÁRIO: "${data.instruction}"\n\nAplique a alteração necessária e responda com o JSON de patch.` }],
+        parts: [{ text: userPromptText }],
       },
     ];
 
@@ -2813,9 +2932,23 @@ SUAS REGRAS DE OURO:
 
     try {
       const parsed = JSON.parse(rawContent);
+      const patch = parsed.patch || {};
+
+      // Fallback de segurança para garantir que as fotos importadas vão para o patch se a IA não tiver setado
+      if (extractedImages.length > 0) {
+        if (!patch.avatar_url && !currentBio.avatar_url) {
+          patch.avatar_url = extractedImages[0].publicUrl;
+        }
+        if (!patch.cover_url && !currentBio.cover_url && extractedImages.length > 1) {
+          patch.cover_url = extractedImages[1].publicUrl;
+        }
+      }
+
       return {
-        assistantReply: parsed.assistantReply || "Ajustei os detalhes da sua página conforme solicitado! Veja como ficou na prévia ao lado.",
-        patch: parsed.patch || {},
+        assistantReply:
+          parsed.assistantReply ||
+          "Ajustei os detalhes da sua página conforme solicitado! Veja como ficou na prévia ao lado.",
+        patch,
         suggestions: parsed.suggestions || [
           "Mudar paleta para tons dourados",
           "Tornar a headline mais vendedora",

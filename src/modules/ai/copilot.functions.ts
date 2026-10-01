@@ -264,6 +264,7 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
           foundUrl.includes("maps.app.goo.gl") ||
           foundUrl.includes("google.com/maps") ||
           foundUrl.includes("goo.gl/maps") ||
+          foundUrl.includes("share.google") ||
           foundUrl.includes("drive.google.com") ||
           foundUrl.includes("instagram.com")
         ) {
@@ -476,10 +477,10 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     // Modelos Google Gemini de alta performance em ordem estrita de velocidade, compatibilidade e suporte ativo:
     // gemini-2.5-flash e gemini-2.0-flash são os modelos padrão recomendados pelo Google AI Studio
     const finalModelsToTry = [
-      "gemini-2.5-flash",
       "gemini-2.0-flash",
       "gemini-1.5-flash",
-      "gemini-2.5-flash-lite",
+      "gemini-2.0-flash-lite",
+      "gemini-1.5-pro",
     ];
 
     const errorLogs: string[] = [];
@@ -1323,10 +1324,10 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
     const apiBase = customGateway || defaultEndpoint;
 
     const finalModelsToTry = [
-      "gemini-2.5-flash",
       "gemini-2.0-flash",
       "gemini-1.5-flash",
-      "gemini-2.5-flash-lite",
+      "gemini-2.0-flash-lite",
+      "gemini-1.5-pro",
     ];
 
     let rawContent: string | null = null;
@@ -1638,33 +1639,23 @@ export interface FetchedBusinessData {
 
 export async function resolveGoogleMapsTargetUrl(rawUrl: string): Promise<string> {
   let current = rawUrl.trim();
-  if (current.includes("maps.app.goo.gl") || current.includes("goo.gl/maps")) {
+  if (
+    current.includes("maps.app.goo.gl") ||
+    current.includes("goo.gl/maps") ||
+    current.includes("share.google")
+  ) {
     try {
-      const manualHead = await fetch(current, {
-        method: "HEAD",
-        redirect: "manual",
+      const followRes = await fetch(current, {
+        method: "GET",
+        redirect: "follow",
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         },
-        signal: AbortSignal.timeout(5000),
+        signal: AbortSignal.timeout(8000),
       });
-      const loc = manualHead.headers.get("location");
-      if (loc) {
-        current = loc;
-      } else {
-        const followRes = await fetch(current, {
-          method: "GET",
-          redirect: "follow",
-          headers: {
-            "User-Agent":
-              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-          },
-          signal: AbortSignal.timeout(7000),
-        });
-        if (followRes.url && followRes.url !== current) {
-          current = followRes.url;
-        }
+      if (followRes.url && followRes.url !== current) {
+        current = followRes.url;
       }
 
       if (current.includes("consent.google.com") || current.includes("continue=")) {
@@ -1677,6 +1668,22 @@ export async function resolveGoogleMapsTargetUrl(rawUrl: string): Promise<string
       console.warn("[resolveGoogleMapsTargetUrl] Aviso ao resolver link curto:", e);
     }
   }
+
+  // Se o link redirecionou para uma busca do Google (comum em share.google e mobile search),
+  // e temos o parâmetro 'q' (nome da empresa), transforma direto em URL de busca do Google Maps!
+  if (
+    (current.includes("google.com/search") || current.includes("google.com.br/search")) &&
+    !current.includes("/maps")
+  ) {
+    const qMatch = current.match(/[?&]q=([^&]+)/i);
+    if (qMatch && qMatch[1]) {
+      const extractedQuery = decodeURIComponent(qMatch[1]).replace(/\+/g, " ").trim();
+      if (extractedQuery) {
+        current = `https://www.google.com/maps/search/${encodeURIComponent(extractedQuery)}?hl=pt-BR`;
+      }
+    }
+  }
+
   return current;
 }
 
@@ -1964,11 +1971,16 @@ export async function internalFetchBusinessFromUrl(
     target.includes("maps.google.com") ||
     target.includes("maps.app.goo.gl") ||
     target.includes("goo.gl/maps") ||
+    target.includes("share.google") ||
     target.includes("google.com/search") ||
     target.includes("google.com.br/search");
 
   // Expande links curtos do Google Maps para obter coordenadas e nome do local
-  if (target.includes("maps.app.goo.gl") || target.includes("goo.gl/maps")) {
+  if (
+    target.includes("maps.app.goo.gl") ||
+    target.includes("goo.gl/maps") ||
+    target.includes("share.google")
+  ) {
     target = await resolveGoogleMapsTargetUrl(target);
     isGoogle = true;
   }
@@ -2839,11 +2851,6 @@ SUAS REGRAS DE OURO:
   "suggestions": ["Sugestão rápida 1 para o usuário clicar", "Sugestão rápida 2"]
 }`;
 
-    const conversationHistory = (data.messages || []).slice(-6).map((m: any) => ({
-      role: m.role === "assistant" ? "model" : "user",
-      parts: [{ text: m.content }],
-    }));
-
     const userPromptText = extractedContextInfo
       ? `INSTRUÇÃO ATUAL DO USUÁRIO: "${data.instruction}"\n\n${extractedContextInfo}\n\nIMPORTANTE: Foram obtidos dados reais e fotos da empresa. Atualize a página do usuário aplicando esses dados:
 - Altere 'display_name' para o nome da empresa.
@@ -2854,13 +2861,33 @@ SUAS REGRAS DE OURO:
 - No 'assistantReply', responda com entusiasmo e simpatia explicando detalhadamente que você puxou as informações e fotos reais do estabelecimento direto do Google e aplicou na página dele!`
       : `INSTRUÇÃO ATUAL DO USUÁRIO: "${data.instruction}"\n\nAplique a alteração necessária e responda com o JSON de patch.`;
 
-    const contents = [
-      ...conversationHistory,
-      {
-        role: "user",
-        parts: [{ text: userPromptText }],
-      },
-    ];
+    // Garante que o histórico começa com papel "user" e alterna corretamente (regra estrita da API Gemini)
+    const historyList = (data.messages || []).filter((m: any) => m.content && m.content.trim().length > 0);
+    const firstUserIdx = historyList.findIndex((m: any) => m.role === "user");
+    const validHistory = firstUserIdx >= 0 ? historyList.slice(firstUserIdx) : [];
+
+    const formattedHistory: Array<{ role: "user" | "model"; parts: [{ text: string }] }> = [];
+    for (const m of validHistory.slice(-6)) {
+      const geminiRole = m.role === "assistant" ? "model" : "user";
+      const last = formattedHistory[formattedHistory.length - 1];
+      if (last && last.role === geminiRole) {
+        last.parts[0].text += `\n${m.content}`;
+      } else {
+        formattedHistory.push({ role: geminiRole, parts: [{ text: m.content }] });
+      }
+    }
+
+    const contents: any[] = [];
+    if (formattedHistory.length > 0) {
+      if (formattedHistory[formattedHistory.length - 1].role === "user") {
+        formattedHistory[formattedHistory.length - 1].parts[0].text += `\n\n${userPromptText}`;
+        contents.push(...formattedHistory);
+      } else {
+        contents.push(...formattedHistory, { role: "user", parts: [{ text: userPromptText }] });
+      }
+    } else {
+      contents.push({ role: "user", parts: [{ text: userPromptText }] });
+    }
 
     const defaultEndpoint = "https://generativelanguage.googleapis.com";
     const customGateway = (
@@ -2873,15 +2900,16 @@ SUAS REGRAS DE OURO:
 
     const apiBase = customGateway || defaultEndpoint;
 
+    // Modelos oficiais ativos do Google Gemini
     const modelsToTry = [
-      "gemini-2.5-flash",
       "gemini-2.0-flash",
       "gemini-1.5-flash",
-      "gemini-2.5-flash-lite",
+      "gemini-2.0-flash-lite",
+      "gemini-1.5-pro",
     ];
 
     let rawContent: string | null = null;
-    let lastError = "";
+    const errorLogs: string[] = [];
 
     for (const modelName of modelsToTry) {
       try {
@@ -2919,15 +2947,15 @@ SUAS REGRAS DE OURO:
           }
         } else {
           const errText = await response.text();
-          lastError = `Modelo ${modelName} retornou status ${response.status}: ${errText}`;
+          errorLogs.push(`[${modelName} HTTP ${response.status}]: ${errText.slice(0, 200)}`);
         }
       } catch (err: any) {
-        lastError = `Falha no modelo ${modelName}: ${err?.message || err}`;
+        errorLogs.push(`[${modelName} Falha]: ${err?.message || err}`);
       }
     }
 
     if (!rawContent) {
-      throw new Error(`Não foi possível obter resposta do Assistente de IA: ${lastError}`);
+      throw new Error(`Não foi possível obter resposta do Assistente de IA: ${errorLogs.join(" | ")}`);
     }
 
     try {

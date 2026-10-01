@@ -100,14 +100,17 @@ export function CopilotChatDrawer({
     setIsLoading(true);
 
     try {
-      const activeKey = getSavedGeminiKey() || apiKey || undefined;
+      const cleanKey = apiKey.trim() || getSavedGeminiKey() || "";
+      if (apiKey.trim()) {
+        saveGeminiKey(apiKey.trim());
+      }
 
       const response = await chatCopilotEditFn({
         data: {
           currentBio,
           instruction: text,
           messages: messages.map((m) => ({ role: m.role, content: m.content })),
-          overrideApiKey: activeKey,
+          overrideApiKey: cleanKey || undefined,
         },
       });
 

@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { PublicPricingSection } from "@/components/billing/PublicPricingSection";
 import {
   Dialog,
@@ -18,34 +18,34 @@ import {
   ArrowRight,
   Bot,
   Building2,
-  CalendarDays,
-  CalendarClock,
+  Calendar,
+  CalendarCheck,
   Check,
   CheckCircle2,
   ChevronRight,
+  CreditCard,
+  Crown,
   Dumbbell,
   ExternalLink,
   Flame,
-  Globe2,
-  Heart,
-  Instagram,
+  Globe,
   Layers,
   Lock,
-  MapPin,
   MessageCircle,
-  Palette,
-  PawPrint,
+  Play,
   QrCode,
-  Rocket,
+  Radio,
   Scissors,
+  Share2,
   ShieldCheck,
   ShoppingBag,
   Smartphone,
   Sparkles,
   Star,
   Stethoscope,
-  Store,
   TrendingUp,
+  UserCheck,
+  Users,
   UtensilsCrossed,
   Wand2,
   Zap,
@@ -55,146 +55,191 @@ import { pageSlugFromHostname } from "@/lib/public-page-url";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "EiaLink — Hub de Conversão de Alto Padrão para Negócios e Criadores" },
+      { title: "EiaLink — A Infraestrutura de Alta Conversão para Negócios Locais e Criadores" },
       {
         name: "description",
         content:
-          "Transforme seu Instagram e seu balcão em uma máquina de vendas: vitrine interativa com pedidos no WhatsApp, atendente virtual com IA, agendamento 24h e cartões de aproximação NFC.",
+          "Transforme tráfego de redes sociais em faturamento real. Hub comercial com vitrine estilo Instagram, atendente com inteligência artificial, agendamento 24h e cartões de aproximação NFC.",
       },
-      { property: "og:title", content: "EiaLink — Hub de Conversão de Alto Padrão" },
+      { property: "og:title", content: "EiaLink — Plataforma de Presença & Conversão Comercial" },
       {
         property: "og:description",
         content:
-          "Vitrine estilo Instagram, atendente com inteligência artificial, agendamento automático e subdomínio próprio em uma experiência ultraveloz.",
+          "Vitrine estilo Instagram, atendente com IA para WhatsApp, agendamento Google e subdomínio próprio em uma experiência ultrarrápida.",
       },
       { property: "og:type", content: "website" },
       { property: "og:url", content: "https://eialink.com.br/" },
-      { name: "twitter:title", content: "EiaLink — Hub de Conversão de Alto Padrão" },
-      {
-        name: "twitter:description",
-        content:
-          "Vitrine estilo Instagram, atendente com inteligência artificial, agendamento automático e subdomínio próprio em uma experiência ultraveloz.",
-      },
     ],
     links: [{ rel: "canonical", href: "https://eialink.com.br/" }],
-    scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "EiaLink",
-          url: "https://eialink.com.br/",
-          inLanguage: "pt-BR",
-        }),
-      },
-    ],
   }),
-  component: Landing,
+  component: LandingPage,
 });
 
-const templates = [
+const NICHE_SHOWCASES = [
   {
-    name: "Casa do Sabor",
-    niche: "Restaurante & Gastronomia",
+    id: "gastro",
+    label: "Gastronomia & Delivery",
     icon: UtensilsCrossed,
-    cover: "/template-assets/restaurant-demo-cover.png",
     color: "#f97316",
-    headline: "Cortes nobres na brasa e pedidos diretos no WhatsApp sem taxa de marketplace.",
+    brand: "Brasa & Fogo Steakhouse",
+    city: "Salvador · Barra",
+    headline: "Cortes nobres na brasa viva, chopp artesanal e entrega rápida.",
+    badge: "🔥 Zero comissão de 27% do iFood",
+    coverImg: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=85",
+    productImg: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=85",
+    productName: "Smash Burger Duplo na Brasa",
+    productPrice: "R$ 42,90",
+    whatsappCta: "Pedir no WhatsApp",
+    statNumber: "3.2x",
+    statLabel: "Mais pedidos diretos no WhatsApp",
+    chatPrompt: "Boa noite! Quero pedir 2 Smash Burgers com batata rústica.",
+    chatReply: "Excelente escolha! O pedido foi formatado e direcionado para a cozinha no WhatsApp com entrega em até 35 min.",
   },
   {
-    name: "Clínica Harmonia",
-    niche: "Clínica & Odontologia",
+    id: "clinic",
+    label: "Clínicas & Odonto",
     icon: Stethoscope,
-    cover: "/template-assets/clinic-demo-cover.png",
     color: "#0ea5e9",
-    headline: "Agendamento online 24h e autoridade médica para procedimentos de alto padrão.",
+    brand: "Instituto Dental Prime",
+    city: "São Paulo · Jardins",
+    headline: "Implantes sem dor, alinhadores invisíveis e estética do sorriso.",
+    badge: "📅 Google Agenda Sincronizada",
+    coverImg: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=85",
+    productImg: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=800&q=85",
+    productName: "Avaliação 3D com Escaneamento",
+    productPrice: "R$ 180,00",
+    whatsappCta: "Agendar Avaliação",
+    statNumber: "85%",
+    statLabel: "Redução de tempo marcando consultas",
+    chatPrompt: "Vocês atendem convênio ou apenas particular?",
+    chatReply: "Atendemos particular com parcelamento facilitado em até 12x e emitimos recibo para reembolso integral do seu plano.",
   },
   {
-    name: "Studio Glow",
-    niche: "Estética & Bem-Estar",
+    id: "beauty",
+    label: "Estética & Bem-Estar",
     icon: Scissors,
-    cover: "/template-assets/beauty-demo-cover.png",
     color: "#ec4899",
-    headline: "Vitrine de procedimentos em fotos verticais e reservas automáticas de horário.",
+    brand: "Studio Glow Estética",
+    city: "Belo Horizonte · Lourdes",
+    headline: "Harmonização, estética facial avançada e protocolos exclusivos.",
+    badge: "✨ Alto Padrão Visual",
+    coverImg: "https://images.unsplash.com/photo-1560750588-73207b1ef5b8?auto=format&fit=crop&w=1200&q=85",
+    productImg: "https://images.unsplash.com/photo-1512290900672-1f02e604f58c?auto=format&fit=crop&w=800&q=85",
+    productName: "Limpeza de Pele Profunda VIP",
+    productPrice: "R$ 210,00",
+    whatsappCta: "Reservar Horário VIP",
+    statNumber: "+140",
+    statLabel: "Novas avaliações 5★ com cartão NFC",
+    chatPrompt: "Tem horário disponível para esta sexta à tarde?",
+    chatReply: "Temos sim! Sexta-feira às 15h30 e 17h00. Deseja que eu reserve para você?",
   },
   {
-    name: "Power Studio",
-    niche: "Academia & Performance",
-    icon: Dumbbell,
-    cover: "/template-assets/academy-gym-cover.png",
-    color: "#10b981",
-    headline: "Planos, consultoria personalizada e matrícula instantânea com QR Code.",
-  },
-  {
-    name: "Toledo Advocacia",
-    niche: "Advocacia & Consultoria",
+    id: "law",
+    label: "Advocacia & Negócios",
     icon: ShieldCheck,
-    cover: "/template-assets/law-office-cover.png",
     color: "#d97706",
-    headline: "Posicionamento sóbrio e triagem consultiva com Atendente IA direto no WhatsApp.",
+    brand: "Toledo & Associados",
+    city: "Brasília · Asa Sul",
+    headline: "Assessoria jurídica empresarial, tributária e proteção patrimonial.",
+    badge: "⚖️ Triagem Consultiva com IA",
+    coverImg: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85",
+    productImg: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=800&q=85",
+    productName: "Diagnóstico Jurídico Preventivo",
+    productPrice: "Sob Consulta",
+    whatsappCta: "Falar com Advogado",
+    statNumber: "100%",
+    statLabel: "Leads qualificados antes da reunião",
+    chatPrompt: "Gostaria de uma consultoria para reorganização societária da minha empresa.",
+    chatReply: "Perfeito! Qual é o faturamento aproximado e quantos sócios compõem o quadro para o advogado responsável te atender?",
   },
   {
-    name: "Boutique Exclusiva",
-    niche: "Moda & Catálogo",
+    id: "store",
+    label: "Lojas & Varejo",
     icon: ShoppingBag,
-    cover: "/template-assets/store-demo-cover.png",
     color: "#8b5cf6",
-    headline: "Catálogo estilo stories com sacola de compras e fechamento de pedidos no WhatsApp.",
-  },
-] as const;
-
-const testimonials = [
-  [
-    "Rafael Martins",
-    "Hamburgueria Casa do Sabor · Salvador - BA",
-    "Substituímos o linktree e os PDFs pesados pelo EiaLink. A vitrine estilo Instagram com pedido pronto no WhatsApp triplicou nossos pedidos diretos sem pagar 27% de comissão pro iFood!",
-    "#f97316",
-  ],
-  [
-    "Dra. Juliana Alves",
-    "Clínica Harmonia Estética · São Paulo - SP",
-    "O agendamento online integrado com o Google Agenda eliminou aquela troca interminável de mensagens no WhatsApp. O paciente escolhe o horário e cai direto na minha agenda confirmada.",
-    "#0ea5e9",
-  ],
-  [
-    "Mariana Costa",
-    "Studio Glow Salão & Spa · Belo Horizonte - MG",
-    "O cartão de aproximação NFC no balcão e o link na bio fizeram a gente saltar de 15 para mais de 140 avaliações 5 estrelas no Google em dois meses. As clientes ficam encantadas.",
-    "#ec4899",
-  ],
-] as const;
-
-const faqItems = [
-  {
-    q: "O EiaLink é apenas um gerador de links como o Linktree?",
-    a: "Não. O Linktree é apenas uma lista de botões estáticos. O EiaLink é uma Infraestrutura Completa de Conversão: reúne vitrine interativa de produtos com fotos em alta resolução, Atendente Virtual com IA para triagem automática, agendamento online 24h conectado à sua agenda, tecnologia de aproximação NFC e seu próprio subdomínio exclusivo de marca.",
-  },
-  {
-    q: "Eu preciso pagar comissões sobre os pedidos ou serviços vendidos?",
-    a: "Zero! Ao contrário de marketplaces que cobram de 15% a 30% sobre cada venda, no EiaLink 100% do valor dos seus produtos, serviços e pedidos vai diretamente para a sua conta via WhatsApp ou Pix.",
-  },
-  {
-    q: "Como funciona o Atendente Virtual com Inteligência Artificial?",
-    a: "Seu link conta com um assistente inteligente treinado especificamente com as informações do seu negócio. Ele atende os visitantes no site, tira dúvidas sobre preços e horários, faz a triagem das necessidades e direciona o cliente pronto e qualificado para o seu WhatsApp.",
-  },
-  {
-    q: "Preciso ter um domínio registrado (.com.br) para usar?",
-    a: "Não é obrigatório. Você ganha na hora um endereço exclusivo com o nome da sua marca (exemplo: sualoja.eialink.com.br) com certificado de segurança SSL e carregamento instantâneo. Se você já tiver um domínio registrado, também pode conectá-lo facilmente.",
-  },
-  {
-    q: "Como funciona a tecnologia de aproximação NFC?",
-    a: "Nossa tecnologia é compatível com cartões e plaquinhas inteligentes com chip NFC. Basta encostar o cartão na traseira de qualquer iPhone ou Android para abrir a sua página instantaneamente no celular do cliente, sem que ele precise digitar nenhum endereço ou baixar aplicativo.",
-  },
-  {
-    q: "Posso testar gratuitamente antes de contratar?",
-    a: "Sim! Você pode criar sua conta gratuita, escolher o modelo ideal para o seu segmento e colocar sua vitrine no ar em menos de 5 minutos, sem precisar cadastrar cartão de crédito.",
+    brand: "Aura Concept Store",
+    city: "Curitiba · Batel",
+    headline: "Moda autoral, alfaiataria contemporânea e acessórios premium.",
+    badge: "🛍️ Catálogo Estilo Stories",
+    coverImg: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=85",
+    productImg: "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?auto=format&fit=crop&w=800&q=85",
+    productName: "Blazer Linho Puro Italiano",
+    productPrice: "R$ 389,00",
+    whatsappCta: "Pedir Peça no WhatsApp",
+    statNumber: "4.8x",
+    statLabel: "Mais cliques no link da bio",
+    chatPrompt: "Ainda tem o blazer tamanho M na cor areia?",
+    chatReply: "Restam apenas 2 unidades no tamanho M! Deseja que eu separe agora para entrega ou retirada?",
   },
 ];
 
-function Landing() {
-  const [previewTemplate, setPreviewTemplate] = useState<(typeof templates)[number] | null>(null);
-  const landingRef = useRef<HTMLElement>(null);
+const COMPARISON_ROWS = [
+  {
+    feature: "Apresentação & Layout",
+    oldWay: "Lista vertical cinza e estática de botões",
+    eiaWay: "Vitrine dinâmica estilo Instagram com Parallax 60 FPS",
+  },
+  {
+    feature: "Atendimento & Vendas",
+    oldWay: "Passivo: o visitante se perde e vai embora",
+    eiaWay: "Atendente com Inteligência Artificial que qualifica e vende 24h",
+  },
+  {
+    feature: "Pedidos & Fechamento",
+    oldWay: "PDFs pesados de 20MB ou formulários frios",
+    eiaWay: "1 clique no WhatsApp com foto, preço e item formatado",
+  },
+  {
+    feature: "Agendamento de Horários",
+    oldWay: "Troca manual de dezenas de mensagens no WhatsApp",
+    eiaWay: "Sincronizado automaticamente ao Google Agenda sem conflitos",
+  },
+  {
+    feature: "Conexão com Balcão Físico",
+    oldWay: "Inexistente: zero integração física",
+    eiaWay: "Cartão e Plaquinha de aproximação NFC de alta tecnologia",
+  },
+  {
+    feature: "Domínio & Autoridade",
+    oldWay: "linktr.ee/empresa (promove a marca deles)",
+    eiaWay: "suaempresa.eialink.com.br ou seu próprio domínio .com.br",
+  },
+  {
+    feature: "Taxas e Comissões",
+    oldWay: "Comissões de até 27% em marketplaces de pedidos",
+    eiaWay: "0% de comissão: 100% do lucro fica no seu bolso",
+  },
+];
+
+const FAQ_ITEMS = [
+  {
+    q: "O EiaLink é apenas mais um agregador de links?",
+    a: "Não. As árvores de links tradicionais são cemitérios de cliques: colocam botões feios empilhados que fazem 70% dos visitantes desistirem. O EiaLink é um Hub de Conversão de Alto Padrão. Ele reúne vitrine de produtos estilo Instagram, Atendente Virtual com IA para tirar dúvidas e qualificar clientes, agendamento 24h integrado à sua agenda, cartões de aproximação física NFC e subdomínio próprio em uma infraestrutura ultraveloz.",
+  },
+  {
+    q: "Eu pago comissão sobre as minhas vendas ou agendamentos?",
+    a: "Zero! Ao contrário de marketplaces (iFood, plataformas de agendamento externas) que mordem de 15% a 27% de tudo o que você vende, no EiaLink 100% das receitas e transações vão direto para a sua conta via WhatsApp ou Pix.",
+  },
+  {
+    q: "Como o Atendente Virtual com IA funciona no meu link?",
+    a: "É como ter um atendente comercial sênior trabalhando 24 horas por dia, 7 dias por semana. Ele conversa amigavelmente com os visitantes do seu link, responde dúvidas sobre preços, cardápios ou tratamentos, tira as principais objeções e entrega a pessoa qualificada na conversa do seu WhatsApp com o resumo do que ela deseja.",
+  },
+  {
+    q: "Como funciona a tecnologia de aproximação NFC?",
+    a: "Você pode vincular o seu link a um cartão de visitas de aproximação ou plaquinha de balcão NFC. Quando qualquer pessoa encosta o celular (iPhone ou Android) no cartão, a sua página abre em menos de 1 segundo na tela dela, sem necessidade de instalar aplicativos ou digitar endereços.",
+  },
+  {
+    q: "Preciso ter conhecimento técnico ou saber programar?",
+    a: "Absolutamente nenhum. O sistema possui modelos prontos para cada nicho e um Copiloto Criativo inteligente: você pode simplesmente conversar com o assistente ('mude a cor para dourado e adicione meus 3 pratos') e a página se ajusta em tempo real.",
+  },
+  {
+    q: "Posso testar gratuitamente?",
+    a: "Sim! Você pode criar sua conta gratuita, escolher o modelo ideal para a sua área e colocar sua vitrine profissional no ar em menos de 5 minutos, sem nenhum cadastro de cartão de crédito.",
+  },
+];
+
+function LandingPage() {
+  const [activeNiche, setActiveNiche] = useState(NICHE_SHOWCASES[0]);
   const subdomainSlug =
     typeof window === "undefined" ? null : pageSlugFromHostname(window.location.hostname);
 
@@ -203,29 +248,11 @@ function Landing() {
     window.location.replace(`/p/${subdomainSlug}${window.location.search}${window.location.hash}`);
   }, [subdomainSlug]);
 
-  useEffect(() => {
-    const root = landingRef.current;
-    if (!root || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const sections = Array.from(root.querySelectorAll<HTMLElement>("[data-reveal]"));
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-revealed");
-          observer.unobserve(entry.target);
-        });
-      },
-      { threshold: 0.12 },
-    );
-    sections.forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
-  }, []);
-
   if (subdomainSlug && window.location.pathname === "/") {
     return (
-      <main className="grid min-h-screen place-items-center bg-[#07060b] px-5 text-center text-white">
+      <main className="grid min-h-screen place-items-center bg-[#050508] px-5 text-center text-white">
         <div>
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">EiaLink</p>
+          <p className="text-xs uppercase tracking-widest text-indigo-400 font-bold">EiaLink</p>
           <h1 className="mt-3 text-xl font-semibold">Abrindo sua página oficial...</h1>
         </div>
       </main>
@@ -233,962 +260,769 @@ function Landing() {
   }
 
   return (
-    <main
-      ref={landingRef}
-      className="landing-motion-root min-h-screen overflow-hidden bg-[#07060b] text-[#f8f5ff] selection:bg-fuchsia-500/30 selection:text-fuchsia-200"
-    >
-      {/* Background Glows */}
-      <div className="pointer-events-none fixed inset-0 -z-0 bg-[radial-gradient(circle_at_50%_0,rgba(139,92,246,.18),transparent_32rem),radial-gradient(circle_at_90%_75%,rgba(217,70,239,.12),transparent_34rem)]" />
-
-      <Nav />
-      <Hero onSelectTemplate={(t) => setPreviewTemplate(t)} />
-
-      {/* SEÇÃO 1: OS 6 PILARES DO ECOSSISTEMA */}
-      <div data-reveal id="pilares">
-        <EcosystemPillars />
+    <div className="min-h-screen bg-[#06070a] text-[#f4f4f7] selection:bg-indigo-500/30 selection:text-indigo-200 font-sans antialiased overflow-x-hidden">
+      {/* Background Matrix & Subtle Gradient Mesh */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <div className="absolute inset-0 bg-[radial-gradient(#1f2430_1px,transparent_1px)] [background-size:28px_28px] opacity-25" />
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[550px] bg-gradient-to-b from-indigo-600/20 via-purple-600/10 to-transparent blur-[140px] pointer-events-none" />
+        <div className="absolute top-[40%] right-[-100px] w-[500px] h-[500px] bg-cyan-600/10 blur-[130px] pointer-events-none" />
       </div>
 
-      {/* SEÇÃO 2: COMPARATIVO MATADOR */}
-      <div data-reveal id="comparativo">
-        <DifferenceSection />
-      </div>
+      {/* Header / Navbar */}
+      <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#06070a]/80 backdrop-blur-2xl">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
+          <Link to="/" className="flex items-center gap-2.5 group">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-cyan-400 text-white shadow-lg shadow-indigo-500/30 group-hover:scale-105 transition-transform">
+              <Sparkles className="h-4.5 w-4.5" />
+            </span>
+            <div className="flex items-baseline gap-1">
+              <span className="font-extrabold text-xl tracking-tight text-white">EIA</span>
+              <span className="font-extrabold text-xl tracking-tight bg-gradient-to-r from-indigo-400 to-cyan-300 bg-clip-text text-transparent">
+                LINK
+              </span>
+            </div>
+          </Link>
 
-      {/* SEÇÃO 3: VITRINES & TEMPLATES POR NICHO */}
-      <div data-reveal id="modelos">
-        <TemplatesSection onPreview={setPreviewTemplate} />
-      </div>
+          <nav className="hidden items-center gap-8 text-xs font-semibold text-zinc-400 lg:flex">
+            <a href="#solucoes" className="hover:text-white transition-colors">
+              Soluções
+            </a>
+            <a href="#showcase" className="hover:text-white transition-colors">
+              Experiência Interativa
+            </a>
+            <a href="#comparativo" className="hover:text-white transition-colors">
+              Por que EiaLink?
+            </a>
+            <a href="#infraestrutura" className="hover:text-white transition-colors">
+              Infraestrutura
+            </a>
+            <a href="#precos" className="hover:text-white transition-colors">
+              Planos
+            </a>
+            <a href="#faq" className="hover:text-white transition-colors">
+              Dúvidas
+            </a>
+          </nav>
 
-      {/* SEÇÃO 4: INFRAESTRUTURA PROPRIETÁRIA DE ALTO PADRÃO */}
-      <div data-reveal id="tecnologia">
-        <ProprietaryInfrastructure />
-      </div>
-
-      {/* SEÇÃO 5: COMO FUNCIONA (PASSO A PASSO) */}
-      <div data-reveal id="como-funciona">
-        <HowItWorks />
-      </div>
-
-      {/* SEÇÃO 6: DEPOIMENTOS REAIS */}
-      <div data-reveal>
-        <TestimonialsSection />
-      </div>
-
-      {/* SEÇÃO 7: TABELA DE PREÇOS */}
-      <div data-reveal id="precos">
-        <PublicPricingSection />
-      </div>
-
-      {/* SEÇÃO 8: PERGUNTAS FREQUENTES (FAQ) */}
-      <div data-reveal id="faq">
-        <FaqSection />
-      </div>
-
-      {/* SEÇÃO 9: CTA FINAL */}
-      <div data-reveal>
-        <FinalCta />
-      </div>
-
-      <Footer />
-
-      {/* MODAL DE PRÉVIA DE MODELOS */}
-      <Dialog
-        open={Boolean(previewTemplate)}
-        onOpenChange={(open) => !open && setPreviewTemplate(null)}
-      >
-        {previewTemplate && (
-          <DialogContent className="template-preview-dialog max-h-[90vh] max-w-sm overflow-y-auto bg-[#0d0a14] border-white/10 text-white">
-            <DialogHeader>
-              <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">Prévia Oficial</p>
-              <DialogTitle className="text-white text-xl font-bold">{previewTemplate.name}</DialogTitle>
-              <DialogDescription className="text-xs text-[#a99fb5]">
-                {previewTemplate.headline}
-              </DialogDescription>
-            </DialogHeader>
-            <TemplatePhone template={previewTemplate} featured />
+          <div className="flex items-center gap-3">
+            <Link
+              to="/auth"
+              className="text-xs font-semibold text-zinc-300 hover:text-white px-3.5 py-2 transition-colors hidden sm:block"
+            >
+              Entrar
+            </Link>
             <Link
               to="/auth"
               search={{ mode: "signup" } as never}
-              className="btn-primary justify-center font-bold text-xs py-3 mt-2 shadow-lg shadow-fuchsia-500/20"
+              className="relative inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-indigo-500/25 hover:from-indigo-400 hover:to-indigo-500 transition-all hover:scale-[1.02] active:scale-95"
             >
-              Começar com Este Modelo <ArrowRight className="h-4 w-4" />
+              <span>Criar Página Grátis</span>
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
-          </DialogContent>
-        )}
-      </Dialog>
-    </main>
-  );
-}
-
-function Nav() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-white/[.08] bg-[#07060b]/85 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
-        <Brand compact />
-
-        <nav className="hidden items-center gap-7 text-xs font-medium text-[#c6bdd0] md:flex">
-          <a href="#pilares" className="hover:text-white transition-colors">
-            Recursos Exclusivos
-          </a>
-          <a href="#comparativo" className="hover:text-white transition-colors">
-            Por que Funciona
-          </a>
-          <a href="#modelos" className="hover:text-white transition-colors">
-            Modelos por Nicho
-          </a>
-          <a href="#tecnologia" className="hover:text-white transition-colors">
-            Infraestrutura
-          </a>
-          <a href="#precos" className="hover:text-white transition-colors">
-            Planos
-          </a>
-          <a href="#faq" className="hover:text-white transition-colors">
-            FAQ
-          </a>
-        </nav>
-
-        <div className="flex items-center gap-2.5">
-          <Link
-            to="/auth"
-            className="rounded-xl border border-white/15 px-3.5 py-2 text-xs font-semibold text-white/90 hover:bg-white/10 transition-colors hidden sm:inline-flex"
-          >
-            Acessar Conta
-          </Link>
-          <Link
-            to="/auth"
-            search={{ mode: "signup" } as never}
-            className="rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-fuchsia-500/25 hover:opacity-95 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-1.5"
-          >
-            <span>Começar Grátis</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </div>
-    </header>
-  );
-}
-
-function Brand({ compact = false }: { compact?: boolean }) {
-  return (
-    <div className="flex items-center gap-2.5">
-      <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 shadow-md shadow-purple-500/30 text-white">
-        <Sparkles className="h-5 w-5" />
-      </span>
-      <div>
-        <b className={compact ? "font-display text-lg tracking-tight" : "font-display text-2xl tracking-tight"}>
-          EIA <span className="bg-gradient-to-r from-fuchsia-400 to-pink-400 bg-clip-text text-transparent">LINK</span>
-        </b>
-        {!compact && (
-          <p className="text-[10px] font-bold tracking-[.25em] text-violet-300 uppercase">
-            Hub de Conversão
-          </p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function Hero({ onSelectTemplate }: { onSelectTemplate: (t: (typeof templates)[number]) => void }) {
-  return (
-    <section
-      data-reveal
-      className="landing-motion-section relative z-10 mx-auto max-w-7xl px-5 pb-16 pt-8 lg:pb-24 lg:pt-14"
-    >
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,rgba(26,14,48,.92),rgba(9,7,15,.98))] p-6 shadow-[0_25px_90px_rgba(0,0,0,.5)] md:p-12">
-        <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-violet-600/15 blur-3xl pointer-events-none" />
-
-        <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_.9fr]">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-fuchsia-500/30 bg-fuchsia-500/10 px-3.5 py-1 text-xs font-semibold text-fuchsia-300 mb-4">
-              <Sparkles className="h-3.5 w-3.5 text-fuchsia-400 animate-pulse" />
-              <span>O Novo Padrão de Presença Digital Comercial</span>
-            </div>
-
-            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.08] tracking-tight text-white">
-              Pare de perder clientes na bio. Tenha um{" "}
-              <span className="bg-gradient-to-r from-fuchsia-400 via-pink-400 to-amber-300 bg-clip-text text-transparent">
-                Hub de Conversão de Alto Padrão.
-              </span>
-            </h1>
-
-            <p className="mt-5 max-w-xl text-sm sm:text-base leading-relaxed text-[#cbc2d7]">
-              Esqueça listas de links cinzas e sites lentos que ninguém lê. O <strong>EiaLink</strong> une vitrine estilo Instagram, atendente com inteligência artificial, agendamento online 24h, cartão de aproximação NFC e subdomínio próprio em uma experiência ultraveloz desenhada para fechar vendas no WhatsApp.
-            </p>
-
-            <div className="mt-8 flex flex-wrap gap-3.5">
-              <Link
-                to="/auth"
-                search={{ mode: "signup" } as never}
-                className="rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 px-6 py-3.5 text-sm font-bold text-white shadow-xl shadow-fuchsia-500/25 hover:opacity-95 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
-              >
-                <span>Criar Minha Página Grátis</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-
-              <a
-                href="#pilares"
-                className="rounded-xl border border-white/20 bg-white/5 px-5 py-3.5 text-sm font-semibold text-white hover:bg-white/10 transition-colors"
-              >
-                Conhecer Recursos
-              </a>
-            </div>
-
-            {/* Trust Metrics Bar */}
-            <div className="mt-9 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 border-t border-white/10 text-xs text-[#d6cde0]">
-              <div className="flex items-center gap-2 font-medium">
-                <Zap className="h-4 w-4 text-amber-400 shrink-0" />
-                <span>Carrega em 0.3s</span>
-              </div>
-              <div className="flex items-center gap-2 font-medium">
-                <Bot className="h-4 w-4 text-emerald-400 shrink-0" />
-                <span>Atendente com IA</span>
-              </div>
-              <div className="flex items-center gap-2 font-medium">
-                <CalendarDays className="h-4 w-4 text-sky-400 shrink-0" />
-                <span>Agenda 24h</span>
-              </div>
-              <div className="flex items-center gap-2 font-medium">
-                <ShieldCheck className="h-4 w-4 text-fuchsia-400 shrink-0" />
-                <span>Zero Comissões</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative">
-            <div className="absolute inset-x-8 bottom-0 h-32 rounded-full bg-violet-600/30 blur-3xl pointer-events-none" />
-            <TemplateRail featured onPreview={onSelectTemplate} />
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
+      </header>
 
-function EcosystemPillars() {
-  const pillars = [
-    {
-      icon: Bot,
-      iconColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-      badge: "🤖 Inteligência Artificial 24h",
-      title: "Atendente Virtual com IA Integrada",
-      subtitle: "Triagem consultiva de clientes e orçamentos direto no WhatsApp.",
-      desc: "Um assistente inteligente conversa com os visitantes do seu link, responde dúvidas frequentes sobre procedimentos ou pratos e entrega o lead pronto e qualificado na conversa do seu WhatsApp.",
-      impact: "Aumenta em até 40% a taxa de resposta de novos clientes.",
-    },
-    {
-      icon: Flame,
-      iconColor: "text-orange-400 bg-orange-500/10 border-orange-500/20",
-      badge: "🛍️ Vitrine de Desejo",
-      title: "Catálogo & Carrossel Estilo Instagram",
-      subtitle: "Fotos verticais que despertam desejo imediato de compra.",
-      desc: "Apresente seus pratos, roupas ou procedimentos em carrossel vertical deslizante com etiquetas de 'Mais Vendido', preços claros e botão de 1 clique que já monta a mensagem no WhatsApp.",
-      impact: "Elimina taxas abusivas de 27% cobradas por marketplaces.",
-    },
-    {
-      icon: CalendarClock,
-      iconColor: "text-sky-400 bg-sky-500/10 border-sky-500/20",
-      badge: "📅 Sincronizado em Tempo Real",
-      title: "Agendamento Automático 24 Horas",
-      subtitle: "Conectado ao seu Google Agenda sem atrito nem mensagens manuais.",
-      desc: "Seus pacientes ou clientes escolhem o serviço, o profissional e o horário livre diretamente na página. O horário é bloqueado na sua agenda na hora com confirmação automática.",
-      impact: "Economize mais de R$ 140/mês eliminando ferramentas externas de agendamento.",
-    },
-    {
-      icon: Layers,
-      iconColor: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-      badge: "🎬 Alto Padrão Visual",
-      title: "Scrollytelling & Visual Cinematográfico",
-      subtitle: "Experiência imersiva em tela cheia com profundidade Parallax a 60 FPS.",
-      desc: "Capítulos narrativos nobres, iluminação de estúdio escura e tipografia editorial sofisticada. O cliente sente na hora o padrão exclusivo da sua clínica, restaurante ou escritório.",
-      impact: "Posiciona sua marca como a autoridade número 1 da sua cidade.",
-    },
-    {
-      icon: QrCode,
-      iconColor: "text-pink-400 bg-pink-500/10 border-pink-500/20",
-      badge: "🏷️ Do Físico ao Digital",
-      title: "Tecnologia NFC & QR Codes Dinâmicos",
-      subtitle: "Aproxime o cartão físico do celular e abra seu site instantaneamente.",
-      desc: "Integração nativa com cartões e plaquinhas de aproximação NFC para mesas e balcões, além de QR Codes dinâmicos com redirecionamento flexível para avaliações 5 estrelas no Google.",
-      impact: "Multiplica suas avaliações no Google Meu Negócio e atrai clientes locais.",
-    },
-    {
-      icon: Globe2,
-      iconColor: "text-violet-400 bg-violet-500/10 border-violet-500/20",
-      badge: "🌐 Autoridade de Marca",
-      title: "Subdomínio Próprio & Velocidade Extrema",
-      subtitle: "Sua marca em destaque com seu próprio endereço na web.",
-      desc: "Receba na hora um endereço comercial exclusivo (suaempresa.eialink.com.br) ou conecte seu domínio próprio. Acesso protegido por SSL automático e carregamento instantâneo em qualquer rede móvel.",
-      impact: "Elimina a marca alheia e fortalece a reputação da sua própria empresa.",
-    },
-  ];
-
-  return (
-    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
-      <div className="rounded-3xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(20,10,35,.85),rgba(9,7,15,.96))] p-6 md:p-12 shadow-2xl">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">O Ecossistema Completo</p>
-          <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight text-white">
-            6 Superpoderes em uma Única Plataforma
-          </h2>
-          <p className="text-sm sm:text-base text-[#c4bacf]">
-            Tudo o que o seu negócio precisa para atrair, impressionar e converter visitantes em vendas reais.
-          </p>
-        </div>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {pillars.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={idx}
-                className="group relative rounded-2xl border border-white/10 bg-[#0d0a14] p-6 transition-all duration-300 hover:border-violet-400/40 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-violet-950/40 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-3 mb-4">
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${item.iconColor}`}>
-                      <Icon className="w-6 h-6" />
-                    </div>
-                    <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-violet-300">
-                      {item.badge}
-                    </span>
-                  </div>
-
-                  <h3 className="font-display text-lg font-bold text-white group-hover:text-fuchsia-300 transition-colors">
-                    {item.title}
-                  </h3>
-                  <p className="text-xs font-semibold text-[#cfc5d8] mt-1">
-                    {item.subtitle}
-                  </p>
-                  <p className="text-xs leading-relaxed text-[#a99fb5] mt-3">
-                    {item.desc}
-                  </p>
-                </div>
-
-                <div className="mt-6 pt-3.5 border-t border-white/10 flex items-center gap-2 text-xs font-medium text-emerald-400">
-                  <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
-                  <span>{item.impact}</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function DifferenceSection() {
-  const comparison = [
-    {
-      feature: "Apresentação Visual",
-      oldWay: "Botões cinzas estáticos empilhados sem fotos",
-      eiaWay: "Vitrines interativas verticais e Parallax 60 FPS",
-    },
-    {
-      feature: "Atendimento & Triagem",
-      oldWay: "Passivo: o visitante tem que adivinhar o que fazer",
-      eiaWay: "Atendente Virtual com IA que qualifica e direciona",
-    },
-    {
-      feature: "Processo de Compra",
-      oldWay: "Redireciona para PDFs pesados ou sites lentos",
-      eiaWay: "Pedido estruturado com nome e preço no WhatsApp",
-    },
-    {
-      feature: "Agendamentos",
-      oldWay: "Troca manual de dezenas de mensagens no WhatsApp",
-      eiaWay: "Sincronizado automaticamente ao Google Agenda",
-    },
-    {
-      feature: "Conexão com Balcão Físico",
-      oldWay: "Zero integração com o mundo real",
-      eiaWay: "Cartão e Plaquinha de aproximação NFC instantânea",
-    },
-    {
-      feature: "Marca & Credibilidade",
-      oldWay: "linktr.ee/seunome (fortalece a marca deles)",
-      eiaWay: "seunome.eialink.com.br ou domínio próprio",
-    },
-  ];
-
-  return (
-    <section id="comparativo" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
-      <div className="rounded-3xl border border-white/10 bg-[#0d0a14] p-6 md:p-12 shadow-2xl">
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">O Fim da Perda de Vendas</p>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-white">
-            Por que os Links Tradicionais Perdem 70% dos Clientes?
-          </h2>
-          <p className="text-sm text-[#b8aeca]">
-            Veja a comparação direta entre o formato ultrapassado e a nova arquitetura de conversão do EiaLink.
-          </p>
-        </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse min-w-[600px]">
-            <thead>
-              <tr className="border-b border-white/15 text-xs text-muted-foreground uppercase tracking-wider">
-                <th className="py-4 px-4 font-semibold text-white/70">Recurso / Experiência</th>
-                <th className="py-4 px-4 font-semibold text-rose-400/90 bg-rose-950/20 rounded-t-xl">O Jeito Antigo (Linktree / Comum)</th>
-                <th className="py-4 px-4 font-semibold text-emerald-300 bg-emerald-950/30 rounded-t-xl border-t-2 border-emerald-500/50">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-emerald-400" />
-                    <span>A Máquina EiaLink</span>
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10 text-xs">
-              {comparison.map((row, idx) => (
-                <tr key={idx} className="hover:bg-white/[.02] transition-colors">
-                  <td className="py-4 px-4 font-medium text-white">{row.feature}</td>
-                  <td className="py-4 px-4 text-rose-300/80 bg-rose-950/10">
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="text-rose-400 font-bold">✕</span> {row.oldWay}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 text-emerald-200 font-medium bg-emerald-950/20">
-                    <span className="inline-flex items-center gap-1.5">
-                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" /> {row.eiaWay}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="text-xs text-[#b8aeca]">
-            <strong className="text-white">Resultado comprovado:</strong> Menos dúvidas soltas, mais conversão no primeiro clique.
+      {/* Hero Section */}
+      <section className="relative pt-12 pb-20 md:pt-20 md:pb-28">
+        <div className="mx-auto max-w-7xl px-6 text-center">
+          {/* Announcement Pill */}
+          <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/30 bg-indigo-500/10 px-4 py-1.5 text-xs font-semibold text-indigo-300 mb-8 backdrop-blur-md shadow-inner">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>O Novo Padrão de Presença Digital Comercial</span>
+            <ChevronRight className="h-3.5 w-3.5 text-indigo-400" />
           </div>
-          <Link
-            to="/auth"
-            search={{ mode: "signup" } as never}
-            className="rounded-xl bg-gradient-to-r from-violet-600 via-fuchsia-600 to-pink-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-fuchsia-500/25 hover:opacity-95 transition-all flex items-center gap-1.5 shrink-0"
-          >
-            <span>Quero Essa Estrutura</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function TemplatesSection({ onPreview }: { onPreview: (template: (typeof templates)[number]) => void }) {
-  return (
-    <section id="modelos" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
-      <div className="rounded-3xl border border-violet-300/20 bg-[linear-gradient(135deg,rgba(27,14,45,.88),rgba(11,8,16,.96))] p-6 md:p-12 shadow-2xl">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end mb-8">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">Arquitetura por Segmento</p>
-            <h2 className="mt-2 font-display text-3xl sm:text-4xl font-bold text-white">
-              Modelos de Alta Conversão Prontos para Seu Ramo
-            </h2>
-          </div>
-          <p className="max-w-md text-xs sm:text-sm text-[#c4bacf]">
-            Layouts completos com carrossel de produtos, agendamento de horários e botões de WhatsApp prontos para ativar em segundos.
+          {/* Main Headline */}
+          <h1 className="mx-auto max-w-4xl text-4xl font-extrabold tracking-tight text-white sm:text-6xl sm:leading-[1.12]">
+            Transforme seguidores em{" "}
+            <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-cyan-300 bg-clip-text text-transparent">
+              clientes pagantes no WhatsApp.
+            </span>
+          </h1>
+
+          {/* Subhead */}
+          <p className="mx-auto mt-6 max-w-2xl text-base text-zinc-300 sm:text-lg leading-relaxed">
+            Elimine links de bio feios e genéricos que vazam tráfego. Tenha um{" "}
+            <strong className="text-white font-semibold">Hub de Conversão de Alto Padrão</strong> com vitrine estilo Instagram, Atendente com IA para triagem automática, agendamento 24h e cartão de aproximação NFC.
           </p>
-        </div>
 
-        <TemplateRail onPreview={onPreview} />
-      </div>
-    </section>
-  );
-}
-
-function TemplateRail({
-  featured = false,
-  onPreview,
-}: {
-  featured?: boolean;
-  onPreview?: (template: (typeof templates)[number]) => void;
-}) {
-  const items = featured ? templates.slice(0, 5) : templates;
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [previousIndex, setPreviousIndex] = useState<number | null>(null);
-  const [direction, setDirection] = useState<"next" | "previous">("next");
-  const [paused, setPaused] = useState(false);
-  const activeIndexRef = useRef(0);
-  const touchStartX = useRef<number | null>(null);
-  const exitTimer = useRef<number | undefined>(undefined);
-
-  const changeSlide = useCallback((nextIndex: number, nextDirection: "next" | "previous") => {
-    const currentIndex = activeIndexRef.current;
-    if (currentIndex === nextIndex) return;
-    activeIndexRef.current = nextIndex;
-    setPreviousIndex(currentIndex);
-    setDirection(nextDirection);
-    setActiveIndex(nextIndex);
-    if (exitTimer.current) window.clearTimeout(exitTimer.current);
-    exitTimer.current = window.setTimeout(() => setPreviousIndex(null), 460);
-  }, []);
-
-  const nextSlide = () => changeSlide((activeIndex + 1) % items.length, "next");
-  const previousSlide = () =>
-    changeSlide((activeIndex - 1 + items.length) % items.length, "previous");
-
-  useEffect(() => {
-    if (!featured || paused) return;
-    const timer = window.setInterval(() => {
-      changeSlide((activeIndexRef.current + 1) % items.length, "next");
-    }, 4200);
-    return () => window.clearInterval(timer);
-  }, [changeSlide, featured, items.length, paused]);
-
-  useEffect(
-    () => () => {
-      if (exitTimer.current) window.clearTimeout(exitTimer.current);
-    },
-    [],
-  );
-
-  if (featured) {
-    const current = items[activeIndex];
-    return (
-      <div
-        className="relative mx-auto max-w-[18rem]"
-        aria-roledescription="carrossel"
-        aria-label="Exemplos de vitrines digitais por nicho"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocus={() => setPaused(true)}
-        onBlur={() => setPaused(false)}
-      >
-        <div
-          className="landing-template-carousel"
-          onTouchStart={(event) => {
-            touchStartX.current = event.touches[0]?.clientX ?? null;
-          }}
-          onTouchEnd={(event) => {
-            const startX = touchStartX.current;
-            const endX = event.changedTouches[0]?.clientX;
-            touchStartX.current = null;
-            if (startX === null || endX === undefined || Math.abs(startX - endX) < 42) return;
-            if (startX > endX) nextSlide();
-            else previousSlide();
-          }}
-        >
-          {previousIndex !== null && (
-            <div
-              aria-hidden="true"
-              className={`landing-template-carousel-slide landing-template-carousel-exit-${direction}`}
+          {/* CTAs */}
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              to="/auth"
+              search={{ mode: "signup" } as never}
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-indigo-700 px-7 py-4 text-sm font-bold text-white shadow-xl shadow-indigo-500/30 hover:scale-105 active:scale-95 transition-all"
             >
-              <TemplatePhone template={items[previousIndex]} featured />
+              <span>Começar Minha Página Grátis</span>
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+
+            <a
+              href="#showcase"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-6 py-4 text-sm font-semibold text-zinc-200 hover:bg-white/[0.08] hover:text-white transition-all backdrop-blur-md"
+            >
+              <Play className="h-4 w-4 text-indigo-400 fill-indigo-400/20" />
+              <span>Ver Demonstração Interativa</span>
+            </a>
+          </div>
+
+          {/* Highlights Mini-Bar */}
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-6 sm:gap-10 text-xs font-medium text-zinc-400">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-amber-400" />
+              <span>Carregamento em 0.28s</span>
             </div>
-          )}
-          <div
-            key={current.name}
-            className={`landing-template-carousel-slide landing-template-carousel-enter-${direction}`}
-          >
-            <TemplatePhone template={current} featured />
+            <div className="flex items-center gap-2">
+              <Bot className="h-4 w-4 text-emerald-400" />
+              <span>Atendente com IA 24/7</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Radio className="h-4 w-4 text-cyan-400" />
+              <span>Tecnologia NFC Integrada</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="h-4 w-4 text-indigo-400" />
+              <span>0% de comissões sobre vendas</span>
+            </div>
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between text-xs text-[#bcb2c8]">
-          <button
-            type="button"
-            onClick={previousSlide}
-            aria-label="Slide anterior"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
-          >
-            ←
-          </button>
-          <div className="flex gap-1.5">
-            {items.map((it, idx) => (
-              <span
-                key={it.name}
-                className={`h-1.5 rounded-full transition-all ${
-                  idx === activeIndex ? "w-5 bg-fuchsia-400" : "w-1.5 bg-white/30"
-                }`}
-              />
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={nextSlide}
-            aria-label="Próximo slide"
-            className="flex h-8 w-8 items-center justify-center rounded-full border border-white/20 bg-white/5 hover:bg-white/10 text-white transition-colors"
-          >
-            →
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-      {items.map((template) => {
-        const Icon = template.icon;
-        return (
-          <div
-            key={template.name}
-            onClick={() => onPreview?.(template)}
-            className="group cursor-pointer rounded-2xl border border-white/10 bg-[#0d0a14] p-5 transition-all duration-300 hover:border-violet-400/40 hover:-translate-y-1 hover:shadow-xl flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold"
-                  style={{ backgroundColor: template.color }}
-                >
-                  <Icon className="w-5 h-5" />
-                </div>
-                <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-white/5 border border-white/10 text-[#d6cde0]">
-                  {template.niche}
+        {/* Studio Canvas Showcase (Hero Preview) */}
+        <div className="mx-auto mt-16 max-w-6xl px-6">
+          <div className="relative rounded-2xl border border-white/10 bg-gradient-to-b from-[#11131a] to-[#090a0f] p-3 shadow-2xl shadow-indigo-950/50 backdrop-blur-xl">
+            {/* Window Topbar */}
+            <div className="flex items-center justify-between border-b border-white/[0.08] px-4 py-3 bg-[#0d0f17]/60 rounded-t-xl">
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 rounded-full bg-rose-500/80" />
+                <span className="h-3 w-3 rounded-full bg-amber-500/80" />
+                <span className="h-3 w-3 rounded-full bg-emerald-500/80" />
+                <span className="ml-3 text-xs font-medium text-zinc-400 hidden sm:inline">
+                  https://seunegocio.eialink.com.br
                 </span>
               </div>
-              <h3 className="font-display text-lg font-bold text-white group-hover:text-fuchsia-300 transition-colors">
-                {template.name}
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Página Oficial Ativa</span>
+              </div>
+            </div>
+
+            {/* Split Mockup Content */}
+            <div className="grid gap-6 p-6 lg:grid-cols-[1fr_360px] items-center">
+              {/* Left Side: Business Highlights in Real Studio */}
+              <div className="space-y-6 text-left">
+                <div className="inline-flex items-center gap-2 rounded-xl bg-white/[0.04] border border-white/10 px-3.5 py-1.5 text-xs text-zinc-300">
+                  <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                  <span>Mais de 12.000 pedidos e agendamentos processados</span>
+                </div>
+
+                <h3 className="text-2xl sm:text-3xl font-bold tracking-tight text-white leading-tight">
+                  Toda a sua operação comercial reunida em uma página impecável.
+                </h3>
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                    <div className="flex items-center gap-2 text-indigo-400 font-semibold text-sm mb-1.5">
+                      <Flame className="h-4 w-4" />
+                      <span>Vitrine Instagram</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      Fotos de alta qualidade com preços e fechamento direto no WhatsApp em 1 clique.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                    <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm mb-1.5">
+                      <Bot className="h-4 w-4" />
+                      <span>Atendente com IA</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      Responde dúvidas, recomenda produtos e entrega o cliente pronto no seu WhatsApp.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                    <div className="flex items-center gap-2 text-sky-400 font-semibold text-sm mb-1.5">
+                      <CalendarCheck className="h-4 w-4" />
+                      <span>Google Agenda 24h</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      Seus clientes marcam horários sem você perder tempo trocando mensagens manuais.
+                    </p>
+                  </div>
+
+                  <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                    <div className="flex items-center gap-2 text-purple-400 font-semibold text-sm mb-1.5">
+                      <Radio className="h-4 w-4" />
+                      <span>Cartão & Placa NFC</span>
+                    </div>
+                    <p className="text-xs text-zinc-400 leading-relaxed">
+                      Aproxime o cartão físico e abra sua página no celular do cliente em 1 segundo.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Floating Notification */}
+                <div className="flex items-center gap-3 rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-3.5 text-xs text-emerald-200">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-bold shrink-0">
+                    <MessageCircle className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <strong className="block text-white font-semibold">Novo Pedido no WhatsApp:</strong>
+                    <span>"Smash Burger Duplo na Brasa + Batata Rústica · Mesa 04"</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Side: Realistic Phone Mockup of Active Site */}
+              <div className="relative mx-auto w-full max-w-[320px]">
+                <div className="rounded-[2.5rem] border-[6px] border-[#1e2230] bg-[#0b0c12] p-3.5 shadow-2xl shadow-black">
+                  {/* Speaker Notch */}
+                  <div className="mx-auto h-4 w-28 rounded-full bg-[#1e2230] mb-3" />
+
+                  {/* Profile & Header */}
+                  <div className="relative rounded-2xl overflow-hidden mb-3.5">
+                    <img
+                      src="https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=600&q=80"
+                      alt="Capa de demonstração"
+                      className="h-28 w-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex items-center gap-2">
+                      <div className="h-10 w-10 rounded-xl bg-orange-500 flex items-center justify-center text-white font-bold shadow-md">
+                        <UtensilsCrossed className="h-5 w-5" />
+                      </div>
+                      <div className="text-left text-white">
+                        <b className="text-xs block leading-tight">Brasa & Fogo Steak</b>
+                        <span className="text-[10px] text-orange-300">suaempresa.eialink.com.br</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Mini Product Carousel Card */}
+                  <div className="rounded-xl border border-white/10 bg-white/[0.04] p-2.5 text-left mb-3">
+                    <div className="flex items-center justify-between text-[10px] text-zinc-400 mb-1.5">
+                      <span>Destaque de Hoje</span>
+                      <span className="text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                        Disponível
+                      </span>
+                    </div>
+                    <div className="flex gap-2.5">
+                      <img
+                        src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=200&q=80"
+                        alt="Prato"
+                        className="h-14 w-14 rounded-lg object-cover"
+                      />
+                      <div>
+                        <b className="text-xs text-white block">Smash Burger Duplo</b>
+                        <span className="text-xs font-bold text-orange-400">R$ 42,90</span>
+                        <div className="mt-1 inline-flex items-center gap-1 rounded bg-emerald-600 px-2 py-0.5 text-[9px] font-bold text-white">
+                          <MessageCircle className="h-2.5 w-2.5" /> Pedir no Zap
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="space-y-2 text-left">
+                    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-xs text-white">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3.5 w-3.5 text-sky-400" />
+                        <span className="text-[11px] font-medium">Reservar Mesa Online</span>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-zinc-500" />
+                    </div>
+
+                    <div className="flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.03] p-2.5 text-xs text-white">
+                      <div className="flex items-center gap-2">
+                        <Bot className="h-3.5 w-3.5 text-emerald-400" />
+                        <span className="text-[11px] font-medium">Atendente com IA</span>
+                      </div>
+                      <span className="text-[9px] text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">Online</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Segment Showcase */}
+      <section id="showcase" className="py-20 border-t border-white/[0.07] bg-[#07080d]/60">
+        <div className="mx-auto max-w-7xl px-6 text-center">
+          <div className="space-y-3 max-w-3xl mx-auto mb-10">
+            <p className="text-xs uppercase tracking-widest text-indigo-400 font-bold">Experiência Interativa</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              Modelos de Alta Conversão Criados para o Seu Ramo
+            </h2>
+            <p className="text-sm text-zinc-400">
+              Clique nos nichos abaixo para ver como a sua presença comercial ganha autoridade instantânea.
+            </p>
+          </div>
+
+          {/* Segment Tabs */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mb-12">
+            {NICHE_SHOWCASES.map((niche) => {
+              const Icon = niche.icon;
+              const isSelected = activeNiche.id === niche.id;
+              return (
+                <button
+                  key={niche.id}
+                  onClick={() => setActiveNiche(niche)}
+                  className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+                    isSelected
+                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 scale-105"
+                      : "border border-white/10 bg-white/[0.03] text-zinc-400 hover:text-white hover:bg-white/[0.07]"
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{niche.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Dynamic Showcase Stage */}
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-b from-[#0f111a] to-[#07080e] p-6 md:p-10 shadow-2xl text-left">
+            <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr] items-center">
+              <div>
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-xs font-semibold text-zinc-300 mb-4">
+                  <span>{activeNiche.badge}</span>
+                </div>
+
+                <h3 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-snug">
+                  {activeNiche.brand}
+                </h3>
+                <p className="text-xs text-indigo-400 font-medium mt-1">{activeNiche.city}</p>
+
+                <p className="text-sm sm:text-base text-zinc-300 mt-4 leading-relaxed">
+                  {activeNiche.headline}
+                </p>
+
+                {/* Simulated AI Agent Dialog */}
+                <div className="mt-6 rounded-2xl border border-white/10 bg-[#090a10] p-4 space-y-3">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-emerald-400">
+                    <Bot className="h-4 w-4" />
+                    <span>Atendente Virtual IA em Ação:</span>
+                  </div>
+
+                  <div className="rounded-xl bg-white/[0.04] p-3 text-xs text-zinc-300">
+                    <strong className="block text-zinc-400 text-[10px] uppercase mb-0.5">Cliente:</strong>
+                    “{activeNiche.chatPrompt}”
+                  </div>
+
+                  <div className="rounded-xl bg-indigo-950/30 border border-indigo-500/20 p-3 text-xs text-indigo-200">
+                    <strong className="block text-indigo-400 text-[10px] uppercase mb-0.5">IA da Loja:</strong>
+                    “{activeNiche.chatReply}”
+                  </div>
+                </div>
+
+                {/* Metric Box */}
+                <div className="mt-6 pt-5 border-t border-white/10 flex items-center gap-6">
+                  <div>
+                    <span className="text-3xl font-extrabold text-white block">{activeNiche.statNumber}</span>
+                    <span className="text-xs text-zinc-400">{activeNiche.statLabel}</span>
+                  </div>
+                  <Link
+                    to="/auth"
+                    search={{ mode: "signup" } as never}
+                    className="ml-auto inline-flex items-center gap-1.5 rounded-xl bg-white text-zinc-950 font-bold px-4 py-2.5 text-xs hover:bg-zinc-200 transition-colors shadow-md"
+                  >
+                    <span>Usar Este Modelo</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Stage Image Visual */}
+              <div className="relative rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
+                <img
+                  src={activeNiche.coverImg}
+                  alt={activeNiche.brand}
+                  className="w-full h-80 sm:h-96 object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+
+                {/* Floating Product Card */}
+                <div className="absolute bottom-4 left-4 right-4 rounded-xl border border-white/15 bg-black/75 p-3.5 backdrop-blur-md flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={activeNiche.productImg}
+                      alt={activeNiche.productName}
+                      className="h-12 w-12 rounded-lg object-cover shrink-0"
+                    />
+                    <div>
+                      <b className="text-xs text-white block">{activeNiche.productName}</b>
+                      <span className="text-xs font-bold text-emerald-400">{activeNiche.productPrice}</span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white flex items-center gap-1.5 shrink-0">
+                    <MessageCircle className="h-3.5 w-3.5" />
+                    <span>{activeNiche.whatsappCta}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6 Core Pillars (Bento Grid) */}
+      <section id="solucoes" className="py-24 max-w-7xl mx-auto px-6">
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+          <p className="text-xs uppercase tracking-widest text-indigo-400 font-bold">O Ecossistema Completo</p>
+          <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+            Projetado de Ponta a Ponta para Gerar Vendas
+          </h2>
+          <p className="text-base text-zinc-400">
+            A tecnologia mais avançada do mercado para quem não pode se dar ao luxo de queimar clientes.
+          </p>
+        </div>
+
+        {/* Bento Grid */}
+        <div className="grid gap-6 md:grid-cols-3">
+          {/* Card 1: Atendente com IA (Large Span 2) */}
+          <div className="md:col-span-2 rounded-3xl border border-white/10 bg-gradient-to-br from-[#10121d] to-[#07080d] p-8 shadow-xl relative overflow-hidden flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  <Bot className="h-6 w-6" />
+                </div>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  Inteligência Artificial Exclusiva
+                </span>
+              </div>
+
+              <h3 className="text-2xl font-bold text-white tracking-tight">
+                Atendente Virtual com IA: Seu Vendedor 24/7
               </h3>
-              <p className="text-xs text-[#a99fb5] mt-2 leading-relaxed">
-                {template.headline}
+              <p className="text-sm text-zinc-400 leading-relaxed max-w-xl">
+                O visitante entra na sua página com dúvidas e é atendido na hora por uma IA treinada com os dados do seu negócio. Ela responde sobre cardápios, planos ou procedimentos e transfere a conversa estruturada direto para o seu WhatsApp.
               </p>
             </div>
-            <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-violet-300 font-semibold group-hover:text-white transition-colors">
-              <span>Ver modelo interativo</span>
-              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+
+            <div className="mt-8 rounded-2xl border border-white/10 bg-black/40 p-4 max-w-lg">
+              <div className="flex items-center gap-2 text-xs font-semibold text-zinc-300 mb-2">
+                <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                <span>Conversão em Tempo Real</span>
+              </div>
+              <p className="text-xs text-zinc-400">
+                “Cliente qualificado pela IA com interesse no procedimento de Harmonização Facial para agendar nesta quinta-feira.”
+              </p>
             </div>
           </div>
-        );
-      })}
-    </div>
-  );
-}
 
-function TemplatePhone({
-  template,
-  featured = false,
-}: {
-  template: (typeof templates)[number];
-  featured?: boolean;
-}) {
-  const Icon = template.icon;
-  return (
-    <div className="relative mx-auto w-full max-w-[17.5rem] rounded-[2rem] border-[4px] border-[#221735] bg-[#0c0915] p-3.5 shadow-2xl">
-      {/* Notch */}
-      <div className="mx-auto h-3.5 w-20 rounded-full bg-[#221735] mb-3" />
-
-      {/* Header Profile */}
-      <div className="text-center">
-        <div
-          className="mx-auto grid h-14 w-14 place-items-center rounded-2xl shadow-md text-white mb-2"
-          style={{ backgroundColor: template.color }}
-        >
-          <Icon className="h-7 w-7" />
-        </div>
-        <h4 className="text-sm font-bold text-white tracking-tight">{template.name}</h4>
-        <p className="text-[10px] text-violet-300 font-medium">{template.niche}</p>
-      </div>
-
-      {/* Mini Mockup Buttons */}
-      <div className="mt-4 space-y-2">
-        <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-center text-[11px] font-semibold text-white shadow-sm flex items-center justify-center gap-1.5">
-          <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Fazer Pedido no WhatsApp</span>
-        </div>
-
-        <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-center text-[11px] font-semibold text-white shadow-sm flex items-center justify-center gap-1.5">
-          <CalendarDays className="w-3.5 h-3.5 text-sky-400" />
-          <span>Agendar Horário Online</span>
-        </div>
-
-        <div className="rounded-xl border border-white/10 bg-white/5 p-2.5 text-center text-[11px] font-semibold text-white shadow-sm flex items-center justify-center gap-1.5">
-          <MapPin className="w-3.5 h-3.5 text-rose-400" />
-          <span>Como Chegar (Google Maps)</span>
-        </div>
-      </div>
-
-      {/* Mini Footer Badge */}
-      <div className="mt-4 pt-2 border-t border-white/5 text-center">
-        <span className="text-[9px] text-[#7d738a] font-medium">⚡ Carregamento em 0.3s</span>
-      </div>
-    </div>
-  );
-}
-
-function ProprietaryInfrastructure() {
-  const infraPoints = [
-    {
-      icon: Zap,
-      title: "Rede Global Ultrarrápida",
-      desc: "Servidores distribuídos em centenas de cidades para garantir carregamento instantâneo em 0.3 segundos até mesmo em redes móveis 3G/4G.",
-    },
-    {
-      icon: Lock,
-      title: "Criptografia & Blindagem SSL",
-      desc: "Certificados de segurança automáticos padrão bancário (HTTPS) para proteger todos os dados e transmissões dos seus clientes.",
-    },
-    {
-      icon: ShieldCheck,
-      title: "Disponibilidade 99.9% Garantida",
-      desc: "Infraestrutura corporativa em nuvem redundante que nunca deixa sua página cair, mesmo durante picos de tráfego e campanhas de anúncios.",
-    },
-    {
-      icon: Smartphone,
-      title: "Arquitetura PWA Nativa",
-      desc: "Seu link se comporta como um aplicativo de verdade no celular do cliente, sem burocracias de aprovação ou custos em lojas de apps.",
-    },
-  ];
-
-  return (
-    <section id="tecnologia" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
-      <div className="rounded-3xl border border-white/10 bg-[#0d0a14] p-6 md:p-12 shadow-2xl">
-        <div className="text-center max-w-3xl mx-auto space-y-3 mb-10">
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">Tecnologia Proprietária</p>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-white">
-            Engenharia de Alto Padrão por Trás da Sua Marca
-          </h2>
-          <p className="text-sm text-[#b8aeca]">
-            Construído com tecnologia de ponta para garantir velocidade extrema, segurança e estabilidade ininterrupta.
-          </p>
-        </div>
-
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          {infraPoints.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <div
-                key={idx}
-                className="rounded-2xl border border-white/10 bg-white/[.02] p-5 flex flex-col justify-between"
-              >
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 flex items-center justify-center mb-4">
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-semibold text-white text-sm">{item.title}</h3>
-                  <p className="text-xs text-[#a99fb5] mt-2 leading-relaxed">{item.desc}</p>
+          {/* Card 2: Cartão e Plaquinha NFC (Span 1) */}
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#10121d] to-[#07080d] p-8 shadow-xl flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+                  <Radio className="h-6 w-6" />
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function HowItWorks() {
-  const steps = [
-    {
-      step: "01",
-      icon: Store,
-      title: "Escolha seu Segmento",
-      desc: "Selecione o modelo pré-configurado ideal para seu ramo, com paleta de cores e argumentos vendedoras.",
-    },
-    {
-      step: "02",
-      icon: Wand2,
-      title: "Personalize com o Copiloto IA",
-      desc: "Converse com o assistente criativo para ajustar fotos, textos, serviços e botões em tempo real.",
-    },
-    {
-      step: "03",
-      icon: CalendarClock,
-      title: "Conecte WhatsApp & Agenda",
-      desc: "Defina o número do seu atendimento comercial e sincronize horários livres de forma automática.",
-    },
-    {
-      step: "04",
-      icon: QrCode,
-      title: "Ative na Bio e no Balcão",
-      desc: "Coloque seu link exclusivo no Instagram e gere seu cartão ou QR Code de balcão para capturar clientes.",
-    },
-  ];
-
-  return (
-    <section id="como-funciona" className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
-      <div className="rounded-3xl border border-white/10 bg-[#0d0a14] p-6 md:p-12 shadow-2xl">
-        <div className="text-center max-w-2xl mx-auto space-y-3 mb-12">
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">Passo a Passo Simples</p>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white">
-            Sua Página no Ar em Menos de 5 Minutos
-          </h2>
-          <p className="text-xs sm:text-sm text-[#b8aeca]">
-            Sem precisar entender de programação, sem contratar designers caros e sem complicações técnicas.
-          </p>
-        </div>
-
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {steps.map((item, idx) => {
-            const Icon = item.icon;
-            return (
-              <div key={idx} className="relative rounded-2xl border border-white/10 bg-white/[.02] p-6 text-center">
-                <span className="text-[10px] font-bold text-violet-400 uppercase tracking-widest block mb-2">
-                  Passo {item.step}
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-white/5 text-zinc-300">
+                  NFC Phygital
                 </span>
-                <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl border border-violet-400/30 bg-violet-500/10 text-violet-300 shadow-md mb-4">
-                  <Icon className="h-7 w-7" />
+              </div>
+
+              <h3 className="text-xl font-bold text-white tracking-tight">
+                Cartão & Plaquinha de Balcão NFC
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Aproxime o cartão físico de qualquer smartphone e abra seu link instantaneamente, sem digitar nada.
+              </p>
+            </div>
+
+            <div className="mt-8 rounded-2xl border border-white/15 bg-gradient-to-tr from-zinc-900 to-black p-4 text-center">
+              <div className="h-8 w-12 rounded bg-amber-400/80 mx-auto mb-2 flex items-center justify-center text-[9px] font-bold text-black">
+                CHIP
+              </div>
+              <span className="text-xs text-zinc-300 font-semibold block">Cartão Inteligente EiaLink</span>
+              <span className="text-[10px] text-zinc-500">Aproximou, abriu seu catálogo</span>
+            </div>
+          </div>
+
+          {/* Card 3: Google Agenda 24h (Span 1) */}
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#10121d] to-[#07080d] p-8 shadow-xl flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                  <CalendarCheck className="h-6 w-6" />
                 </div>
-                <h3 className="font-semibold text-white text-sm">{item.title}</h3>
-                <p className="mt-2 text-xs leading-relaxed text-[#b9afc4]">{item.desc}</p>
+                <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-400">
+                  Google Calendar
+                </span>
               </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function TestimonialsSection() {
-  return (
-    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-16">
-      <div className="rounded-3xl border border-white/10 bg-[#0d0a14] p-6 md:p-12 shadow-2xl">
-        <div className="text-center max-w-2xl mx-auto space-y-3 mb-10">
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">Resultados Reais</p>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white">
-            O Que Nossos Clientes Estão Dizendo
-          </h2>
-        </div>
+              <h3 className="text-xl font-bold text-white tracking-tight">
+                Agendamento Online 24 Horas
+              </h3>
+              <p className="text-xs text-zinc-400 leading-relaxed">
+                Seus horários livres sincronizados em tempo real. O cliente escolhe, confirma e bloqueia na sua agenda sem conflitos.
+              </p>
+            </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          {testimonials.map(([name, business, quote, color]) => (
-            <article
-              key={name}
-              className="rounded-2xl border border-white/10 bg-white/[.025] p-6 flex flex-col justify-between shadow-lg"
-            >
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <span
-                    className="grid h-10 w-10 place-items-center rounded-full text-xs font-bold text-white shadow-sm shrink-0"
-                    style={{ background: color }}
-                  >
-                    {name.slice(0, 1)}
-                  </span>
-                  <div>
-                    <b className="text-sm text-white block">{name}</b>
-                    <p className="text-[11px] text-[#b9afc4]">{business}</p>
-                  </div>
+            <div className="mt-8 rounded-xl border border-white/10 bg-white/[0.02] p-3 text-xs text-zinc-300 space-y-1.5">
+              <div className="flex justify-between text-[11px] text-zinc-400">
+                <span>Horários de Hoje:</span>
+                <span className="text-emerald-400 font-bold">3 vagos</span>
+              </div>
+              <div className="flex gap-2">
+                <span className="px-2 py-1 rounded bg-white/10 text-[10px] font-bold">14:00</span>
+                <span className="px-2 py-1 rounded bg-white/10 text-[10px] font-bold">15:30</span>
+                <span className="px-2 py-1 rounded bg-white/10 text-[10px] font-bold">17:00</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card 4: Vitrine Estilo Instagram (Large Span 2) */}
+          <div className="md:col-span-2 rounded-3xl border border-white/10 bg-gradient-to-br from-[#10121d] to-[#07080d] p-8 shadow-xl flex flex-col justify-between">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                  <Flame className="h-6 w-6" />
                 </div>
-                <p className="text-xs leading-relaxed text-[#d2c8dc]">“{quote}”</p>
+                <span className="text-xs font-bold px-3 py-1 rounded-full bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                  0% de Comissões
+                </span>
               </div>
-              <div className="mt-5 pt-3 border-t border-white/10 text-amber-400 text-xs font-bold flex items-center gap-1">
-                <span>★★★★★</span>
-                <span className="text-[11px] text-white/70 font-normal">Avaliação Verificada</span>
-              </div>
-            </article>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function FaqSection() {
-  return (
-    <section id="faq" className="relative z-10 mx-auto max-w-4xl px-5 pb-16">
-      <div className="rounded-3xl border border-white/10 bg-[#0d0a14] p-6 md:p-12 shadow-2xl">
-        <div className="text-center max-w-xl mx-auto space-y-3 mb-8">
-          <p className="text-xs uppercase tracking-widest text-violet-400 font-bold">Dúvidas Frequentes</p>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-white">
+              <h3 className="text-2xl font-bold text-white tracking-tight">
+                Vitrine & Catálogo Interativo com Fotos em Alta Resolução
+              </h3>
+              <p className="text-sm text-zinc-400 leading-relaxed max-w-xl">
+                Apresente seus produtos e serviços em formato vertical deslizante com tags de preço e botão de pedido pronto para o WhatsApp. Venda direta para o cliente sem intermediários e sem taxas de marketplace.
+              </p>
+            </div>
+
+            <div className="mt-8 flex flex-wrap gap-4 items-center justify-between border-t border-white/10 pt-4 text-xs text-zinc-400">
+              <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                <Check className="h-4 w-4" /> Checkout Direto no WhatsApp ou Pix
+              </span>
+              <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+                <Check className="h-4 w-4" /> Fotos em Proporção de Stories (4:5)
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Comparison Table Section */}
+      <section id="comparativo" className="py-20 border-t border-white/[0.07] bg-[#07080d]/80">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
+            <p className="text-xs uppercase tracking-widest text-indigo-400 font-bold">Comparativo Direto</p>
+            <h2 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
+              O Fim do Linktree Tradicional
+            </h2>
+            <p className="text-sm text-zinc-400">
+              Por que manter um link antigo está custando caro para o seu negócio todos os dias.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto rounded-3xl border border-white/10 bg-[#0c0e15] shadow-2xl">
+            <table className="w-full text-left border-collapse min-w-[650px]">
+              <thead>
+                <tr className="border-b border-white/10 text-xs uppercase tracking-wider text-zinc-400">
+                  <th className="py-5 px-6 font-semibold">Critério</th>
+                  <th className="py-5 px-6 font-semibold text-rose-400 bg-rose-950/20">Links Tradicionais (Linktree / Comum)</th>
+                  <th className="py-5 px-6 font-semibold text-emerald-300 bg-emerald-950/30 border-l border-emerald-500/20">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-emerald-400" />
+                      <span>EiaLink Pro</span>
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10 text-xs">
+                {COMPARISON_ROWS.map((row, idx) => (
+                  <tr key={idx} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-4 px-6 font-medium text-white">{row.feature}</td>
+                    <td className="py-4 px-6 text-rose-300/80 bg-rose-950/10">
+                      <span className="flex items-start gap-2">
+                        <span className="text-rose-400 font-bold">✕</span> {row.oldWay}
+                      </span>
+                    </td>
+                    <td className="py-4 px-6 text-emerald-200 font-semibold bg-emerald-950/20 border-l border-emerald-500/20">
+                      <span className="flex items-start gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                        <span>{row.eiaWay}</span>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Proprietary Infrastructure Section */}
+      <section id="infraestrutura" className="py-20 max-w-7xl mx-auto px-6">
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-[#0e1017] to-[#07080d] p-8 md:p-14 shadow-2xl">
+          <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
+            <p className="text-xs uppercase tracking-widest text-indigo-400 font-bold">Engenharia Proprietária</p>
+            <h2 className="text-3xl font-extrabold text-white tracking-tight sm:text-4xl">
+              Nuvem de Alta Performance & Blindagem
+            </h2>
+            <p className="text-sm text-zinc-400">
+              Sua página nunca cai, carrega instantaneamente e garante segurança absoluta para os dados dos seus clientes.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-4">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+              <Zap className="h-8 w-8 text-amber-400 mb-3" />
+              <h4 className="font-bold text-white text-sm">Carregamento 0.28s</h4>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Servidores distribuídos globalmente para abrir na velocidade da luz em qualquer rede móvel.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+              <Lock className="h-8 w-8 text-indigo-400 mb-3" />
+              <h4 className="font-bold text-white text-sm">Criptografia SSL</h4>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Certificados de segurança automáticos com blindagem de dados padrão bancário.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+              <ShieldCheck className="h-8 w-8 text-emerald-400 mb-3" />
+              <h4 className="font-bold text-white text-sm">Uptime 99.9%</h4>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Estrutura em nuvem redundante que suporta milhares de acessos simultâneos sem lentidão.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+              <Smartphone className="h-8 w-8 text-cyan-400 mb-3" />
+              <h4 className="font-bold text-white text-sm">Tecnologia PWA</h4>
+              <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                Seu cliente pode instalar o seu link como um app direto na tela inicial do celular dele.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="precos" className="py-20 border-t border-white/[0.07] bg-[#07080d]/60">
+        <PublicPricingSection />
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" className="py-20 max-w-4xl mx-auto px-6">
+        <div className="text-center max-w-xl mx-auto mb-12 space-y-3">
+          <p className="text-xs uppercase tracking-widest text-indigo-400 font-bold">Perguntas Frequentes</p>
+          <h2 className="text-3xl font-extrabold text-white tracking-tight sm:text-4xl">
             Tudo o Que Você Precisa Saber
           </h2>
         </div>
 
         <Accordion type="single" collapsible className="w-full space-y-3">
-          {faqItems.map((item, idx) => (
+          {FAQ_ITEMS.map((item, idx) => (
             <AccordionItem
               key={idx}
-              value={`item-${idx}`}
-              className="rounded-xl border border-white/10 bg-white/[.02] px-4 data-[state=open]:bg-white/[.04] transition-all"
+              value={`faq-${idx}`}
+              className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 data-[state=open]:bg-white/[0.05] transition-all"
             >
               <AccordionTrigger className="text-sm font-semibold text-white hover:no-underline text-left py-4">
                 {item.q}
               </AccordionTrigger>
-              <AccordionContent className="text-xs leading-relaxed text-[#b9afc4] pb-4">
+              <AccordionContent className="text-xs leading-relaxed text-zinc-400 pb-5">
                 {item.a}
               </AccordionContent>
             </AccordionItem>
           ))}
         </Accordion>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-function FinalCta() {
-  return (
-    <section className="relative z-10 mx-auto max-w-7xl px-5 pb-14">
-      <div className="relative overflow-hidden rounded-3xl border border-violet-300/30 bg-[linear-gradient(115deg,#47149b,#8124be_55%,#271051)] px-6 py-12 md:px-14 shadow-2xl">
-        <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-fuchsia-300/20 blur-3xl pointer-events-none" />
+      {/* Final Call to Action */}
+      <section className="py-16 max-w-7xl mx-auto px-6">
+        <div className="relative overflow-hidden rounded-3xl border border-indigo-500/30 bg-gradient-to-r from-indigo-950 via-[#0d1020] to-[#07080d] p-8 md:p-14 shadow-2xl">
+          <div className="absolute top-0 right-0 h-64 w-64 bg-indigo-500/20 blur-3xl pointer-events-none" />
 
-        <div className="relative flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 text-xs font-bold text-white mb-3">
-              <Zap className="w-3.5 h-3.5 text-amber-300" />
-              <span>Comece hoje sem custo e sem cartão</span>
+          <div className="relative flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-indigo-300 mb-3">
+                <Sparkles className="h-3.5 w-3.5 text-indigo-400" />
+                <span>Comece agora mesmo em menos de 5 minutos</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+                Seu próximo cliente está a um toque do seu WhatsApp.
+              </h2>
+              <p className="mt-3 text-sm text-zinc-300 max-w-xl">
+                Crie sua presença de alto padrão com vitrine, atendente IA e agendamento online hoje mesmo.
+              </p>
             </div>
-            <h2 className="max-w-xl font-display text-3xl sm:text-4xl font-bold leading-tight text-white">
-              Seu próximo cliente está a um toque do seu WhatsApp.
-            </h2>
-            <p className="mt-3 text-sm text-violet-100 max-w-lg leading-relaxed">
-              Crie sua vitrine de alta conversão com carrossel estilo Instagram, atendente com IA e agendamento automático em menos de 5 minutos.
+
+            <div className="shrink-0 flex flex-col sm:flex-row gap-3">
+              <Link
+                to="/auth"
+                search={{ mode: "signup" } as never}
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-white text-zinc-950 font-bold px-7 py-4 text-sm shadow-xl hover:bg-zinc-100 hover:scale-105 active:scale-95 transition-all"
+              >
+                <span>Criar Minha Página Grátis</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/[0.08] bg-[#050608] py-14">
+        <div className="mx-auto max-w-7xl px-6 grid gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
+          <div>
+            <div className="flex items-center gap-2.5 mb-3">
+              <span className="grid h-8 w-8 place-items-center rounded-xl bg-indigo-600 text-white font-bold">
+                <Sparkles className="h-4 w-4" />
+              </span>
+              <span className="font-extrabold text-lg text-white">EIALINK</span>
+            </div>
+            <p className="text-xs text-zinc-400 leading-relaxed max-w-xs">
+              Infraestrutura de alta conversão comercial para negócios locais e criadores. Conecte seu público físico e digital ao faturamento real.
             </p>
           </div>
 
-          <div className="grid gap-3 shrink-0">
-            <Link
-              to="/auth"
-              search={{ mode: "signup" } as never}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-white px-7 py-4 font-bold text-violet-950 shadow-xl hover:bg-violet-50 transition-all text-sm hover:scale-105 active:scale-95"
-            >
-              <span>Criar Minha Página Grátis</span>
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              to="/auth"
-              className="inline-flex items-center justify-center gap-2 rounded-xl border border-white/35 px-5 py-3 text-xs font-semibold text-white hover:bg-white/10 transition-colors"
-            >
-              Já tenho uma conta · Entrar
-            </Link>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Footer() {
-  return (
-    <footer className="relative z-10 border-t border-white/10 bg-[#09070d] py-12">
-      <div className="mx-auto grid max-w-7xl gap-8 px-5 md:grid-cols-[1.3fr_.7fr_.7fr_.7fr]">
-        <div>
-          <Brand />
-          <p className="mt-3 max-w-xs text-xs leading-relaxed text-[#bcb2c8]">
-            A infraestrutura definitiva de conversão para negócios locais e criadores. Transforme tráfego de redes sociais e balcão físico em faturamento real.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-3 text-xs text-[#a99fb5]">
-            <span className="flex items-center gap-1.5"><Bot className="w-3.5 h-3.5 text-emerald-400" /> Atendente IA</span>
-            <span className="flex items-center gap-1.5"><Flame className="w-3.5 h-3.5 text-orange-400" /> Vitrine</span>
-            <span className="flex items-center gap-1.5"><CalendarDays className="w-3.5 h-3.5 text-sky-400" /> Agenda</span>
-            <span className="flex items-center gap-1.5"><QrCode className="w-3.5 h-3.5 text-pink-400" /> NFC</span>
-          </div>
-        </div>
-
-        {[
-          ["Recursos", "Atendente Virtual IA", "Catálogo & Vitrine", "Agendamento 24h", "Tecnologia NFC", "Aplicativo PWA"],
-          ["Segmentos", "Restaurantes & Bares", "Clínicas & Médicos", "Salões & Estética", "Lojas & Varejo", "Advocacia & Serviços"],
-          ["Institucional", "Planos & Preços", "Acessar Conta", "Central de Dúvidas", "Termos de Uso", "Privacidade"],
-        ].map(([title, ...links]) => (
-          <div key={title}>
-            <b className="text-sm text-white font-semibold block mb-3">{title}</b>
-            <div className="grid gap-2">
-              {links.map((item) => (
-                <a key={item} href="#pilares" className="text-xs text-[#bcb2c8] hover:text-white transition-colors">
-                  {item}
-                </a>
-              ))}
+          <div>
+            <b className="text-xs uppercase tracking-wider text-white block mb-3">Recursos</b>
+            <div className="grid gap-2 text-xs text-zinc-400">
+              <a href="#solucoes" className="hover:text-white transition-colors">Atendente com IA</a>
+              <a href="#solucoes" className="hover:text-white transition-colors">Vitrine de Produtos</a>
+              <a href="#solucoes" className="hover:text-white transition-colors">Google Agenda</a>
+              <a href="#solucoes" className="hover:text-white transition-colors">Cartão NFC</a>
             </div>
           </div>
-        ))}
-      </div>
 
-      <div className="mx-auto mt-10 flex max-w-7xl flex-col sm:flex-row items-center justify-between border-t border-white/10 px-5 pt-6 text-[11px] text-[#8f859d] gap-3">
-        <span>© 2026 EiaLink — Infraestrutura de Conversão Comercial. Todos os direitos reservados.</span>
-        <span>Tecnologia Proprietária de Alta Performance · Feito com excelência no Brasil</span>
-      </div>
-    </footer>
+          <div>
+            <b className="text-xs uppercase tracking-wider text-white block mb-3">Segmentos</b>
+            <div className="grid gap-2 text-xs text-zinc-400">
+              <a href="#showcase" className="hover:text-white transition-colors">Gastronomia & Bares</a>
+              <a href="#showcase" className="hover:text-white transition-colors">Clínicas & Odonto</a>
+              <a href="#showcase" className="hover:text-white transition-colors">Estética & Salões</a>
+              <a href="#showcase" className="hover:text-white transition-colors">Advocacia & Serviços</a>
+            </div>
+          </div>
+
+          <div>
+            <b className="text-xs uppercase tracking-wider text-white block mb-3">Legal & Suporte</b>
+            <div className="grid gap-2 text-xs text-zinc-400">
+              <Link to="/terms" className="hover:text-white transition-colors">Termos de Uso</Link>
+              <Link to="/privacy" className="hover:text-white transition-colors">Política de Privacidade</Link>
+              <Link to="/refund-policy" className="hover:text-white transition-colors">Reembolso</Link>
+              <Link to="/auth" className="hover:text-white transition-colors">Área do Cliente</Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="mx-auto mt-12 max-w-7xl px-6 pt-6 border-t border-white/[0.07] flex flex-col sm:flex-row items-center justify-between text-[11px] text-zinc-500 gap-3">
+          <span>© 2026 EiaLink — Todos os direitos reservados.</span>
+          <span>Tecnologia Proprietária de Conversão Digital · Feito no Brasil</span>
+        </div>
+      </footer>
+    </div>
   );
 }

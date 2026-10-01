@@ -66,6 +66,7 @@ export const DealsService = {
       whatsapp_number: row.bio_pages?.whatsapp_number,
     }));
 
+    // Filtro por Categoria se especificado
     if (categoryId && categoryId !== "todas") {
       deals = deals.filter((d) => {
         const cat = findCategoryByKeyword(`${d.niche || ""} ${d.title} ${d.description || ""}`);
@@ -73,6 +74,7 @@ export const DealsService = {
       });
     }
 
+    // Filtro por termo de busca se especificado
     if (search && search.trim() !== "") {
       const term = search.trim().toLowerCase();
       deals = deals.filter(
@@ -87,6 +89,9 @@ export const DealsService = {
     return deals;
   },
 
+  /**
+   * Consulta profissionais e prestadores de serviços cadastrados na bio_pages da cidade indicada.
+   */
   async getActiveCityProviders(
     city?: string,
     categoryId?: string,
@@ -146,6 +151,7 @@ export const DealsService = {
         };
       });
 
+      // Filtro por cidade se informado
       if (city && city.trim() !== "" && city !== "Todas as Cidades") {
         const cleanCity = city.trim().toLowerCase();
         providers = providers.filter(
@@ -156,10 +162,12 @@ export const DealsService = {
         );
       }
 
+      // Filtro por categoria
       if (categoryId && categoryId !== "todas") {
         providers = providers.filter((p) => p.category === categoryId);
       }
 
+      // Filtro por termo de busca
       if (search && search.trim() !== "") {
         const term = search.trim().toLowerCase();
         providers = providers.filter(

@@ -3,23 +3,6 @@ import { getSavedGeminiKey } from "@/modules/prospecting/GeminiAuditorService";
 import type { DailyDeal } from "../types";
 import { findCategoryByKeyword } from "../categories";
 
-export interface HuntedProvider {
-  id: string;
-  display_name: string;
-  niche: string;
-  category: string;
-  city: string;
-  description: string;
-  contact_whatsapp?: string;
-  contact_instagram?: string;
-  source_url?: string;
-  image_url: string;
-  services?: Array<{ name: string; price?: number; description?: string }>;
-  outreach_message: string;
-  status: "discovered" | "published";
-  created_at: string;
-}
-
 export interface HuntedDeal {
   id: string;
   business_name: string;
@@ -35,6 +18,23 @@ export interface HuntedDeal {
   source_url?: string;
   image_url: string;
   is_flash?: boolean;
+  outreach_message: string;
+  status: "discovered" | "published";
+  created_at: string;
+}
+
+export interface HuntedProvider {
+  id: string;
+  display_name: string;
+  niche: string;
+  category: string;
+  city: string;
+  description: string;
+  contact_whatsapp?: string;
+  contact_instagram?: string;
+  source_url?: string;
+  image_url: string;
+  services?: Array<{ name: string; price?: number; description?: string }>;
   outreach_message: string;
   status: "discovered" | "published";
   created_at: string;
@@ -442,6 +442,7 @@ REGRAS OBRIGATÓRIAS:
 
     let gatheredRawText = "";
 
+    // 1. Se forneceu link/perfil direto de um profissional
     if (options.targetUrl && options.targetUrl.trim().length > 4) {
       try {
         let target = options.targetUrl.trim();
@@ -468,6 +469,7 @@ REGRAS OBRIGATÓRIAS:
         console.warn("[OfferHunterService] Aviso ao consultar perfil do prestador via Jina:", err);
       }
     } else {
+      // 2. Busca na web / Instagram por prestadores de serviços da cidade
       try {
         const queryTerms = options.customSearch
           ? options.customSearch
@@ -491,6 +493,7 @@ REGRAS OBRIGATÓRIAS:
       }
     }
 
+    // 3. Estruturação dos dados com Gemini
     const systemPrompt = `[RADAR DE PRESTADORES DE SERVIÇOS & PROFISSIONAIS EIA LINK]
 Você é um Especialista em Mapeamento de Negócios Locais e Prospecção B2B.
 Sua missão é extrair ou estruturar de 4 a 6 perfis de prestadores de serviços, autônomos ou profissionais liberais conceituados na cidade de "${city}"${niche ? ` na área "${niche}"` : ""}.
@@ -533,7 +536,7 @@ REGRAS OBRIGATÓRIAS:
       "gemini-2.0-flash-lite",
       "gemini-1.5-pro",
     ];
-    let rawJsonContent = null;
+    let rawJsonContent: string | null = null;
     let lastError = "";
 
     for (const modelName of modelsToTry) {
@@ -573,7 +576,7 @@ REGRAS OBRIGATÓRIAS:
         if (response.ok) {
           const resData = await response.json();
           const candidate = resData.candidates?.[0];
-          const part = candidate?.content?.parts?.find((p) => p.text && !p.thought);
+          const part = candidate?.content?.parts?.find((p: any) => p.text && !p.thought);
           if (part?.text) {
             rawJsonContent = part.text.trim();
             break;
@@ -582,7 +585,7 @@ REGRAS OBRIGATÓRIAS:
           const errText = await response.text();
           lastError = `Modelo ${modelName} retornou ${response.status}: ${errText}`;
         }
-      } catch (err) {
+      } catch (err: any) {
         lastError = `Falha no modelo ${modelName}: ${err?.message || err}`;
       }
     }
@@ -595,7 +598,7 @@ REGRAS OBRIGATÓRIAS:
       const parsed = JSON.parse(rawJsonContent);
       const rawProviders = Array.isArray(parsed.providers) ? parsed.providers : [];
 
-      const huntedProviders = rawProviders.map((p, index) => {
+      const huntedProviders: HuntedProvider[] = rawProviders.map((p: any, index: number) => {
         const fallbackCover = getNicheCoverFallback(p.niche || niche);
         const img = p.image_url && p.image_url.startsWith("http") ? p.image_url : fallbackCover;
         const matchedCategory = p.category || findCategoryByKeyword(`${p.niche || ""} ${p.display_name}`).id;
@@ -642,6 +645,7 @@ REGRAS OBRIGATÓRIAS:
     const userId = authData.user.id;
     const baseSlug = slugify(`${provider.display_name}-${provider.city}`);
 
+    // Verifica se já existe bio_page com este slug ou nome
     const { data: existingPage } = await supabase
       .from("bio_pages")
       .select("id, slug")
@@ -688,6 +692,7 @@ REGRAS OBRIGATÓRIAS:
       targetBioPageId = newPage.id;
       targetSlug = newPage.slug;
     } else {
+      // Atualiza os metadados do prestador caso já exista
       await (supabase as any)
         .from("bio_pages")
         .update({

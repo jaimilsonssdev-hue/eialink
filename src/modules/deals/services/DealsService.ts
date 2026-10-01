@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { DailyDeal, CreateDailyDealInput, ClaimDealResult } from "../types";
+import type { DailyDeal, CreateDailyDealInput, ClaimDealResult, ServiceProvider } from "../types";
+import { findCategoryByKeyword } from "../categories";
 import { formatPrice } from "@/lib/utils";
 
 export const DealsService = {
@@ -7,7 +8,7 @@ export const DealsService = {
    * Consulta daily_deals ativas (is_active = true e expires_at > now),
    * trazendo os dados da bio_pages relacionada.
    */
-  async getActiveCityDeals(city?: string): Promise<DailyDeal[]> {
+  async getActiveCityDeals(city?: string, categoryId?: string, search?: string): Promise<DailyDeal[]> {
     let query = (supabase as any)
       .from("daily_deals")
       .select(`
@@ -36,7 +37,7 @@ export const DealsService = {
 
     if (!data) return [];
 
-    return (data as any[]).map((row) => ({
+    let deals: DailyDeal[] = (data as any[]).map((row) => ({
       id: row.id,
       bio_page_id: row.bio_page_id,
       user_id: row.user_id,
@@ -64,6 +65,116 @@ export const DealsService = {
       avatar_url: row.bio_pages?.avatar_url,
       whatsapp_number: row.bio_pages?.whatsapp_number,
     }));
+
+    if (categoryId && categoryId !== "todas") {
+      deals = deals.filter((d) => {
+        const cat = findCategoryByKeyword(`${d.niche || ""} ${d.title} ${d.description || ""}`);
+        return cat.id === categoryId;
+      });
+    }
+
+    if (search && search.trim() !== "") {
+      const term = search.trim().toLowerCase();
+      deals = deals.filter(
+        (d) =>
+          d.title.toLowerCase().includes(term) ||
+          (d.description && d.description.toLowerCase().includes(term)) ||
+          (d.business_name && d.business_name.toLowerCase().includes(term)) ||
+          (d.niche && d.niche.toLowerCase().includes(term))
+      );
+    }
+
+    return deals;
+  },
+
+  async getActiveCityProviders(
+    city?: string,
+    categoryId?: string,
+    search?: string
+  ): Promise<ServiceProvider[]> {
+    try {
+      const query = (supabase as any)
+        .from("bio_pages")
+        .select(`
+          id,
+          display_name,
+          slug,
+          avatar_url,
+          cover_url,
+          description,
+          whatsapp,
+          social_links,
+          published,
+          created_at
+        `)
+        .eq("published", true)
+        .order("created_at", { ascending: false })
+        .limit(60);
+
+      const { data, error } = await query;
+      if (error) {
+        console.warn("[DealsService] Aviso ao buscar prestadores de serviços:", error);
+        return [];
+      }
+
+      if (!data) return [];
+
+      let providers: ServiceProvider[] = (data as any[]).map((row) => {
+        const social = (row.social_links as Record<string, any>) || {};
+        const providerCity = String(social.city || "").trim();
+        const niche = String(social.niche || "").trim();
+        const categoryObj = findCategoryByKeyword(
+          `${niche} ${row.display_name} ${row.description || ""}`
+        );
+
+        return {
+          id: row.id,
+          display_name: row.display_name,
+          slug: row.slug,
+          avatar_url: row.avatar_url,
+          cover_url: row.cover_url,
+          description: row.description,
+          category: social.category || categoryObj.id,
+          niche: niche || categoryObj.shortLabel,
+          city: providerCity || "Teixeira de Freitas",
+          whatsapp: row.whatsapp,
+          instagram: social.instagram,
+          is_verified: Boolean(social.is_verified ?? true),
+          featured: Boolean(social.featured),
+          services: Array.isArray(social.suggested_services) ? social.suggested_services : [],
+          created_at: row.created_at,
+        };
+      });
+
+      if (city && city.trim() !== "" && city !== "Todas as Cidades") {
+        const cleanCity = city.trim().toLowerCase();
+        providers = providers.filter(
+          (p) =>
+            !p.city ||
+            p.city.toLowerCase().includes(cleanCity) ||
+            cleanCity.includes(p.city.toLowerCase())
+        );
+      }
+
+      if (categoryId && categoryId !== "todas") {
+        providers = providers.filter((p) => p.category === categoryId);
+      }
+
+      if (search && search.trim() !== "") {
+        const term = search.trim().toLowerCase();
+        providers = providers.filter(
+          (p) =>
+            p.display_name.toLowerCase().includes(term) ||
+            (p.description && p.description.toLowerCase().includes(term)) ||
+            (p.niche && p.niche.toLowerCase().includes(term))
+        );
+      }
+
+      return providers;
+    } catch (err) {
+      console.error("[DealsService] Erro ao carregar prestadores:", err);
+      return [];
+    }
   },
 
   /**

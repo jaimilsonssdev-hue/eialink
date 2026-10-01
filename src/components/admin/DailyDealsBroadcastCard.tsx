@@ -25,6 +25,7 @@ import {
   Target,
   Loader2,
   CheckCircle2,
+  Wrench,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -34,6 +35,7 @@ import {
   type DailyDeal,
   type CrossTrafficPartnership,
   type HuntedDeal,
+  type HuntedProvider,
 } from "@/modules/deals";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,14 +59,20 @@ export function DailyDealsBroadcastCard() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  // Caçador de Ofertas (Offer Hunter AI) states
+  // Caçador de Ofertas & Prestadores (Offer Hunter AI) states
+  const [hunterType, setHunterType] = useState<"deals" | "providers">("deals");
   const [hunterCity, setHunterCity] = useState("Teixeira de Freitas");
   const [hunterNiche, setHunterNiche] = useState("Gastronomia & Delivery");
   const [hunterTargetUrl, setHunterTargetUrl] = useState("");
   const [hunterResults, setHunterResults] = useState<HuntedDeal[]>([]);
+  const [huntedProviders, setHuntedProviders] = useState<HuntedProvider[]>([]);
   const [isHunting, setIsHunting] = useState(false);
   const [publishingDealId, setPublishingDealId] = useState<string | null>(null);
+  const [publishingProviderId, setPublishingProviderId] = useState<string | null>(null);
   const [publishedDealsMap, setPublishedDealsMap] = useState<
+    Record<string, { muralUrl: string; pageUrl: string; slug: string }>
+  >({});
+  const [publishedProvidersMap, setPublishedProvidersMap] = useState<
     Record<string, { muralUrl: string; pageUrl: string; slug: string }>
   >({});
 
@@ -150,6 +158,48 @@ export function DailyDealsBroadcastCard() {
       toast.error(err?.message || "Erro ao publicar oferta no mural.");
     } finally {
       setPublishingDealId(null);
+    }
+  };
+
+  const handleHuntProviders = async () => {
+    setIsHunting(true);
+    try {
+      const results = await OfferHunterService.huntCityProviders({
+        city: hunterCity || city,
+        niche: hunterNiche,
+        targetUrl: hunterTargetUrl,
+      });
+      setHuntedProviders(results);
+      if (results.length > 0) {
+        toast.success(`${results.length} prestadores e negócios locais rastreados com sucesso!`);
+      } else {
+        toast.info("Nenhum profissional encontrado com os filtros informados. Tente outro nicho ou termo.");
+      }
+    } catch (err: any) {
+      console.error("[DailyDealsBroadcastCard] Erro ao rastrear prestadores:", err);
+      toast.error(err?.message || "Erro ao rastrear prestadores de serviços.");
+    } finally {
+      setIsHunting(false);
+    }
+  };
+
+  const handlePublishProvider = async (provider: HuntedProvider) => {
+    setPublishingProviderId(provider.id);
+    try {
+      const res = await OfferHunterService.publishHuntedProvider(provider);
+      setPublishedProvidersMap((prev) => ({
+        ...prev,
+        [provider.id]: res,
+      }));
+      setHuntedProviders((prev) =>
+        prev.map((p) => (p.id === provider.id ? { ...p, status: "published" as const } : p))
+      );
+      toast.success(`Profissional "${provider.display_name}" publicado no Guia com sucesso!`);
+    } catch (err: any) {
+      console.error("[DailyDealsBroadcastCard] Erro ao publicar prestador:", err);
+      toast.error(err?.message || "Erro ao publicar prestador de serviços.");
+    } finally {
+      setPublishingProviderId(null);
     }
   };
 
@@ -564,19 +614,53 @@ export function DailyDealsBroadcastCard() {
             </div>
           </TabsContent>
 
-          {/* TAB 2: CAÇADOR DE OFERTAS & OPORTUNIDADES COM IA */}
+          {/* TAB 2: CAÇADOR DE OFERTAS & PRESTADORES DE SERVIÇO COM IA */}
           <TabsContent value="hunter" className="space-y-5 mt-0">
+            {/* Seletor de Tipo de Caça */}
+            <div className="flex items-center gap-2 p-1 rounded-xl bg-muted/60 border border-border w-fit">
+              <button
+                type="button"
+                onClick={() => setHunterType("deals")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  hunterType === "deals"
+                    ? "bg-emerald-500 text-black shadow-xs font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Tag className="h-3.5 w-3.5" />
+                <span>Ofertas do Comércio ({hunterResults.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setHunterType("providers")}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+                  hunterType === "providers"
+                    ? "bg-indigo-600 text-white shadow-xs font-bold"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Briefcase className="h-3.5 w-3.5" />
+                <span>Prestadores & Autônomos ({huntedProviders.length})</span>
+              </button>
+            </div>
+
             {/* Banner Explicativo */}
             <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-teal-950/30 to-purple-950/20 border border-emerald-500/30 text-xs text-slate-200 space-y-2">
               <div className="flex items-center gap-2 font-semibold text-emerald-400">
                 <Target className="h-4 w-4 text-emerald-400" />
-                <span className="text-sm font-bold">Caçador de Ofertas & Radar de Prospecção</span>
+                <span className="text-sm font-bold">
+                  {hunterType === "deals"
+                    ? "Caçador de Ofertas & Radar de Prospecção"
+                    : "Radar de Prestadores de Serviços & Negócios Locais"}
+                </span>
                 <Badge variant="outline" className="text-[10px] bg-emerald-500/10 text-emerald-300 border-emerald-500/30">
                   IA + Web Scraper
                 </Badge>
               </div>
               <p className="text-muted-foreground leading-relaxed">
-                Varra posts do Instagram, anúncios locais e ofertas de qualquer cidade. A IA estrutura a oportunidade com preços e regras, gera uma página digital para a empresa e publica no Mural de Hoje com 1 clique — pronta para você abordar o lojista no WhatsApp com um benefício concreto!
+                {hunterType === "deals"
+                  ? "Varra posts do Instagram, anúncios locais e ofertas de qualquer cidade. A IA estrutura a oportunidade com preços e regras, gera uma página digital para a empresa e publica no Mural de Hoje com 1 clique — pronta para você abordar o lojista no WhatsApp com um benefício concreto!"
+                  : "Descubra eletricistas, diaristas, técnicos, mecânicos e prestadores de serviços de qualquer cidade. A IA formata o perfil profissional, sugere os serviços prestados e cadastra no Guia Oficial de Serviços com 1 clique — gerando o link pronto para você enviar no WhatsApp dele!"}
               </p>
             </div>
 
@@ -625,11 +709,11 @@ export function DailyDealsBroadcastCard() {
                     className="w-full h-9 px-3 rounded-lg border border-border bg-background text-foreground text-xs focus:ring-1 focus:ring-emerald-500 outline-none"
                   >
                     <option value="Gastronomia & Delivery">Gastronomia & Delivery (Pizzas, Hamburguers, Sushi)</option>
-                    <option value="Pizzaria & Rodízio">Pizzarias & Rodízios</option>
-                    <option value="Hamburgueria & Lanches">Hamburguerias & Lanches Artesanais</option>
-                    <option value="Estética, Beleza & Barbearia">Estética, Beleza & Barbearias</option>
-                    <option value="Saúde & Clínicas Odontológicas">Saúde & Clínicas Odontológicas</option>
-                    <option value="Moda & Vestuário">Moda & Vestuário Local</option>
+                    <option value="Reformas & Serviços Gerais">Reformas & Construção (Eletricista, Pintor, Pedreiro)</option>
+                    <option value="Estética, Beleza & Barbearia">Estética, Beleza, Unhas & Barbearias</option>
+                    <option value="Saúde & Bem-Estar">Saúde, Clínicas, Dentistas & Fisioterapia</option>
+                    <option value="Automotivo & Mecânica">Automotivo (Mecânica, Auto Elétrica, Lavajato)</option>
+                    <option value="Serviços Profissionais">Serviços Profissionais (Contabilidade, TI, Advocacia)</option>
                     <option value="Fitness & Academia">Academias, Crossfit & Personal</option>
                     <option value="Comércio Geral">Comércio Geral & Varejo</option>
                   </select>
@@ -656,19 +740,31 @@ export function DailyDealsBroadcastCard() {
               <div className="flex items-center justify-end pt-2 border-t border-border/60">
                 <Button
                   type="button"
-                  onClick={handleHuntDeals}
+                  onClick={hunterType === "deals" ? handleHuntDeals : handleHuntProviders}
                   disabled={isHunting || !hunterCity}
-                  className="h-9 px-4 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black gap-2 shadow-md shadow-emerald-500/20"
+                  className={`h-9 px-4 text-xs font-bold gap-2 shadow-md ${
+                    hunterType === "deals"
+                      ? "bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/20"
+                      : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-indigo-600/20"
+                  }`}
                 >
                   {isHunting ? (
                     <>
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      <span>Varrendo Promoções na Região...</span>
+                      <span>
+                        {hunterType === "deals"
+                          ? "Varrendo Promoções na Região..."
+                          : "Auditando Prestadores de Serviços..."}
+                      </span>
                     </>
                   ) : (
                     <>
                       <Target className="h-3.5 w-3.5" />
-                      <span>Rastrear Oportunidades com IA</span>
+                      <span>
+                        {hunterType === "deals"
+                          ? "Rastrear Oportunidades com IA"
+                          : "Rastrear Prestadores de Serviços com IA"}
+                      </span>
                     </>
                   )}
                 </Button>
@@ -683,158 +779,310 @@ export function DailyDealsBroadcastCard() {
                 </div>
                 <div className="space-y-1">
                   <h4 className="text-sm font-bold text-white">
-                    Auditando o comércio de {hunterCity}...
+                    {hunterType === "deals"
+                      ? `Auditando ofertas do comércio em ${hunterCity}...`
+                      : `Mapeando profissionais e prestadores em ${hunterCity}...`}
                   </h4>
                   <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                    Conectando com o radar de redes sociais e estruturando as melhores ofertas com o Gemini 2.5 Flash.
+                    Conectando com o radar de redes sociais e estruturando as informações com o Gemini 2.0 Flash.
                   </p>
                 </div>
               </div>
-            ) : hunterResults.length === 0 ? (
-              <div className="py-10 px-4 rounded-xl border border-dashed border-border text-center space-y-2">
-                <Flame className="h-8 w-8 text-muted-foreground/60 mx-auto" />
-                <h4 className="text-xs font-semibold text-foreground">Nenhuma oferta rastreada ainda</h4>
-                <p className="text-xs text-muted-foreground max-w-md mx-auto">
-                  Clique no botão verde acima para ativar o radar e caçar ofertas ativas em {hunterCity}. Você poderá publicá-las no mural e notificar o lojista com 1 clique!
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                    <span>Oportunidades Encontradas ({hunterResults.length})</span>
-                    <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30">
-                      Prontas para Publicar
-                    </Badge>
-                  </h4>
+            ) : hunterType === "deals" ? (
+              /* MODO 1: RESULTADOS DE OFERTAS */
+              hunterResults.length === 0 ? (
+                <div className="py-10 px-4 rounded-xl border border-dashed border-border text-center space-y-2">
+                  <Flame className="h-8 w-8 text-muted-foreground/60 mx-auto" />
+                  <h4 className="text-xs font-semibold text-foreground">Nenhuma oferta rastreada ainda</h4>
+                  <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                    Clique no botão acima para ativar o radar e caçar ofertas ativas em {hunterCity}. Você poderá publicá-las no mural e notificar o lojista com 1 clique!
+                  </p>
                 </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <span>Oportunidades Encontradas ({hunterResults.length})</span>
+                      <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30">
+                        Prontas para Publicar
+                      </Badge>
+                    </h4>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {hunterResults.map((deal) => {
-                    const isPublished = deal.status === "published";
-                    const isPublishing = publishingDealId === deal.id;
-                    const publishedInfo = publishedDealsMap[deal.id];
-                    const whatsappUrl = OfferHunterService.getWhatsAppOutreachLink(deal, publishedInfo?.slug);
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {hunterResults.map((deal) => {
+                      const isPublished = deal.status === "published";
+                      const isPublishing = publishingDealId === deal.id;
+                      const publishedInfo = publishedDealsMap[deal.id];
+                      const whatsappUrl = OfferHunterService.getWhatsAppOutreachLink(deal, publishedInfo?.slug);
 
-                    return (
-                      <div
-                        key={deal.id}
-                        className={`flex flex-col justify-between p-4 rounded-xl border transition-all ${
-                          isPublished
-                            ? "bg-emerald-950/20 border-emerald-500/40 shadow-sm"
-                            : "bg-background/80 hover:bg-muted/20 border-border/80"
-                        }`}
-                      >
-                        <div className="space-y-3">
-                          {/* Topo do Card com Imagem e Badges */}
-                          <div className="flex items-start gap-3">
-                            <img
-                              src={deal.image_url}
-                              alt={deal.title}
-                              className="h-16 w-20 rounded-lg object-cover border border-border/60 shrink-0 bg-muted"
-                              loading="lazy"
-                            />
-                            <div className="space-y-1 min-w-0 flex-1">
-                              <div className="flex items-center gap-1.5 flex-wrap">
-                                <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30 font-bold">
-                                  {deal.discount_badge}
-                                </Badge>
-                                {deal.is_flash && (
-                                  <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/30 gap-1">
-                                    <Zap className="h-2.5 w-2.5" />
-                                    Relâmpago
+                      return (
+                        <div
+                          key={deal.id}
+                          className={`flex flex-col justify-between p-4 rounded-xl border transition-all ${
+                            isPublished
+                              ? "bg-emerald-950/20 border-emerald-500/40 shadow-sm"
+                              : "bg-background/80 hover:bg-muted/20 border-border/80"
+                          }`}
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-3">
+                              <img
+                                src={deal.image_url}
+                                alt={deal.title}
+                                className="h-16 w-20 rounded-lg object-cover border border-border/60 shrink-0 bg-muted"
+                                loading="lazy"
+                              />
+                              <div className="space-y-1 min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <Badge variant="outline" className="text-[10px] text-emerald-400 border-emerald-500/30 font-bold">
+                                    {deal.discount_badge}
                                   </Badge>
-                                )}
-                                <span className="text-[10px] text-muted-foreground truncate">
-                                  {deal.niche}
-                                </span>
+                                  {deal.is_flash && (
+                                    <Badge variant="outline" className="text-[10px] text-amber-400 border-amber-500/30 gap-1">
+                                      <Zap className="h-2.5 w-2.5" />
+                                      Relâmpago
+                                    </Badge>
+                                  )}
+                                  <span className="text-[10px] text-muted-foreground truncate">
+                                    {deal.niche}
+                                  </span>
+                                </div>
+                                <h4 className="text-xs font-bold text-foreground line-clamp-1">
+                                  {deal.business_name}
+                                </h4>
+                                <p className="text-xs font-semibold text-emerald-400 line-clamp-1">
+                                  {deal.title}
+                                </p>
                               </div>
-                              <h4 className="text-xs font-bold text-foreground line-clamp-1">
-                                {deal.business_name}
-                              </h4>
-                              <p className="text-xs font-semibold text-emerald-400 line-clamp-1">
-                                {deal.title}
-                              </p>
                             </div>
-                          </div>
 
-                          {/* Descrição e Preços */}
-                          <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-                            {deal.description}
-                          </p>
+                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                              {deal.description}
+                            </p>
 
-                          <div className="flex items-baseline gap-2 pt-1 border-t border-border/60">
-                            <span className="text-sm font-extrabold text-foreground">
-                              R$ {deal.deal_price.toFixed(2).replace(".", ",")}
-                            </span>
-                            {deal.original_price && (
-                              <span className="text-xs line-through text-muted-foreground">
-                                R$ {deal.original_price.toFixed(2).replace(".", ",")}
+                            <div className="flex items-baseline gap-2 pt-1 border-t border-border/60">
+                              <span className="text-sm font-extrabold text-foreground">
+                                R$ {deal.deal_price.toFixed(2).replace(".", ",")}
                               </span>
-                            )}
-                            {deal.contact_whatsapp && (
-                              <span className="text-[10px] text-muted-foreground ml-auto">
-                                WhatsApp: {deal.contact_whatsapp}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Botões de Ação */}
-                        <div className="pt-3 mt-3 border-t border-border/60 flex flex-wrap items-center gap-2 justify-between">
-                          {isPublished ? (
-                            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
-                              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
-                              <span>No Ar no Mural!</span>
-                              {publishedInfo?.pageUrl && (
-                                <a
-                                  href={publishedInfo.pageUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-[11px] text-blue-400 hover:underline flex items-center gap-0.5 ml-1"
-                                >
-                                  <span>Ver Página</span>
-                                  <ExternalLink className="h-2.5 w-2.5" />
-                                </a>
+                              {deal.original_price && (
+                                <span className="text-xs line-through text-muted-foreground">
+                                  R$ {deal.original_price.toFixed(2).replace(".", ",")}
+                                </span>
+                              )}
+                              {deal.contact_whatsapp && (
+                                <span className="text-[10px] text-muted-foreground ml-auto">
+                                  WhatsApp: {deal.contact_whatsapp}
+                                </span>
                               )}
                             </div>
-                          ) : (
-                            <Button
-                              type="button"
-                              size="sm"
-                              disabled={isPublishing}
-                              onClick={() => handlePublishHuntedDeal(deal)}
-                              className="h-8 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black gap-1.5 shadow-xs"
+                          </div>
+
+                          <div className="pt-3 mt-3 border-t border-border/60 flex flex-wrap items-center gap-2 justify-between">
+                            {isPublished ? (
+                              <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                                <span>No Ar no Mural!</span>
+                                {publishedInfo?.pageUrl && (
+                                  <a
+                                    href={publishedInfo.pageUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[11px] text-blue-400 hover:underline flex items-center gap-0.5 ml-1"
+                                  >
+                                    <span>Ver Página</span>
+                                    <ExternalLink className="h-2.5 w-2.5" />
+                                  </a>
+                                )}
+                              </div>
+                            ) : (
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={isPublishing}
+                                onClick={() => handlePublishHuntedDeal(deal)}
+                                className="h-8 text-xs font-bold bg-emerald-500 hover:bg-emerald-400 text-black gap-1.5 shadow-xs"
+                              >
+                                {isPublishing ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>Publicando...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Zap className="h-3 w-3" />
+                                    <span>Publicar no Mural</span>
+                                  </>
+                                )}
+                              </Button>
+                            )}
+
+                            <a
+                              href={whatsappUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-xs ml-auto"
                             >
-                              {isPublishing ? (
-                                <>
-                                  <Loader2 className="h-3 w-3 animate-spin" />
-                                  <span>Publicando...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Zap className="h-3 w-3" />
-                                  <span>Publicar no Mural</span>
-                                </>
-                              )}
-                            </Button>
-                          )}
-
-                          <a
-                            href={whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-xs ml-auto"
-                          >
-                            <Send className="h-3 w-3" />
-                            <span>Abordar no WhatsApp</span>
-                          </a>
+                              <Send className="h-3 w-3" />
+                              <span>Abordar no WhatsApp</span>
+                            </a>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
+              )
+            ) : (
+              /* MODO 2: RESULTADOS DE PRESTADORES DE SERVIÇOS */
+              huntedProviders.length === 0 ? (
+                <div className="py-10 px-4 rounded-xl border border-dashed border-border text-center space-y-2">
+                  <Briefcase className="h-8 w-8 text-muted-foreground/60 mx-auto" />
+                  <h4 className="text-xs font-semibold text-foreground">Nenhum prestador rastreado ainda</h4>
+                  <p className="text-xs text-muted-foreground max-w-md mx-auto">
+                    Selecione o nicho e a cidade acima e clique no botão roxo para rastrear profissionais autônomos e cadastrá-los no Guia de Serviços do EIA Link!
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <span>Profissionais & Prestadores Encontrados ({huntedProviders.length})</span>
+                      <Badge variant="outline" className="text-[10px] text-indigo-400 border-indigo-500/30">
+                        Prontos para o Guia
+                      </Badge>
+                    </h4>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {huntedProviders.map((provider) => {
+                      const isPublished = provider.status === "published";
+                      const isPublishing = publishingProviderId === provider.id;
+                      const publishedInfo = publishedProvidersMap[provider.id];
+                      const whatsappUrl = OfferHunterService.getWhatsAppProviderOutreachLink(
+                        provider,
+                        publishedInfo?.slug
+                      );
+
+                      return (
+                        <div
+                          key={provider.id}
+                          className={`flex flex-col justify-between p-4 rounded-xl border transition-all ${
+                            isPublished
+                              ? "bg-indigo-950/20 border-indigo-500/40 shadow-sm"
+                              : "bg-background/80 hover:bg-muted/20 border-border/80"
+                          }`}
+                        >
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-3">
+                              {provider.image_url ? (
+                                <img
+                                  src={provider.image_url}
+                                  alt={provider.display_name}
+                                  className="h-16 w-16 rounded-xl object-cover border border-border/60 shrink-0 bg-muted"
+                                  loading="lazy"
+                                />
+                              ) : (
+                                <div className="h-16 w-16 rounded-xl bg-indigo-950/50 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-300 shrink-0">
+                                  {provider.display_name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+
+                              <div className="space-y-1 min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <Badge variant="outline" className="text-[10px] text-indigo-400 border-indigo-500/30 font-semibold">
+                                    {provider.niche || provider.category}
+                                  </Badge>
+                                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                                    <MapPin className="h-2.5 w-2.5 text-emerald-400" />
+                                    {provider.city}
+                                  </span>
+                                </div>
+                                <h4 className="text-sm font-bold text-foreground line-clamp-1">
+                                  {provider.display_name}
+                                </h4>
+                                {provider.contact_whatsapp && (
+                                  <p className="text-xs text-emerald-400 font-mono">
+                                    WhatsApp: {provider.contact_whatsapp}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+
+                            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                              {provider.description}
+                            </p>
+
+                            {/* Tags de Serviços Oferecidos */}
+                            {provider.suggested_services && provider.suggested_services.length > 0 && (
+                              <div className="flex flex-wrap gap-1 pt-1">
+                                {provider.suggested_services.map((srv, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="text-[10px] px-2 py-0.5 rounded bg-muted/60 text-foreground border border-border"
+                                  >
+                                    {srv.name} {srv.price ? `(R$ ${srv.price})` : ""}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="pt-3 mt-3 border-t border-border/60 flex flex-wrap items-center gap-2 justify-between">
+                            {isPublished ? (
+                              <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-semibold">
+                                <CheckCircle2 className="h-3.5 w-3.5 text-indigo-400" />
+                                <span>No Ar no Guia!</span>
+                                {publishedInfo?.pageUrl && (
+                                  <a
+                                    href={publishedInfo.pageUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-[11px] text-blue-400 hover:underline flex items-center gap-0.5 ml-1"
+                                  >
+                                    <span>Ver Cartão PWA</span>
+                                    <ExternalLink className="h-2.5 w-2.5" />
+                                  </a>
+                                )}
+                              </div>
+                            ) : (
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={isPublishing}
+                                onClick={() => handlePublishProvider(provider)}
+                                className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white gap-1.5 shadow-xs"
+                              >
+                                {isPublishing ? (
+                                  <>
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                    <span>Cadastrando...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Wrench className="h-3 w-3" />
+                                    <span>Publicar no Guia</span>
+                                  </>
+                                )}
+                              </Button>
+                            )}
+
+                            <a
+                              href={whatsappUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors shadow-xs ml-auto"
+                            >
+                              <Send className="h-3 w-3" />
+                              <span>Abordar no WhatsApp</span>
+                            </a>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )
             )}
           </TabsContent>
 

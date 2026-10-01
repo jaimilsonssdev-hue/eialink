@@ -1,6 +1,24 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSavedGeminiKey } from "@/modules/prospecting/GeminiAuditorService";
 import type { DailyDeal } from "../types";
+import { findCategoryByKeyword } from "../categories";
+
+export interface HuntedProvider {
+  id: string;
+  display_name: string;
+  niche: string;
+  category: string;
+  city: string;
+  description: string;
+  contact_whatsapp?: string;
+  contact_instagram?: string;
+  source_url?: string;
+  image_url: string;
+  services?: Array<{ name: string; price?: number; description?: string }>;
+  outreach_message: string;
+  status: "discovered" | "published";
+  created_at: string;
+}
 
 export interface HuntedDeal {
   id: string;
@@ -401,6 +419,317 @@ REGRAS OBRIGATÓRIAS:
     const message =
       deal.outreach_message ||
       `Olá ${deal.business_name}! 👋\n\nNotamos a oferta de vocês: *${deal.title}*.\n\nPara apoiar o comércio local, nós acabamos de destacar a sua oferta GRATUITAMENTE no *Mural de Oportunidades de ${deal.city}* no EIA LINK!\n\n👉 Veja o seu destaque no ar aqui: ${muralUrl}${pageUrl ? `\n\nCriamos também uma página interativa de demonstração para vocês: ${pageUrl}` : ""}\n\nSe quiserem gerenciar novos cupons ou receber pedidos diretos no WhatsApp com cartão digital PWA, estamos à disposição!`;
+
+    if (cleanNumber.length >= 10) {
+      return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
+    }
+    return `https://wa.me/?text=${encodeURIComponent(message)}`;
+  },
+
+  /**
+   * Garimpa prestadores de serviços, autônomos e negócios locais na cidade indicada.
+   */
+  async huntCityProviders(options: HuntCityDealsOptions): Promise<HuntedProvider[]> {
+    const city = options.city?.trim() || "Teixeira de Freitas";
+    const niche = options.niche?.trim() || "";
+    const apiKey = (options.apiKey || getSavedGeminiKey() || "").trim();
+
+    if (!apiKey) {
+      throw new Error(
+        "Chave da API do Google AI Studio / Gemini não configurada. Configure a chave para rastrear prestadores de serviços.",
+      );
+    }
+
+    let gatheredRawText = "";
+
+    if (options.targetUrl && options.targetUrl.trim().length > 4) {
+      try {
+        let target = options.targetUrl.trim();
+        if (!target.startsWith("http://") && !target.startsWith("https://")) {
+          if (target.startsWith("@") || !target.includes(".")) {
+            target = `https://www.instagram.com/${target.replace(/^@/, "")}/`;
+          } else {
+            target = `https://${target}`;
+          }
+        }
+
+        const jinaUrl = `https://r.jina.ai/${target}`;
+        const res = await fetch(jinaUrl, {
+          headers: {
+            "Accept-Language": "pt-BR,pt;q=0.9",
+            "x-timeout": "25",
+          },
+          signal: AbortSignal.timeout(20000),
+        });
+        if (res.ok) {
+          gatheredRawText = await res.text();
+        }
+      } catch (err) {
+        console.warn("[OfferHunterService] Aviso ao consultar perfil do prestador via Jina:", err);
+      }
+    } else {
+      try {
+        const queryTerms = options.customSearch
+          ? options.customSearch
+          : `site:instagram.com "${city}" ("orçamento" OR "atendimento" OR "whatsapp" OR "serviço" OR "profissional" OR "agendamento") ${niche}`;
+
+        const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(queryTerms)}&hl=pt-BR`;
+        const jinaUrl = `https://r.jina.ai/${searchUrl}`;
+
+        const res = await fetch(jinaUrl, {
+          headers: {
+            "Accept-Language": "pt-BR,pt;q=0.9",
+            "x-timeout": "25",
+          },
+          signal: AbortSignal.timeout(22000),
+        });
+        if (res.ok) {
+          gatheredRawText = await res.text();
+        }
+      } catch (err) {
+        console.warn("[OfferHunterService] Aviso ao buscar prestadores via Jina:", err);
+      }
+    }
+
+    const systemPrompt = `[RADAR DE PRESTADORES DE SERVIÇOS & PROFISSIONAIS EIA LINK]
+Você é um Especialista em Mapeamento de Negócios Locais e Prospecção B2B.
+Sua missão é extrair ou estruturar de 4 a 6 perfis de prestadores de serviços, autônomos ou profissionais liberais conceituados na cidade de "${city}"${niche ? ` na área "${niche}"` : ""}.
+
+DADOS COLETADOS:
+${gatheredRawText ? gatheredRawText.slice(0, 14000) : "Nenhum resultado direto da web. Gere perfis profissionais altamente plausíveis, realistas e bem avaliados da cidade indicada."}
+
+REGRAS OBRIGATÓRIAS:
+1. Extraia o nome do profissional ou empresa de serviços (ex: "Dr. Marcelo Ramos - Odontologia", "Elétrica Silva & Climatização", "Studio Bella - Cabelo & Estética", "Advocacia Oliveira & Associados").
+2. Identifique o nicho específico e a categoria correspondente:
+   Categorias válidas: "gastronomia", "beleza", "reformas", "saude", "automotivo", "profissionais", "fitness", "comercio".
+3. Descrição persuasiva das especialidades e diferenciais do profissional.
+4. Lista de 2 a 4 principais serviços prestados com nome claro e valor estimado médio se aplicável.
+5. Crie uma mensagem consultiva pronta para WhatsApp (outreach_message) informando com entusiasmo que o profissional foi cadastrado e destacado no Guia Oficial de Profissionais de ${city} no EIA LINK, permitindo receber contatos diretos no WhatsApp.
+6. Retorne RIGOROSAMENTE apenas um JSON no formato:
+{
+  "providers": [
+    {
+      "display_name": "Nome do Profissional / Empresa",
+      "niche": "Eletricista Residencial & Predial",
+      "category": "reformas",
+      "city": "${city}",
+      "description": "Atendimento rápido para instalações elétricas, quadros de distribuição, padrão Coelba e manutenção 24h.",
+      "contact_whatsapp": "5573999999999",
+      "contact_instagram": "@profissionallocal",
+      "source_url": "https://instagram.com/...",
+      "image_url": "",
+      "services": [
+        { "name": "Instalação de Quadro Elétrico", "price": 180, "description": "Com disjuntores e aterramento seguro" },
+        { "name": "Manutenção Preventiva", "price": 120, "description": "Revisão completa da fiação" }
+      ],
+      "outreach_message": "Olá! Vimos seu excelente trabalho em ${city}..."
+    }
+  ]
+}`;
+
+    const modelsToTry = [
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-2.0-flash-lite",
+      "gemini-1.5-pro",
+    ];
+    let rawJsonContent = null;
+    let lastError = "";
+
+    for (const modelName of modelsToTry) {
+      try {
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
+            apiKey,
+          )}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              system_instruction: {
+                parts: [{ text: systemPrompt }],
+              },
+              contents: [
+                {
+                  role: "user",
+                  parts: [
+                    {
+                      text: `Rastreie e estruture os melhores prestadores de serviços e profissionais de ${city}${niche ? ` na categoria ${niche}` : ""} para cadastrar no guia. Retorne apenas o JSON.`,
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.4,
+                maxOutputTokens: 3500,
+                responseMimeType: "application/json",
+              },
+            }),
+          },
+        );
+
+        if (response.ok) {
+          const resData = await response.json();
+          const candidate = resData.candidates?.[0];
+          const part = candidate?.content?.parts?.find((p) => p.text && !p.thought);
+          if (part?.text) {
+            rawJsonContent = part.text.trim();
+            break;
+          }
+        } else {
+          const errText = await response.text();
+          lastError = `Modelo ${modelName} retornou ${response.status}: ${errText}`;
+        }
+      } catch (err) {
+        lastError = `Falha no modelo ${modelName}: ${err?.message || err}`;
+      }
+    }
+
+    if (!rawJsonContent) {
+      throw new Error(`Falha ao rastrear prestadores pelo Radar de IA: ${lastError}`);
+    }
+
+    try {
+      const parsed = JSON.parse(rawJsonContent);
+      const rawProviders = Array.isArray(parsed.providers) ? parsed.providers : [];
+
+      const huntedProviders = rawProviders.map((p, index) => {
+        const fallbackCover = getNicheCoverFallback(p.niche || niche);
+        const img = p.image_url && p.image_url.startsWith("http") ? p.image_url : fallbackCover;
+        const matchedCategory = p.category || findCategoryByKeyword(`${p.niche || ""} ${p.display_name}`).id;
+
+        return {
+          id: `provider-${Date.now()}-${index}`,
+          display_name: String(p.display_name || `Profissional de ${city}`).trim(),
+          niche: String(p.niche || niche || "Serviços Especializados").trim(),
+          category: matchedCategory,
+          city: String(p.city || city).trim(),
+          description: String(p.description || "Entre em contato direto pelo WhatsApp para orçamentos e agendamento.").trim(),
+          contact_whatsapp: p.contact_whatsapp ? String(p.contact_whatsapp).replace(/\D/g, "") : undefined,
+          contact_instagram: p.contact_instagram ? String(p.contact_instagram).trim() : undefined,
+          source_url: p.source_url ? String(p.source_url).trim() : undefined,
+          image_url: img,
+          services: Array.isArray(p.services) ? p.services : [],
+          outreach_message: String(p.outreach_message || "").trim(),
+          status: "discovered",
+          created_at: new Date().toISOString(),
+        };
+      });
+
+      return huntedProviders;
+    } catch (parseErr) {
+      console.error("[OfferHunterService] Erro ao processar JSON de profissionais:", parseErr);
+      throw new Error("Formato inválido retornado pelo Radar de Profissionais.");
+    }
+  },
+
+  /**
+   * Publica o prestador de serviços no Guia do EIA LINK criando sua bio_page oficial.
+   */
+  async publishHuntedProvider(provider: HuntedProvider): Promise<{
+    providerId: string;
+    slug: string;
+    muralUrl: string;
+    pageUrl: string;
+  }> {
+    const { data: authData, error: authError } = await supabase.auth.getUser();
+    if (authError || !authData?.user) {
+      throw new Error("Usuário não autenticado. Faça login para cadastrar profissionais no guia.");
+    }
+
+    const userId = authData.user.id;
+    const baseSlug = slugify(`${provider.display_name}-${provider.city}`);
+
+    const { data: existingPage } = await supabase
+      .from("bio_pages")
+      .select("id, slug")
+      .or(`slug.eq.${baseSlug},display_name.ilike.%${provider.display_name}%`)
+      .limit(1)
+      .maybeSingle();
+
+    let targetBioPageId = existingPage?.id;
+    let targetSlug = existingPage?.slug;
+
+    if (!targetBioPageId) {
+      const generatedSlug = `${baseSlug}-${Math.random().toString(36).substring(2, 6)}`;
+      const { data: newPage, error: pageErr } = await (supabase as any)
+        .from("bio_pages")
+        .insert({
+          user_id: userId,
+          display_name: provider.display_name,
+          slug: generatedSlug,
+          description: provider.description,
+          whatsapp: provider.contact_whatsapp || null,
+          published: true,
+          theme: "modern-dark",
+          avatar_url: provider.image_url,
+          cover_url: provider.image_url,
+          cover_fit: "cover",
+          social_links: {
+            niche: provider.niche,
+            category: provider.category,
+            city: provider.city,
+            instagram: provider.contact_instagram || null,
+            suggested_services: provider.services || [],
+            is_verified: true,
+            hunted_provider: true,
+          },
+        })
+        .select("id, slug")
+        .single();
+
+      if (pageErr || !newPage) {
+        console.error("[OfferHunterService] Erro ao cadastrar prestador no banco:", pageErr);
+        throw new Error(`Não foi possível cadastrar a página do profissional: ${pageErr?.message || ""}`);
+      }
+
+      targetBioPageId = newPage.id;
+      targetSlug = newPage.slug;
+    } else {
+      await (supabase as any)
+        .from("bio_pages")
+        .update({
+          published: true,
+          social_links: {
+            niche: provider.niche,
+            category: provider.category,
+            city: provider.city,
+            instagram: provider.contact_instagram || null,
+            suggested_services: provider.services || [],
+            is_verified: true,
+          },
+        })
+        .eq("id", targetBioPageId);
+    }
+
+    const domain = typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
+    const muralUrl = `${domain}/hoje?tab=profissionais&cidade=${encodeURIComponent(provider.city)}&categoria=${encodeURIComponent(provider.category)}`;
+    const pageUrl = `${domain}/p/${targetSlug}`;
+
+    return {
+      providerId: targetBioPageId,
+      slug: targetSlug,
+      muralUrl,
+      pageUrl,
+    };
+  },
+
+  /**
+   * Constrói mensagem de WhatsApp personalizada para prospecção do profissional/prestador.
+   */
+  getWhatsAppProviderOutreachLink(provider: HuntedProvider, slug?: string): string {
+    const rawNumber = provider.contact_whatsapp ? provider.contact_whatsapp.replace(/\D/g, "") : "";
+    const cleanNumber = rawNumber.startsWith("55") ? rawNumber : `55${rawNumber}`;
+
+    const domain = typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
+    const muralUrl = `${domain}/hoje?tab=profissionais&cidade=${encodeURIComponent(provider.city)}`;
+    const pageUrl = slug ? `${domain}/p/${slug}` : "";
+
+    const message =
+      provider.outreach_message ||
+      `Olá ${provider.display_name}! 👋\n\nSou do EIA LINK e passamos para avisar que acabamos de cadastrar e destacar gratuitamente o seu trabalho no *Guia Oficial de Profissionais & Prestadores de Serviços de ${provider.city}*!\n\n👉 Veja o seu perfil no ar aqui: ${muralUrl}${pageUrl ? `\n\nCriamos também o seu cartão de visitas digital PWA interativo: ${pageUrl}` : ""}\n\nAgora clientes que buscam por ${provider.niche} em ${provider.city} podem encontrar seus serviços e te chamar direto no WhatsApp. Esperamos que gere muitos contatos e novos clientes!`;
 
     if (cleanNumber.length >= 10) {
       return `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;

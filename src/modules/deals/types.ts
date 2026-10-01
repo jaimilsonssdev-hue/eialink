@@ -154,3 +154,21 @@ export interface ReactivationMessageResult {
   text: string;
   whatsappUrl: string;
 }
+
+export interface ServiceProvider {
+  id: string;
+  display_name: string;
+  slug: string;
+  avatar_url?: string | null;
+  cover_url?: string | null;
+  description?: string | null;
+  category: string;
+  niche?: string | null;
+  city: string;
+  whatsapp?: string | null;
+  instagram?: string | null;
+  is_verified?: boolean;
+  featured?: boolean;
+  services?: Array<{ name: string; price?: number; description?: string }>;
+  created_at: string;
+}

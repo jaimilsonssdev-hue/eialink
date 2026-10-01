@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
@@ -24,6 +24,7 @@ import {
   ChevronDown,
   Eye,
   ArrowUp,
+  ArrowLeft,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -550,40 +551,63 @@ export default function CinematicStudioPage() {
 
   return (
     <div className="cinematic-studio flex h-screen w-full flex-col overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
-      {/* TOPBAR UNIFICADA DO COCKPIT */}
-      <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/80 px-4 backdrop-blur-md z-30">
-        <div className="flex items-center gap-3">
+      {/* TOPBAR UNIFICADA DO COCKPIT ESTILO APLICATIVO NATIVO */}
+      <header className="flex h-14 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/80 px-3 sm:px-4 backdrop-blur-md z-30">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <Link
+            to="/dashboard"
+            className="flex items-center justify-center p-1.5 -ml-1 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors"
+            title="Voltar ao Painel"
+            aria-label="Voltar para o Painel"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
           <div className="flex items-center gap-2">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
             </span>
-            <span className="text-sm font-semibold tracking-tight text-zinc-100">Cinematic Studio</span>
-            <span className="rounded-full bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
+            <span className="text-sm font-semibold tracking-tight text-zinc-100">Studio IA</span>
+            <span className="hidden sm:inline-block rounded-full bg-zinc-900 border border-zinc-800 px-2 py-0.5 text-[10px] font-medium text-zinc-400">
               Direção Criativa
             </span>
           </div>
         </div>
 
-        {/* Alternador Mobile (Abas de Navegação Pequenas) */}
+        {/* Alternador Mobile (Abas de Navegação Estilo App Nativo) */}
         <div className="flex lg:hidden items-center gap-1 rounded-lg bg-zinc-900 p-0.5 border border-zinc-800">
           <button
             type="button"
             onClick={() => setMobileTab("controls")}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
               mobileTab === "controls" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Cockpit
+            <Bot className="h-3.5 w-3.5" />
+            <span>Copiloto</span>
           </button>
           <button
             type="button"
             onClick={() => setMobileTab("preview")}
-            className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+            className={`flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
               mobileTab === "preview" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
-            Visualizar
+            <Eye className="h-3.5 w-3.5" />
+            <span>Prévia</span>
+          </button>
+        </div>
+
+        {/* Botão Salvar & Publicar no Mobile */}
+        <div className="flex lg:hidden items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleSaveAndPublish}
+            disabled={isSaving}
+            className="flex items-center gap-1 bg-zinc-100 text-zinc-950 hover:bg-white font-semibold text-xs px-2.5 py-1.5 rounded-lg shadow-sm transition-all active:scale-95 disabled:opacity-50"
+          >
+            {isSaving ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />}
+            <span>{isSaving ? "Salvando..." : "Publicar"}</span>
           </button>
         </div>
 
@@ -935,7 +959,7 @@ export default function CinematicStudioPage() {
               </div>
 
               {/* Barra de Entrada no Rodapé (Footer Chat Bar estilo Lovable) */}
-              <div className="shrink-0 bg-zinc-950 p-3 border-t border-zinc-800/80">
+              <div className="shrink-0 bg-zinc-950 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t border-zinc-800/80">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1464,31 +1488,62 @@ export default function CinematicStudioPage() {
 
           {/* Container do Preview */}
           <div className="relative flex-1 overflow-hidden flex items-center justify-center p-0">
-            {previewMode === "desktop" ? (
-              /* Prévia Desktop de Tela Cheia com Escala 100% Real e Scroll Natural */
-              <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-zinc-950 p-2 sm:p-6 flex justify-center [scrollbar-width:none]">
-                <div className="w-full max-w-[1400px] min-h-full bg-black rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden">
-                  <CinematicViewer data={activeCanvasData} isEmbedded={true} />
-                </div>
-              </div>
-            ) : (
-              /* Prévia Simulando Moldura de iPhone com Proporção Real */
-              <div className="h-full w-full overflow-y-auto flex items-center justify-center p-4 [scrollbar-width:none]">
-                <div className="relative h-[780px] w-[390px] shrink-0 overflow-hidden rounded-[48px] border-[8px] border-zinc-800 bg-black shadow-[0_0_60px_rgba(0,0,0,0.8)] ring-1 ring-white/10 flex flex-col">
-                  {/* Dynamic Island */}
-                  <div className="absolute top-2.5 left-1/2 -translate-x-1/2 h-5 w-24 rounded-full bg-black z-50 flex items-center justify-center">
-                    <div className="h-2 w-2 rounded-full bg-zinc-900 border border-zinc-800" />
-                  </div>
-                  {/* Tela do Celular */}
-                  <div className="flex-1 overflow-hidden pt-3">
+            {/* Visualização Direta em Tela Cheia no Celular Real */}
+            <div className="lg:hidden h-full w-full overflow-y-auto overflow-x-hidden bg-black pb-20 [scrollbar-width:none]">
+              <CinematicViewer data={activeCanvasData} isEmbedded={true} />
+            </div>
+
+            {/* Visualização Desktop: Alternável entre Desktop Real e Mockup iPhone Pro */}
+            <div className="hidden lg:flex h-full w-full overflow-hidden items-center justify-center">
+              {previewMode === "desktop" ? (
+                /* Prévia Desktop de Tela Cheia com Escala 100% Real e Scroll Natural */
+                <div className="h-full w-full overflow-y-auto overflow-x-hidden bg-zinc-950 p-2 sm:p-6 flex justify-center [scrollbar-width:none]">
+                  <div className="w-full max-w-[1400px] min-h-full bg-black rounded-2xl border border-zinc-800/80 shadow-2xl overflow-hidden">
                     <CinematicViewer data={activeCanvasData} isEmbedded={true} />
                   </div>
                 </div>
-              </div>
-            )}
+              ) : (
+                /* Prévia Simulando Moldura de iPhone com Proporção Real */
+                <div className="h-full w-full overflow-y-auto flex items-center justify-center p-4 [scrollbar-width:none]">
+                  <div className="relative h-[780px] w-[390px] shrink-0 overflow-hidden rounded-[48px] border-[8px] border-zinc-800 bg-black shadow-[0_0_60px_rgba(0,0,0,0.8)] ring-1 ring-white/10 flex flex-col">
+                    {/* Dynamic Island */}
+                    <div className="absolute top-2.5 left-1/2 -translate-x-1/2 h-5 w-24 rounded-full bg-black z-50 flex items-center justify-center">
+                      <div className="h-2 w-2 rounded-full bg-zinc-900 border border-zinc-800" />
+                    </div>
+                    {/* Tela do Celular */}
+                    <div className="flex-1 overflow-hidden pt-3">
+                      <CinematicViewer data={activeCanvasData} isEmbedded={true} />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </main>
       </div>
+
+      {/* Barra Flutuante de Ação no Mobile durante a Prévia */}
+      {mobileTab === "preview" && (
+        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40 flex items-center gap-2 bg-zinc-950/90 border border-zinc-800 p-2 rounded-2xl shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-bottom-2">
+          <button
+            type="button"
+            onClick={() => setMobileTab("controls")}
+            className="flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-zinc-900 text-zinc-100 text-xs font-semibold hover:bg-zinc-800 active:scale-95 transition-all"
+          >
+            <Bot className="h-4 w-4 text-emerald-400" />
+            <span>Voltar ao Copiloto IA</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveAndPublish}
+            disabled={isSaving}
+            className="flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-xl bg-zinc-100 text-zinc-950 text-xs font-bold hover:bg-white active:scale-95 transition-all disabled:opacity-50"
+          >
+            {isSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            <span>{isSaving ? "Salvando..." : "Publicar"}</span>
+          </button>
+        </div>
+      )}
 
       {/* MODAL DE SUCESSO: PÁGINA PUBLICADA */}
       {publishedModalOpen && (
@@ -1497,9 +1552,9 @@ export default function CinematicStudioPage() {
           aria-modal="true"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md"
         >
-          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-950 p-6 sm:p-8 text-center shadow-2xl space-y-6">
+          <div className="w-full max-w-md rounded-3xl border border-zinc-800 bg-zinc-950 p-6 sm:p-8 text-center shadow-2xl space-y-5">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-100 shadow-sm">
-              <Check className="h-6 w-6 text-zinc-100" />
+              <Check className="h-6 w-6 text-emerald-400" />
             </div>
 
             <div>
@@ -1507,6 +1562,22 @@ export default function CinematicStudioPage() {
               <p className="mt-1 text-xs text-zinc-400">
                 Sua experiência cinematográfica está ativa com alta velocidade e aceleração GPU.
               </p>
+            </div>
+
+            {/* Destaque do Aplicativo PWA */}
+            <div className="flex items-start gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3.5 text-left">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/20 text-emerald-400 mt-0.5">
+                <Smartphone className="h-5 w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
+                  <span>Aplicativo PWA Ativo</span>
+                  <span className="rounded-full bg-emerald-500/20 text-emerald-400 text-[9px] px-1.5 py-0.2">Pronto</span>
+                </p>
+                <p className="text-[11px] text-zinc-300 mt-1 leading-relaxed">
+                  Qualquer cliente pode instalar seu site direto na tela inicial do celular (Android e iPhone) com ícone e nome oficiais da sua marca!
+                </p>
+              </div>
             </div>
 
             {/* Campo do Link */}

@@ -41,6 +41,7 @@ import {
   Zap,
   ChevronDown,
   Clapperboard,
+  Smartphone,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -968,6 +969,13 @@ function PagesWorkspace() {
                           className={`h-1.5 w-1.5 rounded-full ${page.published ? "bg-emerald-400" : "bg-amber-400"}`}
                         />
                         {page.published ? "Publicado" : "Rascunho"}
+                      </span>
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold backdrop-blur-md bg-sky-500/20 text-sky-300 border border-sky-500/30"
+                        title="Aplicativo PWA oficial pronto para instalação no celular"
+                      >
+                        <Smartphone className="h-3 w-3" />
+                        PWA
                       </span>
                     </div>
 

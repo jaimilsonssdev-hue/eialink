@@ -593,6 +593,9 @@ function PublicBio() {
     return (
       <div className="min-h-screen w-full overflow-x-hidden bg-[#0a0a0c]">
         {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
+        <div className="w-full max-w-2xl mx-auto px-3 pt-2">
+          <PwaInstallBanner companyName={bio.display_name} avatarUrl={effectiveAvatarUrl || bio.avatar_url} />
+        </div>
         <CinematicViewer data={cinematicData} />
         {isTriageActive && bio.whatsapp && (
           <WhatsAppTriageModal
@@ -613,11 +616,9 @@ function PublicBio() {
   return (
     <div className={`min-h-screen flex flex-col w-full overflow-x-hidden ${shouldShowMobileSticky ? "pb-16 sm:pb-0" : ""}`}>
       {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
-      {!isStore && !isCinematic && (
-        <div className="w-full max-w-2xl mx-auto px-3 pt-2">
-          <PwaInstallBanner companyName={bio.display_name} avatarUrl={effectiveAvatarUrl || bio.avatar_url} />
-        </div>
-      )}
+      <div className="w-full max-w-2xl mx-auto px-3 pt-2">
+        <PwaInstallBanner companyName={bio.display_name} avatarUrl={effectiveAvatarUrl || bio.avatar_url} />
+      </div>
       <div onClickCapture={handleContainerClickCapture} className="flex-1 w-full overflow-x-hidden">
         <BrandingProvider show={!hasProPlan && !isDemo}>
           {shouldUseTemplate ? (

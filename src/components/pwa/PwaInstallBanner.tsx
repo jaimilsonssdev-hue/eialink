@@ -40,7 +40,7 @@ export function PwaInstallBanner({ companyName, avatarUrl }: PwaInstallBannerPro
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
   }, []);
 
-  if (isStandalone || isDismissed) return null;
+  if (isStandalone) return null;
   // Exibe se houver evento nativo de instalação, se for iOS ou se for dispositivo móvel
   if (!deferredPrompt && !isIos && !isMobileDevice) return null;
 
@@ -56,6 +56,122 @@ export function PwaInstallBanner({ companyName, avatarUrl }: PwaInstallBannerPro
       setShowInstructions(true);
     }
   };
+
+  // Se o banner superior foi dispensado, mantém apenas um botão flutuante discreto no canto
+  if (isDismissed) {
+    return (
+      <>
+        <button
+          type="button"
+          onClick={handleInstallClick}
+          className="fixed right-4 bottom-5 z-40 inline-flex items-center gap-1.5 px-3 py-2 rounded-full bg-zinc-900/95 border border-white/20 text-white text-xs font-semibold shadow-2xl backdrop-blur-md hover:bg-zinc-800 transition-all hover:scale-105 active:scale-95 cursor-pointer animate-in fade-in"
+          title={`Instalar aplicativo de ${companyName}`}
+          aria-label={`Instalar aplicativo de ${companyName}`}
+        >
+          <Smartphone className="h-3.5 w-3.5 text-emerald-400" />
+          <span>Instalar App</span>
+        </button>
+
+        {/* Modal com Instruções de Instalação (iOS ou Android sem prompt nativo) */}
+        {showInstructions && (
+          <div
+            onClick={(e) => {
+              if (e.target === e.currentTarget) setShowInstructions(false);
+            }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/75 backdrop-blur-xs p-4 animate-in fade-in"
+          >
+            <div className="w-full max-w-sm rounded-3xl bg-zinc-950 p-6 border border-zinc-800 text-zinc-100 space-y-4 shadow-2xl">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-4 w-4 text-emerald-400" />
+                  <h4 className="font-bold text-sm">Instalar Aplicativo Oficial</h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowInstructions(false)}
+                  className="p-1 rounded-full text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                  aria-label="Fechar"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Preview do App que será instalado na tela do celular */}
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 shadow-xs">
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt={companyName}
+                    className="w-12 h-12 rounded-xl object-cover shrink-0 border border-emerald-500/30 shadow-xs"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 font-black text-lg">
+                    📲
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-zinc-100 truncate">{companyName}</p>
+                  <p className="text-[10px] text-zinc-400 truncate">
+                    Ícone personalizado pronto para download
+                  </p>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-semibold mt-0.5">
+                    <CheckCircle2 className="h-3 w-3" />
+                    <span>Ícone e Nome Oficiais</span>
+                  </span>
+                </div>
+              </div>
+
+              {isIos ? (
+                <div className="space-y-2.5 text-xs text-zinc-400">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <Share size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <p>
+                      1. Toque no botão de <strong>Compartilhar</strong> na barra inferior do Safari.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <PlusSquare size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <p>
+                      2. Role para baixo e selecione <strong>"Adicionar à Tela de Início"</strong>.
+                    </p>
+                  </div>
+                  <p className="text-center text-[11px] text-zinc-400 pt-1">
+                    O ícone oficial de <strong>{companyName}</strong> aparecerá na tela do seu iPhone.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2.5 text-xs text-zinc-400">
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <span className="text-emerald-400 font-bold text-base leading-none shrink-0 mt-0.5">⋮</span>
+                    <p>
+                      1. Toque nos <strong>3 pontinhos</strong> no canto superior direito do Chrome.
+                    </p>
+                  </div>
+                  <div className="flex items-start gap-3 p-3 rounded-xl bg-zinc-900 border border-zinc-800">
+                    <Download size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+                    <p>
+                      2. Selecione <strong>"Instalar aplicativo"</strong> ou <strong>"Adicionar à tela inicial"</strong>.
+                    </p>
+                  </div>
+                  <p className="text-center text-[11px] text-zinc-400 pt-1">
+                    O app de <strong>{companyName}</strong> será instalado com a sua marca na tela inicial.
+                  </p>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => setShowInstructions(false)}
+                className="w-full py-2.5 rounded-xl bg-white text-zinc-950 font-bold text-xs hover:bg-zinc-200 transition-colors cursor-pointer"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
 
   return (
     <>

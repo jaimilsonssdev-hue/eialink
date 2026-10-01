@@ -74,7 +74,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { name: "theme-color", content: "#10081d" },
+      { name: "theme-color", content: "#09090b" },
       { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
@@ -97,6 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: freeLayoutsCss },
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml", key: "favicon-svg" },
       { rel: "icon", href: "/favicon.png", type: "image/png", sizes: "64x64", key: "favicon-png" },
+      { rel: "apple-touch-icon", href: "/icons/apple-touch-icon.png", key: "apple-touch-icon" },
       { rel: "manifest", href: "/manifest.webmanifest", key: "pwa-manifest" },
       { rel: "apple-touch-icon", href: "/icons/eia-link-icon.svg", key: "apple-touch-icon" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },

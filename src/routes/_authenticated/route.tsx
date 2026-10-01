@@ -225,12 +225,12 @@ function AuthedLayout() {
               </header>
             )}
             <main
-              className={`app-content mx-auto ${
+              className={`${
                 isStudio
-                  ? "p-0 max-w-none w-full flex-1 h-full min-h-0 overflow-hidden bg-zinc-950 flex flex-col"
+                  ? "studio-main p-0 max-w-none w-full flex-1 h-full min-h-0 overflow-hidden bg-zinc-950 flex flex-col !pb-0 !mb-0"
                   : pathname === "/builder"
-                  ? "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-[1600px]"
-                  : "p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-7xl"
+                  ? "app-content mx-auto p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-[1600px]"
+                  : "app-content mx-auto p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-7xl"
               }`}
             >
               <Outlet />

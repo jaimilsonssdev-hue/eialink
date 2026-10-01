@@ -705,14 +705,29 @@ export default function CinematicStudioPage() {
           {activeTab === "chat" && (
             <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-zinc-950">
               {/* Feed de Mensagens Rolável */}
-              <div className="flex-1 min-h-0 overflow-y-auto px-4 py-3 space-y-3">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
-                  >
+              <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 space-y-3 flex flex-col">
+                {messages.length === 1 && messages[0].id === "welcome" ? (
+                  <div className="flex flex-1 flex-col items-center justify-center text-center px-4 py-8 space-y-3.5 my-auto select-none">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800/80 shadow-lg text-zinc-200">
+                      <Sparkles className="h-6 w-6 text-amber-400" />
+                    </div>
+                    <div className="space-y-1.5 max-w-xs">
+                      <h3 className="text-base sm:text-lg font-semibold tracking-tight text-zinc-100">
+                        O que vamos criar hoje?
+                      </h3>
+                      <p className="text-xs text-zinc-400 leading-relaxed">
+                        Cole um link do Google Maps, anexe fotos ou me conte sobre o negócio para criarmos uma vitrine cinematográfica.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  messages.map((msg) => (
                     <div
-                      className={`text-[13px] leading-relaxed shadow-sm ${
+                      key={msg.id}
+                      className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
+                    >
+                      <div
+                        className={`text-[13px] leading-relaxed shadow-sm ${
                         msg.sender === "user"
                           ? "bg-zinc-800 text-zinc-100 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[88%] border border-zinc-700/50"
                           : "bg-zinc-900/60 border border-zinc-800/80 text-zinc-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[92%] backdrop-blur-xs"
@@ -925,7 +940,7 @@ export default function CinematicStudioPage() {
                     </div>
                     <span className="mt-1 px-1 text-[10px] text-zinc-500">{msg.timestamp}</span>
                   </div>
-                ))}
+                )))}
 
                 {/* Indicador de Carregamento da IA */}
                 {isRefiningAi && (

@@ -16,6 +16,8 @@ import {
   WalletCards,
   Youtube,
   X,
+  Check,
+  ChevronDown,
   Star,
   MessageSquareHeart,
   Wand2,
@@ -1163,6 +1165,42 @@ export function UnifiedPageEditor({
   }, [selectedNicheId, niche, bio.social_links, defaults.niche, draftTemplate, bio.template_id]);
 
   const [autoSyncServices, setAutoSyncServices] = useState<boolean>(true);
+  const [nicheSearch, setNicheSearch] = useState<string>("");
+  const [isNicheSelectOpen, setIsNicheSelectOpen] = useState<boolean>(false);
+  const [nicheCategoryFilter, setNicheCategoryFilter] = useState<string>("todos");
+
+  const CATEGORY_PILLS = [
+    { id: "todos", label: "Todos" },
+    { id: "saude", label: "Saúde & Beleza" },
+    { id: "alimentacao", label: "Alimentação" },
+    { id: "servicos", label: "Serviços" },
+    { id: "geral", label: "Gerais & VIP" },
+  ];
+
+  const filteredNicheModels = useMemo(() => {
+    return NICHE_MODELS.filter((model) => {
+      const q = nicheSearch.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        model.title.toLowerCase().includes(q) ||
+        model.subtitle.toLowerCase().includes(q) ||
+        model.nicheCategory.toLowerCase().includes(q) ||
+        model.nicheKey.toLowerCase().includes(q);
+
+      const matchesCategory =
+        nicheCategoryFilter === "todos" ||
+        (nicheCategoryFilter === "alimentacao" &&
+          ["delivery", "restaurante", "sorveteria", "bebidas", "loja"].includes(model.nicheKey)) ||
+        (nicheCategoryFilter === "saude" &&
+          ["clinica", "odontologia", "psicologia", "beleza", "barbearia", "petshop"].includes(model.nicheKey)) ||
+        (nicheCategoryFilter === "servicos" &&
+          ["advocacia", "contabilidade", "oficina", "construcao", "imobiliaria", "seguros", "energia_solar", "autonomo"].includes(model.nicheKey)) ||
+        (nicheCategoryFilter === "geral" &&
+          ["geral", "marketing", "pessoal"].includes(model.nicheKey));
+
+      return matchesSearch && matchesCategory;
+    });
+  }, [nicheSearch, nicheCategoryFilter]);
 
   const applyPresetVariant = (
     preset: NichePreset,
@@ -1566,27 +1604,25 @@ export function UnifiedPageEditor({
                   </p>
                 </div>
 
-                {/* 0. Seletor de Formato da Página: Site Institucional vs BioLink vs Loja vs Cinematográfico */}
-                <div className="rounded-2xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+                {/* 0. Formato da Presença Comercial */}
+                <div className="rounded-2xl border border-border/80 bg-card/50 p-3.5 space-y-2.5 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                      <Globe2 className="h-4 w-4 text-primary" />
-                      <span>Formato da Presença Comercial</span>
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                      <Globe2 className="h-3.5 w-3.5 text-primary" />
+                      <span>Formato da Página</span>
                     </label>
-                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-primary/20 text-primary">
+                    <span className="text-[11px] font-semibold text-primary">
                       {bio.template_id === "cinematic-glass"
-                        ? "🎬 Cinematográfico (Scrollytelling)"
+                        ? "🎬 Cinematográfico"
                         : bio.template_id === "site-maquina"
-                        ? "Site Institucional Completo"
+                        ? "🖥️ Site Completo"
                         : bio.template_id === "storefront" || bio.template_id === "store-showcase"
-                        ? "Loja / Delivery App"
-                        : "BioLink de Bolso"}
+                        ? "🛍️ Delivery / Loja"
+                        : "📱 BioLink Direto"}
                     </span>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Escolha o objetivo principal desta página. O motor do Máquina de Sites oferece presença completa, enquanto o BioLink foca em conversão rápida.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <button
                       type="button"
                       onClick={() => {
@@ -1602,161 +1638,232 @@ export function UnifiedPageEditor({
                             },
                           },
                         });
-                        toast.success("Formato alterado para: Experiência Cinematográfica (Scrollytelling)");
+                        toast.success("Formato alterado para: Experiência Cinematográfica");
                       }}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-center transition-all ${
                         bio.template_id === "cinematic-glass"
-                          ? "border-2 border-amber-500 bg-amber-500/15 text-foreground shadow-md font-bold ring-2 ring-amber-500/30"
-                          : "border-border bg-card hover:border-amber-500/50 text-foreground"
+                          ? "border-amber-500/80 bg-amber-500/15 text-foreground font-bold shadow-xs ring-1 ring-amber-500/30"
+                          : "border-border bg-surface hover:bg-muted/40 text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-base">🎬</span>
-                        {bio.template_id === "cinematic-glass" && (
-                          <span className="px-1.5 py-0.5 rounded bg-amber-500 text-slate-950 text-[10px] font-bold">✓ Ativo</span>
-                        )}
-                      </div>
-                      <div className="text-xs font-bold text-amber-300">Landing Cinematográfica</div>
-                      <div className="text-[10px] opacity-80 mt-0.5">Scrollytelling imersivo, atos narrativos, parallax e visual de alto luxo</div>
+                      <span className="text-sm block">🎬</span>
+                      <span className="text-xs font-bold block truncate mt-0.5">Cinematográfico</span>
+                      <span className="text-[10px] text-muted-foreground block truncate">Scrollytelling & Luxo</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => {
                         updateBio({ template_id: "site-maquina" });
-                        toast.success("Formato alterado para: Site Institucional (Padrão Máquina de Sites)");
+                        toast.success("Formato alterado para: Site Institucional");
                       }}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-center transition-all ${
                         bio.template_id === "site-maquina"
-                          ? "border-2 border-primary bg-primary/15 text-foreground shadow-md font-bold ring-2 ring-primary/30"
-                          : "border-border bg-card hover:border-primary/50 text-foreground"
+                          ? "border-primary bg-primary/15 text-foreground font-bold shadow-xs ring-1 ring-primary/30"
+                          : "border-border bg-surface hover:bg-muted/40 text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-base">🖥️</span>
-                        {bio.template_id === "site-maquina" && (
-                          <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-bold">✓ Ativo</span>
-                        )}
-                      </div>
-                      <div className="text-xs font-bold">Site / Landing Page</div>
-                      <div className="text-[10px] opacity-80 mt-0.5">Padrão Máquina de Sites: Hero, Prova Social, FAQ e Mapa</div>
+                      <span className="text-sm block">🖥️</span>
+                      <span className="text-xs font-bold block truncate mt-0.5">Site / Landing</span>
+                      <span className="text-[10px] text-muted-foreground block truncate">Máquina de Sites</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => {
                         updateBio({ template_id: "default" });
-                        toast.success("Formato alterado para: BioLink de Alta Conversão");
+                        toast.success("Formato alterado para: BioLink");
                       }}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-center transition-all ${
                         bio.template_id !== "site-maquina" &&
                         bio.template_id !== "cinematic-glass" &&
                         bio.template_id !== "storefront" &&
                         bio.template_id !== "store-showcase"
-                          ? "border-2 border-primary bg-primary/15 text-foreground shadow-md font-bold ring-2 ring-primary/30"
-                          : "border-border bg-card hover:border-primary/50 text-foreground"
+                          ? "border-primary bg-primary/15 text-foreground font-bold shadow-xs ring-1 ring-primary/30"
+                          : "border-border bg-surface hover:bg-muted/40 text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-base">📱</span>
-                        {bio.template_id !== "site-maquina" &&
-                         bio.template_id !== "cinematic-glass" &&
-                         bio.template_id !== "storefront" &&
-                         bio.template_id !== "store-showcase" && (
-                          <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-bold">✓ Ativo</span>
-                        )}
-                      </div>
-                      <div className="text-xs font-bold">BioLink de Bolso</div>
-                      <div className="text-[10px] opacity-80 mt-0.5">Compacto, direto para o Instagram e WhatsApp em 1 clique</div>
+                      <span className="text-sm block">📱</span>
+                      <span className="text-xs font-bold block truncate mt-0.5">BioLink de Bolso</span>
+                      <span className="text-[10px] text-muted-foreground block truncate">Conversão Rápida</span>
                     </button>
 
                     <button
                       type="button"
                       onClick={() => {
                         updateBio({ template_id: "store-showcase" });
-                        toast.success("Formato alterado para: Delivery & Loja Virtual (App / PWA)");
+                        toast.success("Formato alterado para: Delivery & Loja");
                       }}
-                      className={`p-3 rounded-xl border text-left transition-all ${
+                      className={`p-2.5 rounded-xl border text-center transition-all ${
                         bio.template_id === "storefront" || bio.template_id === "store-showcase"
-                          ? "border-2 border-primary bg-primary/15 text-foreground shadow-md font-bold ring-2 ring-primary/30"
-                          : "border-border bg-card hover:border-primary/50 text-foreground"
+                          ? "border-primary bg-primary/15 text-foreground font-bold shadow-xs ring-1 ring-primary/30"
+                          : "border-border bg-surface hover:bg-muted/40 text-muted-foreground hover:text-foreground"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-base">🛍️</span>
-                        {(bio.template_id === "storefront" || bio.template_id === "store-showcase") && (
-                          <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[10px] font-bold">✓ Ativo</span>
-                        )}
-                      </div>
-                      <div className="text-xs font-bold">Delivery / Loja App</div>
-                      <div className="text-[10px] opacity-80 mt-0.5">Sensação de iFood com sacola flutuante e instalação PWA</div>
+                      <span className="text-sm block">🛍️</span>
+                      <span className="text-xs font-bold block truncate mt-0.5">Delivery / Loja</span>
+                      <span className="text-[10px] text-muted-foreground block truncate">Carrinho & Cardápio</span>
                     </button>
                   </div>
                 </div>
 
-                {/* 1. Grade de Nichos / Modelos */}
-                <div className="space-y-3">
+                {/* 1. Escolha do Nicho com Campo de Busca Inteligente */}
+                <div className="rounded-2xl border border-border/80 bg-card/50 p-4 space-y-3.5 shadow-2xs">
                   <div className="flex items-center justify-between">
-                    <label className="text-sm font-semibold text-foreground">
-                      1. Escolha o Nicho e Modelo
-                    </label>
-                    <span className="text-xs text-muted-foreground font-medium">
-                      Ativo: <span className="text-foreground">{activeNicheModel.title}</span>
-                    </span>
+                    <div>
+                      <label className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                        <Sparkles className="h-4 w-4 text-primary" />
+                        <span>1. Nicho & Especialidade</span>
+                      </label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Selecione o ramo da sua empresa para carregar identidade, serviços e copies prontas.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsNicheSelectOpen((prev) => !prev)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-border bg-surface hover:bg-muted text-foreground transition-all cursor-pointer"
+                    >
+                      <span>{isNicheSelectOpen ? "Fechar" : "Trocar Nicho"}</span>
+                      <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${isNicheSelectOpen ? "rotate-180" : ""}`} />
+                    </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                    {NICHE_MODELS.map((model) => {
-                      const Icon = model.icon;
-                      const isSelected = activeNicheModel.id === model.id;
-                      return (
-                        <button
-                          key={model.id}
-                          type="button"
-                          onClick={() => selectNicheModel(model)}
-                          className={`group flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-150 ${
-                            isSelected
-                              ? "border-2 border-primary bg-primary/15 shadow-sm ring-2 ring-primary/30 text-foreground"
-                              : "border-border bg-card hover:border-primary/50 hover:bg-muted/30 text-foreground shadow-2xs"
-                          }`}
-                        >
-                          <div
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors ${
-                              isSelected
-                                ? "border-primary bg-primary text-primary-foreground shadow-xs"
-                                : "border-border bg-muted/60 text-slate-700 dark:text-muted-foreground group-hover:text-primary group-hover:border-primary/40"
+                  {/* Card Compacto do Nicho Ativo */}
+                  <div className="flex items-center justify-between p-3 rounded-xl border border-primary/30 bg-primary/10 shadow-2xs">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-xs">
+                        {(() => {
+                          const ActiveIcon = activeNicheModel.icon;
+                          return <ActiveIcon className="h-4.5 w-4.5" />;
+                        })()}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="text-xs sm:text-sm font-bold text-foreground truncate">
+                            {activeNicheModel.title}
+                          </h4>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary/20 text-primary shrink-0">
+                            {activeNicheModel.nicheCategory}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5 font-normal">
+                          {activeNicheModel.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsNicheSelectOpen(true)}
+                      className="text-[11px] font-bold text-primary hover:underline px-2 py-1 shrink-0 ml-2 cursor-pointer"
+                    >
+                      Alterar
+                    </button>
+                  </div>
+
+                  {/* Painel Expansível de Busca e Seleção de Nicho */}
+                  {isNicheSelectOpen && (
+                    <div className="space-y-2.5 pt-1 animate-in fade-in-50 duration-200">
+                      {/* Campo de Busca */}
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                        <input
+                          type="text"
+                          value={nicheSearch}
+                          onChange={(e) => setNicheSearch(e.target.value)}
+                          placeholder="Pesquise seu nicho (ex: dentista, advocacia, pizzaria, estética, mecânica...)"
+                          autoFocus
+                          className="w-full pl-9 pr-8 py-2 rounded-xl border border-border bg-surface text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all"
+                        />
+                        {nicheSearch && (
+                          <button
+                            type="button"
+                            onClick={() => setNicheSearch("")}
+                            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Filtros rápidos de Categoria */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs">
+                        {CATEGORY_PILLS.map((cat) => (
+                          <button
+                            key={cat.id}
+                            type="button"
+                            onClick={() => setNicheCategoryFilter(cat.id)}
+                            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold whitespace-nowrap transition-all cursor-pointer ${
+                              nicheCategoryFilter === cat.id
+                                ? "bg-primary text-primary-foreground shadow-xs"
+                                : "bg-muted/60 text-muted-foreground hover:text-foreground hover:bg-muted"
                             }`}
                           >
-                            <Icon className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1">
-                              <p className={`text-xs sm:text-sm font-semibold truncate ${isSelected ? "text-primary font-bold" : "text-foreground group-hover:text-primary"}`}>
-                                {model.title}
-                              </p>
-                              {isSelected && (
-                                <span className="px-1.5 py-0.5 rounded bg-primary text-primary-foreground text-[9px] font-bold shrink-0">✓ Ativo</span>
-                              )}
-                            </div>
-                            <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5 font-normal">
-                              {model.subtitle}
-                            </p>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+                            {cat.label}
+                          </button>
+                        ))}
+                      </div>
 
-                  {/* 1.1 Seleção dos 3 Modelos Visuais Exclusivos do Nicho */}
-                  <div className="rounded-2xl border border-border/80 bg-surface-elevated/40 p-4 space-y-3 shadow-2xs">
+                      {/* Lista de Resultados Compacta e Rolável */}
+                      <div className="rounded-xl border border-border/80 bg-surface/70 p-1.5 max-h-60 overflow-y-auto space-y-1">
+                        {filteredNicheModels.length === 0 ? (
+                          <div className="p-4 text-center text-xs text-muted-foreground">
+                            Nenhum nicho encontrado para &quot;{nicheSearch}&quot;.
+                          </div>
+                        ) : (
+                          filteredNicheModels.map((model) => {
+                            const Icon = model.icon;
+                            const isSelected = activeNicheModel.id === model.id;
+                            return (
+                              <button
+                                key={model.id}
+                                type="button"
+                                onClick={() => {
+                                  selectNicheModel(model);
+                                  setIsNicheSelectOpen(false);
+                                  setNicheSearch("");
+                                }}
+                                className={`w-full flex items-center gap-2.5 p-2 rounded-lg text-left transition-all cursor-pointer ${
+                                  isSelected
+                                    ? "bg-primary/20 border border-primary/40 text-foreground font-bold shadow-xs"
+                                    : "hover:bg-muted/50 text-foreground"
+                                }`}
+                              >
+                                <div
+                                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+                                    isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                                  }`}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="flex items-center justify-between gap-1">
+                                    <span className={`text-xs truncate ${isSelected ? "text-primary font-bold" : "font-semibold"}`}>
+                                      {model.title}
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground shrink-0">{model.nicheCategory}</span>
+                                  </div>
+                                  <p className="text-[10px] text-muted-foreground truncate">{model.subtitle}</p>
+                                </div>
+                                {isSelected && <Check className="h-4 w-4 text-primary shrink-0 ml-1" />}
+                              </button>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 1.1 Modelos Visuais Exclusivos do Nicho Ativo */}
+                  <div className="rounded-xl border border-border/80 bg-surface-elevated/40 p-3 space-y-2.5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <span className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--primary)] flex items-center gap-1.5">
                           <Sparkles className="h-3.5 w-3.5" />
-                          Modelos Visuais de {activeNicheModel.title}
+                          Estilos Visuais de {activeNicheModel.title}
                         </span>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          Cada nicho possui 3 identidades completas com layout, textos e serviços exclusivos.
+                        <p className="text-[11px] text-muted-foreground">
+                          Escolha entre as 3 identidades completas com layout, copies e cores exclusivas.
                         </p>
                       </div>
                       <label className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none shrink-0">
@@ -1770,7 +1877,7 @@ export function UnifiedPageEditor({
                       </label>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       {getVariantsForNiche(activeNicheModel.nicheKey).map((variant, idx) => {
                         const currentSocial = (bio.social_links as Record<string, any>) || {};
                         const isVariantSelected =
@@ -1782,32 +1889,32 @@ export function UnifiedPageEditor({
                             key={idx}
                             type="button"
                             onClick={() => applyPresetVariant(variant, autoSyncServices, idx)}
-                            className={`p-3 rounded-xl border text-left transition-all duration-150 relative flex flex-col justify-between ${
+                            className={`p-2.5 rounded-xl border text-left transition-all duration-150 relative flex flex-col justify-between cursor-pointer ${
                               isVariantSelected
-                                ? "border-2 border-primary bg-primary/15 shadow-sm ring-2 ring-primary/30 text-foreground"
+                                ? "border-2 border-primary bg-primary/15 shadow-sm ring-1 ring-primary/30 text-foreground"
                                 : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground shadow-2xs"
                             }`}
                           >
                             <div>
-                              <div className="flex items-center justify-between gap-1 mb-1.5">
-                                <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-primary/15 text-primary">
-                                  Modelo {idx + 1}
+                              <div className="flex items-center justify-between gap-1 mb-1">
+                                <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-primary/15 text-primary">
+                                  Variação {idx + 1}
                                 </span>
                                 <span className="text-[10px] text-muted-foreground capitalize font-medium">
                                   {variant.theme}
                                 </span>
                               </div>
-                              <p className="text-xs sm:text-sm font-bold text-foreground line-clamp-1">
+                              <p className="text-xs font-bold text-foreground line-clamp-1">
                                 {variant.modelName}
                               </p>
-                              <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1">
+                              <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5">
                                 {variant.generateHeadline(bio.display_name || defaults.displayName || "Sua Empresa", "sua cidade")}
                               </p>
                             </div>
 
-                            <div className="mt-3 pt-2 border-t border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
+                            <div className="mt-2 pt-1.5 border-t border-border/60 flex items-center justify-between text-[10px] text-muted-foreground">
                               <span>{variant.services?.length || 3} serviços</span>
-                              <span className={`font-bold text-[10px] uppercase px-1.5 py-0.5 rounded ${isVariantSelected ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground"}`}>
+                              <span className={`font-bold text-[9px] uppercase px-1.5 py-0.5 rounded ${isVariantSelected ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground"}`}>
                                 {isVariantSelected ? "✓ Ativo" : "Aplicar"}
                               </span>
                             </div>
@@ -1819,20 +1926,20 @@ export function UnifiedPageEditor({
 
                   {/* Banner de 1-Clique para Fotos & Serviços Recomendados */}
                   {activeNicheModel.nicheKey !== "geral" && (
-                    <div className="rounded-xl border border-primary/25 bg-primary/5 p-3.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+                    <div className="rounded-xl border border-primary/25 bg-primary/5 p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 shadow-2xs">
                       <div className="space-y-0.5 min-w-0">
-                        <p className="font-semibold text-xs sm:text-sm flex items-center gap-1.5 text-foreground">
+                        <p className="font-semibold text-xs flex items-center gap-1.5 text-foreground">
                           <Sparkles className="h-3.5 w-3.5 text-primary" />
-                          <span>Fotos e Serviços Recomendados de {activeNicheModel.title}</span>
+                          <span>Catálogo e Fotos de {activeNicheModel.title}</span>
                         </p>
                         <p className="text-[11px] text-muted-foreground">
-                          Preencher capa, avatar e catálogo com fotos do Unsplash e tratamentos deste nicho.
+                          Preencher capa, avatar e lista de serviços com fotos e itens padrão deste nicho.
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => applyNicheDefaults(activeNicheModel.nicheKey)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-card hover:bg-primary/10 text-primary text-xs font-semibold px-3 py-1.5 transition-colors shrink-0 shadow-2xs"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-card hover:bg-primary/10 text-primary text-xs font-semibold px-2.5 py-1.5 transition-colors shrink-0 shadow-2xs cursor-pointer"
                       >
                         <Wand2 className="h-3.5 w-3.5 text-primary" />
                         <span>Aplicar ao Catálogo</span>
@@ -1841,12 +1948,25 @@ export function UnifiedPageEditor({
                   )}
                 </div>
 
-                {/* 2. Cores e Paleta do Tema */}
-                <div className="space-y-3">
-                  <label className="text-sm font-semibold text-foreground">
-                    2. Paleta de Cores do Tema
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {/* 2. Cores e Paleta do Tema (Swatches Horizontais Limpos) */}
+                <div className="rounded-2xl border border-border/80 bg-card/50 p-4 space-y-3 shadow-2xs">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                        <Palette className="h-4 w-4 text-primary" />
+                        <span>2. Paleta de Cores do Tema</span>
+                      </label>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Atmosfera de cores da página (fundo, cartões e botões).
+                      </p>
+                    </div>
+                    <span className="text-xs font-bold text-primary capitalize px-2 py-0.5 rounded-md bg-primary/10">
+                      {THEMES.find((t) => t.id === (bio.theme || "aurora"))?.label || "Aurora"}
+                    </span>
+                  </div>
+
+                  {/* Swatches compactos de cores em linha */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                     {THEMES.map((theme) => {
                       const isSelected = (bio.theme || "aurora") === theme.id;
                       return (
@@ -1885,10 +2005,10 @@ export function UnifiedPageEditor({
                               },
                             });
                           }}
-                          className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
+                          className={`flex items-center gap-2 p-2 rounded-xl border text-left transition-all cursor-pointer ${
                             isSelected
-                              ? "border-2 border-primary bg-primary/15 text-foreground ring-2 ring-primary/30 shadow-sm font-semibold"
-                              : "border-border bg-card hover:border-primary/40 hover:bg-muted/30 text-foreground shadow-2xs"
+                              ? "border-primary bg-primary/15 text-foreground font-bold shadow-xs ring-1 ring-primary/40"
+                              : "border-border bg-surface hover:bg-muted/40 text-muted-foreground hover:text-foreground"
                           }`}
                         >
                           <span
@@ -1896,19 +2016,16 @@ export function UnifiedPageEditor({
                             style={{ background: theme.gradientStyle }}
                           />
                           <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-1">
-                              <p className="font-semibold text-xs truncate text-foreground">{theme.label}</p>
-                              {isSelected && <span className="text-[10px] text-primary font-bold">✓ Ativo</span>}
-                            </div>
-                            <p className="text-[10px] text-muted-foreground truncate font-normal">{theme.description}</p>
+                            <span className="text-xs font-bold block truncate">{theme.label}</span>
                           </div>
+                          {isSelected && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
                         </button>
                       );
                     })}
                   </div>
 
                   {/* Seletor Livre de Cores Hex & Design Tokens (Recolhido para simplificar o uso diário) */}
-                  <details className="group rounded-xl border border-border/80 bg-card/40 p-3.5 mt-2 transition-all">
+                  <details className="group rounded-xl border border-border/80 bg-card/40 p-3 mt-2 transition-all">
                     <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center justify-between select-none">
                       <span className="flex items-center gap-1.5">
                         <Palette className="h-3.5 w-3.5 text-primary" />

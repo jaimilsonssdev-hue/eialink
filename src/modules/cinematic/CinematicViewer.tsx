@@ -163,10 +163,10 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-xs font-bold transition-transform group-hover:scale-105"
               style={{ color: accentColor }}
             >
-              {data.businessName.slice(0, 2).toUpperCase()}
+              {(data.businessName || "Site").slice(0, 2).toUpperCase()}
             </span>
             <span className={`text-sm sm:text-base font-bold tracking-wide text-white truncate max-w-[160px] sm:max-w-xs ${fontHeadingClass}`}>
-              {data.businessName}
+              {data.businessName || "Sua Marca"}
             </span>
           </a>
 
@@ -256,16 +256,18 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               <source src={data.hero.backgroundVideo} type="video/mp4" />
               <source src={data.hero.backgroundVideo} type="video/webm" />
             </video>
-          ) : (
+          ) : data.hero.backgroundImage ? (
             <img
               src={data.hero.backgroundImage}
-              alt={data.businessName}
+              alt={data.businessName || "Capa"}
               className="h-full w-full object-cover object-center will-change-transform"
               style={{
                 transform: `translate3d(0, ${backgroundParallaxY}px, 0) scale(${backgroundZoom})`,
                 transition: "transform 0.08s cubic-bezier(0.2, 0.9, 0.3, 1)",
               }}
             />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-zinc-900 via-black to-zinc-950" />
           )}
 
           {/* Vinheta Escura de Cinema e Iluminação Mesh nas Bordas */}
@@ -303,13 +305,15 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           <h1
             className={`text-4xl sm:text-6xl md:text-7xl font-bold leading-[1.08] text-white drop-shadow-2xl ${fontHeadingClass}`}
           >
-            {data.hero.title}
+            {data.hero.title || (data.businessName ? `Bem-vindo à ${data.businessName}` : "Sua Experiência Exclusiva")}
           </h1>
 
           {/* Subtítulo Narrativo */}
-          <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg md:text-xl font-light leading-relaxed text-zinc-300 drop-shadow">
-            {data.hero.subtitle}
-          </p>
+          {(data.hero.subtitle || !data.businessName) && (
+            <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg md:text-xl font-light leading-relaxed text-zinc-300 drop-shadow">
+              {data.hero.subtitle || "Descreva seu negócio no chat ao lado ou importe sua ficha do Google Maps para gerar sua vitrine cinematográfica completa."}
+            </p>
+          )}
 
           {/* Ações Hero */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
@@ -498,137 +502,141 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       )}
 
       {/* 5. SEÇÃO A EXPERIÊNCIA (GALERIA COM LIGHTBOX) */}
-      <section id="galeria" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 py-20">
-        <div className="text-center mb-14">
-          <span
-            className="text-[11px] font-bold uppercase tracking-widest"
-            style={{ color: accentColor }}
-          >
-            Capítulo II — O Olhar
-          </span>
-          <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
-            A Experiência Visual
-          </h2>
-          <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
-            Toque nas imagens para contemplar cada atmosfera em tela cheia e alta definição.
-          </p>
-        </div>
-
-        {/* Grid de Galeria Cinematográfica */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {data.gallery.map((item: CinematicGalleryItem, index: number) => (
-            <div
-              key={item.id || index}
-              onClick={() => setSelectedPhoto(item)}
-              className="group relative h-80 sm:h-96 cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 transition-all duration-300 hover:-translate-y-1.5 hover:border-white/30 hover:shadow-2xl"
+      {data.gallery && data.gallery.length > 0 && (
+        <section id="galeria" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 py-20">
+          <div className="text-center mb-14">
+            <span
+              className="text-[11px] font-bold uppercase tracking-widest"
+              style={{ color: accentColor }}
             >
-              <img
-                src={item.url}
-                alt={item.caption || data.businessName}
-                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
+              Capítulo II — O Olhar
+            </span>
+            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+              A Experiência Visual
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+              Toque nas imagens para contemplar cada atmosfera em tela cheia e alta definição.
+            </p>
+          </div>
 
-              <div className="absolute bottom-0 left-0 right-0 p-5 transform transition-transform duration-300">
-                {item.category && (
-                  <span
-                    className="text-[10px] font-bold uppercase tracking-wider"
-                    style={{ color: accentColor }}
-                  >
-                    {item.category}
-                  </span>
-                )}
-                {item.caption && (
-                  <p className="mt-1 text-sm font-medium leading-snug text-white drop-shadow">
-                    {item.caption}
-                  </p>
-                )}
-                <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Maximize2 className="h-3.5 w-3.5" />
-                  <span>Ampliar</span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+          {/* Grid de Galeria Cinematográfica */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {data.gallery.map((item: CinematicGalleryItem, index: number) => (
+              <div
+                key={item.id || index}
+                onClick={() => setSelectedPhoto(item)}
+                className="group relative h-80 sm:h-96 cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 transition-all duration-300 hover:-translate-y-1.5 hover:border-white/30 hover:shadow-2xl"
+              >
+                <img
+                  src={item.url}
+                  alt={item.caption || data.businessName}
+                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
 
-      {/* 6. SEÇÃO DESTAQUES & MENU DE LUXO */}
-      <section id="destaques" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 py-20">
-        <div className="text-center mb-14">
-          <span
-            className="text-[11px] font-bold uppercase tracking-widest"
-            style={{ color: accentColor }}
-          >
-            Capítulo III — Assinatura
-          </span>
-          <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
-            Criações em Destaque
-          </h2>
-          <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
-            Cada item carrega a dedicação de processos artesanais e ingredientes rigorosamente selecionados.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          {data.highlights.map((item: CinematicHighlight, index: number) => (
-            <div
-              key={item.id || index}
-              className={`group overflow-hidden transition-all duration-300 hover:border-white/30 hover:-translate-y-1 ${cardBorderClass}`}
-            >
-              {item.image && (
-                <div className="relative h-56 sm:h-64 w-full overflow-hidden">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
-                  {item.badge && (
+                <div className="absolute bottom-0 left-0 right-0 p-5 transform transition-transform duration-300">
+                  {item.category && (
                     <span
-                      className="absolute top-4 right-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-black shadow-lg"
-                      style={{ backgroundColor: accentColor }}
-                    >
-                      {item.badge}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              <div className="p-6 sm:p-8 space-y-3">
-                <div className="flex items-start justify-between gap-4">
-                  <h3 className={`text-xl font-bold text-white ${fontHeadingClass}`}>
-                    {item.title}
-                  </h3>
-                  {item.price && (
-                    <span
-                      className="text-base sm:text-lg font-bold shrink-0 font-mono"
+                      className="text-[10px] font-bold uppercase tracking-wider"
                       style={{ color: accentColor }}
                     >
-                      {item.price}
+                      {item.category}
                     </span>
                   )}
+                  {item.caption && (
+                    <p className="mt-1 text-sm font-medium leading-snug text-white drop-shadow">
+                      {item.caption}
+                    </p>
+                  )}
+                  <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Maximize2 className="h-3.5 w-3.5" />
+                    <span>Ampliar</span>
+                  </div>
                 </div>
-
-                <p className="text-xs sm:text-sm leading-relaxed text-zinc-300">
-                  {item.description}
-                </p>
-
-                <a
-                  href={`${whatsappHref}&text=${encodeURIComponent(`Olá! Gostaria de pedir/reservar "${item.title}".`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center gap-2 text-xs font-semibold transition-colors hover:underline"
-                  style={{ color: accentColor }}
-                >
-                  <span>Pedir ou Reservar este item</span>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </a>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* 6. SEÇÃO DESTAQUES & MENU DE LUXO */}
+      {data.highlights && data.highlights.length > 0 && (
+        <section id="destaques" className="relative z-10 mx-auto max-w-7xl px-4 sm:px-8 py-20">
+          <div className="text-center mb-14">
+            <span
+              className="text-[11px] font-bold uppercase tracking-widest"
+              style={{ color: accentColor }}
+            >
+              Capítulo III — Assinatura
+            </span>
+            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+              Criações em Destaque
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+              Cada item carrega a dedicação de processos artesanais e ingredientes rigorosamente selecionados.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            {data.highlights.map((item: CinematicHighlight, index: number) => (
+              <div
+                key={item.id || index}
+                className={`group overflow-hidden transition-all duration-300 hover:border-white/30 hover:-translate-y-1 ${cardBorderClass}`}
+              >
+                {item.image && (
+                  <div className="relative h-56 sm:h-64 w-full overflow-hidden">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                    {item.badge && (
+                      <span
+                        className="absolute top-4 right-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-black shadow-lg"
+                        style={{ backgroundColor: accentColor }}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                <div className="p-6 sm:p-8 space-y-3">
+                  <div className="flex items-start justify-between gap-4">
+                    <h3 className={`text-xl font-bold text-white ${fontHeadingClass}`}>
+                      {item.title}
+                    </h3>
+                    {item.price && (
+                      <span
+                        className="text-base sm:text-lg font-bold shrink-0 font-mono"
+                        style={{ color: accentColor }}
+                      >
+                        {item.price}
+                      </span>
+                    )}
+                  </div>
+
+                  <p className="text-xs sm:text-sm leading-relaxed text-zinc-300">
+                    {item.description}
+                  </p>
+
+                  <a
+                    href={`${whatsappHref}&text=${encodeURIComponent(`Olá! Gostaria de pedir/reservar "${item.title}".`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 text-xs font-semibold transition-colors hover:underline"
+                    style={{ color: accentColor }}
+                  >
+                    <span>Pedir ou Reservar este item</span>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* 7. SEÇÃO COMPARATIVO (CHECKLIST DE VANTAGENS) */}
       {data.comparison && data.comparison.rows && data.comparison.rows.length > 0 && (

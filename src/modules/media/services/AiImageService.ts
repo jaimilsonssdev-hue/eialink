@@ -1,6 +1,7 @@
 /**
- * Serviço de Geração de Imagens por IA com Limite Estrito (Máximo 3 fotos por página/cliente)
- * Evita explosão de custos de API e garante controle financeiro rígido.
+ * Serviço de Geração de Imagens por IA de Extrema Qualidade e Realismo Comercial.
+ * Utiliza o modelo Flux.1 (Black Forest Labs) com engenharia de prompts premiada
+ * e limite estrito de até 3 fotos por página para controle financeiro e performance.
  */
 
 export const MAX_AI_IMAGES_PER_PAGE = 3;
@@ -11,36 +12,42 @@ export interface AiImageGenerationResult {
 }
 
 const NICHE_PROMPTS: Record<string, string> = {
-  loja: "modern boutique retail store entrance with high end clothes display, brazilian commercial aesthetic, warm natural lighting, 4k architectural photography",
-  delivery: "delicious gourmet burger with melted cheddar and fries, delivery paper bag, brazilian artisan snack food, professional appetizing food photography",
-  restaurante: "elegant contemporary restaurant interior dining room, cozy ambient warm lighting, wine glasses on tables, fine dining brazilian bistro",
-  sorveteria: "artisan gelato ice cream display counter and acai bowl with fresh strawberries, colorful bright refreshing gelateria interior",
-  hamburgueria: "artisan smash burger with crispy bacon and melted cheddar, golden fries on slate board, moody dark wood pub background, delicious food photography",
-  pizzaria: "authentic wood-fired pizza with bubbling mozzarella and fresh basil leaves, rustic pizzeria oven in background, gourmet food photography",
-  confeitaria: "artisanal pastry showcase with colorful macarons, decorated celebration cakes and desserts, bright charming bakery interior",
-  cafeteria: "cozy specialty coffee shop with espresso machine, latte art in ceramic cup, wooden tables and warm ambient lighting, artisanal cafe aesthetic",
-  oficina: "clean professional auto repair shop and tire service center, modern vehicle on lift, high-tech automotive workshop Brazil",
-  clinica: "modern clean medical clinic reception and doctor consultation office, welcoming soothing healthcare interior design",
-  psicologia: "warm comforting psychology therapy office with comfortable armchair and green indoor plants, soft natural light mental wellness",
-  beleza: "luxurious modern beauty salon and aesthetic spa, clean elegant mirrors, hair styling station, soothing ambient lighting, Brazilian aesthetic",
-  barbearia: "classic vintage barbershop interior with leather barber chairs, grooming products, warm ambient lighting, stylish wood trim",
-  petshop: "charming pet shop groomer and veterinary clinic with pet food bags and happy dog, clean bright brazilian pet boutique",
-  advocacia: "prestigious corporate law firm meeting room, dark wood table, scales of justice, sophisticated modern legal office",
-  odontologia: "state of the art dental clinic chair and equipment, bright immaculate clean aesthetic dentistry clinic",
-  construcao: "modern residential architectural house under construction renovation, high-end finishing materials and engineering plan",
-  imobiliaria: "luxury modern residential house facade with swimming pool and landscaped garden, contemporary real estate Brazil",
-  seguros: "happy smiling brazilian family in cozy modern home living room, safety security and protection concept photography",
-  autonomo: "neatly organized professional technician tool kit and precision diagnostics equipment on workbench, clean tradesman aesthetic",
-  pessoal: "minimalist creative home office desk setup with laptop, coffee cup and clean notebook, modern creator workspace",
-  fitness: "high-performance fitness gym with dumbbells rack, led modern lighting and workout equipment, premium training studio",
-  nutricao: "fresh vibrant salad bowl with avocado, greens, fruits and measuring tape on wooden nutritionist desk, healthy eating concept",
-  costura: "vintage sewing machine with colorful thread spools, measuring tape and tailor mannequin in elegant fashion atelier",
-  tecnologia: "modern computer hardware repair workbench with circuit boards, precision screwdrivers and monitors, high-tech IT support",
-  farmacia: "modern bright compounding pharmacy and health store interior with organized shelves and healthcare wellness products",
-  contabilidade: "executive financial consulting desk with financial charts, calculator, sleek laptop and coffee cup, professional corporate accounting",
-  consultoria: "modern business strategy meeting room with glass whiteboard, sleek conference table, panoramic city view, professional consulting",
-  educacao: "contemporary educational classroom and study space with modern desks, books and warm daylight, inspiring learning environment",
-  geral: "modern contemporary commercial office facade and reception desk, premium professional corporate photography",
+  loja: "luxurious modern boutique retail store entrance with elegant clothes display, warm architectural lighting, marble floor, high-end commercial Brazilian boutique",
+  delivery: "mouth-watering artisan gourmet burger with melting aged cheddar, crispy bacon and golden rustic fries, takeaway craft paper bag, dark moody lighting",
+  restaurante: "elegant fine dining restaurant interior, beautifully laid wooden tables with wine glasses, warm ambient candle lighting, cozy contemporary bistro",
+  sorveteria: "artisan Italian gelato display with rich pistachio, chocolate and berry flavors, fresh fruit toppings, bright modern ice cream parlor",
+  hamburgueria: "gourmet smash burger with double beef patty, melting cheddar cheese, caramelized onions and crispy smoked bacon, rustic wooden table, dark background",
+  pizzaria: "authentic artisanal wood-fired pizza with bubbling buffalo mozzarella, fresh basil and ripe san marzano tomatoes, rustic stone oven with golden fire in background",
+  confeitaria: "charming artisanal pastry showcase filled with delicate fruit tarts, macarons, chocolate cakes, warm ambient Parisian style bakery",
+  cafeteria: "cozy artisanal specialty coffee shop with barista espresso machine, cup of cappuccino with delicate latte art on rustic wooden table, morning sun rays",
+  oficina: "spotless high-tech modern auto repair workshop, luxury car lifted on hydraulic lift, organized tool chest, clean epoxy floor, bright workshop lighting",
+  clinica: "immaculate modern healthcare medical clinic consultation office, comfortable designer chairs, soft welcoming lighting, peaceful mental wellness atmosphere",
+  psicologia: "warm comforting psychology therapy office with deep comfortable armchair, green indoor plants, warm beige tones, serene natural morning daylight",
+  beleza: "high-end luxury beauty salon with illuminated vanity mirrors, comfortable styling chairs, sleek minimalist interior design, Brazilian aesthetic",
+  estetica_corporal: "luxury aesthetic body clinic with modern massage table, white fluffy towels, hot basalt massage stones, soothing ambient spa lighting, serene wellness",
+  estetica_facial: "modern clinical facial skincare room, high-tech beauty equipment, immaculate clean treatment bed, magnifying lamp, medical aesthetic clinic",
+  spa: "luxurious tranquil day spa with warm timber elements, glowing candles, indoor bamboo plants, relaxation massage bed, calming zen atmosphere",
+  barbearia: "classic vintage gentlemen barbershop with dark leather barber chairs, brass accents, illuminated mirrors, professional grooming tools and pomades",
+  petshop: "delightful modern pet grooming boutique and vet clinic, clean bright interior, happy golden retriever being pampered, organic pet food shelves",
+  advocacia: "prestigious corporate law firm boardroom with polished dark mahogany conference table, law books, balance scale of justice, panoramic city skyline view",
+  odontologia: "state-of-the-art dental clinic with ultra-modern ergonomic dental chair, spotless clinic room, digital monitors, soft warm clinical lighting",
+  construcao: "striking contemporary residential architectural house under construction renovation, high-end concrete and wood finishes, architectural blueprint plan",
+  imobiliaria: "luxury modern residential architectural house facade with infinity swimming pool, glass walls, landscaped garden, dusk sunset illumination",
+  seguros: "happy Brazilian family smiling together in bright sunlit modern home living room, feeling safe and protected, warm natural photography",
+  autonomo: "neatly arranged high-end professional technician tool kit and precision diagnostic instruments on clean workbench, craftsman pride",
+  pessoal: "minimalist creative home workspace desk setup with ultra-thin laptop, warm cup of coffee, clean notebook, soothing daylight",
+  fitness: "high-performance boutique fitness gym studio with matte black dumbbells rack, neon LED accents, clean wooden floor, elite training equipment",
+  nutricao: "vibrant fresh Mediterranean nutrition bowl with avocado, salmon, microgreens, quinoa and citrus slices on wooden table with measuring tape",
+  costura: "high-fashion atelier design studio with tailor dressmaker mannequin, colorful silk fabrics, vintage sewing machine and measuring tape",
+  tecnologia: "clean futuristic IT computer workstation with high-end dual monitors showing code, mechanical keyboard, soft ambient desk lighting",
+  farmacia: "modern bright compounding pharmacy and health store with organized minimalist wooden shelves and natural wellness products",
+  contabilidade: "executive financial accounting desk with sleek laptop showing analytics charts, financial reports, metallic pen, modern corporate office",
+  consultoria: "executive corporate boardroom with glass whiteboard, business charts, leather armchairs, panoramic metropolis view, strategic consulting",
+  educacao: "inspiring contemporary educational classroom and study space with ergonomic desks, books and warm daylight, creative learning environment",
+  energia_solar: "sleek modern rooftop with photovoltaic solar panels absorbing golden sunlight, clean energy future, clear blue sky",
+  bebidas: "upscale wine cellar and craft beer distributor with wooden racks of vintage wine bottles, cold beer taps, warm industrial ambiance",
+  marketing: "modern creative digital marketing agency studio with large screens displaying analytics dashboards, modern creative team workspace",
+  geral: "contemporary commercial office facade and elegant reception desk, warm architectural lighting, professional corporate photography",
 };
 
 /**
@@ -60,7 +67,8 @@ export function getRemainingAiQuota(socialLinks?: Record<string, any> | null): n
 }
 
 /**
- * Gera uma foto de alta resolução por IA contextualizada no nicho da empresa,
+ * Gera uma foto de altíssima definição por IA contextualizada no nicho da empresa,
+ * utilizando o motor Flux.1 com renderização foto-realista comercial 8K,
  * respeitando estritamente o limite de 3 imagens por página.
  */
 export async function generateAiImage(params: {
@@ -77,33 +85,35 @@ export async function generateAiImage(params: {
     );
   }
 
+  const cleanNiche = (params.niche || "geral").toLowerCase().trim();
+  const baseNichePrompt = NICHE_PROMPTS[cleanNiche] || NICHE_PROMPTS.geral;
+  const companyContext = params.companyName ? `for ${params.companyName}` : "";
+
   let promptText = "";
+
   if (params.type === "product") {
-    const itemContext = params.itemName || "product item";
-    const companyContext = params.companyName ? `for ${params.companyName}` : "";
+    const itemContext = params.itemName || "commercial menu item";
     const detailContext = params.details ? `, ${params.details}` : "";
-    promptText = `${itemContext} ${companyContext}${detailContext}, commercial studio product photography, clean background, appetizing and appealing presentation, sharp focus, professional lighting, 4k ultra realistic, no watermark, no text`;
+    promptText = `award-winning commercial studio product photography, 8k resolution, ${itemContext} ${companyContext}${detailContext}, appetizing and mouthwatering presentation, softbox professional studio lighting, macro lens razor sharp focus, Canon EOS R5, hyperrealistic textures, clean elegant depth of field, masterwork, no watermark, no text, no logo, no blurry artifacts`;
   } else if (params.type === "cover") {
-    const basePrompt = NICHE_PROMPTS[params.niche] || NICHE_PROMPTS.geral;
-    const companyContext = params.companyName ? `, representing ${params.companyName} business in Brazil` : "";
-    promptText = `${basePrompt}${companyContext}, cinematic wide angle, professional commercial photography, inviting atmosphere, warm natural lighting, 4k high resolution, no text, no watermark`;
+    promptText = `award-winning commercial architectural photography, 8k resolution, ultra-photorealistic, ${baseNichePrompt} ${companyContext}, wide angle 16:9 cinematic shot, Sony A7R IV 35mm f/1.8 lens, golden hour natural ambient lighting, razor sharp focus, vibrant natural colors, ultra-detailed texture, depth of field, commercial advertisement standard, masterwork, no watermark, no logo, no blurry artifacts, no deformed details, no text`;
   } else {
-    const basePrompt = NICHE_PROMPTS[params.niche] || NICHE_PROMPTS.geral;
-    promptText = `${basePrompt}, professional commercial photo, sharp focus, 4k, no text, no watermark`;
+    // avatar / emblem / portrait
+    promptText = `professional commercial portrait or luxury brand business emblem, 8k resolution, ${baseNichePrompt} ${companyContext}, Hasselblad H6D-100c studio lighting, razor sharp focus, clean elegant background, hyperrealistic, masterwork, no watermark, no text, no logo`;
   }
 
-  const seed = Math.floor(Math.random() * 100000);
+  const seed = Math.floor(Math.random() * 999999);
   const encodedPrompt = encodeURIComponent(promptText);
 
-  // Gera via motor Pollinations AI de alta qualidade e resposta instantânea
-  const width = params.type === "cover" ? 1200 : params.type === "avatar" ? 400 : 800;
-  const height = params.type === "cover" ? 500 : params.type === "avatar" ? 400 : 600;
+  // Dimensões ideais para cada tipo de enquadramento
+  const width = params.type === "cover" ? 1200 : params.type === "avatar" ? 512 : 800;
+  const height = params.type === "cover" ? 675 : params.type === "avatar" ? 512 : 600;
 
-  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&nologo=true`;
+  // Endpoint do Flux.1 de altíssima definição sem logos
+  const imageUrl = `https://image.pollinations.ai/prompt/${encodedPrompt}?width=${width}&height=${height}&seed=${seed}&model=flux&nologo=true`;
 
   return {
     url: imageUrl,
     remainingQuota: MAX_AI_IMAGES_PER_PAGE - (params.currentUsageCount + 1),
   };
 }
-

@@ -37,7 +37,43 @@ const NICHE_GALLERY_LABELS: Record<string, string> = {
   nutricao: "Nutricionista & Dietas",
   costura: "Costureira & Ateliê de Moda",
   tecnologia: "Tecnologia & Informática",
+  marketing: "Marketing Digital & Tráfego",
+  contabilidade: "Contabilidade & Finanças",
+  energia_solar: "Energia Solar & Fotovoltaica",
   geral: "Empresas & Negócios Gerais",
+};
+
+const NICHE_SEARCH_SUGGESTIONS: Record<string, string[]> = {
+  odontologia: ["Consultório Odontológico", "Clareamento Dental", "Sorriso Saudável", "Equipamento Clínico"],
+  hamburgueria: ["Hambúrguer Artesanal", "Batata Rústica", "Smash Burger", "Combo Delivery"],
+  pizzaria: ["Pizza Forno a Lenha", "Massa Artesanal", "Pizzaria Moderna", "Fatia de Pizza"],
+  restaurante: ["Prato Gourmet", "Bistrô Salão", "Mesa Posta", "Chef de Cozinha"],
+  cafeteria: ["Café Especial Latte", "Xícara Cappuccino", "Cafeteria Moderna", "Grãos de Café"],
+  sorveteria: ["Gelato Italiano", "Açaí na Tigela", "Taça de Sorvete", "Sobremesa Gelada"],
+  bebidas: ["Adega de Vinhos", "Chopp Artesanal", "Distribuidora Bebidas", "Coquetéis Drinks"],
+  barbearia: ["Barbearia Vintage", "Corte Degradê", "Navalha Barbaterapia", "Barber Shop Moderno"],
+  beleza: ["Unhas em Gel", "Salão de Beleza", "Escova Modelada", "Design Sobrancelhas"],
+  estetica_corporal: ["Drenagem Linfática", "Massagem Modeladora", "Clínica Estética", "Spa Relaxamento"],
+  estetica_facial: ["Harmonização Facial", "Limpeza de Pele", "Skincare Clínica", "Botox Estética"],
+  spa: ["Massagem com Pedras", "Day Spa Luxo", "Aromaterapia", "Ambiente Zen"],
+  oficina: ["Oficina Mecânica", "Revisão Automotiva", "Motor Carro", "Mecânico Trabalhando"],
+  clinica: ["Consultório Médico", "Recepção Clínica", "Equipamento Médico", "Médico Atendimento"],
+  psicologia: ["Consultório Psicologia", "Poltrona Terapia", "Ambiente Acolhedor", "Saúde Mental"],
+  petshop: ["Banho e Tosa", "Filhote Cachorro", "Gato Veterinário", "Clínica Pet"],
+  advocacia: ["Escritório Advocacia", "Balança da Justiça", "Reunião Jurídica", "Direito Corporativo"],
+  imobiliaria: ["Casa Moderna Luxo", "Apartamento Decorado", "Fachada Arquitetura", "Condomínio"],
+  construcao: ["Reforma Residencial", "Construção Civil", "Engenheiro Obra", "Acabamento Fino"],
+  fitness: ["Academia Musculação", "Personal Trainer", "Crossfit Treino", "Halteres Fitness"],
+  nutricao: ["Alimentação Saudável", "Prato Nutricional", "Consulta Nutricionista", "Frutas Salada"],
+  costura: ["Ateliê Costura", "Máquina de Costura", "Alfaiataria", "Tecidos e Modelagem"],
+  tecnologia: ["Setup Programação", "Manutenção Computadores", "Servidores TI", "Notebook Escritório"],
+  contabilidade: ["Escritório Contábil", "Consultoria Financeira", "Balanço Gráficos", "Reunião Empresarial"],
+  seguros: ["Família Feliz Casa", "Segurança Residencial", "Proteção Financeira", "Corretora Seguros"],
+  marketing: ["Agência Marketing", "Tráfego Pago Dashboard", "Social Media Equipe", "Branding Criativo"],
+  energia_solar: ["Painel Solar Telhado", "Energia Solar Fotovoltaica", "Usina Solar", "Sustentabilidade"],
+  loja: ["Vitrine Loja Moda", "Roupas Elegantes", "Boutique Conceito", "Interior Loja"],
+  delivery: ["Lanche Gourmet", "Batata Frita", "Pizza Artesanal", "Embalagem Delivery"],
+  geral: ["Fachada Comercial", "Recepção Moderna", "Equipe Atendimento", "Escritório Executivo"],
 };
 
 export function MediaUploader({
@@ -306,7 +342,7 @@ export function MediaUploader({
               <span>{isCover ? "Design em HTML/SVG" : "Monograma Oficial"}</span>
             </button>
 
-            {/* 3. Gerar com IA (Limite Estrito de 3) */}
+            {/* 3. Gerar com IA (Flux.1 Ultra Realista 8K - Limite Estrito de 3) */}
             <button
               type="button"
               onClick={handleGenerateAi}
@@ -314,24 +350,24 @@ export function MediaUploader({
               title={
                 remainingAiQuota <= 0
                   ? "Limite de 3 fotos por IA atingido para esta página"
-                  : `Gera foto realista via IA contextualizada no nicho (Restam ${remainingAiQuota} de ${MAX_AI_IMAGES_PER_PAGE})`
+                  : `Gera foto ultra-realista 8K via IA (Flux.1) contextualizada no nicho (Restam ${remainingAiQuota} de ${MAX_AI_IMAGES_PER_PAGE})`
               }
               className={`inline-flex items-center justify-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition-all shadow-2xs ${
                 remainingAiQuota > 0
-                  ? "border-purple-500/30 bg-purple-500/10 text-foreground hover:bg-purple-500/20"
+                  ? "border-border bg-surface-elevated/70 text-foreground hover:bg-surface-elevated hover:border-foreground/30"
                   : "border-border bg-muted/30 text-muted-foreground cursor-not-allowed opacity-60"
               }`}
             >
               {status === "generating_ai" ? (
                 <>
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-400" />
-                  <span>Gerando com IA...</span>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-foreground" />
+                  <span>Gerando 8K (Flux)...</span>
                 </>
               ) : (
                 <>
-                  <Wand2 className="h-3.5 w-3.5 text-purple-400" />
-                  <span>Gerar IA</span>
-                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300">
+                  <Wand2 className="h-3.5 w-3.5 text-foreground" />
+                  <span>Gerar IA (8K)</span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-full bg-muted text-foreground">
                     {remainingAiQuota}/3
                   </span>
                 </>
@@ -343,7 +379,7 @@ export function MediaUploader({
             <button
               type="button"
               onClick={() => setShowUrlInput(!showUrlInput)}
-              className="text-[11px] text-[color:var(--primary)] hover:underline font-medium inline-flex items-center gap-1"
+              className="text-[11px] text-foreground hover:underline font-medium inline-flex items-center gap-1"
             >
               <LinkIcon className="h-3 w-3" />
               <span>{showUrlInput ? "Ocultar link" : "Colar link de imagem"}</span>
@@ -394,14 +430,14 @@ export function MediaUploader({
         </p>
       )}
 
-      {/* Bancos de Imagem: Galeria Curada e Unsplash Aberto (Recolhido para deixar a tela limpa) */}
+      {/* Bancos de Imagem: Galeria Curada e Busca Aberta em Tempo Real */}
       <details className="group rounded-xl border border-border/70 bg-card/40 p-2.5 transition-all">
         <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center justify-between select-none">
           <span className="flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-primary" />
-            <span>Banco de Fotos do Nicho & Unsplash</span>
+            <Sparkles className="h-3.5 w-3.5 text-foreground" />
+            <span>Banco de Imagens Real & Busca por Nicho</span>
           </span>
-          <span className="text-[11px] text-primary group-open:hidden">Explorar banco</span>
+          <span className="text-[11px] text-foreground font-medium group-open:hidden">Explorar acervo</span>
           <span className="text-[11px] text-muted-foreground hidden group-open:inline">Recolher</span>
         </summary>
         <div className="space-y-3 pt-3 mt-2 border-t border-border/40">
@@ -416,15 +452,15 @@ export function MediaUploader({
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Sparkles className="h-3.5 w-3.5 text-primary" />
-              <span>Fotos por Nicho</span>
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Fotos do Nicho</span>
             </button>
             <button
               type="button"
               onClick={() => {
                 setGalleryTab("unsplash");
                 if (unsplashResults.length === 0 && !isSearchingUnsplash) {
-                  const initialSearch = NICHE_GALLERY_LABELS[activeGalleryNiche] || "estética corporal";
+                  const initialSearch = NICHE_GALLERY_LABELS[activeGalleryNiche] || "consultório";
                   setUnsplashQuery(initialSearch);
                   void handleSearchUnsplash(initialSearch);
                 }
@@ -435,8 +471,8 @@ export function MediaUploader({
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Search className="h-3.5 w-3.5 text-primary" />
-              <span>Buscar no Unsplash (Banco Aberto)</span>
+              <Search className="h-3.5 w-3.5" />
+              <span>Busca Aberta (Google / Web / HD)</span>
             </button>
           </div>
 
@@ -471,7 +507,7 @@ export function MediaUploader({
                     isCover ? "h-20" : "h-16"
                   } ${
                     isSelected
-                      ? "border-[color:var(--primary)] ring-2 ring-[color:var(--primary)]/50"
+                      ? "border-foreground ring-2 ring-foreground/40"
                       : "border-border/60 hover:border-border hover:opacity-90"
                   }`}
                   title={photo.label}
@@ -483,7 +519,7 @@ export function MediaUploader({
                     </span>
                   </div>
                   {isSelected && (
-                    <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-[color:var(--primary)] text-white flex items-center justify-center shadow-xs">
+                    <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-white text-black flex items-center justify-center shadow-xs font-bold">
                       <Check className="h-2.5 w-2.5 stroke-[3]" />
                     </div>
                   )}
@@ -495,88 +531,122 @@ export function MediaUploader({
 
         {galleryTab === "unsplash" && (
           <div className="space-y-3">
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <input
-                  value={unsplashQuery}
-                  onChange={(e) => setUnsplashQuery(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      void handleSearchUnsplash();
-                    }
-                  }}
-                  placeholder="Buscar fotos em alta definição (ex: drenagem, clínica, luxo, cafeteria)..."
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-surface-elevated border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-                />
+            <div className="space-y-2">
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <input
+                    value={unsplashQuery}
+                    onChange={(e) => setUnsplashQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        void handleSearchUnsplash();
+                      }
+                    }}
+                    placeholder="Pesquisar qualquer termo (ex: pizza gourmet, consultório moderno, hambúrguer)..."
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-surface-elevated border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-foreground/40"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => void handleSearchUnsplash()}
+                  disabled={isSearchingUnsplash || !unsplashQuery.trim()}
+                  className="btn-primary text-xs px-3.5 py-1.5 shrink-0 rounded-xl inline-flex items-center gap-1.5"
+                >
+                  {isSearchingUnsplash ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Search className="h-3.5 w-3.5" />
+                  )}
+                  <span>Buscar</span>
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => void handleSearchUnsplash()}
-                disabled={isSearchingUnsplash || !unsplashQuery.trim()}
-                className="btn-primary text-xs px-3 py-1.5 shrink-0 rounded-xl inline-flex items-center gap-1.5"
-              >
-                {isSearchingUnsplash ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Search className="h-3.5 w-3.5" />
-                )}
-                <span>Buscar</span>
-              </button>
+
+              {/* Sugestões rápidas inteligentes para o nicho selecionado */}
+              {NICHE_SEARCH_SUGGESTIONS[activeGalleryNiche] && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                  <span className="text-[10px] uppercase font-bold text-muted-foreground">Sugestões:</span>
+                  {NICHE_SEARCH_SUGGESTIONS[activeGalleryNiche].map((suggestion) => (
+                    <button
+                      key={suggestion}
+                      type="button"
+                      onClick={() => {
+                        setUnsplashQuery(suggestion);
+                        void handleSearchUnsplash(suggestion);
+                      }}
+                      className="text-[11px] px-2 py-0.5 rounded-lg bg-surface-elevated hover:bg-muted text-muted-foreground hover:text-foreground border border-border/60 transition-colors"
+                    >
+                      {suggestion}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {isSearchingUnsplash ? (
               <div className="flex flex-col items-center justify-center py-8 text-muted-foreground gap-2">
-                <Loader2 className="h-5 w-5 animate-spin text-primary" />
-                <span className="text-xs">Buscando fotos no Unsplash...</span>
+                <Loader2 className="h-5 w-5 animate-spin text-foreground" />
+                <span className="text-xs">Buscando fotos reais em alta definição...</span>
               </div>
             ) : unsplashResults.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-80 overflow-y-auto pr-1">
-                {unsplashResults.map((photo) => {
-                  const isSelected = value === photo.url;
-                  return (
-                    <button
-                      key={photo.id}
-                      type="button"
-                      onClick={() => onChange(photo.url)}
-                      className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
-                        isCover ? "h-24" : "h-20"
-                      } ${
-                        isSelected
-                          ? "border-[color:var(--primary)] ring-2 ring-[color:var(--primary)]/50"
-                          : "border-border/60 hover:border-border hover:opacity-90"
-                      }`}
-                      title={photo.label}
-                    >
-                      <img
-                        src={photo.thumbUrl || photo.url}
-                        alt={photo.label}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent p-1.5 flex flex-col justify-end">
-                        <span className="text-[10px] font-medium text-white line-clamp-1 leading-tight">
-                          {photo.label}
-                        </span>
-                        {photo.photographerName && (
-                          <span className="text-[8px] text-zinc-300 line-clamp-1">
-                            Foto: {photo.photographerName}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-[11px] text-muted-foreground px-0.5">
+                  <span>Encontradas {unsplashResults.length} fotos reais de alta resolução</span>
+                  <span className="text-[10px] text-muted-foreground/80">Clique em qualquer foto para aplicar</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 max-h-80 overflow-y-auto pr-1">
+                  {unsplashResults.map((photo) => {
+                    const isSelected = value === photo.url;
+                    return (
+                      <button
+                        key={photo.id}
+                        type="button"
+                        onClick={() => onChange(photo.url)}
+                        className={`group relative overflow-hidden rounded-xl border text-left transition-all ${
+                          isCover ? "h-24" : "h-20"
+                        } ${
+                          isSelected
+                            ? "border-foreground ring-2 ring-foreground/40"
+                            : "border-border/60 hover:border-border hover:opacity-90"
+                        }`}
+                        title={photo.label}
+                      >
+                        <img
+                          src={photo.thumbUrl || photo.url}
+                          alt={photo.label}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                          onError={(e) => {
+                            // Se a imagem falhar, tenta usar a URL direta
+                            if (photo.url && e.currentTarget.src !== photo.url) {
+                              e.currentTarget.src = photo.url;
+                            }
+                          }}
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent p-1.5 flex flex-col justify-end">
+                          <span className="text-[10px] font-medium text-white line-clamp-1 leading-tight">
+                            {photo.label}
                           </span>
-                        )}
-                      </div>
-                      {isSelected && (
-                        <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-[color:var(--primary)] text-white flex items-center justify-center shadow-xs">
-                          <Check className="h-2.5 w-2.5 stroke-[3]" />
+                          {photo.photographerName && (
+                            <span className="text-[8px] text-zinc-300 line-clamp-1">
+                              {photo.photographerName}
+                            </span>
+                          )}
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
+                        {isSelected && (
+                          <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-white text-black flex items-center justify-center shadow-xs font-bold">
+                            <Check className="h-2.5 w-2.5 stroke-[3]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
               <div className="text-center py-6 text-xs text-muted-foreground border border-dashed border-border/60 rounded-xl">
-                Digite um termo e clique em "Buscar" para explorar milhões de fotos gratuitas do Unsplash.
+                Digite um termo no campo de busca ou clique nas sugestões acima para carregar fotos reais de alta definição.
               </div>
             )}
           </div>

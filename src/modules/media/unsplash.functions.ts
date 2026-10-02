@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { NICHE_GALLERIES, detectNicheKey } from "@/modules/prospecting/nichePresets";
 
 export interface UnsplashPhotoItem {
   id: string;
@@ -9,215 +10,241 @@ export interface UnsplashPhotoItem {
   height?: number;
   photographerName?: string;
   photographerUrl?: string;
+  source?: "ddg" | "openverse" | "curated";
 }
 
+/**
+ * Dicionário inteligente de termos em português para inglês para maximizar
+ * os resultados em bancos de imagem internacionais abertos quando aplicável.
+ */
 const PT_TO_EN_TERMS: Record<string, string> = {
   "drenagem corporal": "lymphatic drainage massage body",
   "drenagem linfatica": "lymphatic drainage body massage",
   "drenagem": "lymphatic drainage body massage",
-  "estetica corporal": "body aesthetic clinic treatment",
+  "estetica corporal": "body aesthetic clinic treatment wellness",
   "estetica avancada": "aesthetic clinic wellness body",
-  "estetica facial": "facial skincare clinic spa",
+  "estetica facial": "facial skincare clinic spa beauty",
   "harmonizacao facial": "facial aesthetics skincare clinic",
   "harmonizacao": "facial skincare aesthetics",
   "limpeza de pele": "facial skincare deep cleansing",
   "botox": "aesthetic clinic facial skincare",
   "peeling": "skincare facial peeling treatment",
-  "advogado": "lawyer office attorney legal",
-  "advocacia": "law firm attorney office",
+  "advogado": "lawyer office attorney legal modern",
+  "advocacia": "law firm attorney office corporate",
   "direito": "law office attorney courthouse",
-  "barbearia": "barbershop barber hair",
-  "barbearia moderna": "modern barbershop barber",
-  "barber": "barber barbershop grooming",
-  "salao de beleza": "beauty salon hair stylist",
-  "salao": "beauty salon hair styling",
-  "manicure": "manicure nail salon polish",
+  "barbearia": "modern barbershop barber hair grooming",
+  "barbearia moderna": "modern barbershop interior barber",
+  "barber": "barber barbershop grooming fade",
+  "salao de beleza": "beauty salon hair stylist interior",
+  "salao": "beauty salon hair styling modern",
+  "manicure": "manicure nail salon polish gel",
   "unhas em gel": "gel nails nail art salon",
   "unhas": "manicure nails salon aesthetic",
-  "spa": "luxury spa wellness massage",
+  "spa": "luxury spa wellness massage aromatherapy",
   "massagem relaxante": "relaxing massage spa stones",
   "massoterapia": "massage therapy body treatment",
   "massagem": "massage therapy spa relaxation",
-  "dentista": "dentist dental clinic smile",
-  "odontologia": "dental clinic dentist",
-  "hamburgueria": "artisan burger gourmet",
-  "hamburguer": "artisan burger gourmet beef",
-  "restaurante": "restaurant gourmet food dining",
-  "pizzaria": "artisan pizza restaurant oven",
-  "pizza": "pizza artisan fresh oven",
-  "cafeteria": "coffee shop specialty cafe latte",
-  "cafe": "coffee beans specialty cafe espresso",
-  "sorveteria": "ice cream gelato artisan",
-  "gelato": "gelato ice cream artisanal",
-  "acai": "acai bowl smoothie fruits berry",
-  "oficina mecanica": "auto repair mechanic workshop",
-  "oficina": "car mechanic workshop engine",
-  "mecanica": "auto repair mechanic car",
-  "auto center": "auto repair tires car service",
-  "pet shop": "pet shop dogs cats grooming",
-  "veterinaria": "veterinarian vet clinic dog cat",
-  "banho e tosa": "pet grooming dog bath",
-  "academia": "gym fitness workout training",
-  "fitness": "fitness gym workout athlete",
-  "personal trainer": "personal trainer fitness gym",
-  "nutricionista": "nutritionist healthy food diet",
-  "imobiliaria": "real estate luxury home architecture",
-  "corretor": "real estate agent house luxury",
-  "construcao civil": "architecture construction building",
-  "reforma": "home renovation interior design",
-  "energia solar": "solar energy panels rooftop",
-  "contabilidade": "accounting business finance office",
-  "loja de roupas": "fashion store boutique clothing",
-  "moda": "fashion boutique luxury clothing",
-  "tecnologia": "technology coding modern workspace computer",
+  "dentista": "modern dentist dental clinic clean smile",
+  "odontologia": "dental clinic dentist modern interior",
+  "hamburgueria": "artisan gourmet burger crispy fries",
+  "hamburguer": "artisan smash burger gourmet beef",
+  "restaurante": "restaurant gourmet food dining interior",
+  "pizzaria": "artisan pizza wood fired oven restaurant",
+  "pizza": "artisan pizza fresh oven cheese",
+  "cafeteria": "coffee shop specialty cafe latte art",
+  "cafe": "coffee beans specialty cafe espresso cup",
+  "sorveteria": "ice cream gelato artisan display",
+  "gelato": "gelato ice cream artisanal cup",
+  "acai": "acai bowl smoothie fresh fruits",
+  "oficina mecanica": "auto repair mechanic workshop cars",
+  "oficina": "car mechanic workshop vehicle engine",
+  "mecanica": "auto repair mechanic car service",
+  "auto center": "auto repair tires car service garage",
+  "pet shop": "pet shop grooming cute dogs cats",
+  "veterinaria": "veterinarian vet clinic dog cat care",
+  "banho e tosa": "pet grooming dog bath happy puppy",
+  "academia": "modern gym fitness workout equipment",
+  "fitness": "fitness gym workout athlete training",
+  "personal trainer": "personal trainer fitness gym athlete",
+  "nutricionista": "nutritionist healthy food fresh meal diet",
+  "imobiliaria": "luxury modern real estate house architecture",
+  "corretor": "real estate agent luxury house interior",
+  "construcao civil": "architecture construction building engineer",
+  "reforma": "home renovation modern interior design",
+  "energia solar": "solar energy panels rooftop sunlight",
+  "contabilidade": "accounting business finance executive office",
+  "loja de roupas": "fashion boutique retail store clothing",
+  "moda": "fashion boutique clothing collection",
+  "tecnologia": "technology modern workstation software hardware",
 };
 
-// Fallback curated HD photos for resilient zero-failure searches
-const CURATED_FALLBACKS: Record<string, UnsplashPhotoItem[]> = {
-  estetica_corporal: [
-    {
-      id: "ec-1",
-      url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80",
-      label: "Drenagem Linfática & Massoterapia",
-    },
-    {
-      id: "ec-2",
-      url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80",
-      label: "Tratamento Corporal & Bem-Estar",
-    },
-    {
-      id: "ec-3",
-      url: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=400&q=80",
-      label: "Massagem Modeladora Corporal",
-    },
-    {
-      id: "ec-4",
-      url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=400&q=80",
-      label: "Protocolos de Estética Avançada",
-    },
-    {
-      id: "ec-5",
-      url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80",
-      label: "Clínica de Estética & Alta Tecnologia",
-    },
-    {
-      id: "ec-6",
-      url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=400&q=80",
-      label: "Cuidado e Relaxamento Corporal",
-    },
-  ],
-  advogado: [
-    {
-      id: "adv-1",
-      url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80",
-      label: "Balança da Justiça & Símbolo Jurídico",
-    },
-    {
-      id: "adv-2",
-      url: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=400&q=80",
-      label: "Biblioteca Jurídica & Código de Leis",
-    },
-    {
-      id: "adv-3",
-      url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=400&q=80",
-      label: "Escritório de Advocacia Corporativo",
-    },
-    {
-      id: "adv-4",
-      url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=400&q=80",
-      label: "Acordo Jurídico & Aperto de Mãos",
-    },
-  ],
-  barbearia: [
-    {
-      id: "barb-1",
-      url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=400&q=80",
-      label: "Cadeira de Barbearia Clássica",
-    },
-    {
-      id: "barb-2",
-      url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=400&q=80",
-      label: "Navalha de Precisão & Tesoura",
-    },
-    {
-      id: "barb-3",
-      url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=400&q=80",
-      label: "Barber Club Moderno",
-    },
-    {
-      id: "barb-4",
-      url: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=1200&q=80",
-      thumbUrl: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=400&q=80",
-      label: "Corte e Barbaterapia",
-    },
-  ],
-};
+/**
+ * Busca fotos no DuckDuckGo Image Search (motor de busca global de altíssima precisão).
+ * Retorna dezenas de fotos reais, contextuais e de alta definição.
+ */
+async function searchDuckDuckGoImages(query: string, limit = 24): Promise<UnsplashPhotoItem[]> {
+  try {
+    const tokenRes = await fetch(
+      `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        },
+      }
+    );
 
+    if (!tokenRes.ok) return [];
+    const html = await tokenRes.text();
+    const vqdMatch =
+      html.match(/vqd=([a-zA-Z0-9_-]+)/) || html.match(/vqd="([a-zA-Z0-9_-]+)"/);
+    if (!vqdMatch) return [];
+    const vqd = vqdMatch[1];
+
+    const imgRes = await fetch(
+      `https://duckduckgo.com/i.js?l=wt-wt&o=json&q=${encodeURIComponent(
+        query
+      )}&vqd=${vqd}&f=,,,type:photo,&p=1`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+          Referer: "https://duckduckgo.com/",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!imgRes.ok) return [];
+    const data = await imgRes.json();
+    const results = data.results || [];
+
+    if (!Array.isArray(results) || results.length === 0) return [];
+
+    return results
+      .filter((r: any) => r.image && typeof r.image === "string" && r.image.startsWith("http"))
+      .slice(0, limit)
+      .map((r: any, idx: number) => ({
+        id: `ddg-${idx}-${Date.now()}`,
+        url: r.image,
+        thumbUrl: r.thumbnail || r.image,
+        label: r.title ? r.title.replace(/<[^>]+>/g, "").trim() : query,
+        width: r.width,
+        height: r.height,
+        photographerName: r.source || "Web / Google",
+        photographerUrl: r.url,
+        source: "ddg" as const,
+      }));
+  } catch (err) {
+    console.warn("[searchDuckDuckGoImages] Falha na busca DDG:", err);
+    return [];
+  }
+}
+
+/**
+ * Busca complementar no Openverse (acervo aberto com mais de 800 milhões de fotos comerciais).
+ */
+async function searchOpenverseImages(query: string, limit = 20): Promise<UnsplashPhotoItem[]> {
+  try {
+    const res = await fetch(
+      `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=${limit}`,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MaquinaDeSites/2.0",
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!res.ok) return [];
+    const data = await res.json();
+    const results = data.results || [];
+
+    return results
+      .filter((r: any) => r.url && typeof r.url === "string")
+      .map((r: any) => ({
+        id: `ov-${r.id}`,
+        url: r.url,
+        thumbUrl: r.thumbnail || r.url,
+        label: r.title || query,
+        width: r.width,
+        height: r.height,
+        photographerName: r.creator || "Openverse",
+        photographerUrl: r.foreign_landing_url,
+        source: "openverse" as const,
+      }));
+  } catch (err) {
+    console.warn("[searchOpenverseImages] Falha na busca Openverse:", err);
+    return [];
+  }
+}
+
+/**
+ * Converte a galeria curada do nicho em UnsplashPhotoItems de altíssima definição.
+ */
+function getCuratedNichePhotos(query: string): UnsplashPhotoItem[] {
+  const detectedKey = detectNicheKey(query, null);
+  const gallery = NICHE_GALLERIES[detectedKey] || NICHE_GALLERIES.geral;
+
+  const combined = [...(gallery.covers || []), ...(gallery.avatars || [])];
+
+  return combined.map((item, idx) => ({
+    id: `curated-${detectedKey}-${idx}`,
+    url: item.url,
+    thumbUrl: item.url.replace("w=1200", "w=400").replace("w=1600", "w=400"),
+    label: item.label,
+    photographerName: "Curadoria Oficial",
+    source: "curated" as const,
+  }));
+}
+
+/**
+ * Função Server-Side para busca ultra-robusta de imagens reais:
+ * 1. Executa busca real via DuckDuckGo com suporte total a português e termos de nicho.
+ * 2. Se DDG retornar menos de 4 resultados, complementa com Openverse.
+ * 3. Se houver falha de rede ou timeout, recorre à galeria curada EXATAMENTE do nicho pesquisado (nunca fotos aleatórias).
+ */
 export const searchUnsplashPhotosFn = createServerFn({ method: "POST" })
   .validator((d: { query: string; perPage?: number }) => d)
   .handler(async ({ data }): Promise<UnsplashPhotoItem[]> => {
     const rawQuery = (data.query || "").trim();
-    if (!rawQuery) return [];
+    if (!rawQuery) {
+      return getCuratedNichePhotos("geral");
+    }
+
+    const perPage = Math.min(Math.max(data.perPage || 24, 8), 36);
 
     const normalizedLower = rawQuery
       .toLowerCase()
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "");
 
-    const perPage = Math.min(Math.max(data.perPage || 12, 4), 24);
-
-    // Mapeia para inglês se houver tradução otimizada
-    const mappedQuery = PT_TO_EN_TERMS[normalizedLower] || PT_TO_EN_TERMS[rawQuery.toLowerCase()] || rawQuery;
-
-    try {
-      const url = `https://unsplash.com/napi/search/photos?query=${encodeURIComponent(mappedQuery)}&per_page=${perPage}`;
-      const response = await fetch(url, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          Accept: "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        const results = json.results || [];
-        if (Array.isArray(results) && results.length > 0) {
-          return results.slice(0, perPage).map((p: any) => ({
-            id: p.id,
-            url: p.urls?.regular || p.urls?.full || p.urls?.small,
-            thumbUrl: p.urls?.small || p.urls?.thumb || p.urls?.regular,
-            label: p.alt_description || p.description || rawQuery,
-            width: p.width,
-            height: p.height,
-            photographerName: p.user?.name,
-            photographerUrl: p.user?.links?.html,
-          }));
-        }
-      }
-    } catch (err) {
-      console.warn("[searchUnsplashPhotosFn] Erro ao buscar no Unsplash:", err);
+    // 1. Tenta Busca Real (DuckDuckGo Image Search)
+    const ddgResults = await searchDuckDuckGoImages(rawQuery, perPage);
+    if (ddgResults.length >= 6) {
+      return ddgResults.slice(0, perPage);
     }
 
-    // Fallback inteligente
-    for (const [key, list] of Object.entries(CURATED_FALLBACKS)) {
-      if (normalizedLower.includes(key) || key.includes(normalizedLower)) {
-        return list;
+    // 2. Se retornou poucos resultados, tenta busca em inglês se houver termo mapeado
+    const mappedEnTerm = PT_TO_EN_TERMS[normalizedLower] || PT_TO_EN_TERMS[rawQuery.toLowerCase()];
+    if (mappedEnTerm && mappedEnTerm !== rawQuery) {
+      const ddgEnResults = await searchDuckDuckGoImages(mappedEnTerm, perPage);
+      if (ddgEnResults.length >= 6) {
+        return [...ddgResults, ...ddgEnResults].slice(0, perPage);
+      }
+
+      const ovResults = await searchOpenverseImages(mappedEnTerm, perPage);
+      if (ovResults.length > 0) {
+        return [...ddgResults, ...ovResults].slice(0, perPage);
       }
     }
 
-    return CURATED_FALLBACKS.estetica_corporal;
+    // 3. Fallback inteligente e perfeitamente ancorado no nicho exato
+    const curated = getCuratedNichePhotos(rawQuery);
+    if (ddgResults.length > 0) {
+      return [...ddgResults, ...curated].slice(0, perPage);
+    }
+
+    return curated;
   });

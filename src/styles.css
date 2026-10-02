@@ -49,28 +49,28 @@
 :root {
   --radius: 0.875rem;
 
-  --background: #10081d;
-  --foreground: #ffffff;
-  --surface: #160d29;
-  --surface-elevated: #1e1338;
+  --background: #09090b;
+  --foreground: #f4f4f5;
+  --surface: #121215;
+  --surface-elevated: #18181b;
 
-  --card: #160d29;
-  --card-foreground: #ffffff;
-  --popover: #160d29;
-  --popover-foreground: #ffffff;
+  --card: #121215;
+  --card-foreground: #f4f4f5;
+  --popover: #121215;
+  --popover-foreground: #f4f4f5;
 
-  --primary: #a855f7;
-  --primary-foreground: #ffffff;
-  --primary-glow: #d946ef;
+  --primary: #d4d4d8;
+  --primary-foreground: #09090b;
+  --primary-glow: #a1a1aa;
 
-  --secondary: #1e1338;
-  --secondary-foreground: #ffffff;
+  --secondary: #18181b;
+  --secondary-foreground: #f4f4f5;
 
-  --muted: #1c1233;
-  --muted-foreground: #948fa8;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
 
-  --accent: #a855f7;
-  --accent-foreground: #ffffff;
+  --accent: #27272a;
+  --accent-foreground: #f4f4f5;
 
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
@@ -79,34 +79,34 @@
   --warning: #f59e0b;
   --warning-foreground: #ffffff;
 
-  --border: #27233a;
-  --input: #18102d;
-  --ring: #a855f7;
+  --border: #27272a;
+  --input: #18181b;
+  --ring: #71717a;
 
-  /* Extended brand palette for a vibrant SaaS look */
-  --brand-cyan: oklch(0.78 0.16 210);
-  --brand-violet: oklch(0.68 0.2 290);
-  --brand-pink: oklch(0.75 0.2 340);
-  --brand-amber: oklch(0.82 0.16 75);
-  --brand-lime: oklch(0.82 0.17 140);
+  /* Extended brand palette for a sober luxury look */
+  --brand-cyan: #71717a;
+  --brand-violet: #52525b;
+  --brand-pink: #71717a;
+  --brand-amber: #a1a1aa;
+  --brand-lime: #71717a;
 
   --gradient-hero:
-    radial-gradient(ellipse 80% 60% at 50% 0%, oklch(0.35 0.14 260) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 50% at 20% 40%, oklch(0.3 0.15 290 / 0.6) 0%, transparent 55%),
-    radial-gradient(ellipse 60% 50% at 85% 30%, oklch(0.3 0.15 200 / 0.5) 0%, transparent 55%),
-    oklch(0.15 0.02 260);
-  --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--primary-glow) 100%);
-  --gradient-accent: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(39, 39, 42, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 20% 40%, rgba(24, 24, 27, 0.3) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 50% at 85% 30%, rgba(24, 24, 27, 0.3) 0%, transparent 55%),
+    #09090b;
+  --gradient-primary: linear-gradient(135deg, #27272a 0%, #3f3f46 100%);
+  --gradient-accent: linear-gradient(135deg, #18181b 0%, #27272a 100%);
   --gradient-rainbow: linear-gradient(
     90deg,
-    var(--brand-cyan),
-    var(--brand-violet),
-    var(--brand-pink),
-    var(--brand-amber)
+    #3f3f46,
+    #52525b,
+    #71717a,
+    #a1a1aa
   );
-  --shadow-elegant: 0 20px 60px -20px color-mix(in oklab, var(--primary) 40%, transparent);
-  --shadow-glow: 0 0 80px color-mix(in oklab, var(--primary) 30%, transparent);
-  --shadow-card: 0 8px 30px -12px oklch(0 0 0 / 0.5);
+  --shadow-elegant: 0 20px 60px -20px rgba(0, 0, 0, 0.6);
+  --shadow-glow: 0 0 80px rgba(255, 255, 255, 0.05);
+  --shadow-card: 0 8px 30px -12px rgba(0, 0, 0, 0.6);
 }
 
 @layer base {
@@ -2600,25 +2600,26 @@
 
 /* Premium product shell. These styles intentionally stay scoped to the signed-in
    experience, so public Bio templates continue to own their own visual systems. */
-.app-shell { background: #08070d; }
+.app-shell { background: #09090b; }
 .app-sidebar {
   border-right: 1px solid rgb(255 255 255 / 0.08);
-  background: linear-gradient(180deg, #100d18 0%, #0a0910 100%);
-  box-shadow: 18px 0 50px rgb(0 0 0 / 0.16);
+  background: #0c0c0e;
+  box-shadow: 18px 0 50px rgb(0 0 0 / 0.3);
 }
 .app-brand { color: #fff; letter-spacing: -0.03em; }
 .app-brand > span:last-child { font-size: 1.02rem; letter-spacing: -0.04em; }
-.app-brand b { color: #b05cff; font-weight: 800; }
+.app-brand b { color: #d4d4d8; font-weight: 800; }
 .app-brand-mark {
   display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: .7rem;
-  color: #fff; background: linear-gradient(145deg, #7c3aed, #d946ef);
-  box-shadow: 0 9px 20px rgb(139 63 242 / .3);
+  color: #fff; background: linear-gradient(145deg, #27272a, #3f3f46);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
-.app-nav-link { color: #aaa2b7; transition: color 160ms ease, background 160ms ease, transform 160ms ease; }
+.app-nav-link { color: #a1a1aa; transition: color 160ms ease, background 160ms ease, transform 160ms ease; }
 .app-nav-link:hover { color: #fff; background: rgb(255 255 255 / .055); }
-.app-nav-link.is-active { color: #fff; background: linear-gradient(100deg, rgb(124 58 237 / .28), rgb(217 70 239 / .08)); box-shadow: inset 2px 0 0 #b05cff; }
+.app-nav-link.is-active { color: #fff; background: #27272a; box-shadow: inset 2px 0 0 #d4d4d8; }
 .app-content { width: 100%; }
-.app-mobile-nav { position: fixed; z-index: 35; right: .75rem; bottom: calc(.6rem + env(safe-area-inset-bottom)); left: .75rem; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: .38rem; border: 1px solid rgb(255 255 255 / .12); border-radius: 1.15rem; background: rgb(16 13 24 / .9); box-shadow: 0 18px 45px rgb(0 0 0 / .42); backdrop-filter: blur(18px); }.app-mobile-nav a, .app-mobile-nav button { display: grid; min-height: 3.25rem; place-items: center; gap: .18rem; border-radius: .85rem; color: #a9a0b7; font-size: .59rem; font-weight: 700; text-decoration: none; background: transparent; border: none; cursor: pointer; }.app-mobile-nav svg { width: 1.05rem; height: 1.05rem; }.app-mobile-nav a.is-active { color: #fff; background: linear-gradient(145deg, rgb(124 58 237 / .55), rgb(217 70 239 / .24)); box-shadow: 0 5px 14px rgb(80 28 149 / .28); }
+.app-mobile-nav { position: fixed; z-index: 35; right: .75rem; bottom: calc(.6rem + env(safe-area-inset-bottom)); left: .75rem; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding: .38rem; border: 1px solid rgb(255 255 255 / .12); border-radius: 1.15rem; background: rgb(18 18 21 / .94); box-shadow: 0 18px 45px rgb(0 0 0 / .6); backdrop-filter: blur(18px); }.app-mobile-nav a, .app-mobile-nav button { display: grid; min-height: 3.25rem; place-items: center; gap: .18rem; border-radius: .85rem; color: #a1a1aa; font-size: .59rem; font-weight: 700; text-decoration: none; background: transparent; border: none; cursor: pointer; }.app-mobile-nav svg { width: 1.05rem; height: 1.05rem; }.app-mobile-nav a.is-active { color: #fff; background: #27272a; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5); }
 @media (min-width: 768px) { .app-mobile-nav { display: none !important; } }
 
 /* The sidebar consumes part of the desktop viewport. Do not keep the three-column
@@ -3408,9 +3409,9 @@
   background: var(--surface-elevated);
 }
 .app-nav-link.is-active {
-  color: var(--primary);
-  background: color-mix(in oklab, var(--primary) 10%, var(--surface));
-  box-shadow: inset 3px 0 var(--primary);
+  color: #fff;
+  background: #27272a;
+  box-shadow: inset 3px 0 #d4d4d8;
 }
 .app-content {
   min-height: 100vh;

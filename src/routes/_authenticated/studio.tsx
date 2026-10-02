@@ -649,7 +649,7 @@ export default function CinematicStudioPage() {
             type="button"
             onClick={handleSaveAndPublish}
             disabled={isSaving}
-            className="flex items-center gap-1.5 bg-zinc-100 text-zinc-950 hover:bg-white font-medium text-xs px-3 sm:px-3.5 py-1.5 rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 font-medium text-xs px-3 sm:px-3.5 py-1.5 rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
           >
             {isSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             <span>{isSaving ? "Publicando..." : "Publicar"}</span>
@@ -709,7 +709,7 @@ export default function CinematicStudioPage() {
                 {messages.length === 1 && messages[0].id === "welcome" ? (
                   <div className="flex flex-1 flex-col items-center justify-center text-center px-4 py-8 space-y-3.5 my-auto select-none">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800/80 shadow-lg text-zinc-200">
-                      <Sparkles className="h-6 w-6 text-amber-400" />
+                      <Sparkles className="h-6 w-6 text-zinc-300" />
                     </div>
                     <div className="space-y-1.5 max-w-xs">
                       <h3 className="text-base sm:text-lg font-semibold tracking-tight text-zinc-100">
@@ -920,7 +920,7 @@ export default function CinematicStudioPage() {
                                       className={`flex-1 flex items-center justify-center gap-1 rounded-lg py-1.5 text-[11px] font-medium transition-all ${
                                         isApplied
                                           ? "bg-zinc-800 text-zinc-400 border border-zinc-700/50 cursor-default"
-                                          : "bg-zinc-100 text-zinc-950 hover:bg-white hover:scale-[1.02] active:scale-[0.98] shadow-xs"
+                                          : "bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 hover:scale-[1.02] active:scale-[0.98] shadow-xs"
                                       }`}
                                     >
                                       {isApplied ? (
@@ -956,7 +956,7 @@ export default function CinematicStudioPage() {
               </div>
 
               {/* Barra de Entrada no Rodapé (Footer Chat Bar estilo Lovable / Claude Code) */}
-              <div className="shrink-0 bg-zinc-950 p-2.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] border-t border-zinc-800/80">
+              <div className="shrink-0 bg-zinc-950 px-2.5 pt-1.5 pb-[max(0.4rem,env(safe-area-inset-bottom))] border-t border-zinc-800/80">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -995,7 +995,7 @@ export default function CinematicStudioPage() {
                         type="button"
                         onClick={() => handleLookupMaps()}
                         disabled={isLookingUpMaps || !mapsQuery.trim()}
-                        className="rounded-lg bg-zinc-100 text-zinc-950 font-medium text-xs px-3 py-1.5 hover:bg-white transition-colors disabled:opacity-40"
+                        className="rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60 font-medium text-xs px-3 py-1.5 transition-colors disabled:opacity-40"
                       >
                         {isLookingUpMaps ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : "Importar"}
                       </button>
@@ -1059,7 +1059,7 @@ export default function CinematicStudioPage() {
                       type="button"
                       onClick={() => handleSendMessage()}
                       disabled={isRefiningAi || !aiPrompt.trim()}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-white text-zinc-950 hover:bg-zinc-200 disabled:opacity-30 transition-all"
+                      className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60 disabled:opacity-30 transition-all"
                     >
                       {isRefiningAi ? (
                         <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -1100,6 +1100,7 @@ export default function CinematicStudioPage() {
                         type="text"
                         value={data.businessName}
                         onChange={(e) => setData({ ...data, businessName: e.target.value })}
+                        placeholder="Ex: Studio Alpha, Dra. Helena, Bistrô..."
                         className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
@@ -1111,6 +1112,7 @@ export default function CinematicStudioPage() {
                         onChange={(e) =>
                           setData({ ...data, hero: { ...data.hero, tagline: e.target.value } })
                         }
+                        placeholder="Ex: EXPERIÊNCIA EXCLUSIVA"
                         className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
@@ -1122,6 +1124,7 @@ export default function CinematicStudioPage() {
                         onChange={(e) =>
                           setData({ ...data, hero: { ...data.hero, title: e.target.value } })
                         }
+                        placeholder="Ex: Arquitetura & Interiores de Alto Padrão"
                         className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
@@ -1133,6 +1136,7 @@ export default function CinematicStudioPage() {
                         onChange={(e) =>
                           setData({ ...data, hero: { ...data.hero, subtitle: e.target.value } })
                         }
+                        placeholder="Ex: Projetos autorais que unem estética contemporânea, conforto e sofisticação."
                         className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none resize-none"
                       />
                     </div>
@@ -1153,7 +1157,7 @@ export default function CinematicStudioPage() {
                           type="number"
                           step="0.1"
                           max="5.0"
-                          value={data.rating || 4.9}
+                          value={data.rating || 5.0}
                           onChange={(e) => setData({ ...data, rating: parseFloat(e.target.value) })}
                           className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                         />
@@ -1165,6 +1169,7 @@ export default function CinematicStudioPage() {
                         type="text"
                         value={data.address || ""}
                         onChange={(e) => setData({ ...data, address: e.target.value })}
+                        placeholder="Ex: Av. Brigadeiro Faria Lima, 1000 - São Paulo, SP"
                         className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
@@ -1418,7 +1423,7 @@ export default function CinematicStudioPage() {
                   type="button"
                   onClick={handleSaveAndPublish}
                   disabled={isSaving}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-zinc-100 py-3 text-xs font-medium text-zinc-950 shadow-md hover:bg-white transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 py-3 text-xs font-medium shadow-md transition-all disabled:opacity-50"
                 >
                   {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   <span>Salvar & Publicar Página</span>
@@ -1475,7 +1480,7 @@ export default function CinematicStudioPage() {
                     setTemporaryPreview(null);
                     toast.success(`Conceito "${temporaryPreview.optionName}" aprovado e aplicado!`);
                   }}
-                  className="rounded-lg bg-zinc-100 px-3 py-1 text-[11px] font-medium text-zinc-950 hover:bg-white transition-colors shadow-xs"
+                  className="rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 px-3 py-1 text-[11px] font-medium transition-colors shadow-xs"
                 >
                   Aprovar & Fixar
                 </button>
@@ -1551,7 +1556,7 @@ export default function CinematicStudioPage() {
                 href={publicUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-xl bg-zinc-100 py-2.5 text-xs font-medium text-zinc-950 hover:bg-white shadow-sm transition-all"
+                className="flex items-center justify-center gap-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 py-2.5 text-xs font-medium shadow-sm transition-all"
               >
                 <ExternalLink className="h-3.5 w-3.5" />
                 <span>Visualizar Site em Nova Aba</span>

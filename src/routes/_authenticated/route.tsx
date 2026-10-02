@@ -316,33 +316,12 @@ function AuthedLayout() {
         <main
           className={
             pathname === "/builder"
-              ? "app-content mx-auto p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-[1600px]"
-              : "app-content mx-auto p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-7xl"
+              ? "app-content mx-auto p-4 sm:p-5 md:p-8 max-w-[1600px]"
+              : "app-content mx-auto p-4 sm:p-5 md:p-8 max-w-7xl"
           }
         >
           <Outlet />
         </main>
-        <nav className="app-mobile-nav md:hidden h-16" aria-label="Navegação principal">
-          {mobileNavItems.map(({ to, label, icon: Icon }) => {
-            const active =
-              pathname === to ||
-              (to === "/dashboard" && pathname === "/pages");
-            return (
-              <Link key={label} to={to as any} className={active ? "is-active" : ""}>
-                <Icon aria-hidden="true" />
-                <span>{label}</span>
-              </Link>
-            );
-          })}
-          <button
-            type="button"
-            onClick={() => setOpen(true)}
-            aria-label="Abrir menu de opções"
-          >
-            <Menu aria-hidden="true" />
-            <span>Mais</span>
-          </button>
-        </nav>
       </div>
     </div>
   );

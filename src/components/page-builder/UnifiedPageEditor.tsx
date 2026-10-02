@@ -1482,10 +1482,10 @@ export function UnifiedPageEditor({
             <button
               type="button"
               onClick={() => setIsChatDrawerOpen(true)}
-              className="px-3.5 py-2 rounded-xl border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer active:scale-95"
+              className="btn-secondary text-xs py-2 px-3.5 flex items-center gap-1.5 font-bold shadow-xs transition-all cursor-pointer active:scale-95"
               title="Conversar e editar o site em tempo real com Inteligência Artificial"
             >
-              <Sparkles className="h-4 w-4 text-purple-600 dark:text-purple-400 animate-pulse" />
+              <Sparkles className="h-4 w-4" />
               <span>Copiloto IA (Chat)</span>
             </button>
 

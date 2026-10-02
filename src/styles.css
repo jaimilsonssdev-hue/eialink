@@ -3975,9 +3975,8 @@
   .builder-topbar .btn-secondary { flex: 1; }
   .builder-topbar .btn-primary { flex: 1.35; }
   .builder-save-status { margin-left: auto; }
-  .premium-builder { padding-bottom: 2rem; }
-  .app-content { padding-bottom: 8.5rem !important; }
-  .editor-workflow { position: static; }
+  .app-content:not(.studio-main) { padding-bottom: 8.5rem !important; }
+  .studio-main, .cinematic-studio { padding-bottom: 0 !important; margin-bottom: 0 !important; }
   .media-library-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem; }
   .media-library-grid img { height: 5rem; }
   .media-library-grid button { min-height: 7.15rem; }

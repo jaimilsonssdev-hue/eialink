@@ -550,7 +550,10 @@ export default function CinematicStudioPage() {
   const activeCanvasData = temporaryPreview ? temporaryPreview.data : data;
 
   return (
-    <div className="cinematic-studio flex h-full w-full flex-1 min-h-0 flex-col overflow-hidden bg-zinc-950 text-zinc-100 font-sans">
+    <div
+      className="cinematic-studio flex h-full w-full flex-1 min-h-0 flex-col overflow-hidden bg-zinc-950 text-zinc-100 font-sans"
+      style={{ paddingBottom: 0, marginBottom: 0 }}
+    >
       {/* TOPBAR UNIFICADA (Ultra-slim, estilo Lovable / Claude Code) */}
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/90 px-3 sm:px-4 backdrop-blur-md z-30">
         {/* Esquerda: Voltar para Páginas + Status Ativo + Título do Projeto */}

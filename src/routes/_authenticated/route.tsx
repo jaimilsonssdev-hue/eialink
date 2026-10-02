@@ -116,8 +116,16 @@ function AuthedLayout() {
     navigate({ to: "/auth", replace: true });
   }
 
+  const isStudio = pathname.startsWith("/studio");
+
   return (
-    <div className="app-shell min-h-screen flex">
+    <div
+      className={`flex ${
+        isStudio
+          ? "fixed inset-0 z-30 overflow-hidden bg-zinc-950 md:static md:inset-auto md:min-h-screen"
+          : "app-shell min-h-screen"
+      }`}
+    >
       {/* Sidebar */}
       <aside
         className={`app-sidebar fixed inset-y-0 left-0 z-40 w-64 transform transition-transform md:translate-x-0 ${open ? "translate-x-0" : "-translate-x-full"}`}
@@ -212,7 +220,7 @@ function AuthedLayout() {
       {(() => {
         const isStudio = pathname.startsWith("/studio");
         return (
-          <div className={`min-w-0 flex-1 ${isStudio ? "bg-zinc-950 md:ml-64 h-[100dvh] max-h-[100dvh] flex flex-col overflow-hidden" : "md:ml-64"}`}>
+          <div className={`min-w-0 flex-1 ${isStudio ? "w-full h-full flex flex-col overflow-hidden bg-zinc-950 md:ml-64" : "md:ml-64"}`}>
             {!isStudio && (
               <header className="app-mobile-header md:hidden sticky top-0 z-30 glass flex items-center justify-between px-4 h-14">
                 <button onClick={() => setOpen(true)} aria-label="Abrir menu">
@@ -232,6 +240,7 @@ function AuthedLayout() {
                   ? "app-content mx-auto p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-[1600px]"
                   : "app-content mx-auto p-4 pb-24 sm:p-5 md:p-8 md:pb-8 max-w-7xl"
               }`}
+              style={isStudio ? { paddingBottom: 0, marginBottom: 0 } : undefined}
             >
               <Outlet />
             </main>

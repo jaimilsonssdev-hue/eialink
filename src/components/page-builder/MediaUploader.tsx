@@ -394,8 +394,17 @@ export function MediaUploader({
         </p>
       )}
 
-      {/* Bancos de Imagem: Galeria Curada e Unsplash Aberto */}
-      <div className="space-y-3 pt-2 border-t border-border/40">
+      {/* Bancos de Imagem: Galeria Curada e Unsplash Aberto (Recolhido para deixar a tela limpa) */}
+      <details className="group rounded-xl border border-border/70 bg-card/40 p-2.5 transition-all">
+        <summary className="cursor-pointer text-xs font-semibold text-muted-foreground hover:text-foreground flex items-center justify-between select-none">
+          <span className="flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5 text-primary" />
+            <span>Banco de Fotos do Nicho & Unsplash</span>
+          </span>
+          <span className="text-[11px] text-primary group-open:hidden">Explorar banco</span>
+          <span className="text-[11px] text-muted-foreground hidden group-open:inline">Recolher</span>
+        </summary>
+        <div className="space-y-3 pt-3 mt-2 border-t border-border/40">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <div className="flex items-center gap-1.5 p-0.5 rounded-xl bg-muted/40 border border-border/40">
             <button
@@ -572,7 +581,8 @@ export function MediaUploader({
             )}
           </div>
         )}
-      </div>
+        </div>
+      </details>
 
       <ImageCropModal
         open={isCropOpen}

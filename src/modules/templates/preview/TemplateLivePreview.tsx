@@ -77,6 +77,9 @@ export function TemplateLivePreview({
         style={{
           height: scrollable ? Math.max(height, contentHeight * scale) : height,
           position: "relative",
+          display: "flex",
+          justifyContent: "center",
+          width: "100%",
         }}
       >
         <div
@@ -85,6 +88,8 @@ export function TemplateLivePreview({
           style={{
             width: frameWidth,
             transform: `scale(${scale})`,
+            transformOrigin: "top center",
+            margin: "0 auto",
             ...(scrollable ? {} : { minHeight: scale > 0 ? height / scale : height }),
           }}
         >

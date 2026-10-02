@@ -42,6 +42,9 @@ import {
   ChevronDown,
   Clapperboard,
   Smartphone,
+  Share2,
+  LayoutGrid,
+  Layers,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -284,6 +287,8 @@ function PagesWorkspace() {
   const [lookupFeedback, setLookupFeedback] = useState<string | null>(null);
 
   const [isCreatingBlank, setIsCreatingBlank] = useState(false);
+  const [viewMode, setViewMode] = useState<"selector" | "grid">("selector");
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
   const [creationError, setCreationError] = useState<string | null>(null);
@@ -653,6 +658,7 @@ function PagesWorkspace() {
 
   const pageList = pages.data ?? [];
   const publishedCount = pageList.filter((p) => p.published).length;
+  const activePage = pageList.find((p) => p.id === selectedPageId) || pageList[0] || null;
 
   return (
     <div className="space-y-8 pb-16">
@@ -889,11 +895,32 @@ function PagesWorkspace() {
 
       {/* Grid de Páginas do Usuário */}
       <section className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-bold text-foreground">Suas Páginas Criadas</h2>
-          <span className="text-xs text-muted-foreground">
-            {pageList.length} {pageList.length === 1 ? "página cadastrada" : "páginas cadastradas"}
-          </span>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="font-display text-lg font-bold text-foreground">Suas Páginas Criadas</h2>
+            <p className="text-xs text-muted-foreground">
+              {pageList.length} {pageList.length === 1 ? "página cadastrada" : "páginas cadastradas no sistema"}
+            </p>
+          </div>
+          {pageList.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setViewMode(viewMode === "selector" ? "grid" : "selector")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border bg-card hover:bg-surface-elevated text-xs font-semibold text-muted-foreground hover:text-foreground transition-all cursor-pointer self-start sm:self-auto"
+            >
+              {viewMode === "selector" ? (
+                <>
+                  <LayoutGrid className="h-3.5 w-3.5" />
+                  <span>Ver todas em grade</span>
+                </>
+              ) : (
+                <>
+                  <Layers className="h-3.5 w-3.5" />
+                  <span>Recolher em seletor</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
 
         {pageList.length === 0 ? (
@@ -928,6 +955,158 @@ function PagesWorkspace() {
                 <Sparkles className="h-4 w-4" /> Criar Rápido (30s)
               </button>
             </div>
+          </div>
+        ) : viewMode === "selector" && activePage ? (
+          <div className="space-y-3">
+            {/* Seletor Compacto Elegante */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 bg-card/60 p-3 rounded-2xl border border-border">
+              <div className="relative flex-1">
+                <select
+                  value={activePage.id}
+                  onChange={(e) => setSelectedPageId(e.target.value)}
+                  className="w-full appearance-none rounded-xl border border-border/80 bg-surface px-4 py-2.5 text-sm font-bold text-foreground focus:outline-none focus:border-white shadow-2xs transition-all cursor-pointer pr-10"
+                >
+                  {pageList.map((page, idx) => (
+                    <option key={page.id} value={page.id} className="bg-card text-foreground py-1">
+                      {idx + 1}. {page.display_name} — {page.published ? "✓ Publicado (No Ar)" : "📝 Rascunho"}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              </div>
+
+              <div className="text-xs text-muted-foreground px-2 sm:text-right shrink-0">
+                Página <b>{pageList.findIndex((p) => p.id === activePage.id) + 1}</b> de <b>{pageList.length}</b>
+              </div>
+            </div>
+
+            {/* Card Focado da Página com Opções: Ver, Compartilhar, Editar */}
+            {(() => {
+              const template = TemplateService.get(activePage.template_id ?? undefined);
+              const isCustom = Boolean(access.data?.isPro && access.data.features.custom_domain);
+              const publicUrl = publicPageUrl(activePage.slug, isCustom);
+
+              return (
+                <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 shadow-md transition-all space-y-4">
+                  <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    {/* Informações da Página & Capa/Avatar */}
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="relative h-14 w-14 sm:h-16 sm:w-16 rounded-2xl overflow-hidden border border-border bg-muted shrink-0 shadow-sm">
+                        {activePage.avatar_url || activePage.cover_url ? (
+                          <img
+                            src={activePage.avatar_url || activePage.cover_url || ""}
+                            alt={activePage.display_name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center bg-primary text-primary-foreground font-black text-xl">
+                            {activePage.display_name.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 space-y-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="text-base font-bold text-foreground truncate">
+                            {activePage.display_name}
+                          </h3>
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                              activePage.published
+                                ? "bg-emerald-500/15 text-emerald-300 border border-emerald-500/30"
+                                : "bg-amber-500/15 text-amber-300 border border-amber-500/30"
+                            }`}
+                          >
+                            <span className={`h-1.5 w-1.5 rounded-full ${activePage.published ? "bg-emerald-400" : "bg-amber-400"}`} />
+                            {activePage.published ? "Publicado" : "Rascunho"}
+                          </span>
+                          <span className="rounded-full bg-surface-elevated border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+                            {template.name}
+                          </span>
+                        </div>
+
+                        <p className="text-xs text-muted-foreground line-clamp-1">
+                          {activePage.description || "Página profissional completa e pronta para converter visitantes em clientes."}
+                        </p>
+
+                        <div className="inline-flex items-center gap-1.5 text-xs text-muted-foreground font-mono bg-surface px-2.5 py-0.5 rounded-lg border border-border/60">
+                          <span>eialink.com.br/p/{activePage.slug}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Botões Principais de Ação: Ver, Compartilhar, Editar */}
+                    <div className="flex flex-wrap items-center gap-2 w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-border/60">
+                      {/* 1. Ver */}
+                      <a
+                        href={publicUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-secondary flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs"
+                        title="Ver página ao vivo no navegador"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>Ver</span>
+                      </a>
+
+                      {/* 2. Compartilhar */}
+                      <button
+                        type="button"
+                        onClick={() => handleCopyUrl(activePage.slug)}
+                        className="btn-secondary flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                        title="Copiar link para compartilhar"
+                      >
+                        {copiedSlug === activePage.slug ? (
+                          <>
+                            <Check className="h-4 w-4 text-emerald-400" />
+                            <span className="text-emerald-400">Copiado!</span>
+                          </>
+                        ) : (
+                          <>
+                            <Share2 className="h-4 w-4" />
+                            <span>Compartilhar</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* 3. Editar */}
+                      <Link
+                        to="/builder"
+                        search={{ page: activePage.id }}
+                        className="btn-primary flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all"
+                      >
+                        <Pencil className="h-4 w-4" />
+                        <span>Editar</span>
+                      </Link>
+
+                      {/* Copiloto IA & Excluir */}
+                      <Link
+                        to="/builder"
+                        search={{ page: activePage.id, copilot: true }}
+                        className="p-2.5 rounded-xl border border-purple-500/30 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs transition-colors"
+                        title="Montar ou transformar com o Copiloto IA"
+                      >
+                        <Sparkles className="h-4 w-4" />
+                      </Link>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePage(activePage.id, activePage.display_name)}
+                        disabled={deletingId === activePage.id}
+                        className="p-2.5 rounded-xl border border-border bg-card hover:border-rose-500/40 hover:bg-rose-500/10 text-muted-foreground hover:text-rose-400 text-xs transition-colors cursor-pointer"
+                        title="Excluir página permanentemente"
+                      >
+                        {deletingId === activePage.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-rose-400" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -1419,7 +1598,7 @@ function PagesWorkspace() {
                               Modelo {selectedVariantIndex + 1} de 3
                             </span>
                           </label>
-                          <div className="grid grid-cols-3 gap-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             {getVariantsForNiche(selectedNiche).map((variant, idx) => {
                               const isSelected = selectedVariantIndex === idx;
                               return (

@@ -186,8 +186,25 @@ function BuilderPage() {
       };
 
   return (
-    <UnifiedPageEditor
-      initialBio={initialBio}
+    <div className="relative">
+      {initialBio.id && (
+        <div className="bg-zinc-900 border-b border-zinc-800 px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-zinc-300">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span>Experimente o <strong>Studio com Diretor de Arte IA</strong> para criar ou editar essa página com chat interativo e sem modelos rígidos.</span>
+          </div>
+          <Link
+            to="/studio"
+            search={{ page: initialBio.id }}
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-medium border border-zinc-700 transition-colors shadow-xs"
+          >
+            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+            <span>Abrir no Studio IA</span>
+          </Link>
+        </div>
+      )}
+      <UnifiedPageEditor
+        initialBio={initialBio}
       initialLinks={links}
       initialProducts={products}
       initialTab={requestedTab as any}
@@ -337,5 +354,6 @@ function BuilderPage() {
         }
       }}
     />
+    </div>
   );
 }

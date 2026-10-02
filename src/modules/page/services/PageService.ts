@@ -169,16 +169,73 @@ export const PageService = {
     const effectiveNicheKey = aiBlueprint.nicheKey || niche || "geral";
     const preset = getPresetForCompany(effectiveNicheKey, sanitizedCompanyName, variantIndex);
 
-    // BLINDAGEM VISUAL (Zero Vergonha):
-    // A capa da demonstração sempre utiliza a foto curada em HD do nicho (preset.cover_url)
-    // para garantir apresentação profissional e impecável, evitando fotos aleatórias de calçadas ou papéis do Maps.
-    // As fotos reais do Google Maps são preservadas com segurança em social_links.google_photos.
-    const realCover = preset.cover_url;
-    // Avatar: utiliza o monograma oficial vetorial da empresa ou avatar curado do nicho
+    // Prioriza fotos reais do Google Maps do próprio estabelecimento
+    const realPhotos: string[] = realPlace?.photos && Array.isArray(realPlace.photos) && realPlace.photos.length > 0
+      ? realPlace.photos
+      : [];
+    const realCover = realPhotos[0] || preset.cover_url;
     const realAvatar = preset.avatar_url;
 
     // Copywriting inteligente estruturado pela IA
     const description = `${aiBlueprint.headline}\n\n${aiBlueprint.manifesto}`;
+
+    // Constrói estrutura Modular / Cinematic nativa para renderização moderna sem moldes rígidos
+    const activeHighlights = (aiBlueprint.services.length > 0 ? aiBlueprint.services : preset.services).map((srv: any, idx: number) => ({
+      id: `hl-${idx}`,
+      title: srv.name || srv.title || "Serviço Especializado",
+      description: srv.description || "",
+      price: srv.price ? (typeof srv.price === "number" ? `R$ ${srv.price.toFixed(2)}` : String(srv.price)) : undefined,
+      badge: "Destaque",
+      image: srv.image_url || undefined,
+    }));
+
+    const activeReviews = (aiBlueprint.testimonials.length > 0 ? aiBlueprint.testimonials : realReviews).map((r: any) => ({
+      author: r.author || r.name || "Cliente Verificado",
+      text: r.text || r.comment || "Excelente experiência e atendimento de primeira.",
+      rating: typeof r.rating === "number" ? r.rating : 5,
+      role: "Avaliação Google",
+    }));
+
+    const cinematicData = {
+      businessName: sanitizedCompanyName,
+      niche: effectiveNicheKey,
+      whatsapp: finalWhatsapp || "",
+      address: realAddress || "",
+      rating: realRating || 4.9,
+      openingHours: realHours || "",
+      archetype: "luxury-editorial" as const,
+      theme: {
+        bg: "#09090b",
+        accent: "#d4d4d8",
+        secondaryAccent: "#a1a1aa",
+        fontHeading: "sans" as const,
+        parallaxEnabled: true,
+        borderStyle: "glass" as const,
+      },
+      hero: {
+        title: aiBlueprint.headline || `A Experiência Autêntica na ${sanitizedCompanyName}`,
+        subtitle: aiBlueprint.manifesto || description,
+        tagline: effectiveNicheKey.toUpperCase(),
+        floatingBadge: realRating ? `★ ${realRating} NO GOOGLE (${realReviewsCount || "100+"} avaliações)` : "★ 4.9 NO GOOGLE",
+        backgroundImage: realCover,
+        ctaText: preset.whatsapp_button_label || "Falar no WhatsApp",
+        ctaLink: finalWhatsapp ? `https://wa.me/55${finalWhatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(aiBlueprint.whatsappMessage || preset.whatsapp_message(sanitizedCompanyName))}` : "#contato",
+      },
+      gallery: realPhotos.slice(0, 8).map((url, i) => ({
+        id: `g-${i}`,
+        url,
+        caption: `${sanitizedCompanyName} - Detalhes`,
+        category: "Ambiente",
+      })),
+      highlights: activeHighlights,
+      reviews: activeReviews,
+      bentoGrid: aiBlueprint.differentials.map((d: any, i: number) => ({
+        id: `bento-${i}`,
+        title: d.title || "Diferencial",
+        description: d.desc || d.description || "",
+        size: (i === 0 ? "large" : "medium") as const,
+      })),
+    };
 
     const { data, error } = await supabase
       .from("bio_pages")
@@ -190,7 +247,7 @@ export const PageService = {
         whatsapp_button_label: preset.whatsapp_button_label,
         whatsapp_message: aiBlueprint.whatsappMessage || preset.whatsapp_message(sanitizedCompanyName),
         instagram: instagram ?? null,
-        template_id: preferredTemplateId || "site-maquina",
+        template_id: preferredTemplateId || "cinematic-glass",
         theme: aiBlueprint.theme || preset.theme,
         cover_url: realCover,
         avatar_url: realAvatar,
@@ -204,21 +261,20 @@ export const PageService = {
           city: city || null,
           google_rating: realRating,
           reviews_count: realReviewsCount,
-          model_variant:
-            preferredTemplateId === "cinematic-glass"
-              ? "Landing Page Cinematográfica (Scrollytelling)"
-              : preferredTemplateId === "site-maquina" || !preferredTemplateId
-                ? "Site Institucional Máquina de Sites"
-                : preset.modelName,
-          custom_theme:
-            preferredTemplateId === "cinematic-glass"
-              ? { parallax: true, hero_style: "cinematic", font_pair: "elegante" }
-              : undefined,
+          model_variant: "Landing Page Cinematográfica (Studio IA)",
+          cinematic_data: cinematicData,
+          custom_theme: {
+            parallax: true,
+            hero_style: "cinematic",
+            font_pair: "moderna",
+            background: "#09090b",
+            primary: "#d4d4d8",
+          },
           address: realAddress,
           opening_hours: realHours,
-          testimonials: aiBlueprint.testimonials.length > 0 ? aiBlueprint.testimonials : realReviews,
+          testimonials: activeReviews,
           differentials: aiBlueprint.differentials,
-          google_photos: realPlace?.photos || [],
+          google_photos: realPhotos,
         },
         published: true,
       })

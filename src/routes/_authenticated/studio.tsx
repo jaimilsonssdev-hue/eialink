@@ -44,15 +44,85 @@ import {
   extractServicesFromPdfTextFn,
 } from "@/modules/cinematic/cinematic.functions";
 import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
+import { z } from "zod";
+
+function convertBioPageToCinematic(bio: any): CinematicPageData {
+  const socialLinks = (bio.social_links as Record<string, any>) || {};
+  const customTheme = socialLinks.custom_theme || {};
+  const defaults = createDefaultCinematicData();
+
+  const googlePhotos: string[] = Array.isArray(socialLinks.google_photos) ? socialLinks.google_photos : [];
+  const galleryItems: CinematicGalleryItem[] = googlePhotos.map((url: string, i: number) => ({
+    id: `photo-${i}`,
+    url,
+    caption: `${bio.display_name} - Detalhes`,
+    category: "Ambiente",
+  }));
+
+  const highlights: CinematicHighlight[] = (socialLinks.suggested_services || []).map((s: any, i: number) => ({
+    id: `hl-${i}`,
+    title: s.name || s.title || "Serviço Especializado",
+    description: s.description || "",
+    price: s.price ? (typeof s.price === "number" ? `R$ ${s.price.toFixed(2)}` : String(s.price)) : undefined,
+    badge: s.badge || "Destaque",
+    image: s.image_url || undefined,
+  }));
+
+  const reviews = (socialLinks.testimonials || []).map((t: any) => ({
+    author: t.author || t.name || "Cliente Satisfeito",
+    text: t.text || t.comment || "Excelente atendimento e qualidade incomparável.",
+    rating: typeof t.rating === "number" ? t.rating : 5,
+    role: "Avaliação Google",
+  }));
+
+  return {
+    ...defaults,
+    id: bio.id,
+    businessName: bio.display_name || "Sua Empresa",
+    niche: socialLinks.niche || "Negócio Local",
+    whatsapp: bio.whatsapp || "",
+    address: socialLinks.address || undefined,
+    rating: socialLinks.google_rating || 4.9,
+    openingHours: socialLinks.opening_hours || undefined,
+    theme: {
+      ...defaults.theme,
+      bg: customTheme.background || defaults.theme.bg,
+      accent: customTheme.primary || defaults.theme.accent,
+      parallaxEnabled: customTheme.parallax !== false,
+    },
+    hero: {
+      ...defaults.hero,
+      title: bio.display_name ? `Bem-vindo(a) à ${bio.display_name}` : defaults.hero.title,
+      subtitle: bio.description || defaults.hero.subtitle,
+      backgroundImage: bio.cover_url || googlePhotos[0] || defaults.hero.backgroundImage,
+      floatingBadge: socialLinks.google_rating ? `★ ${socialLinks.google_rating} NO GOOGLE` : defaults.hero.floatingBadge,
+      ctaText: bio.whatsapp_button_label || "Falar no WhatsApp",
+      ctaLink: bio.whatsapp ? `https://wa.me/55${bio.whatsapp.replace(/\D/g, "")}` : "#contato",
+    },
+    gallery: galleryItems.length > 0 ? galleryItems : defaults.gallery,
+    highlights: highlights.length > 0 ? highlights : defaults.highlights,
+    reviews: reviews.length > 0 ? reviews : defaults.reviews,
+  };
+}
 
 export const Route = createFileRoute("/_authenticated/studio")({
   component: CinematicStudioPage,
+  validateSearch: z.object({
+    page: z.string().optional(),
+    company: z.string().optional(),
+    url: z.string().optional(),
+  }),
 });
 
 export default function CinematicStudioPage() {
+  const searchParams = Route.useSearch();
+  const requestedPageId = searchParams.page;
+  const requestedCompanyId = searchParams.company;
+  const requestedUrl = searchParams.url;
+
   const [data, setData] = useState<CinematicPageData>(() => createDefaultCinematicData());
   const [userId, setUserId] = useState<string>("");
-  const [pageId, setPageId] = useState<string | undefined>(undefined);
+  const [pageId, setPageId] = useState<string | undefined>(requestedPageId);
   const [savedSlug, setSavedSlug] = useState<string | null>(null);
 
   // Navegação do Cockpit
@@ -139,6 +209,69 @@ export default function CinematicStudioPage() {
       }
     });
   }, []);
+
+  // Carrega página pelo ID se informado na URL (?page=...)
+  useEffect(() => {
+    if (!requestedPageId) return;
+    setPageId(requestedPageId);
+
+    supabase
+      .from("bio_pages")
+      .select("*")
+      .eq("id", requestedPageId)
+      .single()
+      .then(({ data: bio, error }) => {
+        if (error || !bio) return;
+        setSavedSlug(bio.slug);
+        const socialLinks = (bio.social_links as Record<string, any>) || {};
+        if (socialLinks.cinematic_data) {
+          setData(socialLinks.cinematic_data as CinematicPageData);
+          setMessages([
+            {
+              id: "page-loaded",
+              sender: "agent",
+              text: `Página "${bio.display_name}" carregada no Studio com sucesso! O que você gostaria de ajustar ou aprimorar?`,
+              timestamp: "Agora",
+            },
+          ]);
+        } else {
+          const converted = convertBioPageToCinematic(bio);
+          setData(converted);
+          setMessages([
+            {
+              id: "page-adapted",
+              sender: "agent",
+              text: `Importei a página "${bio.display_name}" para o Studio! Você pode ajustar o visual, trocar cores ou me pedir alterações diretamente aqui no chat.`,
+              timestamp: "Agora",
+            },
+          ]);
+        }
+      });
+  }, [requestedPageId]);
+
+  // Carrega dados da empresa prospectada pelo ID (?company=...)
+  useEffect(() => {
+    if (!requestedCompanyId) return;
+    supabase
+      .from("prospected_companies")
+      .select("*")
+      .eq("id", requestedCompanyId)
+      .single()
+      .then(({ data: company, error }) => {
+        if (error || !company) return;
+        const query = company.name ? `${company.name} ${company.city || ""}` : "";
+        if (query) {
+          handleLookupMaps(query);
+        }
+      });
+  }, [requestedCompanyId]);
+
+  // Processa link direto do Google Maps se informado (?url=...)
+  useEffect(() => {
+    if (requestedUrl) {
+      handleLookupMaps(requestedUrl);
+    }
+  }, [requestedUrl]);
 
   // 1. Extração Google Maps Unificada
   const handleLookupMaps = async (targetQuery?: string) => {
@@ -390,9 +523,15 @@ export default function CinematicStudioPage() {
     const mapsUrlMatch = trimmedPrompt.match(/https?:\/\/(?:maps\.app\.goo\.gl|[a-z0-9.]*google\.[a-z.]+\/maps|goo\.gl\/maps)[^\s]*/i) ||
       trimmedPrompt.match(/https?:\/\/(?:www\.)?google\.[a-z.]+\/search[^\s]*/i);
     const mapsCommandMatch = /^(?:importar|puxar|extrair|buscar dados|ficha do google|google maps)\s*[:\-]?\s*(.+)/i.exec(trimmedPrompt);
+    const searchIntentMatch = /(?:busque|procure|pesquise|puxe|encontre)\s+(?:fotos?|imagens?|dados|informaç[^\s]*|card[^\s]*|ficha|do\s+local|da\s+empresa)/i.test(trimmedPrompt);
 
-    if (mapsUrlMatch || mapsCommandMatch) {
-      const queryToLookup = mapsUrlMatch ? mapsUrlMatch[0] : (mapsCommandMatch ? mapsCommandMatch[1].trim() : trimmedPrompt);
+    if (mapsUrlMatch || mapsCommandMatch || searchIntentMatch) {
+      let queryToLookup = mapsUrlMatch ? mapsUrlMatch[0] : (mapsCommandMatch ? mapsCommandMatch[1].trim() : "");
+      if (!queryToLookup && searchIntentMatch) {
+        queryToLookup = trimmedPrompt
+          .replace(/(?:busque|procure|pesquise|puxe|encontre)\s+(?:fotos?|imagens?|dados|informaç[^\s]*|card[^\s]*|ficha|do\s+local|da\s+empresa)?/gi, "")
+          .trim() || data.businessName || data.niche;
+      }
 
       const userMsg: StudioChatMessage = {
         id: `user-${Date.now()}`,

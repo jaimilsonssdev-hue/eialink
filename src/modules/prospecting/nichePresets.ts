@@ -1962,6 +1962,8 @@ export function getPresetForCompany(
   };
 }
 
+export const getNichePreset = getPresetForCompany;
+
 /**
  * Retorna a galeria de fotos curadas para o nicho.
  */

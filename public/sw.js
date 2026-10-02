@@ -1,4 +1,4 @@
-const CACHE_NAME = "eia-link-shell-v4";
+const CACHE_NAME = "eia-link-shell-v5";
 const APP_SHELL = [
   "/",
   "/offline.html",

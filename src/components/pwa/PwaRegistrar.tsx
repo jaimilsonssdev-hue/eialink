@@ -6,7 +6,7 @@ export function PwaRegistrar() {
     if (!import.meta.env.PROD || !("serviceWorker" in navigator)) return;
 
     void navigator.serviceWorker.register("/sw.js", { scope: "/" }).then((reg) => {
-      // Força verificação de atualização da nova versão
+      // Força verificação e ativação imediata do novo Service Worker
       reg.update().catch(() => {});
     }).catch((error) => {
       // A PWA failure must never prevent the SaaS from loading normally.

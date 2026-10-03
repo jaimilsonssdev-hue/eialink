@@ -34,6 +34,7 @@ import {
   type LoyaltyProgramSettings,
 } from "@/modules/loyalty";
 import { ThermalReceiptPrint } from "./ThermalReceiptPrint";
+import { LoyaltySettingsModal } from "./LoyaltySettingsModal";
 
 export interface LoyaltyCashierPadProps {
   bioPageId: string;
@@ -166,7 +167,7 @@ export function LoyaltyCashierPad({
   return (
     <Card className={`border-zinc-800 bg-zinc-950/70 shadow-lg text-zinc-100 ${className}`}>
       <CardHeader className="pb-3 border-b border-zinc-900">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
               <Coins className="h-4 w-4" />
@@ -180,9 +181,20 @@ export function LoyaltyCashierPad({
               </CardDescription>
             </div>
           </div>
-          <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
-            R$ 1,00 = 1 Ponto
-          </Badge>
+          <div className="flex items-center gap-2 shrink-0">
+            <Badge className="bg-emerald-500/10 text-emerald-400 border-emerald-500/20 text-[10px] font-bold">
+              {settings?.pointsRatio === 1
+                ? "R$ 1,00 = 1 Ponto"
+                : settings?.pointsRatio === 2
+                ? "R$ 1,00 = 2 Pontos"
+                : `R$ ${(1 / (settings?.pointsRatio || 1)).toFixed(2).replace(".", ",")} = 1 Ponto`}
+            </Badge>
+            <LoyaltySettingsModal
+              bioPageId={bioPageId}
+              settings={settings}
+              onSaved={(updated) => setSettings(updated)}
+            />
+          </div>
         </div>
       </CardHeader>
 
@@ -216,51 +228,24 @@ export function LoyaltyCashierPad({
           <Label className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">
             Ou bonificar por Missão Concluída:
           </Label>
-          <div className="grid grid-cols-3 gap-2 mt-1.5">
-            <button
-              type="button"
-              onClick={() => handleSelectMission("Google 5 Estrelas", 30)}
-              className={`p-2.5 rounded-xl border text-left transition-all ${
-                selectedMission === "Google 5 Estrelas"
-                  ? "border-amber-500/50 bg-amber-500/10 text-amber-300"
-                  : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700"
-              }`}
-            >
-              <div className="flex items-center gap-1 text-[11px] font-bold">
-                <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> +30 pts
-              </div>
-              <p className="text-[10px] text-zinc-500 truncate mt-0.5">Google 5 Estrelas</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectMission("Post nos Stories", 50)}
-              className={`p-2.5 rounded-xl border text-left transition-all ${
-                selectedMission === "Post nos Stories"
-                  ? "border-fuchsia-500/50 bg-fuchsia-500/10 text-fuchsia-300"
-                  : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700"
-              }`}
-            >
-              <div className="flex items-center gap-1 text-[11px] font-bold">
-                <Camera className="h-3 w-3 text-fuchsia-400" /> +50 pts
-              </div>
-              <p className="text-[10px] text-zinc-500 truncate mt-0.5">Story Instagram</p>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => handleSelectMission("Bônus Fidelidade", 20)}
-              className={`p-2.5 rounded-xl border text-left transition-all ${
-                selectedMission === "Bônus Fidelidade"
-                  ? "border-emerald-500/50 bg-emerald-500/10 text-emerald-300"
-                  : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700"
-              }`}
-            >
-              <div className="flex items-center gap-1 text-[11px] font-bold">
-                <Flame className="h-3 w-3 text-emerald-400" /> +20 pts
-              </div>
-              <p className="text-[10px] text-zinc-500 truncate mt-0.5">Visita / Retorno</p>
-            </button>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-1.5">
+            {(settings?.missions || []).slice(0, 3).map((m, idx) => (
+              <button
+                key={m.id || idx}
+                type="button"
+                onClick={() => handleSelectMission(m.title, m.pointsReward)}
+                className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                  selectedMission === m.title
+                    ? "border-amber-500/50 bg-amber-500/10 text-amber-300"
+                    : "border-zinc-800 bg-zinc-900/40 text-zinc-300 hover:border-zinc-700"
+                }`}
+              >
+                <div className="flex items-center gap-1 text-[11px] font-bold">
+                  <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> +{m.pointsReward} pts
+                </div>
+                <p className="text-[10px] text-zinc-500 truncate mt-0.5">{m.title}</p>
+              </button>
+            ))}
           </div>
         </div>
 

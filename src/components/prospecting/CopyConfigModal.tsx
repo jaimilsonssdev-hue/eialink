@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   RefreshCw,
   Trash2,
+  Camera,
 } from "lucide-react";
 import {
   getSavedCopyTemplates,
@@ -30,13 +31,20 @@ import {
   removeGeminiKey,
   testGeminiKey,
 } from "@/modules/prospecting/GeminiAuditorService";
+import {
+  getSavedApifyToken,
+  saveApifyToken,
+  removeApifyToken,
+  testApifyToken,
+} from "@/modules/prospecting/ApifyInstagramService";
 
 export type CopyModalTabType =
   | "whatsappWithDemo"
   | "whatsappWithoutDemo"
   | "instagramWithDemo"
   | "instagramWithoutDemo"
-  | "geminiApiKey";
+  | "geminiApiKey"
+  | "apifyApiToken";
 
 interface CopyConfigModalProps {
   isOpen: boolean;
@@ -63,6 +71,13 @@ export function CopyConfigModal({
   const [testResult, setTestResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [keySavedFeedback, setKeySavedFeedback] = useState(false);
 
+  // Estados específicos para o Token Apify (Instagram)
+  const [apifyTokenInput, setApifyTokenInput] = useState("");
+  const [showApifyPassword, setShowApifyPassword] = useState(false);
+  const [testingApify, setTestingApify] = useState(false);
+  const [apifyTestResult, setApifyTestResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [apifySavedFeedback, setApifySavedFeedback] = useState(false);
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -71,13 +86,17 @@ export function CopyConfigModal({
       const savedKey = getSavedGeminiKey() || "";
       setGeminiKeyInput(savedKey);
       setTestResult(null);
+
+      const savedApify = getSavedApifyToken() || "";
+      setApifyTokenInput(savedApify);
+      setApifyTestResult(null);
     }
   }, [isOpen, initialTab]);
 
   if (!isOpen) return null;
 
   function handleTagClick(tag: string) {
-    if (activeTab === "geminiApiKey") return;
+    if (activeTab === "geminiApiKey" || activeTab === "apifyApiToken") return;
     const textarea = textareaRef.current;
     const currentText = templates[activeTab];
 
@@ -144,6 +163,33 @@ export function CopyConfigModal({
     }
   }
 
+  async function handleTestApify() {
+    setTestingApify(true);
+    setApifyTestResult(null);
+    try {
+      const res = await testApifyToken(apifyTokenInput);
+      setApifyTestResult(res);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erro ao testar conexão.";
+      setApifyTestResult({ ok: false, message: msg });
+    } finally {
+      setTestingApify(false);
+    }
+  }
+
+  function handleSaveApifyToken() {
+    saveApifyToken(apifyTokenInput);
+    setApifySavedFeedback(true);
+    setTimeout(() => setApifySavedFeedback(false), 2000);
+  }
+
+  function handleRemoveApifyToken() {
+    if (confirm("Deseja remover o token da API Apify salvo neste navegador?")) {
+      removeApifyToken();
+      setApifyTokenInput("");
+    }
+  }
+
   // Amostras para pré-visualização em tempo real
   const sampleWithReviews = {
     name: "Clínica Inove",
@@ -201,7 +247,7 @@ export function CopyConfigModal({
         </div>
 
         {/* Seletor de Abas */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 p-1 rounded-xl bg-muted/40 border border-border shrink-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 p-1 rounded-xl bg-muted/40 border border-border shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab("whatsappWithDemo")}
@@ -257,20 +303,170 @@ export function CopyConfigModal({
           <button
             type="button"
             onClick={() => setActiveTab("geminiApiKey")}
-            className={`col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-[11px] font-semibold transition-all ${
+            className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-[11px] font-semibold transition-all ${
               activeTab === "geminiApiKey"
                 ? "bg-card text-purple-400 shadow-sm border border-purple-500/30"
                 : "text-purple-400/80 hover:text-purple-300"
             }`}
           >
             <Bot className="h-3.5 w-3.5 text-purple-400" />
-            <span>🤖 IA Gemini</span>
+            <span>IA Gemini</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab("apifyApiToken")}
+            className={`flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-[11px] font-semibold transition-all ${
+              activeTab === "apifyApiToken"
+                ? "bg-card text-amber-400 shadow-sm border border-amber-500/30"
+                : "text-amber-400/80 hover:text-amber-300"
+            }`}
+          >
+            <Camera className="h-3.5 w-3.5 text-amber-400" />
+            <span>Apify (Insta)</span>
           </button>
         </div>
 
         {/* Conteúdo Dinâmico com Scroll */}
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-          {activeTab === "geminiApiKey" ? (
+          {activeTab === "apifyApiToken" ? (
+            /* Painel de Configuração do Token Apify (Instagram) */
+            <div className="space-y-4">
+              {/* Card de Boas-Vindas e Instruções */}
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Camera className="h-4 w-4 text-amber-400" />
+                    <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">
+                      Apify Instagram Scraper (Fotos e Perfil Reais)
+                    </h3>
+                  </div>
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    US$ 5,00 grátis / mês na Apify
+                  </span>
+                </div>
+
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Com o Apify, ao prospectar ou digitar o Instagram do cliente, o sistema raspa as fotos reais do feed em alta resolução, foto de perfil HD, WhatsApp e legendas autênticas para gerar sites com as fotos verdadeiras da empresa.
+                </p>
+
+                <div className="rounded-lg bg-background/50 border border-border p-3 space-y-1.5 text-xs">
+                  <span className="font-semibold text-foreground flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Como obter seu token em 1 minuto:
+                  </span>
+                  <ol className="list-decimal list-inside space-y-1 text-muted-foreground pl-1">
+                    <li>
+                      Acesse o console da Apify em{" "}
+                      <a
+                        href="https://console.apify.com/account/integrations"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-primary hover:underline font-medium inline-flex items-center gap-1"
+                      >
+                        console.apify.com/account/integrations <ExternalLink className="h-2.5 w-2.5" />
+                      </a>
+                    </li>
+                    <li>Faça login (Google/GitHub) e clique na aba <strong>"API tokens"</strong>.</li>
+                    <li>Copie seu <strong>Personal API token</strong> (inicia com <code>apify_api_...</code>) e cole no campo abaixo.</li>
+                  </ol>
+                </div>
+
+                {/* Box de Segurança e Privacidade */}
+                <div className="flex items-start gap-2.5 pt-1 text-[11px] text-muted-foreground">
+                  <ShieldCheck className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  <p>
+                    <strong className="text-foreground">Armazenamento Seguro:</strong> O token é guardado exclusivamente no armazenamento local do seu navegador (<code>localStorage</code>) e nunca é compartilhado com terceiros.
+                  </p>
+                </div>
+              </div>
+
+              {/* Input com Máscara e Botão de Olho */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider flex items-center justify-between">
+                  <span>Token de API Apify</span>
+                  {apifyTokenInput.trim() && (
+                    <span className="text-[10px] text-emerald-400 font-normal">
+                      Token informado
+                    </span>
+                  )}
+                </label>
+                <div className="relative">
+                  <input
+                    type={showApifyPassword ? "text" : "password"}
+                    value={apifyTokenInput}
+                    onChange={(e) => {
+                      setApifyTokenInput(e.target.value);
+                      setApifyTestResult(null);
+                    }}
+                    placeholder="Cole seu token aqui (ex: apify_api_...)"
+                    className="input-field w-full text-xs font-mono pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowApifyPassword((v) => !v)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1"
+                    title={showApifyPassword ? "Ocultar token" : "Mostrar token"}
+                  >
+                    {showApifyPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* Resultado do Teste de Conexão */}
+              {apifyTestResult && (
+                <div
+                  className={`rounded-xl border p-3 text-xs leading-relaxed flex items-start gap-2.5 ${
+                    apifyTestResult.ok
+                      ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+                      : "bg-rose-500/10 border-rose-500/30 text-rose-300"
+                  }`}
+                >
+                  {apifyTestResult.ok ? (
+                    <Check className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertTriangle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                  )}
+                  <span>{apifyTestResult.message}</span>
+                </div>
+              )}
+
+              {/* Ações de Token */}
+              <div className="flex items-center justify-between gap-2 pt-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleTestApify}
+                    disabled={testingApify || !apifyTokenInput.trim()}
+                    className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 ${testingApify ? "animate-spin" : ""}`} />
+                    <span>{testingApify ? "Validando token..." : "Testar Conexão"}</span>
+                  </button>
+
+                  {getSavedApifyToken() && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveApifyToken}
+                      className="inline-flex items-center gap-1 text-xs text-rose-400 hover:text-rose-300 hover:underline px-2 py-1 transition-colors"
+                      title="Excluir token salvo deste navegador"
+                    >
+                      <Trash2 className="h-3 w-3" /> Remover Token
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleSaveApifyToken}
+                  disabled={!apifyTokenInput.trim() || apifySavedFeedback}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary hover:opacity-90 text-primary-foreground px-4 py-2 text-xs font-semibold shadow-md transition-all disabled:opacity-50"
+                >
+                  {apifySavedFeedback ? <Check className="h-4 w-4 text-white" /> : <Key className="h-4 w-4" />}
+                  <span>{apifySavedFeedback ? "Token Salvo!" : "Salvar Token"}</span>
+                </button>
+              </div>
+            </div>
+          ) : activeTab === "geminiApiKey" ? (
             /* Painel de Configuração da Chave Gemini */
             <div className="space-y-4">
               {/* Card de Boas-Vindas e Instruções */}
@@ -504,7 +700,7 @@ export function CopyConfigModal({
         </div>
 
         {/* Rodapé e Ações para Abas de Mensagens */}
-        {activeTab !== "geminiApiKey" && (
+        {activeTab !== "geminiApiKey" && activeTab !== "apifyApiToken" && (
           <div className="flex items-center justify-between gap-2 pt-3 border-t border-border flex-wrap shrink-0">
             <button
               type="button"

@@ -11,6 +11,7 @@ import {
 import { detectNicheKey } from "./nichePresets";
 import type { ProspectDraft } from "./types";
 import { normalizeBusinessQuery } from "./normalizeBusinessLink";
+import { fetchInstagramProfileViaApify } from "./ApifyInstagramService";
 
 interface RawScrapedLead {
   name: string;
@@ -348,31 +349,51 @@ export async function lookupBusinessProfile(queryOrUrl: string): Promise<Prospec
   // 1. Se for link ou perfil do Instagram (ex: instagram.com/clinica.silva ou @clinica.silva)
   const instaRegex = /(?:https?:\/\/(?:www\.)?instagram\.com\/|@)([a-zA-Z0-9._]+)/i;
   const instaMatch = trimmed.match(instaRegex);
-  if (instaMatch && !["explore", "p", "reel", "stories", "accounts"].includes(instaMatch[1].toLowerCase())) {
+  if (instaMatch && !["explore", "p", "reel", "stories", "accounts", "direct"].includes(instaMatch[1].toLowerCase())) {
     const handle = instaMatch[1];
     const cleanName = handle
       .replace(/[._]/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
 
+    // Consulta perfil e fotos reais via API do Apify
+    let apifyData = null;
+    try {
+      apifyData = await fetchInstagramProfileViaApify(handle);
+    } catch (apifyErr) {
+      console.warn("[Lookup] Aviso ao consultar Apify Instagram:", apifyErr);
+    }
+
+    const effectiveName = apifyData?.fullName || cleanName;
+    const effectiveNiche = detectNicheKey(
+      apifyData?.businessCategory,
+      `${effectiveName} ${apifyData?.biography || ""}`
+    );
+    const effectiveWhatsapp = apifyData?.whatsapp || null;
+
     return [
       {
-        name: cleanName,
-        niche: detectNicheKey(null, cleanName),
+        name: effectiveName,
+        niche: effectiveNiche,
         city: "",
         state: null,
-        phone: null,
-        whatsapp: null,
-        email: null,
+        phone: apifyData?.businessPhone || null,
+        whatsapp: effectiveWhatsapp,
+        email: apifyData?.businessEmail || null,
         instagram: `@${handle}`,
-        website: null,
-        has_website: false,
+        website: apifyData?.externalUrl || null,
+        has_website: Boolean(apifyData?.externalUrl),
         rating: null,
         reviews_count: null,
-        source: "instagram_link",
+        source: apifyData?.source === "apify" ? "apify_instagram" : "instagram_link",
         status: "novo",
-        notes: `Importado via Instagram: @${handle}`,
+        notes: apifyData?.biography
+          ? `Bio Instagram: "${apifyData.biography}"`
+          : `Importado via Instagram: @${handle}`,
+        photos: apifyData?.photos && apifyData.photos.length > 0 ? apifyData.photos : null,
+        avatar_url: apifyData?.profilePicUrlHD || apifyData?.profilePicUrl || null,
+        biography: apifyData?.biography || null,
         dedupe_key: `insta:${handle.toLowerCase()}`,
-        score: 75,
+        score: 85,
         priority: "alta",
       },
     ];

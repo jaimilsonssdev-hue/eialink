@@ -270,6 +270,9 @@ function PagesWorkspace() {
   const [wizardName, setWizardName] = useState("");
   const [wizardWhatsapp, setWizardWhatsapp] = useState("");
   const [wizardCity, setWizardCity] = useState("");
+  const [wizardInstagram, setWizardInstagram] = useState("");
+  const [wizardPhotos, setWizardPhotos] = useState<string[]>([]);
+  const [wizardAvatarUrl, setWizardAvatarUrl] = useState<string | null>(null);
   const [isCreatingWizard, setIsCreatingWizard] = useState(false);
   const [creationEngine, setCreationEngine] = useState<"express" | "premium" | "cinematic">("express");
 
@@ -410,6 +413,9 @@ function PagesWorkspace() {
         whatsapp: wizardWhatsapp.trim() || null,
         niche: selectedNiche,
         city: wizardCity.trim() || null,
+        instagram: wizardInstagram.trim() || null,
+        photos: wizardPhotos.length > 0 ? wizardPhotos : null,
+        avatarUrl: wizardAvatarUrl || null,
         variantIndex: selectedVariantIndex,
         isDemo: false, // Página definitiva do cliente
         preferredTemplateId:
@@ -533,6 +539,15 @@ function PagesWorkspace() {
     if (profile.city) {
       setWizardCity(profile.city);
     }
+    if (profile.instagram) {
+      setWizardInstagram(profile.instagram);
+    }
+    if (profile.photos && profile.photos.length > 0) {
+      setWizardPhotos(profile.photos);
+    }
+    if (profile.avatar_url) {
+      setWizardAvatarUrl(profile.avatar_url);
+    }
     const preset = getPresetForCompany(profile.niche, profile.name);
     setSelectedNiche(preset.nicheKey);
     setLookupResults([]);
@@ -579,9 +594,12 @@ function PagesWorkspace() {
       let city = normalized.suggestedCity || "";
       let whatsapp: string | null = null;
       let nicheKey = "odontologia";
+      let photos: string[] | null = null;
+      let avatarUrl: string | null = null;
+      let instagram: string | null = null;
 
       try {
-        setFastFeedback("Identificando perfil e nicho...");
+        setFastFeedback("Identificando perfil, fotos e nicho...");
         let results: ProspectDraft[] = [];
         try {
           results = await lookupBusinessProfile(raw);
@@ -594,6 +612,9 @@ function PagesWorkspace() {
           companyName = lead.name || companyName;
           city = lead.city || city;
           whatsapp = lead.whatsapp || lead.phone || null;
+          photos = lead.photos || null;
+          avatarUrl = lead.avatar_url || null;
+          instagram = lead.instagram || null;
           const preset = getPresetForCompany(lead.niche, lead.name);
           nicheKey = preset.nicheKey;
         } else {
@@ -606,13 +627,16 @@ function PagesWorkspace() {
         nicheKey = preset.nicheKey;
       }
 
-      setFastFeedback(mode === "ai" ? "Preparando IA Studio..." : "Construindo página express...");
+      setFastFeedback(mode === "ai" ? "Extraindo fotos do Instagram e construindo site..." : "Construindo página express...");
 
       const page = await PageService.createProspectDemoPage({
         companyName,
         whatsapp,
         niche: nicheKey,
         city: city || null,
+        instagram,
+        photos,
+        avatarUrl,
         variantIndex: 0,
         isDemo: false,
         preferredTemplateId: mode === "ai" ? "cinematic-glass" : "site-maquina",

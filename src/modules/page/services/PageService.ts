@@ -10,6 +10,7 @@ import {
   generateNicheMarquee,
 } from "@/modules/prospecting/aiDemoGenerator.service";
 import { NICHE_GALLERIES } from "@/modules/prospecting/nichePresets";
+import { fetchInstagramProfileViaApify } from "@/modules/prospecting/ApifyInstagramService";
 import { formatCatalogDescription } from "@/modules/products/services/ProductService";
 import { type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspectingEngine";
 import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
@@ -116,12 +117,16 @@ export const PageService = {
     reviewsCount,
     cid,
     preferredTemplateId,
+    photos,
+    avatarUrl,
   }: {
     companyName: string;
     whatsapp?: string | null;
     niche?: string | null;
     city?: string | null;
     instagram?: string | null;
+    photos?: string[] | null;
+    avatarUrl?: string | null;
     isDemo?: boolean;
     variantIndex?: number;
     placeDetails?: GoogleMapsPlaceDetails | null;
@@ -151,9 +156,19 @@ export const PageService = {
       }
     }
 
+    // Se houver Instagram fornecido, extrai perfil autêntico e fotos reais do feed via Apify
+    let apifyInstagramData: Awaited<ReturnType<typeof fetchInstagramProfileViaApify>> | null = null;
+    if (instagram) {
+      try {
+        apifyInstagramData = await fetchInstagramProfileViaApify(instagram);
+      } catch (apifyErr) {
+        console.warn("Aviso ao buscar perfil Instagram com Apify:", apifyErr);
+      }
+    }
+
     const realRating = realPlace?.rating ?? rating ?? null;
     const realReviewsCount = realPlace?.reviewsCount ?? reviewsCount ?? null;
-    const finalWhatsapp = whatsapp || realPlace?.whatsapp || null;
+    const finalWhatsapp = whatsapp || realPlace?.whatsapp || apifyInstagramData?.whatsapp || null;
     const realAddress = realPlace?.address || null;
     const realHours = realPlace?.openingHours || null;
     const realReviews = realPlace?.reviews || [];
@@ -170,19 +185,23 @@ export const PageService = {
       whatsapp: finalWhatsapp,
       phone: finalWhatsapp,
       reviews: realReviews,
-      photos: realPlace?.photos || null,
+      photos: realPlace?.photos || apifyInstagramData?.photos || null,
     });
 
     // Identifica preset Pro de alta conversão correspondente à especialidade autêntica detectada
     const effectiveNicheKey = aiBlueprint.nicheKey || niche || "geral";
     const preset = getPresetForCompany(effectiveNicheKey, sanitizedCompanyName, variantIndex);
 
-    // Prioriza fotos reais do Google Maps do próprio estabelecimento
-    const realPhotos: string[] = realPlace?.photos && Array.isArray(realPlace.photos) && realPlace.photos.length > 0
-      ? realPlace.photos
-      : [];
+    // Prioriza fotos reais autênticas: Instagram (Apify) > Fotos passadas > Google Maps
+    const igPhotos = apifyInstagramData?.photos && Array.isArray(apifyInstagramData.photos) ? apifyInstagramData.photos : [];
+    const passedPhotos = photos && Array.isArray(photos) ? photos : [];
+    const mapsPhotos = realPlace?.photos && Array.isArray(realPlace.photos) ? realPlace.photos : [];
+
+    const combinedRealPhotos = Array.from(new Set([...igPhotos, ...passedPhotos, ...mapsPhotos])).filter(Boolean);
+    const realPhotos: string[] = combinedRealPhotos.length > 0 ? combinedRealPhotos : [];
+
     const realCover = realPhotos[0] || preset.cover_url;
-    const realAvatar = preset.avatar_url;
+    const realAvatar = avatarUrl || apifyInstagramData?.profilePicUrlHD || apifyInstagramData?.profilePicUrl || preset.avatar_url;
 
     // Copywriting inteligente estruturado pela IA
     const description = `${aiBlueprint.headline}\n\n${aiBlueprint.manifesto}`;
@@ -194,7 +213,7 @@ export const PageService = {
       description: srv.description || "",
       price: srv.price ? (typeof srv.price === "number" ? `R$ ${srv.price.toFixed(2)}` : String(srv.price)) : undefined,
       badge: "Destaque",
-      image: srv.image_url || undefined,
+      image: srv.image_url || realPhotos[idx + 1] || undefined,
     }));
 
     const activeReviews = (aiBlueprint.testimonials.length > 0 ? aiBlueprint.testimonials : realReviews).map((r: any) => ({
@@ -330,6 +349,8 @@ export const PageService = {
           testimonials: activeReviews,
           differentials: aiBlueprint.differentials,
           google_photos: realPhotos,
+          instagram_photos: realPhotos,
+          apify_scraped: Boolean(apifyInstagramData),
         },
         published: true,
       })
@@ -373,7 +394,7 @@ export const PageService = {
         name: srv.name,
         description: formatCatalogDescription(srv.description, srv.category),
         price: srv.price,
-        image_url: srv.image_url,
+        image_url: srv.image_url || (realPhotos.length > 0 ? realPhotos[idx % realPhotos.length] : null),
         button_label: defaultBtnLabel,
         button_url: defaultBtnUrl,
         type: isProduct ? "product" : "service",

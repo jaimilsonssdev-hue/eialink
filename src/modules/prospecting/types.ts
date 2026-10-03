@@ -44,6 +44,9 @@ export type ProspectedCompany = {
   priority: ProspectPriority;
   status: ProspectStatus;
   notes: string | null;
+  photos?: string[] | null;
+  avatar_url?: string | null;
+  biography?: string | null;
   dedupe_key: string;
   last_contacted_at: string | null;
   next_action_at: string | null;

@@ -619,7 +619,7 @@ export function ProductCarouselManager({ bio, companyName, bioPageId, socialLink
           type="button"
           onClick={handleSave}
           disabled={isSaving}
-          className="w-full sm:w-auto h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold text-xs shadow-md"
+          className="w-full sm:w-auto h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs shadow-md"
         >
           {isSaving ? (
             <>

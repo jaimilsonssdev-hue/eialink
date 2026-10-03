@@ -616,10 +616,11 @@ function ProspectingPage() {
     setLiveResults([]);
   }
 
-  async function handleGenerateDemo(company: ProspectedCompany, asSiteMaquina = true) {
+  async function handleGenerateDemo(company: ProspectedCompany, mode: "ai" | "site-maquina" | boolean = "ai") {
     setCreatingPageId(company.id);
     setFeedback(null);
     try {
+      const isAi = mode === "ai" || mode === false;
       const cidMatch = company.notes?.match(/CID:\s*([0-9a-fx:]+)/i);
       const page = await PageService.createProspectDemoPage({
         companyName: company.name,
@@ -630,9 +631,9 @@ function ProspectingPage() {
         rating: company.rating,
         reviewsCount: company.reviews_count,
         cid: cidMatch ? cidMatch[1] : null,
-        preferredTemplateId: asSiteMaquina ? "site-maquina" : undefined,
+        preferredTemplateId: isAi ? "cinematic-glass" : "site-maquina",
       });
-      const modelVariant = (page.social_links as any)?.model_variant || (asSiteMaquina ? "Site Institucional Máquina de Sites" : "Design Pro");
+      const modelVariant = (page.social_links as any)?.model_variant || (isAi ? "Landing Page Cinematográfica (Studio IA)" : "Site Institucional Máquina de Sites");
       const url = `https://eialink.com.br/p/${page.slug}`;
       const newNotes = company.notes
         ? `${company.notes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
@@ -644,7 +645,7 @@ function ProspectingPage() {
         companyUpdates.phone = page.whatsapp;
       }
       await ProspectingService.updateCompany(company.id, companyUpdates);
-      setFeedback(`🎉 ${asSiteMaquina ? "Site Institucional" : "Página"} gerada no modelo "${modelVariant}" para ${company.name}! O link já foi anexado para envio no WhatsApp e no Instagram.`);
+      setFeedback(`🎉 ${isAi ? "Site com IA (Studio Cinematográfico)" : "Site Institucional"} gerado no modelo "${modelVariant}" para ${company.name}! O link já foi anexado para envio no WhatsApp e no Instagram.`);
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao gerar página de demonstração.";
@@ -654,8 +655,12 @@ function ProspectingPage() {
     }
   }
 
+  async function handleGenerateAiSite(company: ProspectedCompany) {
+    await handleGenerateDemo(company, "ai");
+  }
+
   async function handleGenerateSiteMaquina(company: ProspectedCompany) {
-    await handleGenerateDemo(company, true);
+    await handleGenerateDemo(company, "site-maquina");
   }
 
   async function handleRegenerateDemo(company: ProspectedCompany) {
@@ -2557,16 +2562,17 @@ function ProspectingPage() {
                       </a>
                     ) : (
                       <button
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-3 py-2 text-xs font-semibold hover:bg-primary/25 shadow-xs transition-all"
-                        onClick={() => void handleGenerateDemo(company)}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-200 px-3 py-2 text-xs font-semibold hover:bg-purple-500/25 shadow-xs transition-all"
+                        onClick={() => void handleGenerateAiSite(company)}
                         disabled={creatingPageId === company.id}
+                        title="Gerar site cinematográfico usando IA e fotos reais do feed"
                       >
                         {creatingPageId === company.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-300" />
                         ) : (
                           <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                         )}
-                        <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo 🪄"}</span>
+                        <span>{creatingPageId === company.id ? "Gerando IA..." : "Gerar com IA 🤖"}</span>
                       </button>
                     )}
 
@@ -2637,12 +2643,12 @@ function ProspectingPage() {
                           <span>Auditoria com IA</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => void handleRegenerateDemo(company)}
+                          onClick={() => void handleGenerateAiSite(company)}
                           disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                          className="cursor-pointer text-xs text-purple-300 font-medium"
+                          className="cursor-pointer text-xs text-purple-400 hover:text-purple-300 font-medium"
                         >
-                          <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
-                          <span>{demo.url ? "Trocar Modelo" : "Gerar / Escolher Modelo"}</span>
+                          <Sparkles className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                          <span>Gerar Site com IA (Studio)</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => void handleGenerateSiteMaquina(company)}
@@ -2651,6 +2657,14 @@ function ProspectingPage() {
                         >
                           <Globe2 className="h-3.5 w-3.5 mr-2 text-sky-400" />
                           <span>Gerar Site Máquina (Completo)</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => void handleRegenerateDemo(company)}
+                          disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                          className="cursor-pointer text-xs text-muted-foreground font-medium"
+                        >
+                          <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                          <span>{demo.url ? "Trocar Modelo" : "Gerar / Escolher Modelo"}</span>
                         </DropdownMenuItem>
                         {demo.pageId && (
                           <DropdownMenuItem asChild className="cursor-pointer text-xs">
@@ -2866,17 +2880,17 @@ function ProspectingPage() {
                             </>
                           ) : (
                             <button
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-3 py-1.5 text-xs font-semibold hover:bg-primary/25 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
-                              onClick={() => void handleGenerateDemo(company)}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-200 px-3 py-1.5 text-xs font-semibold hover:bg-purple-500/25 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
+                              onClick={() => void handleGenerateAiSite(company)}
                               disabled={creatingPageId === company.id}
-                              title="Gerar modelo demonstrativo para prospecção"
+                              title="Gerar site cinematográfico usando IA e fotos reais do feed"
                             >
                               {creatingPageId === company.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary dark:text-white" />
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-300" />
                               ) : (
                                 <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                               )}
-                              <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo 🪄"}</span>
+                              <span>{creatingPageId === company.id ? "Gerando IA..." : "Gerar com IA 🤖"}</span>
                             </button>
                           )}
 
@@ -2994,6 +3008,18 @@ function ProspectingPage() {
                                   </span>
                                 </DropdownMenuItem>
 
+                                <DropdownMenuItem
+                                  onClick={() => void handleGenerateAiSite(company)}
+                                  disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                                  className="cursor-pointer text-xs text-purple-400 hover:text-purple-300 focus:text-purple-300 focus:bg-purple-500/10 font-medium"
+                                >
+                                  {creatingPageId === company.id ? (
+                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
+                                  ) : (
+                                    <Sparkles className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                  )}
+                                  <span>Gerar Site com IA (Studio)</span>
+                                </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => void handleGenerateSiteMaquina(company)}
                                   disabled={regeneratingPageId === company.id || creatingPageId === company.id}

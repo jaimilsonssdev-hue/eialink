@@ -221,7 +221,7 @@ export function GoogleApiAdminCard() {
               type="submit"
               size="sm"
               disabled={saving}
-              className="bg-primary hover:bg-primary/90 text-white text-xs font-semibold h-8 px-4 gap-1.5"
+              className="bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs h-8 px-4 gap-1.5"
             >
               {saving ? (
                 <>

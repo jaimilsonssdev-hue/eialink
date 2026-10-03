@@ -384,7 +384,7 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
             <button
               type="submit"
               disabled={isSaving}
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-semibold shadow-md transition-all disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs shadow-md transition-all disabled:opacity-50"
             >
               {isSaving ? (
                 <>

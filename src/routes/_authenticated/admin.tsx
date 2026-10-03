@@ -42,6 +42,7 @@ import {
 import type { AsaasEnvironment } from "@/modules/billing/services/AsaasService";
 import { GoogleApiAdminCard } from "@/components/admin/GoogleApiAdminCard";
 import { GooglePlacesAdminCard } from "@/components/admin/GooglePlacesAdminCard";
+import { ApifyAdminCard } from "@/components/admin/ApifyAdminCard";
 
 import { WhatsAppCheckoutLinksCard } from "@/components/admin/WhatsAppCheckoutLinksCard";
 import { DailyDealsBroadcastCard } from "@/components/admin/DailyDealsBroadcastCard";
@@ -278,7 +279,7 @@ function AdminPage() {
           </Link>
           <Link
             to="/admin/prospeccao"
-            className="inline-flex items-center gap-2 rounded-lg bg-primary hover:bg-primary/90 text-white px-3.5 py-2 text-xs font-medium shadow-sm transition-all"
+            className="inline-flex items-center gap-2 rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold px-3.5 py-2 text-xs shadow-sm transition-all"
           >
             <Target className="h-4 w-4" />
             <span>Radar de Prospecção</span>
@@ -366,6 +367,9 @@ function AdminPage() {
       <GoogleApiAdminCard />
 
       <GooglePlacesAdminCard />
+
+      {/* Configuração Oficial da API Apify (Instagram Scraper) */}
+      <ApifyAdminCard />
 
 
       {/* Planos da Plataforma */}
@@ -952,7 +956,7 @@ function PlanEditor({
       </p>
       <button
         type="button"
-        className="w-full rounded-lg bg-primary hover:bg-primary/90 text-white px-3 py-2 text-xs font-medium shadow-sm transition-all disabled:opacity-50"
+        className="w-full rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold px-3 py-2 text-xs shadow-sm transition-all disabled:opacity-50"
         disabled={saving}
         onClick={save}
       >
@@ -1001,10 +1005,10 @@ function ServiceAdminCard({
       </div>
       <button
         type="button"
-        className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors ${
+        className={`shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
           service.active
             ? "border border-border bg-background text-muted-foreground hover:text-foreground"
-            : "bg-primary hover:bg-primary/90 text-white shadow-sm"
+            : "bg-primary hover:bg-primary/90 text-zinc-950 font-bold shadow-sm"
         }`}
         disabled={saving}
         onClick={() => onToggle(service.id, !service.active)}
@@ -1123,13 +1127,13 @@ function PlatformWhatsAppAdminCard() {
               <button
                 type="submit"
                 disabled={saving || !cleanPhone}
-                className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-medium shadow-sm transition-all disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 h-10 px-5 rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs shadow-sm transition-all disabled:opacity-50"
               >
                 {saving ? (
                   <span>Salvando…</span>
                 ) : success ? (
                   <>
-                    <CheckCircle2 className="h-4 w-4 text-emerald-300" />
+                    <CheckCircle2 className="h-4 w-4 text-emerald-600" />
                     <span>WhatsApp Atualizado!</span>
                   </>
                 ) : (
@@ -1354,11 +1358,11 @@ function PaymentGatewaySettingsCard() {
                   <button
                     type="button"
                     onClick={handleCopyWebhook}
-                    className="absolute right-1.5 h-7 px-3 rounded bg-primary hover:bg-primary/90 text-white text-xs font-medium inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="absolute right-1.5 h-7 px-3 rounded bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     {copiedWebhook ? (
                       <>
-                        <CheckCircle2 className="h-3 w-3" /> Copiado
+                        <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Copiado
                       </>
                     ) : (
                       <>
@@ -1478,11 +1482,11 @@ function PaymentGatewaySettingsCard() {
               <button
                 type="submit"
                 disabled={saving}
-                className="inline-flex items-center justify-center gap-2 h-10 px-6 rounded-lg bg-primary hover:bg-primary/90 text-white text-xs font-medium shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center justify-center gap-2 h-10 px-6 rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold text-xs shadow-sm transition-all cursor-pointer disabled:opacity-50"
               >
                 {saving ? (
                   <>
-                    <div className="h-3.5 w-3.5 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                    <div className="h-3.5 w-3.5 rounded-full border-2 border-zinc-950 border-t-transparent animate-spin" />
                     <span>Salvando Configurações...</span>
                   </>
                 ) : (

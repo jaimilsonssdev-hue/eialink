@@ -239,7 +239,7 @@ function AdminNfcPage() {
         <div className="flex items-center gap-2">
           <Button
             onClick={handleOpenCreate}
-            className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-white px-4 py-2 text-xs font-semibold shadow-md"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary hover:bg-primary/90 text-zinc-950 font-bold px-4 py-2 text-xs shadow-md"
           >
             <Plus className="h-4 w-4" />
             <span>Nova Plaquinha / Link</span>
@@ -377,7 +377,7 @@ function AdminNfcPage() {
                       <Button
                         size="sm"
                         onClick={handleOpenCreate}
-                        className="text-xs rounded-lg bg-primary text-white"
+                        className="text-xs rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold"
                       >
                         <Plus className="h-3.5 w-3.5 mr-1" />
                         Criar Primeira Plaquinha
@@ -758,7 +758,7 @@ function AdminNfcPage() {
                   );
                 }
               }}
-              className="text-xs rounded-xl bg-primary hover:bg-primary/90 text-white font-semibold"
+              className="text-xs rounded-xl bg-primary hover:bg-primary/90 text-zinc-950 font-bold"
             >
               {saveMutation.isPending ? "Salvando..." : "Salvar Plaquinha"}
             </Button>

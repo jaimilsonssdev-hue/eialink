@@ -276,7 +276,7 @@ export const savePaymentGatewaySettingsFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context as never);
-    const supabase = createServiceSupabase();
+    const supabase = (context as any).supabase || createServiceSupabase();
 
     const updatePayload: Record<string, any> = {
       id: "default",
@@ -315,7 +315,7 @@ export const getAdminPaymentSettingsFn = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context as never);
-    const supabase = createServiceSupabase();
+    const supabase = (context as any).supabase || createServiceSupabase();
 
     const { data } = await supabase
       .from("payment_gateway_settings" as any)

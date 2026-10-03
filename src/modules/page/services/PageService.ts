@@ -1,7 +1,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { getPresetForCompany, isProductCatalogNiche, isHealthBookingNiche } from "@/modules/prospecting/nichePresets";
-import { generateAiPageBlueprintFromScrapedData } from "@/modules/prospecting/aiDemoGenerator.service";
+import {
+  generateAiPageBlueprintFromScrapedData,
+  resolveNicheArchetype,
+  generateNicheBentoCards,
+  generateNicheFaq,
+  generateNicheComparison,
+  generateNicheMarquee,
+} from "@/modules/prospecting/aiDemoGenerator.service";
+import { NICHE_GALLERIES } from "@/modules/prospecting/nichePresets";
 import { formatCatalogDescription } from "@/modules/products/services/ProductService";
 import { type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspectingEngine";
 import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
@@ -196,6 +204,66 @@ export const PageService = {
       role: "Avaliação Google",
     }));
 
+    // 1. Arquétipo Visual e Paleta de Cores Dinâmica (elimina cinza genérico)
+    const archetypeConfig = resolveNicheArchetype(effectiveNicheKey);
+
+    // 2. Galeria Visual Autêntica (combina fotos reais com acervo curado em HD do nicho)
+    const nicheGallery = NICHE_GALLERIES[effectiveNicheKey] || NICHE_GALLERIES.geral;
+    const curatedCovers = nicheGallery?.covers || NICHE_GALLERIES.geral.covers;
+
+    const finalGalleryItems = realPhotos.length >= 4
+      ? realPhotos.slice(0, 8).map((url, i) => ({
+          id: `g-${i}`,
+          url,
+          caption: `${sanitizedCompanyName} - Detalhes`,
+          category: "Ambiente",
+        }))
+      : [
+          ...realPhotos.map((url, i) => ({
+            id: `real-${i}`,
+            url,
+            caption: `${sanitizedCompanyName} - Espaço`,
+            category: "Ambiente",
+          })),
+          ...curatedCovers.slice(0, Math.max(4, 6 - realPhotos.length)).map((c, i) => ({
+            id: `curated-${i}`,
+            url: c.url,
+            caption: c.label || `${sanitizedCompanyName} - Atendimento`,
+            category: "Experiência",
+          })),
+        ].slice(0, 8);
+
+    // 3. Bento Grid estruturado com autoridade e números reais
+    const bentoCards = generateNicheBentoCards(
+      sanitizedCompanyName,
+      effectiveNicheKey,
+      city,
+      realRating,
+      realReviewsCount,
+      aiBlueprint.differentials
+    );
+
+    // 4. FAQ interativo
+    const faqItems = generateNicheFaq(
+      sanitizedCompanyName,
+      effectiveNicheKey,
+      city,
+      realAddress
+    );
+
+    // 5. Comparativo transparente
+    const comparisonData = generateNicheComparison(
+      sanitizedCompanyName,
+      effectiveNicheKey
+    );
+
+    // 6. Marquee Ticker
+    const marqueeBadges = generateNicheMarquee(
+      sanitizedCompanyName,
+      effectiveNicheKey,
+      realRating
+    );
+
     const cinematicData = {
       businessName: sanitizedCompanyName,
       niche: effectiveNicheKey,
@@ -203,15 +271,8 @@ export const PageService = {
       address: realAddress || "",
       rating: realRating || 4.9,
       openingHours: realHours || "",
-      archetype: "luxury-editorial" as const,
-      theme: {
-        bg: "#09090b",
-        accent: "#d4d4d8",
-        secondaryAccent: "#a1a1aa",
-        fontHeading: "sans" as const,
-        parallaxEnabled: true,
-        borderStyle: "glass" as const,
-      },
+      archetype: archetypeConfig.archetype,
+      theme: archetypeConfig.theme,
       hero: {
         title: aiBlueprint.headline || `A Experiência Autêntica na ${sanitizedCompanyName}`,
         subtitle: aiBlueprint.manifesto || description,
@@ -221,20 +282,14 @@ export const PageService = {
         ctaText: preset.whatsapp_button_label || "Falar no WhatsApp",
         ctaLink: finalWhatsapp ? `https://wa.me/55${finalWhatsapp.replace(/\D/g, "")}?text=${encodeURIComponent(aiBlueprint.whatsappMessage || preset.whatsapp_message(sanitizedCompanyName))}` : "#contato",
       },
-      gallery: realPhotos.slice(0, 8).map((url, i) => ({
-        id: `g-${i}`,
-        url,
-        caption: `${sanitizedCompanyName} - Detalhes`,
-        category: "Ambiente",
-      })),
+      marquee: marqueeBadges,
+      manifesto: aiBlueprint.manifesto || preset.generateDescription(sanitizedCompanyName, city || "sua região"),
+      gallery: finalGalleryItems,
       highlights: activeHighlights,
       reviews: activeReviews,
-      bentoGrid: aiBlueprint.differentials.map((d: any, i: number) => ({
-        id: `bento-${i}`,
-        title: d.title || "Diferencial",
-        description: d.desc || d.description || "",
-        size: (i === 0 ? "large" : "medium") as const,
-      })),
+      bentoGrid: bentoCards,
+      comparison: comparisonData,
+      faq: faqItems,
     };
 
     const { data, error } = await supabase

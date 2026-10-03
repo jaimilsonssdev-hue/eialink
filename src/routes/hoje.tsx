@@ -18,7 +18,24 @@ import {
   Wrench,
   X,
   Coins,
+  UtensilsCrossed,
+  Scissors,
+  HeartPulse,
+  Car,
+  Dumbbell,
 } from "lucide-react";
+
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  Sparkles,
+  UtensilsCrossed,
+  Scissors,
+  Wrench,
+  HeartPulse,
+  Car,
+  Briefcase,
+  Dumbbell,
+  ShoppingBag,
+};
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -233,36 +250,36 @@ function HojePage() {
         </div>
       </header>
 
-      {/* HERO & SELEÇÃO DE CIDADE */}
-      <section className="pt-8 pb-4 px-4 sm:px-6 max-w-6xl mx-auto w-full text-center space-y-4">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
+      {/* HERO COMPACTO & SELEÇÃO DE CIDADE */}
+      <section className="pt-6 pb-3 px-4 sm:px-6 max-w-6xl mx-auto w-full text-center space-y-3">
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold uppercase tracking-wider">
           <Flame className="h-3.5 w-3.5 fill-emerald-400 text-emerald-400 animate-pulse" />
-          Mural Oficial de Oportunidades & Serviços
+          Mural de Oportunidades & Serviços
         </div>
 
-        <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white max-w-3xl mx-auto leading-[1.15]">
-          O Que Você Procura em{" "}
+        <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white max-w-2xl mx-auto leading-tight">
+          O que você procura em{" "}
           <span className="bg-gradient-to-r from-emerald-400 via-teal-300 to-indigo-400 bg-clip-text text-transparent">
             {selectedCity}
           </span>
           ?
         </h1>
 
-        <p className="text-sm sm:text-base text-slate-300 max-w-xl mx-auto">
-          Cupons limitados do comércio local e profissionais autônomos recomendados diretamente no WhatsApp.
+        <p className="text-xs sm:text-sm text-zinc-400 max-w-lg mx-auto">
+          Cupons imediatos do comércio local e profissionais autônomos recomendados no WhatsApp.
         </p>
 
-        {/* Seletor de Cidades em Chips Modernos */}
-        <div className="pt-2 flex flex-wrap items-center justify-center gap-2">
+        {/* Cidades em Chips Compactos */}
+        <div className="pt-1 flex flex-wrap items-center justify-center gap-1.5">
           {POPULAR_CITIES.map((cityName) => (
             <button
               key={cityName}
               type="button"
               onClick={() => setSelectedCity(cityName)}
-              className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer ${
+              className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer ${
                 selectedCity === cityName
-                  ? "bg-emerald-500 text-black font-bold shadow-lg shadow-emerald-500/25 scale-105"
-                  : "bg-white/[0.06] hover:bg-white/[0.12] text-slate-300 hover:text-white border border-white/15"
+                  ? "bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/20 scale-105"
+                  : "bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/10"
               }`}
             >
               <MapPin className="h-3 w-3" />
@@ -272,57 +289,57 @@ function HojePage() {
         </div>
       </section>
 
-      {/* NAVEGAÇÃO PRINCIPAL (TABS) & BUSCA & CATEGORIAS */}
-      <section className="sticky top-16 z-30 w-full bg-[#07070d]/90 backdrop-blur-xl border-y border-white/10 py-3 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto space-y-3">
-          {/* Alternador de Modo: Ofertas vs Prestadores */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div className="inline-flex p-1 rounded-2xl bg-white/[0.06] border border-white/15">
+      {/* NAVEGAÇÃO PRINCIPAL (STICKY: TABS + BUSCA + CATEGORIAS) */}
+      <section className="sticky top-16 z-30 w-full bg-[#07070d]/95 backdrop-blur-xl border-y border-white/10 py-2.5 px-4 sm:px-6 shadow-xl">
+        <div className="max-w-6xl mx-auto space-y-2.5">
+          {/* Alternador de Modo + Busca em Linha Compacta */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2">
+            <div className="inline-flex p-1 rounded-xl bg-white/[0.06] border border-white/10">
               <button
                 type="button"
                 onClick={() => setActiveTab("deals")}
-                className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "deals"
-                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-black shadow-lg shadow-emerald-500/20"
-                    : "text-slate-300 hover:text-white"
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-zinc-950 shadow-md shadow-emerald-500/20"
+                    : "text-zinc-300 hover:text-white"
                 }`}
               >
-                <Flame className="h-4 w-4" />
-                <span>Ofertas & Cupons ({deals.length})</span>
+                <Flame className="h-3.5 w-3.5" />
+                <span>Ofertas ({deals.length})</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setActiveTab("providers")}
-                className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
+                className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
                   activeTab === "providers"
-                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20"
-                    : "text-slate-300 hover:text-white"
+                    ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md shadow-indigo-500/20"
+                    : "text-zinc-300 hover:text-white"
                 }`}
               >
-                <Briefcase className="h-4 w-4" />
-                <span>Profissionais & Serviços ({providers.length})</span>
+                <Briefcase className="h-3.5 w-3.5" />
+                <span>Profissionais ({providers.length})</span>
               </button>
             </div>
 
-            {/* Input de Busca em Tempo Real */}
+            {/* Input de Busca */}
             <div className="relative flex-1 sm:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder={
                   activeTab === "deals"
                     ? `Buscar promoções em ${selectedCity}...`
-                    : `Buscar eletricista, diarista, salão em ${selectedCity}...`
+                    : `Buscar eletricista, diarista, salão...`
                 }
-                className="pl-9 pr-8 h-9 text-xs bg-white/[0.05] border-white/15 rounded-xl placeholder:text-slate-500 focus-visible:ring-emerald-500/40 text-white"
+                className="pl-9 pr-8 h-8 text-xs bg-white/[0.05] border-white/10 rounded-xl placeholder:text-zinc-500 focus-visible:ring-emerald-500/40 text-white"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -330,10 +347,11 @@ function HojePage() {
             </div>
           </div>
 
-          {/* Carrossel de Categorias */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+          {/* Carrossel de Categorias com Ícones Lucide reais e alto contraste */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
             {CATEGORIES.map((cat) => {
               const isSelected = selectedCategory === cat.id;
+              const IconComp = CATEGORY_ICONS[cat.icon] || Sparkles;
               return (
                 <button
                   key={cat.id}
@@ -341,51 +359,53 @@ function HojePage() {
                   onClick={() => setSelectedCategory(cat.id)}
                   className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? "bg-white text-black font-bold shadow-md shadow-white/10 scale-105"
-                      : "bg-white/[0.05] hover:bg-white/[0.1] text-slate-300 hover:text-white border border-white/10"
+                      ? "bg-emerald-500 text-zinc-950 font-bold shadow-md shadow-emerald-500/25 scale-105"
+                      : "bg-white/[0.05] hover:bg-white/[0.1] text-zinc-300 hover:text-white border border-white/10"
                   }`}
                 >
-                  <span>{cat.icon}</span>
-                  <span>{cat.label}</span>
+                  <IconComp className={`h-3.5 w-3.5 ${isSelected ? "text-zinc-950" : "text-emerald-400"}`} />
+                  <span className={isSelected ? "text-zinc-950 font-bold" : "text-zinc-200"}>
+                    {cat.shortLabel || cat.label}
+                  </span>
                 </button>
               );
             })}
           </div>
-
-          {/* Banner Promocional do Clube de Pontos & Recompensas */}
-          <div className="pt-2">
-            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-zinc-900/90 to-amber-500/5 border border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left">
-              <div className="flex items-center gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/25 shrink-0">
-                  <Coins className="h-5 w-5" />
-                </span>
-                <div>
-                  <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                    Clube de Pontos & Prêmios do Comércio Local
-                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] py-0">
-                      100% Grátis
-                    </Badge>
-                  </h4>
-                  <p className="text-xs text-zinc-400 mt-0.5">
-                    Pontue ao comprar nas lojas participantes escaneando o QR Code da notinha ou balcão. Sem baixar nenhum app!
-                  </p>
-                </div>
-              </div>
-              <MuralLoyaltyLookupModal
-                triggerButton={
-                  <Button
-                    size="sm"
-                    className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shrink-0 shadow-md h-9 gap-1.5"
-                  >
-                    <Coins className="h-3.5 w-3.5" />
-                    <span>Consultar Meus Pontos</span>
-                  </Button>
-                }
-              />
-            </div>
-          </div>
         </div>
       </section>
+
+      {/* BANNER CLUBE DE PONTOS (Discreto e elegante no topo do feed) */}
+      <div className="max-w-6xl mx-auto w-full px-4 sm:px-6 pt-4">
+        <div className="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/10 via-zinc-900/80 to-amber-500/5 border border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left shadow-lg">
+          <div className="flex items-center gap-3">
+            <span className="grid h-9 w-9 place-items-center rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/25 shrink-0">
+              <Coins className="h-4.5 w-4.5" />
+            </span>
+            <div>
+              <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                Clube de Pontos & Prêmios do Comércio Local
+                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] py-0">
+                  100% Grátis
+                </Badge>
+              </h4>
+              <p className="text-[11px] sm:text-xs text-zinc-400 mt-0.5">
+                Pontue nas lojas parceiras escaneando o QR Code da notinha ou balcão. Sem baixar nenhum app!
+              </p>
+            </div>
+          </div>
+          <MuralLoyaltyLookupModal
+            triggerButton={
+              <Button
+                size="sm"
+                className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shrink-0 shadow-md h-8 px-3 gap-1.5"
+              >
+                <Coins className="h-3.5 w-3.5" />
+                <span>Consultar Meus Pontos</span>
+              </Button>
+            }
+          />
+        </div>
+      </div>
 
       {/* FEED PRINCIPAL */}
       <main className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 py-8">

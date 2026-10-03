@@ -32,7 +32,6 @@ import {
   Kanban,
   LayoutList,
   Tag,
-  TrendingUp,
 } from "lucide-react";
 
 import {
@@ -1021,14 +1020,6 @@ function ProspectingPage() {
             <MessageSquareQuote className="h-4 w-4 text-primary" />
             <span>Configurar Copys / Mensagens</span>
           </button>
-          <Link
-            to="/admin/vendas"
-            className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-3.5 py-2 text-xs font-semibold shadow-xs transition-all"
-            title="Acessar Playbook de Vendas completo e Gestão de Metas da Semana"
-          >
-            <TrendingUp className="h-4 w-4 text-emerald-400" />
-            <span>Playbook & Vendas</span>
-          </Link>
         </div>
       </header>
 

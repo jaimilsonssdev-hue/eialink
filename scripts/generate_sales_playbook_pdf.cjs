@@ -27,8 +27,8 @@ function buildPlaybookPdf() {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(148, 163, 184); // slate-400
-    doc.text("PLAYBOOK COMERCIAL & ESTRATÉGIA DE VENDAS | EIA LINK 2026", margin, 10);
-    doc.text("MÉTODO DOS 5 CLIENTES EM 7 DIAS", pageWidth - margin - 56, 10);
+    doc.text("PLAYBOOK COMERCIAL & ESTRATÉGIA DE VENDAS | EIA LINK", margin, 10);
+    doc.text("FASE DE TRAÇÃO: PRIMEIROS 5 CLIENTES", pageWidth - margin - 58, 10);
     doc.setDrawColor(226, 232, 240);
     doc.line(margin, 12, pageWidth - margin, 12);
   }
@@ -91,7 +91,6 @@ function buildPlaybookPdf() {
 
     checkPageBreak(boxHeight + 4);
 
-    // Fundo escuro premium
     doc.setFillColor(15, 23, 42); // slate-900
     doc.setDrawColor(99, 102, 241); // indigo-500
     doc.setLineWidth(0.4);
@@ -128,7 +127,7 @@ function buildPlaybookPdf() {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   doc.setTextColor(52, 211, 153); // emerald-400
-  doc.text("GUIA TÁTICO DE ACELERAÇÃO & FECHAMENTO RÁPIDO", margin + 8, y + 8);
+  doc.text("GUIA TÁTICO DE ACELERAÇÃO & TRAÇÃO INICIAL", margin + 8, y + 8);
 
   doc.setFontSize(16);
   doc.setTextColor(255, 255, 255);
@@ -137,24 +136,24 @@ function buildPlaybookPdf() {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.5);
   doc.setTextColor(203, 213, 225);
-  doc.text("Como fechar os primeiros 5 clientes na próxima semana com zero fricção e alto ticket recorrente", margin + 8, y + 26);
+  doc.text("Como fechar os primeiros 5 clientes com zero fricção de preço e máxima aderência", margin + 8, y + 26);
   doc.setFontSize(7.5);
   doc.setTextColor(148, 163, 184);
-  doc.text("Estratégia: Demonstração com IA + Fotos Reais do Instagram (Apify) + Vídeo de 30s + Fechamento Pix", margin + 8, y + 32);
+  doc.text("Precificação de Tração: R$ 29,90/mês ou R$ 290,00 no Anual | Demos com Fotos Reais e IA", margin + 8, y + 32);
 
   y += 44;
 
   // ==================== SEÇÃO 1 ====================
-  sectionTitle(1, "A Nova Lógica: Venda Reversa com IA", "Por que tentar vender sites pelo modelo tradicional falha e como a IA muda o jogo");
+  sectionTitle(1, "A Lógica de Tração: Fechamento sem Fricção", "Por que começar com preço acessível acelera seus primeiros cases e depoimentos");
 
   const p1 = 
-    "O dono de empresa local recebe mensagens todos os dias de 'agências' oferecendo sites. Ele ignora 99% porque:\n" +
-    "  1. Acha que custará de R$ 2.000 a R$ 5.000 e vai demorar 3 meses para ficar pronto.\n" +
-    "  2. Tem trauma de desenvolvedores que sumiram ou entregaram páginas que ninguém acessa.\n" +
-    "  3. Odeia ter que preencher formulários, enviar textos e escolher fotos.\n\n" +
-    "O SEU SUPERPODER COM O EIA LINK:\n" +
-    "Você não pede nada. Você não agenda reuniões de 1 hora. Você utiliza o Radar de Prospecção integrado com a Apify (Instagram Scraper) e Gemini AI para minerar o perfil do cliente, puxar as melhores fotos do feed real dele e gerar uma vitrine cinematográfica completa em 30 segundos.\n\n" +
-    "Quando você aborda o cliente, o produto já existe, tem as fotos dele, tem os pratos/serviços dele e funciona na palma da mão. A venda deixa de ser uma promessa abstrata e vira a entrega de um presente pronto.";
+    "Na fase inicial de qualquer plataforma, o objetivo número um NÃO é cobrar preços altos imediatos, mas sim:\n" +
+    "  1. Colocar clientes reais no ar usando o sistema em menos de 7 dias.\n" +
+    "  2. Gerar cases de sucesso na sua cidade para usar como prova social irresistível.\n" +
+    "  3. Eliminar qualquer dúvida ou objeção financeira do dono do estabelecimento.\n\n" +
+    "O DIFERENCIAL DO EIA LINK:\n" +
+    "Em vez de tentar vender um projeto demorado, você usa o Radar integrado ao Instagram Scraper (Apify) para puxar fotos reais do feed do cliente e gerar uma vitrine moderna em 30 segundos.\n\n" +
+    "Com um preço de tração de R$ 29,90/mês (menos de R$ 1,00 por dia) ou R$ 290,00 à vista pelo ano inteiro, o lojista não precisa pensar, comparar com agências ou hesitar: ele fecha na hora pelo Pix.";
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.2);
@@ -165,17 +164,17 @@ function buildPlaybookPdf() {
 
   calloutBox(
     "A REGRA DE OURO DA ABORDAGEM:",
-    "Nunca envie: 'Olá, você gostaria de criar um site?'.\nSempre envie: 'Olá [Nome], vi seu trabalho impecável no Instagram e montei esse protótipo interativo no ar com as fotos de vocês para vocês verem como ficaria um site cinematográfico no celular. Dá uma olhada: [link]'.",
+    "Você não pede reuniões. Você entrega um protótipo pronto no WhatsApp do lojista:\n'Olá [Nome], vi as fotos lindas do Instagram da [Empresa] e montei esse protótipo no ar para você ver como ficaria um site cinematográfico no celular. Dá uma olhada: [link]'.",
     240, 253, 250, 13, 148, 136
   );
 
   // ==================== SEÇÃO 2 ====================
-  sectionTitle(2, "A Oferta Irrecusável (No-Brainer)", "A esteira de preços desenhada para fechar 5 clientes em até 5 dias úteis");
+  sectionTitle(2, "A Esteira de Preços de Tração", "Valores desenhados para fechar 5 clientes rapidamente");
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8.2);
   doc.setTextColor(51, 65, 85);
-  const p2 = "Para colocar os primeiros 5 clientes na próxima semana, elimine qualquer barreira financeira de entrada. Apresente duas opções:";
+  const p2 = "Tabela de precificação oficial para a fase de tração inicial (editável pelo painel /admin/vendas):";
   doc.text(p2, margin, y);
   y += 5;
 
@@ -187,29 +186,23 @@ function buildPlaybookPdf() {
   doc.setFontSize(7.5);
   doc.setTextColor(255, 255, 255);
   doc.text("PLANO", margin + 3, y + 4.8);
-  doc.text("INVESTIMENTO", margin + 40, y + 4.8);
-  doc.text("ENTREGÁVEIS", margin + 80, y + 4.8);
-  doc.text("BENEFÍCIO PARA O DONO", margin + 140, y + 4.8);
+  doc.text("VALOR DE TRAÇÃO", margin + 45, y + 4.8);
+  doc.text("ENTREGÁVEIS", margin + 85, y + 4.8);
+  doc.text("ARGUMENTO DE FECHAMENTO", margin + 140, y + 4.8);
   y += 7;
 
   const precos = [
     {
-      p: "Mensalidade Ágil",
-      v: "R$ 197 taxa + R$ 67/mês",
-      e: "Site IA oficial, domínio, hosting e suporte",
-      b: "Custo quase zero para começar imediatamente",
+      p: "Mensal de Tração",
+      v: "R$ 29,90 / mês",
+      e: "Site oficial, hospedagem rápida e suporte",
+      b: "Custa menos de R$ 1,00 por dia (zero risco)",
     },
     {
-      p: "Anual Especial (Recomendado)",
-      v: "R$ 497 à vista / ano",
-      e: "Ano inteiro pago + QR Code de balcão",
-      b: "Desconto agressivo + caixa rápido para você",
-    },
-    {
-      p: "Combo Presencial + NFC",
-      v: "R$ 697 à vista ou 12x",
-      e: "Site IA + 2 Plaquinhas NFC/Acrílico balcão",
-      b: "Tangibilidade física: o cliente vê e toca",
+      p: "Anual à Vista (Recomendado)",
+      v: "R$ 290,00 / ano",
+      e: "1 ano inteiro pago + domínio + QR Code",
+      b: "Desconto atrativo + Pix integral no seu bolso",
     },
   ];
 
@@ -226,11 +219,11 @@ function buildPlaybookPdf() {
 
     doc.setFont("helvetica", "bold");
     doc.setTextColor(16, 185, 129);
-    doc.text(item.v, margin + 40, y + 5);
+    doc.text(item.v, margin + 45, y + 5);
 
     doc.setFont("helvetica", "normal");
     doc.setTextColor(51, 65, 85);
-    doc.text(doc.splitTextToSize(item.e, 58)[0], margin + 80, y + 5);
+    doc.text(doc.splitTextToSize(item.e, 52)[0], margin + 85, y + 5);
     doc.text(doc.splitTextToSize(item.b, 40)[0], margin + 140, y + 5);
 
     y += 8;
@@ -238,68 +231,51 @@ function buildPlaybookPdf() {
 
   y += 4;
   calloutBox(
-    "PROJEÇÃO FINANCEIRA DOS 5 CLIENTES:",
-    "• Se fechar os 5 no Anual (R$ 497): R$ 2.485,00 no seu bolso na mesma semana (Pix imediato).\n• Se fechar no Mensal (R$ 197 + R$ 67/mês): R$ 985,00 de entrada + R$ 335,00/mês de receita recorrente previsível.",
+    "SIMULAÇÃO DOS PRIMEIROS 5 CLIENTES NA TRAÇÃO:",
+    "• Se fechar os 5 no Anual (R$ 290,00): R$ 1.450,00 líquidos direto no seu Pix esta semana.\n• Se fechar no Mensal (R$ 29,90/mês): R$ 149,50/mês de receita recorrente para cobrir custos e dar estabilidade.",
     254, 242, 242, 239, 68, 68
   );
 
   // ==================== SEÇÃO 3 ====================
-  sectionTitle(3, "Scripts de Alta Conversão por Nicho", "Modelos prontos e testados para copiar, colar e disparar via WhatsApp");
+  sectionTitle(3, "Scripts de Abordagem e Fechamento", "Modelos diretos e calibrados para os preços de R$ 29,90/mês e R$ 290,00 anual");
 
   scriptBox(
-    "1. ABORDAGEM 'VÍDEO DE 30 SEGUNDOS' (A MAIS PODEROSA)",
-    "Fala [Nome], tudo bem? Estava admirando as fotos do trabalho de vocês no Instagram e vi que vocês são referência aqui na cidade.\n\n" +
-    "Como trabalho desenvolvendo tecnologia para negócios locais, peguei as fotos mais bonitas do feed de vocês e montei esse protótipo interativo com IA para vocês verem como ficaria um site cinematográfico no celular dos clientes de vocês.\n\n" +
-    "👉 Olha como ficou lindo: [link-da-demo]\n\n" +
-    "Coloquei botão de WhatsApp direto e galeria dos melhores trabalhos. Me diz o que achou!",
+    "1. ABORDAGEM 'VÍDEO DE 25 SEGUNDOS' (A MAIS EFICAZ)",
+    "Fala [Nome], tudo bem? Estava admirando as fotos da [Nome da Empresa] no Instagram e o trabalho de vocês é muito caprichado!\n\n" +
+    "Como desenvolvo tecnologia para empresas locais, peguei as fotos mais bonitas do feed de vocês e montei um protótipo no ar para você ver como ficaria um site cinematográfico no celular dos seus clientes.\n\n" +
+    "👉 Dá uma olhada no celular: [link-da-demo]\n\n" +
+    "Coloquei botão de WhatsApp direto e galeria dos melhores trabalhos. Me diz o que achou da apresentação!",
     "UNIVERSAL"
   );
 
   scriptBox(
-    "2. NICHO ESTÉTICA, BELEZA & HARMONIZAÇÃO",
-    "Oi [Nome], acompanho os procedimentos que você posta no perfil da [Nome da Clínica] e o nível dos resultados é incrível!\n\n" +
-    "Reparei que no link da bio de vocês hoje só tem um link simples. As clientes que buscam procedimentos estéticos decidem pelo impacto visual e sofisticação.\n\n" +
-    "Por isso estruturei essa vitrine de luxo para a clínica usando as próprias fotos dos seus procedimentos com efeito vitrine espelhada: [link-da-demo]\n\n" +
-    "Ficou com cara de marca internacional. Gostaria de ativar esse link oficial para o seu perfil?",
-    "ESTÉTICA / LASH"
-  );
-
-  scriptBox(
-    "3. NICHO GASTRONOMIA, HAMBURGUERIAS & RESTAURANTES",
-    "Fala pessoal da [Nome do Restaurante]! Adoro os pratos de vocês, as fotos do feed dão água na boca.\n\n" +
-    "Montei hoje pela manhã um cardápio digital interativo ultrarrápido para vocês, com fotos grandes dos pratos e botão de pedido direto no WhatsApp sem comissão de aplicativo: [link-da-demo]\n\n" +
-    "Também dá para gerar o QR Code de balcão e mesa para o cliente pedir e pontuar na fidelidade. O que acharam da apresentação dos pratos?",
-    "GASTRONOMIA"
-  );
-
-  scriptBox(
-    "4. SCRIPT DE FECHAMENTO & APRESENTAÇÃO DE VALOR",
-    "Que bom que você curtiu [Nome]! Esse tipo de vitrine com IA e carregamento instantâneo normalmente custa entre R$ 1.500 e R$ 2.500 no mercado tradicional.\n\n" +
-    "Mas como eu já deixei o seu site 100% montado e configurado na minha plataforma, consigo liberar o domínio oficial e o painel para você por apenas R$ 197 de ativação e R$ 67/mês (cobre hospedagem, SSL e suporte).\n\n" +
-    "Ou se preferir quitar o ano todo com desconto especial, fica R$ 497 à vista pelo ano inteiro.\n\n" +
+    "2. SCRIPT DE FECHAMENTO DIRETO & PREÇO DE TRAÇÃO",
+    "Que bom que você curtiu [Nome]! Criar uma vitrine nesse padrão nas agências custa de R$ 1.000 a R$ 2.000.\n\n" +
+    "Mas como o seu site já está 100% estruturado na minha plataforma, consigo liberar o link oficial e o painel para você por apenas R$ 29,90 por mês (cobre hospedagem rápida, SSL e suporte).\n\n" +
+    "Ou se preferir quitar o ano todo com desconto de tração, fica apenas R$ 290,00 à vista pelo ano inteiro!\n\n" +
     "Posso gerar a chave Pix para colocarmos no seu Instagram hoje ainda?",
     "FECHAMENTO"
   );
 
+  scriptBox(
+    "3. QUEBRA DA OBJEÇÃO 'ACHEI CARO / SEM VERBA'",
+    "Super compreendo [Nome]! Mas pensa comigo: R$ 29,90 por mês dá menos de R$ 0,99 por dia.\n\n" +
+    "Se esse site te trouxer apenas UM novo cliente ou agendamento no mês inteiro, ele já pagou o ano todo e colocou lucro no seu bolso.\n\n" +
+    "O risco para você é literalmente zero. Vamos colocar no ar hoje?",
+    "OBJEÇÃO PREÇO"
+  );
+
   // ==================== SEÇÃO 4 ====================
-  sectionTitle(4, "Matriz de Contorno de Objeções", "Respostas elegantes que transformam 'não' ou hesitação em fechamento na hora");
+  sectionTitle(4, "Matriz de Contorno das Demais Objeções", "Respostas práticas e sem enrolação");
 
   const objecoes = [
     {
       o: "OBJEÇÃO: 'Já tenho Instagram, não preciso de site.'",
-      r: "RESPOSTA: 'Com certeza, seu Instagram é fantástico! Mas 68% das pessoas que buscam no Google ou clicam no seu link da bio querem ver serviços, preços e endereço rápido sem ter que caçar nos posts. O site não substitui seu Instagram, ele transforma quem visita seu perfil em agendamento no WhatsApp antes que a pessoa se distraia.'",
-    },
-    {
-      o: "OBJEÇÃO: 'Achei um pouco caro / Não tenho essa verba agora.'",
-      r: "RESPOSTA: 'Super compreendo! Mas pensa comigo: R$ 67 por mês dá menos de R$ 2,25 por dia. Se esse site te trouxer apenas UM novo cliente ou agendamento no mês inteiro, ele já pagou a mensalidade e colocou lucro no seu bolso. O risco é literalmente zero.'",
+      r: "RESPOSTA: 'Com certeza, seu Instagram é excelente! Mas o Instagram atrai atenção, não organiza fechamentos. Mais de 60% das pessoas querem ver horários, serviços e endereço sem ter que caçar em 50 posts. O site direciona quem visita o perfil direto para o WhatsApp antes que a pessoa se distraia.'",
     },
     {
       o: "OBJEÇÃO: 'Preciso falar com meu sócio / esposa primeiro.'",
-      r: "RESPOSTA: 'Perfeito! Faz o seguinte: envia esse link que eu gerei direto no WhatsApp dele(a). Como ele já vê o negócio de vocês pronto e funcionando na tela do celular, é muito mais fácil decidir do que explicar em palavras. Me avisa o que ele(a) achou até o fim da tarde!'",
-    },
-    {
-      o: "OBJEÇÃO: 'Não tenho tempo para gerenciar nem atualizar.'",
-      r: "RESPOSTA: 'Essa é a melhor parte: você não precisa fazer nada. O site sincroniza com o que você já posta no Instagram e qualquer alteração de telefone ou horário você me manda uma mensagem e eu ajusto em 5 minutos. O trabalho é todo meu.'",
+      r: "RESPOSTA: 'Perfeito! Faz o seguinte: envia esse link que gerei direto no WhatsApp dele(a). Como ele(a) vai ver a vitrine já funcionando no celular, é muito mais fácil aprovar do que apenas falar. Consigo segurar essa condição de R$ 290 no anual até amanhã!'",
     },
   ];
 
@@ -311,7 +287,7 @@ function buildPlaybookPdf() {
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
-    doc.setTextColor(220, 38, 38); // red-600
+    doc.setTextColor(220, 38, 38);
     doc.text(item.o, margin + 4, y + 4.5);
 
     doc.setFont("helvetica", "normal");
@@ -324,28 +300,28 @@ function buildPlaybookPdf() {
   });
 
   // ==================== SEÇÃO 5 ====================
-  sectionTitle(5, "Cronograma Tático: 5 Clientes em 5 Dias", "O checklist passo a passo de execução diária (Segunda a Sexta)");
+  sectionTitle(5, "Cronograma Operacional: 5 Clientes em 5 Dias", "Checklist de execução diária (Segunda a Sexta)");
 
   const dias = [
     {
-      d: "SEGUNDA-FEIRA — Mineração & Criação das Demos (Volume)",
-      t: "• Abra o Radar de Prospecção do EiaLink (/admin/prospeccao).\n• Filtre 30 empresas (10 estéticas, 10 hamburguerias/restaurantes, 10 consultórios).\n• Clique em 'Gerar com IA' em todas. O sistema puxa as fotos do Instagram e cria as 30 vitrines em 15 minutos.",
+      d: "SEGUNDA-FEIRA — Mineração & Geração das Demos (Volume)",
+      t: "• Abra o Radar de Prospecção (/admin/prospeccao) e minere 25 a 30 alvos locais.\n• Clique em 'Gerar com IA' em todas. O sistema puxa as fotos do Instagram e cria as páginas em minutos.",
     },
     {
-      d: "TERÇA-FEIRA — Gravação dos Vídeos & Primeiro Lote de Disparos",
-      t: "• Abra os 15 melhores links no celular.\n• Grave 15 vídeos de tela de 25 segundos rolando a página e elogiando o trabalho.\n• Envie o Script 1 no WhatsApp de cada um com o vídeo e o link da demo.\n• Meta: 15 abordagens entregues.",
+      d: "TERÇA-FEIRA — Gravação dos Vídeos & Envio Lote 1",
+      t: "• Abra os 12 a 15 melhores links no celular.\n• Grave vídeos de 25 segundos rolando o site e elogiando o trabalho.\n• Envie no WhatsApp comercial de cada lead.",
     },
     {
-      d: "QUARTA-FEIRA — Segundo Lote & Primeiras Respostas",
-      t: "• Dispare os 15 vídeos restantes pelo mesmo formato.\n• Responda imediatamente quem responder elogiando: 'Gostou? Quer que eu ative hoje por R$ 197 + R$ 67/mês?'.\n• Fechamento esperado de Quarta: 1 a 2 clientes.",
+      d: "QUARTA-FEIRA — Envio Lote 2 & Primeiros Fechamentos",
+      t: "• Dispare os vídeos restantes.\n• Responda de imediato aos elogios oferecendo a condição de tração: R$ 29,90/mês ou R$ 290,00 anual.",
     },
     {
-      d: "QUINTA-FEIRA — Follow-up com Gatilho de Desapego",
-      t: "• Para quem visualizou e não respondeu: 'Oi [Nome], vou precisar liberar esse link temporário amanhã, queria checar se você quer manter ativo ou se posso arquivar'.\n• Aplique a quebra de objeções nos indecisos.\n• Fechamento esperado de Quinta: +2 clientes.",
+      d: "QUINTA-FEIRA — Follow-up & Contorno de Objeções",
+      t: "• Envie o follow-up de desapego para os que visualizaram e não responderam.\n• Feche mais clientes mostrando que custa menos de R$ 1,00/dia.",
     },
     {
-      d: "SEXTA-FEIRA — Fechamento da Meta & Ativação Oficial",
-      t: "• Feche o 5º cliente com a condição especial de fim de semana (ex: R$ 497 à vista pelo ano todo).\n• Ative os domínios oficiais na plataforma e marque como 'Oficial' no Radar.\n• Total faturado: entre R$ 1.500 e R$ 2.485 na semana.",
+      d: "SEXTA-FEIRA — Conclusão da Meta dos 5 Clientes",
+      t: "• Feche os clientes restantes com a oferta especial anual de R$ 290,00.\n• Ative os domínios oficiais na plataforma e marque como 'Oficial' no Radar.",
     },
   ];
 
@@ -358,7 +334,7 @@ function buildPlaybookPdf() {
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    doc.setTextColor(30, 64, 175); // blue-800
+    doc.setTextColor(30, 64, 175);
     doc.text(dia.d, margin + 4, y + 4.5);
 
     doc.setFont("helvetica", "normal");
@@ -379,7 +355,7 @@ function buildPlaybookPdf() {
     doc.setTextColor(148, 163, 184);
     doc.setDrawColor(226, 232, 240);
     doc.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
-    doc.text("EiaLink — Sistema de Prospecção & Máquina de Sites com IA | Documento Oficial", margin, pageHeight - 8);
+    doc.text("EiaLink — Sistema de Prospecção & Máquina de Sites com IA | Documento Oficial de Tração", margin, pageHeight - 8);
     doc.text(`Página ${i} de ${totalPages}`, pageWidth - margin - 20, pageHeight - 8);
   }
 
@@ -397,3 +373,4 @@ fs.writeFileSync(publicPath, Buffer.from(doc.output("arraybuffer")));
 console.log("PDF gerado com sucesso em:");
 console.log("- Root:", rootPath);
 console.log("- Public Web:", publicPath);
+

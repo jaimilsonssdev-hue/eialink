@@ -13,6 +13,8 @@ import {
   Phone,
   DollarSign,
   Gift,
+  Printer,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,9 +25,11 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { CashbackService, type CustomerCashback } from "@/modules/deals";
+import { LoyaltyCashierPad } from "@/components/loyalty/LoyaltyCashierPad";
 
 export interface CounterValidationCardProps {
   bioPageId: string;
+  businessName?: string;
   className?: string;
 }
 
@@ -52,7 +56,7 @@ function maskPhoneBR(value: string): string {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
 }
 
-export function CounterValidationCard({ bioPageId, className = "" }: CounterValidationCardProps) {
+export function CounterValidationCard({ bioPageId, businessName, className = "" }: CounterValidationCardProps) {
   // Estado Aba 1: Validação de Cupom
   const [couponCode, setCouponCode] = useState("");
   const [searchingCoupon, setSearchingCoupon] = useState(false);
@@ -324,14 +328,18 @@ export function CounterValidationCard({ bioPageId, className = "" }: CounterVali
 
       <CardContent className="p-5 pt-2">
         <Tabs defaultValue="validate-coupon" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 max-w-md mb-4 bg-muted/60">
+          <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 max-w-xl mb-4 bg-muted/60">
             <TabsTrigger value="validate-coupon" className="text-xs gap-1.5">
               <Ticket className="h-3.5 w-3.5 text-emerald-400" />
               Validar Cupom
             </TabsTrigger>
             <TabsTrigger value="register-cashback" className="text-xs gap-1.5">
               <Coins className="h-3.5 w-3.5 text-amber-400" />
-              Registrar Compra / Cashback
+              Registrar Cashback
+            </TabsTrigger>
+            <TabsTrigger value="loyalty-cashier" className="text-xs gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+              Clube Pontos & Térmica
             </TabsTrigger>
           </TabsList>
 
@@ -540,6 +548,11 @@ export function CounterValidationCard({ bioPageId, className = "" }: CounterVali
                 {processingTransaction ? "Processando..." : "Lançar Compra & Gerar Cashback"}
               </Button>
             </div>
+          </TabsContent>
+
+          {/* ABA 3: CLUBE DE PONTOS & TÉRMICA */}
+          <TabsContent value="loyalty-cashier" className="mt-0 space-y-4">
+            <LoyaltyCashierPad bioPageId={bioPageId} businessName={businessName} />
           </TabsContent>
         </Tabs>
       </CardContent>

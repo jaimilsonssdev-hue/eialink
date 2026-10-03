@@ -24,6 +24,7 @@ import { PwaInstallBanner } from "@/components/pwa/PwaInstallBanner";
 import { ComandaFloatingBar } from "@/components/public/ComandaFloatingBar";
 import { CrossTrafficCard } from "@/components/public-profile/CrossTrafficCard";
 import { DealPopup } from "@/components/public-profile/DealPopup";
+import { LoyaltyCustomerWalletModal } from "@/components/loyalty/LoyaltyCustomerWalletModal";
 import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
 import type { CinematicPageData } from "@/modules/cinematic/types";
 
@@ -318,6 +319,7 @@ const VALID_THEMES = new Set(["aurora", "sunset", "ocean", "midnight", "mono", "
 function PublicBio() {
   const { bio, links, blocks, products, hasProPlan, bookingActive } = Route.useLoaderData();
   const [refPageId, setRefPageId] = useState<string | undefined>(undefined);
+  const [claimTokenId, setClaimTokenId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -325,6 +327,10 @@ function PublicBio() {
       const ref = params.get("ref");
       if (ref) {
         setRefPageId(ref);
+      }
+      const claim = params.get("claim");
+      if (claim) {
+        setClaimTokenId(claim);
       }
     }
   }, []);
@@ -723,6 +729,15 @@ function PublicBio() {
 
       {/* Pop-up inteligente de cupom com escassez e travas de limite */}
       <DealPopup bioPageId={bio.id} businessName={bio.display_name} refPageId={refPageId} />
+
+      {/* Clube de Pontos VIP & Resgate de Tokens (Térmica / Balcão) */}
+      <LoyaltyCustomerWalletModal
+        bioPageId={bio.id}
+        businessName={bio.display_name}
+        slug={bio.slug}
+        instagram={bio.instagram}
+        claimTokenId={claimTokenId}
+      />
     </div>
   );
 }

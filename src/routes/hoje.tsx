@@ -17,9 +17,11 @@ import {
   Instagram,
   Wrench,
   X,
+  Coins,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DealsService,
@@ -30,6 +32,7 @@ import {
   type ServiceProvider,
 } from "@/modules/deals";
 import { ClaimDealModal } from "@/components/public-profile/ClaimDealModal";
+import { MuralLoyaltyLookupModal } from "@/components/loyalty/MuralLoyaltyLookupModal";
 import { formatPrice } from "@/lib/utils";
 
 export const Route = createFileRoute("/hoje")({
@@ -209,18 +212,23 @@ function HojePage() {
             </div>
           </Link>
 
-          {/* Badge de Contagem Regressiva */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/15 text-xs text-slate-200 shadow-sm">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            <span className="hidden sm:inline font-medium text-slate-200">
-              Ofertas válidas até 23:59:
-            </span>
-            <span className="font-mono font-bold text-emerald-400">
-              {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
-            </span>
+          {/* Ações do Topo: Meus Pontos VIP + Badge de Contagem Regressiva */}
+          <div className="flex items-center gap-2.5">
+            <MuralLoyaltyLookupModal />
+
+            {/* Badge de Contagem Regressiva */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.06] border border-white/15 text-xs text-slate-200 shadow-sm">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              <span className="hidden sm:inline font-medium text-slate-200">
+                Ofertas válidas até 23:59:
+              </span>
+              <span className="font-mono font-bold text-emerald-400">
+                {timeLeft.hours}:{timeLeft.minutes}:{timeLeft.seconds}
+              </span>
+            </div>
           </div>
         </div>
       </header>
@@ -342,6 +350,39 @@ function HojePage() {
                 </button>
               );
             })}
+          </div>
+
+          {/* Banner Promocional do Clube de Pontos & Recompensas */}
+          <div className="pt-2">
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 via-zinc-900/90 to-amber-500/5 border border-amber-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-left">
+              <div className="flex items-center gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-xl bg-amber-500/15 text-amber-400 border border-amber-500/25 shrink-0">
+                  <Coins className="h-5 w-5" />
+                </span>
+                <div>
+                  <h4 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
+                    Clube de Pontos & Prêmios do Comércio Local
+                    <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 text-[10px] py-0">
+                      100% Grátis
+                    </Badge>
+                  </h4>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Pontue ao comprar nas lojas participantes escaneando o QR Code da notinha ou balcão. Sem baixar nenhum app!
+                  </p>
+                </div>
+              </div>
+              <MuralLoyaltyLookupModal
+                triggerButton={
+                  <Button
+                    size="sm"
+                    className="bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs shrink-0 shadow-md h-9 gap-1.5"
+                  >
+                    <Coins className="h-3.5 w-3.5" />
+                    <span>Consultar Meus Pontos</span>
+                  </Button>
+                }
+              />
+            </div>
           </div>
         </div>
       </section>

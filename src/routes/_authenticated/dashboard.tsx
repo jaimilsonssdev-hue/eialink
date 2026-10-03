@@ -579,7 +579,7 @@ function Dashboard() {
       {bio && (
         <div className="space-y-6 mt-6">
           <CashbackSettingsCard bioPageId={bio.id} />
-          <CounterValidationCard bioPageId={bio.id} />
+          <CounterValidationCard bioPageId={bio.id} businessName={bio.display_name} />
           <RetentionGuardianCard bioPageId={bio.id} businessName={bio.display_name} />
         </div>
       )}

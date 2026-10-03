@@ -421,13 +421,8 @@ function PagesWorkspace() {
       await pages.refetch();
       setIsWizardOpen(false);
       navigate({
-        to: "/builder",
-        search:
-          creationEngine === "premium"
-            ? { page: page.id, copilot: true }
-            : creationEngine === "cinematic"
-              ? { page: page.id, copilot: true }
-              : { page: page.id },
+        to: "/studio",
+        search: { page: page.id },
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Não foi possível criar a página.";
@@ -451,7 +446,7 @@ function PagesWorkspace() {
         templateId: "default",
       });
       await pages.refetch();
-      navigate({ to: "/builder", search: { page: page.id } });
+      navigate({ to: "/studio", search: { page: page.id } });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Não foi possível criar a página.";
       setCreationError(message);
@@ -558,7 +553,7 @@ function PagesWorkspace() {
     const raw = fastInput.trim();
     if (!raw) {
       if (mode === "ai") {
-        navigate({ to: "/builder", search: { copilot: true } });
+        navigate({ to: "/studio" });
         return;
       }
       setCreationError("Por favor, cole um link do Google Maps ou digite o nome da empresa.");
@@ -624,12 +619,7 @@ function PagesWorkspace() {
       });
 
       await pages.refetch();
-
-      if (mode === "ai") {
-        navigate({ to: "/builder", search: { page: page.id, copilot: true } });
-      } else {
-        navigate({ to: "/builder", search: { page: page.id } });
-      }
+      navigate({ to: "/studio", search: { page: page.id } });
     } catch (err: any) {
       console.error("[FastCreate] Erro ao criar página rápida:", err);
       setCreationError(err?.message || "Não foi possível criar a página rápida. Tente novamente.");

@@ -174,14 +174,14 @@ function Dashboard() {
       title: "Configurar Nome & WhatsApp",
       desc: "Garante que o cliente fale direto com você.",
       done: Boolean(bio?.display_name?.trim()) && (bio?.whatsapp?.replace(/\D/g, "").length ?? 0) >= 10,
-      link: "/builder",
+      link: "/studio",
     },
     {
       id: "carousel",
       title: "Criar Carrossel Instagram de Produtos",
       desc: "Fotos 4:5 reais dos seus produtos ou pratos com botão Zap.",
       done: carouselItemsCount > 0,
-      link: "/builder?tab=carousel",
+      link: "/studio",
     },
     {
       id: "agenda",
@@ -202,7 +202,7 @@ function Dashboard() {
       title: "Colocar Link na Bio do Instagram",
       desc: "Receba as primeiras visitas e pedidos.",
       done: (stats?.views ?? 0) > 0,
-      link: publicUrl || "/builder",
+      link: publicUrl || "/studio",
       isExternal: Boolean(publicUrl),
     },
   ];
@@ -233,17 +233,16 @@ function Dashboard() {
           </h1>
           <p>Seus produtos no estilo Instagram, agendamento 24h e integração de balcão com WhatsApp.</p>
           <div className="premium-welcome-actions flex-wrap gap-2.5">
-            <Link to="/builder" className="premium-cta">
-              <PanelsTopLeft className="h-4 w-4" /> Personalizar minha página
+            <Link to="/studio" className="premium-cta">
+              <PanelsTopLeft className="h-4 w-4" /> Personalizar no Studio IA
             </Link>
             <Link
-              to="/builder"
-              search={{ copilot: true }}
+              to="/studio"
               className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02]"
               title="Gerar proposta de site completa com briefing e fotos via IA Gateway"
             >
               <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
-              <span>Gerar Proposta com Fotos (IA Gateway)</span>
+              <span>Gerar Proposta com Fotos (Studio IA)</span>
             </Link>
             {bio && (
               <FlashDealModal
@@ -398,7 +397,7 @@ function Dashboard() {
             <h3 className="font-semibold text-lg">Você ainda não criou sua página.</h3>
             <p className="text-sm text-muted-foreground mt-1">Leva 1 minuto e já fica no ar.</p>
           </div>
-          <Link to="/builder" className="btn-primary">
+          <Link to="/studio" className="btn-primary">
             Criar minha página
           </Link>
         </div>
@@ -421,8 +420,7 @@ function Dashboard() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Link
-            to="/builder"
-            search={{ tab: "carousel" }}
+            to="/studio"
             className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-fuchsia-500/50 hover:shadow-lg hover:-translate-y-0.5"
           >
             <div className="h-10 w-10 rounded-xl bg-fuchsia-500/10 text-fuchsia-400 grid place-items-center mb-3">
@@ -596,8 +594,8 @@ function Dashboard() {
         <QuickCard
           icon={PanelsTopLeft}
           title="Minha Página"
-          to="/builder"
-          desc="Personalize capa, perfil, contato e links"
+          to="/studio"
+          desc="Personalize capa, perfil, contato e links no Studio IA"
           color="var(--brand-pink)"
         />
         <QuickCard

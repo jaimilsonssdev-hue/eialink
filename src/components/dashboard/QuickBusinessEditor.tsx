@@ -366,10 +366,11 @@ export function QuickBusinessEditor({ bio, publicUrl }: QuickBusinessEditorProps
           <div className="flex items-center gap-2.5">
             {access?.canAccessBuilder ? (
               <Link
-                to="/builder"
+                to="/studio"
+                search={{ page: bio.id }}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-lg border border-border/80 bg-transparent text-xs font-medium text-muted-foreground hover:text-foreground hover:border-primary/50 transition-all"
               >
-                <Sliders className="h-3.5 w-3.5" /> Construtor Visual Avançado
+                <Sliders className="h-3.5 w-3.5" /> Abrir no Studio IA
               </Link>
             ) : (
               <Link

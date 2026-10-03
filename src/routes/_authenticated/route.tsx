@@ -315,7 +315,7 @@ function AuthedLayout() {
         </header>
         <main
           className={
-            pathname === "/builder"
+            pathname === "/studio"
               ? "app-content mx-auto p-4 sm:p-5 md:p-8 max-w-[1600px]"
               : "app-content mx-auto p-4 sm:p-5 md:p-8 max-w-7xl"
           }

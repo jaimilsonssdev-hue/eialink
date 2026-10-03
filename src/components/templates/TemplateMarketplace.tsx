@@ -77,7 +77,7 @@ export function TemplateMarketplace() {
         JSON.stringify(createTemplateInstance(template.id, template.smart)),
       );
     }
-    window.location.assign(`/builder?template=${encodeURIComponent(template.id)}`);
+    window.location.assign(`/studio`);
   };
 
   return (

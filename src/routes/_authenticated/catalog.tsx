@@ -145,8 +145,8 @@ function CatalogPage() {
           <ShoppingBag className="h-5 w-5" />
           <b>Catálogo desta página</b>
           <p>Imagens, ordem e visibilidade ficam vinculadas somente a este Biolink.</p>
-          <Link to="/builder" search={{ page: selectedPageId }} className="btn-secondary">
-            Personalizar página
+          <Link to="/studio" search={{ page: selectedPageId }} className="btn-secondary">
+            Personalizar no Studio IA
           </Link>
         </aside>
       </div>

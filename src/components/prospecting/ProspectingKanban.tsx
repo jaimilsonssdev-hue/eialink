@@ -487,9 +487,9 @@ export function ProspectingKanban({
 
                                   {demo.pageId && (
                                     <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                      <Link to="/builder" search={{ page: demo.pageId }}>
-                                        <Pencil className="h-3.5 w-3.5 mr-2 text-blue-400" />
-                                        <span>Editar no Construtor</span>
+                                      <Link to="/studio" search={{ page: demo.pageId }}>
+                                        <Pencil className="h-3.5 w-3.5 mr-2 text-zinc-300" />
+                                        <span>Editar no Studio IA</span>
                                       </Link>
                                     </DropdownMenuItem>
                                   )}

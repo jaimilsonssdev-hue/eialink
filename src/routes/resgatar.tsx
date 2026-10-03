@@ -112,7 +112,7 @@ function ClaimPage() {
       const res = await PageService.claimPage(token);
       setClaimSuccess(true);
       setTimeout(() => {
-        navigate({ to: "/builder", search: { page: res.pageId } });
+        navigate({ to: "/studio", search: { page: res.pageId } });
       }, 1500);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao resgatar página.";
@@ -163,7 +163,7 @@ function ClaimPage() {
       const claimRes = await PageService.claimPage(token);
       setClaimSuccess(true);
       setTimeout(() => {
-        navigate({ to: "/builder", search: { page: claimRes.pageId } });
+        navigate({ to: "/studio", search: { page: claimRes.pageId } });
       }, 1500);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao criar conta e resgatar página.";
@@ -195,7 +195,7 @@ function ClaimPage() {
       const claimRes = await PageService.claimPage(token);
       setClaimSuccess(true);
       setTimeout(() => {
-        navigate({ to: "/builder", search: { page: claimRes.pageId } });
+        navigate({ to: "/studio", search: { page: claimRes.pageId } });
       }, 1500);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao entrar e resgatar página.";

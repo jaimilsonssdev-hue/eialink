@@ -42,7 +42,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: next === "billing" ? "/billing" : "/builder" });
+      if (data.session) navigate({ to: next === "billing" ? "/billing" : "/dashboard" });
     });
   }, [navigate, next]);
 
@@ -143,7 +143,7 @@ function LoginForm({ next }: { next?: "billing" }) {
     }
 
     setFailedAttempts(0);
-    navigate({ to: next === "billing" ? "/billing" : "/builder" });
+    navigate({ to: next === "billing" ? "/billing" : "/dashboard" });
   }
 
   return (
@@ -209,7 +209,7 @@ function SignupForm({ next }: { next?: "billing" }) {
     const { data, error: signErr } = await supabase.auth.signUp({
       email: form.email, password: form.password,
       options: {
-        emailRedirectTo: `${window.location.origin}${next === "billing" ? "/billing" : "/builder"}`,
+        emailRedirectTo: `${window.location.origin}${next === "billing" ? "/billing" : "/dashboard"}`,
       },
     });
     if (signErr || !data.user) { setLoading(false); return setError(signErr?.message ?? "Falha no cadastro"); }
@@ -222,7 +222,7 @@ function SignupForm({ next }: { next?: "billing" }) {
     });
     setLoading(false);
     if (profErr) return setError(profErr.message);
-    navigate({ to: next === "billing" ? "/billing" : "/builder" });
+    navigate({ to: next === "billing" ? "/billing" : "/dashboard" });
   }
 
   return (

@@ -1156,10 +1156,10 @@ function ProspectingPage() {
                       </HoverCard>
                       {demo.pageId && (
                         <Link
-                          to="/builder"
+                          to="/studio"
                           search={{ page: demo.pageId }}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all w-full sm:w-auto"
-                          title="Editar no Construtor"
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-zinc-200 hover:border-zinc-500/40 hover:bg-zinc-800/40 transition-all w-full sm:w-auto"
+                          title="Editar no Studio IA"
                         >
                           <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
                           <span>Editar</span>
@@ -2160,7 +2160,7 @@ function ProspectingPage() {
 
                                 {/* Personalizar no Builder */}
                                 <Link
-                                  to="/builder"
+                                  to="/studio"
                                   search={{ page: page.id }}
                                   className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-purple-300 hover:border-purple-500/40 hover:bg-purple-500/10 transition-all"
                                   title="Ajustar dados e fotos no Builder"
@@ -2654,7 +2654,7 @@ function ProspectingPage() {
                         </DropdownMenuItem>
                         {demo.pageId && (
                           <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                            <Link to="/builder" search={{ page: demo.pageId }}>
+                            <Link to="/studio" search={{ page: demo.pageId }}>
                               <Pencil className="h-3.5 w-3.5 mr-2 text-blue-400" />
                               <span>Editar no Construtor</span>
                             </Link>
@@ -2854,7 +2854,7 @@ function ProspectingPage() {
                               </HoverCard>
                               {demo.pageId && (
                                 <Link
-                                  to="/builder"
+                                  to="/studio"
                                   search={{ page: demo.pageId }}
                                   className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
                                   title="Editar no Construtor"

@@ -271,8 +271,15 @@ function AdminPage() {
         </div>
         <div className="flex items-center gap-2">
           <Link
-            to="/admin/nfc"
+            to="/admin/vendas"
             className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 text-xs font-medium shadow-sm transition-all"
+          >
+            <TrendingUp className="h-4 w-4" />
+            <span>Playbook & Vendas</span>
+          </Link>
+          <Link
+            to="/admin/nfc"
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card hover:bg-muted/40 text-foreground px-3.5 py-2 text-xs font-medium shadow-sm transition-all"
           >
             <Radio className="h-4 w-4" />
             <span>Plaquinhas & NFC</span>

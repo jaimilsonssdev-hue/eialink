@@ -46,6 +46,7 @@ import { Route as PSlugRouteImport } from './routes/p.$slug'
 import { Route as RCodeRouteImport } from './routes/r.$code'
 import { Route as AuthenticatedAdminNfcRouteImport } from './routes/_authenticated/admin_.nfc'
 import { Route as AuthenticatedAdminProspeccaoRouteImport } from './routes/_authenticated/admin_.prospeccao'
+import { Route as AuthenticatedAdminVendasRouteImport } from './routes/_authenticated/admin_.vendas'
 import { Route as ApiPublicPaymentsAsaasWebhookRouteImport } from './routes/api/public/payments/asaas-webhook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 
@@ -235,6 +236,12 @@ const AuthenticatedAdminProspeccaoRoute =
     path: '/admin/prospeccao',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedAdminVendasRoute =
+  AuthenticatedAdminVendasRouteImport.update({
+    id: '/admin_/vendas',
+    path: '/admin/vendas',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicPaymentsAsaasWebhookRoute =
   ApiPublicPaymentsAsaasWebhookRouteImport.update({
     id: '/api/public/payments/asaas-webhook',
@@ -285,6 +292,7 @@ export interface FileRoutesByFullPath {
   '/r/$code': typeof RCodeRoute
   '/admin/nfc': typeof AuthenticatedAdminNfcRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
+  '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/api/public/payments/asaas-webhook': typeof ApiPublicPaymentsAsaasWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -325,6 +333,7 @@ export interface FileRoutesByTo {
   '/r/$code': typeof RCodeRoute
   '/admin/nfc': typeof AuthenticatedAdminNfcRoute
   '/admin/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
+  '/admin/vendas': typeof AuthenticatedAdminVendasRoute
   '/api/public/payments/asaas-webhook': typeof ApiPublicPaymentsAsaasWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -367,6 +376,7 @@ export interface FileRoutesById {
   '/r/$code': typeof RCodeRoute
   '/_authenticated/admin_/nfc': typeof AuthenticatedAdminNfcRoute
   '/_authenticated/admin_/prospeccao': typeof AuthenticatedAdminProspeccaoRoute
+  '/_authenticated/admin_/vendas': typeof AuthenticatedAdminVendasRoute
   '/api/public/payments/asaas-webhook': typeof ApiPublicPaymentsAsaasWebhookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
 }
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/admin/nfc'
     | '/admin/prospeccao'
+    | '/admin/vendas'
     | '/api/public/payments/asaas-webhook'
     | '/api/public/payments/webhook'
   fileRoutesByTo: FileRoutesByTo
@@ -449,6 +460,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/admin/nfc'
     | '/admin/prospeccao'
+    | '/admin/vendas'
     | '/api/public/payments/asaas-webhook'
     | '/api/public/payments/webhook'
   id:
@@ -490,6 +502,7 @@ export interface FileRouteTypes {
     | '/r/$code'
     | '/_authenticated/admin_/nfc'
     | '/_authenticated/admin_/prospeccao'
+    | '/_authenticated/admin_/vendas'
     | '/api/public/payments/asaas-webhook'
     | '/api/public/payments/webhook'
   fileRoutesById: FileRoutesById
@@ -777,6 +790,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminProspeccaoRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin_/vendas': {
+      id: '/_authenticated/admin_/vendas'
+      path: '/admin/vendas'
+      fullPath: '/admin/vendas'
+      preLoaderRoute: typeof AuthenticatedAdminVendasRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/payments/asaas-webhook': {
       id: '/api/public/payments/asaas-webhook'
       path: '/api/public/payments/asaas-webhook'
@@ -814,6 +834,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStudioRoute: typeof AuthenticatedStudioRoute
   AuthenticatedAdminNfcRoute: typeof AuthenticatedAdminNfcRoute
   AuthenticatedAdminProspeccaoRoute: typeof AuthenticatedAdminProspeccaoRoute
+  AuthenticatedAdminVendasRoute: typeof AuthenticatedAdminVendasRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -836,6 +857,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStudioRoute: AuthenticatedStudioRoute,
   AuthenticatedAdminNfcRoute: AuthenticatedAdminNfcRoute,
   AuthenticatedAdminProspeccaoRoute: AuthenticatedAdminProspeccaoRoute,
+  AuthenticatedAdminVendasRoute: AuthenticatedAdminVendasRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

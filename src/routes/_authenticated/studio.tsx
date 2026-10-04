@@ -99,11 +99,13 @@ function convertBioPageToCinematic(bio: any): CinematicPageData {
     address: socialLinks.address || undefined,
     rating: socialLinks.google_rating || 4.9,
     openingHours: socialLinks.opening_hours || undefined,
+    marqueeSpeed: socialLinks.cinematic_data?.marqueeSpeed || customTheme.marqueeSpeed || 45,
     theme: {
       ...defaults.theme,
       bg: customTheme.background || defaults.theme.bg,
       accent: customTheme.primary || defaults.theme.accent,
       parallaxEnabled: customTheme.parallax !== false,
+      marqueeSpeed: socialLinks.cinematic_data?.marqueeSpeed || customTheme.marqueeSpeed || 45,
     },
     hero: {
       ...defaults.hero,
@@ -2093,7 +2095,88 @@ export default function CinematicStudioPage() {
                       </div>
 
                       {data.marquee && data.marquee.length > 0 && (
-                        <div className="space-y-3 pt-2 border-t border-zinc-800/60">
+                        <div className="space-y-3.5 pt-2 border-t border-zinc-800/60">
+                          {/* Controle de Velocidade da Animação */}
+                          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/60 p-3 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-semibold uppercase text-zinc-300">
+                                Velocidade de Rolagem
+                              </span>
+                              <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
+                                {data.marqueeSpeed || 45}s{" "}
+                                <span className="text-[9px] font-sans font-normal text-zinc-400">
+                                  ({(data.marqueeSpeed || 45) >= 60
+                                    ? "Lenta & Editorial"
+                                    : (data.marqueeSpeed || 45) >= 40
+                                    ? "Suave (Recomendado)"
+                                    : (data.marqueeSpeed || 45) >= 25
+                                    ? "Moderada"
+                                    : "Rápida"})
+                                </span>
+                              </span>
+                            </div>
+
+                            {/* Presets Rápidos */}
+                            <div className="grid grid-cols-4 gap-1.5">
+                              {[
+                                { speed: 65, label: "Lenta", desc: "65s" },
+                                { speed: 45, label: "Suave", desc: "45s" },
+                                { speed: 30, label: "Normal", desc: "30s" },
+                                { speed: 18, label: "Rápida", desc: "18s" },
+                              ].map((p) => {
+                                const currentSpeed = data.marqueeSpeed || 45;
+                                const isSelected = Math.abs(currentSpeed - p.speed) <= 5;
+                                return (
+                                  <button
+                                    key={p.speed}
+                                    type="button"
+                                    onClick={() => {
+                                      setData((prev) => ({
+                                        ...prev,
+                                        marqueeSpeed: p.speed,
+                                        theme: { ...prev.theme, marqueeSpeed: p.speed },
+                                      }));
+                                      toast.success(`Velocidade ajustada para ${p.label} (${p.speed}s)!`);
+                                    }}
+                                    className={`py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                                      isSelected
+                                        ? "border border-amber-400/80 bg-zinc-800 text-amber-300 font-semibold shadow-xs"
+                                        : "border border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                                    }`}
+                                  >
+                                    <span className="block text-[11px] leading-tight">{p.label}</span>
+                                    <span className="block text-[9px] text-zinc-500 font-mono">{p.desc}</span>
+                                  </button>
+                                );
+                              })}
+                            </div>
+
+                            {/* Slider Deslizante de Precisão */}
+                            <div className="space-y-1 pt-1">
+                              <input
+                                type="range"
+                                min={15}
+                                max={90}
+                                step={5}
+                                value={data.marqueeSpeed || 45}
+                                onChange={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  setData((prev) => ({
+                                    ...prev,
+                                    marqueeSpeed: val,
+                                    theme: { ...prev.theme, marqueeSpeed: val },
+                                  }));
+                                }}
+                                className="w-full h-1.5 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-amber-400"
+                              />
+                              <div className="flex justify-between text-[9px] text-zinc-500 font-mono">
+                                <span>18s (Rápida)</span>
+                                <span>45s (Recomendado)</span>
+                                <span>90s (Ultra Suave)</span>
+                              </div>
+                            </div>
+                          </div>
+
                           <div className="flex items-center justify-between">
                             <span className="text-[10px] font-semibold uppercase text-zinc-400">
                               Frases ativas ({data.marquee.length})

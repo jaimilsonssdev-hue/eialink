@@ -70,6 +70,7 @@ export function createDefaultCinematicData(
       ctaLink,
     },
     marquee: generateNicheMarquee(safeName, effectiveNiche, rating),
+    marqueeSpeed: 45,
     bentoGrid: generateNicheBentoCards(safeName, effectiveNiche, null, rating, 48),
     manifesto: preset.generateDescription(safeName, "sua região"),
     comparison: generateNicheComparison(safeName, effectiveNiche),

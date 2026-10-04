@@ -242,6 +242,10 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
     }
   };
 
+  // Duração da animação do Marquee (segundos) - customizável pelo usuário
+  const userSpeed = data.marqueeSpeed || (data.theme as any)?.marqueeSpeed;
+  const marqueeDuration = userSpeed ? Number(userSpeed) : (isNeoPop ? 30 : isCyber ? 36 : 45);
+
   return (
     <div
       ref={containerRef}
@@ -262,7 +266,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
         .animate-marquee-infinite {
           display: flex;
           width: max-content;
-          animation: cinematicMarquee ${isNeoPop ? "16s" : isCyber ? "20s" : "28s"} linear infinite;
+          animation: cinematicMarquee ${marqueeDuration}s linear infinite;
         }
         .animate-marquee-infinite:hover {
           animation-play-state: paused;

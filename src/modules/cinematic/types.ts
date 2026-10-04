@@ -96,10 +96,12 @@ export interface CinematicPageData {
     fontFamily?: string;
     boxEffect?: "glass" | "solid" | "glow";
     borderRadius?: "rounded" | "pill" | "sharp";
+    marqueeSpeed?: number;
   };
   hero: CinematicHero;
   manifesto?: CinematicManifesto;
   marquee?: MarqueeItem[];
+  marqueeSpeed?: number;
   bentoGrid?: BentoCard[];
   highlights: CinematicHighlight[];
   comparison?: {

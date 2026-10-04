@@ -29,6 +29,8 @@ import {
   ShoppingBag,
   Upload,
   Loader2,
+  Clock,
+  MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -202,8 +204,8 @@ export default function CinematicStudioPage() {
   const [copiedLink, setCopiedLink] = useState(false);
   const [publishedModalOpen, setPublishedModalOpen] = useState(false);
 
-  // Acordeões dos Ajustes Manuais
-  const [openSection, setOpenSection] = useState<"identity" | "products" | "media" | "styling" | "marquee">("identity");
+  // Sub-abas do Painel de Ajustes (Unificado com o Clean Builder)
+  const [adjustmentTab, setAdjustmentTab] = useState<"texts" | "products" | "design" | "media" | "contact">("texts");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -1277,82 +1279,145 @@ export default function CinematicStudioPage() {
             </div>
           )}
 
-          {/* 3. Conteúdo da Aba 2: AJUSTES MANUAIS */}
+          {/* 3. Conteúdo da Aba 2: AJUSTES MANUAIS (UNIFICADO & EXECUTIVO) */}
           {activeTab === "adjustments" && (
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {/* Acordeão 1: Identidade & Conteúdo */}
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenSection(openSection === "identity" ? ("" as any) : "identity")}
-                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-3.5 w-3.5 text-zinc-400" />
-                    <span>Identidade & Conteúdo</span>
-                  </div>
-                  <ChevronDown
-                    className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "identity" ? "rotate-180" : ""}`}
-                  />
-                </button>
+            <div className="flex-1 flex flex-col min-h-0 bg-zinc-950/40">
+              {/* Barra de Sub-Abas do Editor (Clean, Executivo & Prático) */}
+              <div className="p-3 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-20">
+                <div className="grid grid-cols-5 gap-1 p-1 bg-zinc-900/90 rounded-xl border border-zinc-800/80 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setAdjustmentTab("texts")}
+                    className={`py-1.5 px-1 rounded-lg font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      adjustmentTab === "texts"
+                        ? "bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700/60 font-semibold"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+                    }`}
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Textos</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdjustmentTab("products")}
+                    className={`py-1.5 px-1 rounded-lg font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      adjustmentTab === "products"
+                        ? "bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700/60 font-semibold"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+                    }`}
+                  >
+                    <ShoppingBag className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Vitrine</span>
+                    {data.highlights && data.highlights.length > 0 && (
+                      <span className="text-[9px] bg-emerald-500/20 text-emerald-400 font-bold px-1.5 py-0.2 rounded-full">
+                        {data.highlights.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdjustmentTab("design")}
+                    className={`py-1.5 px-1 rounded-lg font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      adjustmentTab === "design"
+                        ? "bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700/60 font-semibold"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+                    }`}
+                  >
+                    <Palette className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Design</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdjustmentTab("media")}
+                    className={`py-1.5 px-1 rounded-lg font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      adjustmentTab === "media"
+                        ? "bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700/60 font-semibold"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+                    }`}
+                  >
+                    <ImageIcon className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Mídia</span>
+                    {data.gallery && data.gallery.length > 0 && (
+                      <span className="text-[9px] bg-amber-500/20 text-amber-400 font-bold px-1.5 py-0.2 rounded-full">
+                        {data.gallery.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAdjustmentTab("contact")}
+                    className={`py-1.5 px-1 rounded-lg font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                      adjustmentTab === "contact"
+                        ? "bg-zinc-800 text-zinc-100 shadow-xs border border-zinc-700/60 font-semibold"
+                        : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/40"
+                    }`}
+                  >
+                    <MapPin className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">Contato</span>
+                  </button>
+                </div>
+              </div>
 
-                {openSection === "identity" && (
-                  <div className="p-3.5 pt-0 space-y-3.5 text-xs border-t border-zinc-800/60">
+              {/* Área com Scroll do Conteúdo da Sub-Aba Ativa */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                {/* 1. SUB-ABA: TEXTOS & CONTEÚDO */}
+                {adjustmentTab === "texts" && (
+                  <div className="space-y-4 animate-in fade-in-50 duration-150">
                     {/* Logotipo da Marca */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
-                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block">
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block tracking-wider">
                         Logotipo da Marca
                       </label>
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-10 w-10 rounded-full border border-zinc-800 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-full border border-zinc-800 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
                           {data.avatarUrl ? (
                             <img src={data.avatarUrl} alt="Logo" className="h-full w-full object-cover" />
                           ) : (
-                            <ImageIcon className="h-4 w-4 text-zinc-500" />
+                            <ImageIcon className="h-5 w-5 text-zinc-500" />
                           )}
                         </div>
-                        <div className="flex-1 space-y-1">
+                        <div className="flex-1 space-y-1.5">
                           <button
                             type="button"
                             onClick={() => logoInputRef.current?.click()}
                             disabled={uploadingLogo}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-medium text-zinc-200 transition cursor-pointer disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-200 transition cursor-pointer disabled:opacity-50"
                           >
-                            {uploadingLogo ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                            {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                             <span>{data.avatarUrl ? "Trocar Logotipo" : "Enviar Logotipo"}</span>
                           </button>
                           <input
                             type="url"
                             value={data.avatarUrl || ""}
                             onChange={(e) => setData({ ...data, avatarUrl: e.target.value })}
-                            placeholder="Ou cole a URL da imagem..."
-                            className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-300 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none font-mono"
+                            placeholder="Ou cole o link direto da imagem..."
+                            className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-[11px] text-zinc-300 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none font-mono"
                           />
                         </div>
                       </div>
                     </div>
 
                     {/* Foto de Capa do Hero */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
-                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block">
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block tracking-wider">
                         Foto de Capa Principal (Hero)
                       </label>
-                      <div className="flex items-center gap-2.5">
-                        <div className="h-12 w-16 rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
+                      <div className="flex items-center gap-3">
+                        <div className="h-14 w-20 rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
                           {data.hero.backgroundImage ? (
                             <img src={data.hero.backgroundImage} alt="Capa" className="h-full w-full object-cover" />
                           ) : (
-                            <ImageIcon className="h-4 w-4 text-zinc-500" />
+                            <ImageIcon className="h-5 w-5 text-zinc-500" />
                           )}
                         </div>
-                        <div className="flex-1 space-y-1">
+                        <div className="flex-1 space-y-1.5">
                           <button
                             type="button"
                             onClick={() => coverInputRef.current?.click()}
                             disabled={uploadingCover}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-medium text-zinc-200 transition cursor-pointer disabled:opacity-50"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-200 transition cursor-pointer disabled:opacity-50"
                           >
-                            {uploadingCover ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                            {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                             <span>Trocar Foto de Capa</span>
                           </button>
                           <input
@@ -1361,13 +1426,14 @@ export default function CinematicStudioPage() {
                             onChange={(e) =>
                               setData({ ...data, hero: { ...data.hero, backgroundImage: e.target.value } })
                             }
-                            placeholder="Ou cole a URL da foto de capa..."
-                            className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-300 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none font-mono"
+                            placeholder="Ou cole a URL da imagem de capa..."
+                            className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-[11px] text-zinc-300 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none font-mono"
                           />
                         </div>
                       </div>
                     </div>
 
+                    {/* Dados Básicos da Marca */}
                     <div>
                       <label className="text-[10px] text-zinc-400 uppercase font-semibold">Nome do Negócio</label>
                       <input
@@ -1375,9 +1441,10 @@ export default function CinematicStudioPage() {
                         value={data.businessName}
                         onChange={(e) => setData({ ...data, businessName: e.target.value })}
                         placeholder="Ex: Studio Alpha, Dra. Helena, Bistrô..."
-                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
+
                     <div>
                       <label className="text-[10px] text-zinc-400 uppercase font-semibold">Tagline do Hero (Caixa Alta)</label>
                       <input
@@ -1387,9 +1454,10 @@ export default function CinematicStudioPage() {
                           setData({ ...data, hero: { ...data.hero, tagline: e.target.value } })
                         }
                         placeholder="Ex: EXPERIÊNCIA EXCLUSIVA"
-                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
+
                     <div>
                       <label className="text-[10px] text-zinc-400 uppercase font-semibold">Título Principal do Hero</label>
                       <input
@@ -1399,9 +1467,10 @@ export default function CinematicStudioPage() {
                           setData({ ...data, hero: { ...data.hero, title: e.target.value } })
                         }
                         placeholder="Ex: Arquitetura & Interiores de Alto Padrão"
-                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
+
                     <div>
                       <label className="text-[10px] text-zinc-400 uppercase font-semibold">Subtítulo Narrativo</label>
                       <textarea
@@ -1411,7 +1480,7 @@ export default function CinematicStudioPage() {
                           setData({ ...data, hero: { ...data.hero, subtitle: e.target.value } })
                         }
                         placeholder="Ex: Projetos autorais que unem estética contemporânea, conforto e sofisticação."
-                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none resize-none"
+                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none resize-none leading-relaxed"
                       />
                     </div>
 
@@ -1425,26 +1494,26 @@ export default function CinematicStudioPage() {
                             setData({ ...data, hero: { ...data.hero, ctaText: e.target.value } })
                           }
                           placeholder="Ex: Pedir no WhatsApp"
-                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                         />
                       </div>
                       <div>
                         <label className="text-[10px] text-zinc-400 uppercase font-semibold">Link / Destino do Botão</label>
                         <input
                           type="text"
-                          value={data.hero.ctaLink || "#manifesto"}
+                          value={data.hero.ctaLink || "#vitrine"}
                           onChange={(e) =>
                             setData({ ...data, hero: { ...data.hero, ctaLink: e.target.value } })
                           }
-                          placeholder="#manifesto ou https://..."
-                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                          placeholder="#vitrine, #contato ou https://..."
+                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                         />
                       </div>
                     </div>
 
                     {/* História / Sobre Nós / Manifesto */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
-                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block">
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block tracking-wider">
                         Sobre Nós / História / Manifesto
                       </label>
                       <div>
@@ -1461,7 +1530,7 @@ export default function CinematicStudioPage() {
                             })
                           }
                           placeholder="Título da História (Ex: O Legado de Criação)"
-                          className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                          className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
                         />
                       </div>
                       <div>
@@ -1482,73 +1551,21 @@ export default function CinematicStudioPage() {
                         />
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-[10px] text-zinc-400 uppercase font-semibold">WhatsApp</label>
-                        <input
-                          type="text"
-                          value={data.whatsapp}
-                          onChange={(e) => setData({ ...data, whatsapp: e.target.value })}
-                          placeholder="DDD + Número"
-                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] text-zinc-400 uppercase font-semibold">Avaliação</label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          max="5.0"
-                          value={data.rating || 5.0}
-                          onChange={(e) => setData({ ...data, rating: parseFloat(e.target.value) })}
-                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">Endereço Completo</label>
-                      <input
-                        type="text"
-                        value={data.address || ""}
-                        onChange={(e) => setData({ ...data, address: e.target.value })}
-                        placeholder="Ex: Av. Brigadeiro Faria Lima, 1000 - São Paulo, SP"
-                        className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
-                      />
-                    </div>
                   </div>
                 )}
-              </div>
 
-              {/* Acordeão 2: Vitrine & Catálogo (Produtos & Serviços) */}
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenSection(openSection === "products" ? ("" as any) : "products")}
-                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="h-3.5 w-3.5 text-zinc-400" />
-                    <span>Vitrine & Catálogo ({data.highlights?.length || 0})</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {data.highlights && data.highlights.length > 0 && (
-                      <span className="rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold px-2 py-0.5">
-                        {data.highlights.length} {data.highlights.length === 1 ? "item" : "itens"}
-                      </span>
-                    )}
-                    <ChevronDown
-                      className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "products" ? "rotate-180" : ""}`}
-                    />
-                  </div>
-                </button>
-
-                {openSection === "products" && (
-                  <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
+                {/* 2. SUB-ABA: VITRINE & PRODUTOS */}
+                {adjustmentTab === "products" && (
+                  <div className="space-y-4 animate-in fade-in-50 duration-150">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-semibold text-zinc-400 uppercase">
-                        Produtos ou Serviços em Destaque
-                      </span>
+                      <div>
+                        <span className="text-xs font-semibold text-zinc-200 block">
+                          Produtos ou Serviços ({data.highlights?.length || 0})
+                        </span>
+                        <span className="text-[10px] text-zinc-400">
+                          Exibidos na vitrine e sincronizados com o catálogo
+                        </span>
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
@@ -1569,23 +1586,25 @@ export default function CinematicStudioPage() {
                           }));
                           toast.success("Novo item adicionado à vitrine!");
                         }}
-                        className="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                        className="text-xs text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 transition-colors cursor-pointer"
                       >
-                        <Plus className="h-3 w-3" />
+                        <Plus className="h-3.5 w-3.5" />
                         <span>Adicionar Item</span>
                       </button>
                     </div>
 
                     {(!data.highlights || data.highlights.length === 0) ? (
-                      <div className="p-4 text-center rounded-xl border border-dashed border-zinc-800 text-zinc-500 text-xs">
-                        Nenhum item na vitrine. Clique em "+ Adicionar Item" para cadastrar produtos ou serviços.
+                      <div className="p-8 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 text-zinc-400 text-xs space-y-2">
+                        <ShoppingBag className="h-8 w-8 mx-auto text-zinc-600" />
+                        <p className="font-medium text-zinc-300">Nenhum item na vitrine ainda</p>
+                        <p className="text-[11px] text-zinc-500">Clique em "+ Adicionar Item" para cadastrar pratos, produtos ou serviços.</p>
                       </div>
                     ) : (
-                      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                      <div className="space-y-3">
                         {data.highlights.map((item, idx) => (
-                          <div key={item.id || idx} className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 space-y-2.5">
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                          <div key={item.id || idx} className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5 space-y-3">
+                            <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
+                              <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
                                 Item #{idx + 1}
                               </span>
                               <button
@@ -1597,7 +1616,7 @@ export default function CinematicStudioPage() {
                                   }));
                                   toast.info("Item removido da vitrine.");
                                 }}
-                                className="p-1 text-zinc-500 hover:text-red-400 transition-colors rounded cursor-pointer"
+                                className="p-1 text-zinc-500 hover:text-red-400 transition-colors rounded hover:bg-zinc-900 cursor-pointer"
                                 title="Remover este item"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
@@ -1618,7 +1637,7 @@ export default function CinematicStudioPage() {
                                   });
                                 }}
                                 placeholder="Nome do produto ou prato"
-                                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                                className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
                               />
                             </div>
 
@@ -1637,7 +1656,7 @@ export default function CinematicStudioPage() {
                                     });
                                   }}
                                   placeholder="Ex: R$ 45,00"
-                                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:border-zinc-700 focus:outline-none"
+                                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:border-zinc-700 focus:outline-none"
                                 />
                               </div>
                               <div>
@@ -1654,7 +1673,7 @@ export default function CinematicStudioPage() {
                                     });
                                   }}
                                   placeholder="Ex: Mais Pedido"
-                                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-200 focus:border-zinc-700 focus:outline-none"
+                                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-200 focus:border-zinc-700 focus:outline-none"
                                 />
                               </div>
                             </div>
@@ -1673,13 +1692,13 @@ export default function CinematicStudioPage() {
                                   });
                                 }}
                                 placeholder="Detalhes, benefícios ou ingredientes do item..."
-                                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-2 text-xs text-zinc-300 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none resize-none"
+                                className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-900 p-2 text-xs text-zinc-300 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none resize-none leading-relaxed"
                               />
                             </div>
 
                             <div>
                               <label className="text-[9px] text-zinc-400 uppercase font-semibold">Foto do Produto (URL)</label>
-                              <div className="flex items-center gap-2">
+                              <div className="mt-1 flex items-center gap-2">
                                 {item.image && (
                                   <img src={item.image} alt="" className="w-8 h-8 rounded-lg object-cover border border-zinc-800 shrink-0" />
                                 )}
@@ -1695,7 +1714,7 @@ export default function CinematicStudioPage() {
                                     });
                                   }}
                                   placeholder="https://exemplo.com/foto.jpg"
-                                  className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-300 font-mono focus:border-zinc-700 focus:outline-none"
+                                  className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-[11px] text-zinc-300 font-mono focus:border-zinc-700 focus:outline-none"
                                 />
                               </div>
                             </div>
@@ -1705,132 +1724,10 @@ export default function CinematicStudioPage() {
                     )}
                   </div>
                 )}
-              </div>
 
-              {/* Acordeão 2: Mídia & Fotos */}
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenSection(openSection === "media" ? ("" as any) : "media")}
-                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="h-3.5 w-3.5 text-zinc-400" />
-                    <span>Mídia & Fotos ({data.gallery.length})</span>
-                  </div>
-                  <ChevronDown
-                    className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "media" ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {openSection === "media" && (
-                  <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
-                    {/* Vídeo em Loop */}
-                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-semibold uppercase text-zinc-400 flex items-center gap-1.5">
-                          <Video className="h-3.5 w-3.5 text-zinc-400" />
-                          <span>Vídeo de Fundo no Hero (Opcional)</span>
-                        </label>
-                        {data.hero.backgroundVideo && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setData((prev) => ({
-                                ...prev,
-                                hero: { ...prev.hero, backgroundVideo: undefined },
-                              }));
-                              toast.info("Vídeo removido. Usando foto de capa.");
-                            }}
-                            className="text-[10px] text-zinc-400 hover:text-zinc-200 transition-colors"
-                          >
-                            Remover
-                          </button>
-                        )}
-                      </div>
-                      <input
-                        type="url"
-                        value={data.hero.backgroundVideo || ""}
-                        onChange={(e) => {
-                          const val = e.target.value.trim();
-                          setData((prev) => ({
-                            ...prev,
-                            hero: { ...prev.hero, backgroundVideo: val || undefined },
-                          }));
-                        }}
-                        placeholder="https://exemplo.com/video-ambiente.mp4"
-                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
-                      />
-                      {data.hero.backgroundVideo && (
-                        <p className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
-                          <CheckCircle2 className="h-3 w-3" /> Vídeo ativo em loop no Hero
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Galeria de Fotos */}
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">
-                          Fotos do Acervo (Clique para definir a Capa)
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="text-[10px] text-zinc-300 font-medium hover:text-white transition-colors"
-                        >
-                          + Adicionar Fotos
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-4 gap-2">
-                        {data.gallery.map((photo, idx) => (
-                          <div
-                            key={photo.id || idx}
-                            onClick={() => {
-                              setData((prev) => ({
-                                ...prev,
-                                hero: { ...prev.hero, backgroundImage: photo.url },
-                              }));
-                              toast.success("Foto definida como Capa do Hero!");
-                            }}
-                            className={`relative h-14 rounded-lg overflow-hidden border cursor-pointer group transition-all ${
-                              data.hero.backgroundImage === photo.url
-                                ? "border-zinc-300 ring-2 ring-zinc-300/40"
-                                : "border-zinc-800 hover:border-zinc-600"
-                            }`}
-                          >
-                            <img src={photo.url} alt="" className="h-full w-full object-cover" />
-                            {data.hero.backgroundImage === photo.url && (
-                              <span className="absolute top-1 right-1 rounded-full bg-zinc-100 text-zinc-950 text-[8px] font-bold px-1.5">
-                                Capa
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Acordeão 3: Arquétipo, Paleta & Tipografia */}
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenSection(openSection === "styling" ? ("" as any) : "styling")}
-                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Palette className="h-3.5 w-3.5 text-zinc-400" />
-                    <span>Arquétipo, Paleta & Tipografia</span>
-                  </div>
-                  <ChevronDown
-                    className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "styling" ? "rotate-180" : ""}`}
-                  />
-                </button>
-
-                {openSection === "styling" && (
-                  <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
+                {/* 3. SUB-ABA: DESIGN & ESTILO */}
+                {adjustmentTab === "design" && (
+                  <div className="space-y-4 animate-in fade-in-50 duration-150">
                     {/* Modelo de Site Ativo */}
                     <div className="space-y-1.5">
                       <span className="text-[10px] text-zinc-400 uppercase font-semibold">Modelo de Site Ativo:</span>
@@ -1948,6 +1845,7 @@ export default function CinematicStudioPage() {
                             (arq.id === "editorial" && (data.archetype === "luxury-editorial" as any)) ||
                             (arq.id === "neobrutalism" && ((data.archetype as any) === "neo-pop-d2c" || (data.archetype as any) === "dark-brutalist")) ||
                             (arq.id === "bento" && ((data.archetype as any) === "clean-biotech" || (data.archetype as any) === "cyber-tech"));
+
                           return (
                             <button
                               key={arq.id}
@@ -2153,202 +2051,383 @@ export default function CinematicStudioPage() {
                         className="rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500/20"
                       />
                     </label>
-                  </div>
-                )}
-              </div>
 
-              {/* Acordeão 4: Faixa Animada (Marquee / Divisor) */}
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
-                <button
-                  type="button"
-                  onClick={() => setOpenSection(openSection === "marquee" ? ("" as any) : "marquee")}
-                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-3.5 w-3.5 text-zinc-400" />
-                    <span>Faixa Animada (Divisor Hero)</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {data.marquee && data.marquee.length > 0 && (
-                      <span className="rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold px-2 py-0.5">
-                        Ativa ({data.marquee.length})
-                      </span>
-                    )}
-                    <ChevronDown
-                      className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "marquee" ? "rotate-180" : ""}`}
-                    />
-                  </div>
-                </button>
-
-                {openSection === "marquee" && (
-                  <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
-                    {/* Toggle Ligar/Desligar Faixa */}
-                    <label className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 cursor-pointer">
-                      <div>
-                        <span className="block text-xs font-semibold text-zinc-200">Exibir Faixa Animada (Marquee)</span>
-                        <span className="block text-[10px] text-zinc-400">
-                          Divisor em loop contínuo logo abaixo da Hero com frases de impacto.
-                        </span>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={Boolean(data.marquee && data.marquee.length > 0)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            const defaultItems = [
-                              { id: "m1", text: "ATENDIMENTO VIP E PERSONALIZADO", icon: "💎" },
-                              { id: "m2", text: "PADRÃO DE ALTA QUALIDADE", icon: "★" },
-                              { id: "m3", text: "EXPERIÊNCIA EXCLUSIVA", icon: "✦" },
-                              { id: "m4", text: "SATISFAÇÃO COMPROVADA", icon: "✨" },
-                            ];
-                            setData((prev) => ({
-                              ...prev,
-                              marquee: defaultItems,
-                            }));
-                            toast.success("Faixa animada ativada!");
-                          } else {
-                            setData((prev) => ({
-                              ...prev,
-                              marquee: [],
-                            }));
-                            toast.info("Faixa animada desativada.");
-                          }
-                        }}
-                        className="rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500/20"
-                      />
-                    </label>
-
-                    {/* Editor de Frases quando ativa */}
-                    {data.marquee && data.marquee.length > 0 && (
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-semibold uppercase text-zinc-400">
-                            Frases que rolam na tela ({data.marquee.length})
+                    {/* Faixa Animada (Divisor Hero / Marquee) */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="block text-xs font-semibold text-zinc-200 flex items-center gap-1.5">
+                            <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                            <span>Faixa Animada (Divisor Hero)</span>
                           </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newId = `m_${Date.now()}`;
+                          <span className="block text-[10px] text-zinc-400">
+                            Frases que rolam na tela em loop infinito
+                          </span>
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={Boolean(data.marquee && data.marquee.length > 0)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              const defaultItems = [
+                                { id: "m1", text: "ATENDIMENTO VIP E PERSONALIZADO", icon: "💎" },
+                                { id: "m2", text: "PADRÃO DE ALTA QUALIDADE", icon: "★" },
+                                { id: "m3", text: "EXPERIÊNCIA EXCLUSIVA", icon: "✦" },
+                                { id: "m4", text: "SATISFAÇÃO COMPROVADA", icon: "✨" },
+                              ];
                               setData((prev) => ({
                                 ...prev,
-                                marquee: [
-                                  ...(prev.marquee || []),
-                                  { id: newId, text: "NOVO DIFERENCIAL EXCLUSIVO", icon: "✦" },
-                                ],
+                                marquee: defaultItems,
                               }));
-                              toast.success("Nova frase adicionada!");
-                            }}
-                            className="text-[10px] text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"
-                          >
-                            <Plus className="h-3 w-3" />
-                            <span>Adicionar Frase</span>
-                          </button>
-                        </div>
+                              toast.success("Faixa animada ativada!");
+                            } else {
+                              setData((prev) => ({
+                                ...prev,
+                                marquee: [],
+                              }));
+                              toast.info("Faixa animada desativada.");
+                            }
+                          }}
+                          className="rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500/20"
+                        />
+                      </div>
 
-                        {/* Lista de Frases */}
-                        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-                          {data.marquee.map((item, idx) => {
-                            const textVal = typeof item === "string" ? item : item.text;
-                            const iconVal = typeof item === "object" ? item.icon || "" : "";
-                            return (
-                              <div key={item.id || idx} className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 p-2">
-                                <input
-                                  type="text"
-                                  value={iconVal}
-                                  placeholder="★"
-                                  title="Emoji ou Ícone"
-                                  onChange={(e) => {
-                                    const newIcon = e.target.value;
-                                    setData((prev) => {
-                                      const nextMarquee = [...(prev.marquee || [])];
-                                      const current = nextMarquee[idx];
-                                      if (typeof current === "string") {
-                                        nextMarquee[idx] = { id: `m_${idx}`, text: current, icon: newIcon };
-                                      } else {
-                                        nextMarquee[idx] = { ...current, icon: newIcon };
-                                      }
-                                      return { ...prev, marquee: nextMarquee };
-                                    });
-                                  }}
-                                  className="w-10 rounded border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-center text-xs text-zinc-200 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none"
-                                />
-                                <input
-                                  type="text"
-                                  value={textVal}
-                                  placeholder="Digite a frase..."
-                                  onChange={(e) => {
-                                    const newText = e.target.value;
-                                    setData((prev) => {
-                                      const nextMarquee = [...(prev.marquee || [])];
-                                      const current = nextMarquee[idx];
-                                      if (typeof current === "string") {
-                                        nextMarquee[idx] = { id: `m_${idx}`, text: newText };
-                                      } else {
-                                        nextMarquee[idx] = { ...current, text: newText };
-                                      }
-                                      return { ...prev, marquee: nextMarquee };
-                                    });
-                                  }}
-                                  className="flex-1 rounded border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
-                                />
+                      {data.marquee && data.marquee.length > 0 && (
+                        <div className="space-y-3 pt-2 border-t border-zinc-800/60">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[10px] font-semibold uppercase text-zinc-400">
+                              Frases ativas ({data.marquee.length})
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newId = `m_${Date.now()}`;
+                                setData((prev) => ({
+                                  ...prev,
+                                  marquee: [
+                                    ...(prev.marquee || []),
+                                    { id: newId, text: "NOVO DIFERENCIAL EXCLUSIVO", icon: "✦" },
+                                  ],
+                                }));
+                                toast.success("Nova frase adicionada!");
+                              }}
+                              className="text-[10px] text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"
+                            >
+                              <Plus className="h-3 w-3" />
+                              <span>Adicionar Frase</span>
+                            </button>
+                          </div>
+
+                          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                            {data.marquee.map((item, idx) => {
+                              const textVal = typeof item === "string" ? item : item.text;
+                              const iconVal = typeof item === "object" ? item.icon || "" : "";
+                              return (
+                                <div key={item.id || idx} className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 p-2">
+                                  <input
+                                    type="text"
+                                    value={iconVal}
+                                    placeholder="★"
+                                    title="Emoji ou Ícone"
+                                    onChange={(e) => {
+                                      const newIcon = e.target.value;
+                                      setData((prev) => {
+                                        const nextMarquee = [...(prev.marquee || [])];
+                                        const current = nextMarquee[idx];
+                                        if (typeof current === "string") {
+                                          nextMarquee[idx] = { id: `m_${idx}`, text: current, icon: newIcon };
+                                        } else {
+                                          nextMarquee[idx] = { ...current, icon: newIcon };
+                                        }
+                                        return { ...prev, marquee: nextMarquee };
+                                      });
+                                    }}
+                                    className="w-10 rounded border border-zinc-800 bg-zinc-950 px-2 py-1.5 text-center text-xs text-zinc-200 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none"
+                                  />
+                                  <input
+                                    type="text"
+                                    value={textVal}
+                                    placeholder="Digite a frase..."
+                                    onChange={(e) => {
+                                      const newText = e.target.value;
+                                      setData((prev) => {
+                                        const nextMarquee = [...(prev.marquee || [])];
+                                        const current = nextMarquee[idx];
+                                        if (typeof current === "string") {
+                                          nextMarquee[idx] = { id: `m_${idx}`, text: newText };
+                                        } else {
+                                          nextMarquee[idx] = { ...current, text: newText };
+                                        }
+                                        return { ...prev, marquee: nextMarquee };
+                                      });
+                                    }}
+                                    className="flex-1 rounded border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setData((prev) => ({
+                                        ...prev,
+                                        marquee: (prev.marquee || []).filter((_, i) => i !== idx),
+                                      }));
+                                      toast.info("Frase removida.");
+                                    }}
+                                    className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors rounded hover:bg-zinc-800 cursor-pointer"
+                                    title="Remover frase"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              );
+                            })}
+                          </div>
+
+                          <div className="pt-1">
+                            <span className="block text-[10px] text-zinc-500 mb-1.5">Sugestões rápidas para adicionar:</span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {[
+                                { text: "★ 4.9 NO GOOGLE", icon: "★" },
+                                { text: "ATENDIMENTO PERSONALIZADO", icon: "💎" },
+                                { text: "SATISFAÇÃO GARANTIDA", icon: "🛡️" },
+                                { text: "EXPERIÊNCIA PREMIUM", icon: "✦" },
+                                { text: "EQUIPE QUALIFICADA", icon: "⚡" },
+                              ].map((sug, sIdx) => (
                                 <button
+                                  key={sIdx}
                                   type="button"
                                   onClick={() => {
                                     setData((prev) => ({
                                       ...prev,
-                                      marquee: (prev.marquee || []).filter((_, i) => i !== idx),
+                                      marquee: [
+                                        ...(prev.marquee || []),
+                                        { id: `sug_${Date.now()}_${sIdx}`, text: sug.text, icon: sug.icon },
+                                      ],
                                     }));
-                                    toast.info("Frase removida.");
+                                    toast.success(`"${sug.text}" adicionada!`);
                                   }}
-                                  className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors rounded hover:bg-zinc-900"
-                                  title="Remover frase"
+                                  className="rounded-full border border-zinc-800 bg-zinc-950/80 px-2.5 py-1 text-[10px] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors"
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" />
+                                  +{sug.icon} {sug.text}
                                 </button>
-                              </div>
-                            );
-                          })}
-                        </div>
-
-                        {/* Sugestões Rápidas de Nicho */}
-                        <div className="pt-1">
-                          <span className="block text-[10px] text-zinc-500 mb-1.5">Sugestões rápidas para adicionar:</span>
-                          <div className="flex flex-wrap gap-1.5">
-                            {[
-                              { text: "★ 4.9 NO GOOGLE", icon: "★" },
-                              { text: "ATENDIMENTO PERSONALIZADO", icon: "💎" },
-                              { text: "SATISFAÇÃO GARANTIDA", icon: "🛡️" },
-                              { text: "EXPERIÊNCIA PREMIUM", icon: "✦" },
-                              { text: "EQUIPE QUALIFICADA", icon: "⚡" },
-                            ].map((sug, sIdx) => (
-                              <button
-                                key={sIdx}
-                                type="button"
-                                onClick={() => {
-                                  setData((prev) => ({
-                                    ...prev,
-                                    marquee: [
-                                      ...(prev.marquee || []),
-                                      { id: `sug_${Date.now()}_${sIdx}`, text: sug.text, icon: sug.icon },
-                                    ],
-                                  }));
-                                  toast.success(`"${sug.text}" adicionada!`);
-                                }}
-                                className="rounded-full border border-zinc-800 bg-zinc-950/80 px-2.5 py-1 text-[10px] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors"
-                              >
-                                +{sug.icon} {sug.text}
-                              </button>
-                            ))}
+                              ))}
+                            </div>
                           </div>
                         </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. SUB-ABA: MÍDIA & GALERIA */}
+                {adjustmentTab === "media" && (
+                  <div className="space-y-4 animate-in fade-in-50 duration-150">
+                    {/* Vídeo em Loop */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] font-semibold uppercase text-zinc-400 flex items-center gap-1.5 tracking-wider">
+                          <Video className="h-3.5 w-3.5 text-zinc-400" />
+                          <span>Vídeo de Fundo no Hero (Opcional)</span>
+                        </label>
+                        {data.hero.backgroundVideo && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setData((prev) => ({
+                                ...prev,
+                                hero: { ...prev.hero, backgroundVideo: undefined },
+                              }));
+                              toast.info("Vídeo removido. Usando foto de capa.");
+                            }}
+                            className="text-[10px] text-zinc-400 hover:text-red-400 transition-colors"
+                          >
+                            Remover Vídeo
+                          </button>
+                        )}
                       </div>
-                    )}
+                      <input
+                        type="url"
+                        value={data.hero.backgroundVideo || ""}
+                        onChange={(e) => {
+                          const val = e.target.value.trim();
+                          setData((prev) => ({
+                            ...prev,
+                            hero: { ...prev.hero, backgroundVideo: val || undefined },
+                          }));
+                        }}
+                        placeholder="https://exemplo.com/video-ambiente.mp4"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                      />
+                      {data.hero.backgroundVideo && (
+                        <p className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
+                          <CheckCircle2 className="h-3 w-3" /> Vídeo ativo em loop no Hero (substitui foto de fundo)
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Galeria de Fotos */}
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <span className="text-xs font-semibold text-zinc-200 block">
+                            Fotos do Acervo ({data.gallery.length})
+                          </span>
+                          <span className="text-[10px] text-zinc-400">
+                            Clique em uma foto para defini-la como Capa do Hero
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="text-xs text-zinc-200 hover:text-white font-medium flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 border border-zinc-700 transition cursor-pointer"
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                          <span>Adicionar Fotos</span>
+                        </button>
+                      </div>
+
+                      {data.gallery.length === 0 ? (
+                        <div className="p-8 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 text-zinc-400 text-xs space-y-2">
+                          <ImageIcon className="h-8 w-8 mx-auto text-zinc-600" />
+                          <p className="font-medium text-zinc-300">Nenhuma foto no acervo</p>
+                          <p className="text-[11px] text-zinc-500">Clique em "+ Adicionar Fotos" para enviar fotos do negócio.</p>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                          {data.gallery.map((photo, idx) => (
+                            <div
+                              key={photo.id || idx}
+                              onClick={() => {
+                                setData((prev) => ({
+                                  ...prev,
+                                  hero: { ...prev.hero, backgroundImage: photo.url },
+                                }));
+                                toast.success("Foto definida como Capa do Hero!");
+                              }}
+                              className={`relative h-20 rounded-xl overflow-hidden border cursor-pointer group transition-all ${
+                                data.hero.backgroundImage === photo.url
+                                  ? "border-amber-400 ring-2 ring-amber-400/50 shadow-md"
+                                  : "border-zinc-800 hover:border-zinc-600"
+                              }`}
+                            >
+                              <img src={photo.url} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                              {data.hero.backgroundImage === photo.url && (
+                                <span className="absolute top-1.5 right-1.5 rounded-full bg-amber-400 text-zinc-950 text-[8px] font-bold px-1.5 py-0.5 shadow">
+                                  Capa
+                                </span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* 5. SUB-ABA: CONTATO & LOCALIZAÇÃO */}
+                {adjustmentTab === "contact" && (
+                  <div className="space-y-4 animate-in fade-in-50 duration-150">
+                    {/* WhatsApp */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] text-zinc-400 uppercase font-semibold block tracking-wider">
+                          WhatsApp de Atendimento
+                        </label>
+                        {data.whatsapp && (
+                          <a
+                            href={`https://wa.me/55${data.whatsapp.replace(/\D/g, "")}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-medium"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            <span>Testar wa.me</span>
+                          </a>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={data.whatsapp}
+                        onChange={(e) => setData({ ...data, whatsapp: e.target.value })}
+                        placeholder="Ex: 11999998888"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none font-mono"
+                      />
+                      <p className="text-[10px] text-zinc-500">
+                        Usado nos botões de conversão e pedidos diretos do site.
+                      </p>
+                    </div>
+
+                    {/* Endereço */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] text-zinc-400 uppercase font-semibold block tracking-wider">
+                          Endereço Completo
+                        </label>
+                        {data.address && (
+                          <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(data.address)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[10px] text-amber-400 hover:text-amber-300 flex items-center gap-1 font-medium"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                            <span>Abrir no Maps</span>
+                          </a>
+                        )}
+                      </div>
+                      <input
+                        type="text"
+                        value={data.address || ""}
+                        onChange={(e) => setData({ ...data, address: e.target.value })}
+                        placeholder="Ex: Av. Paulista, 1000 - Bela Vista, São Paulo - SP"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Horário de Atendimento */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block tracking-wider flex items-center gap-1.5">
+                        <Clock className="h-3.5 w-3.5 text-zinc-400" />
+                        <span>Horário de Funcionamento</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={data.openingHours || ""}
+                        onChange={(e) => setData({ ...data, openingHours: e.target.value })}
+                        placeholder="Ex: Seg a Sex: 08h às 19h | Sáb: 08h às 14h"
+                        className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                      />
+                    </div>
+
+                    {/* Avaliação Google */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3.5 space-y-2.5">
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block tracking-wider flex items-center gap-1.5">
+                        <Star className="h-3.5 w-3.5 text-amber-400 fill-amber-400" />
+                        <span>Avaliação no Google (Nota de Autoridade)</span>
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="number"
+                          step="0.1"
+                          min="1.0"
+                          max="5.0"
+                          value={data.rating || 5.0}
+                          onChange={(e) => setData({ ...data, rating: parseFloat(e.target.value) || 5.0 })}
+                          className="w-24 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-bold text-amber-400 text-center focus:border-zinc-600 focus:outline-none"
+                        />
+                        <div className="flex items-center gap-1 text-amber-400 text-sm">
+                          {"★".repeat(Math.round(data.rating || 5))}
+                          <span className="text-[11px] text-zinc-400 ml-1.5 font-normal">
+                            Exibido nos selos de confiança do site
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Botão de Salvar no Rodapé Mobile */}
-              <div className="lg:hidden pt-2 pb-6">
+              <div className="lg:hidden p-3 border-t border-zinc-800/60 bg-zinc-950/80">
                 <button
                   type="button"
                   onClick={handleSaveAndPublish}

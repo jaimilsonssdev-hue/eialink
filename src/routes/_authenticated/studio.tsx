@@ -218,6 +218,13 @@ function buildInitialCreativePlan(current: CinematicPageData): CreativePlan {
   };
 }
 
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return "Bom dia, como vão as coisas?";
+  if (hour >= 12 && hour < 18) return "Boa tarde, como vão as coisas?";
+  return "Boa noite, como vão as coisas?";
+}
+
 export const Route = createFileRoute("/_authenticated/studio")({
   component: CinematicStudioPage,
   validateSearch: z.object({
@@ -276,19 +283,7 @@ export default function CinematicStudioPage() {
   // Estados de Chat e IA (Fluxo de Plano Criativo & Aprovação)
   const [aiPrompt, setAiPrompt] = useState("");
   const [isRefiningAi, setIsRefiningAi] = useState(false);
-  const [messages, setMessages] = useState<StudioChatMessage[]>(() => {
-    const defaults = createDefaultCinematicData();
-    const plan = buildInitialCreativePlan(defaults);
-    return [
-      {
-        id: "welcome",
-        sender: "agent",
-        text: "Olá! Sou seu Diretor de Arte. Preparei duas abordagens conceituais exclusivas para começarmos. Você pode espiar cada uma ao lado com 1 clique ou me dizer o que gostaria de personalizar!",
-        plan,
-        timestamp: "Agora",
-      },
-    ];
-  });
+  const [messages, setMessages] = useState<StudioChatMessage[]>([]);
 
   // Prévia Temporária de Opção (Espiar antes de aprovar)
   const [temporaryPreview, setTemporaryPreview] = useState<{
@@ -387,17 +382,6 @@ export default function CinematicStudioPage() {
           finalData = convertBioPageToCinematic(bio);
         }
         setData(finalData);
-
-        const initialPlan = buildInitialCreativePlan(finalData);
-        setMessages([
-          {
-            id: "page-loaded",
-            sender: "agent",
-            text: `Página "${bio.display_name}" carregada no Studio com sucesso! Preparei 2 direções criativas sob medida para a sua marca. Você pode espiar qualquer uma no canvas ao lado com 1 clique, aprovar a sua favorita ou me pedir alterações diretamente no chat!`,
-            plan: initialPlan,
-            timestamp: "Agora",
-          },
-        ]);
       });
   }, [requestedPageId]);
 
@@ -1183,11 +1167,27 @@ export default function CinematicStudioPage() {
                 <span>Ajustes</span>
               </button>
             </div>
-            {temporaryPreview && (
-              <span className="text-[10px] text-amber-400 font-mono bg-amber-950/40 border border-amber-800/40 px-2 py-0.5 rounded-md animate-pulse">
-                Modo Espiar
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {messages.length > 0 && activeTab === "chat" && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMessages([]);
+                    setTemporaryPreview(null);
+                  }}
+                  className="text-[11px] text-zinc-400 hover:text-zinc-200 flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-zinc-800/80 transition-colors cursor-pointer"
+                  title="Iniciar nova conversa limpa"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Nova conversa</span>
+                </button>
+              )}
+              {temporaryPreview && (
+                <span className="text-[10px] text-amber-400 font-mono bg-amber-950/40 border border-amber-800/40 px-2 py-0.5 rounded-md animate-pulse">
+                  Modo Espiar
+                </span>
+              )}
+            </div>
           </div>
 
           {/* 2. Conteúdo da Aba 1: FLUXO DE PLANO CRIATIVO & APROVAÇÃO */}
@@ -1195,41 +1195,20 @@ export default function CinematicStudioPage() {
             <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-zinc-950">
               {/* Feed de Mensagens Rolável */}
               <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 space-y-3.5 flex flex-col">
-                {/* Saudação Central Estilo ChatGPT / Claude Code / Lovable */}
-                {messages.length <= 1 && (
-                  <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 space-y-3.5 shadow-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 border border-zinc-700/60 text-amber-400 shadow-md">
-                        <Sparkles className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="text-sm font-semibold tracking-tight text-zinc-100">
-                          Copiloto Criativo • {data.businessName || "Sua Marca"}
-                        </h3>
-                        <p className="text-[11px] text-zinc-400 leading-tight">
-                          O que você gostaria de criar ou refinar na sua vitrine hoje?
-                        </p>
-                      </div>
+                {/* Saudação Central Estilo Claude.ai (apenas quando não houver mensagens) */}
+                {messages.length === 0 && (
+                  <div className="flex flex-1 flex-col items-center justify-center py-12 px-4 my-auto text-center max-w-lg mx-auto w-full select-none">
+                    <div className="text-3xl sm:text-4xl text-[#d97706] mb-3 font-serif">
+                      ✳
                     </div>
+                    <h2 className="text-xl sm:text-2xl font-serif tracking-tight text-zinc-100 font-normal mb-2">
+                      {getGreeting()}
+                    </h2>
+                    <p className="text-xs text-zinc-400 mb-6">
+                      Como posso ajudar a transformar sua vitrine digital hoje?
+                    </p>
 
-                    {/* Cards de Ações Rápidas (Grid 2 Colunas) */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleSendMessage("Elabore uma nova proposta de direção de arte com 2 opções conceituais exclusivas para este negócio.");
-                        }}
-                        className="group flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 text-left hover:border-zinc-700 hover:bg-zinc-800/40 transition-all cursor-pointer"
-                      >
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 group-hover:text-amber-400">
-                          <Sparkles className="h-3 w-3" />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="block text-xs font-semibold text-zinc-200 group-hover:text-white">Novo Conceito Visual</span>
-                          <span className="block text-[10px] text-zinc-400 line-clamp-1">2 direções conceituais</span>
-                        </div>
-                      </button>
-
+                    <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
                       <button
                         type="button"
                         onClick={() => {
@@ -1238,17 +1217,23 @@ export default function CinematicStudioPage() {
                             marqueeSpeed: 180,
                             theme: { ...prev.theme, marqueeSpeed: 180 },
                           }));
-                          toast.success("Velocidade da faixa reduzida para 180s (Flutuante)!");
+                          toast.success("Velocidade da faixa ajustada para 180s (Flutuante)!");
                         }}
-                        className="group flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 text-left hover:border-zinc-700 hover:bg-zinc-800/40 transition-all cursor-pointer"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
                       >
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-amber-400">
-                          <Zap className="h-3 w-3" />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="block text-xs font-semibold text-zinc-200 group-hover:text-white">Faixa 180s Flutuante</span>
-                          <span className="block text-[10px] text-zinc-400 line-clamp-1">Desacelerar animação da faixa</span>
-                        </div>
+                        <Zap className="h-3 w-3 text-amber-400" />
+                        <span>Faixa 180s Flutuante</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSendMessage("Elabore uma nova proposta de direção de arte com 2 opções conceituais exclusivas para este negócio.");
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
+                      >
+                        <Sparkles className="h-3 w-3 text-zinc-400" />
+                        <span>Novo Conceito</span>
                       </button>
 
                       <button
@@ -1266,15 +1251,10 @@ export default function CinematicStudioPage() {
                           }));
                           toast.success("Modo Claro Editorial ativado!");
                         }}
-                        className="group flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 text-left hover:border-zinc-700 hover:bg-zinc-800/40 transition-all cursor-pointer"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
                       >
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-amber-300">
-                          <Sun className="h-3 w-3" />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="block text-xs font-semibold text-zinc-200 group-hover:text-white">Modo Claro Editorial</span>
-                          <span className="block text-[10px] text-zinc-400 line-clamp-1">Fundo níveo e fontes serif</span>
-                        </div>
+                        <Sun className="h-3 w-3 text-amber-400" />
+                        <span>Modo Claro</span>
                       </button>
 
                       <button
@@ -1282,15 +1262,9 @@ export default function CinematicStudioPage() {
                         onClick={() => {
                           handleSendMessage("Reescreva a Headline e o Subtítulo da Hero com copywriting magnético, poético e sensorial de alta conversão.");
                         }}
-                        className="group flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 text-left hover:border-zinc-700 hover:bg-zinc-800/40 transition-all cursor-pointer"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
                       >
-                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 group-hover:text-white">
-                          <Bot className="h-3 w-3" />
-                        </div>
-                        <div className="min-w-0">
-                          <span className="block text-xs font-semibold text-zinc-200 group-hover:text-white">Headline Magnética</span>
-                          <span className="block text-[10px] text-zinc-400 line-clamp-1">Copywriting de alto impacto</span>
-                        </div>
+                        <span>🎯 Headline Magnética</span>
                       </button>
                     </div>
                   </div>
@@ -1681,7 +1655,7 @@ export default function CinematicStudioPage() {
                         handleSendMessage();
                       }
                     }}
-                    placeholder="Cole um link do Maps, anexe um PDF/fotos ou descreva alterações..."
+                    placeholder="Como posso ajudar você hoje?"
                     className="w-full resize-none bg-transparent px-2.5 py-1.5 text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none [scrollbar-width:none]"
                   />
 

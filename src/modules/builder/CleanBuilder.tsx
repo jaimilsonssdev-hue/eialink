@@ -31,6 +31,8 @@ import {
 import { toast } from "sonner";
 import { PageService } from "@/modules/page/services/PageService";
 import type { CinematicPageData } from "@/modules/cinematic/types";
+import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
+import { TemplateRenderer } from "@/modules/templates/components/TemplateRenderer";
 
 // Opções oficiais dos 5 Modelos de Site
 const TEMPLATE_OPTIONS = [
@@ -175,6 +177,7 @@ export function CleanBuilder() {
   // Visualização e Abas
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [activeTab, setActiveTab] = useState<"texts" | "products" | "style" | "contact">("texts");
+  const [previewEngine, setPreviewEngine] = useState<"live" | "server">("live");
 
   useEffect(() => {
     loadPageData();
@@ -522,30 +525,63 @@ export function CleanBuilder() {
           </div>
         </div>
 
-        {/* Controles Centrais: Alternar Tela */}
-        <div className="hidden sm:flex items-center gap-1 rounded-xl bg-black/40 p-1 border border-white/10">
-          <button
-            type="button"
-            onClick={() => setViewMode("mobile")}
-            className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-              viewMode === "mobile" ? "bg-white/15 text-white shadow" : "text-zinc-400 hover:text-white"
-            }`}
-            title="Visualização Mobile (Celular)"
-          >
-            <Smartphone className="h-3.5 w-3.5" />
-            <span>Mobile</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode("desktop")}
-            className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-              viewMode === "desktop" ? "bg-white/15 text-white shadow" : "text-zinc-400 hover:text-white"
-            }`}
-            title="Visualização Desktop"
-          >
-            <Monitor className="h-3.5 w-3.5" />
-            <span>Desktop</span>
-          </button>
+        {/* Controles Centrais: Alternar Tela & Modo de Prévia */}
+        <div className="flex items-center gap-2">
+          <div className="hidden sm:flex items-center gap-1 rounded-xl bg-black/40 p-1 border border-white/10">
+            <button
+              type="button"
+              onClick={() => setViewMode("mobile")}
+              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === "mobile" ? "bg-white/15 text-white shadow" : "text-zinc-400 hover:text-white"
+              }`}
+              title="Visualização Mobile (Celular)"
+            >
+              <Smartphone className="h-3.5 w-3.5" />
+              <span>Mobile</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode("desktop")}
+              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === "desktop" ? "bg-white/15 text-white shadow" : "text-zinc-400 hover:text-white"
+              }`}
+              title="Visualização Desktop"
+            >
+              <Monitor className="h-3.5 w-3.5" />
+              <span>Desktop</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-1 rounded-xl bg-black/40 p-1 border border-white/10">
+            <button
+              type="button"
+              onClick={() => setPreviewEngine("live")}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                previewEngine === "live"
+                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+              title="Prévia reativa em tempo real (0ms de delay)"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span>Ao Vivo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPreviewEngine("server");
+                setPreviewKey(Date.now());
+              }}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                previewEngine === "server"
+                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+              title="Prévia direta do servidor (Iframe publicado)"
+            >
+              <span>Servidor</span>
+            </button>
+          </div>
         </div>
 
         {/* Ações da Direita */}
@@ -1270,14 +1306,143 @@ export function CleanBuilder() {
               </div>
             )}
 
-            {/* Simulação do Iframe atualizado */}
+            {/* Simulação do Visualizador Vivo ou Iframe */}
             <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgColor }}>
-              <iframe
-                key={previewKey}
-                title="Preview do Site"
-                src={`/p/${pageRecord.slug}?t=${previewKey}`}
-                className="w-full h-full border-none"
-              />
+              {previewEngine === "live" ? (
+                templateId === "cinematic-glass" || templateId === "cinematic-scrolly" ? (
+                  <CinematicViewer
+                    data={{
+                      businessName: businessName || "Sua Marca",
+                      niche: pageRecord?.niche || "Geral",
+                      whatsapp: whatsapp.replace(/\D/g, ""),
+                      address,
+                      rating: pageRecord?.google_rating || 4.9,
+                      archetype: archetype as any,
+                      theme: {
+                        bg: bgColor,
+                        accent: accentColor,
+                        fontHeading: fontFamily === "serif" ? "serif" : fontFamily === "display" ? "display" : "sans",
+                        parallaxEnabled: false,
+                        borderStyle: borderRadius === "sharp" ? "sharp" : borderRadius === "pill" ? "pill" : "glass",
+                        headingStyle,
+                        archetype: archetype as any,
+                      },
+                      hero: {
+                        title: headline || businessName || "Sua Marca",
+                        subtitle: subtitle || "Atendimento exclusivo e produtos de qualidade para você.",
+                        tagline: valueProp || "O MELHOR DA CIDADE",
+                        backgroundImage: coverUrl,
+                        ctaText: ctaText || "Pedir pelo WhatsApp",
+                        ctaLink: `https://wa.me/${whatsapp.replace(/\D/g, "")}`,
+                        floatingBadge: "★ 4.9 NO GOOGLE",
+                      },
+                      highlights: items.map((i) => ({
+                        id: i.id,
+                        title: i.title,
+                        description: i.subtitle,
+                        price: i.price,
+                        badge: i.badge || "Destaque",
+                        image: i.imageUrl || coverUrl,
+                      })),
+                      bentoGrid: [
+                        {
+                          id: "b1",
+                          title: "Atendimento Rápido",
+                          description: "Peça e receba atendimento instantâneo pelo WhatsApp.",
+                          size: "large",
+                          metric: "100%",
+                          badge: "Garantia",
+                        },
+                        {
+                          id: "b2",
+                          title: "Qualidade Comprovada",
+                          description: "Aprovado pelos clientes mais exigentes.",
+                          size: "medium",
+                          metric: "4.9★",
+                          badge: "Destaque",
+                        },
+                        {
+                          id: "b3",
+                          title: "Facilidade de Pagamento",
+                          description: "Aceitamos Pix, cartões e entrega rápida.",
+                          size: "small",
+                          badge: "Prático",
+                        },
+                      ],
+                      gallery: items.filter((i) => i.imageUrl).map((i, idx) => ({
+                        id: `gal_${idx}`,
+                        url: i.imageUrl,
+                        caption: i.title,
+                        category: i.badge || "Vitrine",
+                      })),
+                    }}
+                    isEmbedded={true}
+                  />
+                ) : (
+                  <TemplateRenderer
+                    bio={
+                      {
+                        id: pageRecord?.id || "preview_id",
+                        slug: pageRecord?.slug || "preview",
+                        display_name: businessName || "Sua Marca",
+                        description: subtitle || aboutText,
+                        avatar_url: avatarUrl,
+                        cover_url: coverUrl,
+                        whatsapp: whatsapp.replace(/\D/g, ""),
+                        whatsapp_message: `Olá! Vim pelo site da ${businessName || "empresa"} e gostaria de informações.`,
+                        template_id: templateId,
+                        theme: "aurora",
+                        motion_enabled: false,
+                        social_links: {
+                          address,
+                          google_rating: pageRecord?.google_rating || 4.9,
+                          archetype,
+                          theme: {
+                            bg: bgColor,
+                            accent: accentColor,
+                            archetype,
+                            headingStyle,
+                          },
+                          custom_theme: {
+                            bg: bgColor,
+                            accent: accentColor,
+                            archetype,
+                            headingStyle,
+                            borderRadius,
+                            boxEffect,
+                            mode: themeMode,
+                          },
+                        },
+                      } as any
+                    }
+                    links={[]}
+                    onTrack={() => {}}
+                    onShare={() => {}}
+                    products={items.map((i) => {
+                      const rawPrice = parseFloat(i.price.replace(/[^\d,.-]/g, "").replace(",", "."));
+                      return {
+                        id: i.id,
+                        page_id: pageRecord?.id || "",
+                        title: i.title,
+                        description: i.subtitle,
+                        price: isNaN(rawPrice) ? 0 : rawPrice,
+                        image_url: i.imageUrl || coverUrl,
+                        category: i.badge || "Destaques",
+                        active: true,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString(),
+                      };
+                    })}
+                  />
+                )
+              ) : (
+                <iframe
+                  key={previewKey}
+                  title="Preview do Site"
+                  src={`/p/${pageRecord?.slug || ""}?t=${previewKey}`}
+                  className="w-full h-full border-none"
+                />
+              )}
             </div>
           </div>
         </main>

@@ -241,6 +241,98 @@ export function TemplateRenderer({
         } as CSSProperties
       }
     >
+      <style>{`
+        /* 1. NEOBRUTALISMO POP */
+        .archetype-neobrutalism h1,
+        .archetype-neobrutalism h2,
+        .archetype-neobrutalism h3 {
+          text-transform: uppercase !important;
+          font-weight: 900 !important;
+          letter-spacing: -0.03em !important;
+        }
+        .archetype-neobrutalism .bg-card,
+        .archetype-neobrutalism article {
+          border-width: 2px !important;
+          border-style: solid !important;
+          border-color: #000000 !important;
+          box-shadow: 4px 4px 0px #000000 !important;
+          border-radius: 0.75rem !important;
+        }
+        .archetype-neobrutalism a[class*="rounded-"],
+        .archetype-neobrutalism button[class*="rounded-"],
+        .archetype-neobrutalism .public-profile-action-whatsapp {
+          border: 2px solid #000000 !important;
+          box-shadow: 4px 4px 0px #000000 !important;
+          text-transform: uppercase !important;
+          font-weight: 900 !important;
+          border-radius: 0.5rem !important;
+          transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        .archetype-neobrutalism a[class*="rounded-"]:active,
+        .archetype-neobrutalism button[class*="rounded-"]:active {
+          transform: translate(2px, 2px) !important;
+          box-shadow: 1px 1px 0px #000000 !important;
+        }
+
+        /* 2. EDITORIAL SUÍÇO / QUIET LUXURY */
+        .archetype-editorial h1,
+        .archetype-editorial h2,
+        .archetype-editorial h3 {
+          font-family: Georgia, serif !important;
+          font-style: italic !important;
+          font-weight: 400 !important;
+          letter-spacing: 0.02em !important;
+        }
+        .archetype-editorial [class*="rounded-"],
+        .archetype-editorial .bg-card,
+        .archetype-editorial article,
+        .archetype-editorial a[class*="rounded-"],
+        .archetype-editorial button[class*="rounded-"] {
+          border-radius: 0px !important;
+        }
+        .archetype-editorial a[class*="rounded-"],
+        .archetype-editorial button[class*="rounded-"] {
+          letter-spacing: 0.18em !important;
+          text-transform: uppercase !important;
+          font-size: 0.75rem !important;
+          font-weight: 600 !important;
+          border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        }
+
+        /* 3. BENTO HIGH-TECH */
+        .archetype-bento h1,
+        .archetype-bento h2 {
+          background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%) !important;
+          -webkit-background-clip: text !important;
+          -webkit-text-fill-color: transparent !important;
+          font-weight: 900 !important;
+          letter-spacing: -0.04em !important;
+        }
+        .archetype-bento [class*="rounded-"],
+        .archetype-bento .bg-card,
+        .archetype-bento article {
+          border-radius: 1.5rem !important;
+        }
+        .archetype-bento a[class*="rounded-"],
+        .archetype-bento button[class*="rounded-"] {
+          border-radius: 9999px !important;
+          font-weight: 700 !important;
+        }
+
+        /* 4. CINEMATOGRÁFICO GLASS */
+        .archetype-cinematic h1,
+        .archetype-cinematic h2 {
+          text-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+          letter-spacing: -0.02em !important;
+        }
+        .archetype-cinematic [class*="rounded-"],
+        .archetype-cinematic .bg-card,
+        .archetype-cinematic article {
+          border-radius: 1.25rem !important;
+          backdrop-filter: blur(20px) !important;
+          box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5) !important;
+        }
+      `}</style>
       {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, bookingUrl, supplemental })}
       {model.template.layout !== "site-maquina" && model.template.layout !== "cinematic" && <PublicSocialLinks bio={renderedBio} onTrack={onTrack} />}
       {!model.template.components.includes("footer") && <Footer />}

@@ -589,20 +589,36 @@ function PublicBio() {
     effectiveAvatarUrl = generateSvgAvatar(bio.display_name, nicheKey);
   }
 
-  const isSiteMaquina = effectiveTemplateId === "site-maquina";
-  const isCinematic = effectiveTemplateId === "cinematic-glass";
+  const isCinematic = effectiveTemplateId === "cinematic-glass" || effectiveTemplateId === "cinematic-scrolly" || !effectiveTemplateId;
   const isStore = effectiveTemplateId === "store-showcase" || effectiveTemplateId === "storefront";
   const isFullPageChat = effectiveTemplateId === "ai-chat-agent";
-  const cinematicData = (bio.social_links as Record<string, any>)?.cinematic_data as CinematicPageData | undefined;
+  const rawSocial = (bio.social_links as Record<string, any>) || {};
+  const cinematicData = (rawSocial.cinematic_data || rawSocial.cinematicData) as CinematicPageData | undefined;
 
   if (isCinematic && cinematicData) {
+    const customTheme = rawSocial.custom_theme || rawSocial.theme || {};
+    const appliedArchetype = customTheme.archetype || cinematicData.archetype || (cinematicData.theme as any)?.archetype || "cinematic";
+    const appliedHeadingStyle = customTheme.headingStyle || (cinematicData.theme as any)?.headingStyle || "default";
+
+    const hydratedCinematicData: CinematicPageData = {
+      ...cinematicData,
+      archetype: appliedArchetype as any,
+      theme: {
+        ...cinematicData.theme,
+        archetype: appliedArchetype as any,
+        headingStyle: appliedHeadingStyle as any,
+        bg: customTheme.bg || cinematicData.theme?.bg || "#0a0a0c",
+        accent: customTheme.accent || cinematicData.theme?.accent || "#f59e0b",
+      },
+    };
+
     return (
       <div className="min-h-screen w-full overflow-x-hidden bg-[#0a0a0c]">
         {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
         <div className="w-full max-w-2xl mx-auto px-3 pt-2">
           <PwaInstallBanner companyName={bio.display_name} avatarUrl={effectiveAvatarUrl || bio.avatar_url} />
         </div>
-        <CinematicViewer data={cinematicData} />
+        <CinematicViewer data={hydratedCinematicData} />
         {isTriageActive && bio.whatsapp && (
           <WhatsAppTriageModal
             isOpen={isTriageOpen}

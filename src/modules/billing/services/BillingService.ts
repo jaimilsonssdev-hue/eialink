@@ -1,5 +1,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import {
+  adminListAllPlansFn,
+  getPublicPlansFn,
+  adminUpsertPlanFn,
+  adminDeletePlanFn,
+} from "@/utils/plans.functions";
+import {
   ESSENTIAL_FEATURES,
   ESSENTIAL_LIMITS,
   toPlanFeatures,
@@ -125,6 +131,12 @@ export const BillingService = {
     if (error) throw error;
   },
   async listPlans(): Promise<Plan[]> {
+    try {
+      const res = await adminListAllPlansFn();
+      if (res && res.length > 0) return res;
+    } catch (e) {
+      console.warn("Falha no adminListAllPlansFn, tentando direto no Supabase:", e);
+    }
     const { data, error } = await supabase.from("plans").select("*").order("position");
     if (error) throw error;
     return data;
@@ -132,6 +144,12 @@ export const BillingService = {
 
   /** Public landing pages may only read plans that are currently available. */
   async listPublicPlans(): Promise<PublicPlan[]> {
+    try {
+      const res = await getPublicPlansFn();
+      if (res && res.length > 0) return res as PublicPlan[];
+    } catch (e) {
+      console.warn("Falha no getPublicPlansFn, tentando direto no Supabase:", e);
+    }
     const { data, error } = await supabase
       .from("plans")
       .select(
@@ -181,17 +199,58 @@ export const BillingService = {
   async updatePlan(
     id: string,
     input: Partial<
-      Pick<Plan, "name" | "description" | "price_cents" | "active" | "limits" | "features">
+      Pick<Plan, "name" | "description" | "price_cents" | "billing_interval" | "active" | "limits" | "features">
     >,
   ) {
-    const { data, error } = await supabase
-      .from("plans")
-      .update(input)
-      .eq("id", id)
-      .select()
-      .single();
-    if (error) throw error;
-    return data;
+    try {
+      const updated = await adminUpsertPlanFn({
+        data: {
+          id,
+          name: input.name || "",
+          slug: (input as any).slug || id,
+          description: input.description,
+          price_cents: input.price_cents ?? 0,
+          billing_interval: (input.billing_interval as any) || "monthly",
+          active: input.active,
+          limits: input.limits as any,
+          features: input.features as any,
+        },
+      });
+      return updated as Plan;
+    } catch (e) {
+      console.warn("Falha no adminUpsertPlanFn, tentando supabase direto:", e);
+      const { data, error } = await supabase
+        .from("plans")
+        .update(input)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    }
+  },
+
+  async createPlan(input: {
+    name: string;
+    slug: string;
+    description?: string | null;
+    price_cents: number;
+    billing_interval?: "monthly" | "yearly" | "one_time";
+    active?: boolean;
+    limits?: Record<string, number>;
+    features?: Record<string, boolean>;
+    position?: number;
+  }): Promise<Plan> {
+    const created = await adminUpsertPlanFn({
+      data: input,
+    });
+    return created as Plan;
+  },
+
+  async deletePlan(id: string): Promise<void> {
+    await adminDeletePlanFn({
+      data: { id },
+    });
   },
 
   async updateService(

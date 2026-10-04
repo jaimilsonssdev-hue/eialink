@@ -23,6 +23,7 @@ import {
   Target,
   Utensils,
   Clapperboard,
+  BookOpen,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
@@ -188,6 +189,18 @@ function AuthedLayout() {
                   <Target className="h-4 w-4 shrink-0 text-zinc-400" />
                   <span>Prospecção</span>
                 </Link>
+                <Link
+                  to="/admin/vendas"
+                  className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${pathname === "/admin/vendas" ? "is-active" : ""}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <BookOpen className="h-4 w-4 shrink-0 text-emerald-400" />
+                    <span>Playbook Vendas</span>
+                  </div>
+                  <span className="rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-1.5 py-0.2 border border-emerald-500/30">
+                    PDF
+                  </span>
+                </Link>
               </div>
             )}
           </nav>
@@ -288,6 +301,19 @@ function AuthedLayout() {
               >
                 <Target className="h-4 w-4 shrink-0 text-zinc-400" />
                 <span>Prospecção</span>
+              </Link>
+              <Link
+                to="/admin/vendas"
+                onClick={() => setOpen(false)}
+                className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${pathname === "/admin/vendas" ? "is-active" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <BookOpen className="h-4 w-4 shrink-0 text-emerald-400" />
+                  <span>Playbook Vendas</span>
+                </div>
+                <span className="rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-1.5 py-0.2 border border-emerald-500/30">
+                  PDF
+                </span>
               </Link>
             </div>
           )}

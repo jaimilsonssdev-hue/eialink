@@ -27,6 +27,10 @@ import {
   Copy,
   KeyRound,
   Zap,
+  Plus,
+  Trash2,
+  BookOpen,
+  FileText,
 } from "lucide-react";
 import { toast } from "sonner";
 import { BillingService } from "@/modules/billing/services/BillingService";
@@ -91,6 +95,7 @@ function AdminPage() {
   const [cityFilter, setCityFilter] = useState("");
   const [publicationFilter, setPublicationFilter] = useState("all");
   const [registeredAfter, setRegisteredAfter] = useState("");
+  const [isCreatingPlan, setIsCreatingPlan] = useState(false);
   const { data } = useQuery({
     queryKey: ["super-admin"],
     queryFn: async () => {
@@ -139,7 +144,37 @@ function AdminPage() {
       id: string;
       input: Parameters<typeof BillingService.updatePlan>[1];
     }) => BillingService.updatePlan(id, input),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["super-admin"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["super-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["public_plans"] });
+      toast.success("Plano atualizado com sucesso! Alterações refletidas na página de vendas (/assinar).");
+    },
+    onError: (err: any) => {
+      toast.error(err instanceof Error ? err.message : "Erro ao atualizar plano.");
+    },
+  });
+  const createPlan = useMutation({
+    mutationFn: (input: Parameters<typeof BillingService.createPlan>[0]) =>
+      BillingService.createPlan(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["super-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["public_plans"] });
+      toast.success("Novo plano criado com sucesso! Já disponível para contratação em /assinar.");
+    },
+    onError: (err: any) => {
+      toast.error(err instanceof Error ? err.message : "Erro ao criar plano.");
+    },
+  });
+  const deletePlan = useMutation({
+    mutationFn: (id: string) => BillingService.deletePlan(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["super-admin"] });
+      queryClient.invalidateQueries({ queryKey: ["public_plans"] });
+      toast.success("Plano removido com sucesso!");
+    },
+    onError: (err: any) => {
+      toast.error(err instanceof Error ? err.message : "Erro ao remover plano.");
+    },
   });
   const updateService = useMutation({
     mutationFn: ({
@@ -269,10 +304,30 @@ function AdminPage() {
             Gestão estratégica de leads, solicitações, limites e assinaturas da plataforma.
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            to="/admin/vendas"
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold px-3.5 py-2 text-xs shadow-sm transition-all"
+            title="Acessar Playbook Comercial, Scripts de Vendas e Simulador de Metas"
+          >
+            <BookOpen className="h-4 w-4" />
+            <span>Playbook de Vendas</span>
+            <span className="rounded-full bg-white/20 text-white text-[10px] px-1.5 py-0.2 uppercase font-extrabold">
+              PDF
+            </span>
+          </Link>
+          <a
+            href="/Playbook_Comercial_EiaLink.pdf"
+            download="Playbook_Comercial_EiaLink.pdf"
+            className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-semibold px-3 py-2 text-xs transition-colors"
+            title="Baixar arquivo PDF diagramado do Playbook Comercial"
+          >
+            <Download className="h-3.5 w-3.5" />
+            <span>Baixar PDF</span>
+          </a>
           <Link
             to="/admin/nfc"
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-3.5 py-2 text-xs font-medium shadow-sm transition-all"
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600/30 border border-emerald-500/30 hover:bg-emerald-600/40 text-emerald-300 px-3.5 py-2 text-xs font-medium shadow-sm transition-all"
           >
             <Radio className="h-4 w-4" />
             <span>Plaquinhas & NFC</span>
@@ -375,21 +430,52 @@ function AdminPage() {
       {/* Planos da Plataforma */}
       <Card className="rounded-xl border border-border bg-card shadow-xs">
         <CardHeader className="p-5 pb-3">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-primary">
-                Planos da Plataforma
+                Planos Comerciais & Precificação
               </p>
               <CardTitle className="text-base font-semibold tracking-tight text-foreground mt-0.5">
-                Limites e Modelos Comerciais
+                Editar Preços & Criar Planos (Sincronizado com /assinar)
               </CardTitle>
+              <CardDescription className="text-xs text-muted-foreground mt-1">
+                Qualquer novo plano ou alteração de valor é atualizado instantaneamente na página de vendas e checkout.
+              </CardDescription>
             </div>
-            <span className="text-xs text-muted-foreground bg-muted px-2.5 py-1 rounded-full border border-border/60">
-              {data?.services.length ?? 0} serviços profissionais ativos
-            </span>
+            <div className="flex items-center gap-2">
+              <a
+                href="/assinar"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background hover:bg-muted/40 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                title="Abrir página de vendas em nova aba para ver como os clientes enxergam"
+              >
+                <ExternalLink className="h-3.5 w-3.5 text-primary" />
+                <span>Ver Página de Vendas</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setIsCreatingPlan(!isCreatingPlan)}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold px-3 py-1.5 text-xs shadow-sm transition-all cursor-pointer"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                <span>{isCreatingPlan ? "Fechar" : "Criar Novo Plano"}</span>
+              </button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-5 pt-2">
+          {isCreatingPlan && (
+            <CreatePlanCard
+              saving={createPlan.isPending}
+              onCreate={(input) => {
+                createPlan.mutate(input);
+                setIsCreatingPlan(false);
+              }}
+              onCancel={() => setIsCreatingPlan(false)}
+            />
+          )}
+
           <div className="grid gap-4 xl:grid-cols-3">
             {data?.plans.map((plan) => (
               <PlanEditor
@@ -397,6 +483,7 @@ function AdminPage() {
                 plan={plan}
                 saving={updatePlan.isPending}
                 onSave={(id, input) => updatePlan.mutate({ id, input })}
+                onDelete={(id) => deletePlan.mutate(id)}
               />
             ))}
           </div>
@@ -873,28 +960,36 @@ function PlanEditor({
   plan,
   saving,
   onSave,
+  onDelete,
 }: {
   plan: Plan;
   saving: boolean;
   onSave: (id: string, input: Parameters<typeof BillingService.updatePlan>[1]) => void;
+  onDelete?: (id: string) => void;
 }) {
   const baseLimits = toPlanLimits(plan.limits);
   const [name, setName] = useState(plan.name);
   const [description, setDescription] = useState(plan.description ?? "");
   const [price, setPrice] = useState(String(plan.price_cents / 100));
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">(
+    plan.billing_interval === "yearly" ? "yearly" : "monthly"
+  );
   const [active, setActive] = useState(plan.active);
   const [limits, setLimits] = useState(baseLimits);
   const priceCents = Math.max(0, Math.round(Number(price.replace(",", ".")) * 100) || 0);
+
   const save = () =>
     onSave(plan.id, {
       name: name.trim() || plan.name,
       description: description.trim() || null,
       price_cents: priceCents,
+      billing_interval: billingInterval,
       active,
       limits,
     });
+
   return (
-    <article className="rounded-xl border border-border bg-background/50 p-4 space-y-3">
+    <article className="rounded-xl border border-border bg-background/50 p-4 space-y-3 relative group">
       <div className="flex items-center justify-between gap-2">
         <input
           className="h-8 rounded-lg border border-border bg-background px-3 text-xs font-semibold text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 flex-1 transition-colors"
@@ -912,6 +1007,21 @@ function PlanEditor({
           <span>Ativo</span>
         </label>
       </div>
+
+      <div className="flex items-center gap-2">
+        <span className="text-[11px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/50">
+          slug: {plan.slug}
+        </span>
+        <select
+          value={billingInterval}
+          onChange={(e) => setBillingInterval(e.target.value as "monthly" | "yearly")}
+          className="h-7 text-xs rounded border border-border bg-background px-2 text-foreground focus:outline-none focus:border-primary/60 ml-auto"
+        >
+          <option value="monthly">Cobrança Mensal</option>
+          <option value="yearly">Cobrança Anual</option>
+        </select>
+      </div>
+
       <label className="block text-xs text-muted-foreground">
         <span className="font-medium text-foreground">Descrição na Landing Page</span>
         <textarea
@@ -920,8 +1030,11 @@ function PlanEditor({
           onChange={(event) => setDescription(event.target.value)}
         />
       </label>
+
       <label className="block text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">Valor mensal (R$)</span>
+        <span className="font-medium text-foreground">
+          Valor do plano em R$ ({billingInterval === "yearly" ? "Anual total" : "Mensal"})
+        </span>
         <input
           className="mt-1 w-full h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
           inputMode="decimal"
@@ -929,6 +1042,7 @@ function PlanEditor({
           onChange={(event) => setPrice(event.target.value)}
         />
       </label>
+
       <div className="grid grid-cols-2 gap-2 text-xs pt-1">
         <LimitField
           label="BioLinks"
@@ -951,18 +1065,212 @@ function PlanEditor({
           onChange={(value) => setLimits({ ...limits, templates: value })}
         />
       </div>
+
       <p className="text-[11px] text-muted-foreground">
         Use <strong>-1</strong> para limites ilimitados.
       </p>
-      <button
-        type="button"
-        className="w-full rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold px-3 py-2 text-xs shadow-sm transition-all disabled:opacity-50"
-        disabled={saving}
-        onClick={save}
-      >
-        {saving ? "Salvando…" : "Salvar Plano"}
-      </button>
+
+      <div className="flex items-center gap-2 pt-1">
+        <button
+          type="button"
+          className="flex-1 rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold px-3 py-2 text-xs shadow-sm transition-all disabled:opacity-50"
+          disabled={saving}
+          onClick={save}
+        >
+          {saving ? "Salvando…" : "Salvar Alterações"}
+        </button>
+
+        {onDelete && (
+          <button
+            type="button"
+            className="rounded-lg p-2 text-rose-400 hover:text-rose-300 hover:bg-rose-950/30 border border-rose-900/30 transition-all cursor-pointer"
+            title="Excluir ou desativar plano"
+            onClick={() => {
+              if (confirm(`Tem certeza que deseja desativar ou excluir o plano "${plan.name}"?`)) {
+                onDelete(plan.id);
+              }
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        )}
+      </div>
     </article>
+  );
+}
+
+function CreatePlanCard({
+  saving,
+  onCreate,
+  onCancel,
+}: {
+  saving: boolean;
+  onCreate: (input: Parameters<typeof BillingService.createPlan>[0]) => void;
+  onCancel: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [description, setDescription] = useState("");
+  const [price, setPrice] = useState("29.90");
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "yearly">("monthly");
+  const [limits, setLimits] = useState({
+    bio_pages: 10,
+    links: 100,
+    catalog_items: 50,
+    templates: -1,
+  });
+
+  const handleNameChange = (val: string) => {
+    setName(val);
+    if (!slug || slug === name.toLowerCase().replace(/[^a-z0-9]/g, "_")) {
+      setSlug(
+        val
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/[^a-z0-9]/g, "_")
+          .replace(/_+/g, "_")
+      );
+    }
+  };
+
+  const priceCents = Math.max(0, Math.round(Number(price.replace(",", ".")) * 100) || 0);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) {
+      toast.error("Informe o nome do plano.");
+      return;
+    }
+    const finalSlug = slug.trim() || name.toLowerCase().replace(/[^a-z0-9]/g, "_");
+    onCreate({
+      name: name.trim(),
+      slug: finalSlug,
+      description: description.trim() || null,
+      price_cents: priceCents,
+      billing_interval: billingInterval,
+      active: true,
+      limits,
+      features: [],
+    });
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-primary/40 bg-card p-5 space-y-4 shadow-sm">
+      <div className="flex items-center justify-between border-b border-border/80 pb-3">
+        <h4 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Plus className="h-4 w-4 text-primary" />
+          Criar Novo Plano de Assinatura
+        </h4>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-xs text-muted-foreground hover:text-foreground"
+        >
+          Cancelar
+        </button>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Nome do Plano *</span>
+          <input
+            className="mt-1 w-full h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+            placeholder="Ex.: Pro Semestral, Agência, VIP..."
+            value={name}
+            onChange={(e) => handleNameChange(e.target.value)}
+            required
+          />
+        </label>
+
+        <label className="block text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Slug Único (identificador) *</span>
+          <input
+            className="mt-1 w-full h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors font-mono"
+            placeholder="Ex.: pro_semestral"
+            value={slug}
+            onChange={(e) => setSlug(e.target.value)}
+            required
+          />
+        </label>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Preço em R$ *</span>
+          <input
+            className="mt-1 w-full h-8 rounded-lg border border-border bg-background px-3 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+            placeholder="29.90 ou 290.00"
+            inputMode="decimal"
+            value={price}
+            onChange={(e) => setPrice(e.target.value)}
+            required
+          />
+        </label>
+
+        <label className="block text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">Intervalo de Cobrança</span>
+          <select
+            className="mt-1 w-full h-8 rounded-lg border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+            value={billingInterval}
+            onChange={(e) => setBillingInterval(e.target.value as "monthly" | "yearly")}
+          >
+            <option value="monthly">Mensal</option>
+            <option value="yearly">Anual</option>
+          </select>
+        </label>
+      </div>
+
+      <label className="block text-xs text-muted-foreground">
+        <span className="font-medium text-foreground">Descrição / Destaque na Página de Vendas</span>
+        <textarea
+          className="mt-1 w-full rounded-lg border border-border bg-background p-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors min-h-16 resize-none"
+          placeholder="Ex.: Ideal para negócios locais que querem tracionar rápido com IA."
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+      </label>
+
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1">
+        <LimitField
+          label="BioLinks"
+          value={limits.bio_pages}
+          onChange={(value) => setLimits({ ...limits, bio_pages: value })}
+        />
+        <LimitField
+          label="Links"
+          value={limits.links}
+          onChange={(value) => setLimits({ ...limits, links: value })}
+        />
+        <LimitField
+          label="Itens Catálogo"
+          value={limits.catalog_items}
+          onChange={(value) => setLimits({ ...limits, catalog_items: value })}
+        />
+        <LimitField
+          label="Templates (-1 = ilimitado)"
+          value={limits.templates}
+          onChange={(value) => setLimits({ ...limits, templates: value })}
+        />
+      </div>
+
+      <div className="flex items-center justify-end gap-2 pt-2 border-t border-border/80">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-lg border border-border px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          disabled={saving}
+          className="rounded-lg bg-primary hover:bg-primary/90 text-zinc-950 font-bold px-4 py-1.5 text-xs shadow-sm transition-all disabled:opacity-50"
+        >
+          {saving ? "Criando Plano..." : "Salvar e Publicar Plano"}
+        </button>
+      </div>
+    </form>
   );
 }
 

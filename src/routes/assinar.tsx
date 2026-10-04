@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Sparkles,
   Check,
@@ -28,9 +29,80 @@ import {
   createAsaasCardCheckoutFn,
   checkAsaasPaymentStatusFn,
 } from "@/utils/asaas.functions";
+import { getPublicPlansFn } from "@/utils/plans.functions";
+import type { Plan } from "@/modules/billing/types";
 import { toast } from "sonner";
 
-type PlanKey = "pro_yearly" | "pro_yearly_pix" | "pro_monthly";
+export interface DynamicPlanInfo {
+  id: string;
+  slug: string;
+  name: string;
+  badge: string;
+  headlinePrice: string;
+  subPrice: string;
+  billingText: string;
+  savingsBadge?: string;
+  priceCents: number;
+  billingInterval: "monthly" | "yearly";
+}
+
+function formatCentsToBRL(cents: number): string {
+  return new Intl.NumberFormat("pt-BR", {
+    style: "currency",
+    currency: "BRL",
+  }).format(cents / 100);
+}
+
+function mapPlanToDynamicInfo(p: Plan): DynamicPlanInfo {
+  const isYearly = p.billing_interval === "yearly";
+  const formattedTotal = formatCentsToBRL(p.price_cents);
+  const monthlyEquiv = isYearly ? formatCentsToBRL(Math.round(p.price_cents / 12)) : formattedTotal;
+
+  return {
+    id: p.id,
+    slug: p.slug,
+    name: p.name,
+    badge: isYearly ? "Mais Recomendado · Economia Anual" : "Sem Fidelidade",
+    headlinePrice: monthlyEquiv,
+    subPrice: isYearly
+      ? `${formattedTotal} cobrados anualmente`
+      : `${formattedTotal} cobrados mensalmente`,
+    billingText: p.description
+      ? p.description
+      : isYearly
+      ? `Equivale a ${monthlyEquiv}/mês. Acesso completo liberado por 12 meses.`
+      : "Cancele a qualquer momento direto pelo painel, sem taxas extras.",
+    savingsBadge: isYearly ? "ECONOMIZE NO PLANO ANUAL" : undefined,
+    priceCents: p.price_cents,
+    billingInterval: p.billing_interval,
+  };
+}
+
+const FALLBACK_PLANS: DynamicPlanInfo[] = [
+  {
+    id: "plan-pro-yearly",
+    slug: "pro-yearly",
+    name: "EIA Link Pro · Anual",
+    badge: "Mais Recomendado · 2 Meses Grátis",
+    headlinePrice: "R$ 24,16",
+    subPrice: "R$ 290,00 cobrados anualmente",
+    billingText: "Equivale a R$ 24,16/mês. Você economiza R$ 58 por ano.",
+    savingsBadge: "ECONOMIZE 17% (2 MESES GRÁTIS)",
+    priceCents: 29000,
+    billingInterval: "yearly",
+  },
+  {
+    id: "plan-pro-monthly",
+    slug: "pro-monthly",
+    name: "EIA Link Pro · Mensal",
+    badge: "Sem Fidelidade",
+    headlinePrice: "R$ 29,90",
+    subPrice: "R$ 29,90 cobrados mensalmente",
+    billingText: "Cancele a qualquer momento direto pelo painel, sem taxas extras.",
+    priceCents: 2990,
+    billingInterval: "monthly",
+  },
+];
 
 interface SearchParams {
   plan?: string;
@@ -52,58 +124,6 @@ export const Route = createFileRoute("/assinar")({
   component: DirectCheckoutPage,
 });
 
-const PLAN_DETAILS: Record<
-  PlanKey,
-  {
-    name: string;
-    badge: string;
-    headlinePrice: string;
-    subPrice: string;
-    billingText: string;
-    savingsBadge?: string;
-    paymentMethod: "card" | "pix";
-    stripePriceId: PlanKey;
-  }
-> = {
-  pro_yearly: {
-    name: "EIA Link Pro · Anual (Cartão)",
-    badge: "Mais Recomendado · 2 Meses Grátis",
-    headlinePrice: "R$ 24,16",
-    subPrice: "R$ 290 cobrados anualmente no cartão",
-    billingText: "Equivale a R$ 24,16/mês. Você economiza R$ 58 por ano.",
-    savingsBadge: "ECONOMIZE 17% (2 MESES GRÁTIS)",
-    paymentMethod: "card",
-    stripePriceId: "pro_yearly",
-  },
-  pro_yearly_pix: {
-    name: "EIA Link Pro · Anual (Pix à Vista)",
-    badge: "Sem Cartão · Liberação Imediata",
-    headlinePrice: "R$ 290",
-    subPrice: "Pagamento único anual de R$ 290 no Pix",
-    billingText: "Sem renovação automática no cartão. Acesso liberado por 12 meses.",
-    savingsBadge: "2 MESES GRÁTIS NO PIX",
-    paymentMethod: "pix",
-    stripePriceId: "pro_yearly_pix",
-  },
-  pro_monthly: {
-    name: "EIA Link Pro · Mensal",
-    badge: "Sem Fidelidade",
-    headlinePrice: "R$ 29",
-    subPrice: "R$ 29 cobrados mensalmente",
-    billingText: "Cancele a qualquer momento direto pelo painel, sem taxas extras.",
-    paymentMethod: "card",
-    stripePriceId: "pro_monthly",
-  },
-};
-
-function normalizePlanKey(raw?: string): PlanKey {
-  if (!raw) return "pro_yearly";
-  const lower = raw.toLowerCase().replace(/-/g, "_");
-  if (lower.includes("pix")) return "pro_yearly_pix";
-  if (lower.includes("monthly") || lower.includes("mensal")) return "pro_monthly";
-  return "pro_yearly";
-}
-
 const PRO_BENEFITS = [
   "BioLinks e Páginas Ilimitadas para o seu negócio",
   "🔥 Vitrine Carrossel estilo Instagram com pedidos no WhatsApp",
@@ -119,7 +139,39 @@ const PRO_BENEFITS = [
 function DirectCheckoutPage() {
   const { plan: rawPlan, ref } = Route.useSearch();
   const navigate = useNavigate();
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey>(normalizePlanKey(rawPlan));
+
+  const { data: dbPlans = [] } = useQuery({
+    queryKey: ["public_plans"],
+    queryFn: () => getPublicPlansFn(),
+  });
+
+  const availablePlans: DynamicPlanInfo[] = useMemo(() => {
+    if (!dbPlans || dbPlans.length === 0) {
+      return FALLBACK_PLANS;
+    }
+    return dbPlans.map(mapPlanToDynamicInfo);
+  }, [dbPlans]);
+
+  const [selectedPlanSlug, setSelectedPlanSlug] = useState<string>(() => {
+    if (rawPlan) {
+      return rawPlan.toLowerCase().replace(/_/g, "-");
+    }
+    return "pro-yearly";
+  });
+
+  const currentPlanInfo: DynamicPlanInfo = useMemo(() => {
+    const found = availablePlans.find(
+      (p) =>
+        p.slug.toLowerCase() === selectedPlanSlug.toLowerCase() ||
+        p.slug.toLowerCase().replace(/-/g, "_") === selectedPlanSlug.toLowerCase().replace(/-/g, "_") ||
+        p.id === selectedPlanSlug
+    );
+    if (found) return found;
+
+    const yearly = availablePlans.find((p) => p.billingInterval === "yearly");
+    return yearly || availablePlans[0] || FALLBACK_PLANS[0];
+  }, [availablePlans, selectedPlanSlug]);
+
   const [currentUser, setCurrentUser] = useState<{ id: string; email: string } | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
@@ -145,8 +197,6 @@ function DirectCheckoutPage() {
       setAuthChecking(false);
     });
   }, []);
-
-  const planInfo = PLAN_DETAILS[selectedPlan];
 
   async function handleGuestSignUp(e: React.FormEvent) {
     e.preventDefault();
@@ -203,7 +253,7 @@ function DirectCheckoutPage() {
       setCheckoutStarted(true);
       void FunnelService.track("upgrade_click", {
         source: "direct_checkout_whatsapp",
-        plan_slug: selectedPlan,
+        plan_slug: currentPlanInfo.slug,
       });
       toast.success("Conta criada com sucesso! Carregando pagamento seguro...");
     } catch (err) {
@@ -250,42 +300,30 @@ function DirectCheckoutPage() {
           </p>
         </div>
 
-        {/* Seletor Rápido de Planos (Tabs de Fechamento) */}
+        {/* Seletor Rápido de Planos (Tabs Dinâmicas com base no Banco de Dados) */}
         <div className="mb-8 flex flex-wrap justify-center gap-2">
-          <button
-            type="button"
-            onClick={() => setSelectedPlan("pro_yearly")}
-            className={`cursor-pointer rounded-xl px-4 py-2.5 text-xs font-bold transition-all border ${
-              selectedPlan === "pro_yearly"
-                ? "border-fuchsia-500 bg-fuchsia-500/20 text-white shadow-[0_0_15px_rgba(217,70,239,0.3)]"
-                : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
-            }`}
-          >
-            ⭐ Pro Anual (Cartão) · R$ 290/ano{" "}
-            <span className="ml-1 text-emerald-400 font-extrabold">(2 Meses Grátis)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedPlan("pro_yearly_pix")}
-            className={`cursor-pointer rounded-xl px-4 py-2.5 text-xs font-bold transition-all border ${
-              selectedPlan === "pro_yearly_pix"
-                ? "border-violet-500 bg-violet-500/20 text-white shadow-[0_0_15px_rgba(139,92,246,0.3)]"
-                : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
-            }`}
-          >
-            ⚡ Pro Anual (Pix à Vista) · R$ 290
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedPlan("pro_monthly")}
-            className={`cursor-pointer rounded-xl px-4 py-2.5 text-xs font-bold transition-all border ${
-              selectedPlan === "pro_monthly"
-                ? "border-fuchsia-500 bg-fuchsia-500/20 text-white shadow-[0_0_15px_rgba(217,70,239,0.3)]"
-                : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
-            }`}
-          >
-            💳 Pro Mensal · R$ 29/mês
-          </button>
+          {availablePlans.map((plan) => {
+            const isSelected =
+              currentPlanInfo.slug === plan.slug || currentPlanInfo.id === plan.id;
+            return (
+              <button
+                key={plan.id || plan.slug}
+                type="button"
+                onClick={() => setSelectedPlanSlug(plan.slug)}
+                className={`cursor-pointer rounded-xl px-4 py-2.5 text-xs font-bold transition-all border ${
+                  isSelected
+                    ? "border-fuchsia-500 bg-fuchsia-500/20 text-white shadow-[0_0_15px_rgba(217,70,239,0.3)]"
+                    : "border-white/10 bg-white/5 text-zinc-400 hover:text-white"
+                }`}
+              >
+                {plan.billingInterval === "yearly" ? "⭐ " : "💳 "}
+                {plan.name} · {plan.billingInterval === "yearly" ? plan.subPrice : `${plan.headlinePrice}/mês`}
+                {plan.savingsBadge && (
+                  <span className="ml-1 text-emerald-400 font-extrabold">({plan.savingsBadge})</span>
+                )}
+              </button>
+            );
+          })}
         </div>
 
         {/* Grid de 2 Colunas: Resumo do Pedido + Formulário/Checkout */}
@@ -296,25 +334,28 @@ function DirectCheckoutPage() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-fuchsia-400">
                 Resumo do Pedido
               </span>
-              <h2 className="mt-1 font-display text-xl font-bold text-white">{planInfo.name}</h2>
-              <p className="text-xs text-zinc-400 mt-1">{planInfo.billingText}</p>
+              <h2 className="mt-1 font-display text-xl font-bold text-white">{currentPlanInfo.name}</h2>
+              <p className="text-xs text-zinc-400 mt-1">{currentPlanInfo.billingText}</p>
             </div>
 
             <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
               <div className="flex items-baseline justify-between">
                 <span className="text-xs text-zinc-300">Valor do Plano:</span>
                 <span className="font-display text-2xl font-extrabold text-white">
-                  {planInfo.headlinePrice}
-                  {selectedPlan !== "pro_yearly_pix" && (
+                  {currentPlanInfo.headlinePrice}
+                  {currentPlanInfo.billingInterval === "yearly" && (
+                    <span className="text-xs font-normal text-zinc-400">/mês eq.</span>
+                  )}
+                  {currentPlanInfo.billingInterval === "monthly" && (
                     <span className="text-xs font-normal text-zinc-400">/mês</span>
                   )}
                 </span>
               </div>
-              <p className="text-[11px] text-zinc-400 text-right">{planInfo.subPrice}</p>
-              {planInfo.savingsBadge && (
+              <p className="text-[11px] text-zinc-400 text-right">{currentPlanInfo.subPrice}</p>
+              {currentPlanInfo.savingsBadge && (
                 <div className="pt-2 border-t border-white/10">
                   <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400">
-                    <Sparkles className="h-3 w-3" /> {planInfo.savingsBadge}
+                    <Sparkles className="h-3 w-3" /> {currentPlanInfo.savingsBadge}
                   </span>
                 </div>
               )}
@@ -374,8 +415,8 @@ function DirectCheckoutPage() {
 
                 <HybridCheckoutSection
                   currentUser={currentUser}
-                  selectedPlan={selectedPlan}
-                  planInfo={planInfo}
+                  selectedPlan={currentPlanInfo.slug}
+                  planInfo={currentPlanInfo}
                   onSignOut={onSignOut}
                 />
               </div>
@@ -510,8 +551,8 @@ function DirectCheckoutPage() {
 
 interface HybridCheckoutSectionProps {
   currentUser: { id: string; email: string };
-  selectedPlan: PlanKey;
-  planInfo: (typeof PLAN_DETAILS)[PlanKey];
+  selectedPlan: string;
+  planInfo: DynamicPlanInfo;
   onSignOut: () => void;
 }
 
@@ -573,8 +614,6 @@ function HybridCheckoutSection({
         setConfig(cfg);
         if (!cfg.isAsaasConfigured) {
           setPaymentTab("pix_direct");
-        } else if (selectedPlan === "pro_yearly_pix") {
-          setPaymentTab("pix_auto");
         } else {
           setPaymentTab("pix_auto");
         }
@@ -730,10 +769,9 @@ function HybridCheckoutSection({
 
     setCardLoading(true);
     try {
-      const planSlug = selectedPlan === "pro_yearly_pix" ? "pro_yearly" : selectedPlan;
       const res = await createAsaasCardCheckoutFn({
         data: {
-          planKey: planSlug as "pro_yearly" | "pro_monthly",
+          planKey: selectedPlan,
           userId: currentUser.id,
           customerName: cardHolderName.trim(),
           customerEmail: currentUser.email,

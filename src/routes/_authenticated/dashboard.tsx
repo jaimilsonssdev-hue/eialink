@@ -23,6 +23,8 @@ import {
   Circle,
   ArrowRight,
   Zap,
+  BookOpen,
+  Download,
 } from "lucide-react";
 
 import { TemplateMarketplace } from "@/components/templates/TemplateMarketplace";
@@ -365,26 +367,59 @@ function Dashboard() {
         </div>
       </section>
 
-      {/* Destaque do Radar de Prospecção (Exclusivo Admin / Super Admin) */}
+      {/* Destaque do Radar de Prospecção e Playbook de Vendas (Exclusivo Admin / Super Admin) */}
       {isAdmin && (
-        <section className="rounded-2xl border border-[color:var(--primary)]/30 bg-card p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
-              <Globe2 className="h-3.5 w-3.5" />
-              <span>Motor de Prospecção Ativo (Admin)</span>
+        <section className="grid gap-4 md:grid-cols-2">
+          {/* Card 1: Radar de Prospecção */}
+          <div className="rounded-2xl border border-primary/30 bg-card p-6 shadow-sm flex flex-col justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
+                <Globe2 className="h-3.5 w-3.5" />
+                <span>Motor de Prospecção Ativo</span>
+              </div>
+              <h2 className="text-xl font-bold font-display text-foreground">Radar de Prospecção</h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Encontre empresas reais no Google Maps e Instagram sem site na sua cidade, crie páginas de demonstração com 1 clique e aborde com taxa recorde de resposta.
+              </p>
             </div>
-            <h2 className="text-xl font-bold font-display text-foreground">Radar de Prospecção de Clientes</h2>
-            <p className="text-sm text-muted-foreground max-w-xl">
-              Encontre empresas reais no Google Maps e Instagram sem site na sua cidade, crie páginas de demonstração com 1 clique e envie proposta no WhatsApp.
-            </p>
+            <Link
+              to="/admin/prospeccao"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-[color:var(--primary-foreground)] shadow transition-all hover:opacity-90 w-full sm:w-auto self-start"
+              style={{ background: "var(--gradient-primary)" }}
+            >
+              <Target className="h-4 w-4" /> Abrir Radar de Prospecção
+            </Link>
           </div>
-          <Link
-            to="/admin/prospeccao"
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-[color:var(--primary-foreground)] shadow transition-all hover:opacity-90 whitespace-nowrap"
-            style={{ background: "var(--gradient-primary)" }}
-          >
-            <Target className="h-4 w-4" /> Abrir Prospecção
-          </Link>
+
+          {/* Card 2: Playbook Comercial & Gestão de Vendas */}
+          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/20 via-card to-card p-6 shadow-sm flex flex-col justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
+                <BookOpen className="h-3.5 w-3.5" />
+                <span>Estratégia & Fechamento</span>
+              </div>
+              <h2 className="text-xl font-bold font-display text-foreground">Playbook Comercial (PDF)</h2>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Roteiro completo dos primeiros 5 clientes em 7 dias, scripts de WhatsApp prontos para copiar/colar, quebra de objeções e simulador de faturamento.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <Link
+                to="/admin/vendas"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 shadow-sm transition-all"
+              >
+                <BookOpen className="h-4 w-4" /> Acessar Playbook Online
+              </Link>
+              <a
+                href="/Playbook_Comercial_EiaLink.pdf"
+                download="Playbook_Comercial_EiaLink.pdf"
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 font-semibold text-xs px-3.5 py-2.5 transition-colors"
+                title="Baixar arquivo PDF diagramado do Playbook Comercial"
+              >
+                <Download className="h-3.5 w-3.5" /> Baixar PDF
+              </a>
+            </div>
+          </div>
         </section>
       )}
 

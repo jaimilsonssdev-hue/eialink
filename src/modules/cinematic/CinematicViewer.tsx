@@ -527,10 +527,8 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               key={`marquee-track-${marqueeDuration}-${data.marquee.length}`}
               className="flex w-max items-center gap-8 will-change-transform hover:[animation-play-state:paused]"
               style={{
-                animationName: "cinematicMarquee",
+                animation: `cinematicMarquee ${marqueeDuration}s linear infinite`,
                 animationDuration: `${marqueeDuration}s`,
-                animationTimingFunction: "linear",
-                animationIterationCount: "infinite",
               }}
             >
               {trackItems.map((item, idx) => {

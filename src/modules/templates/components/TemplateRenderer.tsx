@@ -59,18 +59,24 @@ export function TemplateRenderer({
   /** Public pages keep essential feedback for everyone; Pro unlocks ambient presentation motion. */
   motionLevel?: "off" | "standard" | "pro";
 }) {
-  const isExplicitCinematic = !bio.template_id || bio.template_id === "cinematic-glass" || bio.template_id === "cinematic-scrolly";
   const socialObj = (bio.social_links as Record<string, any>) || {};
   const cinematicData = (socialObj.cinematic_data || socialObj.cinematicData) as CinematicPageData | undefined;
 
-  if (cinematicData && isExplicitCinematic) {
+  if (cinematicData) {
     const customTheme = socialObj.custom_theme || socialObj.theme || {};
     const appliedArchetype = customTheme.archetype || cinematicData.archetype || (cinematicData.theme as any)?.archetype || "cinematic";
     const appliedHeadingStyle = customTheme.headingStyle || (cinematicData.theme as any)?.headingStyle || "default";
 
+    const appliedMarqueeSpeed =
+      cinematicData.marqueeSpeed ||
+      (cinematicData.theme as any)?.marqueeSpeed ||
+      customTheme.marqueeSpeed ||
+      50;
+
     const hydratedCinematicData: CinematicPageData = {
       ...cinematicData,
       archetype: appliedArchetype as any,
+      marqueeSpeed: appliedMarqueeSpeed,
       theme: {
         ...cinematicData.theme,
         archetype: appliedArchetype as any,
@@ -81,6 +87,7 @@ export function TemplateRenderer({
         fontFamily: customTheme.font || customTheme.font_pair || (cinematicData.theme as any)?.fontFamily || "sans",
         boxEffect: customTheme.boxEffect || (cinematicData.theme as any)?.boxEffect || "glass",
         borderRadius: customTheme.borderRadius || (cinematicData.theme as any)?.borderRadius || "rounded",
+        marqueeSpeed: appliedMarqueeSpeed,
       },
     };
 

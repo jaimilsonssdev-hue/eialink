@@ -403,9 +403,9 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
       const { data: updated, error } = await supabase
         .from("bio_pages")
         .update({
-          display_name: data.businessName,
+          display_name: data.businessName || data.hero?.headline || "Minha Empresa",
           whatsapp: data.whatsapp || null,
-          template_id: (data as any).templateId || "cinematic-glass",
+          template_id: "cinematic-glass",
           cover_url: data.hero.backgroundImage,
           avatar_url: data.avatarUrl || null,
           description: data.hero.subtitle ? data.hero.subtitle.slice(0, 300) : null,
@@ -429,10 +429,10 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
         .from("bio_pages")
         .insert({
           user_id: userId,
-          display_name: data.businessName,
+          display_name: data.businessName || data.hero?.headline || "Minha Empresa",
           slug: resolvedSlug!,
           whatsapp: data.whatsapp || null,
-          template_id: (data as any).templateId || "cinematic-glass",
+          template_id: "cinematic-glass",
           cover_url: data.hero.backgroundImage,
           avatar_url: data.avatarUrl || null,
           description: data.hero.subtitle ? data.hero.subtitle.slice(0, 300) : null,

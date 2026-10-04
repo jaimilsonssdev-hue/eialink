@@ -595,7 +595,9 @@ function PublicBio() {
   const rawSocial = (bio.social_links as Record<string, any>) || {};
   const cinematicData = (rawSocial.cinematic_data || rawSocial.cinematicData) as CinematicPageData | undefined;
 
-  if (isCinematic && cinematicData) {
+  // PRIORIDADE MÁXIMA: Se a página possui dados do Studio Cinematográfico (cinematicData),
+  // renderiza SEMPRE a experiência Cinematográfica completa (textos, bento grid, marquee, etc.)
+  if (cinematicData) {
     const customTheme = rawSocial.custom_theme || rawSocial.theme || {};
     const appliedArchetype = customTheme.archetype || cinematicData.archetype || (cinematicData.theme as any)?.archetype || "cinematic";
     const appliedHeadingStyle = customTheme.headingStyle || (cinematicData.theme as any)?.headingStyle || "default";
@@ -607,7 +609,7 @@ function PublicBio() {
       cinematicData.marqueeSpeed ||
       (cinematicData.theme as any)?.marqueeSpeed ||
       customTheme.marqueeSpeed ||
-      45;
+      50;
 
     const hydratedCinematicData: CinematicPageData = {
       ...cinematicData,

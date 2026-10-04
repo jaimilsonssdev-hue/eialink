@@ -718,13 +718,13 @@ export default function CinematicStudioPage() {
       }
 
       const cleanWhatsapp = (data.whatsapp || "").replace(/\D/g, "");
-      const effectiveTemplate = (data as any).templateId || "cinematic-glass";
+      const effectiveTemplate = "cinematic-glass";
       const effectiveFont = (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
       const effectiveMode = data.theme?.mode || (data.theme?.bg?.includes("#fff") || data.theme?.bg?.includes("#f8") ? "light" : "dark");
       const effectiveRadius = (data.theme as any)?.borderRadius || data.theme?.borderStyle || "rounded";
       const effectiveBoxEffect = (data.theme as any)?.boxEffect || "glass";
       const effectiveArchetype = (data.archetype || (data.theme as any)?.archetype || "cinematic");
-      const effectiveSpeed = data.marqueeSpeed || 45;
+      const effectiveSpeed = data.marqueeSpeed || 50;
 
       const customThemeObj = {
         parallax: Boolean(data.theme.parallaxEnabled),
@@ -794,9 +794,9 @@ export default function CinematicStudioPage() {
         const { data: updated, error: updateError } = await supabase
           .from("bio_pages")
           .update({
-            display_name: data.businessName,
+            display_name: data.businessName || data.hero?.headline || "Minha Empresa",
             whatsapp: cleanWhatsapp || null,
-            template_id: effectiveTemplate,
+            template_id: "cinematic-glass",
             cover_url: data.hero.backgroundImage,
             avatar_url: data.avatarUrl || null,
             description: data.hero.subtitle ? data.hero.subtitle.slice(0, 300) : null,
@@ -832,10 +832,10 @@ export default function CinematicStudioPage() {
           .from("bio_pages")
           .insert({
             user_id: activeUserId,
-            display_name: data.businessName || "Minha Empresa",
+            display_name: data.businessName || data.hero?.headline || "Minha Empresa",
             slug: newSlug,
             whatsapp: cleanWhatsapp || null,
-            template_id: effectiveTemplate,
+            template_id: "cinematic-glass",
             cover_url: data.hero.backgroundImage,
             avatar_url: data.avatarUrl || null,
             description: data.hero.subtitle ? data.hero.subtitle.slice(0, 300) : null,

@@ -258,8 +258,12 @@ export function CleanBuilder() {
       } else {
         setHeadline(data.display_name || "");
         setSubtitle(data.bio || "");
-        setBgColor(customTheme.bg || "#0a0a0c");
-        setAccentColor(customTheme.accent || "#f59e0b");
+        setBgColor(customTheme.bg || customTheme.background || "#0a0a0c");
+        setAccentColor(customTheme.accent || customTheme.primary || "#f59e0b");
+        setFontFamily(customTheme.font || customTheme.font_pair || "sans");
+        setThemeMode(customTheme.mode || (customTheme.bg?.includes("#fff") || customTheme.bg?.includes("#f8") ? "light" : "dark"));
+        setBoxEffect(customTheme.boxEffect || "glass");
+        setBorderRadius(customTheme.borderRadius || "rounded");
         const rawArch = customTheme.archetype || "cinematic";
         if (rawArch === "neobrutalism" || rawArch === "neo-pop-d2c" || rawArch === "dark-brutalist") {
           setArchetype("neobrutalism");
@@ -1411,9 +1415,16 @@ export function CleanBuilder() {
                           archetype,
                           theme: {
                             bg: bgColor,
+                            background: bgColor,
                             accent: accentColor,
+                            primary: accentColor,
                             archetype,
                             headingStyle,
+                            mode: themeMode,
+                            fontFamily,
+                            font: fontFamily,
+                            boxEffect,
+                            borderRadius,
                           },
                           custom_theme: {
                             bg: bgColor,

@@ -214,7 +214,8 @@ export function TemplateRenderer({
     <main
       ref={parallaxRef}
       data-parallax={parallaxEnabled ? "on" : undefined}
-      data-archetype={resolvedArchetype}
+      data-mode={isLightMode ? "light" : "dark"}
+      data-radius={customTheme?.borderRadius || "rounded"}
       data-box-effect={customTheme?.boxEffect || "glass"}
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell archetype-${resolvedArchetype}`}
       data-template={bio.template_id ?? "default"}
@@ -233,6 +234,7 @@ export function TemplateRenderer({
       style={
         {
           fontFamily: resolvedFontFamily || fontPair?.body || model.theme.typography.fontFamily,
+          "--template-font-family": resolvedFontFamily || fontPair?.body || "inherit",
           ...(fontPair
             ? { "--font-sans": resolvedFontFamily || fontPair.body, "--font-display": resolvedFontFamily || fontPair.display }
             : { "--font-sans": resolvedFontFamily, "--font-display": resolvedFontFamily }),
@@ -272,7 +274,7 @@ export function TemplateRenderer({
           "--bio-card": customCard || (isLightMode ? "#ffffff" : "rgba(255, 255, 255, 0.04)"),
           "--bio-border": customBorder || (isLightMode ? "rgba(15, 23, 42, 0.12)" : "rgba(255, 255, 255, 0.1)"),
 
-          "--template-bg": customBg || model.theme.colors.background,
+          "--template-bg": customBg || (isLightMode ? "#f8fafc" : "#090a10"),
           "--template-surface": customCard || model.theme.colors.surface,
           "--template-text": customText || (isLightMode ? "#0f172a" : model.theme.colors.text),
           "--template-title": customTitle,
@@ -284,106 +286,195 @@ export function TemplateRenderer({
       }
     >
       <style>{`
-        /* 1. NEOBRUTALISMO POP */
+        /* 0. TIPOGRAFIA UNIVERSAL REATIVA */
+        .public-profile-shell,
+        .public-profile-shell *:not(svg):not(path) {
+          font-family: var(--template-font-family) !important;
+        }
+
+        /* 1. MODO ESCURO (DARK MODE) UNIVERSAL */
+        .public-profile-shell[data-mode="dark"] {
+          background-color: var(--template-bg, #090a10) !important;
+          color: #e4e4e7 !important;
+        }
+        .public-profile-shell[data-mode="dark"] section,
+        .public-profile-shell[data-mode="dark"] .bg-white,
+        .public-profile-shell[data-mode="dark"] .bg-gray-50,
+        .public-profile-shell[data-mode="dark"] .bg-gray-100,
+        .public-profile-shell[data-mode="dark"] [class*="bg-gray-50"],
+        .public-profile-shell[data-mode="dark"] [class*="bg-slate-50"] {
+          background-color: rgba(18, 22, 34, 0.9) !important;
+          color: #f4f4f5 !important;
+          border-color: rgba(255, 255, 255, 0.12) !important;
+        }
+        .public-profile-shell[data-mode="dark"] h1,
+        .public-profile-shell[data-mode="dark"] h2,
+        .public-profile-shell[data-mode="dark"] h3,
+        .public-profile-shell[data-mode="dark"] h4,
+        .public-profile-shell[data-mode="dark"] .font-heading,
+        .public-profile-shell[data-mode="dark"] .text-gray-900,
+        .public-profile-shell[data-mode="dark"] .text-gray-800,
+        .public-profile-shell[data-mode="dark"] .text-slate-900 {
+          color: #ffffff !important;
+        }
+        .public-profile-shell[data-mode="dark"] p,
+        .public-profile-shell[data-mode="dark"] .text-gray-600,
+        .public-profile-shell[data-mode="dark"] .text-gray-700,
+        .public-profile-shell[data-mode="dark"] .text-gray-500,
+        .public-profile-shell[data-mode="dark"] .text-slate-600 {
+          color: #a1a1aa !important;
+        }
+
+        /* 2. MODO CLARO (LIGHT MODE) UNIVERSAL */
+        .public-profile-shell[data-mode="light"] {
+          background-color: var(--template-bg, #f8fafc) !important;
+          color: #18181b !important;
+        }
+        .public-profile-shell[data-mode="light"] section {
+          background-color: transparent !important;
+        }
+        .public-profile-shell[data-mode="light"] h1,
+        .public-profile-shell[data-mode="light"] h2,
+        .public-profile-shell[data-mode="light"] h3,
+        .public-profile-shell[data-mode="light"] h4,
+        .public-profile-shell[data-mode="light"] .font-heading {
+          color: #09090b !important;
+        }
+
+        /* 3. NEOBRUTALISMO POP */
+        .archetype-neobrutalism [class*="rounded-2xl"],
+        .archetype-neobrutalism [class*="rounded-xl"],
+        .archetype-neobrutalism [class*="rounded-3xl"],
+        .archetype-neobrutalism .bg-white,
+        .archetype-neobrutalism .bg-gray-50,
+        .archetype-neobrutalism .bg-card,
+        .archetype-neobrutalism article,
+        .archetype-neobrutalism div[class*="shadow-"],
+        .archetype-neobrutalism div[class*="border"] {
+          border-width: 3px !important;
+          border-style: solid !important;
+          border-color: #000000 !important;
+          box-shadow: 5px 5px 0px #000000 !important;
+          border-radius: 12px !important;
+        }
+        .archetype-neobrutalism a,
+        .archetype-neobrutalism button,
+        .archetype-neobrutalism .public-profile-action-whatsapp {
+          border: 3px solid #000000 !important;
+          box-shadow: 4px 4px 0px #000000 !important;
+          text-transform: uppercase !important;
+          font-weight: 900 !important;
+          border-radius: 8px !important;
+          transition: transform 0.1s ease, box-shadow 0.1s ease !important;
+        }
+        .archetype-neobrutalism a:active,
+        .archetype-neobrutalism button:active {
+          transform: translate(2px, 2px) !important;
+          box-shadow: 1px 1px 0px #000000 !important;
+        }
         .archetype-neobrutalism h1,
         .archetype-neobrutalism h2,
         .archetype-neobrutalism h3 {
           text-transform: uppercase !important;
           font-weight: 900 !important;
-          letter-spacing: -0.03em !important;
-        }
-        .archetype-neobrutalism .bg-card,
-        .archetype-neobrutalism article {
-          border-width: 2px !important;
-          border-style: solid !important;
-          border-color: #000000 !important;
-          box-shadow: 4px 4px 0px #000000 !important;
-          border-radius: 0.75rem !important;
-        }
-        .archetype-neobrutalism a[class*="rounded-"],
-        .archetype-neobrutalism button[class*="rounded-"],
-        .archetype-neobrutalism .public-profile-action-whatsapp {
-          border: 2px solid #000000 !important;
-          box-shadow: 4px 4px 0px #000000 !important;
-          text-transform: uppercase !important;
-          font-weight: 900 !important;
-          border-radius: 0.5rem !important;
-          transition: transform 0.1s ease, box-shadow 0.1s ease !important;
-        }
-        .archetype-neobrutalism a[class*="rounded-"]:active,
-        .archetype-neobrutalism button[class*="rounded-"]:active {
-          transform: translate(2px, 2px) !important;
-          box-shadow: 1px 1px 0px #000000 !important;
+          letter-spacing: -0.02em !important;
         }
 
-        /* 2. EDITORIAL SUÍÇO / QUIET LUXURY */
+        /* 4. EDITORIAL SUÍÇO / QUIET LUXURY */
+        .archetype-editorial [class*="rounded-"],
+        .archetype-editorial .bg-card,
+        .archetype-editorial article,
+        .archetype-editorial a,
+        .archetype-editorial button,
+        .archetype-editorial img {
+          border-radius: 0px !important;
+        }
         .archetype-editorial h1,
         .archetype-editorial h2,
         .archetype-editorial h3 {
-          font-family: Georgia, serif !important;
           font-style: italic !important;
           font-weight: 400 !important;
           letter-spacing: 0.02em !important;
         }
-        .archetype-editorial [class*="rounded-"],
-        .archetype-editorial .bg-card,
-        .archetype-editorial article,
-        .archetype-editorial a[class*="rounded-"],
-        .archetype-editorial button[class*="rounded-"] {
-          border-radius: 0px !important;
-        }
-        .archetype-editorial a[class*="rounded-"],
-        .archetype-editorial button[class*="rounded-"] {
-          letter-spacing: 0.18em !important;
+        .archetype-editorial a,
+        .archetype-editorial button {
+          letter-spacing: 0.15em !important;
           text-transform: uppercase !important;
-          font-size: 0.75rem !important;
-          font-weight: 600 !important;
           border: 1px solid rgba(255, 255, 255, 0.3) !important;
         }
 
-        /* 3. BENTO HIGH-TECH */
-        .archetype-bento h1,
-        .archetype-bento h2 {
-          background: linear-gradient(180deg, #ffffff 0%, #a1a1aa 100%) !important;
-          -webkit-background-clip: text !important;
-          -webkit-text-fill-color: transparent !important;
-          font-weight: 900 !important;
-          letter-spacing: -0.04em !important;
-        }
-        .archetype-bento [class*="rounded-"],
+        /* 5. BENTO HIGH-TECH */
+        .archetype-bento [class*="rounded-2xl"],
+        .archetype-bento [class*="rounded-xl"],
+        .archetype-bento [class*="rounded-3xl"],
         .archetype-bento .bg-card,
         .archetype-bento article {
-          border-radius: 1.5rem !important;
+          border-radius: 28px !important;
         }
-        .archetype-bento a[class*="rounded-"],
-        .archetype-bento button[class*="rounded-"] {
+        .archetype-bento a,
+        .archetype-bento button {
           border-radius: 9999px !important;
           font-weight: 700 !important;
         }
 
-        /* 4. CINEMATOGRÁFICO GLASS */
-        .archetype-cinematic h1,
-        .archetype-cinematic h2 {
-          text-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
-          letter-spacing: -0.02em !important;
-        }
-        .archetype-cinematic [class*="rounded-"],
-        .archetype-cinematic .bg-card,
-        .archetype-cinematic article {
+        /* 6. CINEMATOGRÁFICO GLASS */
+        .archetype-cinematic [class*="rounded-2xl"],
+        .archetype-cinematic [class*="rounded-3xl"],
+        .archetype-cinematic .bg-card {
           border-radius: 1.25rem !important;
           backdrop-filter: blur(20px) !important;
           box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5) !important;
         }
 
-        /* 5. EFEITOS DOS CARDS (SOLID, GLOW) */
+        /* 7. ARREDONDAMENTO ESPECÍFICO (data-radius) */
+        .public-profile-shell[data-radius="sharp"] [class*="rounded-"],
+        .public-profile-shell[data-radius="sharp"] button,
+        .public-profile-shell[data-radius="sharp"] img,
+        .public-profile-shell[data-radius="sharp"] a,
+        .public-profile-shell[data-radius="sharp"] .bg-card,
+        .public-profile-shell[data-radius="sharp"] article {
+          border-radius: 0px !important;
+        }
+        .public-profile-shell[data-radius="pill"] [class*="rounded-2xl"],
+        .public-profile-shell[data-radius="pill"] [class*="rounded-3xl"],
+        .public-profile-shell[data-radius="pill"] [class*="rounded-xl"],
+        .public-profile-shell[data-radius="pill"] .bg-card,
+        .public-profile-shell[data-radius="pill"] article {
+          border-radius: 28px !important;
+        }
+        .public-profile-shell[data-radius="pill"] button,
+        .public-profile-shell[data-radius="pill"] a[class*="rounded-"],
+        .public-profile-shell[data-radius="pill"] a[class*="bg-"] {
+          border-radius: 9999px !important;
+        }
+        .public-profile-shell[data-radius="rounded"] [class*="rounded-2xl"],
+        .public-profile-shell[data-radius="rounded"] [class*="rounded-3xl"],
+        .public-profile-shell[data-radius="rounded"] .bg-card,
+        .public-profile-shell[data-radius="rounded"] article {
+          border-radius: 16px !important;
+        }
+
+        /* 8. EFEITOS DOS CARDS ESPECÍFICOS (data-box-effect) */
+        .public-profile-shell[data-box-effect="solid"] [class*="rounded-2xl"],
+        .public-profile-shell[data-box-effect="solid"] [class*="rounded-3xl"],
+        .public-profile-shell[data-box-effect="solid"] [class*="rounded-xl"],
+        .public-profile-shell[data-box-effect="solid"] .bg-white,
+        .public-profile-shell[data-box-effect="solid"] .bg-gray-50,
         .public-profile-shell[data-box-effect="solid"] .bg-card,
         .public-profile-shell[data-box-effect="solid"] article {
           backdrop-filter: none !important;
-          box-shadow: none !important;
+          -webkit-backdrop-filter: none !important;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.08) !important;
         }
+        .public-profile-shell[data-box-effect="glow"] [class*="rounded-2xl"],
+        .public-profile-shell[data-box-effect="glow"] [class*="rounded-3xl"],
+        .public-profile-shell[data-box-effect="glow"] [class*="rounded-xl"],
+        .public-profile-shell[data-box-effect="glow"] .bg-white,
+        .public-profile-shell[data-box-effect="glow"] .bg-gray-50,
         .public-profile-shell[data-box-effect="glow"] .bg-card,
         .public-profile-shell[data-box-effect="glow"] article {
-          box-shadow: 0 0 25px var(--cor-destaque, #f59e0b) !important;
+          box-shadow: 0 0 25px var(--cor-destaque, var(--primary, #f59e0b)) !important;
+          border-color: var(--cor-destaque, var(--primary, #f59e0b)) !important;
         }
       `}</style>
       {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, bookingUrl, supplemental })}

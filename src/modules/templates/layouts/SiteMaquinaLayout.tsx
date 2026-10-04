@@ -578,11 +578,10 @@ function SiteMaquinaView({
                         <span>Iniciar Conversa no WhatsApp</span>
                       </a>
                       <a
-                        data-parallax-layer="float"
                         href={mapsLink}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full sm:w-auto px-6 py-4 rounded-xl border border-border/40 dark:border-white/10 bg-white dark:bg-gray-900/80 hover:bg-gray-50 text-gray-800 dark:text-gray-100 font-bold text-sm transition-all flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-6 py-4 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-bold text-sm transition-all flex items-center justify-center gap-2"
                       >
                         <Star className="h-4 w-4 text-amber-400 fill-amber-400" />
                         <span>★ {rating.toFixed(1)} no Google</span>
@@ -593,10 +592,9 @@ function SiteMaquinaView({
                   <div className="lg:col-span-5 relative">
                     <div className="rounded-3xl overflow-hidden shadow-2xl border-4 border-white bg-gray-100">
                       <img
-                        data-parallax-layer="hero"
                         src={heroCover}
                         alt={companyName}
-                        className="parallax-hero-image w-full h-72 sm:h-96 object-cover"
+                        className="w-full h-72 sm:h-96 object-cover"
                         onError={(e) => {
                           e.currentTarget.src =
                             curated.covers?.[0]?.url ||
@@ -604,18 +602,15 @@ function SiteMaquinaView({
                         }}
                       />
                     </div>
-                    <div
-                      data-parallax-layer="float"
-                      className="absolute -bottom-4 left-4 sm:-bottom-6 sm:-left-6 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-border/40 dark:border-white/10 flex items-center gap-3 max-w-[calc(100%-2rem)]"
-                    >
+                    <div className="absolute -bottom-4 left-4 sm:-bottom-6 sm:-left-6 bg-white/95 backdrop-blur-md p-4 rounded-2xl shadow-xl border border-gray-100 flex items-center gap-3 max-w-[calc(100%-2rem)]">
                       <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center font-black text-lg shrink-0">
                         ★
                       </div>
                       <div className="min-w-0">
-                        <div className="font-heading font-black text-lg text-gray-900 dark:text-white leading-tight">
+                        <div className="font-heading font-black text-lg text-gray-900 leading-tight">
                           {rating.toFixed(1)} / 5.0
                         </div>
-                        <div className="text-[11px] text-gray-500 dark:text-gray-400 truncate">
+                        <div className="text-[11px] text-gray-500 truncate">
                           {reviewsCount} avaliações reais no Google
                         </div>
                       </div>
@@ -628,10 +623,9 @@ function SiteMaquinaView({
               <div className="relative isolate min-h-[480px] sm:min-h-[580px] flex items-center justify-center text-center px-4 sm:px-6 py-16 sm:py-20 overflow-hidden">
                 <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
                   <img
-                    data-parallax-layer="hero"
                     src={heroCover}
                     alt={companyName}
-                    className="parallax-hero-image w-full h-full object-cover scale-105"
+                    className="w-full h-full object-cover scale-105"
                     onError={(e) => {
                       e.currentTarget.src =
                         curated.covers?.[0]?.url ||
@@ -642,10 +636,7 @@ function SiteMaquinaView({
                 </div>
 
                 <div className="relative z-10 max-w-3xl mx-auto space-y-6">
-                  <div
-                    data-parallax-layer="float"
-                    className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white text-xs font-bold uppercase tracking-wider shadow-sm"
-                  >
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/30 text-white text-xs font-bold uppercase tracking-wider shadow-sm">
                     <Sparkles className="h-3.5 w-3.5 text-amber-300" />
                     <span>Referência de Atendimento em {city}</span>
                   </div>
@@ -737,10 +728,9 @@ function SiteMaquinaView({
                   </div>
                   <div className="mt-10 sm:mt-12 rounded-3xl overflow-hidden shadow-2xl max-w-3xl mx-auto border-4 border-white bg-gray-100">
                     <img
-                      data-parallax-layer="hero"
                       src={heroCover}
                       alt={companyName}
-                      className="parallax-hero-image w-full h-64 sm:h-80 lg:h-96 object-cover"
+                      className="w-full h-64 sm:h-80 lg:h-96 object-cover"
                       onError={(e) => {
                         e.currentTarget.src =
                           curated.covers?.[0]?.url ||
@@ -956,12 +946,12 @@ function SiteMaquinaView({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Card 1: Destaque Principal (Bento Grid Span 2) */}
                 {displayServices[0] && (
-                  <div className="md:col-span-2 bg-gradient-to-br from-white to-gray-50/80 dark:from-card dark:to-card/80 p-6 sm:p-10 rounded-3xl border border-border/40 dark:border-white/10 shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
+                  <div className="md:col-span-2 bg-gradient-to-br from-white to-gray-50/80 p-6 sm:p-10 rounded-3xl border-2 border-[var(--color-300)] shadow-md hover:shadow-xl transition-all duration-300 relative overflow-hidden flex flex-col justify-between">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-[var(--color-100)] rounded-full blur-3xl opacity-60 pointer-events-none" />
 
                     <div>
                       {displayServices[0].image_url && (
-                        <div className="w-full h-44 sm:h-56 rounded-2xl overflow-hidden mb-6 bg-gray-100 shadow-sm border border-border/40 dark:border-white/10">
+                        <div className="w-full h-44 sm:h-56 rounded-2xl overflow-hidden mb-6 bg-gray-100 shadow-sm border border-gray-100">
                           <img
                             src={displayServices[0].image_url}
                             alt={displayServices[0].name}
@@ -981,31 +971,31 @@ function SiteMaquinaView({
                         </span>
                       </div>
 
-                      <h3 className="font-heading font-black text-xl sm:text-3xl text-gray-900 dark:text-white mb-3">
+                      <h3 className="font-heading font-black text-xl sm:text-3xl text-gray-900 mb-3">
                         {displayServices[0].name}
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm sm:text-base leading-relaxed mb-6">
+                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed mb-6">
                         {displayServices[0].description?.replace(/^\[.*?\]\s*/, "") ||
                           "Avaliação completa com corpo profissional qualificado, diagnóstico assertivo e ambiente acolhedor."}
                       </p>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-muted/50 p-3 rounded-xl border border-border/40 dark:border-white/10 shadow-xs">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
                           <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                           <span>Equipe dedicada e atenciosa</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-muted/50 p-3 rounded-xl border border-border/40 dark:border-white/10 shadow-xs">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
                           <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                           <span>Estrutura moderna e confortável</span>
                         </div>
-                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-muted/50 p-3 rounded-xl border border-border/40 dark:border-white/10 shadow-xs">
+                        <div className="flex items-center gap-2 text-xs font-semibold text-gray-700 bg-white p-3 rounded-xl border border-gray-100 shadow-xs">
                           <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
                           <span>Garantia e acompanhamento</span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-100 dark:border-white/10 flex flex-wrap items-center justify-between gap-4">
+                    <div className="pt-4 border-t border-gray-100 flex flex-wrap items-center justify-between gap-4">
                       <a
                         href={whatsappUrl(
                           phone,
@@ -1028,7 +1018,7 @@ function SiteMaquinaView({
                 {displayServices.slice(1, 3).map((item, idx) => (
                   <div
                     key={item.id || idx}
-                    className="bg-white dark:bg-card p-6 sm:p-8 rounded-3xl border border-border/40 dark:border-white/10 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+                    className="bg-white p-6 sm:p-8 rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
                   >
                     <div>
                       {item.image_url ? (
@@ -1047,15 +1037,15 @@ function SiteMaquinaView({
                           {idx === 0 ? <HeartPulse className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6" />}
                         </div>
                       )}
-                      <h3 className="font-heading font-black text-lg sm:text-xl text-gray-900 dark:text-white mb-3">
+                      <h3 className="font-heading font-black text-lg sm:text-xl text-gray-900 mb-3">
                         {item.name}
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed mb-6">
+                      <p className="text-gray-600 text-sm leading-relaxed mb-6">
                         {item.description?.replace(/^\[.*?\]\s*/, "") ||
                           "Agilidade na realização de procedimentos para você iniciar seus cuidados sem esperas desnecessárias."}
                       </p>
                     </div>
-                    <div className="pt-4 border-t border-gray-100 dark:border-white/10">
+                    <div className="pt-4 border-t border-gray-100">
                       <a
                         href={whatsappUrl(phone, `Olá! Gostaria de mais informações sobre: *${item.name}*.`)}
                         target="_blank"
@@ -1077,7 +1067,7 @@ function SiteMaquinaView({
                   {displayServices.slice(3).map((item) => (
                     <div
                       key={item.id}
-                      className="bg-white dark:bg-card p-6 rounded-3xl border border-border/40 dark:border-white/10 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between"
+                      className="bg-white p-6 rounded-3xl border border-gray-200/80 shadow-xs hover:shadow-lg transition-all flex flex-col justify-between"
                     >
                       <div>
                         {item.image_url && (
@@ -1211,13 +1201,10 @@ function SiteMaquinaView({
             style={{ backgroundColor: avalCfg.bg_color || (isLightMode ? "#f9fafb" : "#0b0f19") }}
           >
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="bg-white dark:bg-card rounded-3xl p-6 sm:p-12 border border-border/40 dark:border-white/10 shadow-xl text-center relative overflow-hidden">
+              <div className="bg-white rounded-3xl p-6 sm:p-12 border border-gray-100 shadow-xl text-center relative overflow-hidden">
                 <div className="absolute -top-12 -right-12 w-48 h-48 bg-[var(--color-100)] rounded-full blur-3xl opacity-50 pointer-events-none" />
 
-                <div
-                  data-parallax-layer="float"
-                  className="inline-flex items-center gap-2 bg-gray-100 dark:bg-muted text-gray-800 dark:text-gray-200 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6"
-                >
+                <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-800 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider mb-6">
                   <Star className="h-4 w-4 text-amber-500 fill-amber-500" />
                   <span>Perfil Verificado no Google Maps</span>
                 </div>
@@ -1241,9 +1228,9 @@ function SiteMaquinaView({
                   {avalCfg.subtitle || `Transparência total com a reputação de quem frequenta nosso espaço no bairro ${address.split("-")[0] || city} e em toda a região de ${city}.`}
                 </p>
 
-                <div className="my-8 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 py-6 px-6 sm:px-8 rounded-2xl bg-gray-50 dark:bg-muted/40 border border-border/40 dark:border-white/10 max-w-2xl mx-auto">
+                <div className="my-8 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12 py-6 px-6 sm:px-8 rounded-2xl bg-gray-50 border border-gray-100 max-w-2xl mx-auto">
                   <div className="text-center">
-                    <div className="font-heading font-black text-4xl sm:text-5xl text-gray-900 dark:text-white tracking-tight">
+                    <div className="font-heading font-black text-4xl sm:text-5xl text-gray-900 tracking-tight">
                       {rating.toFixed(1)}
                     </div>
                     <div className="flex items-center justify-center gap-1 text-amber-400 text-lg mt-1">
@@ -1251,17 +1238,17 @@ function SiteMaquinaView({
                         <Star key={i} className="h-5 w-5 fill-amber-400 text-amber-400" />
                       ))}
                     </div>
-                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1 block">Escala de 1 a 5 estrelas</span>
+                    <span className="text-xs text-gray-500 mt-1 block">Escala de 1 a 5 estrelas</span>
                   </div>
 
-                  <div className="w-px h-16 bg-gray-200 dark:bg-white/10 hidden sm:block" />
+                  <div className="w-px h-16 bg-gray-200 hidden sm:block" />
 
                   <div className="text-center sm:text-left">
-                    <div className="font-heading font-bold text-base sm:text-lg text-gray-900 dark:text-white flex items-center gap-2 justify-center sm:justify-start">
+                    <div className="font-heading font-bold text-base sm:text-lg text-gray-900 flex items-center gap-2 justify-center sm:justify-start">
                       <CheckCircle2 className="h-5 w-5 text-emerald-500 shrink-0" />
                       <span>{reviewsCount} Avaliações Verificadas</span>
                     </div>
-                    <p className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm mt-1">
+                    <p className="text-gray-600 text-xs sm:text-sm mt-1">
                       Comentários e notas registradas diretamente por usuários na ficha oficial do Google Maps.
                     </p>
                   </div>
@@ -1271,14 +1258,14 @@ function SiteMaquinaView({
                 {Array.isArray(socialData.testimonials) && socialData.testimonials.length > 0 && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left my-8">
                     {socialData.testimonials.map((t: any) => (
-                      <div key={t.id || t.author} className="p-5 rounded-2xl bg-gray-50/80 dark:bg-muted/40 border border-border/40 dark:border-white/10 shadow-xs flex flex-col justify-between">
-                        <p className="text-gray-700 dark:text-gray-300 text-sm italic mb-4 leading-relaxed line-clamp-4">"{t.text}"</p>
-                        <div className="flex items-center gap-3 border-t border-gray-200/60 dark:border-white/10 pt-3 mt-auto">
+                      <div key={t.id || t.author} className="p-5 rounded-2xl bg-gray-50/80 border border-gray-100 shadow-xs flex flex-col justify-between">
+                        <p className="text-gray-700 text-sm italic mb-4 leading-relaxed line-clamp-4">"{t.text}"</p>
+                        <div className="flex items-center gap-3 border-t border-gray-200/60 pt-3 mt-auto">
                           <div className="w-8 h-8 rounded-full bg-[var(--color-100)] text-[var(--color-600)] flex items-center justify-center font-bold text-xs shrink-0">
                             {(t.author || "C").charAt(0).toUpperCase()}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <div className="font-heading font-bold text-xs text-gray-900 dark:text-white truncate">{t.author}</div>
+                            <div className="font-heading font-bold text-xs text-gray-900 truncate">{t.author}</div>
                             <div className="text-[10px] text-gray-400 truncate">{t.role || "Cliente Verificado"}</div>
                           </div>
                           <div className="flex text-amber-400 text-xs shrink-0">
@@ -1400,10 +1387,7 @@ function SiteMaquinaView({
             style={{ backgroundColor: contCfg.bg_color || (isLightMode ? "#f9fafb" : "#0d1117") }}
           >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div
-                data-parallax-layer="card"
-                className="bg-[var(--color-900)] rounded-3xl text-white overflow-hidden shadow-2xl border border-border/40 dark:border-white/10"
-              >
+              <div className="bg-[var(--color-900)] rounded-3xl text-white overflow-hidden shadow-2xl">
                 <div className="grid grid-cols-1 lg:grid-cols-2">
                   {/* Lado Esquerdo: Dados de Contato com Contraste 100% Blindado */}
                   <div className="p-6 sm:p-10 lg:p-14 flex flex-col justify-between space-y-6 sm:space-y-8">
@@ -1474,7 +1458,6 @@ function SiteMaquinaView({
 
                     <div>
                       <a
-                        data-parallax-layer="float"
                         href={whatsappHref}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -1690,16 +1673,6 @@ function SiteMaquinaView({
         } as React.CSSProperties
       }
     >
-      {/* AMBIENT MESH GLOW (Iluminação de Fundo Profunda) */}
-      <div
-        data-parallax-layer="deep"
-        className="fixed top-24 left-1/2 -translate-x-1/2 w-[340px] sm:w-[680px] h-[340px] sm:h-[480px] rounded-full blur-[130px] pointer-events-none opacity-20 dark:opacity-30 -z-10"
-        style={{
-          background: `radial-gradient(circle, hsl(${hue}, 85%, 60%) 0%, transparent 70%)`,
-        }}
-        aria-hidden="true"
-      />
-
       {/* 1. BARRA UTILITÁRIA SUPERIOR */}
       <div className="bg-[var(--color-900)] text-white text-[11px] sm:text-xs py-2 px-4 border-b border-[var(--color-800)] z-40 relative">
         <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-2">

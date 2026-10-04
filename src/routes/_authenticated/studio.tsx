@@ -26,9 +26,13 @@ import {
   ArrowUp,
   ArrowLeft,
   Trash2,
+  ShoppingBag,
+  Upload,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { PageService } from "@/modules/page/services/PageService";
 import type {
   CinematicPageData,
   CinematicGalleryItem,
@@ -46,6 +50,14 @@ import {
 } from "@/modules/cinematic/cinematic.functions";
 import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
 import { z } from "zod";
+
+const TEMPLATE_OPTIONS = [
+  { id: "cinematic-glass", name: "Landing Page Cinematográfica", desc: "Visual imersivo de alta conversão, hero marcante e glassmorphism", icon: "✨" },
+  { id: "restaurant-menu", name: "Delivery & Cardápio iFood", desc: "Cardápio com fotos, categorias e pedido direto no WhatsApp", icon: "🍔" },
+  { id: "store-showcase", name: "Loja & E-commerce (Carrinho)", desc: "Vitrine de produtos com sacola de compras e checkout WhatsApp", icon: "🛍️" },
+  { id: "site-maquina", name: "Site Institucional Máquina", desc: "Apresentação de autoridade, diferenciais, serviços e depoimentos", icon: "🏢" },
+  { id: "clinic-care", name: "Clínica & Especialidades", desc: "Agendamento, especialidades e bio profissional para saúde", icon: "🩺" },
+];
 
 function convertBioPageToCinematic(bio: any): CinematicPageData {
   const socialLinks = (bio.social_links as Record<string, any>) || {};
@@ -191,9 +203,47 @@ export default function CinematicStudioPage() {
   const [publishedModalOpen, setPublishedModalOpen] = useState(false);
 
   // Acordeões dos Ajustes Manuais
-  const [openSection, setOpenSection] = useState<"identity" | "media" | "styling" | "marquee">("identity");
+  const [openSection, setOpenSection] = useState<"identity" | "products" | "media" | "styling" | "marquee">("identity");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingLogo(true);
+    try {
+      const publicUrl = await PageService.uploadAsset(file);
+      setData((prev) => ({ ...prev, avatarUrl: publicUrl }));
+      toast.success("Logotipo atualizado com sucesso!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao enviar logotipo.");
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const publicUrl = await PageService.uploadAsset(file);
+      setData((prev) => ({
+        ...prev,
+        hero: { ...prev.hero, backgroundImage: publicUrl },
+      }));
+      toast.success("Foto de capa atualizada!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao enviar capa.");
+    } finally {
+      setUploadingCover(false);
+    }
+  };
+
   const chatEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -1105,6 +1155,20 @@ export default function CinematicStudioPage() {
                   onChange={handleFileUpload}
                   className="hidden"
                 />
+                <input
+                  ref={logoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                  className="hidden"
+                />
+                <input
+                  ref={coverInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCoverUpload}
+                  className="hidden"
+                />
 
                 {/* Popover Inline do Google Maps */}
                 {showMapsInput && (
@@ -1233,7 +1297,77 @@ export default function CinematicStudioPage() {
                 </button>
 
                 {openSection === "identity" && (
-                  <div className="p-3.5 pt-0 space-y-3 text-xs border-t border-zinc-800/60">
+                  <div className="p-3.5 pt-0 space-y-3.5 text-xs border-t border-zinc-800/60">
+                    {/* Logotipo da Marca */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block">
+                        Logotipo da Marca
+                      </label>
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-10 w-10 rounded-full border border-zinc-800 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
+                          {data.avatarUrl ? (
+                            <img src={data.avatarUrl} alt="Logo" className="h-full w-full object-cover" />
+                          ) : (
+                            <ImageIcon className="h-4 w-4 text-zinc-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <button
+                            type="button"
+                            onClick={() => logoInputRef.current?.click()}
+                            disabled={uploadingLogo}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-medium text-zinc-200 transition cursor-pointer disabled:opacity-50"
+                          >
+                            {uploadingLogo ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                            <span>{data.avatarUrl ? "Trocar Logotipo" : "Enviar Logotipo"}</span>
+                          </button>
+                          <input
+                            type="url"
+                            value={data.avatarUrl || ""}
+                            onChange={(e) => setData({ ...data, avatarUrl: e.target.value })}
+                            placeholder="Ou cole a URL da imagem..."
+                            className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-300 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Foto de Capa do Hero */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block">
+                        Foto de Capa Principal (Hero)
+                      </label>
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-12 w-16 rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
+                          {data.hero.backgroundImage ? (
+                            <img src={data.hero.backgroundImage} alt="Capa" className="h-full w-full object-cover" />
+                          ) : (
+                            <ImageIcon className="h-4 w-4 text-zinc-500" />
+                          )}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <button
+                            type="button"
+                            onClick={() => coverInputRef.current?.click()}
+                            disabled={uploadingCover}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-[11px] font-medium text-zinc-200 transition cursor-pointer disabled:opacity-50"
+                          >
+                            {uploadingCover ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />}
+                            <span>Trocar Foto de Capa</span>
+                          </button>
+                          <input
+                            type="url"
+                            value={data.hero.backgroundImage || ""}
+                            onChange={(e) =>
+                              setData({ ...data, hero: { ...data.hero, backgroundImage: e.target.value } })
+                            }
+                            placeholder="Ou cole a URL da foto de capa..."
+                            className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 text-[10px] text-zinc-300 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none font-mono"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
                     <div>
                       <label className="text-[10px] text-zinc-400 uppercase font-semibold">Nome do Negócio</label>
                       <input
@@ -1280,6 +1414,75 @@ export default function CinematicStudioPage() {
                         className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 p-2.5 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none resize-none"
                       />
                     </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-zinc-400 uppercase font-semibold">Texto do Botão CTA</label>
+                        <input
+                          type="text"
+                          value={data.hero.ctaText || "Solicitar Atendimento VIP"}
+                          onChange={(e) =>
+                            setData({ ...data, hero: { ...data.hero, ctaText: e.target.value } })
+                          }
+                          placeholder="Ex: Pedir no WhatsApp"
+                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-zinc-400 uppercase font-semibold">Link / Destino do Botão</label>
+                        <input
+                          type="text"
+                          value={data.hero.ctaLink || "#manifesto"}
+                          onChange={(e) =>
+                            setData({ ...data, hero: { ...data.hero, ctaLink: e.target.value } })
+                          }
+                          placeholder="#manifesto ou https://..."
+                          className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* História / Sobre Nós / Manifesto */}
+                    <div className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 space-y-2">
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold block">
+                        Sobre Nós / História / Manifesto
+                      </label>
+                      <div>
+                        <input
+                          type="text"
+                          value={data.manifesto?.headline || ""}
+                          onChange={(e) =>
+                            setData({
+                              ...data,
+                              manifesto: {
+                                ...(data.manifesto || { headline: "", bodyText: "" }),
+                                headline: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="Título da História (Ex: O Legado de Criação)"
+                          className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <textarea
+                          rows={3}
+                          value={data.manifesto?.bodyText || ""}
+                          onChange={(e) =>
+                            setData({
+                              ...data,
+                              manifesto: {
+                                ...(data.manifesto || { headline: "", bodyText: "" }),
+                                bodyText: e.target.value,
+                              },
+                            })
+                          }
+                          placeholder="Conte a história, os diferenciais e a essência da sua marca..."
+                          className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-2.5 text-xs text-zinc-200 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none resize-none leading-relaxed"
+                        />
+                      </div>
+                    </div>
+
                     <div className="grid grid-cols-2 gap-2">
                       <div>
                         <label className="text-[10px] text-zinc-400 uppercase font-semibold">WhatsApp</label>
@@ -1313,6 +1516,193 @@ export default function CinematicStudioPage() {
                         className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
                       />
                     </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Acordeão 2: Vitrine & Catálogo (Produtos & Serviços) */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenSection(openSection === "products" ? ("" as any) : "products")}
+                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <ShoppingBag className="h-3.5 w-3.5 text-zinc-400" />
+                    <span>Vitrine & Catálogo ({data.highlights?.length || 0})</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {data.highlights && data.highlights.length > 0 && (
+                      <span className="rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold px-2 py-0.5">
+                        {data.highlights.length} {data.highlights.length === 1 ? "item" : "itens"}
+                      </span>
+                    )}
+                    <ChevronDown
+                      className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "products" ? "rotate-180" : ""}`}
+                    />
+                  </div>
+                </button>
+
+                {openSection === "products" && (
+                  <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-semibold text-zinc-400 uppercase">
+                        Produtos ou Serviços em Destaque
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newItemId = `hl_${Date.now()}`;
+                          setData((prev) => ({
+                            ...prev,
+                            highlights: [
+                              ...(prev.highlights || []),
+                              {
+                                id: newItemId,
+                                title: "Novo Item",
+                                description: "Descrição dos diferenciais e benefícios.",
+                                price: "R$ 0,00",
+                                badge: "Destaque",
+                                image: prev.hero?.backgroundImage || "",
+                              },
+                            ],
+                          }));
+                          toast.success("Novo item adicionado à vitrine!");
+                        }}
+                        className="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                      >
+                        <Plus className="h-3 w-3" />
+                        <span>Adicionar Item</span>
+                      </button>
+                    </div>
+
+                    {(!data.highlights || data.highlights.length === 0) ? (
+                      <div className="p-4 text-center rounded-xl border border-dashed border-zinc-800 text-zinc-500 text-xs">
+                        Nenhum item na vitrine. Clique em "+ Adicionar Item" para cadastrar produtos ou serviços.
+                      </div>
+                    ) : (
+                      <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
+                        {data.highlights.map((item, idx) => (
+                          <div key={item.id || idx} className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] font-bold text-zinc-400 uppercase">
+                                Item #{idx + 1}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setData((prev) => ({
+                                    ...prev,
+                                    highlights: (prev.highlights || []).filter((_, i) => i !== idx),
+                                  }));
+                                  toast.info("Item removido da vitrine.");
+                                }}
+                                className="p-1 text-zinc-500 hover:text-red-400 transition-colors rounded cursor-pointer"
+                                title="Remover este item"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+
+                            <div>
+                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">Nome do Produto / Serviço</label>
+                              <input
+                                type="text"
+                                value={item.title}
+                                onChange={(e) => {
+                                  const newTitle = e.target.value;
+                                  setData((prev) => {
+                                    const list = [...(prev.highlights || [])];
+                                    list[idx] = { ...list[idx], title: newTitle };
+                                    return { ...prev, highlights: list };
+                                  });
+                                }}
+                                placeholder="Nome do produto ou prato"
+                                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="text-[9px] text-zinc-400 uppercase font-semibold">Preço ou Valor</label>
+                                <input
+                                  type="text"
+                                  value={item.price || ""}
+                                  onChange={(e) => {
+                                    const newPrice = e.target.value;
+                                    setData((prev) => {
+                                      const list = [...(prev.highlights || [])];
+                                      list[idx] = { ...list[idx], price: newPrice };
+                                      return { ...prev, highlights: list };
+                                    });
+                                  }}
+                                  placeholder="Ex: R$ 45,00"
+                                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-emerald-400 font-bold focus:border-zinc-700 focus:outline-none"
+                                />
+                              </div>
+                              <div>
+                                <label className="text-[9px] text-zinc-400 uppercase font-semibold">Selo / Badge</label>
+                                <input
+                                  type="text"
+                                  value={item.badge || ""}
+                                  onChange={(e) => {
+                                    const newBadge = e.target.value;
+                                    setData((prev) => {
+                                      const list = [...(prev.highlights || [])];
+                                      list[idx] = { ...list[idx], badge: newBadge };
+                                      return { ...prev, highlights: list };
+                                    });
+                                  }}
+                                  placeholder="Ex: Mais Pedido"
+                                  className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-200 focus:border-zinc-700 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+
+                            <div>
+                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">Descrição / Ingredientes</label>
+                              <textarea
+                                rows={2}
+                                value={item.description || ""}
+                                onChange={(e) => {
+                                  const newDesc = e.target.value;
+                                  setData((prev) => {
+                                    const list = [...(prev.highlights || [])];
+                                    list[idx] = { ...list[idx], description: newDesc };
+                                    return { ...prev, highlights: list };
+                                  });
+                                }}
+                                placeholder="Detalhes, benefícios ou ingredientes do item..."
+                                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 p-2 text-xs text-zinc-300 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none resize-none"
+                              />
+                            </div>
+
+                            <div>
+                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">Foto do Produto (URL)</label>
+                              <div className="flex items-center gap-2">
+                                {item.image && (
+                                  <img src={item.image} alt="" className="w-8 h-8 rounded-lg object-cover border border-zinc-800 shrink-0" />
+                                )}
+                                <input
+                                  type="url"
+                                  value={item.image || ""}
+                                  onChange={(e) => {
+                                    const newImg = e.target.value;
+                                    setData((prev) => {
+                                      const list = [...(prev.highlights || [])];
+                                      list[idx] = { ...list[idx], image: newImg };
+                                      return { ...prev, highlights: list };
+                                    });
+                                  }}
+                                  placeholder="https://exemplo.com/foto.jpg"
+                                  className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-300 font-mono focus:border-zinc-700 focus:outline-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1441,6 +1831,33 @@ export default function CinematicStudioPage() {
 
                 {openSection === "styling" && (
                   <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
+                    {/* Modelo de Site Ativo */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Modelo de Site Ativo:</span>
+                      <div className="relative">
+                        <select
+                          value={(data as any).templateId || "cinematic-glass"}
+                          onChange={(e) => {
+                            setData((prev) => ({
+                              ...prev,
+                              templateId: e.target.value,
+                            } as any));
+                            toast.success("Modelo de site atualizado!");
+                          }}
+                          className="w-full appearance-none rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 focus:border-zinc-600 focus:outline-none cursor-pointer"
+                        >
+                          {TEMPLATE_OPTIONS.map((tmpl) => (
+                            <option key={tmpl.id} value={tmpl.id} className="bg-zinc-900 text-zinc-100">
+                              {tmpl.icon} {tmpl.name}
+                            </option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400 text-xs">
+                          ▼
+                        </div>
+                      </div>
+                    </div>
+
                     {/* Modo Visual (Dark vs Light) */}
                     <div className="space-y-1.5">
                       <span className="text-[10px] text-zinc-400 uppercase font-semibold">Modo Visual:</span>

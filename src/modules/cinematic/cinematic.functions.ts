@@ -452,6 +452,34 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
       savedSlug = created.slug;
     }
 
+    // Sincroniza os itens na tabela catalog_items (para alimentar catálogo, loja e pedidos nativamente)
+    if (savedId && data.highlights && Array.isArray(data.highlights)) {
+      try {
+        await supabase.from("catalog_items").delete().eq("page_id", savedId);
+
+        if (data.highlights.length > 0) {
+          const catalogRows = data.highlights.map((item, idx) => {
+            const rawPrice = item.price
+              ? parseFloat(item.price.replace(/[^\d,.-]/g, "").replace(",", "."))
+              : 0;
+            return {
+              page_id: savedId,
+              title: item.title,
+              description: item.description,
+              price: isNaN(rawPrice) ? 0 : rawPrice,
+              image_url: item.image || null,
+              badge: item.badge || null,
+              is_available: true,
+              display_order: idx,
+            };
+          });
+          await supabase.from("catalog_items").insert(catalogRows);
+        }
+      } catch (catErr) {
+        console.warn("Aviso ao sincronizar catalog_items:", catErr);
+      }
+    }
+
     return {
       success: true,
       pageId: savedId,

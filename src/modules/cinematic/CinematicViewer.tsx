@@ -188,14 +188,14 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
     } transition-all duration-300`;
   } else {
     // Glassmorphism (Padrão)
-    cardBorderClass = `${radiusClass} border backdrop-blur-xl ${
+    cardBorderClass = `${radiusClass} border ${
       isLight
-        ? "border-black/10 bg-white/80 text-zinc-900 shadow-lg shadow-black/5 hover:border-black/20"
+        ? "border-zinc-200/90 bg-white text-zinc-900 shadow-[0_4px_25px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:border-zinc-300"
         : isEditorial
         ? "border-white/15 bg-black/60 text-white backdrop-blur-sm hover:border-white/40"
         : isBento
         ? "border-white/10 bg-zinc-950/70 text-white shadow-2xl hover:border-white/20"
-        : "border-white/10 bg-white/[0.04] text-white shadow-2xl hover:border-white/25"
+        : "border-white/10 bg-white/[0.04] text-white shadow-2xl hover:border-white/25 backdrop-blur-xl"
     } transition-all`;
   }
 
@@ -294,11 +294,11 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       </div>
 
       {/* TopBar Flutuante de Luxo */}
-      <header className={`sticky top-0 z-40 transition-all ${isLight ? "border-b border-black/10 bg-white/80 backdrop-blur-xl shadow-sm text-zinc-900" : "border-b border-white/10 bg-black/40 backdrop-blur-xl text-white"}`}>
+      <header className={`sticky top-0 z-40 transition-all ${isLight ? "border-b border-zinc-200/90 bg-white/90 backdrop-blur-xl shadow-xs text-zinc-900" : "border-b border-white/10 bg-black/40 backdrop-blur-xl text-white"}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
           <a href="#hero" className="group flex items-center gap-2.5 min-w-0">
             <span
-              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition-transform group-hover:scale-105 ${isLight ? "border-black/15 bg-black/5" : "border-white/20 bg-white/5"}`}
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition-transform group-hover:scale-105 ${isLight ? "border-zinc-200 bg-zinc-100" : "border-white/20 bg-white/5"}`}
               style={{ color: accentColor }}
             >
               {(data.businessName || "Site").slice(0, 2).toUpperCase()}
@@ -309,12 +309,12 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           </a>
 
           {/* Links de navegação interna */}
-          <nav className={`${isEmbedded ? "hidden" : "hidden md:flex"} items-center gap-6 text-xs font-medium uppercase tracking-widest text-zinc-400`}>
+          <nav className={`${isEmbedded ? "hidden" : "hidden md:flex"} items-center gap-6 text-xs font-semibold uppercase tracking-widest ${isLight ? "text-zinc-600" : "text-zinc-400"}`}>
             {data.bentoGrid && data.bentoGrid.length > 0 && (
               <button
                 type="button"
                 onClick={() => scrollToSection("diferenciais")}
-                className="hover:text-white transition-colors"
+                className={`${isLight ? "hover:text-zinc-950" : "hover:text-white"} transition-colors cursor-pointer`}
               >
                 Diferenciais
               </button>
@@ -323,7 +323,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               <button
                 type="button"
                 onClick={() => scrollToSection("manifesto")}
-                className="hover:text-white transition-colors"
+                className={`${isLight ? "hover:text-zinc-950" : "hover:text-white"} transition-colors cursor-pointer`}
               >
                 O Manifesto
               </button>
@@ -331,14 +331,14 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             <button
               type="button"
               onClick={() => scrollToSection("galeria")}
-              className="hover:text-white transition-colors"
+              className={`${isLight ? "hover:text-zinc-950" : "hover:text-white"} transition-colors cursor-pointer`}
             >
               Galeria
             </button>
             <button
               type="button"
               onClick={() => scrollToSection("destaques")}
-              className="hover:text-white transition-colors"
+              className={`${isLight ? "hover:text-zinc-950" : "hover:text-white"} transition-colors cursor-pointer`}
             >
               Destaques
             </button>
@@ -346,7 +346,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               <button
                 type="button"
                 onClick={() => scrollToSection("comparativo")}
-                className="hover:text-white transition-colors"
+                className={`${isLight ? "hover:text-zinc-950" : "hover:text-white"} transition-colors cursor-pointer`}
               >
                 Comparativo
               </button>
@@ -355,7 +355,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               <button
                 type="button"
                 onClick={() => scrollToSection("faq")}
-                className="hover:text-white transition-colors"
+                className={`${isLight ? "hover:text-zinc-950" : "hover:text-white"} transition-colors cursor-pointer`}
               >
                 FAQ
               </button>
@@ -366,7 +366,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-lg backdrop-blur-md transition-all hover:scale-105 ${
+            className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-md backdrop-blur-md transition-all hover:scale-105 cursor-pointer ${
               isLight
                 ? "border-zinc-300 bg-zinc-900 text-white hover:bg-black"
                 : "border-white/20 bg-white/10 text-white hover:bg-white/20"
@@ -389,7 +389,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               loop
               muted
               playsInline
-              className={`h-full w-full object-cover object-center will-change-transform ${isLight ? "opacity-35" : ""}`}
+              className={`h-full w-full object-cover object-center will-change-transform ${isLight ? "opacity-80" : ""}`}
               style={{
                 transform: `translate3d(0, ${backgroundParallaxY}px, 0) scale(${backgroundZoom})`,
                 transition: "transform 0.08s cubic-bezier(0.2, 0.9, 0.3, 1)",
@@ -402,7 +402,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             <img
               src={data.hero.backgroundImage}
               alt={data.businessName || "Capa"}
-              className={`h-full w-full object-cover object-center will-change-transform ${isLight ? "opacity-40" : ""}`}
+              className={`h-full w-full object-cover object-center will-change-transform ${isLight ? "opacity-90" : ""}`}
               style={{
                 transform: `translate3d(0, ${backgroundParallaxY}px, 0) scale(${backgroundZoom})`,
                 transition: "transform 0.08s cubic-bezier(0.2, 0.9, 0.3, 1)",
@@ -415,8 +415,8 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           {/* Vinheta de Fundo: Luminosa no Modo Claro e Escura no Modo Cinema */}
           {isLight ? (
             <>
-              <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-white/60 to-white/90" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-slate-50/80 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-transparent to-slate-50/90" />
             </>
           ) : (
             <>
@@ -517,7 +517,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
       {/* 2. BLOCO MARQUEE INFINITO / DIVISOR DE SESSÃO */}
       {data.marquee && data.marquee.length > 0 && (
-        <section className={`relative z-20 w-full overflow-hidden border-y py-3.5 backdrop-blur-md ${isLight ? "border-zinc-200/90 bg-zinc-100/90 text-zinc-900 shadow-xs" : "border-white/10 bg-black/60 text-white"}`}>
+        <section className={`relative z-20 w-full overflow-hidden border-y py-3.5 backdrop-blur-md ${isLight ? "border-zinc-200/90 bg-white/95 text-zinc-900 shadow-xs" : "border-white/10 bg-black/60 text-white"}`}>
           <div className="flex w-max animate-marquee-infinite items-center gap-8 will-change-transform">
             {[...data.marquee, ...data.marquee, ...data.marquee, ...data.marquee].map((item, idx) => {
               const text = typeof item === "string" ? item : item?.text || "";
@@ -826,7 +826,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           </div>
 
           <div className={`overflow-hidden ${cardBorderClass}`}>
-            <div className={`grid grid-cols-12 border-b p-4 text-xs font-bold uppercase tracking-wider ${isLight ? "border-black/10 bg-black/5" : "border-white/10 bg-white/[0.04]"}`}>
+            <div className={`grid grid-cols-12 border-b p-4 text-xs font-bold uppercase tracking-wider ${isLight ? "border-zinc-200 bg-zinc-50" : "border-white/10 bg-white/[0.04]"}`}>
               <div className={`col-span-6 ${textMutedClass}`}>Critério / Diferencial</div>
               <div className="col-span-3 text-center" style={{ color: accentColor }}>
                 {data.comparison.usLabel}
@@ -836,9 +836,9 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               </div>
             </div>
 
-            <div className={`divide-y text-xs sm:text-sm ${isLight ? "divide-black/5" : "divide-white/5"}`}>
+            <div className={`divide-y text-xs sm:text-sm ${isLight ? "divide-zinc-200/70" : "divide-white/5"}`}>
               {data.comparison.rows.map((row, idx) => (
-                <div key={idx} className={`grid grid-cols-12 p-4 items-center ${isLight ? "hover:bg-black/[0.02]" : "hover:bg-white/[0.02]"}`}>
+                <div key={idx} className={`grid grid-cols-12 p-4 items-center ${isLight ? "hover:bg-zinc-50/70" : "hover:bg-white/[0.02]"}`}>
                   <div className={`col-span-6 font-medium ${isLight ? "text-zinc-800" : "text-zinc-200"}`}>
                     {row.feature}
                   </div>
@@ -911,7 +911,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                     />
                   </button>
                   {isOpen && (
-                    <div className={`px-5 pb-5 text-xs sm:text-sm leading-relaxed ${textSecondaryClass} border-t ${isLight ? "border-black/5" : "border-white/5"} pt-3`}>
+                    <div className={`px-5 pb-5 text-xs sm:text-sm leading-relaxed ${textSecondaryClass} border-t ${isLight ? "border-zinc-100" : "border-white/5"} pt-3`}>
                       {item.answer}
                     </div>
                   )}
@@ -958,7 +958,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               </div>
             </div>
 
-            <div className={`lg:col-span-5 rounded-2xl border p-6 space-y-5 ${isLight ? "border-black/10 bg-white shadow-xl" : "border-white/10 bg-black/60"}`}>
+            <div className={`lg:col-span-5 rounded-2xl border p-6 space-y-5 ${isLight ? "border-zinc-200/90 bg-zinc-50/90 shadow-md text-zinc-900" : "border-white/10 bg-black/60"}`}>
               {data.address && (
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 shrink-0 mt-0.5" style={{ color: accentColor }} />

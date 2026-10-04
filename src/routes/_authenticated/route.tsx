@@ -70,18 +70,11 @@ function AuthedLayout() {
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
           {
-            to: "/builder",
-            label: "Clean Builder",
-            icon: Sparkles,
-            badge: "Rápido",
-            badgeClassName: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
-          },
-          {
             to: "/studio",
-            label: "Cinematic Studio",
+            label: "Studio & Editor",
             icon: Clapperboard,
-            badge: "VIP",
-            badgeClassName: "bg-white/10 text-zinc-300 border border-white/10 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
+            badge: "IA + Ajustes",
+            badgeClassName: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
           },
           { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
         ],

@@ -2695,9 +2695,9 @@ function ProspectingPage() {
                         </DropdownMenuItem>
                         {demo.pageId && (
                           <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                            <Link to="/builder" search={{ page: demo.pageId }}>
+                            <Link to="/studio" search={{ page: demo.pageId }}>
                               <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                              <span>Editar no Clean Builder</span>
+                              <span>Editar no Studio</span>
                             </Link>
                           </DropdownMenuItem>
                         )}
@@ -3054,9 +3054,9 @@ function ProspectingPage() {
                                   <>
                                     {demo.pageId && (
                                       <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                        <Link to="/builder" search={{ page: demo.pageId }}>
+                                        <Link to="/studio" search={{ page: demo.pageId }}>
                                           <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                          <span>Editar no Clean Builder</span>
+                                          <span>Editar no Studio</span>
                                         </Link>
                                       </DropdownMenuItem>
                                     )}

@@ -148,11 +148,11 @@ export function SiteIdeationModal({
         },
       });
 
-      toast.success("Site gerado com sucesso! Abrindo no Builder...");
+      toast.success("Site gerado com sucesso! Abrindo no Studio...");
       onOpenChange(false);
-      // Redireciona para o novo Builder Clean passando a página criada
+      // Redireciona para o Studio passando a página criada
       navigate({
-        to: "/builder",
+        to: "/studio",
         search: { page: res.slug } as any,
       });
     } catch (err: any) {

@@ -92,6 +92,10 @@ export interface CinematicPageData {
     borderStyle: "glass" | "sharp" | "pill" | "subtle";
     headingStyle?: "default" | "uppercase" | "italic" | "gradient";
     archetype?: VisualArchetype;
+    mode?: "dark" | "light";
+    fontFamily?: string;
+    boxEffect?: "glass" | "solid" | "glow";
+    borderRadius?: "rounded" | "pill" | "sharp";
   };
   hero: CinematicHero;
   manifesto?: CinematicManifesto;

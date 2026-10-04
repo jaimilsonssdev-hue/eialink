@@ -64,9 +64,29 @@ export function TemplateRenderer({
   const cinematicData = (socialObj.cinematic_data || socialObj.cinematicData) as CinematicPageData | undefined;
 
   if (cinematicData && isExplicitCinematic) {
+    const customTheme = socialObj.custom_theme || socialObj.theme || {};
+    const appliedArchetype = customTheme.archetype || cinematicData.archetype || (cinematicData.theme as any)?.archetype || "cinematic";
+    const appliedHeadingStyle = customTheme.headingStyle || (cinematicData.theme as any)?.headingStyle || "default";
+
+    const hydratedCinematicData: CinematicPageData = {
+      ...cinematicData,
+      archetype: appliedArchetype as any,
+      theme: {
+        ...cinematicData.theme,
+        archetype: appliedArchetype as any,
+        headingStyle: appliedHeadingStyle as any,
+        bg: customTheme.bg || cinematicData.theme?.bg || (customTheme.mode === "light" ? "#f8fafc" : "#0a0a0c"),
+        accent: customTheme.accent || cinematicData.theme?.accent || "#f59e0b",
+        mode: customTheme.mode || (cinematicData.theme as any)?.mode || (cinematicData.theme?.bg?.includes("#fff") || cinematicData.theme?.bg?.includes("#f8") ? "light" : "dark"),
+        fontFamily: customTheme.font || customTheme.font_pair || (cinematicData.theme as any)?.fontFamily || "sans",
+        boxEffect: customTheme.boxEffect || (cinematicData.theme as any)?.boxEffect || "glass",
+        borderRadius: customTheme.borderRadius || (cinematicData.theme as any)?.borderRadius || "rounded",
+      },
+    };
+
     return (
-      <div className="w-full">
-        <CinematicViewer data={cinematicData} isEmbedded={true} />
+      <div className="w-full" style={{ backgroundColor: hydratedCinematicData.theme.bg }}>
+        <CinematicViewer data={hydratedCinematicData} isEmbedded={true} />
         {supplemental}
       </div>
     );
@@ -123,23 +143,44 @@ export function TemplateRenderer({
     ? bio.social_links
     : {}) as Record<string, any>;
   const tokensDesign = socialData.tokens_design;
-  const customTheme = socialData.custom_theme as {
+  const customTheme = (socialData.custom_theme || socialData.theme) as {
     primary?: string;
+    accent?: string;
     background?: string;
+    bg?: string;
     text?: string;
     title?: string;
     mode?: string;
     card_bg?: string;
     border_color?: string;
     border_radius?: string;
+    borderRadius?: string;
+    boxEffect?: string;
+    font?: string;
+    font_pair?: string;
+    archetype?: string;
+    headingStyle?: string;
     gradient_1?: string;
     gradient_2?: string;
     layout_esqueleto?: string;
     navigation_bg?: string;
     info_badge_bg?: string;
-    font_pair?: string;
     parallax?: boolean;
   } | undefined;
+
+  const rawFontChoice = customTheme?.font || customTheme?.font_pair;
+  const resolvedFontFamily =
+    rawFontChoice === "serif"
+      ? "'Playfair Display', Georgia, serif"
+      : rawFontChoice === "display"
+      ? "'Plus Jakarta Sans', system-ui, sans-serif"
+      : rawFontChoice === "cormorant"
+      ? "'Cormorant Garamond', serif"
+      : rawFontChoice === "mono"
+      ? "'Courier New', monospace"
+      : rawFontChoice === "sans"
+      ? "'Inter', sans-serif"
+      : findFontPair(customTheme?.font_pair)?.body || model.theme.typography.fontFamily;
 
   const fontPair = findFontPair(customTheme?.font_pair);
   const parallaxEnabled =
@@ -150,14 +191,14 @@ export function TemplateRenderer({
     bio.motion_enabled !== false;
   const parallaxRef = useParallaxScene<HTMLElement>(parallaxEnabled);
 
-  const customPrimary = customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
+  const customPrimary = customTheme?.accent || customTheme?.primary || tokensDesign?.estilo_botoes?.cor_destaque;
   const customText = customTheme?.text || tokensDesign?.estilo_botoes?.cor_texto;
-  const isLightMode = customTheme?.mode === "light" || bio.theme === "mono";
+  const isLightMode = customTheme?.mode === "light" || bio.theme === "mono" || (customTheme?.bg && (customTheme.bg === "#ffffff" || customTheme.bg === "#f8fafc"));
   const customTitle = customTheme?.title || tokensDesign?.estilo_botoes?.cor_titulo || (isLightMode ? "#0f172a" : "#ffffff");
-  const customBg = customTheme?.background || tokensDesign?.fundo_valores?.cor_gradiente_1;
+  const customBg = customTheme?.bg || customTheme?.background || tokensDesign?.fundo_valores?.cor_gradiente_1;
   const customCard = customTheme?.card_bg || tokensDesign?.estilo_botoes?.cor_fundo_card;
   const customBorder = customTheme?.border_color || tokensDesign?.estilo_botoes?.cor_borda;
-  const customRadius = customTheme?.border_radius || tokensDesign?.estilo_botoes?.raio_borda;
+  const customRadius = customTheme?.borderRadius === "sharp" ? "0px" : customTheme?.borderRadius === "pill" ? "28px" : customTheme?.border_radius || (customTheme?.borderRadius === "rounded" ? "16px" : undefined) || tokensDesign?.estilo_botoes?.raio_borda;
 
   const rawArchetype = (customTheme as any)?.archetype || socialData?.archetype || cinematicData?.archetype || "cinematic";
   const resolvedArchetype =
@@ -174,6 +215,7 @@ export function TemplateRenderer({
       ref={parallaxRef}
       data-parallax={parallaxEnabled ? "on" : undefined}
       data-archetype={resolvedArchetype}
+      data-box-effect={customTheme?.boxEffect || "glass"}
       className={`bio-theme ${bio.theme || "aurora"} public-profile-shell archetype-${resolvedArchetype}`}
       data-template={bio.template_id ?? "default"}
       data-layout={model.template.layout}
@@ -190,10 +232,10 @@ export function TemplateRenderer({
       data-motion-ambient={bio.motion_enabled === false ? "none" : bio.motion_ambient ?? "soft"}
       style={
         {
-          fontFamily: fontPair?.body || model.theme.typography.fontFamily,
+          fontFamily: resolvedFontFamily || fontPair?.body || model.theme.typography.fontFamily,
           ...(fontPair
-            ? { "--font-sans": fontPair.body, "--font-display": fontPair.display }
-            : {}),
+            ? { "--font-sans": resolvedFontFamily || fontPair.body, "--font-display": resolvedFontFamily || fontPair.display }
+            : { "--font-sans": resolvedFontFamily, "--font-display": resolvedFontFamily }),
           // Tailwind v4 Design Tokens Bridge
           "--primary": customPrimary || model.theme.colors.primary,
           "--primary-foreground": "#ffffff",
@@ -331,6 +373,17 @@ export function TemplateRenderer({
           border-radius: 1.25rem !important;
           backdrop-filter: blur(20px) !important;
           box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5) !important;
+        }
+
+        /* 5. EFEITOS DOS CARDS (SOLID, GLOW) */
+        .public-profile-shell[data-box-effect="solid"] .bg-card,
+        .public-profile-shell[data-box-effect="solid"] article {
+          backdrop-filter: none !important;
+          box-shadow: none !important;
+        }
+        .public-profile-shell[data-box-effect="glow"] .bg-card,
+        .public-profile-shell[data-box-effect="glow"] article {
+          box-shadow: 0 0 25px var(--cor-destaque, #f59e0b) !important;
         }
       `}</style>
       {layout?.render(model, { bio: renderedBio, links: safeLinks, onTrack, onShare, products: safeProducts, bookingUrl, supplemental })}

@@ -63,8 +63,34 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
     : "#";
 
   // Tokens de Tipografia e Estilo com fallbacks resilientes
+  const rawFont = (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
+  const fontCssFamily =
+    rawFont === "serif"
+      ? "'Playfair Display', Georgia, serif"
+      : rawFont === "display"
+      ? "'Plus Jakarta Sans', system-ui, sans-serif"
+      : rawFont === "cormorant"
+      ? "'Cormorant Garamond', 'Playfair Display', serif"
+      : rawFont === "mono"
+      ? "'Courier New', Courier, monospace"
+      : "'Inter', system-ui, -apple-system, sans-serif";
+
   const fontHeading = data.theme?.fontHeading || "serif";
   const borderStyle = data.theme?.borderStyle || "glass";
+
+  // Modo Visual: Detecção de Claro (Light) vs Escuro (Dark)
+  const isLight =
+    data.theme?.mode === "light" ||
+    (data.theme?.bg &&
+      (data.theme.bg === "#ffffff" ||
+        data.theme.bg === "#f8fafc" ||
+        data.theme.bg.toLowerCase().startsWith("#f") ||
+        data.theme.bg.toLowerCase().startsWith("#e")));
+
+  const textPrimaryClass = isLight ? "text-zinc-900" : "text-zinc-100";
+  const textSecondaryClass = isLight ? "text-zinc-600" : "text-zinc-300";
+  const textMutedClass = isLight ? "text-zinc-500" : "text-zinc-400";
+  const textHeadingClass = isLight ? "text-zinc-950" : "text-white";
 
   // Detecção dos 4 Arquétipos Mestres (com compatibilidade com tags legadas)
   const rawArchetype = ((data.archetype as string) || (data.theme as any)?.archetype || "cinematic").toLowerCase();
@@ -83,45 +109,74 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
   const explicitHeadingStyle = (data.theme as any)?.headingStyle;
 
-  let fontHeadingClass = "font-sans font-bold tracking-tight";
-  let headingEffectClass = "";
+  let fontHeadingClass = "font-bold tracking-tight";
+  let headingEffectClass = textHeadingClass;
 
   if (explicitHeadingStyle === "uppercase" || (!explicitHeadingStyle && isNeobrutalism)) {
-    fontHeadingClass = "font-sans font-black tracking-tight uppercase";
-    headingEffectClass = isNeobrutalism ? "drop-shadow-[3px_3px_0px_#000]" : "";
+    fontHeadingClass = "font-black tracking-tight uppercase";
+    headingEffectClass = isNeobrutalism ? (isLight ? "text-black drop-shadow-[2px_2px_0px_rgba(0,0,0,0.3)]" : "text-white drop-shadow-[3px_3px_0px_#000]") : textHeadingClass;
   } else if (explicitHeadingStyle === "italic" || (!explicitHeadingStyle && isEditorial)) {
-    fontHeadingClass = "font-serif italic font-normal tracking-tight";
-    headingEffectClass = "text-white";
+    fontHeadingClass = "italic font-normal tracking-tight";
+    headingEffectClass = textHeadingClass;
   } else if (explicitHeadingStyle === "gradient" || (!explicitHeadingStyle && isBento)) {
-    fontHeadingClass = "font-sans font-black tracking-tight";
-    headingEffectClass = "bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-400";
+    fontHeadingClass = "font-black tracking-tight";
+    headingEffectClass = isLight
+      ? "bg-clip-text text-transparent bg-gradient-to-r from-zinc-950 via-zinc-800 to-zinc-600"
+      : "bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-400";
   } else {
-    // Padrão / Cinematic
-    fontHeadingClass =
-      fontHeading === "serif"
-        ? "font-serif tracking-tight"
-        : fontHeading === "display"
-        ? "font-sans font-black tracking-tighter uppercase"
-        : fontHeading === "mono"
-        ? "font-mono tracking-wide uppercase"
-        : "font-sans font-bold tracking-tight";
-    headingEffectClass = "drop-shadow-2xl text-white";
+    // Padrão
+    fontHeadingClass = rawFont === "display" ? "font-black tracking-tight" : "font-bold tracking-tight";
+    headingEffectClass = isLight ? "text-zinc-950" : "drop-shadow-2xl text-white";
   }
 
-  // Tokens de Borda / Estilo por Arquétipo
-  const cardBorderClass = isNeobrutalism
-    ? "rounded-xl border-[3px] border-black bg-zinc-900/95 text-white shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_#000] transition-all"
-    : isEditorial
-    ? "rounded-none border border-white/15 bg-black/60 backdrop-blur-sm hover:border-white/40 transition-colors"
-    : isBento
-    ? "rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-xl shadow-2xl hover:border-white/20 transition-all"
-    : borderStyle === "sharp"
-    ? "rounded-none border border-white/20 bg-black/60"
-    : borderStyle === "pill"
-    ? "rounded-3xl border border-white/20 bg-white/[0.04]"
-    : borderStyle === "subtle"
-    ? "rounded-xl border border-white/5 bg-zinc-950/80"
-    : "rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-2xl hover:border-white/25 transition-all";
+  // Tokens de Arredondamento dos Cards
+  const rawRadius = data.theme?.borderRadius || borderStyle;
+  const radiusClass =
+    rawRadius === "sharp"
+      ? "rounded-none"
+      : rawRadius === "pill"
+      ? "rounded-3xl"
+      : isEditorial
+      ? "rounded-none"
+      : isBento
+      ? "rounded-3xl"
+      : "rounded-2xl";
+
+  // Tokens de Efeito dos Cards (Glass, Solid, Glow) & Arquétipos
+  const rawBoxEffect = data.theme?.boxEffect || "glass";
+  const accentColor = data.theme?.accent || "#f59e0b";
+  const secondaryAccent = data.theme?.secondaryAccent || "#fbbf24";
+  const bgColor = data.theme?.bg || (isLight ? "#f8fafc" : "#0a0a0c");
+
+  let cardBorderClass = "";
+  if (isNeobrutalism) {
+    cardBorderClass = `${radiusClass} border-[3px] border-black ${
+      isLight ? "bg-white text-zinc-900" : "bg-zinc-900/95 text-white"
+    } shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_#000] transition-all`;
+  } else if (rawBoxEffect === "solid") {
+    cardBorderClass = `${radiusClass} border ${
+      isLight
+        ? "border-zinc-200 bg-white text-zinc-900 shadow-md hover:border-zinc-300"
+        : "border-zinc-800 bg-zinc-900 text-zinc-100 shadow-xl hover:border-zinc-700"
+    } transition-all`;
+  } else if (rawBoxEffect === "glow") {
+    cardBorderClass = `${radiusClass} border ${
+      isLight
+        ? "border-black/10 bg-white text-zinc-900 shadow-[0_10px_30px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_35px_rgba(0,0,0,0.12)]"
+        : "border-white/20 bg-zinc-950/85 text-white shadow-[0_0_30px_rgba(255,255,255,0.06)] hover:border-white/30"
+    } transition-all duration-300`;
+  } else {
+    // Glassmorphism (Padrão)
+    cardBorderClass = `${radiusClass} border backdrop-blur-xl ${
+      isLight
+        ? "border-black/10 bg-white/80 text-zinc-900 shadow-lg shadow-black/5 hover:border-black/20"
+        : isEditorial
+        ? "border-white/15 bg-black/60 text-white backdrop-blur-sm hover:border-white/40"
+        : isBento
+        ? "border-white/10 bg-zinc-950/70 text-white shadow-2xl hover:border-white/20"
+        : "border-white/10 bg-white/[0.04] text-white shadow-2xl hover:border-white/25"
+    } transition-all`;
+  }
 
   // Tokens de Botões CTA por Arquétipo
   const buttonCtaClass = isNeobrutalism
@@ -136,22 +191,19 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
   const taglineClass = isNeobrutalism
     ? "inline-block bg-amber-400 text-black px-3 py-1 font-black uppercase tracking-wider -rotate-1 border-2 border-black shadow-[3px_3px_0px_#000]"
     : isEditorial
-    ? "tracking-[0.3em] uppercase text-[11px] font-medium text-zinc-300 border-b border-white/25 pb-1 inline-flex items-center gap-2"
+    ? `tracking-[0.3em] uppercase text-[11px] font-medium ${isLight ? "text-zinc-600 border-b border-black/20" : "text-zinc-300 border-b border-white/25"} pb-1 inline-flex items-center gap-2`
     : isBento
-    ? "inline-flex items-center gap-2 font-mono tracking-widest text-[11px] uppercase px-3 py-1 rounded-full border border-white/15 bg-white/5 text-zinc-200"
-    : "inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white shadow-2xl backdrop-blur-md";
+    ? `inline-flex items-center gap-2 font-mono tracking-widest text-[11px] uppercase px-3 py-1 rounded-full border ${isLight ? "border-black/15 bg-black/5 text-zinc-700" : "border-white/15 bg-white/5 text-zinc-200"}`
+    : `inline-flex items-center gap-2 rounded-full border ${isLight ? "border-black/15 bg-white/80 text-zinc-800 shadow-sm" : "border-white/15 bg-black/40 text-white shadow-2xl"} px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase backdrop-blur-md`;
 
   const badgeClass = isNeobrutalism
     ? "rounded-none border-2 border-black bg-white text-black font-black uppercase tracking-wider text-[10px] sm:text-[11px] shadow-[3px_3px_0px_#000] rotate-1 px-3 py-1"
     : isEditorial
-    ? "rounded-none border border-white/20 bg-transparent px-3 py-0.5 text-[10px] tracking-[0.25em] uppercase text-zinc-300"
+    ? `rounded-none border ${isLight ? "border-black/20 text-zinc-700" : "border-white/20 text-zinc-300"} bg-transparent px-3 py-0.5 text-[10px] tracking-[0.25em] uppercase`
     : isBento
-    ? "rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-mono tracking-wide text-zinc-200"
-    : "rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-300 backdrop-blur-md";
+    ? `rounded-full border ${isLight ? "border-black/10 bg-black/5 text-zinc-700" : "border-white/10 bg-white/10 text-zinc-200"} px-3 py-1 text-[11px] font-mono tracking-wide`
+    : `rounded-full border ${isLight ? "border-black/10 bg-white/90 text-zinc-700" : "border-white/15 bg-white/5 text-zinc-300"} px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider backdrop-blur-md`;
 
-  const accentColor = data.theme?.accent || "#f59e0b";
-  const secondaryAccent = data.theme?.secondaryAccent || "#fbbf24";
-  const bgColor = data.theme?.bg || "#0a0a0c";
   const isNeoPop = isNeobrutalism;
   const isCyber = isBento;
 
@@ -170,12 +222,12 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
   return (
     <div
       ref={containerRef}
-      className={`cinematic-experience relative w-full text-zinc-100 selection:bg-white/20 selection:text-white ${
+      className={`cinematic-experience relative w-full ${textPrimaryClass} selection:bg-white/20 selection:text-white ${
         isEmbedded ? "h-full overflow-y-auto overflow-x-hidden" : "min-h-screen overflow-x-hidden"
       } ${className}`}
       style={{
         backgroundColor: bgColor,
-        fontFamily: data.theme.fontHeading === "mono" ? "monospace, sans-serif" : "system-ui, -apple-system, sans-serif",
+        fontFamily: fontCssFamily,
       }}
     >
       {/* Estilos Scoped de Animação do Marquee */}
@@ -195,7 +247,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       `}</style>
 
       {/* Luzes Volumétricas de Fundo (Mesh Glows 60 FPS) */}
-      <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden opacity-50">
+      <div className={`pointer-events-none fixed inset-0 z-0 overflow-hidden ${isLight ? "opacity-25" : "opacity-50"}`}>
         <div
           className="absolute -top-[20%] left-1/2 h-[600px] w-[600px] -translate-x-1/2 rounded-full blur-[140px] transition-all duration-1000"
           style={{
@@ -218,17 +270,17 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
         />
       </div>
 
-      {/* TopBar Flutuante de Luxo (Glassmorphism) */}
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-black/40 backdrop-blur-xl transition-all">
+      {/* TopBar Flutuante de Luxo */}
+      <header className={`sticky top-0 z-40 transition-all ${isLight ? "border-b border-black/10 bg-white/80 backdrop-blur-xl shadow-sm text-zinc-900" : "border-b border-white/10 bg-black/40 backdrop-blur-xl text-white"}`}>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-8">
           <a href="#hero" className="group flex items-center gap-2.5 min-w-0">
             <span
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-xs font-bold transition-transform group-hover:scale-105"
+              className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border text-xs font-bold transition-transform group-hover:scale-105 ${isLight ? "border-black/15 bg-black/5" : "border-white/20 bg-white/5"}`}
               style={{ color: accentColor }}
             >
               {(data.businessName || "Site").slice(0, 2).toUpperCase()}
             </span>
-            <span className={`text-sm sm:text-base font-bold tracking-wide text-white truncate max-w-[160px] sm:max-w-xs ${fontHeadingClass}`}>
+            <span className={`text-sm sm:text-base font-bold tracking-wide truncate max-w-[160px] sm:max-w-xs ${fontHeadingClass} ${textHeadingClass}`}>
               {data.businessName || "Sua Marca"}
             </span>
           </a>
@@ -373,7 +425,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
           {/* Subtítulo Narrativo */}
           {(data.hero.subtitle || !data.businessName) && (
-            <p className="mx-auto mt-6 max-w-2xl text-base sm:text-lg md:text-xl font-light leading-relaxed text-zinc-300 drop-shadow">
+            <p className={`mx-auto mt-6 max-w-2xl text-base sm:text-lg md:text-xl font-light leading-relaxed ${textSecondaryClass} drop-shadow`}>
               {data.hero.subtitle || "Descreva seu negócio no chat ao lado ou importe sua ficha do Google Maps para gerar sua vitrine cinematográfica completa."}
             </p>
           )}
@@ -398,22 +450,26 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             <button
               type="button"
               onClick={() => scrollToSection(data.bentoGrid ? "diferenciais" : "manifesto")}
-              className="flex items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 py-4 text-sm font-semibold text-white backdrop-blur-md transition-all hover:bg-white/15"
+              className={`flex items-center gap-2 rounded-full border px-6 py-4 text-sm font-semibold backdrop-blur-md transition-all ${
+                isLight
+                  ? "border-black/15 bg-white/80 text-zinc-800 hover:bg-white"
+                  : "border-white/20 bg-white/5 text-white hover:bg-white/15"
+              }`}
             >
               <span>Descobrir Detalhes</span>
-              <ArrowDown className="h-4 w-4 text-zinc-400" />
+              <ArrowDown className={`h-4 w-4 ${textMutedClass}`} />
             </button>
           </div>
 
           {/* Avaliação Social Proof no Hero */}
           {data.rating && (
-            <div className="mt-12 flex items-center justify-center gap-2 text-xs font-medium text-zinc-400">
+            <div className={`mt-12 flex items-center justify-center gap-2 text-xs font-medium ${textMutedClass}`}>
               <div className="flex items-center text-amber-400">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="h-3.5 w-3.5 fill-amber-400" />
                 ))}
               </div>
-              <span className="font-bold text-white">{data.rating.toFixed(1)}</span>
+              <span className={`font-bold ${textHeadingClass}`}>{data.rating.toFixed(1)}</span>
               <span>• Avaliação de excelência dos clientes</span>
             </div>
           )}
@@ -422,13 +478,13 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
       {/* 2. BLOCO MARQUEE INFINITO */}
       {data.marquee && data.marquee.length > 0 && (
-        <section className="relative z-20 w-full overflow-hidden border-y border-white/10 bg-black/60 py-3.5 backdrop-blur-md">
+        <section className={`relative z-20 w-full overflow-hidden border-y py-3.5 backdrop-blur-md ${isLight ? "border-black/10 bg-white/80" : "border-white/10 bg-black/60"}`}>
           <div className="animate-marquee-infinite gap-8 items-center">
             {[...data.marquee, ...data.marquee, ...data.marquee].map((item, idx) => (
               <div key={idx} className="flex items-center gap-3 text-xs md:text-sm font-bold tracking-widest uppercase">
                 {item.icon && <span>{item.icon}</span>}
                 <span style={{ color: accentColor }}>{item.text}</span>
-                <span className="text-zinc-600">•</span>
+                <span className={textMutedClass}>•</span>
               </div>
             ))}
           </div>
@@ -448,7 +504,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             <h2 className={`mt-2 text-3xl sm:text-5xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
               Pilares de Distinção
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+            <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${textSecondaryClass}`}>
               Cada dimensão desenhada para superar padrões com consistência comprovada.
             </p>
           </div>
@@ -465,7 +521,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               return (
                 <div
                   key={card.id || idx}
-                  className={`group relative overflow-hidden p-6 sm:p-8 transition-all duration-300 hover:border-white/30 hover:-translate-y-1 ${cardBorderClass} ${colSpan}`}
+                  className={`group relative overflow-hidden p-6 sm:p-8 transition-all duration-300 hover:border-black/30 dark:hover:border-white/30 hover:-translate-y-1 ${cardBorderClass} ${colSpan}`}
                 >
                   {/* Imagem de Fundo se houver */}
                   {card.imageUrl && (
@@ -483,7 +539,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                     <div className="flex items-center justify-between">
                       {card.badge ? (
                         <span
-                          className="rounded-full border border-white/10 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-white"
+                          className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wider ${isLight ? "text-zinc-900" : "text-white"}`}
                           style={{ backgroundColor: `${accentColor}20`, borderColor: `${accentColor}40` }}
                         >
                           {card.badge}
@@ -492,7 +548,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                       {card.metric && (
                         <span
                           className="text-2xl sm:text-3xl font-black tracking-tight"
-                          style={{ color: card.accentBg ? accentColor : "#ffffff" }}
+                          style={{ color: card.accentBg ? accentColor : (isLight ? "#09090b" : "#ffffff") }}
                         >
                           {card.metric}
                         </span>
@@ -501,14 +557,14 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
                     <div>
                       {card.subtitle && (
-                        <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
+                        <p className={`text-xs font-semibold uppercase tracking-wider mb-1 ${textMutedClass}`}>
                           {card.subtitle}
                         </p>
                       )}
-                      <h3 className={`text-xl sm:text-2xl font-bold text-white ${fontHeadingClass}`}>
+                      <h3 className={`text-xl sm:text-2xl font-bold ${fontHeadingClass} ${textHeadingClass}`}>
                         {card.title}
                       </h3>
-                      <p className="mt-2 text-xs sm:text-sm leading-relaxed text-zinc-300">
+                      <p className={`mt-2 text-xs sm:text-sm leading-relaxed ${textSecondaryClass}`}>
                         {card.description}
                       </p>
                     </div>
@@ -541,19 +597,19 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                 {data.manifesto.headline}
               </h2>
 
-              <div className="my-6 h-px w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+              <div className={`my-6 h-px w-20 bg-gradient-to-r from-transparent ${isLight ? "via-black/20" : "via-white/30"} to-transparent`} />
 
-              <p className="max-w-3xl text-base sm:text-lg leading-relaxed text-zinc-300">
+              <p className={`max-w-3xl text-base sm:text-lg leading-relaxed ${textSecondaryClass}`}>
                 {data.manifesto.bodyText}
               </p>
 
               {data.manifesto.quote && (
-                <blockquote className="mt-10 border-l-2 border-amber-500/60 pl-6 text-left max-w-2xl bg-black/40 p-6 rounded-r-2xl">
-                  <p className="italic text-base sm:text-lg text-zinc-200">
+                <blockquote className={`mt-10 border-l-2 border-amber-500/60 pl-6 text-left max-w-2xl ${isLight ? "bg-black/5" : "bg-black/40"} p-6 rounded-r-2xl`}>
+                  <p className={`italic text-base sm:text-lg ${textSecondaryClass}`}>
                     "{data.manifesto.quote}"
                   </p>
                   {data.manifesto.author && (
-                    <footer className="mt-3 text-xs font-semibold uppercase tracking-wider text-amber-400">
+                    <footer className="mt-3 text-xs font-semibold uppercase tracking-wider text-amber-500">
                       — {data.manifesto.author}
                     </footer>
                   )}
@@ -577,7 +633,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             <h2 className={`mt-2 text-3xl sm:text-5xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
               A Experiência Visual
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+            <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${textSecondaryClass}`}>
               Toque nas imagens para contemplar cada atmosfera em tela cheia e alta definição.
             </p>
           </div>
@@ -588,7 +644,11 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               <div
                 key={item.id || index}
                 onClick={() => setSelectedPhoto(item)}
-                className="group relative h-80 sm:h-96 cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-zinc-900 transition-all duration-300 hover:-translate-y-1.5 hover:border-white/30 hover:shadow-2xl"
+                className={`group relative h-80 sm:h-96 cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
+                  isLight
+                    ? "border-black/10 bg-zinc-100 hover:border-black/25"
+                    : "border-white/10 bg-zinc-900 hover:border-white/30"
+                }`}
               >
                 <img
                   src={item.url}
@@ -611,7 +671,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                       {item.caption}
                     </p>
                   )}
-                  <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity">
                     <Maximize2 className="h-3.5 w-3.5" />
                     <span>Ampliar</span>
                   </div>
@@ -635,7 +695,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             <h2 className={`mt-2 text-3xl sm:text-5xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
               Criações em Destaque
             </h2>
-            <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
+            <p className={`mt-3 text-sm sm:text-base max-w-xl mx-auto ${textSecondaryClass}`}>
               Cada item carrega a dedicação de processos artesanais e ingredientes rigorosamente selecionados.
             </p>
           </div>
@@ -644,7 +704,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             {data.highlights.map((item: CinematicHighlight, index: number) => (
               <div
                 key={item.id || index}
-                className={`group overflow-hidden transition-all duration-300 hover:border-white/30 hover:-translate-y-1 ${cardBorderClass}`}
+                className={`group overflow-hidden transition-all duration-300 hover:border-black/30 dark:hover:border-white/30 hover:-translate-y-1 ${cardBorderClass}`}
               >
                 {item.image && (
                   <div className="relative h-56 sm:h-64 w-full overflow-hidden">
@@ -653,13 +713,13 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                       alt={item.title}
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/80 via-transparent to-transparent" />
                     {item.badge && (
                       <span
                         className={`absolute top-4 right-4 ${badgeClass}`}
                         style={{
                           backgroundColor: isNeobrutalism ? "#ffffff" : accentColor,
-                          color: isNeobrutalism ? "#000000" : "#000000",
+                          color: "#000000",
                         }}
                       >
                         {item.badge}
@@ -670,7 +730,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
                 <div className="p-6 sm:p-8 space-y-3">
                   <div className="flex items-start justify-between gap-4">
-                    <h3 className={`text-xl font-bold text-white ${fontHeadingClass}`}>
+                    <h3 className={`text-xl font-bold ${fontHeadingClass} ${textHeadingClass}`}>
                       {item.title}
                     </h3>
                     {item.price && (
@@ -683,7 +743,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                     )}
                   </div>
 
-                  <p className="text-xs sm:text-sm leading-relaxed text-zinc-300">
+                  <p className={`text-xs sm:text-sm leading-relaxed ${textSecondaryClass}`}>
                     {item.description}
                   </p>
 
@@ -720,30 +780,30 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           </div>
 
           <div className={`overflow-hidden ${cardBorderClass}`}>
-            <div className="grid grid-cols-12 border-b border-white/10 bg-white/[0.04] p-4 text-xs font-bold uppercase tracking-wider">
-              <div className="col-span-6 text-zinc-400">Critério / Diferencial</div>
+            <div className={`grid grid-cols-12 border-b p-4 text-xs font-bold uppercase tracking-wider ${isLight ? "border-black/10 bg-black/5" : "border-white/10 bg-white/[0.04]"}`}>
+              <div className={`col-span-6 ${textMutedClass}`}>Critério / Diferencial</div>
               <div className="col-span-3 text-center" style={{ color: accentColor }}>
                 {data.comparison.usLabel}
               </div>
-              <div className="col-span-3 text-center text-zinc-500">
+              <div className={`col-span-3 text-center ${textMutedClass}`}>
                 {data.comparison.othersLabel}
               </div>
             </div>
 
-            <div className="divide-y divide-white/5 text-xs sm:text-sm">
+            <div className={`divide-y text-xs sm:text-sm ${isLight ? "divide-black/5" : "divide-white/5"}`}>
               {data.comparison.rows.map((row, idx) => (
-                <div key={idx} className="grid grid-cols-12 p-4 items-center hover:bg-white/[0.02]">
-                  <div className="col-span-6 font-medium text-zinc-200">
+                <div key={idx} className={`grid grid-cols-12 p-4 items-center ${isLight ? "hover:bg-black/[0.02]" : "hover:bg-white/[0.02]"}`}>
+                  <div className={`col-span-6 font-medium ${isLight ? "text-zinc-800" : "text-zinc-200"}`}>
                     {row.feature}
                   </div>
                   <div className="col-span-3 flex justify-center text-center">
                     {typeof row.us === "boolean" ? (
                       row.us ? (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-500">
                           <Check className="h-3.5 w-3.5" />
                         </div>
                       ) : (
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/20 text-red-400">
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-red-500/20 text-red-500">
                           <X className="h-3.5 w-3.5" />
                         </div>
                       )
@@ -751,15 +811,15 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                       <span className="font-bold" style={{ color: accentColor }}>{row.us}</span>
                     )}
                   </div>
-                  <div className="col-span-3 flex justify-center text-center text-zinc-500">
+                  <div className={`col-span-3 flex justify-center text-center ${textMutedClass}`}>
                     {typeof row.others === "boolean" ? (
                       row.others ? (
                         <Check className="h-4 w-4 text-zinc-400" />
                       ) : (
-                        <X className="h-4 w-4 text-zinc-600" />
+                        <X className="h-4 w-4 text-zinc-500" />
                       )
                     ) : (
-                      <span className="text-zinc-500 text-xs">{row.others}</span>
+                      <span className="text-xs">{row.others}</span>
                     )}
                   </div>
                 </div>
@@ -795,17 +855,17 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                   <button
                     type="button"
                     onClick={() => setOpenFaq(isOpen ? null : idx)}
-                    className="flex w-full items-center justify-between p-5 text-left text-sm sm:text-base font-bold text-white hover:bg-white/[0.02]"
+                    className={`flex w-full items-center justify-between p-5 text-left text-sm sm:text-base font-bold ${textHeadingClass} hover:bg-black/[0.02] dark:hover:bg-white/[0.02]`}
                   >
                     <span>{item.question}</span>
                     <ChevronDown
                       className={`h-4 w-4 shrink-0 transition-transform duration-200 text-zinc-400 ${
-                        isOpen ? "rotate-180 text-amber-400" : ""
+                        isOpen ? "rotate-180 text-amber-500" : ""
                       }`}
                     />
                   </button>
                   {isOpen && (
-                    <div className="px-5 pb-5 text-xs sm:text-sm leading-relaxed text-zinc-300 border-t border-white/5 pt-3">
+                    <div className={`px-5 pb-5 text-xs sm:text-sm leading-relaxed ${textSecondaryClass} border-t ${isLight ? "border-black/5" : "border-white/5"} pt-3`}>
                       {item.answer}
                     </div>
                   )}
@@ -830,7 +890,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               <h2 className={`text-3xl sm:text-5xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
                 Viva a Experiência Pessoalmente na {data.businessName}
               </h2>
-              <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-xl">
+              <p className={`text-sm sm:text-base leading-relaxed max-w-xl ${textSecondaryClass}`}>
                 Nossa equipe de especialistas está pronta para proporcionar um momento único e inesquecível.
               </p>
 
@@ -851,15 +911,15 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               </div>
             </div>
 
-            <div className="lg:col-span-5 rounded-2xl border border-white/10 bg-black/60 p-6 space-y-5">
+            <div className={`lg:col-span-5 rounded-2xl border p-6 space-y-5 ${isLight ? "border-black/10 bg-white shadow-xl" : "border-white/10 bg-black/60"}`}>
               {data.address && (
                 <div className="flex items-start gap-3">
                   <MapPin className="h-5 w-5 shrink-0 mt-0.5" style={{ color: accentColor }} />
                   <div>
-                    <span className="block text-xs font-bold uppercase tracking-wider text-white">
+                    <span className={`block text-xs font-bold uppercase tracking-wider ${textHeadingClass}`}>
                       Endereço
                     </span>
-                    <p className="mt-0.5 text-xs text-zinc-300 leading-relaxed">
+                    <p className={`mt-0.5 text-xs leading-relaxed ${textSecondaryClass}`}>
                       {data.address}
                     </p>
                   </div>
@@ -870,10 +930,10 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                 <div className="flex items-start gap-3">
                   <Clock className="h-5 w-5 shrink-0 mt-0.5" style={{ color: accentColor }} />
                   <div>
-                    <span className="block text-xs font-bold uppercase tracking-wider text-white">
+                    <span className={`block text-xs font-bold uppercase tracking-wider ${textHeadingClass}`}>
                       Horário de Funcionamento
                     </span>
-                    <p className="mt-0.5 text-xs text-zinc-300">
+                    <p className={`mt-0.5 text-xs ${textSecondaryClass}`}>
                       {data.openingHours}
                     </p>
                   </div>
@@ -881,9 +941,9 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               )}
 
               {data.rating && (
-                <div className="border-t border-white/10 pt-4 flex items-center justify-between text-xs">
-                  <span className="text-zinc-400 font-medium">Reputação Comprovada:</span>
-                  <span className="font-bold text-amber-400 flex items-center gap-1">
+                <div className={`border-t pt-4 flex items-center justify-between text-xs ${isLight ? "border-black/10" : "border-white/10"}`}>
+                  <span className={`${textMutedClass} font-medium`}>Reputação Comprovada:</span>
+                  <span className="font-bold text-amber-500 flex items-center gap-1">
                     ★ {data.rating.toFixed(1)} / 5.0
                   </span>
                 </div>

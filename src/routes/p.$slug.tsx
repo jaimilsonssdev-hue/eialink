@@ -600,6 +600,9 @@ function PublicBio() {
     const appliedArchetype = customTheme.archetype || cinematicData.archetype || (cinematicData.theme as any)?.archetype || "cinematic";
     const appliedHeadingStyle = customTheme.headingStyle || (cinematicData.theme as any)?.headingStyle || "default";
 
+    const isLightMode = customTheme.mode === "light" || (customTheme.bg && (customTheme.bg === "#ffffff" || customTheme.bg === "#f8fafc"));
+    const effectiveBg = customTheme.bg || cinematicData.theme?.bg || (isLightMode ? "#f8fafc" : "#0a0a0c");
+
     const hydratedCinematicData: CinematicPageData = {
       ...cinematicData,
       archetype: appliedArchetype as any,
@@ -607,13 +610,17 @@ function PublicBio() {
         ...cinematicData.theme,
         archetype: appliedArchetype as any,
         headingStyle: appliedHeadingStyle as any,
-        bg: customTheme.bg || cinematicData.theme?.bg || "#0a0a0c",
+        bg: effectiveBg,
         accent: customTheme.accent || cinematicData.theme?.accent || "#f59e0b",
+        mode: customTheme.mode || (cinematicData.theme as any)?.mode || (isLightMode ? "light" : "dark"),
+        fontFamily: customTheme.font || customTheme.font_pair || (cinematicData.theme as any)?.fontFamily || "sans",
+        boxEffect: customTheme.boxEffect || (cinematicData.theme as any)?.boxEffect || "glass",
+        borderRadius: customTheme.borderRadius || (cinematicData.theme as any)?.borderRadius || "rounded",
       },
     };
 
     return (
-      <div className="min-h-screen w-full overflow-x-hidden bg-[#0a0a0c]">
+      <div className="min-h-screen w-full overflow-x-hidden" style={{ backgroundColor: effectiveBg }}>
         {isDemo && <DemoConversionBanner companyName={bio.display_name} />}
         <div className="w-full max-w-2xl mx-auto px-3 pt-2">
           <PwaInstallBanner companyName={bio.display_name} avatarUrl={effectiveAvatarUrl || bio.avatar_url} />

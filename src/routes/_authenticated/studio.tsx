@@ -1440,95 +1440,278 @@ export default function CinematicStudioPage() {
 
                 {openSection === "styling" && (
                   <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
+                    {/* Modo Visual (Dark vs Light) */}
+                    <div className="space-y-1.5">
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Modo Visual:</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setData((prev) => ({
+                              ...prev,
+                              theme: {
+                                ...prev.theme,
+                                mode: "dark",
+                                bg: prev.theme.bg && (prev.theme.bg === "#ffffff" || prev.theme.bg.startsWith("#f")) ? "#09090b" : prev.theme.bg || "#09090b",
+                              },
+                            }));
+                            toast.success("Modo Escuro ativado.");
+                          }}
+                          className={`flex items-center justify-center gap-2 rounded-lg border py-2.5 text-xs font-semibold transition-all ${
+                            data.theme?.mode !== "light" && (!data.theme?.bg || !data.theme?.bg.startsWith("#f"))
+                              ? "border-amber-400/80 bg-zinc-800 text-amber-300 shadow-sm"
+                              : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
+                          }`}
+                        >
+                          <span>🌙</span>
+                          <span>Modo Escuro</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setData((prev) => ({
+                              ...prev,
+                              theme: {
+                                ...prev.theme,
+                                mode: "light",
+                                bg: "#f8fafc",
+                              },
+                            }));
+                            toast.success("Modo Claro ativado.");
+                          }}
+                          className={`flex items-center justify-center gap-2 rounded-lg border py-2.5 text-xs font-semibold transition-all ${
+                            data.theme?.mode === "light" || (data.theme?.bg && data.theme?.bg.startsWith("#f"))
+                              ? "border-amber-400/80 bg-zinc-100 text-zinc-900 shadow-sm"
+                              : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
+                          }`}
+                        >
+                          <span>☀️</span>
+                          <span>Modo Claro</span>
+                        </button>
+                      </div>
+                    </div>
+
                     {/* Seletor de Arquétipo Visual */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Arquétipo Visual (Bento Engine):</span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Arquétipo de Design:</span>
+                      <div className="grid grid-cols-2 gap-2">
                         {[
-                          { id: "luxury-editorial", label: "Luxo Editorial", desc: "Monocle, Vinhos & Alta Gastronomia" },
-                          { id: "neo-pop-d2c", label: "Neo-Pop D2C", desc: "Gigi Energy, Alta Voltagem & Neon" },
-                          { id: "clean-biotech", label: "Clean Biotech", desc: "Biometic, Vidro Fosco & Clínicas" },
-                          { id: "cyber-tech", label: "Cyber High-Tech", desc: "Compute-11, Grid Escuro & Tags" },
-                          { id: "dark-brutalist", label: "Dark Brutalist", desc: "Void, Tipografia Gigante & P&B" },
-                        ].map((arq) => (
-                          <button
-                            key={arq.id}
-                            type="button"
-                            onClick={() =>
-                              setData((prev) => ({
-                                ...prev,
-                                archetype: arq.id as any,
-                              }))
-                            }
-                            className={`rounded-lg border p-2.5 text-left transition-all ${
-                              data.archetype === arq.id
-                                ? "border-zinc-300 bg-zinc-800 text-zinc-100 ring-1 ring-zinc-300/30"
-                                : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
-                            }`}
-                          >
-                            <span className="block text-xs font-semibold text-zinc-200">{arq.label}</span>
-                            <span className="block text-[9px] text-zinc-400 mt-0.5">{arq.desc}</span>
-                          </button>
-                        ))}
+                          {
+                            id: "cinematic",
+                            label: "Cinemático Glass",
+                            desc: "Glassmorphism, desfoque e profundidade",
+                            icon: "🎬",
+                            setup: { headingStyle: "default", borderRadius: "rounded", boxEffect: "glass" },
+                          },
+                          {
+                            id: "neobrutalism",
+                            label: "Neobrutalismo Pop",
+                            desc: "Bordas pretas 3D, sombras duras e alta energia",
+                            icon: "⚡",
+                            setup: { headingStyle: "uppercase", borderRadius: "rounded", boxEffect: "solid" },
+                          },
+                          {
+                            id: "editorial",
+                            label: "Editorial Suíço",
+                            desc: "Cantos retos, itálico nobre e minimalismo Vogue",
+                            icon: "🏛️",
+                            setup: { headingStyle: "italic", borderRadius: "sharp", fontFamily: "serif", fontHeading: "serif" },
+                          },
+                          {
+                            id: "bento",
+                            label: "Bento High-Tech",
+                            desc: "Pílulas arredondadas, gradientes e SaaS moderno",
+                            icon: "🍱",
+                            setup: { headingStyle: "gradient", borderRadius: "pill", fontFamily: "display", fontHeading: "display" },
+                          },
+                        ].map((arq) => {
+                          const isSelected =
+                            data.archetype === arq.id ||
+                            (arq.id === "editorial" && (data.archetype === "luxury-editorial" as any)) ||
+                            (arq.id === "neobrutalism" && ((data.archetype as any) === "neo-pop-d2c" || (data.archetype as any) === "dark-brutalist")) ||
+                            (arq.id === "bento" && ((data.archetype as any) === "clean-biotech" || (data.archetype as any) === "cyber-tech"));
+                          return (
+                            <button
+                              key={arq.id}
+                              type="button"
+                              onClick={() => {
+                                setData((prev) => ({
+                                  ...prev,
+                                  archetype: arq.id as any,
+                                  theme: {
+                                    ...prev.theme,
+                                    archetype: arq.id as any,
+                                    headingStyle: arq.setup.headingStyle as any,
+                                    borderRadius: (arq.setup as any).borderRadius || prev.theme?.borderRadius || "rounded",
+                                    boxEffect: (arq.setup as any).boxEffect || prev.theme?.boxEffect || "glass",
+                                    ...(arq.setup as any).fontFamily ? { fontFamily: (arq.setup as any).fontFamily, fontHeading: (arq.setup as any).fontHeading } : {},
+                                  },
+                                }));
+                                toast.success(`Arquétipo ${arq.label} aplicado!`);
+                              }}
+                              className={`rounded-lg border p-2.5 text-left transition-all ${
+                                isSelected
+                                  ? "border-amber-400 bg-zinc-800 text-zinc-100 ring-1 ring-amber-400/40"
+                                  : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
+                              }`}
+                            >
+                              <div className="flex items-center gap-1.5">
+                                <span>{arq.icon}</span>
+                                <span className="block text-xs font-semibold text-zinc-200">{arq.label}</span>
+                              </div>
+                              <span className="block text-[9px] text-zinc-400 mt-1 leading-tight">{arq.desc}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
 
                     {/* Seletor de Paleta */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Paletas de Cores:</span>
-                      <div className="grid grid-cols-5 gap-2">
-                        {LUXURY_PALETTES.map((pal) => (
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Paleta de Cores:</span>
+                      <div className="grid grid-cols-6 gap-2">
+                        {(data.theme?.mode === "light"
+                          ? [
+                              { id: "light-amber", name: "Branco & Âmbar", bg: "#f8fafc", accent: "#f59e0b" },
+                              { id: "light-emerald", name: "Gelo & Esmeralda", bg: "#f0fdf4", accent: "#059669" },
+                              { id: "light-gold", name: "Marfim & Ouro", bg: "#faf7f2", accent: "#b45309" },
+                              { id: "light-sapphire", name: "Nuvem & Safira", bg: "#f8fafc", accent: "#2563eb" },
+                              { id: "light-violet", name: "Lavanda & Violeta", bg: "#faf5ff", accent: "#7c3aed" },
+                              { id: "light-mono", name: "Minimal Preto & Branco", bg: "#ffffff", accent: "#09090b" },
+                            ]
+                          : [
+                              { id: "dark-gold", name: "Âmbar Solar", bg: "#0a0a0c", accent: "#f59e0b" },
+                              { id: "dark-emerald", name: "Esmeralda Nobre", bg: "#06130d", accent: "#10b981" },
+                              { id: "dark-titanium", name: "Grafite & Titânio", bg: "#09090b", accent: "#d4d4d8" },
+                              { id: "dark-champagne", name: "Champagne Sóbrio", bg: "#0c0a09", accent: "#d4af37" },
+                              { id: "dark-violet", name: "Cyber Violeta", bg: "#0c0714", accent: "#a855f7" },
+                              { id: "dark-sapphire", name: "Safira Noturno", bg: "#080c16", accent: "#3b82f6" },
+                            ]
+                        ).map((pal) => (
                           <button
                             key={pal.id}
                             type="button"
-                            onClick={() =>
+                            onClick={() => {
                               setData((prev) => ({
                                 ...prev,
                                 theme: { ...prev.theme, bg: pal.bg, accent: pal.accent },
-                              }))
-                            }
+                              }));
+                              toast.success(`Paleta ${pal.name} selecionada!`);
+                            }}
                             title={pal.name}
                             className={`h-9 rounded-xl border flex items-center justify-center transition-all ${
                               data.theme.accent === pal.accent
-                                ? "border-white ring-2 ring-white/40 scale-105"
+                                ? "border-amber-400 ring-2 ring-amber-400/40 scale-105"
                                 : "border-zinc-800 hover:border-zinc-600"
                             }`}
                             style={{ backgroundColor: pal.bg }}
                           >
-                            <span className="h-3 w-3 rounded-full" style={{ backgroundColor: pal.accent }} />
+                            <span className="h-3 w-3 rounded-full border border-black/20" style={{ backgroundColor: pal.accent }} />
                           </button>
                         ))}
                       </div>
                     </div>
 
-                    {/* Seletor de Tipografia */}
+                    {/* Seletor de Tipografia Completa */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Tipografia dos Títulos:</span>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Tipografia Global:</span>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {[
-                          { id: "serif", label: "Editorial", font: "font-serif" },
-                          { id: "sans", label: "Moderna", font: "font-sans" },
-                          { id: "display", label: "Marcante", font: "font-display" },
-                          { id: "mono", label: "Cyber Mono", font: "font-mono" },
-                        ].map((f) => (
-                          <button
-                            key={f.id}
-                            type="button"
-                            onClick={() =>
-                              setData((prev) => ({
-                                ...prev,
-                                theme: { ...prev.theme, fontHeading: f.id as any },
-                              }))
-                            }
-                            className={`rounded-lg border py-2 text-xs font-medium transition-all ${
-                              data.theme.fontHeading === f.id
-                                ? "border-zinc-300 bg-zinc-800 text-zinc-100 font-semibold"
-                                : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
-                            } ${f.font}`}
-                          >
-                            {f.label}
-                          </button>
-                        ))}
+                          { id: "sans", label: "Inter (Moderna)", sample: "Aa Sans" },
+                          { id: "serif", label: "Playfair (Editorial)", sample: "Aa Serif" },
+                          { id: "display", label: "Plus Jakarta (Marcante)", sample: "Aa Display" },
+                          { id: "cormorant", label: "Cormorant (Poética)", sample: "Aa Cormorant" },
+                          { id: "mono", label: "Courier (Cyber Mono)", sample: "Aa Mono" },
+                        ].map((f) => {
+                          const currentFont = (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
+                          const isSelected = currentFont === f.id;
+                          return (
+                            <button
+                              key={f.id}
+                              type="button"
+                              onClick={() => {
+                                setData((prev) => ({
+                                  ...prev,
+                                  theme: {
+                                    ...prev.theme,
+                                    fontFamily: f.id as any,
+                                    fontHeading: f.id as any,
+                                  },
+                                }));
+                                toast.success(`Fonte ${f.label} ativada!`);
+                              }}
+                              className={`rounded-lg border p-2 text-left transition-all ${
+                                isSelected
+                                  ? "border-amber-400 bg-zinc-800 text-zinc-100 font-semibold"
+                                  : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
+                              }`}
+                            >
+                              <span className="block text-[11px] font-semibold text-zinc-200 truncate">{f.label}</span>
+                              <span className="block text-[9px] text-zinc-400 mt-0.5">{f.sample}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Efeitos dos Cards & Arredondamento */}
+                    <div className="grid grid-cols-2 gap-3 pt-1">
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">Efeito dos Cards:</span>
+                        <div className="flex flex-col gap-1.5">
+                          {[
+                            { id: "glass", label: "Vidro / Glass" },
+                            { id: "solid", label: "Sólido Minimal" },
+                            { id: "glow", label: "Brilho / Glow" },
+                          ].map((eff) => (
+                            <button
+                              key={eff.id}
+                              type="button"
+                              onClick={() =>
+                                setData((prev) => ({
+                                  ...prev,
+                                  theme: { ...prev.theme, boxEffect: eff.id as any },
+                                }))
+                              }
+                              className={`rounded-lg border px-2.5 py-1.5 text-left text-[11px] transition-all ${
+                                ((data.theme as any)?.boxEffect || "glass") === eff.id
+                                  ? "border-amber-400 bg-zinc-800 text-zinc-100 font-semibold"
+                                  : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
+                              }`}
+                            >
+                              {eff.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">Arredondamento:</span>
+                        <div className="flex flex-col gap-1.5">
+                          {[
+                            { id: "rounded", label: "Suave (16px)" },
+                            { id: "pill", label: "Pílula (28px)" },
+                            { id: "sharp", label: "Reto (0px Suíço)" },
+                          ].map((rad) => (
+                            <button
+                              key={rad.id}
+                              type="button"
+                              onClick={() =>
+                                setData((prev) => ({
+                                  ...prev,
+                                  theme: { ...prev.theme, borderRadius: rad.id as any, borderStyle: rad.id as any },
+                                }))
+                              }
+                              className={`rounded-lg border px-2.5 py-1.5 text-left text-[11px] transition-all ${
+                                ((data.theme as any)?.borderRadius || "rounded") === rad.id
+                                  ? "border-amber-400 bg-zinc-800 text-zinc-100 font-semibold"
+                                  : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
+                              }`}
+                            >
+                              {rad.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
@@ -1549,7 +1732,7 @@ export default function CinematicStudioPage() {
                             theme: { ...prev.theme, parallaxEnabled: e.target.checked },
                           }))
                         }
-                        className="h-4 w-4 rounded border-zinc-700 bg-zinc-950 text-zinc-100 focus:ring-0"
+                        className="rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500/20"
                       />
                     </label>
                   </div>

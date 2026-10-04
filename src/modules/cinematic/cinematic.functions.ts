@@ -349,20 +349,51 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
     const suffix = crypto.randomUUID().slice(0, 5);
     const resolvedSlug = pageId ? undefined : `${baseSlug}-${suffix}`;
 
+    const effectiveFont = (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
+    const effectiveMode = data.theme?.mode || (data.theme?.bg?.includes("#fff") || data.theme?.bg?.includes("#f8") ? "light" : "dark");
+    const effectiveRadius = (data.theme as any)?.borderRadius || data.theme?.borderStyle || "rounded";
+    const effectiveBoxEffect = (data.theme as any)?.boxEffect || "glass";
+    const effectiveArchetype = (data.archetype || (data.theme as any)?.archetype || "cinematic");
+
+    const customThemeObj = {
+      parallax: Boolean(data.theme.parallaxEnabled),
+      hero_style: "cinematic",
+      font: effectiveFont,
+      fontFamily: effectiveFont,
+      font_pair: effectiveFont,
+      primary: data.theme.accent,
+      accent: data.theme.accent,
+      background: data.theme.bg,
+      bg: data.theme.bg,
+      mode: effectiveMode,
+      archetype: effectiveArchetype,
+      headingStyle: (data.theme as any)?.headingStyle || "default",
+      borderRadius: effectiveRadius,
+      border_radius: effectiveRadius === "sharp" ? "0px" : effectiveRadius === "pill" ? "28px" : "16px",
+      boxEffect: effectiveBoxEffect,
+    };
+
     const socialLinks = {
       is_demo: false,
-      cinematic_data: data,
+      cinematic_data: {
+        ...data,
+        archetype: effectiveArchetype,
+        theme: {
+          ...data.theme,
+          archetype: effectiveArchetype,
+          fontFamily: effectiveFont,
+          mode: effectiveMode,
+          borderRadius: effectiveRadius,
+          boxEffect: effectiveBoxEffect,
+        },
+      },
       niche: data.niche,
       address: data.address,
       opening_hours: data.openingHours,
       google_rating: data.rating,
-      custom_theme: {
-        parallax: data.theme.parallaxEnabled,
-        hero_style: "cinematic",
-        font_pair: data.theme.fontHeading === "serif" ? "elegante" : "moderna",
-        primary: data.theme.accent,
-        background: data.theme.bg,
-      },
+      archetype: effectiveArchetype,
+      theme: customThemeObj,
+      custom_theme: customThemeObj,
     };
 
     let savedId = pageId;

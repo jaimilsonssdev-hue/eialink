@@ -656,10 +656,10 @@ export function CleanBuilder() {
             <button
               type="button"
               onClick={() => setActiveTab("texts")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
                 activeTab === "texts"
-                  ? "bg-white/15 text-white shadow"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
               }`}
             >
               <FileText className="h-3.5 w-3.5" />
@@ -668,10 +668,10 @@ export function CleanBuilder() {
             <button
               type="button"
               onClick={() => setActiveTab("products")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
                 activeTab === "products"
-                  ? "bg-white/15 text-white shadow"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
               }`}
             >
               <ShoppingBag className="h-3.5 w-3.5" />
@@ -681,10 +681,10 @@ export function CleanBuilder() {
             <button
               type="button"
               onClick={() => setActiveTab("style")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
                 activeTab === "style"
-                  ? "bg-white/15 text-white shadow"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
               }`}
             >
               <Palette className="h-3.5 w-3.5" />
@@ -693,10 +693,10 @@ export function CleanBuilder() {
             <button
               type="button"
               onClick={() => setActiveTab("contact")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
                 activeTab === "contact"
-                  ? "bg-white/15 text-white shadow"
-                  : "text-zinc-400 hover:text-zinc-200"
+                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
               }`}
             >
               <MessageCircle className="h-3.5 w-3.5" />
@@ -705,7 +705,7 @@ export function CleanBuilder() {
           </div>
 
           {/* Conteúdo da Aba Selecionada */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-5">
+          <div key={activeTab} className="flex-1 overflow-y-auto p-4 space-y-5 animate-in fade-in-50 duration-200">
             {/* ABA 1: TEXTOS & MARCA */}
             {activeTab === "texts" && (
               <div className="space-y-4">
@@ -1237,34 +1237,59 @@ export function CleanBuilder() {
                 </div>
 
                 {/* 8. Efeito dos Cards & Arredondamento */}
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <div>
-                    <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                      Efeito dos Cards
+                <div className="space-y-3 pt-2 border-t border-white/10">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-cyan-400" /> Efeito dos Cards & Blocos
                     </label>
-                    <select
-                      value={boxEffect}
-                      onChange={(e) => setBoxEffect(e.target.value as any)}
-                      className="w-full rounded-xl border border-white/15 bg-zinc-900 px-2.5 py-2 text-xs text-white focus:outline-none"
-                    >
-                      <option value="glass">Glassmorphism (Vidro)</option>
-                      <option value="solid">Sólido Minimalista</option>
-                      <option value="glow">Glow Iluminado</option>
-                    </select>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: "glass", label: "Vidro / Glass", icon: "🪟" },
+                        { id: "solid", label: "Sólido Minimal", icon: "🧱" },
+                        { id: "glow", label: "Glow Iluminado", icon: "✨" },
+                      ].map((eff) => (
+                        <button
+                          key={eff.id}
+                          type="button"
+                          onClick={() => setBoxEffect(eff.id as any)}
+                          className={`p-2 rounded-xl border text-center transition-all duration-150 cursor-pointer active:scale-95 ${
+                            boxEffect === eff.id
+                              ? "bg-cyan-950/40 border-cyan-500/80 ring-1 ring-cyan-500/50 text-white shadow-sm"
+                              : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
+                          }`}
+                        >
+                          <span className="block text-sm mb-0.5">{eff.icon}</span>
+                          <span className="block text-[11px] font-semibold truncate">{eff.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
-                      Arredondamento
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                      <Layers className="h-3.5 w-3.5 text-emerald-400" /> Raio dos Cantos
                     </label>
-                    <select
-                      value={borderRadius}
-                      onChange={(e) => setBorderRadius(e.target.value as any)}
-                      className="w-full rounded-xl border border-white/15 bg-zinc-900 px-2.5 py-2 text-xs text-white focus:outline-none"
-                    >
-                      <option value="rounded">Moderno (Suave)</option>
-                      <option value="pill">Pílula (Curvo)</option>
-                      <option value="sharp">Reto (Minimalista)</option>
-                    </select>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: "rounded", label: "Suave (16px)", icon: "🔘" },
+                        { id: "pill", label: "Pílula (28px)", icon: "💊" },
+                        { id: "sharp", label: "Reto (0px Suíço)", icon: "📐" },
+                      ].map((rad) => (
+                        <button
+                          key={rad.id}
+                          type="button"
+                          onClick={() => setBorderRadius(rad.id as any)}
+                          className={`p-2 rounded-xl border text-center transition-all duration-150 cursor-pointer active:scale-95 ${
+                            borderRadius === rad.id
+                              ? "bg-emerald-950/40 border-emerald-500/80 ring-1 ring-emerald-500/50 text-white shadow-sm"
+                              : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
+                          }`}
+                        >
+                          <span className="block text-sm mb-0.5">{rad.icon}</span>
+                          <span className="block text-[11px] font-semibold truncate">{rad.label}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1305,9 +1330,9 @@ export function CleanBuilder() {
         {/* ÁREA CENTRAL: PREVIEW EM TEMPO REAL */}
         <main className="flex-1 bg-[#050408] overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
           <div
-            className={`transition-all duration-300 shadow-2xl overflow-hidden rounded-[2.5rem] border-4 border-zinc-800 bg-black flex flex-col ${
+            className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-2xl overflow-hidden border-4 border-zinc-800 bg-black flex flex-col will-change-[width,height] ${
               viewMode === "mobile"
-                ? "w-[375px] h-[720px] max-h-[85vh]"
+                ? "w-[375px] h-[720px] max-h-[85vh] rounded-[2.5rem]"
                 : "w-full max-w-4xl h-[720px] max-h-[85vh] rounded-2xl border-zinc-700"
             }`}
           >
@@ -1319,7 +1344,7 @@ export function CleanBuilder() {
             )}
 
             {/* Simulação do Visualizador Vivo ou Iframe */}
-            <div className="flex-1 overflow-y-auto" style={{ backgroundColor: bgColor }}>
+            <div className="flex-1 overflow-y-auto transition-colors duration-300 ease-out" style={{ backgroundColor: bgColor }}>
               {previewEngine === "live" ? (
                 templateId === "cinematic-glass" || templateId === "cinematic-scrolly" ? (
                   <CinematicViewer

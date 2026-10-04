@@ -501,6 +501,7 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
       userMessage: string;
       currentData: CinematicPageData;
       conversationHistory?: Array<{ sender: "user" | "agent"; text: string }>;
+      apiKey?: string;
     }) => d
   )
   .handler(async ({ data: input }) => {
@@ -508,6 +509,7 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
     const instruction = (userMessage || "").trim();
 
     const apiKey = (
+      input.apiKey ||
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_AI_STUDIO_KEY ||
       (process.env as any).VITE_GEMINI_API_KEY ||
@@ -644,7 +646,7 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
   }
 }`;
 
-        const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
+        const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
         for (const model of models) {
           try {
             const resp = await fetch(
@@ -683,40 +685,53 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
       }
     }
 
-    // Heurística Fallback inteligente para garantir plano criativo mesmo sem chave/offline
+    // Heurística Fallback inteligente: interpreta a instrução do usuário
     const planId = `plan_${Date.now()}`;
-    const nameA = `Atmosfera Nobre & Herança`;
-    const nameB = `Vanguarda Urbana & Impacto`;
+    const isLightRequested = /branco|claro|light|clean/i.test(instruction);
+    const isGoldRequested = /dourad|ouro|gold|luxo|nobre/i.test(instruction);
+    const isBlueRequested = /azul|blue|mar|celeste/i.test(instruction);
+    const isGreenRequested = /verde|green|natural|sa[uú]de/i.test(instruction);
+
+    const accentA = isGoldRequested ? "#f59e0b" : isBlueRequested ? "#0284c7" : isGreenRequested ? "#10b981" : currentData.theme.accent || "#f59e0b";
+    const bgA = isLightRequested ? "#f8fafc" : "#0a0a0c";
+
+    const nameA = instruction.length > 5 && instruction.length < 35 ? `Conceito: ${instruction}` : `Atmosfera Nobre & Herança`;
+    const nameB = `Vanguarda Contemporânea & Impacto`;
 
     const optionA: CinematicConceptOption = {
       id: "option_a",
       name: nameA,
-      tagline: "CLÁSSICO SENSORIAL",
+      tagline: isLightRequested ? "CLEAN & EDITORIAL" : "CLÁSSICO SENSORIAL",
       palette: {
-        bg: "#0a0a0c",
-        accent: "#f59e0b",
-        cardBg: "#121217",
+        bg: bgA,
+        accent: accentA,
+        cardBg: isLightRequested ? "#ffffff" : "#121217",
       },
       typography: "serif",
-      vibe: "Elegante, intimista com iluminação acolhedora e acabamento de alta gastronomia.",
-      heroHeadline: `O Ritual Inesquecível da ${businessName}`,
+      vibe: isLightRequested ? "Design limpo, editorial e iluminação suave de alta sofisticação." : "Elegante, intimista com acabamento refinado e acolhedor.",
+      heroHeadline: currentData.hero?.headline && currentData.hero.headline !== "Nome da Empresa Aqui"
+        ? currentData.hero.headline
+        : `A Experiência Autêntica da ${businessName}`,
       previewData: {
         ...currentData,
-        archetype: "luxury-editorial",
+        archetype: isLightRequested ? "luxury-editorial" : (currentData.archetype || "luxury-editorial"),
         theme: {
           ...currentData.theme,
-          bg: "#0a0a0c",
-          accent: "#f59e0b",
-          secondaryAccent: "#fbbf24",
+          bg: bgA,
+          accent: accentA,
+          secondaryAccent: isLightRequested ? "#0284c7" : "#fbbf24",
           fontHeading: "serif",
           borderStyle: "glass",
+          mode: isLightRequested ? "light" : "dark",
         },
         hero: {
           ...currentData.hero,
-          title: `O Ritual Inesquecível da ${businessName}`,
-          subtitle: "Onde o tempo desacelera para dar lugar à contemplação dos sentidos, atendimento com hora marcada e à excelência autoral.",
+          title: currentData.hero?.headline && currentData.hero.headline !== "Nome da Empresa Aqui"
+            ? currentData.hero.headline
+            : `A Experiência Autêntica da ${businessName}`,
+          subtitle: currentData.hero.subtitle || "Onde o tempo desacelera para dar lugar à contemplação dos sentidos, atendimento com hora marcada e à excelência autoral.",
           tagline: "EXPERIÊNCIA EXCLUSIVA",
-          floatingBadge: "● ABERTO AGORA • HORA MARCADA",
+          floatingBadge: currentData.hero.floatingBadge || "● ABERTO AGORA • HORA MARCADA",
         },
         highlights: currentData.highlights && currentData.highlights.length > 0 ? currentData.highlights : [
           {

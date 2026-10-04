@@ -515,8 +515,6 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       {data.marquee && data.marquee.length > 0 && (() => {
         // Assegura densidade adequada e cria exatamente 2 metades idênticas para loop contínuo de 0% a -50%
         const baseItems = data.marquee.length < 3
-          ? [...data.marquee, ...data.marquee, ...data.marquee]
-          : data.marquee.length < 5
           ? [...data.marquee, ...data.marquee]
           : data.marquee;
         const trackItems = [...baseItems, ...baseItems];

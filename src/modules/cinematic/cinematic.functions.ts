@@ -133,6 +133,10 @@ BÍBLIA DE DIREÇÃO DE ARTE, ARQUÉTIPOS & REGRAS DE OURO (QA ESTÉTICO):
    - NUNCA invente telefones falsos, novos endereços ou substitua fotos reais por placeholders caso fotos reais já existam.
    - Modifique APENAS os campos solicitados pelo usuário (ex: cores do tema, copy de manifesto, headline, tipografia ou lista de serviços).
 
+5. DIRETRIZES DE ENGENHARIA VISUAL & MOTION (PADRÃO REEBOK NANO X3):
+   - Para produtos físicos, fitness, tecnologia e streetwear: priorize taglines em estilo blueprint/HUD (ex: "[SPEC::01] RESPOSTA DINÂMICA"), títulos com tipografia de impacto em caixa alta e bullets com dados de engenharia comprováveis.
+   - Para serviços de alto padrão, clínicas e gastronomia: priorize o padrão "Quiet Luxury", com elegância silenciosa, tipografia com serifa clássica e vocabulário sensorial tátil.
+
 RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (SEM BLOCOS DE CÓDIGO MARKDOWN OU COMENTÁRIOS):
 {
   "businessName": "${currentData.businessName}",

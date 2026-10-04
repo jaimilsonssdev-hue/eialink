@@ -1,6 +1,10 @@
 export const CINEMATIC_SCHEMA_VERSION = 2;
 
 export type VisualArchetype =
+  | "neobrutalism"     // Neobrutalismo pop com bordas sólidas, sombras 3D duras, badges tipo sticker e botões táteis
+  | "editorial"        // Editorial Suíço e Quiet Luxury com serifa refinada, linhas finas de 1px e elegância de revista
+  | "bento"            // Bento High-Tech com cantos super arredondados, gradientes no texto e badges estilo chip
+  | "cinematic"        // Vidro fosco profundo (glassmorphism), reflexos e iluminação neon envolvente
   | "neo-pop-d2c"      // Gigi Energy Drink: alta energia, neon, marquee veloz, contraste pulsante
   | "luxury-editorial" // Evasion / Café: ébano, dourado/âmbar, fontes nobres serifadas, vídeo imersivo
   | "clean-biotech"    // Biometic: cantos 3xl, vidro fosco acetinado, esmeralda/ciano, abas
@@ -86,6 +90,8 @@ export interface CinematicPageData {
     fontHeading: "serif" | "sans" | "display" | "mono";
     parallaxEnabled: boolean;
     borderStyle: "glass" | "sharp" | "pill" | "subtle";
+    headingStyle?: "default" | "uppercase" | "italic" | "gradient";
+    archetype?: VisualArchetype;
   };
   hero: CinematicHero;
   manifesto?: CinematicManifesto;

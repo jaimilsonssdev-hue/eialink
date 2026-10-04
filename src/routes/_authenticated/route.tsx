@@ -70,6 +70,13 @@ function AuthedLayout() {
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
           {
+            to: "/builder",
+            label: "Clean Builder",
+            icon: Sparkles,
+            badge: "Rápido",
+            badgeClassName: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
+          },
+          {
             to: "/studio",
             label: "Cinematic Studio",
             icon: Clapperboard,

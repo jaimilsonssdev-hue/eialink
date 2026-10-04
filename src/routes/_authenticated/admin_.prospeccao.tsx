@@ -73,6 +73,7 @@ import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";
 import { CopyConfigModal, type CopyModalTabType } from "@/components/prospecting/CopyConfigModal";
 import { ProspectAuditorModal } from "@/components/prospecting/ProspectAuditorModal";
 import { ProspectingKanban } from "@/components/prospecting/ProspectingKanban";
+import { SiteIdeationModal } from "@/components/prospecting/SiteIdeationModal";
 import {
   buildWhatsAppMessage,
   buildInstagramMessage,
@@ -218,6 +219,38 @@ function ProspectingPage() {
   const [creatingPageId, setCreatingPageId] = useState<string | null>(null);
   const [regeneratingPageId, setRegeneratingPageId] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [ideationLead, setIdeationLead] = useState<{
+    name: string;
+    niche: string;
+    city: string;
+    whatsapp?: string | null;
+    address?: string | null;
+    rating?: number | null;
+    reviews_count?: number | null;
+    instagram?: string | null;
+    photos?: string[];
+  } | null>(null);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) setCurrentUserId(data.user.id);
+    });
+  }, []);
+
+  function handleOpenIdeation(company: ProspectedCompany) {
+    setIdeationLead({
+      name: company.name,
+      niche: company.niche || "Geral",
+      city: company.city || "",
+      whatsapp: company.whatsapp ?? company.phone ?? null,
+      address: company.address ?? null,
+      rating: company.rating ?? null,
+      reviews_count: company.reviews_count ?? null,
+      instagram: company.instagram ?? null,
+      photos: (company as any).photos || [],
+    });
+  }
   const [instaModalCompany, setInstaModalCompany] = useState<ProspectedCompany | null>(null);
   const [whatsModalCompany, setWhatsModalCompany] = useState<ProspectedCompany | null>(null);
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
@@ -2451,7 +2484,7 @@ function ProspectingPage() {
               <ProspectingKanban
                 companies={filtered}
                 onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
-                onGenerateDemo={handleGenerateDemo}
+                onGenerateDemo={handleOpenIdeation}
                 creatingPageId={creatingPageId}
                 onRegenerateDemo={handleRegenerateDemo}
                 regeneratingPageId={regeneratingPageId}
@@ -2562,17 +2595,12 @@ function ProspectingPage() {
                       </a>
                     ) : (
                       <button
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-200 px-3 py-2 text-xs font-semibold hover:bg-purple-500/25 shadow-xs transition-all"
-                        onClick={() => void handleGenerateAiSite(company)}
-                        disabled={creatingPageId === company.id}
-                        title="Gerar site cinematográfico usando IA e fotos reais do feed"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 px-3 py-2 text-xs font-semibold hover:bg-emerald-500/25 shadow-xs transition-all cursor-pointer"
+                        onClick={() => handleOpenIdeation(company)}
+                        title="Ideação Estratégica, Super Prompt & Escolha de Modelo"
                       >
-                        {creatingPageId === company.id ? (
-                          <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-300" />
-                        ) : (
-                          <Sparkles className="h-3.5 w-3.5 text-purple-300" />
-                        )}
-                        <span>{creatingPageId === company.id ? "Gerando IA..." : "Gerar com IA 🤖"}</span>
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Ideação & Site ⚡</span>
                       </button>
                     )}
 
@@ -2636,6 +2664,13 @@ function ProspectingPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
                         <DropdownMenuItem
+                          onClick={() => handleOpenIdeation(company)}
+                          className="cursor-pointer text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
+                        >
+                          <Sparkles className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                          <span>Ideação & Super Prompt ⚡</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
                           onClick={() => setActiveAuditCompany(company)}
                           className="cursor-pointer text-xs text-purple-300 font-medium"
                         >
@@ -2643,20 +2678,12 @@ function ProspectingPage() {
                           <span>Auditoria com IA</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                          onClick={() => void handleGenerateAiSite(company)}
-                          disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                          className="cursor-pointer text-xs text-purple-400 hover:text-purple-300 font-medium"
-                        >
-                          <Sparkles className="h-3.5 w-3.5 mr-2 text-purple-400" />
-                          <span>Gerar Site com IA (Studio)</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
                           onClick={() => void handleGenerateSiteMaquina(company)}
                           disabled={regeneratingPageId === company.id || creatingPageId === company.id}
                           className="cursor-pointer text-xs text-sky-400 font-medium"
                         >
                           <Globe2 className="h-3.5 w-3.5 mr-2 text-sky-400" />
-                          <span>Gerar Site Máquina (Completo)</span>
+                          <span>Gerar Site Máquina (Direto)</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => void handleRegenerateDemo(company)}
@@ -2668,9 +2695,9 @@ function ProspectingPage() {
                         </DropdownMenuItem>
                         {demo.pageId && (
                           <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                            <Link to="/studio" search={{ page: demo.pageId }}>
-                              <Pencil className="h-3.5 w-3.5 mr-2 text-blue-400" />
-                              <span>Editar no Construtor</span>
+                            <Link to="/builder" search={{ page: demo.pageId }}>
+                              <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                              <span>Editar no Clean Builder</span>
                             </Link>
                           </DropdownMenuItem>
                         )}
@@ -2880,17 +2907,12 @@ function ProspectingPage() {
                             </>
                           ) : (
                             <button
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-200 px-3 py-1.5 text-xs font-semibold hover:bg-purple-500/25 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all"
-                              onClick={() => void handleGenerateAiSite(company)}
-                              disabled={creatingPageId === company.id}
-                              title="Gerar site cinematográfico usando IA e fotos reais do feed"
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 px-3 py-1.5 text-xs font-semibold hover:bg-emerald-500/25 shadow-md transition-all cursor-pointer"
+                              onClick={() => handleOpenIdeation(company)}
+                              title="Ideação Estratégica, Super Prompt & Escolha de Modelo"
                             >
-                              {creatingPageId === company.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-300" />
-                              ) : (
-                                <Sparkles className="h-3.5 w-3.5 text-purple-300" />
-                              )}
-                              <span>{creatingPageId === company.id ? "Gerando IA..." : "Gerar com IA 🤖"}</span>
+                              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                              <span>Ideação & Site ⚡</span>
                             </button>
                           )}
 
@@ -3009,16 +3031,11 @@ function ProspectingPage() {
                                 </DropdownMenuItem>
 
                                 <DropdownMenuItem
-                                  onClick={() => void handleGenerateAiSite(company)}
-                                  disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                                  className="cursor-pointer text-xs text-purple-400 hover:text-purple-300 focus:text-purple-300 focus:bg-purple-500/10 font-medium"
+                                  onClick={() => handleOpenIdeation(company)}
+                                  className="cursor-pointer text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
                                 >
-                                  {creatingPageId === company.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
-                                  ) : (
-                                    <Sparkles className="h-3.5 w-3.5 mr-2 text-purple-400" />
-                                  )}
-                                  <span>Gerar Site com IA (Studio)</span>
+                                  <Sparkles className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                  <span>Ideação & Super Prompt ⚡</span>
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => void handleGenerateSiteMaquina(company)}
@@ -3030,11 +3047,20 @@ function ProspectingPage() {
                                   ) : (
                                     <Globe2 className="h-3.5 w-3.5 mr-2 text-sky-400" />
                                   )}
-                                  <span>Gerar Site Máquina (Completo)</span>
+                                  <span>Gerar Site Máquina (Direto)</span>
                                 </DropdownMenuItem>
 
                                 {demo.url && (
                                   <>
+                                    {demo.pageId && (
+                                      <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                        <Link to="/builder" search={{ page: demo.pageId }}>
+                                          <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                          <span>Editar no Clean Builder</span>
+                                        </Link>
+                                      </DropdownMenuItem>
+                                    )}
+
                                     {demo.pageId && (
                                       <DropdownMenuItem
                                         onClick={() => void handleMakeOfficial(company, demo.pageId!)}
@@ -3163,6 +3189,13 @@ function ProspectingPage() {
           setCopyModalInitialTab("geminiApiKey");
           setIsCopyModalOpen(true);
         }}
+      />
+
+      <SiteIdeationModal
+        open={Boolean(ideationLead)}
+        onOpenChange={(open) => !open && setIdeationLead(null)}
+        lead={ideationLead}
+        userId={currentUserId}
       />
     </div>
   );

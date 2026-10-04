@@ -65,32 +65,95 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
   // Tokens de Tipografia e Estilo com fallbacks resilientes
   const fontHeading = data.theme?.fontHeading || "serif";
   const borderStyle = data.theme?.borderStyle || "glass";
-  const archetype = data.archetype || "luxury-editorial";
 
-  const fontHeadingClass =
-    fontHeading === "serif"
-      ? "font-serif tracking-tight"
-      : fontHeading === "display"
-      ? "font-sans font-black tracking-tighter uppercase"
-      : fontHeading === "mono"
-      ? "font-mono tracking-wide uppercase"
-      : "font-sans font-bold tracking-tight";
+  // Detecção dos 4 Arquétipos Mestres (com compatibilidade com tags legadas)
+  const rawArchetype = ((data.archetype as string) || (data.theme as any)?.archetype || "cinematic").toLowerCase();
+  const isNeobrutalism =
+    rawArchetype === "neobrutalism" ||
+    rawArchetype === "neo-pop-d2c" ||
+    rawArchetype === "dark-brutalist";
+  const isEditorial =
+    rawArchetype === "editorial" ||
+    rawArchetype === "luxury-editorial";
+  const isBento =
+    rawArchetype === "bento" ||
+    rawArchetype === "clean-biotech" ||
+    rawArchetype === "cyber-tech";
+  const isCinematic = !isNeobrutalism && !isEditorial && !isBento;
 
-  // Tokens de Borda / Estilo
-  const cardBorderClass =
-    borderStyle === "sharp"
-      ? "rounded-none border border-white/20 bg-black/60"
-      : borderStyle === "pill"
-      ? "rounded-3xl border border-white/20 bg-white/[0.04]"
-      : borderStyle === "subtle"
-      ? "rounded-xl border border-white/5 bg-zinc-950/80"
-      : "rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-2xl";
+  const explicitHeadingStyle = (data.theme as any)?.headingStyle;
+
+  let fontHeadingClass = "font-sans font-bold tracking-tight";
+  let headingEffectClass = "";
+
+  if (explicitHeadingStyle === "uppercase" || (!explicitHeadingStyle && isNeobrutalism)) {
+    fontHeadingClass = "font-sans font-black tracking-tight uppercase";
+    headingEffectClass = isNeobrutalism ? "drop-shadow-[3px_3px_0px_#000]" : "";
+  } else if (explicitHeadingStyle === "italic" || (!explicitHeadingStyle && isEditorial)) {
+    fontHeadingClass = "font-serif italic font-normal tracking-tight";
+    headingEffectClass = "text-white";
+  } else if (explicitHeadingStyle === "gradient" || (!explicitHeadingStyle && isBento)) {
+    fontHeadingClass = "font-sans font-black tracking-tight";
+    headingEffectClass = "bg-clip-text text-transparent bg-gradient-to-b from-white via-zinc-200 to-zinc-400";
+  } else {
+    // Padrão / Cinematic
+    fontHeadingClass =
+      fontHeading === "serif"
+        ? "font-serif tracking-tight"
+        : fontHeading === "display"
+        ? "font-sans font-black tracking-tighter uppercase"
+        : fontHeading === "mono"
+        ? "font-mono tracking-wide uppercase"
+        : "font-sans font-bold tracking-tight";
+    headingEffectClass = "drop-shadow-2xl text-white";
+  }
+
+  // Tokens de Borda / Estilo por Arquétipo
+  const cardBorderClass = isNeobrutalism
+    ? "rounded-xl border-[3px] border-black bg-zinc-900/95 text-white shadow-[6px_6px_0px_#000] hover:translate-x-[-2px] hover:translate-y-[-2px] hover:shadow-[8px_8px_0px_#000] transition-all"
+    : isEditorial
+    ? "rounded-none border border-white/15 bg-black/60 backdrop-blur-sm hover:border-white/40 transition-colors"
+    : isBento
+    ? "rounded-3xl border border-white/10 bg-zinc-950/70 backdrop-blur-xl shadow-2xl hover:border-white/20 transition-all"
+    : borderStyle === "sharp"
+    ? "rounded-none border border-white/20 bg-black/60"
+    : borderStyle === "pill"
+    ? "rounded-3xl border border-white/20 bg-white/[0.04]"
+    : borderStyle === "subtle"
+    ? "rounded-xl border border-white/5 bg-zinc-950/80"
+    : "rounded-3xl border border-white/10 bg-white/[0.03] backdrop-blur-xl shadow-2xl hover:border-white/25 transition-all";
+
+  // Tokens de Botões CTA por Arquétipo
+  const buttonCtaClass = isNeobrutalism
+    ? "rounded-lg border-[3px] border-black font-black uppercase tracking-wider text-black shadow-[5px_5px_0px_#000] active:translate-x-1 active:translate-y-1 active:shadow-none hover:shadow-[7px_7px_0px_#000] transition-all cursor-pointer"
+    : isEditorial
+    ? "rounded-none border border-white/40 uppercase tracking-[0.2em] text-xs font-semibold text-white hover:border-white hover:bg-white hover:text-black transition-all cursor-pointer"
+    : isBento
+    ? "rounded-full font-bold tracking-tight shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
+    : "rounded-full font-bold shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer";
+
+  // Tokens de Taglines & Badges por Arquétipo
+  const taglineClass = isNeobrutalism
+    ? "inline-block bg-amber-400 text-black px-3 py-1 font-black uppercase tracking-wider -rotate-1 border-2 border-black shadow-[3px_3px_0px_#000]"
+    : isEditorial
+    ? "tracking-[0.3em] uppercase text-[11px] font-medium text-zinc-300 border-b border-white/25 pb-1 inline-flex items-center gap-2"
+    : isBento
+    ? "inline-flex items-center gap-2 font-mono tracking-widest text-[11px] uppercase px-3 py-1 rounded-full border border-white/15 bg-white/5 text-zinc-200"
+    : "inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white shadow-2xl backdrop-blur-md";
+
+  const badgeClass = isNeobrutalism
+    ? "rounded-none border-2 border-black bg-white text-black font-black uppercase tracking-wider text-[10px] sm:text-[11px] shadow-[3px_3px_0px_#000] rotate-1 px-3 py-1"
+    : isEditorial
+    ? "rounded-none border border-white/20 bg-transparent px-3 py-0.5 text-[10px] tracking-[0.25em] uppercase text-zinc-300"
+    : isBento
+    ? "rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-mono tracking-wide text-zinc-200"
+    : "rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-300 backdrop-blur-md";
 
   const accentColor = data.theme?.accent || "#f59e0b";
   const secondaryAccent = data.theme?.secondaryAccent || "#fbbf24";
   const bgColor = data.theme?.bg || "#0a0a0c";
-  const isNeoPop = archetype === "neo-pop-d2c";
-  const isCyber = archetype === "cyber-tech";
+  const isNeoPop = isNeobrutalism;
+  const isCyber = isBento;
 
   // Profundidade do Parallax
   const backgroundParallaxY = data.theme.parallaxEnabled ? Math.min(scrollY * 0.42, 280) : 0;
@@ -289,13 +352,13 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           {/* Badges do Hero */}
           <div className="mb-6 flex flex-wrap items-center justify-center gap-2">
             {data.hero.tagline && (
-              <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-black/40 px-4 py-1.5 text-[11px] font-semibold tracking-widest uppercase text-white shadow-2xl backdrop-blur-md">
-                <Sparkles className="h-3 w-3" style={{ color: accentColor }} />
-                <span style={{ color: accentColor }}>{data.hero.tagline}</span>
+              <div className={taglineClass}>
+                <Sparkles className="h-3 w-3" style={{ color: isNeobrutalism ? "#000" : accentColor }} />
+                <span style={{ color: isNeobrutalism ? "#000" : accentColor }}>{data.hero.tagline}</span>
               </div>
             )}
             {data.hero.floatingBadge && (
-              <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-zinc-300 backdrop-blur-md">
+              <div className={badgeClass}>
                 <span>{data.hero.floatingBadge}</span>
               </div>
             )}
@@ -303,7 +366,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
           {/* Título Principal Imponente */}
           <h1
-            className={`text-4xl sm:text-6xl md:text-7xl font-bold leading-[1.08] text-white drop-shadow-2xl ${fontHeadingClass}`}
+            className={`text-4xl sm:text-6xl md:text-7xl font-bold leading-[1.08] ${fontHeadingClass} ${headingEffectClass}`}
           >
             {data.hero.title || (data.businessName ? `Bem-vindo à ${data.businessName}` : "Sua Experiência Exclusiva")}
           </h1>
@@ -321,10 +384,10 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-3 rounded-full px-8 py-4 text-sm sm:text-base font-bold text-black shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95"
+              className={`group flex items-center gap-3 px-8 py-4 text-sm sm:text-base ${buttonCtaClass}`}
               style={{
                 backgroundColor: accentColor,
-                boxShadow: `0 0 35px ${accentColor}60`,
+                boxShadow: isNeobrutalism ? undefined : `0 0 35px ${accentColor}60`,
               }}
             >
               <MessageCircle className="h-5 w-5" />
@@ -382,7 +445,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             >
               Arquitetura & Engenharia
             </span>
-            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
               Pilares de Distinção
             </h2>
             <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
@@ -474,7 +537,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                 Capítulo I — A Essência
               </span>
 
-              <h2 className={`mt-3 text-3xl sm:text-4xl md:text-5xl font-bold leading-tight text-white ${fontHeadingClass}`}>
+              <h2 className={`mt-3 text-3xl sm:text-4xl md:text-5xl font-bold leading-tight ${fontHeadingClass} ${headingEffectClass}`}>
                 {data.manifesto.headline}
               </h2>
 
@@ -511,7 +574,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             >
               Capítulo II — O Olhar
             </span>
-            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
               A Experiência Visual
             </h2>
             <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
@@ -569,7 +632,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             >
               Capítulo III — Assinatura
             </span>
-            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+            <h2 className={`mt-2 text-3xl sm:text-5xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
               Criações em Destaque
             </h2>
             <p className="mt-3 text-sm sm:text-base text-zinc-400 max-w-xl mx-auto">
@@ -593,8 +656,11 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
                     {item.badge && (
                       <span
-                        className="absolute top-4 right-4 rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-black shadow-lg"
-                        style={{ backgroundColor: accentColor }}
+                        className={`absolute top-4 right-4 ${badgeClass}`}
+                        style={{
+                          backgroundColor: isNeobrutalism ? "#ffffff" : accentColor,
+                          color: isNeobrutalism ? "#000000" : "#000000",
+                        }}
                       >
                         {item.badge}
                       </span>
@@ -648,7 +714,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             >
               Transparência & Rigor
             </span>
-            <h2 className={`mt-2 text-3xl sm:text-4xl font-bold text-white ${fontHeadingClass}`}>
+            <h2 className={`mt-2 text-3xl sm:text-4xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
               {data.comparison.headline || "O Nosso Padrão vs. O Convencional"}
             </h2>
           </div>
@@ -713,7 +779,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             >
               Esclarecimentos
             </span>
-            <h2 className={`mt-2 text-3xl sm:text-4xl font-bold text-white ${fontHeadingClass}`}>
+            <h2 className={`mt-2 text-3xl sm:text-4xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
               Perguntas Frequentes
             </h2>
           </div>
@@ -761,7 +827,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               >
                 Capítulo Final — O Convite
               </span>
-              <h2 className={`text-3xl sm:text-5xl font-bold text-white ${fontHeadingClass}`}>
+              <h2 className={`text-3xl sm:text-5xl font-bold ${fontHeadingClass} ${headingEffectClass}`}>
                 Viva a Experiência Pessoalmente na {data.businessName}
               </h2>
               <p className="text-sm sm:text-base text-zinc-300 leading-relaxed max-w-xl">
@@ -773,10 +839,10 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                   href={whatsappHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-3 rounded-full px-8 py-4 text-sm font-bold text-black shadow-2xl transition-all hover:scale-105"
+                  className={`flex items-center justify-center gap-3 px-8 py-4 text-sm font-bold text-black ${buttonCtaClass}`}
                   style={{
                     backgroundColor: accentColor,
-                    boxShadow: `0 0 35px ${accentColor}60`,
+                    boxShadow: isNeobrutalism ? undefined : `0 0 35px ${accentColor}60`,
                   }}
                 >
                   <MessageCircle className="h-5 w-5" />

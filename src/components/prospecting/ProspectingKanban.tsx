@@ -418,14 +418,15 @@ export function ProspectingKanban({
                                     onGenerateDemo(company);
                                   }}
                                   disabled={creatingPageId === company.id}
-                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary dark:text-white border border-primary/25 text-xs font-bold transition-all whitespace-nowrap disabled:opacity-60"
+                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all whitespace-nowrap disabled:opacity-60 cursor-pointer shadow-xs"
+                                  title="Ideação Estratégica & Super Prompt com IA"
                                 >
                                   {creatingPageId === company.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0 text-primary" />
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0 text-emerald-400" />
                                   ) : (
-                                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-primary" />
+                                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
                                   )}
-                                  <span>{creatingPageId === company.id ? "Gerando com IA..." : "Gerar Site"}</span>
+                                  <span>{creatingPageId === company.id ? "Ideando..." : "Ideação & Site ⚡"}</span>
                                 </button>
                               )}
                             </div>
@@ -487,9 +488,9 @@ export function ProspectingKanban({
 
                                   {demo.pageId && (
                                     <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                      <Link to="/studio" search={{ page: demo.pageId }}>
-                                        <Pencil className="h-3.5 w-3.5 mr-2 text-zinc-300" />
-                                        <span>Editar no Studio IA</span>
+                                      <Link to="/builder" search={{ page: demo.pageId }}>
+                                        <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                        <span>Editar no Clean Builder</span>
                                       </Link>
                                     </DropdownMenuItem>
                                   )}

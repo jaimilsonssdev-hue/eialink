@@ -79,6 +79,46 @@ const FONT_OPTIONS = [
   { id: "cormorant", name: "Clássica & Confiável", fontName: "Cormorant / Serif", preview: "Aa - Tradição e autoridade" },
 ];
 
+// 4 Grandes Arquétipos Visuais
+const ARCHETYPE_OPTIONS = [
+  {
+    id: "cinematic",
+    name: "Cinematográfico Glass",
+    desc: "Vidro fosco profundo, reflexos translúcidos e iluminação neon envolvente",
+    badge: "Cinema & Luxo",
+    icon: "✨",
+  },
+  {
+    id: "neobrutalism",
+    name: "Neobrutalismo Pop",
+    desc: "Bordas pretas sólidas 3D, sombras duras sem blur, botões táteis que afundam",
+    badge: "Alto Impacto & Tendência",
+    icon: "⚡",
+  },
+  {
+    id: "editorial",
+    name: "Editorial Suíço",
+    desc: "Títulos serifados nobres, linhas finas de 1px, cantos retos e elegância de revista",
+    badge: "Vogue & Quiet Luxury",
+    icon: "🏛️",
+  },
+  {
+    id: "bento",
+    name: "Bento High-Tech",
+    desc: "Títulos com gradiente moderno, super arredondamento (rounded-3xl) e chips",
+    badge: "SaaS & Futurismo",
+    icon: "🍱",
+  },
+];
+
+// Estilos de Título & Efeitos de Texto
+const HEADING_STYLE_OPTIONS = [
+  { id: "default", name: "Padrão Harmônico", preview: "Título equilibrado" },
+  { id: "uppercase", name: "Caixa Alta Marcante (Brutal)", preview: "TÍTULO EM CAIXA ALTA" },
+  { id: "italic", name: "Serifa & Itálico (Editorial)", preview: "Título elegante em itálico" },
+  { id: "gradient", name: "Gradiente Metálico (High-Tech)", preview: "Título com gradiente" },
+];
+
 export function CleanBuilder() {
   const search = useSearch({ from: "/_authenticated/builder" }) as { page?: string };
   const navigate = useNavigate();
@@ -103,8 +143,10 @@ export function CleanBuilder() {
   const [whatsapp, setWhatsapp] = useState("");
   const [address, setAddress] = useState("");
 
-  // 3. Estilo, Cores, Fontes e Modelo
+  // 3. Estilo, Cores, Fontes, Arquétipos e Modelo
   const [templateId, setTemplateId] = useState("cinematic-glass");
+  const [archetype, setArchetype] = useState<"cinematic" | "neobrutalism" | "editorial" | "bento">("cinematic");
+  const [headingStyle, setHeadingStyle] = useState<"default" | "uppercase" | "italic" | "gradient">("default");
   const [fontFamily, setFontFamily] = useState("sans");
   const [themeMode, setThemeMode] = useState<"dark" | "light">("dark");
   const [bgColor, setBgColor] = useState("#0a0a0c");
@@ -189,6 +231,18 @@ export function CleanBuilder() {
         setBoxEffect(customTheme.boxEffect || "glass");
         setBorderRadius(customTheme.borderRadius || "rounded");
 
+        const rawArch = customTheme.archetype || cinematic.archetype || (cinematic.theme as any)?.archetype || "cinematic";
+        if (rawArch === "neobrutalism" || rawArch === "neo-pop-d2c" || rawArch === "dark-brutalist") {
+          setArchetype("neobrutalism");
+        } else if (rawArch === "editorial" || rawArch === "luxury-editorial") {
+          setArchetype("editorial");
+        } else if (rawArch === "bento" || rawArch === "clean-biotech" || rawArch === "cyber-tech") {
+          setArchetype("bento");
+        } else {
+          setArchetype("cinematic");
+        }
+        setHeadingStyle(customTheme.headingStyle || (cinematic.theme as any)?.headingStyle || "default");
+
         const loadedItems = (cinematic.highlights || []).map((h, idx) => ({
           id: h.id || `item_${idx}`,
           title: h.title,
@@ -203,6 +257,17 @@ export function CleanBuilder() {
         setSubtitle(data.bio || "");
         setBgColor(customTheme.bg || "#0a0a0c");
         setAccentColor(customTheme.accent || "#f59e0b");
+        const rawArch = customTheme.archetype || "cinematic";
+        if (rawArch === "neobrutalism" || rawArch === "neo-pop-d2c" || rawArch === "dark-brutalist") {
+          setArchetype("neobrutalism");
+        } else if (rawArch === "editorial" || rawArch === "luxury-editorial") {
+          setArchetype("editorial");
+        } else if (rawArch === "bento" || rawArch === "clean-biotech" || rawArch === "cyber-tech") {
+          setArchetype("bento");
+        } else {
+          setArchetype("cinematic");
+        }
+        setHeadingStyle(customTheme.headingStyle || "default");
       }
     } catch (err) {
       console.error("Erro ao carregar página no Builder Clean:", err);
@@ -290,10 +355,13 @@ export function CleanBuilder() {
         avatarUrl,
         whatsapp: cleanWhatsapp,
         address,
+        archetype,
         theme: {
           ...currentCinematic.theme,
           bg: bgColor,
           accent: accentColor,
+          archetype,
+          headingStyle,
         },
         hero: {
           ...currentCinematic.hero,
@@ -326,6 +394,8 @@ export function CleanBuilder() {
         mode: themeMode,
         boxEffect,
         borderRadius,
+        archetype,
+        headingStyle,
       };
 
       // 1. Atualiza a tabela bio_pages
@@ -878,7 +948,116 @@ export function CleanBuilder() {
                   </div>
                 </div>
 
-                {/* 2. Tipografia / Família de Fontes */}
+                {/* 2. Arquétipo Visual & Atmosfera */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                      <Palette className="h-3.5 w-3.5 text-purple-400" /> Arquétipo Visual & Design
+                    </label>
+                    <span className="text-[10px] text-zinc-500 font-mono">Design System</span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {ARCHETYPE_OPTIONS.map((arch) => {
+                      const isSelected = archetype === arch.id;
+                      return (
+                        <button
+                          key={arch.id}
+                          type="button"
+                          onClick={() => {
+                            setArchetype(arch.id as any);
+                            if (arch.id === "neobrutalism") {
+                              setHeadingStyle("uppercase");
+                              setBorderRadius("rounded");
+                              setBoxEffect("solid");
+                            } else if (arch.id === "editorial") {
+                              setHeadingStyle("italic");
+                              setBorderRadius("sharp");
+                              setFontFamily("serif");
+                            } else if (arch.id === "bento") {
+                              setHeadingStyle("gradient");
+                              setBorderRadius("pill");
+                            } else if (arch.id === "cinematic") {
+                              setHeadingStyle("default");
+                              setBorderRadius("rounded");
+                              setBoxEffect("glass");
+                            }
+                          }}
+                          className={`p-3 rounded-xl border text-left transition cursor-pointer relative flex flex-col justify-between ${
+                            isSelected
+                              ? "bg-purple-950/40 border-purple-500/80 ring-1 ring-purple-500/50 shadow-md"
+                              : "bg-white/5 border-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          <div>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <span className="text-lg">{arch.icon}</span>
+                              <span
+                                className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                  isSelected
+                                    ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
+                                    : "bg-white/5 text-zinc-400 border border-white/10"
+                                }`}
+                              >
+                                {arch.badge}
+                              </span>
+                            </div>
+                            <p className="text-xs font-bold text-white leading-tight">{arch.name}</p>
+                            <p className="text-[10px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
+                              {arch.desc}
+                            </p>
+                          </div>
+                          {isSelected && (
+                            <div className="mt-2 pt-2 border-t border-purple-500/20 flex items-center justify-between text-[10px] text-purple-300 font-bold">
+                              <span>Ativo no Site</span>
+                              <Check className="h-3 w-3 stroke-[3]" />
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 3. Estilo dos Títulos & Efeito Tipográfico */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-pink-400" /> Estilo & Efeito dos Títulos
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {HEADING_STYLE_OPTIONS.map((opt) => {
+                      const isSelected = headingStyle === opt.id;
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          onClick={() => setHeadingStyle(opt.id as any)}
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                            isSelected
+                              ? "bg-pink-950/40 border-pink-500/80 ring-1 ring-pink-500/40"
+                              : "bg-white/5 border-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          <p className="text-xs font-bold text-white">{opt.name}</p>
+                          <p
+                            className={`text-[10px] mt-1 line-clamp-1 ${
+                              opt.id === "uppercase"
+                                ? "uppercase font-black text-amber-300"
+                                : opt.id === "italic"
+                                ? "italic font-serif text-zinc-200"
+                                : opt.id === "gradient"
+                                ? "font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400"
+                                : "text-zinc-400"
+                            }`}
+                          >
+                            {opt.preview}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 4. Tipografia / Família de Fontes */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
                     <Type className="h-3.5 w-3.5 text-blue-400" /> Tipografia & Fontes
@@ -906,7 +1085,7 @@ export function CleanBuilder() {
                   </div>
                 </div>
 
-                {/* 3. Modo do Fundo: Dark vs Light */}
+                {/* 5. Modo do Fundo: Dark vs Light */}
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
                     <Layers className="h-3.5 w-3.5 text-violet-400" /> Modo Visual
@@ -945,7 +1124,7 @@ export function CleanBuilder() {
                   </div>
                 </div>
 
-                {/* 4. Cor de Destaque (Accent) */}
+                {/* 6. Cor de Destaque (Accent) */}
                 <div>
                   <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
                     Cor de Destaque (Accent)
@@ -988,7 +1167,7 @@ export function CleanBuilder() {
                   </div>
                 </div>
 
-                {/* 5. Cor de Fundo */}
+                {/* 7. Cor de Fundo */}
                 <div>
                   <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
                     Cor de Fundo da Página
@@ -1009,7 +1188,7 @@ export function CleanBuilder() {
                   </div>
                 </div>
 
-                {/* 6. Efeito dos Cards & Arredondamento */}
+                {/* 8. Efeito dos Cards & Arredondamento */}
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <div>
                     <label className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block mb-1">
@@ -1108,3 +1287,4 @@ export function CleanBuilder() {
 }
 
 export default CleanBuilder;
+

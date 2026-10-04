@@ -159,11 +159,22 @@ export function TemplateRenderer({
   const customBorder = customTheme?.border_color || tokensDesign?.estilo_botoes?.cor_borda;
   const customRadius = customTheme?.border_radius || tokensDesign?.estilo_botoes?.raio_borda;
 
+  const rawArchetype = (customTheme as any)?.archetype || socialData?.archetype || cinematicData?.archetype || "cinematic";
+  const resolvedArchetype =
+    rawArchetype === "neobrutalism" || rawArchetype === "neo-pop-d2c" || rawArchetype === "dark-brutalist"
+      ? "neobrutalism"
+      : rawArchetype === "editorial" || rawArchetype === "luxury-editorial"
+      ? "editorial"
+      : rawArchetype === "bento" || rawArchetype === "clean-biotech" || rawArchetype === "cyber-tech"
+      ? "bento"
+      : "cinematic";
+
   return (
     <main
       ref={parallaxRef}
       data-parallax={parallaxEnabled ? "on" : undefined}
-      className={`bio-theme ${bio.theme || "aurora"} public-profile-shell`}
+      data-archetype={resolvedArchetype}
+      className={`bio-theme ${bio.theme || "aurora"} public-profile-shell archetype-${resolvedArchetype}`}
       data-template={bio.template_id ?? "default"}
       data-layout={model.template.layout}
       data-template-layout={model.template.layout}

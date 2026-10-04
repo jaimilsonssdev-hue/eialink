@@ -31,6 +31,8 @@ import {
   Loader2,
   Clock,
   MessageCircle,
+  Zap,
+  Sun,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +43,7 @@ import type {
   StudioChatMessage,
   CinematicConceptOption,
   CinematicHighlight,
+  CreativePlan,
 } from "@/modules/cinematic/types";
 import { createDefaultCinematicData, LUXURY_PALETTES } from "@/modules/cinematic/defaults";
 import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
@@ -122,6 +125,99 @@ function convertBioPageToCinematic(bio: any): CinematicPageData {
   };
 }
 
+function buildInitialCreativePlan(current: CinematicPageData): CreativePlan {
+  const name = current.businessName || "Sua Marca";
+  const rating = current.rating || 5.0;
+
+  const optionA: CinematicConceptOption = {
+    id: "option_a",
+    name: "Atelier Nobre & Editorial",
+    tagline: "HERANÇA & CONFIANÇA",
+    palette: {
+      bg: "#0a0a0c",
+      accent: "#f59e0b",
+      cardBg: "#121217",
+    },
+    typography: "serif",
+    vibe: "Sofisticado, acolhedor e com alta percepção de valor",
+    heroHeadline: current.hero.title || `A Excelência Exclusiva da ${name}`,
+    previewData: {
+      ...current,
+      archetype: "luxury-editorial",
+      theme: {
+        ...current.theme,
+        archetype: "luxury-editorial",
+        accent: "#f59e0b",
+        secondaryAccent: "#fbbf24",
+        bg: "#0a0a0c",
+        fontHeading: "serif",
+        fontFamily: "serif",
+        borderStyle: "glass",
+        boxEffect: "glass",
+      },
+      hero: {
+        ...current.hero,
+        title: current.hero.title || `A Experiência Autêntica na ${name}`,
+        subtitle: current.hero.subtitle || "Onde cada detalhe sensorial é lapidado com maestria. Atendimento com agendamento prioritário.",
+        tagline: "ASSINATURA NOBRE 2026",
+        floatingBadge: `★ ${rating.toFixed(1)} NO GOOGLE • EXCLUSIVIDADE`,
+      },
+    },
+  };
+
+  const optionB: CinematicConceptOption = {
+    id: "option_b",
+    name: "Minimalismo & Contraste Contemporâneo",
+    tagline: "LINHAS PURAS & IMPACTO",
+    palette: {
+      bg: "#070709",
+      accent: "#38bdf8",
+      cardBg: "#0c1322",
+    },
+    typography: "sans",
+    vibe: "Moderno, limpo, veloz e altamente focado em conversão",
+    heroHeadline: `O Novo Padrão da ${name} em Sua Região`,
+    previewData: {
+      ...current,
+      archetype: "clean-biotech",
+      theme: {
+        ...current.theme,
+        archetype: "clean-biotech",
+        accent: "#38bdf8",
+        secondaryAccent: "#818cf8",
+        bg: "#070709",
+        fontHeading: "sans",
+        fontFamily: "sans",
+        borderStyle: "pill",
+        boxEffect: "glow",
+      },
+      hero: {
+        ...current.hero,
+        title: `O Novo Padrão da ${name} em Sua Região`,
+        subtitle: "Design contemporâneo, rigor técnico e excelência para quem exige o melhor sem burocracia.",
+        tagline: "ALTA PERFORMANCE 2026",
+        floatingBadge: "● AGENDAMENTO VIP NO WHATSAPP",
+      },
+    },
+  };
+
+  return {
+    id: `plan_initial_${Date.now()}`,
+    conceptSummary: `Direção de arte sob medida com 2 propostas conceituais para destacar a ${name}.`,
+    rationale: `Equilíbrio refinado entre distinção estética e gatilhos de conversão direta no WhatsApp.`,
+    recommendedSections: [
+      "Hero Cinematográfico com Parallax GPU",
+      "Faixa Animada (Divisor Hero)",
+      "Pilares Bento Grid de Autoridade",
+      "Manifesto de Essência & Propósito",
+      "Galeria e Criações em Destaque",
+      "Comparativo de Vantagens",
+      "Políticas, FAQ & Ação VIP no WhatsApp",
+    ],
+    options: [optionA, optionB],
+  };
+}
+
 export const Route = createFileRoute("/_authenticated/studio")({
   component: CinematicStudioPage,
   validateSearch: z.object({
@@ -180,14 +276,19 @@ export default function CinematicStudioPage() {
   // Estados de Chat e IA (Fluxo de Plano Criativo & Aprovação)
   const [aiPrompt, setAiPrompt] = useState("");
   const [isRefiningAi, setIsRefiningAi] = useState(false);
-  const [messages, setMessages] = useState<StudioChatMessage[]>([
-    {
-      id: "welcome",
-      sender: "agent",
-      text: "Olá! Sou seu Diretor de Arte. Envie fotos, cole o link do Google Maps ou me conte sobre o negócio para eu criar um plano exclusivo para você.",
-      timestamp: "Agora",
-    },
-  ]);
+  const [messages, setMessages] = useState<StudioChatMessage[]>(() => {
+    const defaults = createDefaultCinematicData();
+    const plan = buildInitialCreativePlan(defaults);
+    return [
+      {
+        id: "welcome",
+        sender: "agent",
+        text: "Olá! Sou seu Diretor de Arte. Preparei duas abordagens conceituais exclusivas para começarmos. Você pode espiar cada uma ao lado com 1 clique ou me dizer o que gostaria de personalizar!",
+        plan,
+        timestamp: "Agora",
+      },
+    ];
+  });
 
   // Prévia Temporária de Opção (Espiar antes de aprovar)
   const [temporaryPreview, setTemporaryPreview] = useState<{
@@ -279,28 +380,24 @@ export default function CinematicStudioPage() {
         if (error || !bio) return;
         setSavedSlug(bio.slug);
         const socialLinks = (bio.social_links as Record<string, any>) || {};
+        let finalData: CinematicPageData;
         if (socialLinks.cinematic_data) {
-          setData(socialLinks.cinematic_data as CinematicPageData);
-          setMessages([
-            {
-              id: "page-loaded",
-              sender: "agent",
-              text: `Página "${bio.display_name}" carregada no Studio com sucesso! O que você gostaria de ajustar ou aprimorar?`,
-              timestamp: "Agora",
-            },
-          ]);
+          finalData = socialLinks.cinematic_data as CinematicPageData;
         } else {
-          const converted = convertBioPageToCinematic(bio);
-          setData(converted);
-          setMessages([
-            {
-              id: "page-adapted",
-              sender: "agent",
-              text: `Importei a página "${bio.display_name}" para o Studio! Você pode ajustar o visual, trocar cores ou me pedir alterações diretamente aqui no chat.`,
-              timestamp: "Agora",
-            },
-          ]);
+          finalData = convertBioPageToCinematic(bio);
         }
+        setData(finalData);
+
+        const initialPlan = buildInitialCreativePlan(finalData);
+        setMessages([
+          {
+            id: "page-loaded",
+            sender: "agent",
+            text: `Página "${bio.display_name}" carregada no Studio com sucesso! Preparei 2 direções criativas sob medida para a sua marca. Você pode espiar qualquer uma no canvas ao lado com 1 clique, aprovar a sua favorita ou me pedir alterações diretamente no chat!`,
+            plan: initialPlan,
+            timestamp: "Agora",
+          },
+        ]);
       });
   }, [requestedPageId]);
 
@@ -1098,7 +1195,7 @@ export default function CinematicStudioPage() {
             <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-zinc-950">
               {/* Feed de Mensagens Rolável */}
               <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 space-y-3 flex flex-col">
-                {messages.length === 1 && messages[0].id === "welcome" ? (
+                {messages.length === 1 && messages[0].id === "welcome" && !messages[0].plan ? (
                   <div className="flex flex-1 flex-col items-center justify-center text-center px-4 py-8 space-y-3.5 my-auto select-none">
                     <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800/80 shadow-lg text-zinc-200">
                       <Sparkles className="h-6 w-6 text-zinc-300" />
@@ -1408,6 +1505,77 @@ export default function CinematicStudioPage() {
                     </div>
                   </div>
                 )}
+
+                {/* Chips de Ações Rápidas do Copiloto */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-2 px-0.5 [scrollbar-width:none]">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData((prev) => ({
+                        ...prev,
+                        marqueeSpeed: 180,
+                        theme: { ...prev.theme, marqueeSpeed: 180 },
+                      }));
+                      toast.success("Velocidade da faixa ajustada para 180s (Ultra Lenta / Flutuante)!");
+                    }}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
+                  >
+                    <Zap className="h-3 w-3 text-amber-400" />
+                    <span>⚡ Faixa 180s Flutuante</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSendMessage("Elabore uma nova proposta de direção de arte com 2 opções conceituais ricas para meu negócio.");
+                    }}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
+                  >
+                    <Sparkles className="h-3 w-3 text-zinc-400" />
+                    <span>💡 Novo Conceito</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData((prev) => ({
+                        ...prev,
+                        theme: {
+                          ...prev.theme,
+                          mode: "light",
+                          bg: "#f8fafc",
+                          fontHeading: "serif",
+                          accent: "#09090b",
+                        },
+                      }));
+                      toast.success("Modo Claro Editorial ativado com sucesso!");
+                    }}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
+                  >
+                    <Sun className="h-3 w-3 text-amber-400" />
+                    <span>✨ Modo Claro Editorial</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSendMessage("Reescreva a Headline e o Subtítulo da Hero com copywriting magnético, poético e sensorial de alta conversão sem clichês.");
+                    }}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
+                  >
+                    <span>🎯 Nova Headline</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleSendMessage("Sugira 3 a 4 serviços de alto ticket com preços e tempo de atendimento ideais para meu posicionamento.");
+                    }}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
+                  >
+                    <span>💎 Sugerir Serviços</span>
+                  </button>
+                </div>
 
                 {/* Cápsula de Entrada Estilo Lovable */}
                 <div className="relative flex flex-col rounded-2xl border border-zinc-800 bg-zinc-900/90 shadow-lg shadow-black/40 focus-within:border-zinc-600 transition-all p-2">

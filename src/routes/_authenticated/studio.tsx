@@ -1194,23 +1194,109 @@ export default function CinematicStudioPage() {
           {activeTab === "chat" && (
             <div className="flex flex-1 flex-col min-h-0 overflow-hidden bg-zinc-950">
               {/* Feed de Mensagens Rolável */}
-              <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 space-y-3 flex flex-col">
-                {messages.length === 1 && messages[0].id === "welcome" && !messages[0].plan ? (
-                  <div className="flex flex-1 flex-col items-center justify-center text-center px-4 py-8 space-y-3.5 my-auto select-none">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-zinc-900 border border-zinc-800/80 shadow-lg text-zinc-200">
-                      <Sparkles className="h-6 w-6 text-zinc-300" />
+              <div className="flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 py-3 space-y-3.5 flex flex-col">
+                {/* Saudação Central Estilo ChatGPT / Claude Code / Lovable */}
+                {messages.length <= 1 && (
+                  <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/40 p-4 space-y-3.5 shadow-xl">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-zinc-800 border border-zinc-700/60 text-amber-400 shadow-md">
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold tracking-tight text-zinc-100">
+                          Copiloto Criativo • {data.businessName || "Sua Marca"}
+                        </h3>
+                        <p className="text-[11px] text-zinc-400 leading-tight">
+                          O que você gostaria de criar ou refinar na sua vitrine hoje?
+                        </p>
+                      </div>
                     </div>
-                    <div className="space-y-1.5 max-w-xs">
-                      <h3 className="text-base sm:text-lg font-semibold tracking-tight text-zinc-100">
-                        O que vamos criar hoje?
-                      </h3>
-                      <p className="text-xs text-zinc-400 leading-relaxed">
-                        Cole um link do Google Maps, anexe fotos ou me conte sobre o negócio para criarmos uma vitrine cinematográfica.
-                      </p>
+
+                    {/* Cards de Ações Rápidas (Grid 2 Colunas) */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSendMessage("Elabore uma nova proposta de direção de arte com 2 opções conceituais exclusivas para este negócio.");
+                        }}
+                        className="group flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 text-left hover:border-zinc-700 hover:bg-zinc-800/40 transition-all cursor-pointer"
+                      >
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 group-hover:text-amber-400">
+                          <Sparkles className="h-3 w-3" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="block text-xs font-semibold text-zinc-200 group-hover:text-white">Novo Conceito Visual</span>
+                          <span className="block text-[10px] text-zinc-400 line-clamp-1">2 direções conceituais</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setData((prev) => ({
+                            ...prev,
+                            marqueeSpeed: 180,
+                            theme: { ...prev.theme, marqueeSpeed: 180 },
+                          }));
+                          toast.success("Velocidade da faixa reduzida para 180s (Flutuante)!");
+                        }}
+                        className="group flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 text-left hover:border-zinc-700 hover:bg-zinc-800/40 transition-all cursor-pointer"
+                      >
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-amber-400">
+                          <Zap className="h-3 w-3" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="block text-xs font-semibold text-zinc-200 group-hover:text-white">Faixa 180s Flutuante</span>
+                          <span className="block text-[10px] text-zinc-400 line-clamp-1">Desacelerar animação da faixa</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setData((prev) => ({
+                            ...prev,
+                            theme: {
+                              ...prev.theme,
+                              mode: "light",
+                              bg: "#f8fafc",
+                              fontHeading: "serif",
+                              accent: "#09090b",
+                            },
+                          }));
+                          toast.success("Modo Claro Editorial ativado!");
+                        }}
+                        className="group flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 text-left hover:border-zinc-700 hover:bg-zinc-800/40 transition-all cursor-pointer"
+                      >
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-amber-300">
+                          <Sun className="h-3 w-3" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="block text-xs font-semibold text-zinc-200 group-hover:text-white">Modo Claro Editorial</span>
+                          <span className="block text-[10px] text-zinc-400 line-clamp-1">Fundo níveo e fontes serif</span>
+                        </div>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSendMessage("Reescreva a Headline e o Subtítulo da Hero com copywriting magnético, poético e sensorial de alta conversão.");
+                        }}
+                        className="group flex items-start gap-2.5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-2.5 text-left hover:border-zinc-700 hover:bg-zinc-800/40 transition-all cursor-pointer"
+                      >
+                        <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300 group-hover:text-white">
+                          <Bot className="h-3 w-3" />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="block text-xs font-semibold text-zinc-200 group-hover:text-white">Headline Magnética</span>
+                          <span className="block text-[10px] text-zinc-400 line-clamp-1">Copywriting de alto impacto</span>
+                        </div>
+                      </button>
                     </div>
                   </div>
-                ) : (
-                  messages.map((msg) => (
+                )}
+
+                {messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
@@ -1429,7 +1515,7 @@ export default function CinematicStudioPage() {
                     </div>
                     <span className="mt-1 px-1 text-[10px] text-zinc-500">{msg.timestamp}</span>
                   </div>
-                )))}
+                ))}
 
                 {/* Indicador de Carregamento da IA */}
                 {isRefiningAi && (
@@ -1628,12 +1714,16 @@ export default function CinematicStudioPage() {
                       </button>
                     </div>
 
-                    {/* Botão de Envio (Circular Minimalista estilo Lovable) */}
+                    {/* Botão de Envio (Circular Minimalista estilo Lovable / Claude) */}
                     <button
                       type="button"
                       onClick={() => handleSendMessage()}
                       disabled={isRefiningAi || !aiPrompt.trim()}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60 disabled:opacity-30 transition-all"
+                      className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+                        aiPrompt.trim()
+                          ? "bg-white text-zinc-950 font-bold shadow-md hover:bg-zinc-200 hover:scale-105 active:scale-95 cursor-pointer"
+                          : "bg-zinc-800 text-zinc-500 border border-zinc-700/60 opacity-30 cursor-not-allowed"
+                      }`}
                     >
                       {isRefiningAi ? (
                         <RefreshCw className="h-3.5 w-3.5 animate-spin" />

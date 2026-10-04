@@ -21,6 +21,7 @@ import {
   ShieldCheck,
   Zap,
 } from "lucide-react";
+import { CinematicMarquee } from "./CinematicMarquee";
 
 interface CinematicViewerProps {
   data: CinematicPageData;
@@ -512,50 +513,14 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       </section>
 
       {/* 2. BLOCO MARQUEE INFINITO / DIVISOR DE SESSÃO */}
-      {data.marquee && data.marquee.length > 0 && (() => {
-        // Assegura densidade suficiente para preencher qualquer monitor sem espaços vazios
-        let baseItems = [...data.marquee];
-        while (baseItems.length < 5) {
-          baseItems = [...baseItems, ...data.marquee];
-        }
-        const trackItems = [...baseItems, ...baseItems];
-        const animName = `cinematicMarquee_${marqueeDuration}s`;
-
-        return (
-          <section className={`relative z-20 w-full overflow-hidden border-y py-3.5 backdrop-blur-md select-none ${isLight ? "border-zinc-200/90 bg-white/95 text-zinc-900 shadow-xs" : "border-white/10 bg-black/60 text-white"}`}>
-            <style>{`
-              @keyframes ${animName} {
-                0% { transform: translate3d(0, 0, 0); }
-                100% { transform: translate3d(-50%, 0, 0); }
-              }
-            `}</style>
-            <div
-              key={`marquee-track-${animName}-${(data.marquee || []).length}`}
-              className="flex w-max items-center gap-8 will-change-transform hover:[animation-play-state:paused]"
-              style={{
-                animation: `${animName} ${marqueeDuration}s linear infinite`,
-                WebkitAnimation: `${animName} ${marqueeDuration}s linear infinite`,
-                animationDuration: `${marqueeDuration}s`,
-              }}
-            >
-              {trackItems.map((item, idx) => {
-                const text = typeof item === "string" ? item : item?.text || "";
-                const icon = typeof item === "object" ? item?.icon : "";
-                if (!text) return null;
-                return (
-                  <div key={idx} className="flex shrink-0 items-center gap-3 text-xs md:text-sm font-bold tracking-widest uppercase">
-                    {icon && <span>{icon}</span>}
-                    <span style={{ color: isLight && (accentColor === "#ffffff" || accentColor === "#f8fafc") ? "#09090b" : accentColor }}>
-                      {text}
-                    </span>
-                    <span className={isLight ? "text-zinc-400" : textMutedClass}>•</span>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        );
-      })()}
+      {data.marquee && data.marquee.length > 0 && (
+        <CinematicMarquee
+          items={data.marquee}
+          speed={marqueeDuration}
+          isLight={isLight}
+          accentColor={accentColor}
+        />
+      )}
 
       {/* 3. BLOCO BENTO GRID ASSIMÉTRICO */}
       {data.bentoGrid && data.bentoGrid.length > 0 && (

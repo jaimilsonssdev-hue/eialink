@@ -168,6 +168,17 @@ export function CleanBuilder() {
     }>
   >([]);
 
+  // 5. Faixa Animada (Marquee / Divisor)
+  const [marqueeEnabled, setMarqueeEnabled] = useState(true);
+  const [marqueeItems, setMarqueeItems] = useState<
+    Array<{ id: string; text: string; icon?: string }>
+  >([
+    { id: "m1", text: "ATENDIMENTO VIP E PERSONALIZADO", icon: "💎" },
+    { id: "m2", text: "PADRÃO DE ALTA QUALIDADE", icon: "★" },
+    { id: "m3", text: "EXPERIÊNCIA EXCLUSIVA", icon: "✦" },
+    { id: "m4", text: "SATISFAÇÃO COMPROVADA", icon: "✨" },
+  ]);
+
   // Estados de Upload
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
@@ -255,6 +266,21 @@ export function CleanBuilder() {
           imageUrl: h.imageUrl || "",
         }));
         setItems(loadedItems);
+
+        if (cinematic.marquee && Array.isArray(cinematic.marquee)) {
+          if (cinematic.marquee.length > 0) {
+            setMarqueeEnabled(true);
+            setMarqueeItems(
+              cinematic.marquee.map((m: any, idx: number) => ({
+                id: m.id || `m_${idx}`,
+                text: typeof m === "string" ? m : m.text || "",
+                icon: typeof m === "object" ? m.icon || "✦" : "✦",
+              }))
+            );
+          } else {
+            setMarqueeEnabled(false);
+          }
+        }
       } else {
         setHeadline(data.display_name || "");
         setSubtitle(data.bio || "");
@@ -358,6 +384,9 @@ export function CleanBuilder() {
 
       const updatedCinematic: CinematicPageData = {
         ...currentCinematic,
+        marquee: marqueeEnabled
+          ? marqueeItems.filter((m) => m.text.trim().length > 0)
+          : [],
         businessName,
         avatarUrl,
         whatsapp: cleanWhatsapp,
@@ -1256,6 +1285,121 @@ export function CleanBuilder() {
                     </div>
                   </div>
                 </div>
+
+                {/* 8. Faixa Animada (Marquee / Divisor de Sessão) */}
+                <div className="space-y-3 pt-3 border-t border-zinc-850">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <label className="text-xs font-medium text-zinc-300 block">Faixa Animada (Divisor Hero)</label>
+                      <span className="text-[10px] text-zinc-500">Loop contínuo com frases de impacto abaixo da Hero</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={marqueeEnabled}
+                        onChange={(e) => setMarqueeEnabled(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+                    </label>
+                  </div>
+
+                  {marqueeEnabled && (
+                    <div className="space-y-2.5 rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-semibold text-zinc-400 uppercase">
+                          Frases na Faixa ({marqueeItems.length})
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newId = `m_${Date.now()}`;
+                            setMarqueeItems((prev) => [
+                              ...prev,
+                              { id: newId, text: "NOVO DIFERENCIAL EXCLUSIVO", icon: "✦" },
+                            ]);
+                            toast.success("Frase adicionada!");
+                          }}
+                          className="text-[10px] text-emerald-400 hover:text-emerald-300 font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                        >
+                          <Plus className="h-3 w-3" />
+                          <span>Adicionar</span>
+                        </button>
+                      </div>
+
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+                        {marqueeItems.map((item, idx) => (
+                          <div key={item.id || idx} className="flex items-center gap-1.5">
+                            <input
+                              type="text"
+                              value={item.icon || ""}
+                              placeholder="★"
+                              title="Ícone / Emoji"
+                              onChange={(e) => {
+                                const newIcon = e.target.value;
+                                setMarqueeItems((prev) =>
+                                  prev.map((m, i) => (i === idx ? { ...m, icon: newIcon } : m))
+                                );
+                              }}
+                              className="w-8 rounded-lg border border-zinc-800 bg-zinc-950 px-1 py-1.5 text-center text-xs text-zinc-200 placeholder-zinc-600 focus:border-zinc-600 focus:outline-none"
+                            />
+                            <input
+                              type="text"
+                              value={item.text}
+                              placeholder="Frase de destaque..."
+                              onChange={(e) => {
+                                const newText = e.target.value;
+                                setMarqueeItems((prev) =>
+                                  prev.map((m, i) => (i === idx ? { ...m, text: newText } : m))
+                                );
+                              }}
+                              className="flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-2.5 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-600 focus:outline-none"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMarqueeItems((prev) => prev.filter((_, i) => i !== idx));
+                                toast.info("Frase removida.");
+                              }}
+                              className="p-1 text-zinc-500 hover:text-red-400 transition cursor-pointer rounded"
+                              title="Remover"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Sugestões Rápidas */}
+                      <div className="pt-1">
+                        <span className="block text-[9px] text-zinc-500 mb-1">Sugestões de 1 clique:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {[
+                            { text: "★ 4.9 NO GOOGLE", icon: "★" },
+                            { text: "ATENDIMENTO VIP", icon: "💎" },
+                            { text: "100% ARTESANAL", icon: "🌿" },
+                            { text: "ENTREGA RÁPIDA", icon: "⚡" },
+                          ].map((sug, sIdx) => (
+                            <button
+                              key={sIdx}
+                              type="button"
+                              onClick={() => {
+                                setMarqueeItems((prev) => [
+                                  ...prev,
+                                  { id: `sug_${Date.now()}_${sIdx}`, text: sug.text, icon: sug.icon },
+                                ]);
+                                toast.success(`"${sug.text}" adicionada!`);
+                              }}
+                              className="rounded-md border border-zinc-800 bg-zinc-950/80 px-2 py-0.5 text-[9px] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition cursor-pointer"
+                            >
+                              +{sug.icon} {sug.text}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1367,6 +1511,9 @@ export function CleanBuilder() {
                         ctaLink: `https://wa.me/${whatsapp.replace(/\D/g, "")}`,
                         floatingBadge: "★ 4.9 NO GOOGLE",
                       },
+                      marquee: marqueeEnabled
+                        ? marqueeItems.filter((m) => m.text.trim().length > 0)
+                        : [],
                       highlights: items.map((i) => ({
                         id: i.id,
                         title: i.title,

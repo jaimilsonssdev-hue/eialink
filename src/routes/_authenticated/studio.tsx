@@ -25,6 +25,7 @@ import {
   Eye,
   ArrowUp,
   ArrowLeft,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -190,7 +191,7 @@ export default function CinematicStudioPage() {
   const [publishedModalOpen, setPublishedModalOpen] = useState(false);
 
   // Acordeões dos Ajustes Manuais
-  const [openSection, setOpenSection] = useState<"identity" | "media" | "styling">("identity");
+  const [openSection, setOpenSection] = useState<"identity" | "media" | "styling" | "marquee">("identity");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -1735,6 +1736,196 @@ export default function CinematicStudioPage() {
                         className="rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500/20"
                       />
                     </label>
+                  </div>
+                )}
+              </div>
+
+              {/* Acordeão 4: Faixa Animada (Marquee / Divisor) */}
+              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setOpenSection(openSection === "marquee" ? ("" as any) : "marquee")}
+                  className="flex w-full items-center justify-between p-3.5 text-left text-xs font-semibold text-zinc-300 uppercase tracking-wider hover:bg-zinc-900/60 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-3.5 w-3.5 text-zinc-400" />
+                    <span>Faixa Animada (Divisor Hero)</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {data.marquee && data.marquee.length > 0 && (
+                      <span className="rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[9px] font-bold px-2 py-0.5">
+                        Ativa ({data.marquee.length})
+                      </span>
+                    )}
+                    <ChevronDown
+                      className={`h-4 w-4 text-zinc-500 transition-transform ${openSection === "marquee" ? "rotate-180" : ""}`}
+                    />
+                  </div>
+                </button>
+
+                {openSection === "marquee" && (
+                  <div className="p-3.5 pt-0 space-y-4 text-xs border-t border-zinc-800/60">
+                    {/* Toggle Ligar/Desligar Faixa */}
+                    <label className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-950/60 p-3 cursor-pointer">
+                      <div>
+                        <span className="block text-xs font-semibold text-zinc-200">Exibir Faixa Animada (Marquee)</span>
+                        <span className="block text-[10px] text-zinc-400">
+                          Divisor em loop contínuo logo abaixo da Hero com frases de impacto.
+                        </span>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={Boolean(data.marquee && data.marquee.length > 0)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            const defaultItems = [
+                              { id: "m1", text: "ATENDIMENTO VIP E PERSONALIZADO", icon: "💎" },
+                              { id: "m2", text: "PADRÃO DE ALTA QUALIDADE", icon: "★" },
+                              { id: "m3", text: "EXPERIÊNCIA EXCLUSIVA", icon: "✦" },
+                              { id: "m4", text: "SATISFAÇÃO COMPROVADA", icon: "✨" },
+                            ];
+                            setData((prev) => ({
+                              ...prev,
+                              marquee: defaultItems,
+                            }));
+                            toast.success("Faixa animada ativada!");
+                          } else {
+                            setData((prev) => ({
+                              ...prev,
+                              marquee: [],
+                            }));
+                            toast.info("Faixa animada desativada.");
+                          }
+                        }}
+                        className="rounded border-zinc-700 bg-zinc-900 text-amber-500 focus:ring-amber-500/20"
+                      />
+                    </label>
+
+                    {/* Editor de Frases quando ativa */}
+                    {data.marquee && data.marquee.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-semibold uppercase text-zinc-400">
+                            Frases que rolam na tela ({data.marquee.length})
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newId = `m_${Date.now()}`;
+                              setData((prev) => ({
+                                ...prev,
+                                marquee: [
+                                  ...(prev.marquee || []),
+                                  { id: newId, text: "NOVO DIFERENCIAL EXCLUSIVO", icon: "✦" },
+                                ],
+                              }));
+                              toast.success("Nova frase adicionada!");
+                            }}
+                            className="text-[10px] text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors"
+                          >
+                            <Plus className="h-3 w-3" />
+                            <span>Adicionar Frase</span>
+                          </button>
+                        </div>
+
+                        {/* Lista de Frases */}
+                        <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                          {data.marquee.map((item, idx) => {
+                            const textVal = typeof item === "string" ? item : item.text;
+                            const iconVal = typeof item === "object" ? item.icon || "" : "";
+                            return (
+                              <div key={item.id || idx} className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950 p-2">
+                                <input
+                                  type="text"
+                                  value={iconVal}
+                                  placeholder="★"
+                                  title="Emoji ou Ícone"
+                                  onChange={(e) => {
+                                    const newIcon = e.target.value;
+                                    setData((prev) => {
+                                      const nextMarquee = [...(prev.marquee || [])];
+                                      const current = nextMarquee[idx];
+                                      if (typeof current === "string") {
+                                        nextMarquee[idx] = { id: `m_${idx}`, text: current, icon: newIcon };
+                                      } else {
+                                        nextMarquee[idx] = { ...current, icon: newIcon };
+                                      }
+                                      return { ...prev, marquee: nextMarquee };
+                                    });
+                                  }}
+                                  className="w-10 rounded border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-center text-xs text-zinc-200 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none"
+                                />
+                                <input
+                                  type="text"
+                                  value={textVal}
+                                  placeholder="Digite a frase..."
+                                  onChange={(e) => {
+                                    const newText = e.target.value;
+                                    setData((prev) => {
+                                      const nextMarquee = [...(prev.marquee || [])];
+                                      const current = nextMarquee[idx];
+                                      if (typeof current === "string") {
+                                        nextMarquee[idx] = { id: `m_${idx}`, text: newText };
+                                      } else {
+                                        nextMarquee[idx] = { ...current, text: newText };
+                                      }
+                                      return { ...prev, marquee: nextMarquee };
+                                    });
+                                  }}
+                                  className="flex-1 rounded border border-zinc-800 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-zinc-700 focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setData((prev) => ({
+                                      ...prev,
+                                      marquee: (prev.marquee || []).filter((_, i) => i !== idx),
+                                    }));
+                                    toast.info("Frase removida.");
+                                  }}
+                                  className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors rounded hover:bg-zinc-900"
+                                  title="Remover frase"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Sugestões Rápidas de Nicho */}
+                        <div className="pt-1">
+                          <span className="block text-[10px] text-zinc-500 mb-1.5">Sugestões rápidas para adicionar:</span>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[
+                              { text: "★ 4.9 NO GOOGLE", icon: "★" },
+                              { text: "ATENDIMENTO PERSONALIZADO", icon: "💎" },
+                              { text: "SATISFAÇÃO GARANTIDA", icon: "🛡️" },
+                              { text: "EXPERIÊNCIA PREMIUM", icon: "✦" },
+                              { text: "EQUIPE QUALIFICADA", icon: "⚡" },
+                            ].map((sug, sIdx) => (
+                              <button
+                                key={sIdx}
+                                type="button"
+                                onClick={() => {
+                                  setData((prev) => ({
+                                    ...prev,
+                                    marquee: [
+                                      ...(prev.marquee || []),
+                                      { id: `sug_${Date.now()}_${sIdx}`, text: sug.text, icon: sug.icon },
+                                    ],
+                                  }));
+                                  toast.success(`"${sug.text}" adicionada!`);
+                                }}
+                                className="rounded-full border border-zinc-800 bg-zinc-950/80 px-2.5 py-1 text-[10px] text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors"
+                              >
+                                +{sug.icon} {sug.text}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

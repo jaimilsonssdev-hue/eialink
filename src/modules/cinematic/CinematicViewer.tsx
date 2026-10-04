@@ -28,6 +28,27 @@ interface CinematicViewerProps {
   className?: string;
 }
 
+// Utilitário de contraste para garantir que botões coloridos ou brancos nunca fiquem ilegíveis
+export function getContrastTextColor(hexColor?: string): string {
+  if (!hexColor) return "#ffffff";
+  const clean = hexColor.replace("#", "").trim();
+  if (clean.length === 3) {
+    const r = parseInt(clean[0] + clean[0], 16);
+    const g = parseInt(clean[1] + clean[1], 16);
+    const b = parseInt(clean[2] + clean[2], 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 160 ? "#09090b" : "#ffffff";
+  }
+  if (clean.length === 6) {
+    const r = parseInt(clean.substring(0, 2), 16);
+    const g = parseInt(clean.substring(2, 4), 16);
+    const b = parseInt(clean.substring(4, 6), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 160 ? "#09090b" : "#ffffff";
+  }
+  return "#ffffff";
+}
+
 export function CinematicViewer({ data, isEmbedded = false, className = "" }: CinematicViewerProps) {
   const [selectedPhoto, setSelectedPhoto] = useState<CinematicGalleryItem | null>(null);
   const [openFaq, setOpenFaq] = useState<number | null>(0);
@@ -178,14 +199,16 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
     } transition-all`;
   }
 
-  // Tokens de Botões CTA por Arquétipo
+  // Tokens de Botões CTA por Arquétipo com contraste dinâmico garantido
+  const ctaTextColor = getContrastTextColor(accentColor);
   const buttonCtaClass = isNeobrutalism
-    ? "rounded-lg border-[3px] border-black font-black uppercase tracking-wider text-black shadow-[5px_5px_0px_#000] active:translate-x-1 active:translate-y-1 active:shadow-none hover:shadow-[7px_7px_0px_#000] transition-all cursor-pointer"
+    ? "rounded-lg border-[3px] border-black font-black uppercase tracking-wider shadow-[5px_5px_0px_#000] active:translate-x-1 active:translate-y-1 active:shadow-none hover:shadow-[7px_7px_0px_#000] transition-all cursor-pointer"
     : isEditorial
-    ? "rounded-none border border-white/40 uppercase tracking-[0.2em] text-xs font-semibold text-white hover:border-white hover:bg-white hover:text-black transition-all cursor-pointer"
+    ? "rounded-none border border-current uppercase tracking-[0.2em] text-xs font-semibold hover:opacity-90 transition-all cursor-pointer"
     : isBento
     ? "rounded-full font-bold tracking-tight shadow-xl hover:scale-105 active:scale-95 transition-all cursor-pointer"
     : "rounded-full font-bold shadow-2xl transition-all duration-200 hover:scale-105 active:scale-95 cursor-pointer";
+
 
   // Tokens de Taglines & Badges por Arquétipo
   const taglineClass = isNeobrutalism
@@ -343,10 +366,14 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             href={whatsappHref}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md transition-all hover:scale-105 hover:bg-white/20"
-            style={{ borderColor: `${accentColor}50` }}
+            className={`flex items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-semibold shadow-lg backdrop-blur-md transition-all hover:scale-105 ${
+              isLight
+                ? "border-zinc-300 bg-zinc-900 text-white hover:bg-black"
+                : "border-white/20 bg-white/10 text-white hover:bg-white/20"
+            }`}
+            style={{ borderColor: isLight ? undefined : `${accentColor}50` }}
           >
-            <MessageCircle className="h-3.5 w-3.5" style={{ color: accentColor }} />
+            <MessageCircle className="h-3.5 w-3.5" style={{ color: isLight ? "#ffffff" : accentColor }} />
             <span>WhatsApp VIP</span>
           </a>
         </div>
@@ -362,7 +389,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               loop
               muted
               playsInline
-              className="h-full w-full object-cover object-center will-change-transform"
+              className={`h-full w-full object-cover object-center will-change-transform ${isLight ? "opacity-35" : ""}`}
               style={{
                 transform: `translate3d(0, ${backgroundParallaxY}px, 0) scale(${backgroundZoom})`,
                 transition: "transform 0.08s cubic-bezier(0.2, 0.9, 0.3, 1)",
@@ -375,23 +402,32 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             <img
               src={data.hero.backgroundImage}
               alt={data.businessName || "Capa"}
-              className="h-full w-full object-cover object-center will-change-transform"
+              className={`h-full w-full object-cover object-center will-change-transform ${isLight ? "opacity-40" : ""}`}
               style={{
                 transform: `translate3d(0, ${backgroundParallaxY}px, 0) scale(${backgroundZoom})`,
                 transition: "transform 0.08s cubic-bezier(0.2, 0.9, 0.3, 1)",
               }}
             />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-zinc-900 via-black to-zinc-950" />
+            <div className={`h-full w-full ${isLight ? "bg-gradient-to-br from-zinc-100 via-white to-slate-100" : "bg-gradient-to-br from-zinc-900 via-black to-zinc-950"}`} />
           )}
 
-          {/* Vinheta Escura de Cinema e Iluminação Mesh nas Bordas */}
-          <div className="absolute inset-0 bg-radial-[circle_at_center,transparent_25%,#070709_90%] opacity-90" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-black/60 to-black/75" />
-          <div
-            className="absolute inset-0 opacity-25 mix-blend-color pointer-events-none"
-            style={{ backgroundColor: accentColor }}
-          />
+          {/* Vinheta de Fundo: Luminosa no Modo Claro e Escura no Modo Cinema */}
+          {isLight ? (
+            <>
+              <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-50 via-white/60 to-white/90" />
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 bg-radial-[circle_at_center,transparent_25%,#070709_90%] opacity-90" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#070709] via-black/60 to-black/75" />
+              <div
+                className="absolute inset-0 opacity-25 mix-blend-color pointer-events-none"
+                style={{ backgroundColor: accentColor }}
+              />
+            </>
+          )}
         </div>
 
         {/* Conteúdo Central Hero */}
@@ -406,7 +442,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
             {data.hero.tagline && (
               <div className={taglineClass}>
                 <Sparkles className="h-3 w-3" style={{ color: isNeobrutalism ? "#000" : accentColor }} />
-                <span style={{ color: isNeobrutalism ? "#000" : accentColor }}>{data.hero.tagline}</span>
+                <span style={{ color: isNeobrutalism ? "#000" : (isLight ? "#09090b" : accentColor) }}>{data.hero.tagline}</span>
               </div>
             )}
             {data.hero.floatingBadge && (
@@ -425,7 +461,7 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
 
           {/* Subtítulo Narrativo */}
           {(data.hero.subtitle || !data.businessName) && (
-            <p className={`mx-auto mt-6 max-w-2xl text-base sm:text-lg md:text-xl font-light leading-relaxed ${textSecondaryClass} drop-shadow`}>
+            <p className={`mx-auto mt-6 max-w-2xl text-base sm:text-lg md:text-xl font-light leading-relaxed ${textSecondaryClass} drop-shadow-sm`}>
               {data.hero.subtitle || "Descreva seu negócio no chat ao lado ou importe sua ficha do Google Maps para gerar sua vitrine cinematográfica completa."}
             </p>
           )}
@@ -436,15 +472,18 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
-              className={`group flex items-center gap-3 px-8 py-4 text-sm sm:text-base ${buttonCtaClass}`}
+              className={`group flex items-center gap-3 px-8 py-4 text-sm sm:text-base ${buttonCtaClass} border ${
+                ctaTextColor === "#09090b" ? "border-black/15" : "border-white/20"
+              }`}
               style={{
                 backgroundColor: accentColor,
+                color: ctaTextColor,
                 boxShadow: isNeobrutalism ? undefined : `0 0 35px ${accentColor}60`,
               }}
             >
-              <MessageCircle className="h-5 w-5" />
-              <span>{data.hero.ctaText || "Solicitar Atendimento VIP"}</span>
-              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              <MessageCircle className="h-5 w-5" style={{ color: ctaTextColor }} />
+              <span style={{ color: ctaTextColor }}>{data.hero.ctaText || "Solicitar Atendimento VIP"}</span>
+              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" style={{ color: ctaTextColor }} />
             </a>
 
             <button
@@ -452,41 +491,48 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
               onClick={() => scrollToSection(data.bentoGrid ? "diferenciais" : "manifesto")}
               className={`flex items-center gap-2 rounded-full border px-6 py-4 text-sm font-semibold backdrop-blur-md transition-all ${
                 isLight
-                  ? "border-black/15 bg-white/80 text-zinc-800 hover:bg-white"
+                  ? "border-zinc-300 bg-white text-zinc-900 hover:bg-zinc-100 shadow-sm"
                   : "border-white/20 bg-white/5 text-white hover:bg-white/15"
               }`}
             >
-              <span>Descobrir Detalhes</span>
-              <ArrowDown className={`h-4 w-4 ${textMutedClass}`} />
+              <span className={isLight ? "text-zinc-900" : "text-white"}>Descobrir Detalhes</span>
+              <ArrowDown className={`h-4 w-4 ${isLight ? "text-zinc-600" : textMutedClass}`} />
             </button>
           </div>
 
           {/* Avaliação Social Proof no Hero */}
           {data.rating && (
-            <div className={`mt-12 flex items-center justify-center gap-2 text-xs font-medium ${textMutedClass}`}>
-              <div className="flex items-center text-amber-400">
+            <div className={`mt-12 flex items-center justify-center gap-2 text-xs font-medium ${isLight ? "text-zinc-700" : textMutedClass}`}>
+              <div className="flex items-center text-amber-500">
                 {[...Array(5)].map((_, i) => (
                   <Star key={i} className="h-3.5 w-3.5 fill-amber-400" />
                 ))}
               </div>
-              <span className={`font-bold ${textHeadingClass}`}>{data.rating.toFixed(1)}</span>
+              <span className={`font-bold ${isLight ? "text-zinc-900" : textHeadingClass}`}>{data.rating.toFixed(1)}</span>
               <span>• Avaliação de excelência dos clientes</span>
             </div>
           )}
         </div>
       </section>
 
-      {/* 2. BLOCO MARQUEE INFINITO */}
+      {/* 2. BLOCO MARQUEE INFINITO / DIVISOR DE SESSÃO */}
       {data.marquee && data.marquee.length > 0 && (
-        <section className={`relative z-20 w-full overflow-hidden border-y py-3.5 backdrop-blur-md ${isLight ? "border-black/10 bg-white/80" : "border-white/10 bg-black/60"}`}>
-          <div className="animate-marquee-infinite gap-8 items-center">
-            {[...data.marquee, ...data.marquee, ...data.marquee].map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3 text-xs md:text-sm font-bold tracking-widest uppercase">
-                {item.icon && <span>{item.icon}</span>}
-                <span style={{ color: accentColor }}>{item.text}</span>
-                <span className={textMutedClass}>•</span>
-              </div>
-            ))}
+        <section className={`relative z-20 w-full overflow-hidden border-y py-3.5 backdrop-blur-md ${isLight ? "border-zinc-200/90 bg-zinc-100/90 text-zinc-900 shadow-xs" : "border-white/10 bg-black/60 text-white"}`}>
+          <div className="flex w-max animate-marquee-infinite items-center gap-8 will-change-transform">
+            {[...data.marquee, ...data.marquee, ...data.marquee, ...data.marquee].map((item, idx) => {
+              const text = typeof item === "string" ? item : item?.text || "";
+              const icon = typeof item === "object" ? item?.icon : "";
+              if (!text) return null;
+              return (
+                <div key={idx} className="flex shrink-0 items-center gap-3 text-xs md:text-sm font-bold tracking-widest uppercase">
+                  {icon && <span>{icon}</span>}
+                  <span style={{ color: isLight && (accentColor === "#ffffff" || accentColor === "#f8fafc") ? "#09090b" : accentColor }}>
+                    {text}
+                  </span>
+                  <span className={isLight ? "text-zinc-400" : textMutedClass}>•</span>
+                </div>
+              );
+            })}
           </div>
         </section>
       )}
@@ -529,9 +575,9 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                       <img
                         src={card.imageUrl}
                         alt=""
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 opacity-35"
+                        className={`h-full w-full object-cover transition-transform duration-700 group-hover:scale-105 ${isLight ? "opacity-25" : "opacity-35"}`}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+                      <div className={`absolute inset-0 ${isLight ? "bg-gradient-to-t from-white via-white/85 to-white/40" : "bg-gradient-to-t from-black via-black/80 to-transparent"}`} />
                     </div>
                   )}
 
@@ -899,13 +945,14 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
                   href={whatsappHref}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center justify-center gap-3 px-8 py-4 text-sm font-bold text-black ${buttonCtaClass}`}
+                  className={`flex items-center justify-center gap-3 px-8 py-4 text-sm font-bold ${buttonCtaClass}`}
                   style={{
                     backgroundColor: accentColor,
+                    color: ctaTextColor,
                     boxShadow: isNeobrutalism ? undefined : `0 0 35px ${accentColor}60`,
                   }}
                 >
-                  <MessageCircle className="h-5 w-5" />
+                  <MessageCircle className="h-5 w-5" style={{ color: ctaTextColor }} />
                   <span>Iniciar Atendimento no WhatsApp</span>
                 </a>
               </div>
@@ -954,9 +1001,9 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       </section>
 
       {/* Footer Simples e Nobre */}
-      <footer className="border-t border-white/10 py-10 text-center text-xs text-zinc-500">
+      <footer className={`border-t py-10 text-center text-xs ${isLight ? "border-zinc-200 text-zinc-500" : "border-white/10 text-zinc-500"}`}>
         <p>© {new Date().getFullYear()} {data.businessName}. Todos os direitos reservados.</p>
-        <p className="mt-1 text-[11px] text-zinc-600">Experiência Cinematográfica desenvolvida na plataforma EIA Digital.</p>
+        <p className={`mt-1 text-[11px] ${isLight ? "text-zinc-400" : "text-zinc-600"}`}>Experiência Cinematográfica desenvolvida na plataforma EIA Digital.</p>
       </footer>
 
       {/* LIGHTBOX MODAL (IMAGEM EM TELA CHEIA) */}

@@ -517,65 +517,79 @@ export function CleanBuilder() {
         className="hidden"
       />
 
-      {/* Barra Superior do Builder Clean */}
-      <header className="h-14 border-b border-white/10 bg-black/60 backdrop-blur-md px-4 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
+      {/* Barra Superior do Builder Clean - Linear/Apple Style */}
+      <header className="h-13 border-b border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md px-4 flex items-center justify-between shrink-0 z-20">
+        {/* Lado Esquerdo: Voltar + Nome do Site + Slug */}
+        <div className="flex items-center gap-3 min-w-0">
           <Link
             to="/pages"
-            className="p-1.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition cursor-pointer"
+            className="h-8 w-8 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-850 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center transition shrink-0"
             title="Voltar para páginas"
           >
             <ArrowLeft className="h-4 w-4" />
           </Link>
-          <div>
-            <h1 className="text-sm font-bold text-white flex items-center gap-2">
-              <span>{businessName || "Meu Site"}</span>
-              <span className="text-[10px] font-mono text-zinc-400 bg-white/5 px-2 py-0.5 rounded border border-white/10">
-                /p/{pageRecord.slug}
-              </span>
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-sm font-semibold text-zinc-100 truncate max-w-[160px] sm:max-w-[240px]" title={businessName}>
+              {businessName || "Meu Site"}
             </h1>
+            <button
+              type="button"
+              onClick={handleCopyPublicLink}
+              className="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-[11px] font-mono text-zinc-400 hover:text-zinc-200 transition cursor-pointer"
+              title="Copiar link público do site"
+            >
+              <span className="text-zinc-600">/p/</span>
+              <span className="truncate max-w-[120px]">{pageRecord.slug}</span>
+              <Copy className="h-3 w-3 text-zinc-500" />
+            </button>
           </div>
         </div>
 
-        {/* Controles Centrais: Alternar Tela & Modo de Prévia */}
+        {/* Centro: Controles de Dispositivo & Engine */}
         <div className="flex items-center gap-2">
-          <div className="hidden sm:flex items-center gap-1 rounded-xl bg-black/40 p-1 border border-white/10">
+          {/* Segmented Switch: Mobile vs Desktop */}
+          <div className="flex items-center rounded-lg bg-zinc-900 border border-zinc-800 p-0.5">
             <button
               type="button"
               onClick={() => setViewMode("mobile")}
-              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === "mobile" ? "bg-white/15 text-white shadow" : "text-zinc-400 hover:text-white"
+              className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === "mobile"
+                  ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
-              title="Visualização Mobile (Celular)"
+              title="Visualização Mobile"
             >
               <Smartphone className="h-3.5 w-3.5" />
-              <span>Mobile</span>
+              <span className="hidden sm:inline">Mobile</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode("desktop")}
-              className={`p-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer ${
-                viewMode === "desktop" ? "bg-white/15 text-white shadow" : "text-zinc-400 hover:text-white"
+              className={`px-2.5 py-1 rounded-md text-xs font-medium flex items-center gap-1.5 transition cursor-pointer ${
+                viewMode === "desktop"
+                  ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
               title="Visualização Desktop"
             >
               <Monitor className="h-3.5 w-3.5" />
-              <span>Desktop</span>
+              <span className="hidden sm:inline">Desktop</span>
             </button>
           </div>
 
-          <div className="flex items-center gap-1 rounded-xl bg-black/40 p-1 border border-white/10">
+          {/* Engine: Ao Vivo vs Servidor */}
+          <div className="hidden lg:flex items-center rounded-lg bg-zinc-900 border border-zinc-800 p-0.5">
             <button
               type="button"
               onClick={() => setPreviewEngine("live")}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer ${
+              className={`px-2 py-1 rounded-md text-[11px] font-medium flex items-center gap-1.5 transition cursor-pointer ${
                 previewEngine === "live"
-                  ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 shadow-sm"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
-              title="Prévia reativa em tempo real (0ms de delay)"
+              title="Prévia em tempo real instantânea"
             >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
               <span>Ao Vivo</span>
             </button>
             <button
@@ -584,43 +598,34 @@ export function CleanBuilder() {
                 setPreviewEngine("server");
                 setPreviewKey(Date.now());
               }}
-              className={`px-2.5 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1.5 transition cursor-pointer ${
+              className={`px-2 py-1 rounded-md text-[11px] font-medium flex items-center gap-1.5 transition cursor-pointer ${
                 previewEngine === "server"
-                  ? "bg-blue-500/20 text-blue-300 border border-blue-500/40 shadow-sm"
-                  : "text-zinc-400 hover:text-white"
+                  ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
-              title="Prévia direta do servidor (Iframe publicado)"
+              title="Visualização via iframe publicado"
             >
               <span>Servidor</span>
             </button>
           </div>
         </div>
 
-        {/* Ações da Direita */}
-        <div className="flex items-center gap-2">
+        {/* Lado Direito: Ações */}
+        <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => setPreviewKey(Date.now())}
-            className="p-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-zinc-300 hover:text-white transition cursor-pointer"
-            title="Recarregar Pré-visualização"
+            className="h-8 w-8 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-850 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 flex items-center justify-center transition cursor-pointer"
+            title="Recarregar Prévia"
           >
             <RefreshCw className="h-3.5 w-3.5" />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleCopyPublicLink}
-            className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-zinc-300 hover:text-white transition cursor-pointer"
-          >
-            <Copy className="h-3.5 w-3.5" />
-            <span>Copiar Link</span>
           </button>
 
           <a
             href={`/p/${pageRecord.slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-xs text-zinc-300 hover:text-white transition"
+            className="hidden sm:inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-850 hover:border-zinc-700 text-xs font-medium text-zinc-300 hover:text-white transition"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             <span>Ver no Ar</span>
@@ -630,16 +635,16 @@ export function CleanBuilder() {
             type="button"
             onClick={handleSave}
             disabled={saving}
-            className="inline-flex items-center gap-2 px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-md transition disabled:opacity-50 cursor-pointer"
+            className="h-8 px-3.5 rounded-lg bg-zinc-100 hover:bg-white text-zinc-950 text-xs font-semibold inline-flex items-center gap-1.5 shadow-xs transition active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             {saving ? (
               <>
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Salvando...</span>
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-900" />
+                <span>Salvando</span>
               </>
             ) : (
               <>
-                <Save className="h-3.5 w-3.5" />
+                <Save className="h-3.5 w-3.5 text-zinc-900" />
                 <span>Salvar</span>
               </>
             )}
@@ -649,54 +654,54 @@ export function CleanBuilder() {
 
       {/* Conteúdo Principal: Inspetor Lateral + Preview */}
       <div className="flex-1 flex overflow-hidden">
-        {/* PAINEL LATERAL DE EDIÇÃO */}
-        <aside className="w-full sm:w-[380px] lg:w-[440px] border-r border-white/10 bg-[#09080e] flex flex-col shrink-0 overflow-hidden">
+        {/* PAINEL LATERAL DE EDIÇÃO - Minimal & Modern */}
+        <aside className="w-full sm:w-[380px] lg:w-[420px] border-r border-zinc-800/80 bg-zinc-950 flex flex-col shrink-0 overflow-hidden">
           {/* Abas Superiores do Inspetor */}
-          <div className="flex border-b border-white/10 bg-black/40 p-1 gap-1">
+          <div className="p-1.5 bg-zinc-950 border-b border-zinc-800/80 grid grid-cols-4 gap-1">
             <button
               type="button"
               onClick={() => setActiveTab("texts")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
+              className={`py-1.5 px-2 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
                 activeTab === "texts"
-                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
-                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                  ? "bg-zinc-900 text-zinc-100 border border-zinc-750 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40"
               }`}
             >
               <FileText className="h-3.5 w-3.5" />
-              <span>Textos & Marca</span>
+              <span>Textos</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("products")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
+              className={`py-1.5 px-2 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
                 activeTab === "products"
-                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
-                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                  ? "bg-zinc-900 text-zinc-100 border border-zinc-750 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40"
               }`}
             >
               <ShoppingBag className="h-3.5 w-3.5" />
               <span>Vitrine</span>
-              <span className="text-[10px] bg-white/10 px-1.5 rounded-full">{items.length}</span>
+              <span className="text-[10px] text-zinc-400 bg-zinc-800 px-1 rounded-full">{items.length}</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("style")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
+              className={`py-1.5 px-2 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
                 activeTab === "style"
-                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
-                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                  ? "bg-zinc-900 text-zinc-100 border border-zinc-750 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40"
               }`}
             >
               <Palette className="h-3.5 w-3.5" />
-              <span>Design & Estilos</span>
+              <span>Design</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab("contact")}
-              className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all duration-150 flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.98] ${
+              className={`py-1.5 px-2 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
                 activeTab === "contact"
-                  ? "bg-white/15 text-white shadow-sm ring-1 ring-white/10"
-                  : "text-zinc-400 hover:text-zinc-200 hover:bg-white/5"
+                  ? "bg-zinc-900 text-zinc-100 border border-zinc-750 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900/40"
               }`}
             >
               <MessageCircle className="h-3.5 w-3.5" />
@@ -956,55 +961,40 @@ export function CleanBuilder() {
               </div>
             )}
 
-            {/* ABA 3: DESIGN, FONTES, ESTILOS & MODELO */}
+            {/* ABA 3: DESIGN, ESTILOS, ARQUÉTIPOS & CORES - Clean & Executive */}
             {activeTab === "style" && (
               <div className="space-y-5">
-                {/* 1. Trocar Modelo de Site */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-400" /> Modelo de Site Ativo
-                  </label>
-                  <div className="space-y-1.5">
-                    {TEMPLATE_OPTIONS.map((tmpl) => {
-                      const isSelected = templateId === tmpl.id;
-                      return (
-                        <button
-                          key={tmpl.id}
-                          type="button"
-                          onClick={() => setTemplateId(tmpl.id)}
-                          className={`w-full p-2.5 rounded-xl border text-left transition relative flex items-center justify-between cursor-pointer ${
-                            isSelected
-                              ? "bg-emerald-950/40 border-emerald-500/80 shadow-md ring-1 ring-emerald-500/50"
-                              : "bg-white/5 border-white/10 hover:bg-white/10"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span className="text-base">{tmpl.icon}</span>
-                            <div>
-                              <p className="text-xs font-bold text-white leading-tight">{tmpl.name}</p>
-                              <p className="text-[10px] text-zinc-400 line-clamp-1">{tmpl.desc}</p>
-                            </div>
-                          </div>
-                          {isSelected && (
-                            <span className="h-4 w-4 rounded-full bg-emerald-500 text-black flex items-center justify-center shrink-0">
-                              <Check className="h-2.5 w-2.5 stroke-[3]" />
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
+                {/* 1. Modelo de Site Ativo - Dropdown Compacto e Elegante */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300 block">Modelo de Site Ativo</label>
+                  <div className="relative">
+                    <select
+                      value={templateId}
+                      onChange={(e) => setTemplateId(e.target.value)}
+                      className="w-full appearance-none rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-xs text-zinc-100 focus:outline-none focus:border-zinc-600 cursor-pointer"
+                    >
+                      {TEMPLATE_OPTIONS.map((tmpl) => (
+                        <option key={tmpl.id} value={tmpl.id} className="bg-zinc-900 text-zinc-100">
+                          {tmpl.icon} {tmpl.name} ({tmpl.badge})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-zinc-400 text-xs">
+                      ▼
+                    </div>
                   </div>
+                  <p className="text-[11px] text-zinc-500 leading-tight">
+                    {TEMPLATE_OPTIONS.find((t) => t.id === templateId)?.desc}
+                  </p>
                 </div>
 
-                {/* 2. Arquétipo Visual & Atmosfera */}
+                {/* 2. Arquétipo Visual de Design - Grid 2x2 Clean */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                      <Palette className="h-3.5 w-3.5 text-purple-400" /> Arquétipo Visual & Design
-                    </label>
-                    <span className="text-[10px] text-zinc-500 font-mono">Design System</span>
+                    <label className="text-xs font-medium text-zinc-300">Arquétipo Visual</label>
+                    <span className="text-[10px] text-zinc-500 font-mono">Direção de Arte</span>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {ARCHETYPE_OPTIONS.map((arch) => {
                       const isSelected = archetype === arch.id;
                       return (
@@ -1030,47 +1020,94 @@ export function CleanBuilder() {
                               setBoxEffect("glass");
                             }
                           }}
-                          className={`p-3 rounded-xl border text-left transition cursor-pointer relative flex flex-col justify-between ${
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between ${
                             isSelected
-                              ? "bg-purple-950/40 border-purple-500/80 ring-1 ring-purple-500/50 shadow-md"
-                              : "bg-white/5 border-white/10 hover:bg-white/10"
+                              ? "bg-zinc-850 border-zinc-400 text-white shadow-xs ring-1 ring-zinc-500/20"
+                              : "bg-zinc-900/40 border-zinc-800/80 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-300"
                           }`}
                         >
-                          <div>
-                            <div className="flex items-center justify-between mb-1.5">
-                              <span className="text-lg">{arch.icon}</span>
-                              <span
-                                className={`text-[9px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                                  isSelected
-                                    ? "bg-purple-500/20 text-purple-300 border border-purple-500/40"
-                                    : "bg-white/5 text-zinc-400 border border-white/10"
-                                }`}
-                              >
-                                {arch.badge}
-                              </span>
-                            </div>
-                            <p className="text-xs font-bold text-white leading-tight">{arch.name}</p>
-                            <p className="text-[10px] text-zinc-400 mt-1 line-clamp-2 leading-relaxed">
-                              {arch.desc}
-                            </p>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-base">{arch.icon}</span>
+                            {isSelected && <Check className="h-3.5 w-3.5 text-zinc-200 stroke-[2.5]" />}
                           </div>
-                          {isSelected && (
-                            <div className="mt-2 pt-2 border-t border-purple-500/20 flex items-center justify-between text-[10px] text-purple-300 font-bold">
-                              <span>Ativo no Site</span>
-                              <Check className="h-3 w-3 stroke-[3]" />
-                            </div>
-                          )}
+                          <div>
+                            <p className="text-xs font-semibold leading-tight text-zinc-100">{arch.name}</p>
+                            <p className="text-[10px] text-zinc-400 mt-0.5 line-clamp-1">{arch.badge}</p>
+                          </div>
                         </button>
                       );
                     })}
                   </div>
                 </div>
 
-                {/* 3. Estilo dos Títulos & Efeito Tipográfico */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-pink-400" /> Estilo & Efeito dos Títulos
-                  </label>
+                {/* 3. Modo Visual: Escuro vs Claro */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300 block">Modo Visual</label>
+                  <div className="grid grid-cols-2 gap-1.5 bg-zinc-900 p-0.5 rounded-lg border border-zinc-800">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setThemeMode("dark");
+                        if (bgColor === "#ffffff" || bgColor === "#f8fafc") setBgColor("#0a0a0c");
+                      }}
+                      className={`py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        themeMode === "dark"
+                          ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                          : "text-zinc-400 hover:text-zinc-200"
+                      }`}
+                    >
+                      <Moon className="h-3.5 w-3.5 text-zinc-400" />
+                      <span>Modo Escuro</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setThemeMode("light");
+                        if (bgColor === "#0a0a0c" || bgColor === "#09080e") setBgColor("#f8fafc");
+                      }}
+                      className={`py-1.5 rounded-md text-xs font-medium flex items-center justify-center gap-1.5 transition cursor-pointer ${
+                        themeMode === "light"
+                          ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                          : "text-zinc-400 hover:text-zinc-200"
+                      }`}
+                    >
+                      <Sun className="h-3.5 w-3.5 text-amber-400" />
+                      <span>Modo Claro</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Tipografia & Fontes */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300 block">Tipografia & Família de Fonte</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {FONT_OPTIONS.map((font) => {
+                      const isSelected = fontFamily === font.id;
+                      return (
+                        <button
+                          key={font.id}
+                          type="button"
+                          onClick={() => setFontFamily(font.id)}
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                            isSelected
+                              ? "bg-zinc-850 border-zinc-400 text-white shadow-xs"
+                              : "bg-zinc-900/40 border-zinc-800/80 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-300"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs font-semibold text-zinc-100">{font.name}</p>
+                            {isSelected && <Check className="h-3 w-3 text-zinc-200" />}
+                          </div>
+                          <p className="text-[10px] text-zinc-400 mt-0.5 truncate">{font.fontName}</p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* 5. Estilo dos Títulos */}
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-zinc-300 block">Estilo dos Títulos</label>
                   <div className="grid grid-cols-2 gap-2">
                     {HEADING_STYLE_OPTIONS.map((opt) => {
                       const isSelected = headingStyle === opt.id;
@@ -1079,21 +1116,21 @@ export function CleanBuilder() {
                           key={opt.id}
                           type="button"
                           onClick={() => setHeadingStyle(opt.id as any)}
-                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                          className={`p-2 rounded-xl border text-left transition cursor-pointer ${
                             isSelected
-                              ? "bg-pink-950/40 border-pink-500/80 ring-1 ring-pink-500/40"
-                              : "bg-white/5 border-white/10 hover:bg-white/10"
+                              ? "bg-zinc-850 border-zinc-400 text-white shadow-xs"
+                              : "bg-zinc-900/40 border-zinc-800/80 hover:bg-zinc-900 hover:border-zinc-700 text-zinc-300"
                           }`}
                         >
-                          <p className="text-xs font-bold text-white">{opt.name}</p>
+                          <p className="text-xs font-semibold text-zinc-100 truncate">{opt.name}</p>
                           <p
-                            className={`text-[10px] mt-1 line-clamp-1 ${
+                            className={`text-[10px] mt-0.5 truncate ${
                               opt.id === "uppercase"
-                                ? "uppercase font-black text-amber-300"
+                                ? "uppercase font-bold text-zinc-300"
                                 : opt.id === "italic"
-                                ? "italic font-serif text-zinc-200"
+                                ? "italic font-serif text-zinc-300"
                                 : opt.id === "gradient"
-                                ? "font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-zinc-400"
+                                ? "font-bold text-transparent bg-clip-text bg-gradient-to-r from-zinc-200 to-zinc-400"
                                 : "text-zinc-400"
                             }`}
                           >
@@ -1105,188 +1142,115 @@ export function CleanBuilder() {
                   </div>
                 </div>
 
-                {/* 4. Tipografia / Família de Fontes */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                    <Type className="h-3.5 w-3.5 text-blue-400" /> Tipografia & Fontes
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {FONT_OPTIONS.map((font) => {
-                      const isSelected = fontFamily === font.id;
-                      return (
-                        <button
-                          key={font.id}
-                          type="button"
-                          onClick={() => setFontFamily(font.id)}
-                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
-                            isSelected
-                              ? "bg-blue-950/40 border-blue-500/80 ring-1 ring-blue-500/40"
-                              : "bg-white/5 border-white/10 hover:bg-white/10"
-                          }`}
-                        >
-                          <p className="text-xs font-bold text-white">{font.name}</p>
-                          <p className="text-[10px] text-zinc-400">{font.fontName}</p>
-                          <p className="text-[10px] text-zinc-300 mt-1 italic opacity-80">{font.preview}</p>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 5. Modo do Fundo: Dark vs Light */}
-                <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                    <Layers className="h-3.5 w-3.5 text-violet-400" /> Modo Visual
-                  </label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setThemeMode("dark");
-                        if (bgColor === "#ffffff" || bgColor === "#f8fafc") setBgColor("#0a0a0c");
-                      }}
-                      className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition cursor-pointer ${
-                        themeMode === "dark"
-                          ? "bg-zinc-800 border-white/30 text-white shadow"
-                          : "bg-white/5 border-white/10 text-zinc-400 hover:text-white"
-                      }`}
-                    >
-                      <Moon className="h-3.5 w-3.5 text-indigo-400" />
-                      <span>Modo Escuro (Dark)</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setThemeMode("light");
-                        if (bgColor === "#0a0a0c" || bgColor === "#09080e") setBgColor("#f8fafc");
-                      }}
-                      className={`p-2.5 rounded-xl border flex items-center justify-center gap-2 text-xs font-bold transition cursor-pointer ${
-                        themeMode === "light"
-                          ? "bg-white text-zinc-900 border-white shadow"
-                          : "bg-white/5 border-white/10 text-zinc-400 hover:text-white"
-                      }`}
-                    >
-                      <Sun className="h-3.5 w-3.5 text-amber-500" />
-                      <span>Modo Claro (Light)</span>
-                    </button>
-                  </div>
-                </div>
-
-                {/* 6. Cor de Destaque (Accent) */}
-                <div>
-                  <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
-                    Cor de Destaque (Accent)
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
-                      className="w-8 h-8 rounded-lg border border-white/20 bg-transparent cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={accentColor}
-                      onChange={(e) => setAccentColor(e.target.value)}
-                      className="flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-white font-mono focus:outline-none"
-                    />
-                  </div>
-
-                  {/* Presets de Cor */}
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
-                    {[
-                      { name: "Âmbar Nobre", color: "#f59e0b" },
-                      { name: "Esmeralda", color: "#10b981" },
-                      { name: "Cyan Elétrico", color: "#00f0ff" },
-                      { name: "Volt Neon", color: "#ccff00" },
-                      { name: "Laranja Delivery", color: "#ea580c" },
-                      { name: "Rosa Glamour", color: "#ec4899" },
-                    ].map((p) => (
-                      <button
-                        key={p.color}
-                        type="button"
-                        onClick={() => setAccentColor(p.color)}
-                        className="px-2.5 py-1 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-[11px] text-zinc-300 flex items-center gap-1.5 transition cursor-pointer"
-                      >
-                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: p.color }} />
-                        <span>{p.name}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 7. Cor de Fundo */}
-                <div>
-                  <label className="text-xs font-semibold text-zinc-300 block mb-1.5">
-                    Cor de Fundo da Página
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="color"
-                      value={bgColor}
-                      onChange={(e) => setBgColor(e.target.value)}
-                      className="w-8 h-8 rounded-lg border border-white/20 bg-transparent cursor-pointer"
-                    />
-                    <input
-                      type="text"
-                      value={bgColor}
-                      onChange={(e) => setBgColor(e.target.value)}
-                      className="flex-1 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs text-white font-mono focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                {/* 8. Efeito dos Cards & Arredondamento */}
-                <div className="space-y-3 pt-2 border-t border-white/10">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5 text-cyan-400" /> Efeito dos Cards & Blocos
+                {/* 6. Cores & Paleta */}
+                <div className="space-y-2.5 pt-2 border-t border-zinc-850">
+                  <div>
+                    <label className="text-xs font-medium text-zinc-300 block mb-1">
+                      Cor de Destaque (Botões e Destaques)
                     </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={accentColor}
+                        onChange={(e) => setAccentColor(e.target.value)}
+                        className="w-8 h-8 rounded-lg border border-zinc-800 bg-transparent cursor-pointer shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={accentColor}
+                        onChange={(e) => setAccentColor(e.target.value)}
+                        className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-zinc-600"
+                      />
+                    </div>
+                    {/* Paletas de Cores Nobres */}
+                    <div className="mt-2 flex flex-wrap gap-1.5">
                       {[
-                        { id: "glass", label: "Vidro / Glass", icon: "🪟" },
-                        { id: "solid", label: "Sólido Minimal", icon: "🧱" },
-                        { id: "glow", label: "Glow Iluminado", icon: "✨" },
+                        { name: "Âmbar", color: "#f59e0b" },
+                        { name: "Esmeralda", color: "#10b981" },
+                        { name: "Azul Real", color: "#2563eb" },
+                        { name: "Violeta", color: "#8b5cf6" },
+                        { name: "Laranja", color: "#ea580c" },
+                        { name: "Monocromático", color: "#ffffff" },
+                      ].map((p) => (
+                        <button
+                          key={p.color}
+                          type="button"
+                          onClick={() => setAccentColor(p.color)}
+                          className="px-2 py-1 rounded-md border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-850 text-[11px] text-zinc-300 flex items-center gap-1.5 transition cursor-pointer"
+                        >
+                          <span className="w-2.5 h-2.5 rounded-full shrink-0 border border-black/20" style={{ backgroundColor: p.color }} />
+                          <span>{p.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-medium text-zinc-300 block mb-1">
+                      Cor de Fundo da Página
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="color"
+                        value={bgColor}
+                        onChange={(e) => setBgColor(e.target.value)}
+                        className="w-8 h-8 rounded-lg border border-zinc-800 bg-transparent cursor-pointer shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={bgColor}
+                        onChange={(e) => setBgColor(e.target.value)}
+                        className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-1.5 text-xs text-zinc-100 font-mono focus:outline-none focus:border-zinc-600"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 7. Efeito dos Cards & Arredondamento */}
+                <div className="space-y-3 pt-2 border-t border-zinc-850">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-zinc-300 block">Estilo dos Cards</label>
+                    <div className="grid grid-cols-3 gap-1.5 bg-zinc-900 p-0.5 rounded-lg border border-zinc-800">
+                      {[
+                        { id: "glass", label: "Vidro" },
+                        { id: "solid", label: "Sólido" },
+                        { id: "glow", label: "Glow" },
                       ].map((eff) => (
                         <button
                           key={eff.id}
                           type="button"
                           onClick={() => setBoxEffect(eff.id as any)}
-                          className={`p-2 rounded-xl border text-center transition-all duration-150 cursor-pointer active:scale-95 ${
+                          className={`py-1.5 rounded-md text-xs font-medium transition cursor-pointer text-center ${
                             boxEffect === eff.id
-                              ? "bg-cyan-950/40 border-cyan-500/80 ring-1 ring-cyan-500/50 text-white shadow-sm"
-                              : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
+                              ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                              : "text-zinc-400 hover:text-zinc-200"
                           }`}
                         >
-                          <span className="block text-sm mb-0.5">{eff.icon}</span>
-                          <span className="block text-[11px] font-semibold truncate">{eff.label}</span>
+                          {eff.label}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-zinc-300 flex items-center gap-1.5">
-                      <Layers className="h-3.5 w-3.5 text-emerald-400" /> Raio dos Cantos
-                    </label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <label className="text-xs font-medium text-zinc-300 block">Arredondamento das Bordas</label>
+                    <div className="grid grid-cols-3 gap-1.5 bg-zinc-900 p-0.5 rounded-lg border border-zinc-800">
                       {[
-                        { id: "rounded", label: "Suave (16px)", icon: "🔘" },
-                        { id: "pill", label: "Pílula (28px)", icon: "💊" },
-                        { id: "sharp", label: "Reto (0px Suíço)", icon: "📐" },
+                        { id: "rounded", label: "Curvo" },
+                        { id: "pill", label: "Pílula" },
+                        { id: "sharp", label: "Reto" },
                       ].map((rad) => (
                         <button
                           key={rad.id}
                           type="button"
                           onClick={() => setBorderRadius(rad.id as any)}
-                          className={`p-2 rounded-xl border text-center transition-all duration-150 cursor-pointer active:scale-95 ${
+                          className={`py-1.5 rounded-md text-xs font-medium transition cursor-pointer text-center ${
                             borderRadius === rad.id
-                              ? "bg-emerald-950/40 border-emerald-500/80 ring-1 ring-emerald-500/50 text-white shadow-sm"
-                              : "bg-white/5 border-white/10 text-zinc-400 hover:text-white hover:bg-white/10"
+                              ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                              : "text-zinc-400 hover:text-zinc-200"
                           }`}
                         >
-                          <span className="block text-sm mb-0.5">{rad.icon}</span>
-                          <span className="block text-[11px] font-semibold truncate">{rad.label}</span>
+                          {rad.label}
                         </button>
                       ))}
                     </div>
@@ -1327,24 +1291,50 @@ export function CleanBuilder() {
           </div>
         </aside>
 
-        {/* ÁREA CENTRAL: PREVIEW EM TEMPO REAL */}
-        <main className="flex-1 bg-[#050408] overflow-y-auto p-4 sm:p-6 flex items-center justify-center">
+        {/* ÁREA CENTRAL: PREVIEW MODERNO & REFINADO */}
+        <main className="flex-1 bg-[#09090b] overflow-y-auto p-4 sm:p-6 flex items-center justify-center relative">
           <div
-            className={`transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-2xl overflow-hidden border-4 border-zinc-800 bg-black flex flex-col will-change-[width,height] ${
+            className={`transition-all duration-300 ease-out flex flex-col will-change-[width,height] ${
               viewMode === "mobile"
-                ? "w-[375px] h-[720px] max-h-[85vh] rounded-[2.5rem]"
-                : "w-full max-w-4xl h-[720px] max-h-[85vh] rounded-2xl border-zinc-700"
+                ? "w-[380px] h-[740px] max-h-[85vh] rounded-[48px] bg-zinc-900 p-2.5 shadow-2xl ring-1 ring-zinc-800 border border-zinc-700/50"
+                : "w-full max-w-4xl h-[740px] max-h-[85vh] rounded-xl overflow-hidden shadow-2xl border border-zinc-800 bg-zinc-950"
             }`}
           >
-            {/* Notch do Smartphone */}
-            {viewMode === "mobile" && (
-              <div className="h-6 w-full bg-black shrink-0 flex items-center justify-center">
-                <div className="w-24 h-4 bg-zinc-900 rounded-b-xl" />
+            {/* Topbar de Janela Desktop (Estilo macOS / Navegador Minimalista) */}
+            {viewMode === "desktop" && (
+              <div className="h-9 w-full bg-zinc-900/80 border-b border-zinc-800/80 px-4 flex items-center justify-between shrink-0">
+                <div className="flex items-center gap-2">
+                  <span className="h-2.5 w-2.5 rounded-full bg-zinc-700/80" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-zinc-700/80" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-zinc-700/80" />
+                </div>
+                <div className="px-3 py-1 rounded-md bg-zinc-950/80 border border-zinc-800 text-[11px] font-mono text-zinc-400 flex items-center gap-1.5 w-72 justify-center">
+                  <span className="text-zinc-600">https://</span>
+                  <span className="truncate">{businessName?.toLowerCase().replace(/\s+/g, "") || "empresa"}.com.br</span>
+                </div>
+                <div className="w-12" />
               </div>
             )}
 
-            {/* Simulação do Visualizador Vivo ou Iframe */}
-            <div className="flex-1 overflow-y-auto transition-colors duration-300 ease-out" style={{ backgroundColor: bgColor }}>
+            {/* Frame Interno do Smartphone com Dynamic Island Fina */}
+            <div
+              className={`flex-1 overflow-hidden relative flex flex-col ${
+                viewMode === "mobile" ? "rounded-[38px] bg-black shadow-inner" : ""
+              }`}
+            >
+              {viewMode === "mobile" && (
+                <div className="h-6 w-full bg-transparent absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-6 pointer-events-none">
+                  <span className="text-[10px] font-semibold text-zinc-400 font-mono">09:41</span>
+                  <div className="w-20 h-3.5 bg-black/90 rounded-full border border-white/10 shadow-xs" />
+                  <div className="flex items-center gap-1 text-[10px] text-zinc-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                    <span>5G</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Conteúdo Renderizado (Live ou Iframe) */}
+              <div className="flex-1 overflow-y-auto transition-colors duration-200" style={{ backgroundColor: bgColor }}>
               {previewEngine === "live" ? (
                 templateId === "cinematic-glass" || templateId === "cinematic-scrolly" ? (
                   <CinematicViewer
@@ -1497,11 +1487,19 @@ export function CleanBuilder() {
                 />
               )}
             </div>
+
+            {/* Home indicator sutil do mobile */}
+            {viewMode === "mobile" && (
+              <div className="h-4 w-full bg-transparent absolute bottom-0 left-0 right-0 z-30 flex items-center justify-center pointer-events-none">
+                <div className="w-24 h-1 bg-white/30 rounded-full" />
+              </div>
+            )}
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
-  );
+  </div>
+);
 }
 
 export default CleanBuilder;

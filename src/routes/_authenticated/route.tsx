@@ -24,6 +24,7 @@ import {
   Utensils,
   Clapperboard,
   BookOpen,
+  Edit3,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
@@ -70,6 +71,13 @@ function AuthedLayout() {
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
           {
+            to: "/builder",
+            label: "Novo Builder",
+            icon: Edit3,
+            badge: "CLEAN",
+            badgeClassName: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
+          },
+          {
             to: "/studio",
             label: "Cinematic Studio",
             icon: Clapperboard,
@@ -101,6 +109,7 @@ function AuthedLayout() {
 
   const mobileNavItems = useMemo(() => {
     const homeItem = { to: "/dashboard", label: "Início", icon: LayoutDashboard };
+    const builderItem = { to: "/builder", label: "Builder", icon: Edit3 };
     const studioItem = { to: "/studio", label: "Studio", icon: Clapperboard };
     const pagesItem = { to: "/pages", label: "Páginas", icon: PanelsTopLeft };
 
@@ -109,7 +118,7 @@ function AuthedLayout() {
       salesItem = { to: "/comanda", label: "Comanda", icon: Utensils };
     }
 
-    return [homeItem, studioItem, pagesItem, salesItem];
+    return [homeItem, builderItem, studioItem, pagesItem, salesItem];
   }, [canAccessComanda]);
 
   async function signOut() {

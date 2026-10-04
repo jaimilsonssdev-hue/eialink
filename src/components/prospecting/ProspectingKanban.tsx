@@ -21,6 +21,7 @@ import {
   Globe2,
   ChevronDown,
   ChevronUp,
+  Edit3,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -457,6 +458,13 @@ export function ProspectingKanban({
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-52">
                                   <DropdownMenuItem
+                                    onClick={() => onGenerateDemo(company)}
+                                    className="cursor-pointer text-xs text-amber-300 font-medium"
+                                  >
+                                    <Sparkles className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                                    <span>✨ Ideação & Super Prompt</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
                                     onClick={() => onAuditCompany(company)}
                                     className="cursor-pointer text-xs text-purple-400 font-medium"
                                   >
@@ -484,6 +492,15 @@ export function ProspectingKanban({
                                     <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
                                     <span>{demo.url ? "Trocar Modelo da Página" : "Gerar Modelo"}</span>
                                   </DropdownMenuItem>
+
+                                  {demo.slug && (
+                                    <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                      <Link to="/builder" search={{ page: demo.slug }}>
+                                        <Edit3 className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                        <span className="text-emerald-400 font-semibold">Editar no Novo Builder</span>
+                                      </Link>
+                                    </DropdownMenuItem>
+                                  )}
 
                                   {demo.pageId && (
                                     <DropdownMenuItem asChild className="cursor-pointer text-xs">

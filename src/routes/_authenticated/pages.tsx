@@ -45,7 +45,6 @@ import {
   Share2,
   LayoutGrid,
   Layers,
-  Edit3,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -1084,25 +1083,14 @@ function PagesWorkspace() {
                         )}
                       </button>
 
-                      {/* 3. Editor Rápido (Clean Builder) */}
-                      <Link
-                        to="/builder"
-                        search={{ page: activePage.slug }}
-                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-all shadow-xs"
-                        title="Editar textos, vitrine e cores no Novo Builder sem gastar IA"
-                      >
-                        <Edit3 className="h-4 w-4" />
-                        <span>Editor Rápido</span>
-                      </Link>
-
-                      {/* 4. Editar no Studio */}
+                      {/* 3. Editar no Studio */}
                       <Link
                         to="/studio"
                         search={{ page: activePage.id }}
-                        className="btn-primary flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all"
+                        className="btn-primary flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl text-xs font-bold shadow-md transition-all"
                       >
                         <Pencil className="h-4 w-4" />
-                        <span>Studio IA</span>
+                        <span>Editar no Studio</span>
                       </Link>
 
                       {/* Copiloto IA & Excluir */}

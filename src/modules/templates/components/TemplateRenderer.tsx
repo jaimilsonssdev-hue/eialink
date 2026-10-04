@@ -59,8 +59,11 @@ export function TemplateRenderer({
   /** Public pages keep essential feedback for everyone; Pro unlocks ambient presentation motion. */
   motionLevel?: "off" | "standard" | "pro";
 }) {
-  const cinematicData = (bio.social_links as Record<string, any>)?.cinematic_data as CinematicPageData | undefined;
-  if (cinematicData) {
+  const isExplicitCinematic = !bio.template_id || bio.template_id === "cinematic-glass" || bio.template_id === "cinematic-scrolly";
+  const socialObj = (bio.social_links as Record<string, any>) || {};
+  const cinematicData = (socialObj.cinematic_data || socialObj.cinematicData) as CinematicPageData | undefined;
+
+  if (cinematicData && isExplicitCinematic) {
     return (
       <div className="w-full">
         <CinematicViewer data={cinematicData} isEmbedded={true} />
@@ -72,7 +75,26 @@ export function TemplateRenderer({
   const safeLinks = links
     .map((link) => ({ ...link, url: safeExternalUrl(link.url) }))
     .filter((link): link is typeof link & { url: string } => Boolean(link.url));
-  const safeProducts = products?.map((product) => ({
+
+  const effectiveProducts: CatalogItem[] = (products && products.length > 0)
+    ? products
+    : (cinematicData?.highlights || []).map((h, i) => {
+        const rawPrice = typeof h.price === "string" ? parseFloat(h.price.replace(/[^\d,.-]/g, "").replace(",", ".")) : (h.price || 0);
+        return {
+          id: h.id || `item-${i}`,
+          title: h.title,
+          description: h.subtitle || h.description || null,
+          price: isNaN(rawPrice) ? 0 : rawPrice,
+          image_url: h.imageUrl || null,
+          active: true,
+          category: h.badge || "Destaques",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          page_id: bio.id,
+        };
+      });
+
+  const safeProducts = effectiveProducts.map((product) => ({
     ...product,
     button_url: safeExternalUrl(product.button_url) ?? null,
   }));

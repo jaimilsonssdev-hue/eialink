@@ -68,6 +68,7 @@ import { useActionCooldown } from "@/hooks/useActionCooldown";
 import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
 import { PageService, type OwnedPage } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
+import { SiteIdeationModal } from "@/components/prospecting/SiteIdeationModal";
 import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
 import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";
 import { CopyConfigModal, type CopyModalTabType } from "@/components/prospecting/CopyConfigModal";
@@ -246,6 +247,26 @@ function ProspectingPage() {
       isDemo?: boolean;
     };
   } | null>(null);
+
+  const [ideationLead, setIdeationLead] = useState<{
+    name: string;
+    niche: string;
+    city: string;
+    whatsapp?: string | null;
+    address?: string | null;
+    rating?: number | null;
+    reviews_count?: number | null;
+    instagram?: string | null;
+    photos?: string[];
+  } | null>(null);
+  const [isIdeationModalOpen, setIsIdeationModalOpen] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string>("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user?.id) setCurrentUserId(data.user.id);
+    });
+  }, []);
 
 
   const [prospectEngine, setProspectEngine] = useState<"maps" | "cnae" | "utilities" | "demos">(() => {
@@ -1275,6 +1296,27 @@ function ProspectingPage() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-52">
                       <DropdownMenuItem
+                        onClick={() => {
+                          setIdeationLead({
+                            name: company.name,
+                            niche: company.niche || "",
+                            city: company.city || "",
+                            whatsapp: company.whatsapp,
+                            address: company.address,
+                            rating: company.rating,
+                            reviews_count: company.reviews_count,
+                            instagram: company.instagram,
+                            photos: (company as any).photos || [],
+                          });
+                          setIsIdeationModalOpen(true);
+                        }}
+                        className="cursor-pointer text-xs text-amber-300 hover:text-amber-200 focus:text-amber-200 focus:bg-amber-500/10 font-medium"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                        <span>✨ Ideação & Super Prompt</span>
+                      </DropdownMenuItem>
+
+                      <DropdownMenuItem
                         onClick={() => setActiveAuditCompany(company)}
                         className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
                       >
@@ -1635,6 +1677,7 @@ function ProspectingPage() {
                           <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Instagram</TableHead>
                           <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Status do Site</TableHead>
                           <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80">Score</TableHead>
+                          <TableHead className="px-3.5 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground/80 text-right">Ação</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody className="divide-y divide-border/40">
@@ -1730,6 +1773,30 @@ function ProspectingPage() {
                               </TableCell>
                               <TableCell className="px-3.5 py-2.5">
                                 <span className="font-semibold text-xs sm:text-sm tabular-nums text-foreground">{lead.score}</span>
+                              </TableCell>
+                              <TableCell className="px-3.5 py-2.5 text-right whitespace-nowrap">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setIdeationLead({
+                                      name: lead.name,
+                                      niche: lead.niche || searchNiche,
+                                      city: lead.city || searchCity,
+                                      whatsapp: lead.whatsapp,
+                                      address: lead.address,
+                                      rating: lead.rating,
+                                      reviews_count: lead.reviews_count,
+                                      instagram: lead.instagram,
+                                      photos: lead.photos || [],
+                                    });
+                                    setIsIdeationModalOpen(true);
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold shadow-xs transition-all"
+                                  title="Analisar dados minerados, gerar Super Prompt sensorial e criar site de alta conversão"
+                                >
+                                  <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                                  <span>✨ Ideação</span>
+                                </button>
                               </TableCell>
                             </TableRow>
                           );
@@ -2636,6 +2703,27 @@ function ProspectingPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-56">
                         <DropdownMenuItem
+                          onClick={() => {
+                            setIdeationLead({
+                              name: company.name,
+                              niche: company.niche || "",
+                              city: company.city || "",
+                              whatsapp: company.whatsapp,
+                              address: company.address,
+                              rating: company.rating,
+                              reviews_count: company.reviews_count,
+                              instagram: company.instagram,
+                              photos: (company as any).photos || [],
+                            });
+                            setIsIdeationModalOpen(true);
+                          }}
+                          className="cursor-pointer text-xs text-amber-300 hover:text-amber-200 focus:text-amber-200 focus:bg-amber-500/10 font-medium"
+                        >
+                          <Sparkles className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                          <span>✨ Ideação & Super Prompt</span>
+                        </DropdownMenuItem>
+
+                        <DropdownMenuItem
                           onClick={() => setActiveAuditCompany(company)}
                           className="cursor-pointer text-xs text-purple-300 font-medium"
                         >
@@ -2981,6 +3069,27 @@ function ProspectingPage() {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-52">
                               <DropdownMenuItem
+                                onClick={() => {
+                                  setIdeationLead({
+                                    name: company.name,
+                                    niche: company.niche || "",
+                                    city: company.city || "",
+                                    whatsapp: company.whatsapp,
+                                    address: company.address,
+                                    rating: company.rating,
+                                    reviews_count: company.reviews_count,
+                                    instagram: company.instagram,
+                                    photos: (company as any).photos || [],
+                                  });
+                                  setIsIdeationModalOpen(true);
+                                }}
+                                className="cursor-pointer text-xs text-amber-300 hover:text-amber-200 focus:text-amber-200 focus:bg-amber-500/10 font-medium"
+                              >
+                                <Sparkles className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                                <span>✨ Ideação & Super Prompt</span>
+                              </DropdownMenuItem>
+
+                              <DropdownMenuItem
                                 onClick={() => setActiveAuditCompany(company)}
                                 className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
                               >
@@ -3163,6 +3272,13 @@ function ProspectingPage() {
           setCopyModalInitialTab("geminiApiKey");
           setIsCopyModalOpen(true);
         }}
+      />
+
+      <SiteIdeationModal
+        open={isIdeationModalOpen}
+        onOpenChange={setIsIdeationModalOpen}
+        lead={ideationLead}
+        userId={currentUserId}
       />
     </div>
   );

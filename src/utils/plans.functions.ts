@@ -77,40 +77,33 @@ export const getPublicPlansFn = createServerFn({ method: "GET" }).handler(async 
       // Se a tabela estiver vazia, tenta fazer o seed inicial dos planos padrão
       try {
         for (const p of DEFAULT_FALLBACK_PLANS) {
-          await supabase.from("plans").upsert(
-            {
-              name: p.name,
-              slug: p.slug,
-              description: p.description,
-              price_cents: p.price_cents,
-              billing_interval: p.billing_interval,
-              active: p.active,
-              position: p.position,
-              limits: p.limits as any,
-              features: p.features as any,
-            },
-            { onConflict: "slug" }
-          );
+          await supabase.from("plans").upsert({
+            name: p.name,
+            slug: p.slug,
+            description: p.description,
+            price_cents: p.price_cents,
+            billing_interval: p.billing_interval,
+            active: p.active,
+            position: p.position,
+            limits: p.limits as any,
+            features: p.features as any,
+          }, { onConflict: "slug" });
         }
       } catch (seedErr) {
-        console.warn("Erro no seed automático de planos:", seedErr);
+        console.warn("Falha no seed inicial de planos:", seedErr);
       }
       return DEFAULT_FALLBACK_PLANS;
     }
 
-    return (data as unknown as Plan[]).map((p) => ({
-      ...p,
-      limits: p.limits || ESSENTIAL_LIMITS,
-      features: p.features || ESSENTIAL_FEATURES,
-    }));
-  } catch (e: any) {
-    console.error("Falha ao recuperar planos públicos:", e);
+    return (data as Plan[]).filter((p) => p.slug !== "free" && p.slug !== "essential");
+  } catch (err) {
+    console.error("Erro inesperado em getPublicPlansFn:", err);
     return DEFAULT_FALLBACK_PLANS;
   }
 });
 
 /**
- * 2. Retorna todos os planos (ativos e inativos) para o Super Admin
+ * 2. Retorna todos os planos (ativos e inativos) para o Painel Super Admin
  */
 export const adminListAllPlansFn = createServerFn({ method: "GET" }).handler(async () => {
   const supabase = createServiceSupabase();
@@ -125,58 +118,47 @@ export const adminListAllPlansFn = createServerFn({ method: "GET" }).handler(asy
       return DEFAULT_FALLBACK_PLANS;
     }
 
-    return (data as unknown as Plan[]).map((p) => ({
-      ...p,
-      limits: p.limits || ESSENTIAL_LIMITS,
-      features: p.features || ESSENTIAL_FEATURES,
-    }));
-  } catch (e) {
+    return data as Plan[];
+  } catch {
     return DEFAULT_FALLBACK_PLANS;
   }
 });
 
 /**
- * 3. Cria ou atualiza plano (Super Admin)
+ * 3. Cria ou Atualiza um Plano (Salva no Banco e reflete imediatamente na página de vendas)
  */
 export const adminUpsertPlanFn = createServerFn({ method: "POST" })
-  .validator(
+  .inputValidator(
     (input: {
       id?: string;
       name: string;
       slug: string;
       description?: string | null;
       price_cents: number;
-      billing_interval: "monthly" | "yearly";
-      active: boolean;
+      billing_interval?: "monthly" | "yearly" | "one_time";
+      active?: boolean;
       position?: number;
-      limits?: any;
-      features?: any;
+      limits?: Record<string, number>;
+      features?: Record<string, boolean>;
     }) => input
   )
   .handler(async ({ data: input }) => {
     const supabase = createServiceSupabase();
 
-    const planData: Record<string, unknown> = {
-      name: input.name,
-      slug: input.slug,
-      description: input.description ?? null,
-      price_cents: input.price_cents,
-      billing_interval: input.billing_interval,
-      active: input.active,
+    const planData = {
+      name: input.name.trim(),
+      slug: input.slug.trim().toLowerCase().replace(/\s+/g, "-"),
+      description: input.description?.trim() || null,
+      price_cents: Math.max(0, input.price_cents),
+      billing_interval: input.billing_interval || "monthly",
+      active: input.active !== undefined ? input.active : true,
+      position: input.position ?? 99,
+      limits: input.limits || { bio_pages: -1, links: -1, catalog_items: -1, templates: -1 },
+      features: input.features || { whatsapp: true, analytics: true, custom_domain: true },
       updated_at: new Date().toISOString(),
     };
 
-    if (input.position !== undefined) {
-      planData.position = input.position;
-    }
-    if (input.limits) {
-      planData.limits = input.limits;
-    }
-    if (input.features) {
-      planData.features = input.features;
-    }
-
-    if (input.id) {
+    if (input.id && !input.id.startsWith("plan-")) {
       const { data, error } = await supabase
         .from("plans")
         .update(planData)
@@ -184,44 +166,35 @@ export const adminUpsertPlanFn = createServerFn({ method: "POST" })
         .select()
         .single();
 
-      if (error) throw new Error(error.message);
-      return data as unknown as Plan;
+      if (error) throw new Error(`Falha ao atualizar plano: ${error.message}`);
+      return data;
     } else {
+      // Cria novo plano ou upsert por slug
       const { data, error } = await supabase
         .from("plans")
-        .insert(planData)
+        .upsert(planData, { onConflict: "slug" })
         .select()
         .single();
 
-      if (error) throw new Error(error.message);
-      return data as unknown as Plan;
+      if (error) throw new Error(`Falha ao salvar novo plano: ${error.message}`);
+      return data;
     }
   });
 
 /**
- * 4. Exclui ou desativa plano (Super Admin)
+ * 4. Remove ou desativa um Plano
  */
 export const adminDeletePlanFn = createServerFn({ method: "POST" })
-  .validator((id: string) => id)
-  .handler(async ({ data: id }) => {
+  .inputValidator((input: { id: string }) => input)
+  .handler(async ({ data: input }) => {
     const supabase = createServiceSupabase();
 
-    // Primeiro tenta desativar
-    const { error } = await supabase
-      .from("plans")
-      .delete()
-      .eq("id", id);
-
+    const { error } = await supabase.from("plans").delete().eq("id", input.id);
     if (error) {
-      // Se tiver foreign key vinculada a subscriptions, apenas desativa
-      const { error: deactivateErr } = await supabase
-        .from("plans")
-        .update({ active: false, updated_at: new Date().toISOString() })
-        .eq("id", id);
-
-      if (deactivateErr) throw new Error(deactivateErr.message);
-      return { success: true, deactivated: true };
+      // Se não puder deletar por chave estrangeira, apenas desativa
+      await supabase.from("plans").update({ active: false }).eq("id", input.id);
     }
 
-    return { success: true, deleted: true };
+    return { success: true };
   });
+

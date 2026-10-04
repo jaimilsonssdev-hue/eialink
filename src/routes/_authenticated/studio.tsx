@@ -697,32 +697,227 @@ export default function CinematicStudioPage() {
     toast.success(`Conceito "${option.name}" aprovado e aplicado!`);
   };
 
-  // 5. Salvar & Publicar
+  // 5. Salvar & Publicar (Direto no Supabase com Autenticação Ativa)
   const handleSaveAndPublish = async () => {
-    if (!userId) {
-      toast.error("Sessão de usuário não identificada. Faça login novamente.");
-      return;
-    }
-
     setIsSaving(true);
     try {
-      const result = await saveCinematicPageFn({
-        data: {
-          data,
-          userId,
-          pageId,
-          publish: true,
-        },
-      });
+      // 1. Assegura identificação do usuário logado
+      let activeUserId = userId;
+      if (!activeUserId) {
+        const { data: authData } = await supabase.auth.getUser();
+        if (authData?.user) {
+          activeUserId = authData.user.id;
+          setUserId(activeUserId);
+        }
+      }
 
-      if (result.success) {
-        setPageId(result.pageId);
-        setSavedSlug(result.slug);
-        setPublishedModalOpen(true);
-        toast.success("Landing Page publicada com sucesso!");
+      if (!activeUserId) {
+        toast.error("Sessão de usuário não identificada. Faça login novamente.");
+        setIsSaving(false);
+        return;
+      }
+
+      const cleanWhatsapp = (data.whatsapp || "").replace(/\D/g, "");
+      const effectiveTemplate = (data as any).templateId || "cinematic-glass";
+      const effectiveFont = (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
+      const effectiveMode = data.theme?.mode || (data.theme?.bg?.includes("#fff") || data.theme?.bg?.includes("#f8") ? "light" : "dark");
+      const effectiveRadius = (data.theme as any)?.borderRadius || data.theme?.borderStyle || "rounded";
+      const effectiveBoxEffect = (data.theme as any)?.boxEffect || "glass";
+      const effectiveArchetype = (data.archetype || (data.theme as any)?.archetype || "cinematic");
+      const effectiveSpeed = data.marqueeSpeed || 45;
+
+      const customThemeObj = {
+        parallax: Boolean(data.theme.parallaxEnabled),
+        hero_style: "cinematic",
+        font: effectiveFont,
+        fontFamily: effectiveFont,
+        font_pair: effectiveFont,
+        primary: data.theme.accent,
+        accent: data.theme.accent,
+        background: data.theme.bg,
+        bg: data.theme.bg,
+        mode: effectiveMode,
+        archetype: effectiveArchetype,
+        headingStyle: (data.theme as any)?.headingStyle || "default",
+        borderRadius: effectiveRadius,
+        border_radius: effectiveRadius === "sharp" ? "0px" : effectiveRadius === "pill" ? "28px" : "16px",
+        boxEffect: effectiveBoxEffect,
+        marqueeSpeed: effectiveSpeed,
+      };
+
+      const socialLinks = {
+        is_demo: false,
+        cinematic_data: {
+          ...data,
+          templateId: effectiveTemplate,
+          marqueeSpeed: effectiveSpeed,
+          archetype: effectiveArchetype,
+          theme: {
+            ...data.theme,
+            marqueeSpeed: effectiveSpeed,
+            archetype: effectiveArchetype,
+            fontFamily: effectiveFont,
+            mode: effectiveMode,
+            borderRadius: effectiveRadius,
+            boxEffect: effectiveBoxEffect,
+          },
+        },
+        cinematicData: {
+          ...data,
+          templateId: effectiveTemplate,
+          marqueeSpeed: effectiveSpeed,
+          archetype: effectiveArchetype,
+          theme: {
+            ...data.theme,
+            marqueeSpeed: effectiveSpeed,
+            archetype: effectiveArchetype,
+            fontFamily: effectiveFont,
+            mode: effectiveMode,
+            borderRadius: effectiveRadius,
+            boxEffect: effectiveBoxEffect,
+          },
+        },
+        niche: data.niche,
+        address: data.address,
+        opening_hours: data.openingHours,
+        google_rating: data.rating,
+        archetype: effectiveArchetype,
+        theme: customThemeObj,
+        custom_theme: customThemeObj,
+      };
+
+      let finalPageId = pageId;
+      let finalSlug = savedSlug || "";
+
+      if (finalPageId) {
+        // Atualiza página existente
+        const { data: updated, error: updateError } = await supabase
+          .from("bio_pages")
+          .update({
+            display_name: data.businessName,
+            whatsapp: cleanWhatsapp || null,
+            template_id: effectiveTemplate,
+            cover_url: data.hero.backgroundImage,
+            avatar_url: data.avatarUrl || null,
+            description: data.hero.subtitle ? data.hero.subtitle.slice(0, 300) : null,
+            published: true,
+            motion_enabled: true,
+            motion_entrance: "rise",
+            motion_ambient: "spotlight",
+            motion_cta: "glow",
+            social_links: socialLinks as any,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", finalPageId)
+          .select("id, slug")
+          .single();
+
+        if (updateError) {
+          throw new Error(`Erro ao atualizar página: ${updateError.message}`);
+        }
+        finalSlug = updated.slug;
+      } else {
+        // Cria nova página
+        const baseSlug = (data.businessName || "minha-pagina")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "")
+          .slice(0, 32) || "pagina";
+        const suffix = crypto.randomUUID().slice(0, 5);
+        const newSlug = `${baseSlug}-${suffix}`;
+
+        const { data: created, error: createError } = await supabase
+          .from("bio_pages")
+          .insert({
+            user_id: activeUserId,
+            display_name: data.businessName || "Minha Empresa",
+            slug: newSlug,
+            whatsapp: cleanWhatsapp || null,
+            template_id: effectiveTemplate,
+            cover_url: data.hero.backgroundImage,
+            avatar_url: data.avatarUrl || null,
+            description: data.hero.subtitle ? data.hero.subtitle.slice(0, 300) : null,
+            published: true,
+            theme: "midnight",
+            motion_enabled: true,
+            motion_entrance: "rise",
+            motion_ambient: "spotlight",
+            motion_cta: "glow",
+            social_links: socialLinks as any,
+          })
+          .select("id, slug")
+          .single();
+
+        if (createError || !created) {
+          throw new Error(`Erro ao criar página: ${createError?.message || "falha desconhecida"}`);
+        }
+        finalPageId = created.id;
+        finalSlug = created.slug;
+      }
+
+      // Sincroniza produtos/serviços na tabela catalog_items
+      if (finalPageId && data.highlights && Array.isArray(data.highlights)) {
+        try {
+          await supabase.from("catalog_items").delete().eq("page_id", finalPageId);
+
+          if (data.highlights.length > 0) {
+            const catalogRows = data.highlights.map((item, idx) => {
+              const rawPrice = item.price
+                ? parseFloat(item.price.replace(/[^\d,.-]/g, "").replace(",", "."))
+                : 0;
+              return {
+                page_id: finalPageId,
+                title: item.title,
+                description: item.description || null,
+                price: isNaN(rawPrice) ? 0 : rawPrice,
+                image_url: item.image || data.hero.backgroundImage || null,
+                category: item.badge || "Destaques",
+                active: true,
+                position: idx,
+              };
+            });
+            await supabase.from("catalog_items").insert(catalogRows);
+          }
+        } catch (catErr) {
+          console.warn("Aviso ao sincronizar catálogo:", catErr);
+        }
+      }
+
+      setPageId(finalPageId);
+      setSavedSlug(finalSlug);
+      setPublishedModalOpen(true);
+      toast.success("Site salvo e publicado com sucesso no ar!");
+
+      // Atualiza URL no navegador para manter ?page=ID sem recarregar a página
+      if (typeof window !== "undefined") {
+        const newUrl = new URL(window.location.href);
+        newUrl.searchParams.set("page", finalPageId);
+        window.history.replaceState({}, "", newUrl.toString());
       }
     } catch (err: any) {
-      toast.error(err.message || "Erro ao salvar página cinematográfica.");
+      console.error("Erro no salvamento direto, tentando fallback:", err);
+      try {
+        const fallbackRes = await saveCinematicPageFn({
+          data: {
+            data,
+            userId: userId || "",
+            pageId,
+            publish: true,
+          },
+        });
+        if (fallbackRes.success) {
+          setPageId(fallbackRes.pageId);
+          setSavedSlug(fallbackRes.slug);
+          setPublishedModalOpen(true);
+          toast.success("Site salvo e publicado com sucesso!");
+          return;
+        }
+      } catch {
+        // Ignora erro do fallback e lança o erro principal
+      }
+      toast.error(err.message || "Erro ao salvar e publicar página.");
     } finally {
       setIsSaving(false);
     }
@@ -2509,16 +2704,16 @@ export default function CinematicStudioPage() {
                 )}
               </div>
 
-              {/* Botão de Salvar no Rodapé Mobile */}
-              <div className="lg:hidden p-3 border-t border-zinc-800/60 bg-zinc-950/80">
+              {/* Botão de Salvar & Publicar Fixo no Rodapé dos Ajustes (Desktop & Mobile) */}
+              <div className="p-3 border-t border-zinc-800/80 bg-zinc-950/90 backdrop-blur-md sticky bottom-0 z-20">
                 <button
                   type="button"
                   onClick={handleSaveAndPublish}
                   disabled={isSaving}
-                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 py-3 text-xs font-medium shadow-md transition-all disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-2.5 px-4 text-xs shadow-lg shadow-amber-500/10 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
                 >
                   {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  <span>Salvar & Publicar Página</span>
+                  <span>{isSaving ? "Salvando & Publicando..." : "Salvar & Publicar Alterações"}</span>
                 </button>
               </div>
             </div>

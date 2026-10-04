@@ -603,9 +603,16 @@ function PublicBio() {
     const isLightMode = customTheme.mode === "light" || (customTheme.bg && (customTheme.bg === "#ffffff" || customTheme.bg === "#f8fafc"));
     const effectiveBg = customTheme.bg || cinematicData.theme?.bg || (isLightMode ? "#f8fafc" : "#0a0a0c");
 
+    const appliedMarqueeSpeed =
+      cinematicData.marqueeSpeed ||
+      (cinematicData.theme as any)?.marqueeSpeed ||
+      customTheme.marqueeSpeed ||
+      45;
+
     const hydratedCinematicData: CinematicPageData = {
       ...cinematicData,
       archetype: appliedArchetype as any,
+      marqueeSpeed: appliedMarqueeSpeed,
       theme: {
         ...cinematicData.theme,
         archetype: appliedArchetype as any,
@@ -616,6 +623,7 @@ function PublicBio() {
         fontFamily: customTheme.font || customTheme.font_pair || (cinematicData.theme as any)?.fontFamily || "sans",
         boxEffect: customTheme.boxEffect || (cinematicData.theme as any)?.boxEffect || "glass",
         borderRadius: customTheme.borderRadius || (cinematicData.theme as any)?.borderRadius || "rounded",
+        marqueeSpeed: appliedMarqueeSpeed,
       },
     };
 

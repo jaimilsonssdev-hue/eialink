@@ -260,16 +260,8 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       {/* Estilos Scoped de Animação do Marquee */}
       <style>{`
         @keyframes cinematicMarquee {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
-        .animate-marquee-infinite {
-          display: flex;
-          width: max-content;
-          animation: cinematicMarquee ${marqueeDuration}s linear infinite;
-        }
-        .animate-marquee-infinite:hover {
-          animation-play-state: paused;
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-50%, 0, 0); }
         }
       `}</style>
 
@@ -520,26 +512,45 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       </section>
 
       {/* 2. BLOCO MARQUEE INFINITO / DIVISOR DE SESSÃO */}
-      {data.marquee && data.marquee.length > 0 && (
-        <section className={`relative z-20 w-full overflow-hidden border-y py-3.5 backdrop-blur-md ${isLight ? "border-zinc-200/90 bg-white/95 text-zinc-900 shadow-xs" : "border-white/10 bg-black/60 text-white"}`}>
-          <div className="flex w-max animate-marquee-infinite items-center gap-8 will-change-transform">
-            {[...data.marquee, ...data.marquee, ...data.marquee, ...data.marquee].map((item, idx) => {
-              const text = typeof item === "string" ? item : item?.text || "";
-              const icon = typeof item === "object" ? item?.icon : "";
-              if (!text) return null;
-              return (
-                <div key={idx} className="flex shrink-0 items-center gap-3 text-xs md:text-sm font-bold tracking-widest uppercase">
-                  {icon && <span>{icon}</span>}
-                  <span style={{ color: isLight && (accentColor === "#ffffff" || accentColor === "#f8fafc") ? "#09090b" : accentColor }}>
-                    {text}
-                  </span>
-                  <span className={isLight ? "text-zinc-400" : textMutedClass}>•</span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      {data.marquee && data.marquee.length > 0 && (() => {
+        // Assegura densidade adequada e cria exatamente 2 metades idênticas para loop contínuo de 0% a -50%
+        const baseItems = data.marquee.length < 3
+          ? [...data.marquee, ...data.marquee, ...data.marquee]
+          : data.marquee.length < 5
+          ? [...data.marquee, ...data.marquee]
+          : data.marquee;
+        const trackItems = [...baseItems, ...baseItems];
+
+        return (
+          <section className={`relative z-20 w-full overflow-hidden border-y py-3.5 backdrop-blur-md select-none ${isLight ? "border-zinc-200/90 bg-white/95 text-zinc-900 shadow-xs" : "border-white/10 bg-black/60 text-white"}`}>
+            <div
+              key={`marquee-track-${marqueeDuration}-${data.marquee.length}`}
+              className="flex w-max items-center gap-8 will-change-transform hover:[animation-play-state:paused]"
+              style={{
+                animationName: "cinematicMarquee",
+                animationDuration: `${marqueeDuration}s`,
+                animationTimingFunction: "linear",
+                animationIterationCount: "infinite",
+              }}
+            >
+              {trackItems.map((item, idx) => {
+                const text = typeof item === "string" ? item : item?.text || "";
+                const icon = typeof item === "object" ? item?.icon : "";
+                if (!text) return null;
+                return (
+                  <div key={idx} className="flex shrink-0 items-center gap-3 text-xs md:text-sm font-bold tracking-widest uppercase">
+                    {icon && <span>{icon}</span>}
+                    <span style={{ color: isLight && (accentColor === "#ffffff" || accentColor === "#f8fafc") ? "#09090b" : accentColor }}>
+                      {text}
+                    </span>
+                    <span className={isLight ? "text-zinc-400" : textMutedClass}>•</span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        );
+      })()}
 
       {/* 3. BLOCO BENTO GRID ASSIMÉTRICO */}
       {data.bentoGrid && data.bentoGrid.length > 0 && (

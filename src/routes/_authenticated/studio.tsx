@@ -2298,13 +2298,15 @@ export default function CinematicStudioPage() {
                                 Velocidade de Rolagem
                               </span>
                               <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
-                                {data.marqueeSpeed || 45}s{" "}
+                                {data.marqueeSpeed || 50}s{" "}
                                 <span className="text-[9px] font-sans font-normal text-zinc-400">
-                                  ({(data.marqueeSpeed || 45) >= 60
-                                    ? "Lenta & Editorial"
-                                    : (data.marqueeSpeed || 45) >= 40
+                                  ({(data.marqueeSpeed || 50) >= 100
+                                    ? "Ultra Lenta & Editorial"
+                                    : (data.marqueeSpeed || 50) >= 70
+                                    ? "Lenta & Elegante"
+                                    : (data.marqueeSpeed || 50) >= 40
                                     ? "Suave (Recomendado)"
-                                    : (data.marqueeSpeed || 45) >= 25
+                                    : (data.marqueeSpeed || 50) >= 25
                                     ? "Moderada"
                                     : "Rápida"})
                                 </span>
@@ -2312,15 +2314,16 @@ export default function CinematicStudioPage() {
                             </div>
 
                             {/* Presets Rápidos */}
-                            <div className="grid grid-cols-4 gap-1.5">
+                            <div className="grid grid-cols-5 gap-1">
                               {[
-                                { speed: 65, label: "Lenta", desc: "65s" },
-                                { speed: 45, label: "Suave", desc: "45s" },
-                                { speed: 30, label: "Normal", desc: "30s" },
+                                { speed: 120, label: "Ultra", desc: "120s" },
+                                { speed: 80, label: "Lenta", desc: "80s" },
+                                { speed: 50, label: "Suave", desc: "50s" },
+                                { speed: 30, label: "Média", desc: "30s" },
                                 { speed: 18, label: "Rápida", desc: "18s" },
                               ].map((p) => {
-                                const currentSpeed = data.marqueeSpeed || 45;
-                                const isSelected = Math.abs(currentSpeed - p.speed) <= 5;
+                                const currentSpeed = data.marqueeSpeed || 50;
+                                const isSelected = Math.abs(currentSpeed - p.speed) <= 4;
                                 return (
                                   <button
                                     key={p.speed}
@@ -2331,15 +2334,15 @@ export default function CinematicStudioPage() {
                                         marqueeSpeed: p.speed,
                                         theme: { ...prev.theme, marqueeSpeed: p.speed },
                                       }));
-                                      toast.success(`Velocidade ajustada para ${p.label} (${p.speed}s)!`);
+                                      toast.success(`Velocidade da faixa: ${p.label} (${p.speed}s)!`);
                                     }}
-                                    className={`py-1.5 px-2 rounded-lg text-center transition-all cursor-pointer ${
+                                    className={`py-1.5 px-1 rounded-lg text-center transition-all cursor-pointer ${
                                       isSelected
                                         ? "border border-amber-400/80 bg-zinc-800 text-amber-300 font-semibold shadow-xs"
                                         : "border border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
                                     }`}
                                   >
-                                    <span className="block text-[11px] leading-tight">{p.label}</span>
+                                    <span className="block text-[10px] leading-tight font-medium truncate">{p.label}</span>
                                     <span className="block text-[9px] text-zinc-500 font-mono">{p.desc}</span>
                                   </button>
                                 );
@@ -2351,9 +2354,9 @@ export default function CinematicStudioPage() {
                               <input
                                 type="range"
                                 min={15}
-                                max={90}
+                                max={150}
                                 step={5}
-                                value={data.marqueeSpeed || 45}
+                                value={data.marqueeSpeed || 50}
                                 onChange={(e) => {
                                   const val = parseInt(e.target.value, 10);
                                   setData((prev) => ({
@@ -2366,8 +2369,8 @@ export default function CinematicStudioPage() {
                               />
                               <div className="flex justify-between text-[9px] text-zinc-500 font-mono">
                                 <span>18s (Rápida)</span>
-                                <span>45s (Recomendado)</span>
-                                <span>90s (Ultra Suave)</span>
+                                <span>50s (Recomendado)</span>
+                                <span>150s (Ultra Lenta)</span>
                               </div>
                             </div>
                           </div>

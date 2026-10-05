@@ -45,9 +45,13 @@ import {
   getSavedGeminiKey,
   saveGeminiKey,
   removeGeminiKey,
-  testGeminiKey,
   GEMINI_KEY_UPDATED_EVENT,
 } from "@/modules/prospecting/GeminiAuditorService";
+import {
+  getGeminiApiKeyStatusFn,
+  saveGeminiApiKeyFn,
+  testGeminiApiKeyFn,
+} from "@/modules/ai/gemini-admin.functions";
 import type {
   CinematicPageData,
   CinematicGalleryItem,
@@ -300,37 +304,62 @@ export default function CinematicStudioPage() {
   const [inputKey, setInputKey] = useState<string>("");
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [showKeyPassword, setShowKeyPassword] = useState(false);
+  const [dbKeyConfigured, setDbKeyConfigured] = useState(false);
+  const [dbKeyMasked, setDbKeyMasked] = useState("");
+  const [isFromEnv, setIsFromEnv] = useState(false);
+
+  // Consulta status seguro da chave no banco de dados na inicialização
+  useEffect(() => {
+    getGeminiApiKeyStatusFn()
+      .then((res) => {
+        setDbKeyConfigured(Boolean(res.configured));
+        if (res.masked) setDbKeyMasked(res.masked);
+        setIsFromEnv(Boolean(res.isFromEnv));
+        if (res.configured) {
+          setGeminiKey("configured_in_database");
+        }
+      })
+      .catch((e) => console.warn("Aviso ao checar chave do Gemini no banco:", e));
+  }, []);
 
   // Sincroniza chave da IA quando atualizada em qualquer tela
   useEffect(() => {
     const handleKeyUpdated = () => {
-      setGeminiKey(getSavedGeminiKey() || "");
+      setGeminiKey(getSavedGeminiKey() || (dbKeyConfigured ? "configured_in_database" : ""));
     };
     window.addEventListener(GEMINI_KEY_UPDATED_EVENT, handleKeyUpdated);
     return () => window.removeEventListener(GEMINI_KEY_UPDATED_EVENT, handleKeyUpdated);
-  }, []);
+  }, [dbKeyConfigured]);
 
-  const handleSaveGeminiKey = () => {
+  const handleSaveGeminiKey = async () => {
     const clean = inputKey.trim();
     if (!clean) {
-      toast.error("Por favor, cole sua chave da API do Google Gemini.");
-      return;
-    }
-    saveGeminiKey(clean);
-    setGeminiKey(clean);
-    setShowKeyModal(false);
-    toast.success("Chave da IA conectada com sucesso! O Copiloto agora opera com inteligência generativa total.");
-  };
-
-  const handleTestGeminiKey = async () => {
-    const clean = inputKey.trim();
-    if (!clean) {
-      toast.error("Insira a chave antes de testar.");
+      toast.error("Por favor, cole sua chave da API do Google AI Studio.");
       return;
     }
     setIsTestingKey(true);
     try {
-      const res = await testGeminiKey(clean);
+      const res = await saveGeminiApiKeyFn({ data: { apiKey: clean } });
+      if (res.success) {
+        setDbKeyConfigured(true);
+        if (res.masked) setDbKeyMasked(res.masked);
+        setGeminiKey("configured_in_database");
+        setInputKey("");
+        setShowKeyModal(false);
+        toast.success(res.message || "Chave salva com sucesso no Banco de Dados!");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar chave no banco de dados.");
+    } finally {
+      setIsTestingKey(false);
+    }
+  };
+
+  const handleTestGeminiKey = async () => {
+    const clean = inputKey.trim();
+    setIsTestingKey(true);
+    try {
+      const res = await testGeminiApiKeyFn({ data: { apiKey: clean || undefined } });
       if (res.ok) {
         toast.success(res.message || "Conexão com Google AI validada!");
       } else {
@@ -343,12 +372,19 @@ export default function CinematicStudioPage() {
     }
   };
 
-  const handleRemoveGeminiKey = () => {
-    removeGeminiKey();
-    setGeminiKey("");
-    setInputKey("");
-    setShowKeyModal(false);
-    toast.info("Chave da IA removida.");
+  const handleRemoveGeminiKey = async () => {
+    try {
+      await saveGeminiApiKeyFn({ data: { apiKey: "" } });
+      removeGeminiKey();
+      setDbKeyConfigured(false);
+      setDbKeyMasked("");
+      setGeminiKey("");
+      setInputKey("");
+      setShowKeyModal(false);
+      toast.info("Chave da IA removida do banco de dados.");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao remover chave.");
+    }
   };
 
   // Prévia Temporária de Opção (Espiar antes de aprovar)
@@ -1212,19 +1248,19 @@ export default function CinematicStudioPage() {
           <button
             type="button"
             onClick={() => {
-              setInputKey(geminiKey || getSavedGeminiKey() || "");
+              setInputKey("");
               setShowKeyModal(true);
             }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-              geminiKey
+              dbKeyConfigured || geminiKey
                 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
                 : "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25 animate-pulse"
             }`}
-            title={geminiKey ? "Cérebro da IA Conectado (Google Gemini)" : "Conectar Chave da IA (Google Gemini)"}
+            title={dbKeyConfigured || geminiKey ? "Cérebro da IA Conectado no Banco de Dados (Google Gemini)" : "Conectar Chave da IA no Banco de Dados"}
           >
             <KeyRound className="h-3.5 w-3.5 shrink-0" />
-            <span className="hidden sm:inline">{geminiKey ? "IA Conectada" : "Conectar IA"}</span>
-            <span className="sm:hidden">{geminiKey ? "IA" : "🔑 IA"}</span>
+            <span className="hidden sm:inline">{dbKeyConfigured || geminiKey ? "IA Conectada" : "Conectar IA"}</span>
+            <span className="sm:hidden">{dbKeyConfigured || geminiKey ? "IA" : "🔑 IA"}</span>
           </button>
 
           <button
@@ -3469,11 +3505,18 @@ export default function CinematicStudioPage() {
                   <KeyRound className="h-4 w-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-zinc-100">
-                    Cérebro da IA (Google Gemini)
-                  </h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-zinc-100">
+                      Cérebro da IA (Google Gemini)
+                    </h3>
+                    {dbKeyConfigured && (
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                        {dbKeyMasked || "Ativo no Banco"}
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-zinc-400">
-                    Inteligência generativa em tempo real para o Studio
+                    Armazenamento Seguro no Banco de Dados (Supabase Server-Side)
                   </p>
                 </div>
               </div>
@@ -3487,8 +3530,12 @@ export default function CinematicStudioPage() {
             </div>
 
             <div className="space-y-3.5 text-xs text-zinc-300">
-              <p className="leading-relaxed">
-                Para o Copiloto dialogar livremente como o ChatGPT ou Claude, entender comandos complexos e transformar seu site ao vivo (incluindo desconstrução Anime.js, blueprints técnicos e copywriting autoral), conecte sua chave da API.
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] leading-relaxed">
+                <strong>🔒 Segurança Máxima:</strong> Sua chave é gravada diretamente no servidor do Supabase através de Server Functions autenticadas. Ela <strong>nunca fica exposta no navegador</strong> nem nos sites publicados para seus clientes.
+              </div>
+
+              <p className="leading-relaxed text-zinc-400 text-[11px]">
+                Com a IA ativa, o Copiloto dialoga livremente com inteligência real (como o ChatGPT e Claude), refina seu design ao vivo, programa animações de desconstrução (Anime.js) e cria propostas conceituais completas.
               </p>
 
               <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 space-y-2">
@@ -3505,22 +3552,27 @@ export default function CinematicStudioPage() {
                   </a>
                 </div>
                 <ul className="text-[11px] text-zinc-400 list-disc list-inside space-y-0.5">
-                  <li>Leva menos de 10 segundos</li>
-                  <li>100% gratuito (sem cartão de crédito)</li>
-                  <li>Clique em "Create API key" e cole o código iniciado por <code className="text-amber-300 font-mono">AIzaSy...</code></li>
+                  <li>Leva menos de 10 segundos e é 100% gratuito (sem cartão)</li>
+                  <li>Clique em <strong>"Create API key"</strong> no Google AI Studio</li>
+                  <li>Aceita qualquer formato de chave emitido pela Google</li>
                 </ul>
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-zinc-300">
-                  Chave da API do Google Gemini
+                <label className="text-[11px] font-semibold text-zinc-300 flex items-center justify-between">
+                  <span>Chave da API do Google Gemini</span>
+                  {dbKeyConfigured && (
+                    <span className="text-[10px] text-emerald-400 font-mono">
+                      Gravada no Banco ({dbKeyMasked})
+                    </span>
+                  )}
                 </label>
                 <div className="relative">
                   <input
                     type={showKeyPassword ? "text" : "password"}
                     value={inputKey}
                     onChange={(e) => setInputKey(e.target.value)}
-                    placeholder="Cole sua chave aqui (ex: AIzaSy...)"
+                    placeholder={dbKeyConfigured ? "Chave ativa no banco. Cole uma nova para substituir..." : "Cole sua chave da Google aqui..."}
                     className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none pr-10 font-mono"
                   />
                   <button
@@ -3536,13 +3588,13 @@ export default function CinematicStudioPage() {
 
             <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80">
               <div>
-                {geminiKey && (
+                {(dbKeyConfigured || geminiKey) && (
                   <button
                     type="button"
                     onClick={handleRemoveGeminiKey}
                     className="text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                   >
-                    Remover chave
+                    Remover do Banco
                   </button>
                 )}
               </div>
@@ -3551,7 +3603,7 @@ export default function CinematicStudioPage() {
                 <button
                   type="button"
                   onClick={handleTestGeminiKey}
-                  disabled={isTestingKey || !inputKey.trim()}
+                  disabled={isTestingKey || (!inputKey.trim() && !dbKeyConfigured)}
                   className="rounded-xl border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors disabled:opacity-40 cursor-pointer"
                 >
                   {isTestingKey ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : "Testar Conexão"}
@@ -3560,10 +3612,10 @@ export default function CinematicStudioPage() {
                 <button
                   type="button"
                   onClick={handleSaveGeminiKey}
-                  disabled={!inputKey.trim()}
+                  disabled={isTestingKey || !inputKey.trim()}
                   className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 transition-all shadow-md shadow-amber-950/30 disabled:opacity-40 cursor-pointer active:scale-95"
                 >
-                  Salvar Chave
+                  Salvar no Banco
                 </button>
               </div>
             </div>

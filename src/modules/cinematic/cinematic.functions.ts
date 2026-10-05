@@ -5,6 +5,7 @@ import type { CinematicPageData, CreativePlan, CinematicConceptOption } from "./
 import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
 import type { ProspectDraft } from "@/modules/prospecting/types";
+import { resolveGeminiApiKey } from "@/modules/ai/gemini-admin.functions";
 
 function slugify(value: string) {
   return value
@@ -87,7 +88,9 @@ export const refineCinematicWithAiFn = createServerFn({ method: "POST" })
       return currentData;
     }
 
+    const dbOrEnvKey = await resolveGeminiApiKey();
     const apiKey = (
+      dbOrEnvKey ||
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_AI_STUDIO_KEY ||
       (process.env as any).VITE_GEMINI_API_KEY ||
@@ -519,8 +522,10 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
     const { businessName, niche, userMessage, currentData, conversationHistory = [] } = input;
     const instruction = (userMessage || "").trim();
 
+    const dbOrEnvKey = await resolveGeminiApiKey();
     const apiKey = (
       input.apiKey ||
+      dbOrEnvKey ||
       process.env.GEMINI_API_KEY ||
       process.env.GOOGLE_AI_STUDIO_KEY ||
       (process.env as any).VITE_GEMINI_API_KEY ||

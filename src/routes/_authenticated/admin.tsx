@@ -46,6 +46,7 @@ import {
 import type { AsaasEnvironment } from "@/modules/billing/services/AsaasService";
 import { GoogleApiAdminCard } from "@/components/admin/GoogleApiAdminCard";
 import { GooglePlacesAdminCard } from "@/components/admin/GooglePlacesAdminCard";
+import { GoogleGeminiAdminCard } from "@/components/admin/GoogleGeminiAdminCard";
 import { ApifyAdminCard } from "@/components/admin/ApifyAdminCard";
 
 import { WhatsAppCheckoutLinksCard } from "@/components/admin/WhatsAppCheckoutLinksCard";
@@ -420,6 +421,9 @@ function AdminPage() {
 
       {/* Configurações da Integração Google Agenda */}
       <GoogleApiAdminCard />
+
+      {/* Configurações da IA Generativa (Google Gemini) */}
+      <GoogleGeminiAdminCard />
 
       <GooglePlacesAdminCard />
 

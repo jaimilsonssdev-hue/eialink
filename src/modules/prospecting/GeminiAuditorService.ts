@@ -65,8 +65,8 @@ export async function testGeminiKey(key: string): Promise<{ ok: boolean; message
   if (!cleanKey) {
     return { ok: false, message: "A chave não pode estar em branco." };
   }
-  if (!cleanKey.startsWith("AIza")) {
-    return { ok: false, message: "Formato inválido. Chaves do Google AI Studio geralmente começam com 'AIzaSy...'." };
+  if (cleanKey.length < 10) {
+    return { ok: false, message: "A chave informada é muito curta para ser uma chave válida do Google AI Studio." };
   }
 
   try {

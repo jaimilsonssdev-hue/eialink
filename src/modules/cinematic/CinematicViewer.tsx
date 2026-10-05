@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { CinematicMarquee } from "./CinematicMarquee";
 import { TechnicalBlueprintSection } from "./components/TechnicalBlueprintSection";
+import { ExplodedDeconstructionSection } from "./components/ExplodedDeconstructionSection";
 
 interface CinematicViewerProps {
   data: CinematicPageData;
@@ -527,6 +528,16 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
       {data.blueprint && (
         <TechnicalBlueprintSection
           blueprint={data.blueprint}
+          accentColor={accentColor}
+          isLight={isLight}
+          businessName={data.businessName}
+        />
+      )}
+
+      {/* 2.6 SEÇÃO DE VISTA EXPLODIDA & DESCONSTRUÇÃO COM ANIME.JS */}
+      {data.deconstruction && (
+        <ExplodedDeconstructionSection
+          data={data.deconstruction}
           accentColor={accentColor}
           isLight={isLight}
           businessName={data.businessName}

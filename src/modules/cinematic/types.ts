@@ -82,6 +82,25 @@ export interface TechnicalCallout {
   position?: { x: number; y: number }; // % relativo na imagem/produto (0-100)
 }
 
+export interface DeconstructedLayer {
+  id: string;
+  name: string; // Ex: "Planta Baixa Estrutural" ou "Blend de Costela 180g" ou "Chassi com Tração Integral"
+  detail: string; // Ex: "Cotas técnicas e distribuição de carga" ou "Carne maturada 21 dias"
+  tag?: string; // Ex: "[CAMADA 01]" ou "[INGREDIENTE 03]"
+  icon?: string; // Ex: "📐", "🥩", "⚙️", "🏛️"
+  color?: string;
+}
+
+export interface ExplodedDeconstructionSection {
+  headline?: string;
+  tagline?: string;
+  subtitle?: string;
+  category?: "architecture" | "gastronomy" | "automotive" | "biotech" | "custom";
+  baseImage?: string; // Imagem do todo montado (ex: fachada da casa, hambúrguer montado, carro)
+  blueprintImage?: string; // Imagem ou vetor da planta baixa / raio-x quando desconstruído
+  layers: DeconstructedLayer[];
+}
+
 export interface TechnicalBlueprintSection {
   headline?: string;
   tagline?: string;
@@ -119,6 +138,7 @@ export interface CinematicPageData {
   marquee?: MarqueeItem[];
   marqueeSpeed?: number;
   blueprint?: TechnicalBlueprintSection; // Seção de Raio-X Técnico / Engenharia estilo Reebok NANO X3
+  deconstruction?: ExplodedDeconstructionSection; // Seção de Vista Explodida e Desconstrução em Camadas animada com Anime.js
   bentoGrid?: BentoCard[];
   highlights: CinematicHighlight[];
   comparison?: {

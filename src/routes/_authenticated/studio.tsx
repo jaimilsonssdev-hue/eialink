@@ -34,6 +34,7 @@ import {
   Zap,
   Sun,
   Crosshair,
+  Layers,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -1315,6 +1316,59 @@ export default function CinematicStudioPage() {
                         <Crosshair className="h-3 w-3 text-amber-400" />
                         <span>🔬 Raio-X de Engenharia</span>
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setData((prev) => ({
+                            ...prev,
+                            deconstruction: prev.deconstruction
+                              ? undefined
+                              : {
+                                  tagline: "[ANATOMIA & DESCONSTRUÇÃO TÉCNICA]",
+                                  headline: `A Engenharia Oculta • ${prev.businessName || "Visão Detalhada"}`,
+                                  subtitle: "Desconstrua cada camada e compreenda a ciência, precisão e rigor aplicados a cada elemento.",
+                                  category: "architecture",
+                                  blueprintImage: prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
+                                  layers: [
+                                    {
+                                      id: "l_1",
+                                      tag: "[CAMADA 01]",
+                                      icon: "🏛️",
+                                      name: "Fachada & Cobertura Térmica",
+                                      detail: "Painéis de isolamento acústico e controle bioclimático passivo.",
+                                    },
+                                    {
+                                      id: "l_2",
+                                      tag: "[CAMADA 02]",
+                                      icon: "📐",
+                                      name: "Planta Baixa & Modulação",
+                                      detail: "Cotas milimétricas e distribuição fluida de circulação integrada.",
+                                    },
+                                    {
+                                      id: "l_3",
+                                      tag: "[CAMADA 03]",
+                                      icon: "⚙️",
+                                      name: "Infraestrutura Hidráulica & Elétrica",
+                                      detail: "Sistemas inteligentes embutidos com redundância e telemetria.",
+                                    },
+                                    {
+                                      id: "l_4",
+                                      tag: "[CAMADA 04]",
+                                      icon: "🧱",
+                                      name: "Fundações & Radier Protendido",
+                                      detail: "Cálculo estrutural para estabilidade de longo prazo sem fissuras.",
+                                    },
+                                  ],
+                                },
+                          }));
+                          toast.success("Vista Explodida com Anime.js alternada com sucesso!");
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
+                      >
+                        <Layers className="h-3 w-3 text-amber-400" />
+                        <span>💥 Vista Explodida (Anime.js)</span>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1731,6 +1785,59 @@ export default function CinematicStudioPage() {
                   >
                     <Crosshair className="h-3 w-3 text-amber-400" />
                     <span>🔬 Raio-X de Engenharia</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData((prev) => ({
+                        ...prev,
+                        deconstruction: prev.deconstruction
+                          ? undefined
+                          : {
+                              tagline: "[ANATOMIA & DESCONSTRUÇÃO TÉCNICA]",
+                              headline: `A Engenharia Oculta • ${prev.businessName || "Visão Detalhada"}`,
+                              subtitle: "Desconstrua cada camada e compreenda a ciência, precisão e rigor aplicados a cada elemento.",
+                              category: "architecture",
+                              blueprintImage: prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
+                              layers: [
+                                {
+                                  id: "l_1",
+                                  tag: "[CAMADA 01]",
+                                  icon: "🏛️",
+                                  name: "Fachada & Cobertura Térmica",
+                                  detail: "Painéis de isolamento acústico e controle bioclimático passivo.",
+                                },
+                                {
+                                  id: "l_2",
+                                  tag: "[CAMADA 02]",
+                                  icon: "📐",
+                                  name: "Planta Baixa & Modulação",
+                                  detail: "Cotas milimétricas e distribuição fluida de circulação integrada.",
+                                },
+                                {
+                                  id: "l_3",
+                                  tag: "[CAMADA 03]",
+                                  icon: "⚙️",
+                                  name: "Infraestrutura Hidráulica & Elétrica",
+                                  detail: "Sistemas inteligentes embutidos com redundância e telemetria.",
+                                },
+                                {
+                                  id: "l_4",
+                                  tag: "[CAMADA 04]",
+                                  icon: "🧱",
+                                  name: "Fundações & Radier Protendido",
+                                  detail: "Cálculo estrutural para estabilidade de longo prazo sem fissuras.",
+                                },
+                              ],
+                            },
+                      }));
+                      toast.success("Vista Explodida com Anime.js alternada com sucesso!");
+                    }}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
+                  >
+                    <Layers className="h-3 w-3 text-amber-400" />
+                    <span>💥 Vista Explodida (Anime.js)</span>
                   </button>
                 </div>
 

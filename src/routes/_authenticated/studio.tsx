@@ -720,16 +720,37 @@ export default function CinematicStudioPage() {
         },
       });
 
+      // Se for uma atualização direta (direct_update) com dados modificados:
+      if (pitch.actionType === "direct_update" && pitch.updatedData) {
+        setData((prev) => ({
+          ...prev,
+          ...pitch.updatedData,
+          theme: {
+            ...prev.theme,
+            ...(pitch.updatedData.theme || {}),
+          },
+          hero: {
+            ...prev.hero,
+            ...(pitch.updatedData.hero || {}),
+          },
+        }));
+        toast.success("Alteração aplicada ao vivo no site!");
+      } else if (pitch.actionType === "proposal_plan") {
+        toast.success("Plano criativo elaborado com 2 propostas conceituais!");
+      }
+
       const agentMsg: StudioChatMessage = {
         id: `agent-${Date.now()}`,
         sender: "agent",
         text: pitch.agentMessage,
+        actionType: pitch.actionType,
+        updatedData: pitch.updatedData,
         plan: pitch.plan,
+        suggestions: pitch.suggestions,
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
       setMessages((prev) => [...prev, agentMsg]);
-      toast.success("Plano criativo elaborado com 2 propostas conceituais!");
     } catch (err: any) {
       setMessages((prev) => [
         ...prev,
@@ -1587,6 +1608,31 @@ export default function CinematicStudioPage() {
                               );
                             })}
                           </div>
+                        </div>
+                      )}
+                      {/* Badge de Atualização Direta ao Vivo */}
+                      {msg.actionType === "direct_update" && (
+                        <div className="mt-3 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-300 text-xs font-medium w-fit">
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                          <span>Alteração aplicada ao vivo no Studio</span>
+                        </div>
+                      )}
+
+                      {/* Sugestões Rápidas Interativas */}
+                      {msg.suggestions && msg.suggestions.length > 0 && (
+                        <div className="mt-3 pt-2.5 border-t border-zinc-800/60 flex flex-wrap gap-1.5">
+                          {msg.suggestions.map((sug, sIdx) => (
+                            <button
+                              key={sIdx}
+                              type="button"
+                              onClick={() => handleSendMessage(sug)}
+                              disabled={isRefiningAi}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-300 hover:text-white border border-zinc-700/50 transition-colors cursor-pointer text-left"
+                            >
+                              <span className="text-amber-400 text-[10px]">✦</span>
+                              <span>{sug}</span>
+                            </button>
+                          ))}
                         </div>
                       )}
                     </div>

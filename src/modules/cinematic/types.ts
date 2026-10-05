@@ -181,6 +181,9 @@ export interface StudioChatMessage {
   timestamp: string;
   plan?: CreativePlan; // Presente quando o agente faz uma proposta de design
   appliedOptionId?: string; // Registra qual opção o usuário aprovou
+  actionType?: "conversation" | "direct_update" | "proposal_plan";
+  updatedData?: Partial<CinematicPageData>;
+  suggestions?: string[];
   meta?: {
     name?: string;
     rating?: number;
@@ -189,5 +192,13 @@ export interface StudioChatMessage {
     photoCount?: number;
     thumbnails?: string[];
   };
+}
+
+export interface CreativePitchResponse {
+  actionType: "conversation" | "direct_update" | "proposal_plan";
+  agentMessage: string;
+  updatedData?: Partial<CinematicPageData>;
+  plan?: CreativePlan;
+  suggestions?: string[];
 }
 

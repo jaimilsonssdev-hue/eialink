@@ -497,6 +497,13 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
 /**
  * 4. Elaboração de Plano Criativo & Pitch de Conceitos (Opções A e B)
  */
+/**
+ * 4. Agente Diretor de Arte & Tech Lead Generativo
+ * Reconhece intenções:
+ * - "conversation": Troca de ideias, consultoria, responde dúvidas e debate design/ferramentas sem mexer no site
+ * - "direct_update": Aplica mudanças cirúrgicas ao vivo na hora (deconstrução Anime.js, cores, blueprints, copy, cardápio)
+ * - "proposal_plan": Gera Opções A e B quando o usuário pede explicitamente propostas/conceitos novos
+ */
 export const createCreativePitchFn = createServerFn({ method: "POST" })
   .validator(
     (d: {
@@ -508,7 +515,7 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
       apiKey?: string;
     }) => d
   )
-  .handler(async ({ data: input }) => {
+  .handler(async ({ data: input }): Promise<import("./types").CreativePitchResponse> => {
     const { businessName, niche, userMessage, currentData, conversationHistory = [] } = input;
     const instruction = (userMessage || "").trim();
 
@@ -522,133 +529,92 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
 
     if (apiKey) {
       try {
-        const prompt = `Você é um Diretor de Arte e Consultor de Branding Internacional (padrão v0, Lovable, Pentagram, Awwwards) focado em alta conversão e estética nobre (como Atelier Lumi, Maísa Furtado e Insight Sites).
-O usuário está cocriando a experiência digital cinematográfica e interativa para o negócio "${businessName}" (Nicho: "${niche}").
+        const prompt = `Você é o Agente Diretor de Arte Criativo, Arquiteto de Software e Parceiro de Design da plataforma EIA Link.
+Você está dialogando em tempo real com o usuário no Cinematic Studio para conceber e refinar a experiência digital de alta conversão do negócio "${businessName}" (Nicho: "${niche}").
 
-MENSAGEM DO USUÁRIO:
-"""${instruction}"""
-
-HISTÓRICO DA CONVERSA RECENTE:
-${JSON.stringify(conversationHistory.slice(-4), null, 2)}
-
-DADOS ATUAIS DA PÁGINA:
+ESTADO ATUAL DA PÁGINA (CinematicPageData):
 ${JSON.stringify(currentData, null, 2)}
 
-DIRETRIZES DE ALTA CONVERSÃO & DESIGN EDITORIAL (PADRÃO ATELIER LUMI & INSIGHT SITES):
-1. STATUS & CONFIANÇA IMEDIATA:
-   - Em "hero.floatingBadge", gere status realista e acolhedor (ex: "● ABERTO AGORA • HORA MARCADA" ou "● ATENDIMENTO EXCLUSIVO • VAGAS PARA ESTA SEMANA" ou "★ 4.9 NO GOOGLE (180+ AVALIAÇÕES)").
-2. CARDÁPIO / MENU DE SERVIÇOS COM PREÇO E DURAÇÃO ("highlights"):
-   - Crie 3 a 4 serviços desejáveis com nome sofisticado.
-   - Sempre defina "price" realista (ex: "A partir de R$ 180", "R$ 390", "Consulte").
-   - Sempre defina "badge" com tempo de cadeira ou exclusividade (ex: "1h 30m • Mais Pedido", "45 min", "Pacote Completo").
-   - Inclua pelo menos 1 serviço ou pacote de alto valor / ticket premium.
-3. POLÍTICAS TRANSPARENTES & COMBINADOS ("faq"):
-   - Inclua 3 a 4 perguntas reais que clientes desse nicho valorizam: tolerância de atraso (ex: 15 min), cancelamento/reagendamento com 24h, formas de pagamento (Pix/Cartão/Parcelamento) e atendimento com hora marcada.
-4. BENTO GRID DE AUTORIDADE:
-   - Cartões assimétricos com métricas concretas (ex: "Nota 4.9 no Google", "+2.500 Atendimentos", "Ambiente Climatizado & Café Barista").
-5. COMPARATIVO TRANSPARENTE ("comparison"):
-   - Destaque o padrão de excelência deste negócio vs o mercado tradicional (sem espera, insumos de alta linha, ambiente privativo).
-6. MODO DELTA INTELIGENTE (PRESERVAÇÃO ESTRITA):
-   - Mantenha rigorosamente intactos em ambos previewData: "whatsapp", "address", "rating", "openingHours" e fotos reais já carregadas.
+HISTÓRICO RECENTE DA CONVERSA:
+${JSON.stringify(conversationHistory.slice(-6), null, 2)}
 
-RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENTÁRIOS):
-{
-  "agentMessage": "Mensagem empática, inspiradora e detalhada do Diretor de Arte (2 a 3 parágrafos curtos) explicando a visão estética e convidando o usuário a espiar a prévia ou aprovar uma das propostas...",
-  "plan": {
-    "id": "plan_${Date.now()}",
-    "conceptSummary": "Resumo de 1 a 2 frases da direção artística proposta",
-    "rationale": "Justificativa estratégica do porquê dessas abordagens funcionarem para o público desse nicho",
-    "recommendedSections": ["Hero Imersivo com Status Ativo", "Marquee Contínuo", "Bento Grid de Autoridade", "Manifesto de Essência", "Menu de Serviços com Preço e Duração", "Comparativo vs Mercado", "Combinados & Políticas (FAQ)", "Ação VIP no WhatsApp"],
-    "options": [
-      {
-        "id": "option_a",
-        "name": "Nome Poético da Opção A",
-        "tagline": "TAGLINE DO CONCEITO A",
-        "palette": {
-          "bg": "#0a0a0c",
-          "accent": "#f59e0b",
-          "cardBg": "#121217"
-        },
-        "typography": "serif",
-        "vibe": "Sensorial, Intimista & Herança Nobre",
-        "heroHeadline": "Título do Hero para o Conceito A",
-        "previewData": {
-          "archetype": "luxury-editorial",
-          "theme": {
-            "bg": "#0a0a0c",
-            "accent": "#f59e0b",
-            "secondaryAccent": "#fbbf24",
-            "fontHeading": "serif",
-            "parallaxEnabled": true,
-            "borderStyle": "glass"
-          },
-          "hero": {
-            "title": "string",
-            "subtitle": "string",
-            "tagline": "string",
-            "floatingBadge": "★ 4.9 NO GOOGLE",
-            "backgroundImage": "${currentData.hero.backgroundImage}",
-            ${currentData.hero.backgroundVideo ? `"backgroundVideo": "${currentData.hero.backgroundVideo}",` : ""}
-            "ctaText": "Solicitar Atendimento VIP",
-            "ctaLink": "#manifesto"
-          },
-          "marquee": [...],
-          "bentoGrid": [...],
-          "manifesto": {
-            "headline": "string",
-            "bodyText": "string",
-            "quote": "string",
-            "author": "string"
-          },
-          "highlights": [...]
-        }
-      },
-      {
-        "id": "option_b",
-        "name": "Nome Arrojado da Opção B",
-        "tagline": "TAGLINE DO CONCEITO B",
-        "palette": {
-          "bg": "#070709",
-          "accent": "#ccff00",
-          "cardBg": "#0e0e13"
-        },
-        "typography": "display",
-        "vibe": "Contemporâneo, Pulsante & Neo-Pop",
-        "heroHeadline": "Título do Hero para o Conceito B",
-        "previewData": {
-          "archetype": "neo-pop-d2c",
-          "theme": {
-            "bg": "#070709",
-            "accent": "#ccff00",
-            "secondaryAccent": "#ff0055",
-            "fontHeading": "display",
-            "parallaxEnabled": true,
-            "borderStyle": "pill"
-          },
-          "hero": {
-            "title": "string",
-            "subtitle": "string",
-            "tagline": "string",
-            "floatingBadge": "⚡ EDIÇÃO AUTORAL 2026",
-            "backgroundImage": "${currentData.hero.backgroundImage}",
-            ${currentData.hero.backgroundVideo ? `"backgroundVideo": "${currentData.hero.backgroundVideo}",` : ""}
-            "ctaText": "Explorar Agora",
-            "ctaLink": "#diferenciais"
-          },
-          "marquee": [...],
-          "bentoGrid": [...],
-          "manifesto": {
-            "headline": "string",
-            "bodyText": "string",
-            "quote": "string",
-            "author": "string"
-          },
-          "highlights": [...]
-        }
-      }
-    ]
+MENSAGEM ATUAL DO USUÁRIO:
+"""${instruction}"""
+
+SUA CAIXA DE FERRAMENTAS & RECURSOS NO SISTEMA:
+1. ANIME.JS v4 & VISTA EXPLODIDA EM CAMADAS ('deconstruction'):
+   - Permite ativar uma seção cinematográfica de "Vista Explodida" em camadas interativas com animação de desconstrução (Anime.js).
+   - Exemplos ricos por nicho:
+     * Arquitetura / Imobiliária: Fachada da casa -> Planta baixa estrutural (Cotas Técnicas, Elétrica/Hidráulica, Radier, Cobertura).
+     * Gastronomia: Hambúrguer montado -> Camadas explodidas (Pão brioche selado, Cheddar inglês derretido, Blend 180g na brasa, Bacon artesanal defumado).
+     * Automotivo / Mecânica: Veículo montado -> Chassi tubular, Motor V8 aspirado, Suspensão independente, Tração integral.
+     * Saúde / Odontologia: Sorriso -> Arcada dentária, Implante osseointegrado, Guia cirúrgico digital.
+     * Produtos / Calçados: Estilo Reebok NANO X3 -> Cabedal respirável, Entressola Floatride, Chassi TPU de estabilidade.
+   - Quando o usuário pedir para criar/adicionar uma vista explodida, planta baixa ou desconstrução, configure o objeto 'deconstruction' com:
+     headline, tagline, subtitle, category ("architecture" | "gastronomy" | "automotive" | "biotech" | "custom"), layers (array com 4 a 5 camadas com id, tag, icon, name, detail).
+
+2. TECHNICAL BLUEPRINT ('blueprint') - ESTILO REEBOK NANO X3 / RAIO-X TÉCNICO:
+   - Seção de especificações técnicas milimétricas com callouts flutuantes com coordenadas X/Y e tags [SPEC::01].
+   - Campos: headline, tagline, subtitle, specs (array de callouts com id, tag, title, description, position).
+
+3. MOTION LIBRARIES (Three.js, GSAP, Parallax GPU):
+   - Capacidade de profundidade 3D (Three.js), scroll suave (GSAP) e parallax imersivo na capa ('theme.parallaxEnabled: true').
+
+4. DESIGN SYSTEM & ESTÉTICA DE ALTO PADRÃO:
+   - Padrão Lendora CRM SaaS: fundos escuros nobres (#09090b, #0a0a0c, #121217), bordas sutis com brilho suave (border-white/10), glassmorphism, tipografia limpa.
+   - 5 Arquétipos: luxury-editorial (âmbar #f59e0b), clean-biotech (esmeralda #10b981), cyber-tech (ciano elétrico #00f0ff), dark-brutalist (titânio #ffffff), neo-pop-d2c (neon #ccff00).
+
+5. COPYWRITING SENSORIAL (ZERO CLICHÊS):
+   - Proibido usar "o melhor da cidade", "qualidade garantida". Use números reais, descrições sensoriais de dar água na boca ou autoridade técnica inquestionável.
+
+CLASSIFICAÇÃO DE INTENÇÃO (INTENT RECOGNITION):
+Analise o contexto e a mensagem do usuário e responda sob UMA das 3 modalidades:
+
+MODALIDADE A: "conversation" (Dúvidas, Opiniões, Brainstorming, Consultoria de Design)
+- Ative quando o usuário fizer perguntas, pedir sua opinião ("o que você acha?", "qual biblioteca usar?", "como podemos animar?", "dá pra fazer isso com animejs?", "me dá ideias", "como ficaria uma clínica?").
+- AJA COMO UM PARCEIRO E TECH LEAD: converse abertamente, analise alternativas, cite as ferramentas do sistema (Anime.js, Three.js, GSAP, Lendora UI, Reebok NANO X3), proponha caminhos e pergunte como o usuário prefere proceder.
+- NÃO altere os dados do site sem o comando dele.
+- Retorne no JSON:
+  {
+    "actionType": "conversation",
+    "agentMessage": "Sua resposta analítica, detalhada, empática e inspiradora conversando de igual para igual...",
+    "suggestions": ["Sim, crie a vista explodida agora", "Mude as cores para preto grafite", "Me mostre mais ideias"]
   }
-}`;
+
+MODALIDADE B: "direct_update" (Instrução Direta, Modificação ou Criação Específica)
+- Ative quando o usuário der um comando de alteração ou refinamento ("mude a cor para preto carvão e dourado", "adicione a seção de desconstrução da planta da casa com animejs", "coloque um menu com 4 opções gourmet", "troque a headline para algo focado em agendamento VIP", "ative o blueprint de raio-x", "coloque estilo escuro minimalista").
+- APLIQUE AS ALTERAÇÕES DIRETAMENTE EM 'updatedData' (apenas os campos de CinematicPageData que mudaram ou foram adicionados).
+- Retorne no JSON:
+  {
+    "actionType": "direct_update",
+    "agentMessage": "Explicação elegante e empolgante do que você acabou de aplicar na página ao vivo...",
+    "updatedData": {
+      // Exemplo de campos que você alterou ou adicionou:
+      // "theme": { "bg": "#0a0a0c", "accent": "#f59e0b", ... },
+      // "hero": { "title": "...", "subtitle": "...", ... },
+      // "deconstruction": { "headline": "...", "category": "architecture", "layers": [ ... ] },
+      // "blueprint": { "headline": "...", "specs": [ ... ] },
+      // "highlights": [ ... ]
+    },
+    "suggestions": ["Próximo ajuste", "Testar outra cor"]
+  }
+
+MODALIDADE C: "proposal_plan" (Geração de Novas Alternativas Conceituais / Pitch Completo)
+- Ative SOMENTE quando o usuário pedir expressamente novos conceitos do zero ("crie duas opções conceituais", "proponha novos conceitos do zero", "quero ver duas abordagens diferentes").
+- Retorne no JSON:
+  {
+    "actionType": "proposal_plan",
+    "agentMessage": "Mensagem apresentando as duas propostas conceituais...",
+    "plan": {
+      "id": "plan_${Date.now()}",
+      "conceptSummary": "...",
+      "rationale": "...",
+      "recommendedSections": [...],
+      "options": [ { "id": "option_a", ... }, { "id": "option_b", ... } ]
+    }
+  }
+
+RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
 
         const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
         for (const model of models) {
@@ -662,7 +628,7 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   contents: [{ role: "user", parts: [{ text: prompt }] }],
-                  generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
+                  generationConfig: { responseMimeType: "application/json", temperature: 0.6 },
                 }),
               }
             );
@@ -672,10 +638,13 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
               const textOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
               if (textOutput) {
                 const parsed = JSON.parse(textOutput);
-                if (parsed.agentMessage && parsed.plan && parsed.plan.options && parsed.plan.options.length >= 2) {
+                if (parsed.actionType && parsed.agentMessage) {
                   return {
-                    agentMessage: parsed.agentMessage as string,
-                    plan: parsed.plan as CreativePlan,
+                    actionType: parsed.actionType,
+                    agentMessage: parsed.agentMessage,
+                    updatedData: parsed.updatedData,
+                    plan: parsed.plan,
+                    suggestions: parsed.suggestions,
                   };
                 }
               }
@@ -689,125 +658,149 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
       }
     }
 
-    // Heurística Fallback inteligente: interpreta a instrução do usuário
+    // Heurística Fallback inteligente com Intent Classification se a API falhar
+    const isQuestion = /\?|o que você acha|qual|como|opini|ideia|pense|dá pra|consegue|expli/i.test(instruction);
+    const isDeconstruction = /desconstru|planta|explodida|animejs|anime\.js|camada|camadas|hamb[uú]rguer|carro|ve[ií]culo|cl[ií]nica|odonto|casa/i.test(instruction);
+    const isBlueprint = /blueprint|raio-x|raio x|especificaç|specs|reebok/i.test(instruction);
+    const isColorOrTheme = /cor|cores|paleta|fundo|preto|dourado|azul|verde|clean|escuro|claro|dark|light|tema/i.test(instruction);
+    const isProposal = /opç[õo]es|propostas|conceito|conceitos|pitch|duas opç/i.test(instruction);
+
+    // 1. Fallback Conversacional (Responde e debate ideias)
+    if (isQuestion && !isDeconstruction && !isProposal) {
+      return {
+        actionType: "conversation",
+        agentMessage: `Excelente reflexão! No sistema nós temos o ecossistema perfeito para isso: podemos orquestrar o **Anime.js v4** para animações de física e desconstrução em camadas (como plantas baixas, cortes gastronômicos ou mecânica), o **Three.js** para rotação 3D interativa de produtos e a estética refinada do **Lendora CRM** com fundos em grafite profundo e bordas de vidro acetinado.
+
+Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Anime.js** ou ajustar a direção de arte da página. O que prefere que façamos primeiro?`,
+        suggestions: [
+          "Ativar seção de Vista Explodida (Anime.js)",
+          "Ajustar paleta para estilo Lendora CRM",
+          "Reescrever a headline com copywriting sensorial",
+        ],
+      };
+    }
+
+    // 2. Fallback de Atualização Direta - Deconstrução com Anime.js
+    if (isDeconstruction) {
+      const isArchitecture = /casa|planta|im[oó]vel|arquitetura/i.test(instruction);
+      const isBurger = /hamb[uú]rguer|burger|lanche|comida/i.test(instruction);
+      const isCar = /carro|ve[ií]culo|auto|moto/i.test(instruction);
+
+      const category = isArchitecture ? "architecture" : isBurger ? "gastronomy" : isCar ? "automotive" : "custom";
+      const headline = isArchitecture
+        ? "Engenharia Arquitetônica Desconstruída"
+        : isBurger
+        ? "Arquitetura do Sabor em Camadas"
+        : isCar
+        ? "Engenharia e Performance Desconstruída"
+        : "Precisão Estrutural em Camadas";
+
+      const layers = isArchitecture
+        ? [
+            { id: "l_1", tag: "[CAMADA 01]", icon: "🏛️", name: "Cobertura & Conforto Térmico", detail: "Isolamento termoacústico e telhado com captação solar." },
+            { id: "l_2", tag: "[CAMADA 02]", icon: "📐", name: "Planta Baixa & Layout dos Ambientes", detail: "Integração fluida de espaços com iluminação natural." },
+            { id: "l_3", tag: "[CAMADA 03]", icon: "⚙️", name: "Infraestrutura Hidráulica & Automação", detail: "Tubulações inteligentes embutidas com redundância." },
+            { id: "l_4", tag: "[CAMADA 04]", icon: "🧱", name: "Fundações & Radier Estrutural", detail: "Cálculo milimétrico de carga para durabilidade de décadas." },
+          ]
+        : isBurger
+        ? [
+            { id: "l_1", tag: "[CAMADA 01]", icon: "🍞", name: "Pão Brioche Selado na Manteiga", detail: "Massa leve e dourada com fermentação artesanal." },
+            { id: "l_2", tag: "[CAMADA 02]", icon: "🧀", name: "Cheddar Inglês Cremoso", detail: "Queijo derretido no ponto exato sobre a carne." },
+            { id: "l_3", tag: "[CAMADA 03]", icon: "🥩", name: "Blend Especial 180g na Brasa", detail: "Corte nobre com crostinha defumada e suculência máxima." },
+            { id: "l_4", tag: "[CAMADA 04]", icon: "🥓", name: "Bacon Crocante Artesanal", detail: "Fatias espessas defumadas por 8 horas em lenha nobre." },
+          ]
+        : [
+            { id: "l_1", tag: "[CAMADA 01]", icon: "✨", name: "Camada Superior & Acabamento", detail: "Superfície de alta precisão com acabamento aeroespacial." },
+            { id: "l_2", tag: "[CAMADA 02]", icon: "⚙️", name: "Mecanismo Central Ativo", detail: "Distribuição inteligente de força e absorção de impacto." },
+            { id: "l_3", tag: "[CAMADA 03]", icon: "🔬", name: "Núcleo de Engenharia & Rigidez", detail: "Estrutura principal projetada para máxima eficiência." },
+          ];
+
+      return {
+        actionType: "direct_update",
+        agentMessage: `Pronto! Ativei ao vivo no Studio a seção de **Vista Explodida com Anime.js** (${headline}). As camadas foram sincronizadas com controles de interatividade para o cliente visualizar a estrutura técnica em detalhes.`,
+        updatedData: {
+          deconstruction: {
+            headline,
+            tagline: "VISTA EXPLODIDA INTERATIVA • ANIME.JS",
+            subtitle: "Clique nas camadas para explorar cada elemento estrutural em detalhe e profundidade.",
+            category,
+            layers,
+          },
+        },
+        suggestions: ["Ajustar as cores da página", "Reescrever a headline principal"],
+      };
+    }
+
+    // 3. Fallback de Atualização Direta - Tema e Cores
+    if (isColorOrTheme && !isProposal) {
+      const isGold = /dourad|ouro|gold|luxo/i.test(instruction);
+      const isBlue = /azul|blue|ciano/i.test(instruction);
+      const isGreen = /verde|green|esmeralda/i.test(instruction);
+      const isLight = /claro|light|branco/i.test(instruction);
+
+      const accent = isGold ? "#f59e0b" : isBlue ? "#00f0ff" : isGreen ? "#10b981" : "#f59e0b";
+      const bg = isLight ? "#f8fafc" : "#09090b";
+
+      return {
+        actionType: "direct_update",
+        agentMessage: `Apliquei a nova paleta de design diretamente na sua página ao vivo! O fundo foi ajustado para ${isLight ? "modo claro editorial" : "modo escuro Lendora CRM (#09090b)"} com acento em ${accent}.`,
+        updatedData: {
+          theme: {
+            ...currentData.theme,
+            bg,
+            accent,
+            borderStyle: "glass",
+            mode: isLight ? "light" : "dark",
+          },
+        },
+        suggestions: ["Ativar Vista Explodida (Anime.js)", "Ajustar textos do Hero"],
+      };
+    }
+
+    // 4. Fallback de Proposta Conceitual Completa (Opção A e Opção B)
     const planId = `plan_${Date.now()}`;
-    const isLightRequested = /branco|claro|light|clean/i.test(instruction);
-    const isGoldRequested = /dourad|ouro|gold|luxo|nobre/i.test(instruction);
-    const isBlueRequested = /azul|blue|mar|celeste/i.test(instruction);
-    const isGreenRequested = /verde|green|natural|sa[uú]de/i.test(instruction);
-
-    const accentA = isGoldRequested ? "#f59e0b" : isBlueRequested ? "#0284c7" : isGreenRequested ? "#10b981" : currentData.theme.accent || "#f59e0b";
-    const bgA = isLightRequested ? "#f8fafc" : "#0a0a0c";
-
-    const nameA = instruction.length > 5 && instruction.length < 35 ? `Conceito: ${instruction}` : `Atmosfera Nobre & Herança`;
-    const nameB = `Vanguarda Contemporânea & Impacto`;
-
     const optionA: CinematicConceptOption = {
       id: "option_a",
-      name: nameA,
-      tagline: isLightRequested ? "CLEAN & EDITORIAL" : "CLÁSSICO SENSORIAL",
-      palette: {
-        bg: bgA,
-        accent: accentA,
-        cardBg: isLightRequested ? "#ffffff" : "#121217",
-      },
+      name: "Atmosfera Nobre & Herança Sensorial",
+      tagline: "CLÁSSICO SENSORIAL",
+      palette: { bg: "#0a0a0c", accent: "#f59e0b", cardBg: "#121217" },
       typography: "serif",
-      vibe: isLightRequested ? "Design limpo, editorial e iluminação suave de alta sofisticação." : "Elegante, intimista com acabamento refinado e acolhedor.",
-      heroHeadline: currentData.hero?.headline && currentData.hero.headline !== "Nome da Empresa Aqui"
-        ? currentData.hero.headline
-        : `A Experiência Autêntica da ${businessName}`,
+      vibe: "Elegante, intimista com acabamento refinado e acolhedor.",
+      heroHeadline: `A Excelência Autêntica da ${businessName}`,
       previewData: {
         ...currentData,
-        archetype: isLightRequested ? "luxury-editorial" : (currentData.archetype || "luxury-editorial"),
+        archetype: "luxury-editorial",
         theme: {
           ...currentData.theme,
-          bg: bgA,
-          accent: accentA,
-          secondaryAccent: isLightRequested ? "#0284c7" : "#fbbf24",
+          bg: "#0a0a0c",
+          accent: "#f59e0b",
           fontHeading: "serif",
           borderStyle: "glass",
-          mode: isLightRequested ? "light" : "dark",
         },
         hero: {
           ...currentData.hero,
-          title: currentData.hero?.headline && currentData.hero.headline !== "Nome da Empresa Aqui"
-            ? currentData.hero.headline
-            : `A Experiência Autêntica da ${businessName}`,
-          subtitle: currentData.hero.subtitle || "Onde o tempo desacelera para dar lugar à contemplação dos sentidos, atendimento com hora marcada e à excelência autoral.",
-          tagline: "EXPERIÊNCIA EXCLUSIVA",
-          floatingBadge: currentData.hero.floatingBadge || "● ABERTO AGORA • HORA MARCADA",
+          title: `A Excelência Autêntica da ${businessName}`,
+          subtitle: "Onde o tempo desacelera para dar lugar à contemplação dos sentidos, atendimento com hora marcada e à excelência autoral.",
+          floatingBadge: "★ 4.9 NO GOOGLE • EXCLUSIVIDADE",
         },
-        highlights: currentData.highlights && currentData.highlights.length > 0 ? currentData.highlights : [
-          {
-            id: "h1",
-            title: "Experiência Signature",
-            description: "Atendimento completo e individualizado, respeitando o tempo de cadeira e a personalização de cada detalhe.",
-            price: "A partir de R$ 180",
-            badge: "1h 30m • Mais Pedido",
-          },
-          {
-            id: "h2",
-            title: "Protocolo Revitalizante",
-            description: "Diagnóstico preciso com aplicação de técnicas e insumos de padrão internacional de alta performance.",
-            price: "R$ 290",
-            badge: "1h • Exclusivo",
-          },
-          {
-            id: "h3",
-            title: "Pacote VIP Completo",
-            description: "Imersão premium sob medida com consultoria de estilo e comodidades especiais para ocasiões inesquecíveis.",
-            price: "Consulte",
-            badge: "Edição Premium",
-          },
-        ],
-        comparison: {
-          headline: "Nosso Padrão vs. O Mercado Tradicional",
-          usLabel: businessName,
-          othersLabel: "Convencional",
-          rows: [
-            { feature: "Atendimento individual com hora marcada (zero filas)", us: true, others: false },
-            { feature: "Insumos e produtos originais de alta performance", us: true, others: false },
-            { feature: "Ambiente reservado com acústica e café especial", us: true, others: false },
-            { feature: "Tempo de cadeira respeitado com rigor", us: true, others: false },
-          ],
-        },
-        faq: [
-          {
-            question: "Como funciona a tolerância de horário e pontualidade?",
-            answer: "Trabalhamos com agenda rigorosamente pontual e tolerância de 15 minutos para garantir que cada cliente usufrua de sua experiência sem pressa.",
-          },
-          {
-            question: "Qual a política para cancelamentos ou reagendamentos?",
-            answer: "Solicitamos aviso prévio de até 24 horas para que possamos realocar a vaga sem comprometer a sua reserva ou a de outros clientes.",
-          },
-          {
-            question: "Quais formas de pagamento são aceitas?",
-            answer: "Aceitamos Pix, cartões de crédito e débito com parcelamento facilitado em procedimentos de maior valor.",
-          },
-        ],
       },
     };
 
     const optionB: CinematicConceptOption = {
       id: "option_b",
-      name: nameB,
+      name: "Vanguarda Tecnológica & Linhas Puras",
       tagline: "MINIMALISMO ARROJADO",
-      palette: {
-        bg: "#070709",
-        accent: "#e2e8f0",
-        cardBg: "#0f0f14",
-      },
+      palette: { bg: "#070709", accent: "#38bdf8", cardBg: "#0f0f14" },
       typography: "sans",
-      vibe: "Estética pura, formas arquitetônicas contemporâneas e alta autoridade.",
+      vibe: "Estética contemporânea, rigor milimétrico e alta autoridade.",
       heroHeadline: `A Nova Assinatura da ${businessName}`,
       previewData: {
         ...currentData,
-        archetype: "clean-biotech",
+        archetype: "cyber-tech",
         theme: {
           ...currentData.theme,
           bg: "#070709",
-          accent: "#e2e8f0",
-          secondaryAccent: "#38bdf8",
+          accent: "#38bdf8",
           fontHeading: "sans",
           borderStyle: "pill",
         },
@@ -815,49 +808,13 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
           ...currentData.hero,
           title: `A Nova Assinatura da ${businessName}`,
           subtitle: "Design contemporâneo, rigor milimétrico e precisão para quem não aceita o comum. Atendimento com agendamento direto.",
-          tagline: "ESTÉTICA PURA 2026",
           floatingBadge: "● VAGAS PARA ESTA SEMANA",
         },
-        highlights: currentData.highlights && currentData.highlights.length > 0 ? currentData.highlights : [
-          {
-            id: "hb1",
-            title: "Procedimento Estrutural",
-            description: "Calibragem e acabamento com rigor técnico, garantindo resultado duradouro e previsível.",
-            price: "A partir de R$ 220",
-            badge: "45 min",
-          },
-          {
-            id: "hb2",
-            title: "Tratamento de Precisão",
-            description: "Metodologia rápida, assertiva e sem excessos para clientes que valorizam agilidade e sofisticação.",
-            price: "R$ 380",
-            badge: "1h 15m",
-          },
-        ],
-        comparison: {
-          headline: "Metodologia de Precisão vs. O Comum",
-          usLabel: businessName,
-          othersLabel: "Mercado Padrão",
-          rows: [
-            { feature: "Metodologia autoral testada e comprovada", us: true, others: false },
-            { feature: "Agendamento ágil diretamente pelo WhatsApp", us: true, others: false },
-            { feature: "Transparência total em valores e etapas", us: true, others: false },
-          ],
-        },
-        faq: [
-          {
-            question: "Como agendar um horário?",
-            answer: "Basta clicar no botão de WhatsApp. Nossa equipe confirma a disponibilidade em poucos minutos.",
-          },
-          {
-            question: "Há estacionamento ou fácil acesso no local?",
-            answer: "Sim, estamos em localização estratégica com fácil estacionamento nas proximidades.",
-          },
-        ],
       },
     };
 
     return {
+      actionType: "proposal_plan",
       agentMessage: `Analisei o posicionamento da ${businessName} e estruturei duas abordagens conceituais exclusivas. A Opção A traz uma narrativa contemplativa e calorosa com tipografia editorial. A Opção B aposta em contraste contemporâneo e linhas puras. Você pode espiar a prévia de qualquer uma no canvas ao vivo ou aprovar a sua favorita para aplicá-la em definitivo.`,
       plan: {
         id: planId,
@@ -875,8 +832,14 @@ RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU COMENT
         ],
         options: [optionA, optionB],
       },
+      suggestions: [
+        "Aprovar Opção A",
+        "Aprovar Opção B",
+        "Ativar seção de Vista Explodida (Anime.js)",
+      ],
     };
   });
+
 
 export interface ExtractedServiceItem {
   title: string;

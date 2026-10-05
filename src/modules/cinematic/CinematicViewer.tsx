@@ -22,6 +22,7 @@ import {
   Zap,
 } from "lucide-react";
 import { CinematicMarquee } from "./CinematicMarquee";
+import { TechnicalBlueprintSection } from "./components/TechnicalBlueprintSection";
 
 interface CinematicViewerProps {
   data: CinematicPageData;
@@ -519,6 +520,16 @@ export function CinematicViewer({ data, isEmbedded = false, className = "" }: Ci
           speed={marqueeDuration}
           isLight={isLight}
           accentColor={accentColor}
+        />
+      )}
+
+      {/* 2.5 SEÇÃO TÉCNICA BLUEPRINT / RAIO-X ESTILO REEBOK NANO X3 */}
+      {data.blueprint && (
+        <TechnicalBlueprintSection
+          blueprint={data.blueprint}
+          accentColor={accentColor}
+          isLight={isLight}
+          businessName={data.businessName}
         />
       )}
 

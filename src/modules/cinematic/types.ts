@@ -74,6 +74,22 @@ export interface CinematicHighlight {
   image?: string;
 }
 
+export interface TechnicalCallout {
+  id: string;
+  tag: string; // Ex: "[SPEC::01]"
+  title: string; // Ex: "SISTEMA DE RESPOSTA DINÂMICA"
+  description: string; // Ex: "Densidade dupla com retorno de energia calibrado"
+  position?: { x: number; y: number }; // % relativo na imagem/produto (0-100)
+}
+
+export interface TechnicalBlueprintSection {
+  headline?: string;
+  tagline?: string;
+  subtitle?: string;
+  productImage?: string;
+  specs: TechnicalCallout[];
+}
+
 export interface CinematicPageData {
   id?: string;
   businessName: string;
@@ -102,6 +118,7 @@ export interface CinematicPageData {
   manifesto?: CinematicManifesto;
   marquee?: MarqueeItem[];
   marqueeSpeed?: number;
+  blueprint?: TechnicalBlueprintSection; // Seção de Raio-X Técnico / Engenharia estilo Reebok NANO X3
   bentoGrid?: BentoCard[];
   highlights: CinematicHighlight[];
   comparison?: {

@@ -33,6 +33,7 @@ import {
   MessageCircle,
   Zap,
   Sun,
+  Crosshair,
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -1266,6 +1267,54 @@ export default function CinematicStudioPage() {
                       >
                         <span>🎯 Headline Magnética</span>
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setData((prev) => ({
+                            ...prev,
+                            blueprint: prev.blueprint
+                              ? undefined
+                              : {
+                                  tagline: "[SPEC::BLUEPRINT] ARQUITETURA & PRECISÃO",
+                                  headline: `Engenharia & Rigor • ${prev.businessName || "Alta Performance"}`,
+                                  subtitle: "Cada dimensão foi calibrada milimetricamente para superar os limites do padrão convencional.",
+                                  productImage: prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
+                                  specs: [
+                                    {
+                                      id: "spec_1",
+                                      tag: "[SPEC::01]",
+                                      title: "RESPOSTA DINÂMICA",
+                                      description: "Calibragem biomecânica de precisão e retorno energético imediato sob alta intensidade.",
+                                    },
+                                    {
+                                      id: "spec_2",
+                                      tag: "[SPEC::02]",
+                                      title: "ESTRUTURA INDEFORMÁVEL",
+                                      description: "Composição de polímero aeroespacial com resistência extrema ao desgaste e deformações.",
+                                    },
+                                    {
+                                      id: "spec_3",
+                                      tag: "[SPEC::03]",
+                                      title: "TRAÇÃO MULTIDIRECIONAL",
+                                      description: "Geometria de contato contínuo com dispersão ativa para máxima estabilidade em qualquer superfície.",
+                                    },
+                                    {
+                                      id: "spec_4",
+                                      tag: "[SPEC::04]",
+                                      title: "VENTILAÇÃO TERMOATIVA",
+                                      description: "Fluxo de troca de calor acelerado que preserva a temperatura ideal durante todo o ciclo.",
+                                    },
+                                  ],
+                                },
+                          }));
+                          toast.success("Seção de Raio-X Técnico (Reebok Style) alternada com sucesso!");
+                        }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
+                      >
+                        <Crosshair className="h-3 w-3 text-amber-400" />
+                        <span>🔬 Raio-X de Engenharia</span>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -1634,6 +1683,54 @@ export default function CinematicStudioPage() {
                     className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
                   >
                     <span>💎 Sugerir Serviços</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setData((prev) => ({
+                        ...prev,
+                        blueprint: prev.blueprint
+                          ? undefined
+                          : {
+                              tagline: "[SPEC::BLUEPRINT] ARQUITETURA & PRECISÃO",
+                              headline: `Engenharia & Rigor • ${prev.businessName || "Alta Performance"}`,
+                              subtitle: "Cada dimensão foi calibrada milimetricamente para superar os limites do padrão convencional.",
+                              productImage: prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
+                              specs: [
+                                {
+                                  id: "spec_1",
+                                  tag: "[SPEC::01]",
+                                  title: "RESPOSTA DINÂMICA",
+                                  description: "Calibragem biomecânica de precisão e retorno energético imediato sob alta intensidade.",
+                                },
+                                {
+                                  id: "spec_2",
+                                  tag: "[SPEC::02]",
+                                  title: "ESTRUTURA INDEFORMÁVEL",
+                                  description: "Composição de polímero aeroespacial com resistência extrema ao desgaste e deformações.",
+                                },
+                                {
+                                  id: "spec_3",
+                                  tag: "[SPEC::03]",
+                                  title: "TRAÇÃO MULTIDIRECIONAL",
+                                  description: "Geometria de contato contínuo com dispersão ativa para máxima estabilidade em qualquer superfície.",
+                                },
+                                {
+                                  id: "spec_4",
+                                  tag: "[SPEC::04]",
+                                  title: "VENTILAÇÃO TERMOATIVA",
+                                  description: "Fluxo de troca de calor acelerado que preserva a temperatura ideal durante todo o ciclo.",
+                                },
+                              ],
+                            },
+                      }));
+                      toast.success("Seção de Raio-X Técnico (Reebok Style) alternada com sucesso!");
+                    }}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
+                  >
+                    <Crosshair className="h-3 w-3 text-amber-400" />
+                    <span>🔬 Raio-X de Engenharia</span>
                   </button>
                 </div>
 

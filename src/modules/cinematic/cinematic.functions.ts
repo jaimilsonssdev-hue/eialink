@@ -191,7 +191,7 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
   ]
 }`;
 
-        const models = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-3.5-flash"];
+        const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
         for (const model of models) {
           try {
             const resp = await fetch(
@@ -527,19 +527,26 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
       ""
     ).trim();
 
-    if (apiKey) {
-      try {
-        const prompt = `Você é o Agente Diretor de Arte Criativo, Arquiteto de Software e Parceiro de Design da plataforma EIA Link.
-Você está dialogando em tempo real com o usuário no Cinematic Studio para conceber e refinar a experiência digital de alta conversão do negócio "${businessName}" (Nicho: "${niche}").
+    if (!apiKey) {
+      return {
+        actionType: "conversation",
+        agentMessage: `⚠️ **Para conversarmos em tempo real e eu gerar o design como o ChatGPT ou Claude, conecte sua chave do Google Gemini.**
+
+Clique no botão **🔑 Conectar IA** no topo da tela para colar sua chave. Você pode gerar uma gratuitamente em menos de 10 segundos no [Google AI Studio](https://aistudio.google.com/app/apikey). Assim que conectar, terei inteligência total para conversar, criar e transformar seu site ao vivo!`,
+        suggestions: [
+          "Como pegar chave gratuita no Google AI Studio?",
+          "Ativar seção de Vista Explodida (Anime.js)",
+        ],
+      };
+    }
+
+    try {
+      const systemPrompt = `Você é o Agente Diretor de Arte Criativo, Arquiteto de Software e Parceiro de Design da plataforma EIA Link.
+Você é uma IA generativa de altíssimo nível (com a mesma profundidade, naturalidade e fluidez que o Claude 3.7 Sonnet e ChatGPT 4o).
+Você está dialogando em tempo real com o usuário no Cinematic Studio para conceber, debater e refinar a experiência digital de alta conversão do negócio "${businessName}" (Nicho: "${niche}").
 
 ESTADO ATUAL DA PÁGINA (CinematicPageData):
 ${JSON.stringify(currentData, null, 2)}
-
-HISTÓRICO RECENTE DA CONVERSA:
-${JSON.stringify(conversationHistory.slice(-6), null, 2)}
-
-MENSAGEM ATUAL DO USUÁRIO:
-"""${instruction}"""
 
 SUA CAIXA DE FERRAMENTAS & RECURSOS NO SISTEMA:
 1. ANIME.JS v4 & VISTA EXPLODIDA EM CAMADAS ('deconstruction'):
@@ -572,7 +579,7 @@ Analise o contexto e a mensagem do usuário e responda sob UMA das 3 modalidades
 
 MODALIDADE A: "conversation" (Dúvidas, Opiniões, Brainstorming, Consultoria de Design)
 - Ative quando o usuário fizer perguntas, pedir sua opinião ("o que você acha?", "qual biblioteca usar?", "como podemos animar?", "dá pra fazer isso com animejs?", "me dá ideias", "como ficaria uma clínica?").
-- AJA COMO UM PARCEIRO E TECH LEAD: converse abertamente, analise alternativas, cite as ferramentas do sistema (Anime.js, Three.js, GSAP, Lendora UI, Reebok NANO X3), proponha caminhos e pergunte como o usuário prefere proceder.
+- AJA COMO UM PARCEIRO E TECH LEAD: converse abertamente com inteligência real, analise alternativas, cite as ferramentas do sistema (Anime.js, Three.js, GSAP, Lendora UI, Reebok NANO X3), proponha caminhos e pergunte como o usuário prefere proceder.
 - NÃO altere os dados do site sem o comando dele.
 - Retorne no JSON:
   {
@@ -616,47 +623,118 @@ MODALIDADE C: "proposal_plan" (Geração de Novas Alternativas Conceituais / Pit
 
 RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
 
-        const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
-        for (const model of models) {
-          try {
-            const resp = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
-                apiKey
-              )}`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  contents: [{ role: "user", parts: [{ text: prompt }] }],
-                  generationConfig: { responseMimeType: "application/json", temperature: 0.6 },
-                }),
-              }
-            );
+      // Monta histórico de conversação com alternância correta de turnos (user / model)
+      const validHistory = conversationHistory.filter((h) => h.text && h.text.trim().length > 0);
+      const contentsPayload: Array<{ role: "user" | "model"; parts: [{ text: string }] }> = [];
 
-            if (resp.ok) {
-              const resJson = await resp.json();
-              const textOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (textOutput) {
-                const parsed = JSON.parse(textOutput);
-                if (parsed.actionType && parsed.agentMessage) {
-                  return {
-                    actionType: parsed.actionType,
-                    agentMessage: parsed.agentMessage,
-                    updatedData: parsed.updatedData,
-                    plan: parsed.plan,
-                    suggestions: parsed.suggestions,
-                  };
+      for (const turn of validHistory.slice(-8)) {
+        const geminiRole = turn.sender === "agent" ? "model" : "user";
+        const last = contentsPayload[contentsPayload.length - 1];
+        if (last && last.role === geminiRole) {
+          last.parts[0].text += `\n${turn.text}`;
+        } else {
+          contentsPayload.push({ role: geminiRole, parts: [{ text: turn.text }] });
+        }
+      }
+
+      // Adiciona o turno atual do usuário
+      if (contentsPayload.length > 0 && contentsPayload[contentsPayload.length - 1].role === "user") {
+        contentsPayload[contentsPayload.length - 1].parts[0].text += `\n${instruction}`;
+      } else {
+        contentsPayload.push({ role: "user", parts: [{ text: instruction }] });
+      }
+
+      const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+      for (const model of models) {
+        try {
+          const resp = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
+              apiKey
+            )}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                system_instruction: { parts: [{ text: systemPrompt }] },
+                contents: contentsPayload,
+                generationConfig: { responseMimeType: "application/json", temperature: 0.6 },
+              }),
+            }
+          );
+
+          if (resp.ok) {
+            const resJson = await resp.json();
+            const textOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (textOutput) {
+              let cleaned = textOutput.trim();
+              if (cleaned.startsWith("```json")) {
+                cleaned = cleaned.replace(/^```json\s*/i, "").replace(/```\s*$/, "");
+              } else if (cleaned.startsWith("```")) {
+                cleaned = cleaned.replace(/^```\s*/, "").replace(/```\s*$/, "");
+              }
+
+              let parsed: any = null;
+              try {
+                parsed = JSON.parse(cleaned);
+              } catch {
+                const match = cleaned.match(/\{[\s\S]*\}/);
+                if (match) {
+                  try {
+                    parsed = JSON.parse(match[0]);
+                  } catch (e) {
+                    console.warn("[CreativePitch] Falha ao parsear regex json:", e);
+                  }
                 }
               }
+
+              if (parsed && (parsed.actionType || parsed.agentMessage)) {
+                return {
+                  actionType: parsed.actionType || "conversation",
+                  agentMessage: parsed.agentMessage || textOutput,
+                  updatedData: parsed.updatedData,
+                  plan: parsed.plan,
+                  suggestions: parsed.suggestions || [
+                    "Aplicar essas alterações na página",
+                    "Ativar seção com Anime.js",
+                    "Refinar direção de arte",
+                  ],
+                };
+              }
+
+              // Se o Gemini gerou resposta conversacional direta sem JSON estrito:
+              if (textOutput.trim().length > 5) {
+                return {
+                  actionType: "conversation",
+                  agentMessage: textOutput.replace(/```json/gi, "").replace(/```/g, "").trim(),
+                  suggestions: [
+                    "Aplicar essas ideias no site",
+                    "Ativar vista explodida (Anime.js)",
+                    "Ajustar paleta de cores",
+                  ],
+                };
+              }
             }
-          } catch (modelErr) {
-            console.warn(`[CreativePitch] Falha com modelo ${model}:`, modelErr);
+          } else {
+            const errBody = await resp.text();
+            console.warn(`[CreativePitch] Erro HTTP ${resp.status} no modelo ${model}:`, errBody);
+            if (resp.status === 400 || resp.status === 403) {
+              if (errBody.includes("API_KEY_INVALID") || errBody.includes("API key not valid")) {
+                return {
+                  actionType: "conversation",
+                  agentMessage: `⚠️ **A chave do Google Gemini conectada não é válida ou foi revogada.**\n\nPor favor, gere uma nova chave gratuita no [Google AI Studio](https://aistudio.google.com/app/apikey) e clique em **🔑 Conectar IA** no topo da tela para atualizar.`,
+                  suggestions: ["Abrir Google AI Studio", "Como pegar chave gratuita"],
+                };
+              }
+            }
           }
+        } catch (modelErr) {
+          console.warn(`[CreativePitch] Falha com modelo ${model}:`, modelErr);
         }
-      } catch (err) {
-        console.warn("[CreativePitch] Erro na chamada com IA:", err);
       }
+    } catch (err) {
+      console.warn("[CreativePitch] Erro na chamada com IA:", err);
     }
+
 
     // Heurística Fallback inteligente com Intent Classification se a API falhar
     const isQuestion = /\?|o que você acha|qual|como|opini|ideia|pense|dá pra|consegue|expli/i.test(instruction);

@@ -19,10 +19,12 @@ import {
   Bot,
   Plus,
   X,
+  KeyRound,
   Video,
   FileText,
   ChevronDown,
   Eye,
+  EyeOff,
   ArrowUp,
   ArrowLeft,
   Trash2,
@@ -39,6 +41,13 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { PageService } from "@/modules/page/services/PageService";
+import {
+  getSavedGeminiKey,
+  saveGeminiKey,
+  removeGeminiKey,
+  testGeminiKey,
+  GEMINI_KEY_UPDATED_EVENT,
+} from "@/modules/prospecting/GeminiAuditorService";
 import type {
   CinematicPageData,
   CinematicGalleryItem,
@@ -286,6 +295,61 @@ export default function CinematicStudioPage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [isRefiningAi, setIsRefiningAi] = useState(false);
   const [messages, setMessages] = useState<StudioChatMessage[]>([]);
+  const [geminiKey, setGeminiKey] = useState<string>(() => getSavedGeminiKey() || "");
+  const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
+  const [inputKey, setInputKey] = useState<string>("");
+  const [isTestingKey, setIsTestingKey] = useState(false);
+  const [showKeyPassword, setShowKeyPassword] = useState(false);
+
+  // Sincroniza chave da IA quando atualizada em qualquer tela
+  useEffect(() => {
+    const handleKeyUpdated = () => {
+      setGeminiKey(getSavedGeminiKey() || "");
+    };
+    window.addEventListener(GEMINI_KEY_UPDATED_EVENT, handleKeyUpdated);
+    return () => window.removeEventListener(GEMINI_KEY_UPDATED_EVENT, handleKeyUpdated);
+  }, []);
+
+  const handleSaveGeminiKey = () => {
+    const clean = inputKey.trim();
+    if (!clean) {
+      toast.error("Por favor, cole sua chave da API do Google Gemini.");
+      return;
+    }
+    saveGeminiKey(clean);
+    setGeminiKey(clean);
+    setShowKeyModal(false);
+    toast.success("Chave da IA conectada com sucesso! O Copiloto agora opera com inteligência generativa total.");
+  };
+
+  const handleTestGeminiKey = async () => {
+    const clean = inputKey.trim();
+    if (!clean) {
+      toast.error("Insira a chave antes de testar.");
+      return;
+    }
+    setIsTestingKey(true);
+    try {
+      const res = await testGeminiKey(clean);
+      if (res.ok) {
+        toast.success(res.message || "Conexão com Google AI validada!");
+      } else {
+        toast.error(res.message || "Falha na validação da chave.");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao testar chave.");
+    } finally {
+      setIsTestingKey(false);
+    }
+  };
+
+  const handleRemoveGeminiKey = () => {
+    removeGeminiKey();
+    setGeminiKey("");
+    setInputKey("");
+    setShowKeyModal(false);
+    toast.info("Chave da IA removida.");
+  };
 
   // Prévia Temporária de Opção (Espiar antes de aprovar)
   const [temporaryPreview, setTemporaryPreview] = useState<{
@@ -707,7 +771,10 @@ export default function CinematicStudioPage() {
         text: m.text,
       }));
 
-      const clientApiKey = typeof window !== "undefined" ? localStorage.getItem("eialink_gemini_api_key") : null;
+      const activeKey = (geminiKey || getSavedGeminiKey() || "").trim();
+      if (!activeKey) {
+        setShowKeyModal(true);
+      }
 
       const pitch = await createCreativePitchFn({
         data: {
@@ -716,7 +783,7 @@ export default function CinematicStudioPage() {
           userMessage: promptToUse,
           currentData: data,
           conversationHistory: history,
-          apiKey: clientApiKey || undefined,
+          apiKey: activeKey || undefined,
         },
       });
 
@@ -1141,11 +1208,30 @@ export default function CinematicStudioPage() {
             </a>
           )}
 
+          {/* Status e Conexão da IA (Chave Gemini) */}
+          <button
+            type="button"
+            onClick={() => {
+              setInputKey(geminiKey || getSavedGeminiKey() || "");
+              setShowKeyModal(true);
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
+              geminiKey
+                ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
+                : "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25 animate-pulse"
+            }`}
+            title={geminiKey ? "Cérebro da IA Conectado (Google Gemini)" : "Conectar Chave da IA (Google Gemini)"}
+          >
+            <KeyRound className="h-3.5 w-3.5 shrink-0" />
+            <span className="hidden sm:inline">{geminiKey ? "IA Conectada" : "Conectar IA"}</span>
+            <span className="sm:hidden">{geminiKey ? "IA" : "🔑 IA"}</span>
+          </button>
+
           <button
             type="button"
             onClick={handleSaveAndPublish}
             disabled={isSaving}
-            className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 font-medium text-xs px-3 sm:px-3.5 py-1.5 rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50"
+            className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 font-medium text-xs px-3 sm:px-3.5 py-1.5 rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
             {isSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
             <span>{isSaving ? "Publicando..." : "Publicar"}</span>
@@ -1227,9 +1313,32 @@ export default function CinematicStudioPage() {
                     <h2 className="text-xl sm:text-2xl font-serif tracking-tight text-zinc-100 font-normal mb-2">
                       {getGreeting()}
                     </h2>
-                    <p className="text-xs text-zinc-400 mb-6">
+                    <p className="text-xs text-zinc-400 mb-4">
                       Como posso ajudar a transformar sua vitrine digital hoje?
                     </p>
+
+                    {!geminiKey && (
+                      <div className="mb-5 p-3.5 rounded-xl border border-amber-500/35 bg-amber-500/10 text-left max-w-sm w-full backdrop-blur-sm shadow-lg shadow-amber-950/20">
+                        <div className="flex items-center gap-2 text-amber-300 font-semibold text-xs mb-1.5">
+                          <KeyRound className="h-4 w-4 shrink-0 text-amber-400" />
+                          <span>Ativar Inteligência Generativa (IA)</span>
+                        </div>
+                        <p className="text-[11px] text-zinc-300 leading-relaxed mb-3">
+                          Para eu dialogar como o ChatGPT ou Claude, entender comandos livres e desenhar o site ao vivo, conecte sua chave do Google Gemini (100% gratuita).
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setInputKey(getSavedGeminiKey() || "");
+                            setShowKeyModal(true);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold text-xs transition-colors shadow-sm cursor-pointer active:scale-98"
+                        >
+                          <KeyRound className="h-3.5 w-3.5" />
+                          <span>Conectar Chave Gratuita (10s)</span>
+                        </button>
+                      </div>
+                    )}
 
                     <div className="flex flex-wrap items-center justify-center gap-1.5 pt-1">
                       <button
@@ -1654,7 +1763,7 @@ export default function CinematicStudioPage() {
               </div>
 
               {/* Barra de Entrada no Rodapé (Footer Chat Bar estilo Lovable / Claude Code) */}
-              <div className="shrink-0 bg-zinc-950 px-2.5 pt-1.5 pb-[max(0.4rem,env(safe-area-inset-bottom))] border-t border-zinc-800/80">
+              <div className="shrink-0 bg-zinc-950/98 backdrop-blur-xl px-2.5 sm:px-3 pt-2 pb-[max(1.25rem,calc(env(safe-area-inset-bottom)+0.75rem))] border-t border-zinc-800/90 z-30 shadow-2xl relative">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -1909,50 +2018,51 @@ export default function CinematicStudioPage() {
                     className="w-full resize-none bg-transparent px-2.5 py-1.5 text-[13px] text-zinc-100 placeholder-zinc-500 focus:outline-none [scrollbar-width:none]"
                   />
 
-                  {/* Barra Inferior Interna da Cápsula com Botões */}
-                  <div className="flex items-center justify-between pt-1 px-1">
-                    <div className="flex items-center gap-1.5">
+                  {/* Barra Inferior Interna da Cápsula com Botões de Ação */}
+                  <div className="flex items-center justify-between pt-1.5 px-0.5 border-t border-zinc-800/60 mt-1">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                       {/* Botão de Anexo */}
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
                         title="Anexar fotos ou documento PDF (cardápio, tabela)"
-                        className="flex h-7 w-7 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-colors"
+                        className="flex h-8 items-center gap-1.5 px-2.5 rounded-lg text-zinc-300 bg-zinc-800/80 hover:bg-zinc-700/80 border border-zinc-700/50 hover:text-white transition-all text-xs font-medium cursor-pointer shadow-xs active:scale-95"
                       >
-                        <Plus className="h-4 w-4" />
+                        <Plus className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                        <span className="text-[11px] font-medium">Anexar</span>
                       </button>
 
                       {/* Botão de Google Maps */}
                       <button
                         type="button"
                         onClick={() => setShowMapsInput((prev) => !prev)}
-                        title="Importar do Google Maps"
-                        className={`flex h-7 px-2 items-center gap-1.5 rounded-lg text-xs transition-colors ${
+                        title="Importar dados e fotos do Google Maps"
+                        className={`flex h-8 items-center gap-1.5 px-2.5 rounded-lg text-xs font-medium transition-all cursor-pointer shadow-xs active:scale-95 ${
                           showMapsInput
-                            ? "bg-zinc-800 text-white font-medium"
-                            : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                            ? "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                            : "bg-zinc-800/80 text-zinc-300 hover:bg-zinc-700/80 border border-zinc-700/50 hover:text-white"
                         }`}
                       >
-                        <MapPin className="h-3.5 w-3.5" />
-                        <span className="text-[11px]">Maps</span>
+                        <MapPin className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                        <span className="text-[11px] font-medium">Maps</span>
                       </button>
                     </div>
 
-                    {/* Botão de Envio (Circular Minimalista estilo Lovable / Claude) */}
+                    {/* Botão de Envio */}
                     <button
                       type="button"
                       onClick={() => handleSendMessage()}
                       disabled={isRefiningAi || !aiPrompt.trim()}
-                      className={`flex h-7 w-7 items-center justify-center rounded-full transition-all ${
+                      className={`flex h-8 w-8 items-center justify-center rounded-full transition-all shrink-0 ${
                         aiPrompt.trim()
                           ? "bg-white text-zinc-950 font-bold shadow-md hover:bg-zinc-200 hover:scale-105 active:scale-95 cursor-pointer"
-                          : "bg-zinc-800 text-zinc-500 border border-zinc-700/60 opacity-30 cursor-not-allowed"
+                          : "bg-zinc-800 text-zinc-500 border border-zinc-700/60 opacity-40 cursor-not-allowed"
                       }`}
                     >
                       {isRefiningAi ? (
                         <RefreshCw className="h-3.5 w-3.5 animate-spin" />
                       ) : (
-                        <ArrowUp className="h-3.5 w-3.5 stroke-[2.5]" />
+                        <ArrowUp className="h-4 w-4 stroke-[2.5]" />
                       )}
                     </button>
                   </div>
@@ -3344,6 +3454,118 @@ export default function CinematicStudioPage() {
               >
                 Continuar Editando no Studio
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Conexão com Google Gemini AI */}
+      {showKeyModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400">
+                  <KeyRound className="h-4 w-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-semibold text-zinc-100">
+                    Cérebro da IA (Google Gemini)
+                  </h3>
+                  <p className="text-[11px] text-zinc-400">
+                    Inteligência generativa em tempo real para o Studio
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowKeyModal(false)}
+                className="text-zinc-500 hover:text-zinc-300 p-1.5 rounded-lg hover:bg-zinc-900 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3.5 text-xs text-zinc-300">
+              <p className="leading-relaxed">
+                Para o Copiloto dialogar livremente como o ChatGPT ou Claude, entender comandos complexos e transformar seu site ao vivo (incluindo desconstrução Anime.js, blueprints técnicos e copywriting autoral), conecte sua chave da API.
+              </p>
+
+              <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-medium text-zinc-400">Como obter sua chave gratuita:</span>
+                  <a
+                    href="https://aistudio.google.com/app/apikey"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 hover:text-amber-300 transition-colors"
+                  >
+                    <span>Google AI Studio</span>
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                <ul className="text-[11px] text-zinc-400 list-disc list-inside space-y-0.5">
+                  <li>Leva menos de 10 segundos</li>
+                  <li>100% gratuito (sem cartão de crédito)</li>
+                  <li>Clique em "Create API key" e cole o código iniciado por <code className="text-amber-300 font-mono">AIzaSy...</code></li>
+                </ul>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-zinc-300">
+                  Chave da API do Google Gemini
+                </label>
+                <div className="relative">
+                  <input
+                    type={showKeyPassword ? "text" : "password"}
+                    value={inputKey}
+                    onChange={(e) => setInputKey(e.target.value)}
+                    placeholder="Cole sua chave aqui (ex: AIzaSy...)"
+                    className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none pr-10 font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyPassword((prev) => !prev)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
+                  >
+                    {showKeyPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80">
+              <div>
+                {geminiKey && (
+                  <button
+                    type="button"
+                    onClick={handleRemoveGeminiKey}
+                    className="text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                  >
+                    Remover chave
+                  </button>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleTestGeminiKey}
+                  disabled={isTestingKey || !inputKey.trim()}
+                  className="rounded-xl border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors disabled:opacity-40 cursor-pointer"
+                >
+                  {isTestingKey ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : "Testar Conexão"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSaveGeminiKey}
+                  disabled={!inputKey.trim()}
+                  className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 transition-all shadow-md shadow-amber-950/30 disabled:opacity-40 cursor-pointer active:scale-95"
+                >
+                  Salvar Chave
+                </button>
+              </div>
             </div>
           </div>
         </div>

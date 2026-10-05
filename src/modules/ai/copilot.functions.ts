@@ -2823,29 +2823,33 @@ ESTADO ATUAL DA PÁGINA DO USUÁRIO:
 ${JSON.stringify(simplifiedState, null, 2)}
 
 SUAS REGRAS DE OURO:
-1. INTELIGÊNCIA CONVERSACIONAL & CONSULTORIA CRIATIVA:
-   - Se o usuário estiver conversando, fazendo perguntas, pedindo sugestões ("o que você acha?", "como animar?", "dá pra fazer uma planta desconstruindo?", "qual biblioteca usar?"):
-     CONVERSE DE VERDADE como um parceiro e Diretor de Arte de alto nível! Explique com clareza como o sistema utiliza Anime.js v4 (para vista explodida em camadas de produtos/plantas), Three.js (para profundidade 3D), GSAP e a estética refinada do Lendora CRM (grafite escuro e bordas de vidro acetinado). Deixe o objeto "patch": {} vazio até o usuário pedir para aplicar.
-2. EDIÇÃO CIRÚRGICA AO VIVO (QUANDO SOLICITADA):
-   - Se o usuário pedir para alterar algo no site, aplique RIGOROSAMENTE no objeto 'patch':
-     * Cores / tema visual: 'custom_theme' (ex: { primary: "#f59e0b", background: "#09090b", mode: "dark" })
-     * Textos e headline: 'description'
-     * Nome do negócio: 'display_name'
-     * Contato: 'whatsapp' e 'whatsapp_message'
-     * Serviços e produtos: 'suggested_services'
-     * Diferenciais competitivos: 'differentials'
+1. Responda em Português do Brasil com entusiasmo, simpatia e brevidade (1 a 3 frases amigáveis) em 'assistantReply'.
+2. EDIÇÃO CIRÚRGICA (ZERO PERDA DE DADOS):
+   - Altere RIGOROSAMENTE APENAS o que o usuário pediu para mudar ou os dados da empresa extraídos.
    - NUNCA reinicie o site e NUNCA apague dados que o usuário não mencionou.
+   - Se o usuário pediu para mudar a cor, altere apenas 'custom_theme'.
+   - Se o usuário pediu para mudar o texto/headline, altere apenas 'description'.
+   - Se pediu para mudar o WhatsApp, altere apenas 'whatsapp' ou 'whatsapp_message'.
+   - Se pediu para adicionar ou alterar um serviço, faça a alteração em 'suggested_services'.
 3. COPYWRITING BRASILEIRO DE ALTA CONVERSÃO:
-   - Sem frases vazias ou clichês corporativos ("o melhor da cidade"). Use escrita persuasiva com benefícios claros e chamada direta para o WhatsApp.
+   - Se o usuário pedir para melhorar textos ou fornecer dados de empresa, use linguagem magnética, direta, humana e vendedora (Direct Response), sem jargões corporativos chatos.
 4. RETORNE RIGOROSAMENTE E APENAS O SEGUINTE JSON VÁLIDO:
 {
-  "assistantReply": "Sua resposta humana, calorosa e detalhada conversando ou explicando o que alterou...",
+  "assistantReply": "Mensagem simpática explicando de forma clara o que você ajustou na página...",
   "patch": {
-    // APENAS OS CAMPOS QUE MUDARAM. Se for apenas conversa/dúvida, retorne {}
+    // APENAS OS CAMPOS QUE MUDARAM. Exemplos:
+    // "display_name": "Novo Nome",
+    // "description": "Nova Headline Magnética",
+    // "whatsapp": "5511999999999",
+    // "whatsapp_message": "Nova mensagem de WhatsApp",
+    // "avatar_url": "https://...",
+    // "cover_url": "https://...",
+    // "custom_theme": { "primary": "#f59e0b", "background": "#0b0c10", "mode": "dark" },
+    // "suggested_services": [ ... ],
+    // "differentials": [ ... ]
   },
-  "suggestions": ["Sugestão contextual 1", "Sugestão contextual 2"]
+  "suggestions": ["Sugestão rápida 1 para o usuário clicar", "Sugestão rápida 2"]
 }`;
-
 
     const userPromptText = extractedContextInfo
       ? `INSTRUÇÃO ATUAL DO USUÁRIO: "${data.instruction}"\n\n${extractedContextInfo}\n\nIMPORTANTE: Foram obtidos dados reais e fotos da empresa. Atualize a página do usuário aplicando esses dados:

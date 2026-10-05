@@ -226,24 +226,34 @@ function Dashboard() {
 
   return (
     <div className="space-y-8 premium-dashboard">
-      <section className="premium-welcome">
-        <div>
-          <p className="eyebrow">Máquina de Vendas & Presença</p>
-          <h1>
+      {/* Lendora Hero Welcome Banner */}
+      <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-6 sm:p-8 backdrop-blur-xl shadow-lg">
+        <div className="relative z-10 max-w-3xl space-y-4">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1 text-[11px] font-semibold tracking-wider text-zinc-300 uppercase">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
+            Máquina de Vendas & Presença
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white font-display leading-tight">
             Olá, {profile?.full_name?.split(" ")[0] ?? "empreendedor"}.<br />
-            Sua presença merece <span>mais destaque.</span>
+            Sua presença merece <span className="text-zinc-200 underline decoration-amber-400/40 decoration-2 underline-offset-4">mais destaque.</span>
           </h1>
-          <p>Seus produtos no estilo Instagram, agendamento 24h e integração de balcão com WhatsApp.</p>
-          <div className="premium-welcome-actions flex-wrap gap-2.5">
-            <Link to="/studio" className="premium-cta">
+          <p className="text-sm sm:text-base text-zinc-400 max-w-2xl leading-relaxed">
+            Seus produtos no estilo Instagram, agendamento 24h e integração de balcão com WhatsApp.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            <Link
+              to="/studio"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-semibold text-xs sm:text-sm shadow-md transition-all hover:scale-[1.01]"
+            >
               <PanelsTopLeft className="h-4 w-4" /> Personalizar no Studio IA
             </Link>
             <Link
               to="/studio"
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 inline-flex items-center gap-2 transition-all hover:scale-[1.02]"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 border border-white/10 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all hover:scale-[1.01]"
               title="Gerar proposta de site completa com briefing e fotos via IA Gateway"
             >
-              <Sparkles className="h-4 w-4 text-purple-200 animate-pulse" />
+              <Sparkles className="h-4 w-4 text-purple-300" />
               <span>Gerar Proposta com Fotos (Studio IA)</span>
             </Link>
             {bio && (
@@ -255,63 +265,58 @@ function Dashboard() {
                 triggerButton={
                   <button
                     type="button"
-                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-amber-500 hover:from-amber-400 hover:to-amber-500 text-black font-extrabold text-xs shadow-lg shadow-amber-500/20 inline-flex items-center gap-2 transition-all hover:scale-[1.02] cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-zinc-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/10 transition-all hover:scale-[1.01] cursor-pointer"
                   >
-                    <Zap className="h-4 w-4 fill-black text-black" />
+                    <Zap className="h-4 w-4 fill-zinc-950 text-zinc-950" />
                     <span>⚡ Publicar Oferta (Flash / Mural)</span>
                   </button>
                 }
               />
             )}
             {bio && (
-              <a href={publicUrl} target="_blank" rel="noopener" className="premium-text-action">
-                Ver página <ExternalLink className="h-4 w-4" />
+              <a
+                href={publicUrl}
+                target="_blank"
+                rel="noopener"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
+              >
+                Ver página <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
           </div>
         </div>
-        <div className="premium-phone-teaser" aria-hidden="true">
-          <div className="premium-phone-island" />
-          <div className="premium-phone-cover" />
-          <div className="premium-phone-avatar">{(bio?.display_name ?? "E").slice(0, 1)}</div>
-          <span className="premium-phone-line is-title" />
-          <span className="premium-phone-line" />
-          <span className="premium-phone-cta">Pedir no WhatsApp</span>
-          <span className="premium-phone-link" />
-          <span className="premium-phone-link" />
-        </div>
       </section>
 
       {/* Checklist Interativo: Roteiro dos Primeiros 3 Minutos */}
-      <section className="rounded-2xl border border-violet-500/20 bg-gradient-to-br from-violet-950/40 via-card to-background p-6 shadow-md backdrop-blur-sm">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-border/60">
+      <section className="rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-6 backdrop-blur-md shadow-sm">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-4 border-b border-white/[0.06]">
           <div>
             <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-500/30 bg-violet-500/10 px-2.5 py-0.5 text-xs font-semibold text-violet-300">
-              <Zap className="h-3.5 w-3.5 text-fuchsia-400" />
+              <Zap className="h-3.5 w-3.5 text-violet-400" />
               <span>Roteiro de Ativação Rápida</span>
             </div>
-            <h2 className="text-xl font-bold font-display text-foreground mt-1.5">
+            <h2 className="text-xl font-bold font-display text-white mt-1.5">
               Complete sua Máquina em 3 Minutos
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs sm:text-sm text-zinc-400">
               Passos essenciais para colocar seus produtos na vitrine e receber pedidos no piloto automático.
             </p>
           </div>
           <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
             <div className="text-right">
-              <span className="text-xs text-muted-foreground">Progresso</span>
-              <p className="text-base font-extrabold text-violet-400">{progressPercent}% Concluído</p>
+              <span className="text-[11px] uppercase tracking-wider text-zinc-500 font-semibold">Progresso</span>
+              <p className="text-base font-bold text-white tabular-nums">{progressPercent}% Concluído</p>
             </div>
-            <div className="h-10 w-10 rounded-full border-2 border-violet-500/30 grid place-items-center font-bold text-xs text-foreground bg-surface-elevated">
+            <div className="h-10 w-10 rounded-xl border border-white/[0.08] grid place-items-center font-bold text-xs text-white bg-zinc-800/80">
               {completedSteps}/{onboardingSteps.length}
             </div>
           </div>
         </div>
 
         {/* Barra de progresso */}
-        <div className="mt-4 h-2 w-full rounded-full bg-white/5 overflow-hidden">
+        <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-violet-600 via-fuchsia-500 to-emerald-400 transition-all duration-500"
+            className="h-full bg-gradient-to-r from-violet-500 via-amber-400 to-emerald-400 transition-all duration-500"
             style={{ width: `${progressPercent}%` }}
           />
         </div>
@@ -321,42 +326,42 @@ function Dashboard() {
           {onboardingSteps.map((step, idx) => (
             <div
               key={step.id}
-              className={`rounded-xl border p-3.5 flex flex-col justify-between transition-all ${
+              className={`rounded-xl border p-4 flex flex-col justify-between transition-all ${
                 step.done
-                  ? "border-emerald-500/30 bg-emerald-500/5 text-muted-foreground"
-                  : "border-border/80 bg-card hover:border-violet-500/50 hover:bg-violet-500/[0.02]"
+                  ? "border-emerald-500/30 bg-emerald-500/[0.04] text-zinc-400"
+                  : "border-white/[0.06] bg-zinc-900/60 hover:border-white/[0.12] hover:bg-zinc-900/90"
               }`}
             >
               <div className="flex items-start gap-2.5">
                 {step.done ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
                 ) : (
-                  <Circle className="h-4 w-4 text-muted-foreground shrink-0 mt-0.5" />
+                  <Circle className="h-4 w-4 text-zinc-500 shrink-0 mt-0.5" />
                 )}
                 <div>
-                  <div className="text-xs font-bold text-foreground flex items-center gap-1.5">
+                  <div className="text-xs font-bold text-white flex items-center gap-1.5">
                     <span className="text-zinc-500">#{idx + 1}</span> {step.title}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed">
+                  <p className="text-[11px] text-zinc-400 mt-1 leading-relaxed">
                     {step.desc}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-3 pt-2 border-t border-border/40 flex justify-end">
+              <div className="mt-3 pt-2.5 border-t border-white/[0.06] flex justify-end">
                 {step.isExternal ? (
                   <a
                     href={step.link}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-300 hover:text-white transition-colors"
                   >
                     Abrir Página <ExternalLink className="h-3 w-3" />
                   </a>
                 ) : (
                   <Link
                     to={step.link}
-                    className="inline-flex items-center gap-1 text-xs font-semibold text-violet-400 hover:text-violet-300"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-300 hover:text-white transition-colors"
                   >
                     Configurar <ArrowRight className="h-3 w-3" />
                   </Link>
@@ -371,42 +376,41 @@ function Dashboard() {
       {isAdmin && (
         <section className="grid gap-4 md:grid-cols-2">
           {/* Card 1: Radar de Prospecção */}
-          <div className="rounded-2xl border border-primary/30 bg-card p-6 shadow-sm flex flex-col justify-between gap-4">
-            <div className="space-y-1.5">
+          <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-6 shadow-sm backdrop-blur-md flex flex-col justify-between gap-4">
+            <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-semibold text-emerald-400">
                 <Globe2 className="h-3.5 w-3.5" />
                 <span>Motor de Prospecção Ativo</span>
               </div>
-              <h2 className="text-xl font-bold font-display text-foreground">Radar de Prospecção</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <h2 className="text-xl font-bold font-display text-white">Radar de Prospecção</h2>
+              <p className="text-xs text-zinc-400 leading-relaxed">
                 Encontre empresas reais no Google Maps e Instagram sem site na sua cidade, crie páginas de demonstração com 1 clique e aborde com taxa recorde de resposta.
               </p>
             </div>
             <Link
               to="/admin/prospeccao"
-              className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-[color:var(--primary-foreground)] shadow transition-all hover:opacity-90 w-full sm:w-auto self-start"
-              style={{ background: "var(--gradient-primary)" }}
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold text-zinc-950 bg-white hover:bg-zinc-100 shadow transition-all w-full sm:w-auto self-start"
             >
               <Target className="h-4 w-4" /> Abrir Radar de Prospecção
             </Link>
           </div>
 
           {/* Card 2: Playbook Comercial & Gestão de Vendas */}
-          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/20 via-card to-card p-6 shadow-sm flex flex-col justify-between gap-4">
-            <div className="space-y-1.5">
+          <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-6 shadow-sm backdrop-blur-md flex flex-col justify-between gap-4">
+            <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-300">
                 <BookOpen className="h-3.5 w-3.5" />
                 <span>Estratégia & Fechamento</span>
               </div>
-              <h2 className="text-xl font-bold font-display text-foreground">Playbook Comercial (PDF)</h2>
-              <p className="text-xs text-muted-foreground leading-relaxed">
+              <h2 className="text-xl font-bold font-display text-white">Playbook Comercial (PDF)</h2>
+              <p className="text-xs text-zinc-400 leading-relaxed">
                 Roteiro completo dos primeiros 5 clientes em 7 dias, scripts de WhatsApp prontos para copiar/colar, quebra de objeções e simulador de faturamento.
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 to="/admin/vendas"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs px-4 py-2.5 shadow-sm transition-all"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 border border-white/10 text-white font-semibold text-xs px-4 py-2.5 shadow-sm transition-all"
               >
                 <BookOpen className="h-4 w-4" /> Acessar Playbook Online
               </Link>
@@ -424,15 +428,12 @@ function Dashboard() {
       )}
 
       {!bio && (
-        <div
-          className="card-glow flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
-          style={{ background: "var(--gradient-hero)" }}
-        >
+        <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-6 backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
           <div>
-            <h3 className="font-semibold text-lg">Você ainda não criou sua página.</h3>
-            <p className="text-sm text-muted-foreground mt-1">Leva 1 minuto e já fica no ar.</p>
+            <h3 className="font-semibold text-lg text-white">Você ainda não criou sua página.</h3>
+            <p className="text-sm text-zinc-400 mt-1">Leva 1 minuto e já fica no ar.</p>
           </div>
-          <Link to="/studio" className="btn-primary">
+          <Link to="/studio" className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-semibold text-sm shadow-sm transition-all">
             Criar minha página
           </Link>
         </div>
@@ -447,148 +448,148 @@ function Dashboard() {
 
       {/* Superpoderes da sua Máquina */}
       <section className="space-y-4">
-        <div className="premium-section-heading">
+        <div className="flex items-center justify-between">
           <div>
-            <p className="eyebrow">Arsenal de Conversão</p>
-            <h2>Superpoderes da sua Conta</h2>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Arsenal de Conversão</p>
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white font-display mt-0.5">Superpoderes da sua Conta</h2>
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Link
             to="/studio"
-            className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-fuchsia-500/50 hover:shadow-lg hover:-translate-y-0.5"
+            className="group rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 hover:-translate-y-0.5 shadow-sm"
           >
-            <div className="h-10 w-10 rounded-xl bg-fuchsia-500/10 text-fuchsia-400 grid place-items-center mb-3">
+            <div className="h-10 w-10 rounded-xl bg-fuchsia-500/10 border border-fuchsia-500/20 text-fuchsia-400 grid place-items-center mb-3">
               <Flame className="h-5 w-5" />
             </div>
-            <h3 className="font-bold text-foreground text-sm flex items-center justify-between">
-              Carrossel Instagram <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <h3 className="font-bold text-white text-sm flex items-center justify-between">
+              Carrossel Instagram <ArrowRight className="h-3.5 w-3.5 text-zinc-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
             </h3>
-            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
               Vitrine com fotos 4:5 deslizáveis e botão de pedido direto no WhatsApp com valor e produto selecionado.
             </p>
           </Link>
 
           <Link
             to="/agenda"
-            className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-violet-500/50 hover:shadow-lg hover:-translate-y-0.5"
+            className="group rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 hover:-translate-y-0.5 shadow-sm"
           >
-            <div className="h-10 w-10 rounded-xl bg-violet-500/10 text-violet-400 grid place-items-center mb-3">
+            <div className="h-10 w-10 rounded-xl bg-violet-500/10 border border-violet-500/20 text-violet-400 grid place-items-center mb-3">
               <Calendar className="h-5 w-5" />
             </div>
-            <h3 className="font-bold text-foreground text-sm flex items-center justify-between">
-              Agendamento 24/7 <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <h3 className="font-bold text-white text-sm flex items-center justify-between">
+              Agendamento 24/7 <ArrowRight className="h-3.5 w-3.5 text-zinc-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
             </h3>
-            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
               Integração direta com o Google Agenda. Seus clientes agendam serviços sem você precisar responder no manual.
             </p>
           </Link>
 
           <Link
             to="/admin/nfc"
-            className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-emerald-500/50 hover:shadow-lg hover:-translate-y-0.5"
+            className="group rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 hover:-translate-y-0.5 shadow-sm"
           >
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-400 grid place-items-center mb-3">
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 grid place-items-center mb-3">
               <Radio className="h-5 w-5" />
             </div>
-            <h3 className="font-bold text-foreground text-sm flex items-center justify-between">
-              Plaquinhas NFC & QR <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <h3 className="font-bold text-white text-sm flex items-center justify-between">
+              Plaquinhas NFC & QR <ArrowRight className="h-3.5 w-3.5 text-zinc-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
             </h3>
-            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
               Aproxime o celular do cliente no balcão e capture avaliações no Google Meu Negócio ou novos pedidos.
             </p>
           </Link>
 
-          <div className="group rounded-2xl border border-border bg-card p-5 transition-all hover:border-blue-500/50">
-            <div className="h-10 w-10 rounded-xl bg-blue-500/10 text-blue-400 grid place-items-center mb-3">
+          <div className="group rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 shadow-sm">
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 grid place-items-center mb-3">
               <Smartphone className="h-5 w-5" />
             </div>
-            <h3 className="font-bold text-foreground text-sm">
+            <h3 className="font-bold text-white text-sm">
               App PWA Instalável
             </h3>
-            <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">
+            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
               Sua página pode ser salva na tela inicial do celular de cada cliente com ícone e tela cheia, como um aplicativo nativo.
             </p>
           </div>
         </div>
       </section>
 
-      <div className="premium-section-heading">
-        <div>
-          <p className="eyebrow">Panorama</p>
-          <h2>O que acontece na sua página</h2>
+      {/* Panorama Métricas (Lendora CRM Bento Grid) */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Panorama Operacional</p>
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white font-display mt-0.5">O que acontece na sua página</h2>
+          </div>
+          <Link to="/analytics" className="inline-flex items-center gap-1.5 text-xs font-semibold text-zinc-400 hover:text-white transition-colors">
+            Ver métricas detalhadas <ExternalLink className="h-3.5 w-3.5" />
+          </Link>
         </div>
-        <Link to="/analytics" className="premium-text-action">
-          Ver resultados <ExternalLink className="h-4 w-4" />
-        </Link>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 premium-stats">
-        <Stat
-          icon={Eye}
-          label="Visualizações"
-          value={stats?.views ?? 0}
-          color="var(--brand-cyan)"
-        />
-        <Stat
-          icon={Link2}
-          label="Cliques em links"
-          value={stats?.clicks ?? 0}
-          color="var(--brand-violet)"
-        />
-        <Stat
-          icon={MessageCircle}
-          label="Cliques WhatsApp"
-          value={stats?.whatsapp ?? 0}
-          color="var(--brand-lime)"
-        />
-        <div className="card-glow">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">Força da sua página</span>
-            <span
-              className="grid h-8 w-8 place-items-center rounded-lg"
-              style={{
-                background: `color-mix(in oklab, ${scoreColor} 20%, transparent)`,
-                color: scoreColor,
-              }}
-            >
-              <Sparkles className="h-4 w-4" />
-            </span>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Stat
+            icon={Eye}
+            label="Visualizações"
+            value={stats?.views ?? 0}
+            color="#38bdf8"
+            trend="Ao vivo"
+          />
+          <Stat
+            icon={Link2}
+            label="Cliques em links"
+            value={stats?.clicks ?? 0}
+            color="#a78bfa"
+          />
+          <Stat
+            icon={MessageCircle}
+            label="Cliques WhatsApp"
+            value={stats?.whatsapp ?? 0}
+            color="#34d399"
+            trend="Alta conv."
+          />
+
+          {/* Força da página card */}
+          <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md shadow-sm flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">Força da sua página</span>
+                <span
+                  className="grid h-8 w-8 place-items-center rounded-xl border border-white/[0.06] bg-zinc-800/80"
+                  style={{ color: scoreColor }}
+                >
+                  <Sparkles className="h-4 w-4" />
+                </span>
+              </div>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-3xl font-bold tracking-tight text-white tabular-nums">{score}</span>
+                <span className="text-xs text-zinc-500 font-medium">/100</span>
+                <span className="ml-auto text-xs font-semibold" style={{ color: scoreColor }}>
+                  {scoreLabel}
+                </span>
+              </div>
+              <div className="mt-3 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                <div
+                  className="h-full transition-all duration-700"
+                  style={{
+                    width: `${score}%`,
+                    background: `linear-gradient(90deg, #38bdf8, ${scoreColor})`,
+                  }}
+                />
+              </div>
+            </div>
+            <p className="text-[11px] text-zinc-400 mt-3 pt-2.5 border-t border-white/[0.06]">{scoreSuggestion}</p>
           </div>
-          <div className="mt-3 text-3xl font-bold">
-            {score}
-            <span className="text-lg text-muted-foreground">/100</span>
-          </div>
-          <div className="mt-2 h-1.5 rounded-full bg-surface-elevated overflow-hidden">
-            <div
-              className="h-full transition-all"
-              style={{
-                width: `${score}%`,
-                background: `linear-gradient(90deg, var(--brand-cyan), ${scoreColor})`,
-              }}
-            />
-          </div>
-          <div className="text-xs mt-2" style={{ color: scoreColor }}>
-            {scoreLabel}
-          </div>
-          <p className="page-score-suggestion">{scoreSuggestion}</p>
-          <details className="page-score-details">
-            <summary>Como é calculado?</summary>
-            <p>
-              Considera configuração do perfil, publicação, contatos, links e os primeiros
-              resultados da página.
-            </p>
-          </details>
         </div>
       </div>
 
       {bio && (
-        <div className="premium-public-link flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-4 sm:p-5 backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
           <div className="min-w-0 flex-1">
-            <div className="text-xs uppercase tracking-widest text-muted-foreground">
+            <div className="text-[10px] uppercase font-bold tracking-wider text-zinc-500">
               {hasProfessionalSubdomain ? "Seu subdomínio profissional" : "Sua página pública"}
             </div>
-            <div className="mt-2 flex items-center gap-2 text-[color:var(--primary)] font-medium truncate">
-              <span className="truncate">{publicUrl}</span>
+            <div className="mt-1 flex items-center gap-2 text-white font-medium text-sm truncate">
+              <span className="truncate text-zinc-200">{publicUrl}</span>
             </div>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -596,12 +597,17 @@ function Dashboard() {
               onClick={() => {
                 navigator.clipboard.writeText(publicUrl);
               }}
-              className="btn-secondary"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-white/10 bg-zinc-800/80 hover:bg-zinc-700/80 text-zinc-200 text-xs font-semibold transition-colors"
             >
-              <Copy className="h-4 w-4" /> Copiar
+              <Copy className="h-3.5 w-3.5" /> Copiar link
             </button>
-            <a href={publicUrl} target="_blank" rel="noopener" className="btn-primary">
-              Abrir <ExternalLink className="h-4 w-4" />
+            <a
+              href={publicUrl}
+              target="_blank"
+              rel="noopener"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 text-xs font-bold transition-colors"
+            >
+              Abrir <ExternalLink className="h-3.5 w-3.5" />
             </a>
           </div>
         </div>
@@ -619,41 +625,41 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="premium-section-heading">
+      <div className="space-y-4">
         <div>
-          <p className="eyebrow">Comece por aqui</p>
-          <h2>Deixe sua página pronta para vender</h2>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Comece por aqui</p>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white font-display mt-0.5">Deixe sua página pronta para vender</h2>
         </div>
-      </div>
-      <div className="grid gap-4 md:grid-cols-3 premium-quick-actions">
-        <QuickCard
-          icon={PanelsTopLeft}
-          title="Minha Página"
-          to="/studio"
-          desc="Personalize capa, perfil, contato e links no Studio IA"
-          color="var(--brand-pink)"
-        />
-        <QuickCard
-          icon={BarChart3}
-          title="Ver Analytics"
-          to="/analytics"
-          desc="Gráficos e origem do tráfego"
-          color="var(--brand-pink)"
-        />
-        <QuickCard
-          icon={Sparkles}
-          title="Diagnóstico"
-          to="/diagnostic"
-          desc="Descubra seu score digital"
-          color="var(--brand-amber)"
-        />
-        <QuickCard
-          icon={TrendingUp}
-          title="Centro de Crescimento"
-          to="/growth"
-          desc="Oportunidades para crescer"
-          color="var(--brand-lime)"
-        />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <QuickCard
+            icon={PanelsTopLeft}
+            title="Minha Página"
+            to="/studio"
+            desc="Personalize capa, perfil, contato e links no Studio IA"
+            color="var(--brand-pink)"
+          />
+          <QuickCard
+            icon={BarChart3}
+            title="Ver Analytics"
+            to="/analytics"
+            desc="Gráficos de acessos e origem do tráfego"
+            color="var(--brand-pink)"
+          />
+          <QuickCard
+            icon={Sparkles}
+            title="Diagnóstico"
+            to="/diagnostic"
+            desc="Descubra seu score digital e oportunidades"
+            color="var(--brand-amber)"
+          />
+          <QuickCard
+            icon={TrendingUp}
+            title="Centro de Crescimento"
+            to="/growth"
+            desc="Dicas e táticas para crescer faturamento"
+            color="var(--brand-lime)"
+          />
+        </div>
       </div>
       <TemplateMarketplace />
     </div>
@@ -665,24 +671,38 @@ function Stat({
   label,
   value,
   color,
+  trend,
 }: {
   icon: React.ElementType;
   label: string;
   value: number | string;
   color: string;
+  trend?: string;
 }) {
   return (
-    <div className="card-glow">
+    <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.14] hover:bg-zinc-900/70 group shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-muted-foreground">{label}</span>
+        <span className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400">
+          {label}
+        </span>
         <span
-          className="grid h-8 w-8 place-items-center rounded-lg"
-          style={{ background: `color-mix(in oklab, ${color} 20%, transparent)`, color }}
+          className="grid h-9 w-9 place-items-center rounded-xl border border-white/[0.06] bg-zinc-800/80 transition-transform group-hover:scale-105"
+          style={{ color }}
         >
           <Icon className="h-4 w-4" />
         </span>
       </div>
-      <div className="mt-3 text-3xl font-bold">{value}</div>
+      <div className="mt-3 flex items-baseline justify-between">
+        <div className="text-3xl font-bold tracking-tight text-white tabular-nums">
+          {value}
+        </div>
+        {trend && (
+          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            {trend}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -703,16 +723,19 @@ function QuickCard({
   return (
     <Link
       to={to}
-      className="card-surface hover:border-[color:var(--primary)] hover:-translate-y-0.5 transition-all block"
+      className="group relative overflow-hidden rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 hover:-translate-y-0.5 shadow-sm block"
     >
       <span
-        className="grid h-10 w-10 place-items-center rounded-lg"
-        style={{ background: `color-mix(in oklab, ${color} 20%, transparent)`, color }}
+        className="grid h-10 w-10 place-items-center rounded-xl border border-white/[0.06] bg-zinc-800/80 transition-transform group-hover:scale-105"
+        style={{ color }}
       >
         <Icon className="h-5 w-5" />
       </span>
-      <h3 className="mt-3 font-semibold">{title}</h3>
-      <p className="text-sm text-muted-foreground mt-1">{desc}</p>
+      <h3 className="mt-3.5 font-bold text-sm text-zinc-100 flex items-center justify-between">
+        {title}
+        <ArrowRight className="h-3.5 w-3.5 text-zinc-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+      </h3>
+      <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">{desc}</p>
     </Link>
   );
 }

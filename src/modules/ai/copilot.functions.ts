@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { resolveGeminiApiKey } from "./gemini-admin.functions";
+import { requestGemini } from "./gemini-gateway";
 import { PremiumBetaProposalSchema, type PremiumBetaProposal } from "./premiumProposal.schema";
 import {
   adaptProposalToExistingStructures,
@@ -17,12 +17,12 @@ function getSupabaseServerClient() {
   const url =
     process.env.SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
-    "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+    "https://nitzhrmcbotdriajaxhw.supabase.co";
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_PUBLISHABLE_KEY ||
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_7cbVuf-q1wh7nqSeCXM1Ag_FMhRT2fS";
+    "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
   if (!url || !key) return null;
   return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -174,14 +174,6 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
   .handler(async ({ data, context }): Promise<AiCopilotResult> => {
-    const resolvedKey = (data.overrideApiKey || (await resolveGeminiApiKey()) || "").trim();
-
-    if (!resolvedKey) {
-      throw new Error(
-        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto.",
-      );
-    }
-
     function isRealImageUrl(url?: string | null): boolean {
       if (!url || typeof url !== "string") return false;
       const trimmed = url.trim();
@@ -463,22 +455,6 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     let lastError = "";
     let rawContent: string | null = null;
 
-    const defaultEndpoint = "https://generativelanguage.googleapis.com";
-    const customGateway = (
-      data.aiGatewayUrl ||
-      process.env.AI_GATEWAY_URL ||
-      process.env.CLOUDFLARE_AI_GATEWAY ||
-      process.env.CF_AI_GATEWAY ||
-      ""
-    )
-      .trim()
-      .replace(/\/+$/, "");
-
-    // Se houver um AI Gateway (Cloudflare AI Gateway) configurado, usa-o; caso contrário, usa o endpoint oficial do Google
-    const apiBase = customGateway || defaultEndpoint;
-
-    // Modelos Google Gemini de alta performance em ordem estrita de velocidade, compatibilidade e suporte ativo:
-    // Prioriza modelos Gemini 2.5 documentados para geração de conteúdo.
     const finalModelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
 
     const errorLogs: string[] = [];
@@ -486,22 +462,11 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     // 1. Tenta a API generateContent nos modelos suportados
     for (const modelName of finalModelsToTry) {
       try {
-        const response = await fetch(`${apiBase}/v1beta/models/${modelName}:generateContent`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": resolvedKey,
-            ...(customGateway
-              ? {
-                  "cf-aig-metadata": JSON.stringify({
-                    app: "eialink",
-                    service: "copilot-generate",
-                    model: modelName,
-                  }),
-                }
-              : {}),
-          },
-          body: JSON.stringify({
+        const response = await requestGemini(context.supabase, {
+          action: "generateContent",
+          model: modelName,
+          apiKeyOverride: data.overrideApiKey || undefined,
+          payload: {
             system_instruction: {
               parts: [{ text: systemPrompt }],
             },
@@ -515,7 +480,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
               responseMimeType: "application/json",
               temperature: 0.7,
             },
-          }),
+          },
         });
 
         if (!response.ok) {
@@ -572,28 +537,16 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
       const interactionModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
       for (const modelName of interactionModels) {
         try {
-          const response = await fetch(`${apiBase}/v1beta/interactions`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": resolvedKey,
-              "api-revision": "2026-05-20",
-              ...(customGateway
-                ? {
-                    "cf-aig-metadata": JSON.stringify({
-                      app: "eialink",
-                      service: "copilot-interactions",
-                      model: modelName,
-                    }),
-                  }
-                : {}),
-            },
-            body: JSON.stringify({
+          const response = await requestGemini(context.supabase, {
+            action: "interactions",
+            model: modelName,
+            apiKeyOverride: data.overrideApiKey || undefined,
+            payload: {
               model: modelName,
               system_instruction: systemPrompt,
               input: userPrompt,
               response_mime_type: "application/json",
-            }),
+            },
           });
 
           if (!response.ok) {
@@ -867,14 +820,6 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const resolvedKey = (data.overrideApiKey || (await resolveGeminiApiKey()) || "").trim();
-
-    if (!resolvedKey) {
-      throw new Error(
-        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto.",
-      );
-    }
-
     function isRealImageUrl(url?: string | null): boolean {
       if (!url || typeof url !== "string") return false;
       const trimmed = url.trim();
@@ -1333,19 +1278,6 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 
     promptParts.push({ text: userPrompt });
 
-    const defaultEndpoint = "https://generativelanguage.googleapis.com";
-    const customGateway = (
-      data.aiGatewayUrl ||
-      process.env.AI_GATEWAY_URL ||
-      process.env.CLOUDFLARE_AI_GATEWAY ||
-      process.env.CF_AI_GATEWAY ||
-      ""
-    )
-      .trim()
-      .replace(/\/+$/, "");
-
-    const apiBase = customGateway || defaultEndpoint;
-
     const finalModelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
 
     let rawContent: string | null = null;
@@ -1355,22 +1287,11 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 
     for (const modelName of finalModelsToTry) {
       try {
-        const response = await fetch(`${apiBase}/v1beta/models/${modelName}:generateContent`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": resolvedKey,
-            ...(customGateway
-              ? {
-                  "cf-aig-metadata": JSON.stringify({
-                    app: "eialink",
-                    service: "copilot-premium-proposal",
-                    model: modelName,
-                  }),
-                }
-              : {}),
-          },
-          body: JSON.stringify({
+        const response = await requestGemini(context.supabase, {
+          action: "generateContent",
+          model: modelName,
+          apiKeyOverride: data.overrideApiKey || undefined,
+          payload: {
             system_instruction: {
               parts: [{ text: systemPrompt }],
             },
@@ -1384,7 +1305,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
               responseMimeType: "application/json",
               temperature: 0.95,
             },
-          }),
+          },
         });
 
         if (!response.ok) {
@@ -2074,8 +1995,6 @@ export async function internalFetchBusinessFromUrl(
 
   // TRATAMENTO EXCLUSIVO DE LINKS DO GOOGLE DRIVE
   if (isGoogleDrive) {
-    const serverKey = await resolveGeminiApiKey();
-
     const fileMatch = target.match(/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]{20,})/i);
     const folderMatch = target.match(/(?:folders\/)([a-zA-Z0-9_-]{20,})/i);
 
@@ -2174,28 +2093,7 @@ export async function internalFetchBusinessFromUrl(
       let driveFiles: Array<{ id: string; name: string; mimeType: string }> = [];
 
       // 1. Tenta API oficial se houver chave do Google
-      if (serverKey) {
-        try {
-          const apiUrl = `https://www.googleapis.com/drive/v3/files?q=%27${folderId}%27+in+parents+and+trashed%3Dfalse&fields=files(id%2Cname%2CmimeType)&pageSize=25`;
-          const apiRes = await fetch(apiUrl, {
-            signal: controller.signal,
-            headers: { "x-goog-api-key": serverKey },
-          });
-          if (apiRes.ok) {
-            const apiData = await apiRes.json();
-            if (Array.isArray(apiData.files)) {
-              driveFiles = apiData.files.filter(
-                (f: any) =>
-                  (f.mimeType || "").startsWith("image/") || (f.mimeType || "").includes("pdf"),
-              );
-            }
-          }
-        } catch {
-          // fallback
-        }
-      }
-
-      // 2. Extração via página pública caso a API não esteja ativa
+      // Extrai metadados da página pública quando o link aponta para uma pasta.
       if (driveFiles.length === 0) {
         try {
           const folderRes = await fetch(`https://drive.google.com/drive/folders/${folderId}`, {
@@ -2828,14 +2726,6 @@ export const chatCopilotEditFn = createServerFn({ method: "POST" })
     chatCopilotEditInputSchema.parse(data),
   )
   .handler(async ({ data, context }: any): Promise<ChatCopilotEditResponse> => {
-    const resolvedKey = (data.overrideApiKey || (await resolveGeminiApiKey()) || "").trim();
-
-    if (!resolvedKey) {
-      throw new Error(
-        "Chave da API do Google AI Studio não configurada. Defina GEMINI_API_KEY nas variáveis de ambiente do servidor ou insira sua chave no campo do Copiloto.",
-      );
-    }
-
     const currentBio = data.currentBio || {};
     const socialLinks = (currentBio.social_links as Record<string, any>) || {};
 
@@ -3007,19 +2897,6 @@ SUAS REGRAS DE OURO:
       contents.push({ role: "user", parts: [{ text: userPromptText }] });
     }
 
-    const defaultEndpoint = "https://generativelanguage.googleapis.com";
-    const customGateway = (
-      data.aiGatewayUrl ||
-      process.env.AI_GATEWAY_URL ||
-      process.env.CLOUDFLARE_AI_GATEWAY ||
-      process.env.CF_AI_GATEWAY ||
-      ""
-    )
-      .trim()
-      .replace(/\/+$/, "");
-
-    const apiBase = customGateway || defaultEndpoint;
-
     // Modelos oficiais ativos do Google Gemini
     const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
 
@@ -3028,13 +2905,11 @@ SUAS REGRAS DE OURO:
 
     for (const modelName of modelsToTry) {
       try {
-        const response = await fetch(`${apiBase}/v1beta/models/${modelName}:generateContent`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": resolvedKey,
-          },
-          body: JSON.stringify({
+        const response = await requestGemini(context.supabase, {
+          action: "generateContent",
+          model: modelName,
+          apiKeyOverride: data.overrideApiKey || undefined,
+          payload: {
             system_instruction: {
               parts: [{ text: systemPrompt }],
             },
@@ -3044,7 +2919,7 @@ SUAS REGRAS DE OURO:
               maxOutputTokens: 3000,
               responseMimeType: "application/json",
             },
-          }),
+          },
         });
 
         if (response.ok) {

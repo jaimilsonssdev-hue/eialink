@@ -6,7 +6,7 @@ import type { CinematicPageData, CreativePlan, CinematicConceptOption } from "./
 import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
 import type { ProspectDraft } from "@/modules/prospecting/types";
-import { resolveGeminiApiKey } from "@/modules/ai/gemini-admin.functions";
+import { requestGemini } from "@/modules/ai/gemini-gateway";
 
 function slugify(value: string) {
   return value
@@ -21,12 +21,12 @@ function getSupabaseServerClient() {
   const url =
     process.env.SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
-    "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+    "https://nitzhrmcbotdriajaxhw.supabase.co";
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_PUBLISHABLE_KEY ||
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_7cbVuf-q1wh7nqSeCXM1Ag_FMhRT2fS";
+    "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
   if (!url || !key) return null;
   return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -89,7 +89,7 @@ export const lookupMapsForCinematicFn = createServerFn({ method: "POST" })
 export const refineCinematicWithAiFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { currentData: CinematicPageData; userInstruction: string }) => d)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { currentData, userInstruction } = data;
     const instruction = (userInstruction || "").trim();
 
@@ -97,11 +97,8 @@ export const refineCinematicWithAiFn = createServerFn({ method: "POST" })
       return currentData;
     }
 
-    const apiKey = (await resolveGeminiApiKey()) || "";
-
-    if (apiKey) {
-      try {
-        const prompt = `Você é um Arquiteto de Software e Diretor Criativo Sênior internacional (padrão v0, Lovable, Awwwards) para marcas de alto impacto e ultra-luxo.
+    try {
+      const prompt = `Você é um Arquiteto de Software e Diretor Criativo Sênior internacional (padrão v0, Lovable, Awwwards) para marcas de alto impacto e ultra-luxo.
 O usuário está refinando a Landing Page Cinematográfica com narrativa de Scrollytelling e arquitetura modular Bento para o negócio "${currentData.businessName}" (Nicho: "${currentData.niche}").
 
 DADOS ATUAIS DA PÁGINA:
@@ -196,59 +193,54 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
   ]
 }`;
 
-        const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
-        for (const model of models) {
-          try {
-            const resp = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-                body: JSON.stringify({
-                  contents: [{ role: "user", parts: [{ text: prompt }] }],
-                  generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
-                }),
-              },
-            );
+      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
+      for (const model of models) {
+        try {
+          const resp = await requestGemini(context.supabase, {
+            action: "generateContent",
+            model,
+            payload: {
+              contents: [{ role: "user", parts: [{ text: prompt }] }],
+              generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
+            },
+          });
 
-            if (resp.ok) {
-              const resJson = await resp.json();
-              const textOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
-              if (textOutput) {
-                const parsed = JSON.parse(textOutput) as CinematicPageData;
-                if (parsed.hero) {
-                  return {
-                    ...currentData,
-                    ...parsed,
-                    id: currentData.id,
-                    businessName: currentData.businessName || parsed.businessName,
-                    whatsapp: currentData.whatsapp || parsed.whatsapp,
-                    address: currentData.address || parsed.address,
-                    hero: {
-                      ...currentData.hero,
-                      ...parsed.hero,
-                      backgroundImage:
-                        currentData.hero.backgroundImage || parsed.hero.backgroundImage,
-                      backgroundVideo:
-                        currentData.hero.backgroundVideo || parsed.hero.backgroundVideo,
-                    },
-                    gallery:
-                      parsed.gallery && parsed.gallery.length > 0
-                        ? parsed.gallery
-                        : currentData.gallery,
-                  };
-                }
+          if (resp.ok) {
+            const resJson = await resp.json();
+            const textOutput = resJson.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (textOutput) {
+              const parsed = JSON.parse(textOutput) as CinematicPageData;
+              if (parsed.hero) {
+                return {
+                  ...currentData,
+                  ...parsed,
+                  id: currentData.id,
+                  businessName: currentData.businessName || parsed.businessName,
+                  whatsapp: currentData.whatsapp || parsed.whatsapp,
+                  address: currentData.address || parsed.address,
+                  hero: {
+                    ...currentData.hero,
+                    ...parsed.hero,
+                    backgroundImage:
+                      currentData.hero.backgroundImage || parsed.hero.backgroundImage,
+                    backgroundVideo:
+                      currentData.hero.backgroundVideo || parsed.hero.backgroundVideo,
+                  },
+                  gallery:
+                    parsed.gallery && parsed.gallery.length > 0
+                      ? parsed.gallery
+                      : currentData.gallery,
+                };
               }
             }
-          } catch (modelErr) {
-            console.warn(`[CinematicAi] Falha com modelo ${model}:`, modelErr);
           }
+        } catch (modelErr) {
+          console.warn(`[CinematicAi] Falha com modelo ${model}:`, modelErr);
         }
-      } catch (err) {
-        console.warn("[CinematicAi] Erro na chamada com IA:", err);
       }
+    } catch (err) {
+      console.warn("[CinematicAi] Erro na chamada com IA:", err);
     }
-
     // Heurística Fallback inteligente com Matriz de Arquétipos
     const lower = instruction.toLowerCase();
     const updated = JSON.parse(JSON.stringify(currentData)) as CinematicPageData;
@@ -554,24 +546,9 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
       apiKey?: string;
     }) => d,
   )
-  .handler(async ({ data: input }): Promise<import("./types").CreativePitchResponse> => {
+  .handler(async ({ data: input, context }): Promise<import("./types").CreativePitchResponse> => {
     const { businessName, niche, userMessage, currentData, conversationHistory = [] } = input;
     const instruction = (userMessage || "").trim();
-
-    const apiKey = (input.apiKey || (await resolveGeminiApiKey()) || "").trim();
-
-    if (!apiKey) {
-      return {
-        actionType: "conversation",
-        agentMessage: `⚠️ **Para conversarmos em tempo real e eu gerar o design como o ChatGPT ou Claude, conecte sua chave do Google Gemini.**
-
-Clique no botão **🔑 Conectar IA** no topo da tela para colar sua chave. Você pode gerar uma gratuitamente em menos de 10 segundos no [Google AI Studio](https://aistudio.google.com/app/apikey). Assim que conectar, terei inteligência total para conversar, criar e transformar seu site ao vivo!`,
-        suggestions: [
-          "Como pegar chave gratuita no Google AI Studio?",
-          "Ativar seção de Vista Explodida (Anime.js)",
-        ],
-      };
-    }
 
     try {
       const systemPrompt = `Você é o Agente Diretor de Arte Criativo, Arquiteto de Software e Parceiro de Design da plataforma EIA Link.
@@ -683,18 +660,16 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
       const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
       for (const model of models) {
         try {
-          const resp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-              body: JSON.stringify({
-                system_instruction: { parts: [{ text: systemPrompt }] },
-                contents: contentsPayload,
-                generationConfig: { responseMimeType: "application/json", temperature: 0.6 },
-              }),
+          const resp = await requestGemini(context.supabase, {
+            action: "generateContent",
+            model,
+            apiKeyOverride: input.apiKey || undefined,
+            payload: {
+              system_instruction: { parts: [{ text: systemPrompt }] },
+              contents: contentsPayload,
+              generationConfig: { responseMimeType: "application/json", temperature: 0.6 },
             },
-          );
+          });
 
           if (resp.ok) {
             const resJson = await resp.json();
@@ -1055,7 +1030,7 @@ export interface ExtractedPdfDocumentResult {
 export const extractServicesFromPdfTextFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { text: string; businessName?: string; niche?: string }) => d)
-  .handler(async ({ data }): Promise<ExtractedPdfDocumentResult> => {
+  .handler(async ({ data, context }): Promise<ExtractedPdfDocumentResult> => {
     const { text, businessName = "Empresa", niche = "Geral" } = data;
     const cleanText = (text || "").trim();
 
@@ -1066,11 +1041,8 @@ export const extractServicesFromPdfTextFn = createServerFn({ method: "POST" })
       };
     }
 
-    const apiKey = (await resolveGeminiApiKey()) || "";
-
-    if (apiKey) {
-      try {
-        const prompt = `Você é um Especialista em Extração e Estruturação de Cardápios, Tabelas de Preços e Catálogos Comerciais da EIA Digital.
+    try {
+      const prompt = `Você é um Especialista em Extração e Estruturação de Cardápios, Tabelas de Preços e Catálogos Comerciais da EIA Digital.
 Analise com atenção o texto abaixo, extraído diretamente de um documento comercial (cardápio, tabela de procedimentos, folder ou catálogo):
 
 TEXTO DO DOCUMENTO:
@@ -1104,54 +1076,50 @@ RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS A
   ]
 }`;
 
-        const endpoint =
-          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 14000);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 14000);
 
-        const response = await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-          signal: controller.signal,
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: {
-              temperature: 0.2,
-              responseMimeType: "application/json",
-            },
-          }),
-        });
+      const response = await requestGemini(context.supabase, {
+        action: "generateContent",
+        model: "gemini-2.5-flash",
+        payload: {
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json",
+          },
+        },
+      });
 
-        clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
 
-        if (response.ok) {
-          const json = await response.json();
-          const raw = json.candidates?.[0]?.content?.parts?.[0]?.text;
-          if (raw) {
-            const cleanJson = raw
-              .replace(/^```json\s*/i, "")
-              .replace(/^```\s*/i, "")
-              .replace(/\s*```$/i, "")
-              .trim();
-            const parsed = JSON.parse(cleanJson);
-            if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0) {
-              return {
-                summary: parsed.summary || `Serviços extraídos do documento de ${businessName}.`,
-                items: parsed.items.map((it: any) => ({
-                  title: String(it.title || "Item Especializado").trim(),
-                  description: String(
-                    it.description || "Atendimento e experiência de alta qualidade.",
-                  ).trim(),
-                  price: it.price ? String(it.price).trim() : "Sob Consulta",
-                  badge: it.badge ? String(it.badge).trim() : "Destaque",
-                })),
-              };
-            }
+      if (response.ok) {
+        const json = await response.json();
+        const raw = json.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (raw) {
+          const cleanJson = raw
+            .replace(/^```json\s*/i, "")
+            .replace(/^```\s*/i, "")
+            .replace(/\s*```$/i, "")
+            .trim();
+          const parsed = JSON.parse(cleanJson);
+          if (parsed && Array.isArray(parsed.items) && parsed.items.length > 0) {
+            return {
+              summary: parsed.summary || `Serviços extraídos do documento de ${businessName}.`,
+              items: parsed.items.map((it: any) => ({
+                title: String(it.title || "Item Especializado").trim(),
+                description: String(
+                  it.description || "Atendimento e experiência de alta qualidade.",
+                ).trim(),
+                price: it.price ? String(it.price).trim() : "Sob Consulta",
+                badge: it.badge ? String(it.badge).trim() : "Destaque",
+              })),
+            };
           }
         }
-      } catch (geminiErr) {
-        console.warn("[cinematic.functions] Falha na síntese do documento com Gemini:", geminiErr);
       }
+    } catch (geminiErr) {
+      console.warn("[cinematic.functions] Falha na síntese do documento com Gemini:", geminiErr);
     }
 
     // Fallback heurístico inteligente caso não haja API ou ocorra falha de rede

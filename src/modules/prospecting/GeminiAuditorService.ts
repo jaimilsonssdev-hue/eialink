@@ -1,4 +1,6 @@
 import type { ProspectedCompany } from "./types";
+import { supabase } from "@/integrations/supabase/client";
+import { invokeGeminiGateway, requestGemini } from "@/modules/ai/gemini-gateway";
 
 export interface CompanyAuditResult {
   companyName: string;
@@ -74,69 +76,18 @@ export async function testGeminiKey(
   }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 12000);
-
-    // Consulta os modelos suportados pelo projeto do usuário (ListModels)
-    const listEndpoint = "https://generativelanguage.googleapis.com/v1beta/models";
-
-    const response = await fetch(listEndpoint, {
-      method: "GET",
-      signal: controller.signal,
-      headers: { "Content-Type": "application/json", "x-goog-api-key": cleanKey },
+    const result = await invokeGeminiGateway<{ ok: boolean; message: string }>(supabase, {
+      action: "test",
+      apiKey: cleanKey,
     });
-
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      const errBody = await response.json().catch(() => ({}));
-      const errorMsg = errBody?.error?.message || `Erro HTTP ${response.status}`;
-      if (response.status === 400 || response.status === 403) {
-        return { ok: false, message: `Chave recusada pelo Google: ${errorMsg}` };
-      }
-      return { ok: false, message: `Falha na verificação: ${errorMsg}` };
+    const activeModel = "gemini-2.5-flash";
+    if (result.ok && typeof window !== "undefined") {
+      localStorage.setItem(GEMINI_ACTIVE_MODEL_STORAGE, activeModel);
     }
-
-    const data = await response.json().catch(() => ({}));
-    const rawModels: Array<{ name?: string; supportedGenerationMethods?: string[] }> =
-      data.models || [];
-
-    // Filtra modelos disponíveis que suportam geração de texto
-    const contentModels = rawModels.filter(
-      (m) =>
-        Array.isArray(m.supportedGenerationMethods) &&
-        m.supportedGenerationMethods.includes("generateContent"),
-    );
-
-    // Lista ordenada dos modelos preferidos do ecossistema Gemini
-    const priority = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
-
-    let chosenModel = "gemini-2.5-flash";
-
-    if (contentModels.length > 0) {
-      let found = false;
-      for (const pref of priority) {
-        const match = contentModels.find((m) => (m.name || "").includes(pref));
-        if (match?.name) {
-          chosenModel = match.name.replace(/^models\//, "");
-          found = true;
-          break;
-        }
-      }
-      if (!found && contentModels[0]?.name) {
-        chosenModel = contentModels[0].name.replace(/^models\//, "");
-      }
-    }
-
-    // Salva o modelo descoberto no armazenamento local para uso ágil nas auditorias
-    if (typeof window !== "undefined") {
-      localStorage.setItem(GEMINI_ACTIVE_MODEL_STORAGE, chosenModel);
-    }
-
     return {
-      ok: true,
-      message: `Conexão validada com sucesso com o Google AI Studio! Modelo ativo: ${chosenModel} 🚀`,
-      activeModel: chosenModel,
+      ...result,
+      message: result.ok ? `${result.message} Modelo padrão: ${activeModel}.` : result.message,
+      ...(result.ok ? { activeModel } : {}),
     };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Erro desconhecido de rede.";
@@ -251,11 +202,6 @@ export async function auditCompany(
   const apiKey = getSavedGeminiKey();
   const matchDemo = demoUrl || company.notes?.match(/https?:\/\/[^\s)]+/)?.[0] || null;
 
-  // Se não houver chave configurada, executa o motor nativo imediatamente
-  if (!apiKey) {
-    return generateHeuristicAudit(company, matchDemo || undefined);
-  }
-
   const prompt = `Você é um Consultor Especialista em Crescimento de Negócios Locais e Auditor de Presença Digital (AI SDR).
 Sua missão é analisar os dados reais de uma empresa extraídos do Google Maps e gerar um mini-diagnóstico consultivo, focado em ajudar o dono do negócio a faturar mais e parar de perder clientes para a concorrência.
 
@@ -292,9 +238,6 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
     typeof window !== "undefined" ? localStorage.getItem(GEMINI_ACTIVE_MODEL_STORAGE) : null;
   const candidateModels = [
     ...(savedModel ? [savedModel] : []),
-    "gemini-3.5-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-3.6-flash",
     "gemini-2.5-flash",
     "gemini-2.5-flash-lite",
   ];
@@ -304,26 +247,19 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
   for (const model of models) {
     try {
       const cleanModel = model.replace(/^models\//, "");
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent`;
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 12000);
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        signal: controller.signal,
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify({
+      const response = await requestGemini(supabase, {
+        action: "generateContent",
+        model: cleanModel,
+        ...(apiKey ? { apiKeyOverride: apiKey } : {}),
+        payload: {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.4,
             maxOutputTokens: 800,
             responseMimeType: "application/json",
           },
-        }),
+        },
       });
-
-      clearTimeout(timeout);
 
       if (!response.ok) {
         continue;

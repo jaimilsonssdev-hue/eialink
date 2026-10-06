@@ -103,7 +103,7 @@ export const signPublishedBioMediaFn = createServerFn({ method: "POST" })
       const supabaseUrl =
         process.env.VITE_SUPABASE_URL ||
         process.env.SUPABASE_URL ||
-        "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+        "https://nitzhrmcbotdriajaxhw.supabase.co";
       const urls = data.paths.map((path) => `${supabaseUrl}/storage/v1/object/public/bio-media/${path}`);
       return { signedUrls: urls };
     }

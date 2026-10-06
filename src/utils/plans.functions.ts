@@ -9,12 +9,12 @@ function createServiceSupabase() {
   const url =
     process.env.SUPABASE_URL ||
     process.env.VITE_SUPABASE_URL ||
-    "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+    "https://nitzhrmcbotdriajaxhw.supabase.co";
   const key =
     process.env.SUPABASE_SERVICE_ROLE_KEY ||
     process.env.SUPABASE_PUBLISHABLE_KEY ||
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_7cbVuf-q1wh7nqSeCXM1Ag_FMhRT2fS";
+    "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
   return createClient<Database>(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -197,4 +197,3 @@ export const adminDeletePlanFn = createServerFn({ method: "POST" })
 
     return { success: true };
   });
-

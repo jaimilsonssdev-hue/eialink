@@ -47,7 +47,7 @@ import {
   removeGeminiKey,
   GEMINI_KEY_UPDATED_EVENT,
 } from "@/modules/prospecting/GeminiAuditorService";
-import { getGeminiApiKeyStatusFn, testGeminiApiKeyFn } from "@/modules/ai/gemini-admin.functions";
+import { invokeGeminiGateway } from "@/modules/ai/gemini-gateway";
 import type {
   CinematicPageData,
   CinematicGalleryItem,
@@ -344,7 +344,11 @@ export default function CinematicStudioPage() {
 
   // Consulta status seguro da chave no banco de dados na inicialização
   useEffect(() => {
-    getGeminiApiKeyStatusFn()
+    invokeGeminiGateway<{
+      configured: boolean;
+      masked: string;
+      isFromEnv: boolean;
+    }>(supabase, { action: "status" })
       .then((res) => {
         setDbKeyConfigured(Boolean(res.configured));
         if (res.masked) setDbKeyMasked(res.masked);
@@ -389,7 +393,10 @@ export default function CinematicStudioPage() {
     const clean = inputKey.trim();
     setIsTestingKey(true);
     try {
-      const res = await testGeminiApiKeyFn({ data: { apiKey: clean || undefined } });
+      const res = await invokeGeminiGateway<{ ok: boolean; message: string }>(supabase, {
+        action: "test",
+        apiKey: clean || undefined,
+      });
       if (res.ok) {
         toast.success(res.message || "Conexão com Google AI validada!");
       } else {

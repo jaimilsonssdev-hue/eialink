@@ -13,14 +13,11 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { invokeGeminiGateway } from "@/modules/ai/gemini-gateway";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  getGeminiApiKeyStatusFn,
-  saveGeminiApiKeyFn,
-  testGeminiApiKeyFn,
-} from "@/modules/ai/gemini-admin.functions";
 
 export function GoogleGeminiAdminCard() {
   const [apiKey, setApiKey] = useState("");
@@ -29,26 +26,48 @@ export function GoogleGeminiAdminCard() {
   const [isFromEnv, setIsFromEnv] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [statusError, setStatusError] = useState("");
+  const [canManage, setCanManage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
 
   useEffect(() => {
-    getGeminiApiKeyStatusFn()
-      .then((res) => {
+    async function loadStatus() {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+        if (userError) throw userError;
+        setCanManage(user?.email?.toLowerCase() === "jaimilsonvendas@gmail.com");
+        const res = await invokeGeminiGateway<{
+          configured: boolean;
+          masked: string;
+          isFromEnv: boolean;
+        }>(supabase, { action: "status" });
         setConfigured(Boolean(res.configured));
         setMasked(res.masked || "");
         setIsFromEnv(Boolean(res.isFromEnv));
-      })
-      .catch((err) => console.warn("Aviso ao carregar chave do Gemini:", err))
-      .finally(() => setLoading(false));
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Erro desconhecido.";
+        setStatusError(`Não foi possível verificar a configuração Gemini: ${message}`);
+      } finally {
+        setLoading(false);
+      }
+    }
+    void loadStatus();
   }, []);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await saveGeminiApiKeyFn({ data: { apiKey } });
+      const res = await invokeGeminiGateway<{
+        configured: boolean;
+        masked?: string;
+        message: string;
+      }>(supabase, { action: "save", apiKey });
       setConfigured(Boolean(res.configured));
       if (res.configured) {
         setMasked(res.masked || `${apiKey.slice(0, 4)}••••••••${apiKey.slice(-4)}`);
@@ -69,7 +88,10 @@ export function GoogleGeminiAdminCard() {
   async function handleTest() {
     setTesting(true);
     try {
-      const res = await testGeminiApiKeyFn({ data: { apiKey: apiKey.trim() || undefined } });
+      const res = await invokeGeminiGateway<{ ok: boolean; message: string }>(supabase, {
+        action: "test",
+        apiKey: apiKey.trim() || undefined,
+      });
       if (res.ok) toast.success(res.message);
       else toast.error(res.message);
     } catch (err: unknown) {
@@ -82,13 +104,13 @@ export function GoogleGeminiAdminCard() {
   async function handleRemove() {
     setSaving(true);
     try {
-      await saveGeminiApiKeyFn({ data: { apiKey: "" } });
+      await invokeGeminiGateway(supabase, { action: "save", apiKey: "" });
       setConfigured(false);
       setMasked("");
       setApiKey("");
       toast.info("Chave do Gemini removida do banco de dados.");
-    } catch (err: any) {
-      toast.error(err?.message || "Erro ao remover chave.");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Erro ao remover chave.");
     } finally {
       setSaving(false);
     }
@@ -112,7 +134,10 @@ export function GoogleGeminiAdminCard() {
                     <CheckCircle2 className="h-3 w-3 mr-1" /> Ativo no Banco
                   </Badge>
                 ) : (
-                  <Badge variant="outline" className="text-amber-400 border-amber-500/30 text-[11px]">
+                  <Badge
+                    variant="outline"
+                    className="text-amber-400 border-amber-500/30 text-[11px]"
+                  >
                     Não Configurado
                   </Badge>
                 )}
@@ -123,7 +148,8 @@ export function GoogleGeminiAdminCard() {
                 )}
               </div>
               <CardDescription className="text-xs text-muted-foreground mt-0.5">
-                Alimenta o Agente Copiloto do Studio, auditoria de empresas e geração criativa com IA em toda a plataforma.
+                Alimenta o Agente Copiloto do Studio, auditoria de empresas e geração criativa com
+                IA em toda a plataforma.
               </CardDescription>
             </div>
           </div>
@@ -142,9 +168,24 @@ export function GoogleGeminiAdminCard() {
       </CardHeader>
 
       <CardContent className="p-5 space-y-4">
+        {statusError && (
+          <p
+            role="alert"
+            className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"
+          >
+            {statusError}
+          </p>
+        )}
+        {!loading && !canManage && (
+          <p className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-300">
+            Somente o superadministrador pode alterar a chave Gemini.
+          </p>
+        )}
         {showInstructions && (
           <div className="rounded-lg border border-border/70 bg-muted/30 p-4 text-xs space-y-2 text-muted-foreground animate-in fade-in-50 duration-200">
-            <p className="font-semibold text-foreground">Como obter sua chave no Google AI Studio (100% gratuita):</p>
+            <p className="font-semibold text-foreground">
+              Como obter sua chave no Google AI Studio (100% gratuita):
+            </p>
             <ol className="list-decimal list-inside space-y-1.5 leading-relaxed">
               <li>
                 Acesse o{" "}
@@ -158,12 +199,16 @@ export function GoogleGeminiAdminCard() {
                 </a>{" "}
                 e faça login com sua conta Google.
               </li>
-              <li>Clique no botão azul <strong>"Create API key"</strong>.</li>
+              <li>
+                Clique no botão azul <strong>"Create API key"</strong>.
+              </li>
               <li>Copie a chave gerada e cole no campo abaixo.</li>
             </ol>
             <div className="pt-2 text-[11px] border-t border-border/60 flex items-center gap-2 text-emerald-400">
               <ShieldCheck className="h-4 w-4 shrink-0" />
-              <span>A chave é gravada diretamente no banco de dados com segurança do lado do servidor.</span>
+              <span>
+                A chave é gravada diretamente no banco de dados com segurança do lado do servidor.
+              </span>
             </div>
           </div>
         )}
@@ -184,7 +229,9 @@ export function GoogleGeminiAdminCard() {
 
             <div className="space-y-1.5">
               <label htmlFor="gemini-admin-key" className="text-xs font-medium text-foreground">
-                {configured ? "Substituir chave existente" : "Cole a Chave da API do Google AI Studio"}
+                {configured
+                  ? "Substituir chave existente"
+                  : "Cole a Chave da API do Google AI Studio"}
               </label>
               <div className="relative">
                 <input
@@ -192,7 +239,10 @@ export function GoogleGeminiAdminCard() {
                   type={showKey ? "text" : "password"}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
-                  placeholder={configured ? "Cole uma nova chave para atualizar" : "Cole sua chave aqui..."}
+                  disabled={!canManage}
+                  placeholder={
+                    configured ? "Cole uma nova chave para atualizar" : "Cole sua chave aqui..."
+                  }
                   className="w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-ring"
                 />
                 <button
@@ -214,7 +264,7 @@ export function GoogleGeminiAdminCard() {
                     variant="ghost"
                     size="sm"
                     onClick={handleRemove}
-                    disabled={saving}
+                    disabled={saving || !canManage}
                     className="text-xs text-destructive hover:text-destructive hover:bg-destructive/10 gap-1"
                   >
                     <Trash2 className="h-3 w-3" />
@@ -229,20 +279,28 @@ export function GoogleGeminiAdminCard() {
                   variant="outline"
                   size="sm"
                   onClick={handleTest}
-                  disabled={testing || (!apiKey.trim() && !configured)}
+                  disabled={!canManage || testing || (!apiKey.trim() && !configured)}
                   className="text-xs gap-1.5"
                 >
-                  {testing ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <KeyRound className="h-3.5 w-3.5" />}
+                  {testing ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <KeyRound className="h-3.5 w-3.5" />
+                  )}
                   <span>Testar Conexão</span>
                 </Button>
 
                 <Button
                   type="submit"
                   size="sm"
-                  disabled={saving || !apiKey.trim()}
+                  disabled={!canManage || saving || !apiKey.trim()}
                   className="text-xs bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold gap-1.5"
                 >
-                  {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                  {saving ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Save className="h-3.5 w-3.5" />
+                  )}
                   <span>Salvar no Banco</span>
                 </Button>
               </div>

@@ -10,6 +10,8 @@
 
 import { getSavedGeminiKey } from "./GeminiAuditorService";
 import { detectNicheKey, getPresetForCompany, NICHE_GALLERIES } from "./nichePresets";
+import { supabase } from "@/integrations/supabase/client";
+import { requestGemini } from "@/modules/ai/gemini-gateway";
 
 export interface ScrapedCompanyPayload {
   companyName: string;
@@ -93,18 +95,13 @@ export async function generateAiPageBlueprintFromScrapedData(
     }
   }
 
-  if (apiKey) {
-    try {
-      const aiResult = await requestGeminiBlueprint(payload, apiKey, instagramSnippet);
-      if (aiResult) {
-        return enrichBlueprintImages(aiResult, payload);
-      }
-    } catch (err) {
-      console.warn(
-        "[aiDemoGenerator] Falha ou timeout no Gemini, aplicando fallback heurístico:",
-        err,
-      );
+  try {
+    const aiResult = await requestGeminiBlueprint(payload, apiKey || undefined, instagramSnippet);
+    if (aiResult) {
+      return enrichBlueprintImages(aiResult, payload);
     }
+  } catch (err) {
+    console.warn("[aiDemoGenerator] Falha no gateway Gemini, aplicando fallback heurístico:", err);
   }
 
   // Fallback Determinístico Blindado com os Presets Refinados e Reviews do Google
@@ -116,7 +113,7 @@ export async function generateAiPageBlueprintFromScrapedData(
  */
 async function requestGeminiBlueprint(
   payload: ScrapedCompanyPayload,
-  apiKey: string,
+  apiKey: string | undefined,
   instagramSnippet = "",
 ): Promise<AiPageBlueprint | null> {
   const reviewsSummary = (payload.reviews || [])
@@ -200,24 +197,18 @@ Responda APENAS com um objeto JSON válido seguindo esta estrutura exata:
 
   for (const model of PREFERRED_GEMINI_MODELS) {
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 12000);
-
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        signal: controller.signal,
-        body: JSON.stringify({
+      const response = await requestGemini(supabase, {
+        action: "generateContent",
+        model,
+        ...(apiKey ? { apiKeyOverride: apiKey } : {}),
+        payload: {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.25,
             responseMimeType: "application/json",
           },
-        }),
+        },
       });
-
-      clearTimeout(timeoutId);
 
       if (!response.ok) {
         continue;

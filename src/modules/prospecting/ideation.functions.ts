@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import type { CinematicPageData } from "@/modules/cinematic/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { resolveGeminiApiKey } from "@/modules/ai/gemini-admin.functions";
+import { invokeGeminiGateway, requestGemini } from "@/modules/ai/gemini-gateway";
 
 export interface IdeationInput {
   businessName: string;
@@ -115,7 +115,7 @@ function getArchetypePalette(archetype: IdeationDossier["archetype"]): IdeationD
 export const synthesizeSiteIdeationFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: IdeationInput) => data)
-  .handler(async ({ data }): Promise<IdeationDossier> => {
+  .handler(async ({ data, context }): Promise<IdeationDossier> => {
     const archetype = detectArchetype(data.niche);
     const palette = getArchetypePalette(archetype);
 
@@ -125,8 +125,6 @@ export const synthesizeSiteIdeationFn = createServerFn({ method: "POST" })
       "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80";
     const showcasePhotos = photos.slice(1, 5);
     const ambiancePhotos = photos.slice(5, 9);
-
-    const apiKey = (await resolveGeminiApiKey()) || "";
 
     // Fallback heurístico inteligente caso não haja chave Gemini configurada
     const fallbackDossier: IdeationDossier = {
@@ -164,7 +162,10 @@ WhatsApp: ${data.whatsapp || "Direto no botão"}.
 Regras de Copy: Sem clichês ("o melhor da cidade"). Use tom sensorial, autoridade e elegância.`,
     };
 
-    if (!apiKey) {
+    const keyStatus = await invokeGeminiGateway<{ configured: boolean }>(context.supabase, {
+      action: "status",
+    });
+    if (!keyStatus.configured) {
       return fallbackDossier;
     }
 
@@ -209,20 +210,17 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
       const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
       for (const m of models) {
         try {
-          const resp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-              body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                  temperature: 0.4,
-                  responseMimeType: "application/json",
-                },
-              }),
+          const resp = await requestGemini(context.supabase, {
+            action: "generateContent",
+            model: m,
+            payload: {
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: {
+                temperature: 0.4,
+                responseMimeType: "application/json",
+              },
             },
-          );
+          });
 
           if (resp.ok) {
             const json = await resp.json();

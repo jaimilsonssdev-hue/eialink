@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSavedGeminiKey } from "@/modules/prospecting/GeminiAuditorService";
+import { requestGemini } from "@/modules/ai/gemini-gateway";
 import type { DailyDeal } from "../types";
 import { findCategoryByKeyword } from "../categories";
 
@@ -95,12 +96,6 @@ export const OfferHunterService = {
     const niche = options.niche?.trim() || "";
     const apiKey = (options.apiKey || getSavedGeminiKey() || "").trim();
 
-    if (!apiKey) {
-      throw new Error(
-        "Chave da API do Google AI Studio / Gemini não configurada. Salve sua chave no assistente ou configure a chave para rastrear ofertas.",
-      );
-    }
-
     let gatheredRawText = "";
 
     // 1. Se forneceu um link ou perfil direto (ex: Instagram ou site do negócio)
@@ -191,46 +186,37 @@ REGRAS OBRIGATÓRIAS:
   ]
 }`;
 
-    const modelsToTry = [
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.5-pro",
-    ];
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
     let rawJsonContent: string | null = null;
     let lastError = "";
 
     for (const modelName of modelsToTry) {
       try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
+        const response = await requestGemini(supabase, {
+          action: "generateContent",
+          model: modelName,
+          ...(apiKey ? { apiKeyOverride: apiKey } : {}),
+          payload: {
+            system_instruction: {
+              parts: [{ text: systemPrompt }],
             },
-            body: JSON.stringify({
-              system_instruction: {
-                parts: [{ text: systemPrompt }],
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `Rastreie e estruture as melhores ofertas de ${city}${niche ? ` no nicho ${niche}` : ""} para publicar no mural de hoje. Retorne apenas o JSON.`,
+                  },
+                ],
               },
-              contents: [
-                {
-                  role: "user",
-                  parts: [
-                    {
-                      text: `Rastreie e estruture as melhores ofertas de ${city}${niche ? ` no nicho ${niche}` : ""} para publicar no mural de hoje. Retorne apenas o JSON.`,
-                    },
-                  ],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.4,
-                maxOutputTokens: 3500,
-                responseMimeType: "application/json",
-              },
-            }),
+            ],
+            generationConfig: {
+              temperature: 0.4,
+              maxOutputTokens: 3500,
+              responseMimeType: "application/json",
+            },
           },
-        );
+        });
 
         if (response.ok) {
           const resData = await response.json();
@@ -265,13 +251,17 @@ REGRAS OBRIGATÓRIAS:
           id: `hunted-${Date.now()}-${index}`,
           business_name: String(d.business_name || `Comércio Local de ${city}`).trim(),
           title: String(d.title || "Oferta Especial").trim(),
-          description: String(d.description || "Consulte regras e validade com o estabelecimento.").trim(),
+          description: String(
+            d.description || "Consulte regras e validade com o estabelecimento.",
+          ).trim(),
           deal_price: Number(d.deal_price) || 29.9,
           original_price: d.original_price ? Number(d.original_price) : null,
           discount_badge: String(d.discount_badge || "OFERTA").trim(),
           niche: String(d.niche || niche || "Comércio Local").trim(),
           city: String(d.city || city).trim(),
-          contact_whatsapp: d.contact_whatsapp ? String(d.contact_whatsapp).replace(/\D/g, "") : undefined,
+          contact_whatsapp: d.contact_whatsapp
+            ? String(d.contact_whatsapp).replace(/\D/g, "")
+            : undefined,
           contact_instagram: d.contact_instagram ? String(d.contact_instagram).trim() : undefined,
           source_url: d.source_url ? String(d.source_url).trim() : undefined,
           image_url: img,
@@ -346,7 +336,9 @@ REGRAS OBRIGATÓRIAS:
 
       if (pageErr || !newPage) {
         console.error("[OfferHunterService] Erro ao criar bio_page para o negócio:", pageErr);
-        throw new Error(`Não foi possível registrar a página do estabelecimento: ${pageErr?.message || ""}`);
+        throw new Error(
+          `Não foi possível registrar a página do estabelecimento: ${pageErr?.message || ""}`,
+        );
       }
 
       targetBioPageId = newPage.id;
@@ -390,7 +382,8 @@ REGRAS OBRIGATÓRIAS:
       throw new Error(`Erro ao publicar oferta no mural: ${dealErr?.message || ""}`);
     }
 
-    const domain = typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
+    const domain =
+      typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
     const muralUrl = `${domain}/hoje?cidade=${encodeURIComponent(deal.city)}`;
     const pageUrl = `${domain}/p/${targetSlug}`;
 
@@ -410,7 +403,8 @@ REGRAS OBRIGATÓRIAS:
     const rawNumber = deal.contact_whatsapp ? deal.contact_whatsapp.replace(/\D/g, "") : "";
     const cleanNumber = rawNumber.startsWith("55") ? rawNumber : `55${rawNumber}`;
 
-    const domain = typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
+    const domain =
+      typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
     const muralUrl = `${domain}/hoje?cidade=${encodeURIComponent(deal.city)}`;
     const pageUrl = slug ? `${domain}/p/${slug}` : "";
 
@@ -431,12 +425,6 @@ REGRAS OBRIGATÓRIAS:
     const city = options.city?.trim() || "Teixeira de Freitas";
     const niche = options.niche?.trim() || "";
     const apiKey = (options.apiKey || getSavedGeminiKey() || "").trim();
-
-    if (!apiKey) {
-      throw new Error(
-        "Chave da API do Google AI Studio / Gemini não configurada. Configure a chave para rastrear prestadores de serviços.",
-      );
-    }
 
     let gatheredRawText = "";
 
@@ -528,46 +516,37 @@ REGRAS OBRIGATÓRIAS:
   ]
 }`;
 
-    const modelsToTry = [
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.5-pro",
-    ];
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
     let rawJsonContent: string | null = null;
     let lastError = "";
 
     for (const modelName of modelsToTry) {
       try {
-        const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": apiKey,
+        const response = await requestGemini(supabase, {
+          action: "generateContent",
+          model: modelName,
+          ...(apiKey ? { apiKeyOverride: apiKey } : {}),
+          payload: {
+            system_instruction: {
+              parts: [{ text: systemPrompt }],
             },
-            body: JSON.stringify({
-              system_instruction: {
-                parts: [{ text: systemPrompt }],
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `Rastreie e estruture os melhores prestadores de serviços e profissionais de ${city}${niche ? ` na categoria ${niche}` : ""} para cadastrar no guia. Retorne apenas o JSON.`,
+                  },
+                ],
               },
-              contents: [
-                {
-                  role: "user",
-                  parts: [
-                    {
-                      text: `Rastreie e estruture os melhores prestadores de serviços e profissionais de ${city}${niche ? ` na categoria ${niche}` : ""} para cadastrar no guia. Retorne apenas o JSON.`,
-                    },
-                  ],
-                },
-              ],
-              generationConfig: {
-                temperature: 0.4,
-                maxOutputTokens: 3500,
-                responseMimeType: "application/json",
-              },
-            }),
+            ],
+            generationConfig: {
+              temperature: 0.4,
+              maxOutputTokens: 3500,
+              responseMimeType: "application/json",
+            },
           },
-        );
+        });
 
         if (response.ok) {
           const resData = await response.json();
@@ -597,7 +576,8 @@ REGRAS OBRIGATÓRIAS:
       const huntedProviders: HuntedProvider[] = rawProviders.map((p: any, index: number) => {
         const fallbackCover = getNicheCoverFallback(p.niche || niche);
         const img = p.image_url && p.image_url.startsWith("http") ? p.image_url : fallbackCover;
-        const matchedCategory = p.category || findCategoryByKeyword(`${p.niche || ""} ${p.display_name}`).id;
+        const matchedCategory =
+          p.category || findCategoryByKeyword(`${p.niche || ""} ${p.display_name}`).id;
 
         return {
           id: `provider-${Date.now()}-${index}`,
@@ -605,8 +585,12 @@ REGRAS OBRIGATÓRIAS:
           niche: String(p.niche || niche || "Serviços Especializados").trim(),
           category: matchedCategory,
           city: String(p.city || city).trim(),
-          description: String(p.description || "Entre em contato direto pelo WhatsApp para orçamentos e agendamento.").trim(),
-          contact_whatsapp: p.contact_whatsapp ? String(p.contact_whatsapp).replace(/\D/g, "") : undefined,
+          description: String(
+            p.description || "Entre em contato direto pelo WhatsApp para orçamentos e agendamento.",
+          ).trim(),
+          contact_whatsapp: p.contact_whatsapp
+            ? String(p.contact_whatsapp).replace(/\D/g, "")
+            : undefined,
           contact_instagram: p.contact_instagram ? String(p.contact_instagram).trim() : undefined,
           source_url: p.source_url ? String(p.source_url).trim() : undefined,
           image_url: img,
@@ -682,7 +666,9 @@ REGRAS OBRIGATÓRIAS:
 
       if (pageErr || !newPage) {
         console.error("[OfferHunterService] Erro ao cadastrar prestador no banco:", pageErr);
-        throw new Error(`Não foi possível cadastrar a página do profissional: ${pageErr?.message || ""}`);
+        throw new Error(
+          `Não foi possível cadastrar a página do profissional: ${pageErr?.message || ""}`,
+        );
       }
 
       targetBioPageId = newPage.id;
@@ -705,7 +691,8 @@ REGRAS OBRIGATÓRIAS:
         .eq("id", targetBioPageId);
     }
 
-    const domain = typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
+    const domain =
+      typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
     const muralUrl = `${domain}/hoje?tab=profissionais&cidade=${encodeURIComponent(provider.city)}&categoria=${encodeURIComponent(provider.category)}`;
     const pageUrl = `${domain}/p/${targetSlug}`;
 
@@ -724,7 +711,8 @@ REGRAS OBRIGATÓRIAS:
     const rawNumber = provider.contact_whatsapp ? provider.contact_whatsapp.replace(/\D/g, "") : "";
     const cleanNumber = rawNumber.startsWith("55") ? rawNumber : `55${rawNumber}`;
 
-    const domain = typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
+    const domain =
+      typeof window !== "undefined" ? window.location.origin : "https://www.eialink.com.br";
     const muralUrl = `${domain}/hoje?tab=profissionais&cidade=${encodeURIComponent(provider.city)}`;
     const pageUrl = slug ? `${domain}/p/${slug}` : "";
 

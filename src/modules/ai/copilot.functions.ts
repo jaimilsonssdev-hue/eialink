@@ -3,10 +3,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import {
-  PremiumBetaProposalSchema,
-  type PremiumBetaProposal,
-} from "./premiumProposal.schema";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { resolveGeminiApiKey } from "./gemini-admin.functions";
+import { PremiumBetaProposalSchema, type PremiumBetaProposal } from "./premiumProposal.schema";
 import {
   adaptProposalToExistingStructures,
   type AdaptedProposalResult,
@@ -115,15 +114,21 @@ const nullableNumber = z.preprocess((val) => {
 
 const copilotFileInputSchema = z.object({
   name: z.preprocess((val) => (val ? String(val).trim() : "imagem"), z.string().default("imagem")),
-  mimeType: z.preprocess((val) => (val ? String(val).trim() : "image/jpeg"), z.string().default("image/jpeg")),
+  mimeType: z.preprocess(
+    (val) => (val ? String(val).trim() : "image/jpeg"),
+    z.string().default("image/jpeg"),
+  ),
   base64: z.string(),
   publicUrl: nullableString,
-  role: z.preprocess((val) => {
-    if (!val || typeof val !== "string") return undefined;
-    const clean = val.trim().toLowerCase();
-    if (["logo", "cover", "product", "general"].includes(clean)) return clean;
-    return undefined;
-  }, z.enum(["logo", "cover", "product", "general"]).optional()),
+  role: z.preprocess(
+    (val) => {
+      if (!val || typeof val !== "string") return undefined;
+      const clean = val.trim().toLowerCase();
+      if (["logo", "cover", "product", "general"].includes(clean)) return clean;
+      return undefined;
+    },
+    z.enum(["logo", "cover", "product", "general"]).optional(),
+  ),
 });
 
 const copilotContextSchema = z.preprocess(
@@ -144,7 +149,10 @@ const copilotInputSchema = z
       if (val === null || val === undefined) return "";
       return typeof val === "string" ? val : String(val);
     }, z.string().max(25000).default("")),
-    files: z.preprocess((val) => (Array.isArray(val) ? val : []), z.array(copilotFileInputSchema).default([])),
+    files: z.preprocess(
+      (val) => (Array.isArray(val) ? val : []),
+      z.array(copilotFileInputSchema).default([]),
+    ),
     videoUrl: nullableString,
     currentContext: copilotContextSchema,
     overrideApiKey: nullableString,
@@ -163,15 +171,10 @@ const copilotInputSchema = z
   );
 
 export const generateCopilotSiteFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
   .handler(async ({ data, context }): Promise<AiCopilotResult> => {
-    // RESOLUÇÃO SEGURA DA CHAVE NO SERVIDOR:
-    const serverKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_STUDIO_KEY ||
-      (process.env as any).VITE_GEMINI_API_KEY;
-
-    const resolvedKey = (data.overrideApiKey || serverKey || "").trim();
+    const resolvedKey = (data.overrideApiKey || (await resolveGeminiApiKey()) || "").trim();
 
     if (!resolvedKey) {
       throw new Error(
@@ -184,7 +187,8 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
       const trimmed = url.trim();
       if (trimmed.startsWith("data:image/") || trimmed.startsWith("blob:")) return true;
       if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-        if (trimmed.includes("example.com") || trimmed.includes("via.placeholder.com")) return false;
+        if (trimmed.includes("example.com") || trimmed.includes("via.placeholder.com"))
+          return false;
         return true;
       }
       return false;
@@ -226,9 +230,7 @@ export const generateCopilotSiteFn = createServerFn({ method: "POST" })
               });
 
             if (!upErr) {
-              const { data: pubData } = supabaseAdmin.storage
-                .from("bio-media")
-                .getPublicUrl(path);
+              const { data: pubData } = supabaseAdmin.storage.from("bio-media").getPublicUrl(path);
               if (pubData?.publicUrl) {
                 finalUrl = pubData.publicUrl;
               }
@@ -388,11 +390,12 @@ REGRAS DE OURO DA GERAÇÃO (DIREÇÃO DE ARTE EXCLUSIVA & ZERO SITES CLONES):
     // Validacao de dados minimos para evitar geracao completamente inventada
     const _hasBriefing = data.briefing && data.briefing.trim().length > 20;
     const _hasFiles = preparedFiles.length > 0;
-    const _hasContext = data.currentContext?.displayName && data.currentContext.displayName !== "Empresa Local";
+    const _hasContext =
+      data.currentContext?.displayName && data.currentContext.displayName !== "Empresa Local";
     if (!_hasBriefing && !_hasFiles && !_hasContext) {
       throw new Error(
         "Dados insuficientes para gerar o site. Forneca ao menos: nome do negocio, descricao, " +
-        "ou fotos do estabelecimento. Dica: cole o link do Google Maps ou Instagram do negocio."
+          "ou fotos do estabelecimento. Dica: cole o link do Google Maps ou Instagram do negocio.",
       );
     }
 
@@ -475,55 +478,45 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     const apiBase = customGateway || defaultEndpoint;
 
     // Modelos Google Gemini de alta performance em ordem estrita de velocidade, compatibilidade e suporte ativo:
-    // gemini-2.5-flash e gemini-2.0-flash são os modelos padrão recomendados pelo Google AI Studio
-    const finalModelsToTry = [
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-pro",
-    ];
+    // Prioriza modelos Gemini 2.5 documentados para geração de conteúdo.
+    const finalModelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
 
     const errorLogs: string[] = [];
 
     // 1. Tenta a API generateContent nos modelos suportados
     for (const modelName of finalModelsToTry) {
       try {
-        const response = await fetch(
-          `${apiBase}/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
-            resolvedKey,
-          )}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": resolvedKey,
-              ...(customGateway
-                ? {
-                    "cf-aig-metadata": JSON.stringify({
-                      app: "eialink",
-                      service: "copilot-generate",
-                      model: modelName,
-                    }),
-                  }
-                : {}),
-            },
-            body: JSON.stringify({
-              system_instruction: {
-                parts: [{ text: systemPrompt }],
-              },
-              contents: [
-                {
-                  role: "user",
-                  parts: promptParts,
-                },
-              ],
-              generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.7,
-              },
-            }),
+        const response = await fetch(`${apiBase}/v1beta/models/${modelName}:generateContent`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": resolvedKey,
+            ...(customGateway
+              ? {
+                  "cf-aig-metadata": JSON.stringify({
+                    app: "eialink",
+                    service: "copilot-generate",
+                    model: modelName,
+                  }),
+                }
+              : {}),
           },
-        );
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: systemPrompt }],
+            },
+            contents: [
+              {
+                role: "user",
+                parts: promptParts,
+              },
+            ],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.7,
+            },
+          }),
+        });
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -554,9 +547,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           text = nonThoughtParts.map((p: any) => p.text).join("\n");
         } else {
           // Fallback se nenhuma parte possuir a flag thought
-          const textParts = parts.filter(
-            (p: any) => typeof p.text === "string" && p.text.trim(),
-          );
+          const textParts = parts.filter((p: any) => typeof p.text === "string" && p.text.trim());
           text = textParts.map((p: any) => p.text).join("\n");
         }
 
@@ -578,41 +569,32 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
 
     // 2. Fallback: Interactions API caso generateContent falhe
     if (!rawContent) {
-      const interactionModels = [
-        "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-      ];
+      const interactionModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
       for (const modelName of interactionModels) {
         try {
-          const response = await fetch(
-            `${apiBase}/v1beta/interactions?key=${encodeURIComponent(
-              resolvedKey,
-            )}`,
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-goog-api-key": resolvedKey,
-                "api-revision": "2026-05-20",
-                ...(customGateway
-                  ? {
-                      "cf-aig-metadata": JSON.stringify({
-                        app: "eialink",
-                        service: "copilot-interactions",
-                        model: modelName,
-                      }),
-                    }
-                  : {}),
-              },
-              body: JSON.stringify({
-                model: modelName,
-                system_instruction: systemPrompt,
-                input: userPrompt,
-                response_mime_type: "application/json",
-              }),
+          const response = await fetch(`${apiBase}/v1beta/interactions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": resolvedKey,
+              "api-revision": "2026-05-20",
+              ...(customGateway
+                ? {
+                    "cf-aig-metadata": JSON.stringify({
+                      app: "eialink",
+                      service: "copilot-interactions",
+                      model: modelName,
+                    }),
+                  }
+                : {}),
             },
-          );
+            body: JSON.stringify({
+              model: modelName,
+              system_instruction: systemPrompt,
+              input: userPrompt,
+              response_mime_type: "application/json",
+            }),
+          });
 
           if (!response.ok) {
             const errText = await response.text();
@@ -659,7 +641,10 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     }
 
     if (!rawContent) {
-      const detailMsg = errorLogs.length > 0 ? errorLogs.join(" | ") : (lastError || "Nenhum modelo respondeu com sucesso");
+      const detailMsg =
+        errorLogs.length > 0
+          ? errorLogs.join(" | ")
+          : lastError || "Nenhum modelo respondeu com sucesso";
       throw new Error(
         `Não foi possível gerar com a API do Google AI Studio. Detalhe: ${detailMsg}. Certifique-se de que sua chave de API está ativa no console do Google AI Studio.`,
       );
@@ -696,16 +681,20 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           ...parsed.custom_theme,
           mode: isDark ? "dark" : "light",
           background: isDark
-            ? (parsed.custom_theme.background && calcLum(parsed.custom_theme.background) < 90
-                ? parsed.custom_theme.background
-                : "#0a0c10")
-            : (parsed.custom_theme.background && calcLum(parsed.custom_theme.background) > 160
-                ? parsed.custom_theme.background
-                : "#f8fafc"),
+            ? parsed.custom_theme.background && calcLum(parsed.custom_theme.background) < 90
+              ? parsed.custom_theme.background
+              : "#0a0c10"
+            : parsed.custom_theme.background && calcLum(parsed.custom_theme.background) > 160
+              ? parsed.custom_theme.background
+              : "#f8fafc",
           title: isDark ? "#ffffff" : "#0f172a",
           text: isDark
-            ? (calcLum(parsed.custom_theme.text) > 130 ? parsed.custom_theme.text : "#e2e8f0")
-            : (calcLum(parsed.custom_theme.text) < 100 ? parsed.custom_theme.text : "#334155"),
+            ? calcLum(parsed.custom_theme.text) > 130
+              ? parsed.custom_theme.text
+              : "#e2e8f0"
+            : calcLum(parsed.custom_theme.text) < 100
+              ? parsed.custom_theme.text
+              : "#334155",
           card_bg: parsed.custom_theme.card_bg || (isDark ? "#12161f" : "#ffffff"),
           border_color: parsed.custom_theme.border_color || (isDark ? "#1f293d" : "#e2e8f0"),
         };
@@ -746,7 +735,9 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
         // 2. Por nome do arquivo (ou correspondência parcial)
         const byName = preparedFiles.find((f) => {
           const fn = f.name.toLowerCase();
-          return fn === cleanCandidate || cleanCandidate.includes(fn) || fn.includes(cleanCandidate);
+          return (
+            fn === cleanCandidate || cleanCandidate.includes(fn) || fn.includes(cleanCandidate)
+          );
         });
         if (byName?.publicUrl) return byName.publicUrl;
 
@@ -766,7 +757,11 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           candidate.startsWith("data:image/") ||
           candidate.startsWith("blob:")
         ) {
-          if (!candidate.includes("example.com") && !candidate.includes("URL_") && !candidate.includes("placeholder")) {
+          if (
+            !candidate.includes("example.com") &&
+            !candidate.includes("URL_") &&
+            !candidate.includes("placeholder")
+          ) {
             return candidate.trim();
           }
         }
@@ -869,14 +864,10 @@ export interface PremiumProposalResponse {
 }
 
 export const generatePremiumProposalFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof copilotInputSchema>) => copilotInputSchema.parse(data))
   .handler(async ({ data, context }) => {
-    const serverKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_STUDIO_KEY ||
-      (process.env as any).VITE_GEMINI_API_KEY;
-
-    const resolvedKey = (data.overrideApiKey || serverKey || "").trim();
+    const resolvedKey = (data.overrideApiKey || (await resolveGeminiApiKey()) || "").trim();
 
     if (!resolvedKey) {
       throw new Error(
@@ -889,7 +880,8 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
       const trimmed = url.trim();
       if (trimmed.startsWith("data:image/") || trimmed.startsWith("blob:")) return true;
       if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-        if (trimmed.includes("example.com") || trimmed.includes("via.placeholder.com")) return false;
+        if (trimmed.includes("example.com") || trimmed.includes("via.placeholder.com"))
+          return false;
         return true;
       }
       return false;
@@ -930,9 +922,7 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
               });
 
             if (!upErr) {
-              const { data: pubData } = supabaseAdmin.storage
-                .from("bio-media")
-                .getPublicUrl(path);
+              const { data: pubData } = supabaseAdmin.storage.from("bio-media").getPublicUrl(path);
               if (pubData?.publicUrl) {
                 finalUrl = pubData.publicUrl;
               }
@@ -1027,17 +1017,50 @@ export const generatePremiumProposalFn = createServerFn({ method: "POST" })
 
     // Semente criativa: garante variedade entre gerações (e entre "Gerar outra versão")
     const ART_DIRECTIONS = [
-      { id: "editorial-luxo", brief: "Editorial de luxo: muito respiro, tipografia serifada elegante (fontPair 'elegante'), paleta sóbria com um único acento metálico (ouro, champagne ou cobre), motion 'subtle'." },
-      { id: "neon-noturno", brief: "Neon noturno: fundo quase preto com leve tom da cor principal, acento vibrante saturado (ciano, magenta, lima ou laranja elétrico), fontPair 'marcante', motion 'cinematic'." },
-      { id: "minimal-claro", brief: "Minimal claro: mode 'light', fundo off-white quente ou frio, texto grafite, acento único e contido, fontPair 'moderna', motion 'subtle'." },
-      { id: "organico-quente", brief: "Orgânico quente: tons terrosos (argila, oliva, areia, terracota), sensação artesanal e acolhedora, fontPair 'elegante' ou 'moderna', motion 'standard'." },
-      { id: "brutalista-bold", brief: "Brutalista bold: alto contraste, cores chapadas fortes, bordas retas (radius '4px'), títulos enormes, fontPair 'marcante', motion 'standard'." },
-      { id: "cinematografico", brief: "Cinematográfico: fotos em destaque total, fundo profundo com gradiente da cor principal, acento quente, fontPair 'elegante' ou 'marcante', motion 'cinematic'." },
-      { id: "corporativo-confianca", brief: "Corporativo de confiança: azuis/verdes profundos ou grafite com acento sóbrio, fontPair 'corporativa', layout organizado, motion 'subtle'." },
-      { id: "vibrante-pop", brief: "Vibrante pop: energia jovem, 2 cores complementares alegres, radius '24px', fontPair 'marcante', motion 'standard'." },
+      {
+        id: "editorial-luxo",
+        brief:
+          "Editorial de luxo: muito respiro, tipografia serifada elegante (fontPair 'elegante'), paleta sóbria com um único acento metálico (ouro, champagne ou cobre), motion 'subtle'.",
+      },
+      {
+        id: "neon-noturno",
+        brief:
+          "Neon noturno: fundo quase preto com leve tom da cor principal, acento vibrante saturado (ciano, magenta, lima ou laranja elétrico), fontPair 'marcante', motion 'cinematic'.",
+      },
+      {
+        id: "minimal-claro",
+        brief:
+          "Minimal claro: mode 'light', fundo off-white quente ou frio, texto grafite, acento único e contido, fontPair 'moderna', motion 'subtle'.",
+      },
+      {
+        id: "organico-quente",
+        brief:
+          "Orgânico quente: tons terrosos (argila, oliva, areia, terracota), sensação artesanal e acolhedora, fontPair 'elegante' ou 'moderna', motion 'standard'.",
+      },
+      {
+        id: "brutalista-bold",
+        brief:
+          "Brutalista bold: alto contraste, cores chapadas fortes, bordas retas (radius '4px'), títulos enormes, fontPair 'marcante', motion 'standard'.",
+      },
+      {
+        id: "cinematografico",
+        brief:
+          "Cinematográfico: fotos em destaque total, fundo profundo com gradiente da cor principal, acento quente, fontPair 'elegante' ou 'marcante', motion 'cinematic'.",
+      },
+      {
+        id: "corporativo-confianca",
+        brief:
+          "Corporativo de confiança: azuis/verdes profundos ou grafite com acento sóbrio, fontPair 'corporativa', layout organizado, motion 'subtle'.",
+      },
+      {
+        id: "vibrante-pop",
+        brief:
+          "Vibrante pop: energia jovem, 2 cores complementares alegres, radius '24px', fontPair 'marcante', motion 'standard'.",
+      },
     ];
     const availableDirections = ART_DIRECTIONS.filter((d) => d.id !== data.avoidDirectionId);
-    const chosenDirection = availableDirections[Math.floor(Math.random() * availableDirections.length)];
+    const chosenDirection =
+      availableDirections[Math.floor(Math.random() * availableDirections.length)];
 
     const systemPrompt = `[INSTRUÇÃO MESTRE - GERADOR PREMIUM BETA NÍVEL 2 - COMPOSIÇÃO LIVRE CONTROLADA]
 Você é um Arquiteto Sênior de Produto, Diretor de Arte de Elite e Copywriter Especialista da plataforma EIA Link.
@@ -1323,12 +1346,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 
     const apiBase = customGateway || defaultEndpoint;
 
-    const finalModelsToTry = [
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-pro",
-    ];
+    const finalModelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
 
     let rawContent: string | null = null;
     let lastError = "";
@@ -1337,42 +1355,37 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 
     for (const modelName of finalModelsToTry) {
       try {
-        const response = await fetch(
-          `${apiBase}/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
-            resolvedKey,
-          )}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": resolvedKey,
-              ...(customGateway
-                ? {
-                    "cf-aig-metadata": JSON.stringify({
-                      app: "eialink",
-                      service: "copilot-premium-proposal",
-                      model: modelName,
-                    }),
-                  }
-                : {}),
-            },
-            body: JSON.stringify({
-              system_instruction: {
-                parts: [{ text: systemPrompt }],
-              },
-              contents: [
-                {
-                  role: "user",
-                  parts: promptParts,
-                },
-              ],
-              generationConfig: {
-                responseMimeType: "application/json",
-                temperature: 0.95,
-              },
-            }),
+        const response = await fetch(`${apiBase}/v1beta/models/${modelName}:generateContent`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": resolvedKey,
+            ...(customGateway
+              ? {
+                  "cf-aig-metadata": JSON.stringify({
+                    app: "eialink",
+                    service: "copilot-premium-proposal",
+                    model: modelName,
+                  }),
+                }
+              : {}),
           },
-        );
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: systemPrompt }],
+            },
+            contents: [
+              {
+                role: "user",
+                parts: promptParts,
+              },
+            ],
+            generationConfig: {
+              responseMimeType: "application/json",
+              temperature: 0.95,
+            },
+          }),
+        });
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -1393,7 +1406,8 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
             break;
           }
           if (response.status === 429) {
-            lastError = "Cota gratuita do Google AI Studio atingida no momento. Aguarde alguns minutos e tente novamente.";
+            lastError =
+              "Cota gratuita do Google AI Studio atingida no momento. Aguarde alguns minutos e tente novamente.";
           }
           continue;
         }
@@ -1409,9 +1423,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
         if (nonThoughtParts.length > 0) {
           text = nonThoughtParts.map((p: any) => p.text).join("\n");
         } else {
-          const textParts = parts.filter(
-            (p: any) => typeof p.text === "string" && p.text.trim(),
-          );
+          const textParts = parts.filter((p: any) => typeof p.text === "string" && p.text.trim());
           text = textParts.map((p: any) => p.text).join("\n");
         }
 
@@ -1434,7 +1446,10 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
     if (fatalError) throw new Error(fatalError);
 
     if (!rawContent) {
-      const detailMsg = errorLogs.length > 0 ? errorLogs.join(" | ") : (lastError || "Nenhum modelo respondeu com sucesso");
+      const detailMsg =
+        errorLogs.length > 0
+          ? errorLogs.join(" | ")
+          : lastError || "Nenhum modelo respondeu com sucesso";
       throw new Error(
         `Não foi possível gerar a Proposta Premium. Detalhe: ${detailMsg}. Certifique-se de que sua chave de API está ativa no Google AI Studio.`,
       );
@@ -1481,7 +1496,11 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
           candidate.startsWith("data:image/") ||
           candidate.startsWith("blob:")
         ) {
-          if (!candidate.includes("example.com") && !candidate.includes("URL_") && !candidate.includes("placeholder")) {
+          if (
+            !candidate.includes("example.com") &&
+            !candidate.includes("URL_") &&
+            !candidate.includes("placeholder")
+          ) {
             return candidate.trim();
           }
         }
@@ -1526,7 +1545,8 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
         validatedProposal.strategy?.niche || data.currentContext?.niche,
         validatedProposal.pagePatch?.displayName || data.currentContext?.displayName,
       );
-      const nicheGallery = NICHE_GALLERIES[detectedNicheKey] || NICHE_GALLERIES.geral || NICHE_GALLERIES.loja;
+      const nicheGallery =
+        NICHE_GALLERIES[detectedNicheKey] || NICHE_GALLERIES.geral || NICHE_GALLERIES.loja;
 
       if (validatedProposal.pagePatch) {
         let avatar = resolveFileUrl(validatedProposal.pagePatch.avatarUrl);
@@ -1536,15 +1556,22 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
           try {
             const aiImg = await generateAiImage({
               niche: detectedNicheKey,
-              companyName: validatedProposal.pagePatch.displayName || data.currentContext?.displayName || "Empresa",
+              companyName:
+                validatedProposal.pagePatch.displayName ||
+                data.currentContext?.displayName ||
+                "Empresa",
               currentUsageCount: 0,
               type: "cover",
             });
             cover = aiImg.url;
           } catch (err) {
-            console.warn("[Copilot] Falha ao gerar imagem de capa por IA, usando fallback da galeria:", err);
+            console.warn(
+              "[Copilot] Falha ao gerar imagem de capa por IA, usando fallback da galeria:",
+              err,
+            );
             if (nicheGallery?.covers && nicheGallery.covers.length > 0) {
-              cover = nicheGallery.covers[Math.floor(Math.random() * nicheGallery.covers.length)].url;
+              cover =
+                nicheGallery.covers[Math.floor(Math.random() * nicheGallery.covers.length)].url;
             }
           }
         }
@@ -1561,7 +1588,10 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
             try {
               const aiImg = await generateAiImage({
                 niche: detectedNicheKey,
-                companyName: validatedProposal.pagePatch?.displayName || data.currentContext?.displayName || "Empresa",
+                companyName:
+                  validatedProposal.pagePatch?.displayName ||
+                  data.currentContext?.displayName ||
+                  "Empresa",
                 currentUsageCount: 0,
                 type: "product",
                 itemName: item.name || `Item ${i + 1}`,
@@ -1610,7 +1640,9 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
       };
     } catch (parseErr: any) {
       console.error("Erro ao validar Proposta Premium v2:", parseErr);
-      throw new Error(`A IA gerou a proposta mas o esquema apresentou divergência: ${parseErr.message}`);
+      throw new Error(
+        `A IA gerou a proposta mas o esquema apresentou divergência: ${parseErr.message}`,
+      );
     }
   });
 
@@ -1717,7 +1749,10 @@ export async function extractGoogleMapsSearchUniversal(
 
   // Se já temos a URL completa de um Place específico, usamos ela diretamente no Jina Reader!
   let jinaUrl = "";
-  if (urlOrQuery.includes("google.com/maps/place/") || urlOrQuery.includes("google.com.br/maps/place/")) {
+  if (
+    urlOrQuery.includes("google.com/maps/place/") ||
+    urlOrQuery.includes("google.com.br/maps/place/")
+  ) {
     console.log(`[UniversalMaps] Acessando Place direto no Google Maps: "${urlOrQuery}"`);
     jinaUrl = `https://r.jina.ai/${urlOrQuery}`;
   } else {
@@ -1741,7 +1776,10 @@ export async function extractGoogleMapsSearchUniversal(
       text = await res.text();
     }
   } catch (jinaErr) {
-    console.warn("[UniversalMaps] Falha ao consultar Jina Reader para Google Maps Search:", jinaErr);
+    console.warn(
+      "[UniversalMaps] Falha ao consultar Jina Reader para Google Maps Search:",
+      jinaErr,
+    );
   }
 
   // 3. Extração dos Campos Estruturados sem depender de glifos especiais
@@ -1759,7 +1797,9 @@ export async function extractGoogleMapsSearchUniversal(
   }
 
   if (!name) {
-    const placeLinkMatch = text.match(/\[([^\n\r\]]+)\]\(https:\/\/www\.google\.com\/maps\/place\//);
+    const placeLinkMatch = text.match(
+      /\[([^\n\r\]]+)\]\(https:\/\/www\.google\.com\/maps\/place\//,
+    );
     if (placeLinkMatch && placeLinkMatch[1]) {
       name = placeLinkMatch[1].trim();
     }
@@ -1806,7 +1846,9 @@ export async function extractGoogleMapsSearchUniversal(
   let address: string | undefined;
   const addrMatch =
     text.match(/\s*\n+([^\n\r]+)/) ||
-    text.match(/(?:Endereço|Localização)?[:\s]*((?:Av\.|Rua|Alameda|Travessa|Praça|Estrada|Rodovia|Rod\.|Av\b|R\.)\s*[^,\n\r]+(?:,\s*[^,\n\r]+){1,4})/i) ||
+    text.match(
+      /(?:Endereço|Localização)?[:\s]*((?:Av\.|Rua|Alameda|Travessa|Praça|Estrada|Rodovia|Rod\.|Av\b|R\.)\s*[^,\n\r]+(?:,\s*[^,\n\r]+){1,4})/i,
+    ) ||
     text.match(/([^\n\r,]+,\s*\d+[^,\n\r]*(?:,\s*[^\n\r]+)?\s*-\s*[A-Z]{2})/i);
 
   if (addrMatch) {
@@ -1817,14 +1859,19 @@ export async function extractGoogleMapsSearchUniversal(
   const telMatch =
     text.match(/tel:([+\d]+)/) ||
     text.match(/\s*\n+([+\d\s-]+)/) ||
-    text.match(/(?:Telefone|Contato|Tel|WhatsApp|Ligar)?[:\s]*(\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)?(?:9\s*)?(\d{4,5})[-\s]?(\d{4})/i);
+    text.match(
+      /(?:Telefone|Contato|Tel|WhatsApp|Ligar)?[:\s]*(\+?55\s*)?(?:\(?([1-9]{2})\)?\s*)?(?:9\s*)?(\d{4,5})[-\s]?(\d{4})/i,
+    );
 
   if (telMatch) {
-    phone = (telMatch[1] || telMatch[0]).replace(/^(?:Telefone|Contato|Tel|WhatsApp|Ligar)[:\s]*/i, "").trim();
+    phone = (telMatch[1] || telMatch[0])
+      .replace(/^(?:Telefone|Contato|Tel|WhatsApp|Ligar)[:\s]*/i, "")
+      .trim();
   }
 
   let description: string | undefined;
-  const descMatch = text.match(/Compartilhar\s*\n+([^\n\r]+)/) || text.match(/Visão geral\s*\n+([^\n\r]+)/);
+  const descMatch =
+    text.match(/Compartilhar\s*\n+([^\n\r]+)/) || text.match(/Visão geral\s*\n+([^\n\r]+)/);
   if (descMatch) {
     const rawDesc = descMatch[1].trim();
     if (!rawDesc.startsWith("[") && rawDesc.length > 10) {
@@ -1834,8 +1881,19 @@ export async function extractGoogleMapsSearchUniversal(
 
   // Extração e Otimização de Fotos Reais em Ultra Alta Resolução (1600x1200)
   const rawPhotos =
-    text.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|googleapis\.com\/v1\/thumbnail|ggpht\.com)[^\s\)\"']*/gi) || [];
-  const blocked = ["/a/", "/a-/", "/al/", "default_user", "loader", "mapslogo", "tactile", "cleardot"];
+    text.match(
+      /https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|googleapis\.com\/v1\/thumbnail|ggpht\.com)[^\s\)\"']*/gi,
+    ) || [];
+  const blocked = [
+    "/a/",
+    "/a-/",
+    "/al/",
+    "default_user",
+    "loader",
+    "mapslogo",
+    "tactile",
+    "cleardot",
+  ];
   const candidatePhotos: string[] = [];
 
   for (const p of rawPhotos) {
@@ -1998,7 +2056,10 @@ export async function internalFetchBusinessFromUrl(
         return gosomData;
       }
     } catch (gosomErr) {
-      console.warn("[Copilot] Gosom Scraper indisponível, usando motor universal Google Maps Search:", gosomErr);
+      console.warn(
+        "[Copilot] Gosom Scraper indisponível, usando motor universal Google Maps Search:",
+        gosomErr,
+      );
     }
 
     // 2. MOTOR UNIVERSAL VIA GOOGLE MAPS SEARCH (Funciona 100% no Lovable, Cloud, Linux e Web)
@@ -2013,10 +2074,7 @@ export async function internalFetchBusinessFromUrl(
 
   // TRATAMENTO EXCLUSIVO DE LINKS DO GOOGLE DRIVE
   if (isGoogleDrive) {
-    const serverKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_STUDIO_KEY ||
-      (process.env as any).VITE_GEMINI_API_KEY;
+    const serverKey = await resolveGeminiApiKey();
 
     const fileMatch = target.match(/(?:file\/d\/|open\?id=|uc\?id=)([a-zA-Z0-9_-]{20,})/i);
     const folderMatch = target.match(/(?:folders\/)([a-zA-Z0-9_-]{20,})/i);
@@ -2118,8 +2176,11 @@ export async function internalFetchBusinessFromUrl(
       // 1. Tenta API oficial se houver chave do Google
       if (serverKey) {
         try {
-          const apiUrl = `https://www.googleapis.com/drive/v3/files?q=%27${folderId}%27+in+parents+and+trashed%3Dfalse&fields=files(id%2Cname%2CmimeType)&pageSize=25&key=${encodeURIComponent(serverKey)}`;
-          const apiRes = await fetch(apiUrl, { signal: controller.signal });
+          const apiUrl = `https://www.googleapis.com/drive/v3/files?q=%27${folderId}%27+in+parents+and+trashed%3Dfalse&fields=files(id%2Cname%2CmimeType)&pageSize=25`;
+          const apiRes = await fetch(apiUrl, {
+            signal: controller.signal,
+            headers: { "x-goog-api-key": serverKey },
+          });
           if (apiRes.ok) {
             const apiData = await apiRes.json();
             if (Array.isArray(apiData.files)) {
@@ -2273,8 +2334,8 @@ export async function internalFetchBusinessFromUrl(
         // Headers otimizados para extrair mais dados do Google Maps via Jina Reader
         "Accept-Language": "pt-BR,pt;q=0.9",
         "x-locale": "pt-BR",
-        "x-with-generated-alt": "true",   // gera alt text para imagens
-        "x-with-links-summary": "true",   // inclui links que podem conter URLs de fotos
+        "x-with-generated-alt": "true", // gera alt text para imagens
+        "x-with-links-summary": "true", // inclui links que podem conter URLs de fotos
         "x-timeout": "25",
       },
     });
@@ -2321,7 +2382,11 @@ export async function internalFetchBusinessFromUrl(
       const placeMatch = target.match(/\/maps\/place\/([^/@?&]+)/i);
       if (placeMatch) {
         const extracted = decodeURIComponent(placeMatch[1]).replace(/\+/g, " ").trim();
-        if (extracted && !extracted.match(/^[@\d]/) && !extracted.toLowerCase().includes("google")) {
+        if (
+          extracted &&
+          !extracted.match(/^[@\d]/) &&
+          !extracted.toLowerCase().includes("google")
+        ) {
           name = extracted;
         }
       }
@@ -2330,7 +2395,11 @@ export async function internalFetchBusinessFromUrl(
         const qMatch = target.match(/[?&]q=([^&]+)/i);
         if (qMatch) {
           const extracted = decodeURIComponent(qMatch[1]).replace(/\+/g, " ").trim();
-          if (extracted && !extracted.match(/^[@\d\-]/) && !extracted.toLowerCase().includes("google")) {
+          if (
+            extracted &&
+            !extracted.match(/^[@\d\-]/) &&
+            !extracted.toLowerCase().includes("google")
+          ) {
             name = extracted;
           }
         }
@@ -2374,7 +2443,8 @@ export async function internalFetchBusinessFromUrl(
         ? parseFloat((ratingMatch[1] || ratingMatch[2]).replace(",", "."))
         : undefined;
 
-      let reviewsCountMatch = text.match(/\(([\d.]+)\s*avaliações?\)/i) || text.match(/\(([\d.]+)\)/);
+      let reviewsCountMatch =
+        text.match(/\(([\d.]+)\s*avaliações?\)/i) || text.match(/\(([\d.]+)\)/);
       let reviewsCount = reviewsCountMatch
         ? parseInt(reviewsCountMatch[1].replace(/\D/g, ""), 10)
         : undefined;
@@ -2382,8 +2452,8 @@ export async function internalFetchBusinessFromUrl(
       let phoneMatch = text.match(/(?:\+?55\s?)?(?:\(?\d{2}\)?\s?)?(?:9\s?)?\d{4}[-\s]?\d{4}/);
       let phone = phoneMatch ? phoneMatch[0].trim() : undefined;
 
-      let addressMatch = text.match(/(?:Endereço|Address):\s*([^\n\r]+)/i) ||
-                           text.match(/📍\s*([^\n\r]+)/);
+      let addressMatch =
+        text.match(/(?:Endereço|Address):\s*([^\n\r]+)/i) || text.match(/📍\s*([^\n\r]+)/);
       let address = addressMatch ? addressMatch[1].trim() : undefined;
 
       // EXTRAÇÃO AVANÇADA DE FOTOS REAIS DO GOOGLE MAPS
@@ -2392,7 +2462,10 @@ export async function internalFetchBusinessFromUrl(
       function addCandidatePhotos(rawBlob: string) {
         if (!rawBlob) return;
         // Captura URLs do Google (googleusercontent e lh3.google)
-        const guUrls = rawBlob.match(/https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|lh3\.google\.com)[^\s\)\"']*/gi) || [];
+        const guUrls =
+          rawBlob.match(
+            /https?:\/\/[^\s\)\"']*(?:googleusercontent\.com|lh3\.google\.com)[^\s\)\"']*/gi,
+          ) || [];
         for (const u of guUrls) {
           // Excluir fotos de perfil de usuario
           if (u.includes("/a/") || u.includes("/a-/") || u.includes("default-user")) continue;
@@ -2421,9 +2494,10 @@ export async function internalFetchBusinessFromUrl(
         try {
           const directRes = await fetch(target, {
             headers: {
-              "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+              "User-Agent":
+                "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
               "Accept-Language": "pt-BR,pt;q=0.9",
-              "Accept": "text/html,application/xhtml+xml",
+              Accept: "text/html,application/xhtml+xml",
             },
             signal: AbortSignal.timeout(8000),
             redirect: "follow",
@@ -2443,15 +2517,25 @@ export async function internalFetchBusinessFromUrl(
 
             // og:title geralmente contem: "Nome do Lugar - Google Maps"
             if (!name) {
-              const ogTitleMatch = rawHtml.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i)
-                || rawHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
+              const ogTitleMatch =
+                rawHtml.match(
+                  /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i,
+                ) ||
+                rawHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i);
               if (ogTitleMatch) {
                 const raw = ogTitleMatch[1]
                   .replace(/\s*[-–—]\s*Google Maps.*/i, "")
                   .replace(/\s*[-–—]\s*Google.*/i, "")
-                  .replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/&quot;/g, '"')
+                  .replace(/&#39;/g, "'")
+                  .replace(/&amp;/g, "&")
+                  .replace(/&quot;/g, '"')
                   .trim();
-                if (raw && raw.length > 2 && !raw.toLowerCase().includes("google") && !raw.toLowerCase().includes("login")) {
+                if (
+                  raw &&
+                  raw.length > 2 &&
+                  !raw.toLowerCase().includes("google") &&
+                  !raw.toLowerCase().includes("login")
+                ) {
                   name = raw;
                 }
               }
@@ -2459,8 +2543,13 @@ export async function internalFetchBusinessFromUrl(
 
             // og:description geralmente contem: "4,7 ★ · Clinica odontologica · R. Exemplo, 123"
             if (!address || !rating) {
-              const ogDescMatch = rawHtml.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i)
-                || rawHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i);
+              const ogDescMatch =
+                rawHtml.match(
+                  /<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i,
+                ) ||
+                rawHtml.match(
+                  /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:description["']/i,
+                );
               if (ogDescMatch) {
                 const desc = ogDescMatch[1].replace(/&#39;/g, "'").replace(/&amp;/g, "&");
                 if (!rating) {
@@ -2468,7 +2557,10 @@ export async function internalFetchBusinessFromUrl(
                   if (rm) rating = parseFloat(rm[1].replace(",", "."));
                 }
                 if (!address) {
-                  const addrRegex = new RegExp("(?:[\u00B7\u2022|]|^)\\s*((?:R\\.|Rua|Av\\.|Avenida|Alameda|Trav\\.|Travessa|Est\\.|Estrada)[^\u00B7\u2022|\r\n]+)", "i");
+                  const addrRegex = new RegExp(
+                    "(?:[\u00B7\u2022|]|^)\\s*((?:R\\.|Rua|Av\\.|Avenida|Alameda|Trav\\.|Travessa|Est\\.|Estrada)[^\u00B7\u2022|\r\n]+)",
+                    "i",
+                  );
                   const addrM = desc.match(addrRegex);
                   if (addrM) address = addrM[1].trim();
                 }
@@ -2476,11 +2568,16 @@ export async function internalFetchBusinessFromUrl(
             }
 
             // og:image: foto principal do estabelecimento direto do Google Maps (gratuito)
-            const ogImageMatch = rawHtml.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i)
-              || rawHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
+            const ogImageMatch =
+              rawHtml.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+              rawHtml.match(/<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:image["']/i);
             if (ogImageMatch && ogImageMatch[1]) {
               const imgUrl = ogImageMatch[1].trim();
-              if (imgUrl.startsWith("http") && !imgUrl.includes("maps/vt/") && !imgUrl.includes("default-user")) {
+              if (
+                imgUrl.startsWith("http") &&
+                !imgUrl.includes("maps/vt/") &&
+                !imgUrl.includes("default-user")
+              ) {
                 candidatePhotoUrls.add(imgUrl);
               }
             }
@@ -2495,7 +2592,8 @@ export async function internalFetchBusinessFromUrl(
                 const raw = titleEl[1]
                   .replace(/<\/title>/i, "")
                   .replace(/\s*[-–—]\s*Google Maps.*/i, "")
-                  .replace(/&#39;/g, "'").replace(/&amp;/g, "&")
+                  .replace(/&#39;/g, "'")
+                  .replace(/&amp;/g, "&")
                   .trim();
                 if (raw && raw.length > 2 && !raw.toLowerCase().includes("google")) {
                   name = raw;
@@ -2513,10 +2611,13 @@ export async function internalFetchBusinessFromUrl(
         try {
           const nominatimQuery = encodeURIComponent(name + (address ? " " + address : ""));
           const nominatimRes = await fetch(
-            "https://nominatim.openstreetmap.org/search?q=" + nominatimQuery + "&format=json&addressdetails=1&limit=1&accept-language=pt-BR",
+            "https://nominatim.openstreetmap.org/search?q=" +
+              nominatimQuery +
+              "&format=json&addressdetails=1&limit=1&accept-language=pt-BR",
             {
               headers: {
-                "User-Agent": "EIALink-Copiloto/1.0 (aplicacao de geracao de sites; contato: suporte@eialink.com.br)",
+                "User-Agent":
+                  "EIALink-Copiloto/1.0 (aplicacao de geracao de sites; contato: suporte@eialink.com.br)",
                 "Accept-Language": "pt-BR,pt;q=0.9",
               },
               signal: AbortSignal.timeout(6000),
@@ -2623,15 +2724,26 @@ export async function internalFetchBusinessFromUrl(
       }
 
       // Detecta qualidade dos dados extraidos para avisar a IA
-      const hasConfirmedName = !!(name && name.length > 2 &&
+      const hasConfirmedName = !!(
+        name &&
+        name.length > 2 &&
         !name.toLowerCase().includes("google maps") &&
-        !name.toLowerCase().includes("google search"));
-      const dataFieldCount = [hasConfirmedName, !!phone, !!address, candidatePhotoUrls.size > 0].filter(Boolean).length;
-      const missingWarning = dataFieldCount < 2
-        ? "\n\nAVISO CRITICO PARA A IA: A extracao automatica retornou dados insuficientes (" + dataFieldCount + " campo(s) confirmado(s)). " +
-          "Voce DEVE: registrar campos ausentes em missingInformation, NAO inventar nome/endereco/servicos/precos, " +
-          "gerar apenas hero + whatsapp_cta, e solicitar ao usuario que preencha os dados manualmente."
-        : "";
+        !name.toLowerCase().includes("google search")
+      );
+      const dataFieldCount = [
+        hasConfirmedName,
+        !!phone,
+        !!address,
+        candidatePhotoUrls.size > 0,
+      ].filter(Boolean).length;
+      const missingWarning =
+        dataFieldCount < 2
+          ? "\n\nAVISO CRITICO PARA A IA: A extracao automatica retornou dados insuficientes (" +
+            dataFieldCount +
+            " campo(s) confirmado(s)). " +
+            "Voce DEVE: registrar campos ausentes em missingInformation, NAO inventar nome/endereco/servicos/precos, " +
+            "gerar apenas hero + whatsapp_cta, e solicitar ao usuario que preencha os dados manualmente."
+          : "";
 
       const cleanSnippet = text
         .replace(/Antes de ir para o Google[\s\S]*?(?:Aceitar tudo|Concordo)/i, "")
@@ -2643,7 +2755,9 @@ export async function internalFetchBusinessFromUrl(
 ${name ? `- Nome Comercial Confirmado: ${name}\n` : ""}${rating ? `- Avaliação: ${rating} estrelas no Google Maps ⭐ (${reviewsCount ?? 0} avaliações)\n` : ""}${
         phone ? `- Telefone / WhatsApp: ${phone}\n` : ""
       }${address ? `- Endereço Físico: ${address}\n` : ""}${
-        importedImages.length > 0 ? `- Fotos Reais do Google Maps: ${importedImages.length} foto(s) em alta resolução capturada(s) para o site.\n` : ""
+        importedImages.length > 0
+          ? `- Fotos Reais do Google Maps: ${importedImages.length} foto(s) em alta resolução capturada(s) para o site.\n`
+          : ""
       }
 Resumo de Avaliações e Informações Públicas:
 ${cleanSnippet || "Empresa indexada no Google Maps."}${missingWarning || ""}`;
@@ -2681,6 +2795,7 @@ ${cleanSnippet || "Empresa indexada no Google Maps."}${missingWarning || ""}`;
 }
 
 export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof fetchUrlInputSchema>) => fetchUrlInputSchema.parse(data))
   .handler(async ({ data, context }: any): Promise<FetchedBusinessData> => {
     return internalFetchBusinessFromUrl(data.url, context);
@@ -2688,12 +2803,14 @@ export const fetchBusinessFromUrlFn = createServerFn({ method: "POST" })
 
 export const chatCopilotEditInputSchema = z.object({
   currentBio: z.record(z.any()),
-  messages: z.array(
-    z.object({
-      role: z.enum(["user", "assistant"]),
-      content: z.string(),
-    })
-  ).default([]),
+  messages: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"]),
+        content: z.string(),
+      }),
+    )
+    .default([]),
   instruction: z.string().min(1),
   overrideApiKey: z.string().optional(),
   aiGatewayUrl: z.string().optional(),
@@ -2706,16 +2823,12 @@ export interface ChatCopilotEditResponse {
 }
 
 export const chatCopilotEditFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: z.infer<typeof chatCopilotEditInputSchema>) =>
-    chatCopilotEditInputSchema.parse(data)
+    chatCopilotEditInputSchema.parse(data),
   )
   .handler(async ({ data, context }: any): Promise<ChatCopilotEditResponse> => {
-    const serverKey =
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_STUDIO_KEY ||
-      (process.env as any).VITE_GEMINI_API_KEY;
-
-    const resolvedKey = (data.overrideApiKey || serverKey || "").trim();
+    const resolvedKey = (data.overrideApiKey || (await resolveGeminiApiKey()) || "").trim();
 
     if (!resolvedKey) {
       throw new Error(
@@ -2780,12 +2893,15 @@ export const chatCopilotEditFn = createServerFn({ method: "POST" })
       // 2. DETECÇÃO DE PEDIDOS DE BUSCA DE EMPRESA/LOCAL SEM LINK EXPLÍCITO
       const isSearchIntent =
         /(?:puxa|busca|procure|pesquise|pega|procura|extrai|encontre)\s+(?:as\s+informaç|os\s+dados|fotos?|informações|sobre|da\s+empresa|do\s+restaurante|da\s+loja)/i.test(
-          data.instruction
+          data.instruction,
         );
       if (isSearchIntent) {
         try {
           const queryClean = data.instruction
-            .replace(/(?:puxa|busca|procure|pesquise|pega|procura|extrai|encontre)\s+(?:as\s+informaç[^\s]*|os\s+dados|fotos?|informações|sobre|da\s+empresa|do\s+restaurante|da\s+loja)?/gi, "")
+            .replace(
+              /(?:puxa|busca|procure|pesquise|pega|procura|extrai|encontre)\s+(?:as\s+informaç[^\s]*|os\s+dados|fotos?|informações|sobre|da\s+empresa|do\s+restaurante|da\s+loja)?/gi,
+              "",
+            )
             .trim();
           if (queryClean.length >= 3) {
             console.log(`[chatCopilotEditFn] Intenção de busca detectada: "${queryClean}"`);
@@ -2862,7 +2978,9 @@ SUAS REGRAS DE OURO:
       : `INSTRUÇÃO ATUAL DO USUÁRIO: "${data.instruction}"\n\nAplique a alteração necessária e responda com o JSON de patch.`;
 
     // Garante que o histórico começa com papel "user" e alterna corretamente (regra estrita da API Gemini)
-    const historyList = (data.messages || []).filter((m: any) => m.content && m.content.trim().length > 0);
+    const historyList = (data.messages || []).filter(
+      (m: any) => m.content && m.content.trim().length > 0,
+    );
     const firstUserIdx = historyList.findIndex((m: any) => m.role === "user");
     const validHistory = firstUserIdx >= 0 ? historyList.slice(firstUserIdx) : [];
 
@@ -2896,46 +3014,38 @@ SUAS REGRAS DE OURO:
       process.env.CLOUDFLARE_AI_GATEWAY ||
       process.env.CF_AI_GATEWAY ||
       ""
-    ).trim().replace(/\/+$/, "");
+    )
+      .trim()
+      .replace(/\/+$/, "");
 
     const apiBase = customGateway || defaultEndpoint;
 
     // Modelos oficiais ativos do Google Gemini
-    const modelsToTry = [
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-pro",
-    ];
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
 
     let rawContent: string | null = null;
     const errorLogs: string[] = [];
 
     for (const modelName of modelsToTry) {
       try {
-        const response = await fetch(
-          `${apiBase}/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
-            resolvedKey,
-          )}`,
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "x-goog-api-key": resolvedKey,
-            },
-            body: JSON.stringify({
-              system_instruction: {
-                parts: [{ text: systemPrompt }],
-              },
-              contents,
-              generationConfig: {
-                temperature: 0.5,
-                maxOutputTokens: 3000,
-                responseMimeType: "application/json",
-              },
-            }),
+        const response = await fetch(`${apiBase}/v1beta/models/${modelName}:generateContent`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": resolvedKey,
           },
-        );
+          body: JSON.stringify({
+            system_instruction: {
+              parts: [{ text: systemPrompt }],
+            },
+            contents,
+            generationConfig: {
+              temperature: 0.5,
+              maxOutputTokens: 3000,
+              responseMimeType: "application/json",
+            },
+          }),
+        });
 
         if (response.ok) {
           const resJson = await response.json();
@@ -2955,7 +3065,9 @@ SUAS REGRAS DE OURO:
     }
 
     if (!rawContent) {
-      throw new Error(`Não foi possível obter resposta do Assistente de IA: ${errorLogs.join(" | ")}`);
+      throw new Error(
+        `Não foi possível obter resposta do Assistente de IA: ${errorLogs.join(" | ")}`,
+      );
     }
 
     try {
@@ -2991,4 +3103,3 @@ SUAS REGRAS DE OURO:
       };
     }
   });
-

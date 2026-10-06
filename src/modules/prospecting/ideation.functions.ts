@@ -1,8 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
 import type { CinematicPageData } from "@/modules/cinematic/types";
-import { PageService } from "@/modules/page/services/PageService";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { resolveGeminiApiKey } from "@/modules/ai/gemini-admin.functions";
 
 export interface IdeationInput {
   businessName: string;
@@ -45,22 +44,6 @@ export interface IdeationDossier {
     photoUrl?: string;
   }>;
   superPrompt: string;
-}
-
-function getSupabaseServerClient() {
-  const url =
-    process.env.SUPABASE_URL ||
-    process.env.VITE_SUPABASE_URL ||
-    "https://gctwvvnjcxnsjiovhmsv.supabase.co";
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ||
-    process.env.SUPABASE_PUBLISHABLE_KEY ||
-    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-    "sb_publishable_7cbVuf-q1wh7nqSeCXM1Ag_FMhRT2fS";
-  if (!url || !key) return null;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 }
 
 function detectArchetype(niche: string): IdeationDossier["archetype"] {
@@ -130,22 +113,20 @@ function getArchetypePalette(archetype: IdeationDossier["archetype"]): IdeationD
  * 1. Gera o Dossiê Estratégico e o Super Prompt combinando Google Maps, Instagram e a Skill creative-site-craft
  */
 export const synthesizeSiteIdeationFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((data: IdeationInput) => data)
   .handler(async ({ data }): Promise<IdeationDossier> => {
     const archetype = detectArchetype(data.niche);
     const palette = getArchetypePalette(archetype);
 
     const photos = (data.photos || []).filter((p) => Boolean(p && p.trim()));
-    const heroPhoto = photos[0] || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80";
+    const heroPhoto =
+      photos[0] ||
+      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80";
     const showcasePhotos = photos.slice(1, 5);
     const ambiancePhotos = photos.slice(5, 9);
 
-    const apiKey = (
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_STUDIO_KEY ||
-      (process.env as any).VITE_GEMINI_API_KEY ||
-      ""
-    ).trim();
+    const apiKey = (await resolveGeminiApiKey()) || "";
 
     // Fallback heurístico inteligente caso não haja chave Gemini configurada
     const fallbackDossier: IdeationDossier = {
@@ -225,16 +206,14 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
   "superPrompt": "Instruções cirúrgicas de design, tom de voz e ordem de blocos para gerar o site final"
 }`;
 
-      const models = ["gemini-2.5-flash", "gemini-1.5-flash"];
+      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
       for (const m of models) {
         try {
           const resp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${encodeURIComponent(
-              apiKey
-            )}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
               body: JSON.stringify({
                 contents: [{ parts: [{ text: prompt }] }],
                 generationConfig: {
@@ -242,7 +221,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
                   responseMimeType: "application/json",
                 },
               }),
-            }
+            },
           );
 
           if (resp.ok) {
@@ -288,9 +267,9 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
  * 2. Gera o site final no banco a partir do Dossiê aprovado pelo usuário
  */
 export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator(
     (input: {
-      userId: string;
       businessName: string;
       niche: string;
       city: string;
@@ -300,11 +279,10 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
       templateId?: string;
       archetype?: string;
       dossier: IdeationDossier;
-    }) => input
+    }) => input,
   )
-  .handler(async ({ data }) => {
-    const supabase = getSupabaseServerClient();
-    if (!supabase) throw new Error("Supabase não configurado.");
+  .handler(async ({ data, context }) => {
+    const supabase = context.supabase;
 
     const { dossier } = data;
     const chosenArchetype = (data.archetype || dossier.archetype) as any;
@@ -347,7 +325,7 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
         backgroundImage: dossier.curatedPhotos.hero,
         ctaText: "Pedir pelo WhatsApp",
         ctaLink: `https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(
-          `Olá! Vim pelo site da ${data.businessName} e gostaria de informações.`
+          `Olá! Vim pelo site da ${data.businessName} e gostaria de informações.`,
         )}`,
       },
       marquee: [
@@ -411,7 +389,8 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
       faq: [
         {
           question: "Como funciona o agendamento ou pedido?",
-          answer: "Você pode clicar em qualquer botão para ser atendido diretamente no nosso WhatsApp oficial com prioridade.",
+          answer:
+            "Você pode clicar em qualquer botão para ser atendido diretamente no nosso WhatsApp oficial com prioridade.",
         },
         {
           question: "Onde vocês estão localizados?",
@@ -424,7 +403,7 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
     const { data: page, error } = await supabase
       .from("bio_pages")
       .insert({
-        user_id: data.userId,
+        user_id: context.userId,
         slug: finalSlug,
         display_name: data.businessName,
         bio: dossier.heroSubtitle,
@@ -468,18 +447,17 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
           page_id: page.id,
           title: s.title,
           url: `https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(
-            `Olá! Gostaria de saber mais sobre ${s.title} (${s.priceHint}).`
+            `Olá! Gostaria de saber mais sobre ${s.title} (${s.priceHint}).`,
           )}`,
           position: idx,
           active: true,
         }));
-        await supabase.from("bio_links").insert(linksToInsert);
+        const { error: linksError } = await supabase.from("bio_links").insert(linksToInsert);
+        if (linksError) throw linksError;
 
         // Alimenta também a tabela de catálogo para delivery e loja
         const catalogItemsToInsert = dossier.serviceIdeas.map((s) => {
-          const rawPrice = parseFloat(
-            s.priceHint.replace(/[^\d,.-]/g, "").replace(",", ".")
-          );
+          const rawPrice = parseFloat(s.priceHint.replace(/[^\d,.-]/g, "").replace(",", "."));
           return {
             page_id: page.id,
             title: s.title,
@@ -490,9 +468,16 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
             active: true,
           };
         });
-        await supabase.from("catalog_items").insert(catalogItemsToInsert);
+        const { error: catalogError } = await supabase
+          .from("catalog_items")
+          .insert(catalogItemsToInsert);
+        if (catalogError) throw catalogError;
       } catch (errLinks) {
-        console.warn("[createSiteFromIdeationDossierFn] Aviso ao criar links/itens secundários:", errLinks);
+        throw new Error(
+          `Site criado, mas não foi possível salvar os links e itens: ${
+            errLinks instanceof Error ? errLinks.message : "falha desconhecida"
+          }`,
+        );
       }
     }
 

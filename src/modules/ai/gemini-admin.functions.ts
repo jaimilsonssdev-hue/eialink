@@ -3,50 +3,73 @@ import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 
-export const GEMINI_KEY_FEATURE = "gemini_api_key";
+const OWNER_EMAIL = "jaimilsonvendas@gmail.com";
 
 function getServiceSupabase() {
   const url = process.env["SUPABASE_URL"] || process.env["VITE_SUPABASE_URL"];
-  const key =
-    process.env["SUPABASE_SERVICE_ROLE_KEY"] ||
-    process.env["SUPABASE_PUBLISHABLE_KEY"] ||
-    process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
+  const key = process.env["SUPABASE_SERVICE_ROLE_KEY"];
   if (!url || !key) return null;
-  return createClient<Database>(url, key);
+  return createClient<Database>(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+}
+
+type AuthContext = {
+  supabase: ReturnType<typeof createClient<Database>>;
+  userId: string;
+  claims: Record<string, unknown>;
+};
+
+async function assertAdmin(context: AuthContext) {
+  if ((context.claims["email"] as string | undefined)?.toLowerCase() === OWNER_EMAIL) {
+    return;
+  }
+
+  const { data: roles, error } = await context.supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", context.userId);
+
+  if (error)
+    throw new Error(`Não foi possível verificar permissões administrativas: ${error.message}`);
+  if (!roles?.some((role) => role.role === "admin")) {
+    throw new Error(
+      "Acesso negado: apenas administradores podem alterar a chave compartilhada do Gemini.",
+    );
+  }
+}
+
+function getRequiredServiceSupabase() {
+  const supabase = getServiceSupabase();
+  if (!supabase) {
+    throw new Error(
+      "Configuração segura do banco indisponível. Configure SUPABASE_SERVICE_ROLE_KEY no servidor.",
+    );
+  }
+  return supabase;
 }
 
 /**
  * Resolve a chave de API do Google Gemini com segurança no servidor:
- * 1. Banco de Dados (Supabase plans.features["gemini_api_key"])
+ * 1. Configuração de pagamento privada (acesso exclusivo ao service role)
  * 2. Variável de ambiente (GEMINI_API_KEY ou GOOGLE_AI_STUDIO_KEY)
  * A chave nunca é exposta no frontend público.
  */
 export async function resolveGeminiApiKey(): Promise<string | null> {
-  const envKey =
-    process.env["GEMINI_API_KEY"] ||
-    process.env["GOOGLE_AI_STUDIO_KEY"] ||
-    (process.env as any)["VITE_GEMINI_API_KEY"];
+  const envKey = process.env["GEMINI_API_KEY"] || process.env["GOOGLE_AI_STUDIO_KEY"];
   if (envKey && envKey.trim()) return envKey.trim();
 
   const supabase = getServiceSupabase();
   if (!supabase) return null;
 
-  try {
-    const { data: plan } = await supabase
-      .from("plans")
-      .select("features")
-      .eq("slug", "pro")
-      .maybeSingle();
+  const { data, error } = await supabase
+    .from("payment_gateway_settings")
+    .select("gemini_api_key")
+    .eq("id", "default")
+    .maybeSingle();
 
-    if (plan?.features && typeof plan.features === "object") {
-      const features = plan.features as Record<string, unknown>;
-      const saved = features[GEMINI_KEY_FEATURE];
-      if (typeof saved === "string" && saved.trim()) return saved.trim();
-    }
-  } catch (err) {
-    console.warn("[gemini-admin] Não foi possível ler a chave do banco:", err);
-  }
-  return null;
+  if (error) throw new Error(`Não foi possível ler a configuração do Gemini: ${error.message}`);
+  return data?.gemini_api_key?.trim() || null;
 }
 
 function maskKey(key: string) {
@@ -84,24 +107,23 @@ export const testGeminiApiKeyFn = createServerFn({ method: "POST" })
     try {
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 12000);
-
-      const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(candidateKey)}`,
-        {
+      let resp: Response;
+      try {
+        resp = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
           method: "GET",
           signal: controller.signal,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      clearTimeout(timeout);
+          headers: { "x-goog-api-key": candidateKey },
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
 
       if (!resp.ok) {
-        const errorText = await resp.text();
-        console.warn(`[gemini-admin] Validação Google AI falhou [${resp.status}]:`, errorText);
         if (resp.status === 400 || resp.status === 403) {
           return {
             ok: false,
-            message: "A Google recusou a chave. Verifique se copiou a chave completa no Google AI Studio.",
+            message:
+              "A Google recusou a chave. Verifique se copiou a chave completa no Google AI Studio.",
           };
         }
         return { ok: false, message: `Erro ao validar com a Google (HTTP ${resp.status}).` };
@@ -116,95 +138,78 @@ export const testGeminiApiKeyFn = createServerFn({ method: "POST" })
           ? "Chave validada com sucesso! Acesso aos modelos Gemini confirmado."
           : "Chave válida com o Google AI Studio.",
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       return {
         ok: false,
-        message: err.name === "AbortError" ? "Tempo limite ao conectar com a Google." : err.message || "Falha na conexão.",
+        message:
+          err instanceof Error && err.name === "AbortError"
+            ? "Tempo limite ao conectar com a Google."
+            : err instanceof Error
+              ? err.message
+              : "Falha na conexão.",
       };
     }
   });
 
 /**
- * Salva ou remove a chave do Gemini com segurança permanente no banco de dados (Supabase).
- * Apenas usuários autenticados podem salvar.
+ * Salva ou remove a chave compartilhada do Gemini. O segredo fica na tabela
+ * protegida de configurações e só pode ser alterado por administradores.
  */
 export const saveGeminiApiKeyFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { apiKey: string }) => d)
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
     const rawKey = typeof data?.apiKey === "string" ? data.apiKey.trim() : "";
+    const supabase = getRequiredServiceSupabase();
 
-    // Se for remover
     if (!rawKey) {
-      const supabase = getServiceSupabase();
-      if (!supabase) throw new Error("Banco de dados indisponível.");
+      const { error } = await supabase
+        .from("payment_gateway_settings")
+        .update({ gemini_api_key: null, updated_at: new Date().toISOString() })
+        .eq("id", "default");
+      if (error) throw new Error(`Não foi possível remover a chave do Gemini: ${error.message}`);
 
-      const { data: plans } = await supabase
-        .from("plans")
-        .select("id, features")
-        .in("slug", ["pro", "free"]);
-
-      for (const plan of plans ?? []) {
-        const current =
-          plan.features && typeof plan.features === "object"
-            ? (plan.features as Record<string, unknown>)
-            : {};
-        const next = { ...current };
-        delete next[GEMINI_KEY_FEATURE];
-
-        await supabase
-          .from("plans")
-          .update({ features: next as unknown as Database["public"]["Tables"]["plans"]["Update"]["features"] })
-          .eq("id", plan.id);
-      }
-
-      return { success: true, configured: false, message: "Chave da IA removida do banco de dados." };
+      return {
+        success: true,
+        configured: false,
+        message: "Chave compartilhada do Gemini removida.",
+      };
     }
 
     if (rawKey.length < 10) {
-      throw new Error("A chave informada é muito curta para ser uma chave válida do Google AI Studio.");
-    }
-
-    // Valida a chave na API do Google antes de salvar
-    try {
-      const testResp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(rawKey)}`,
-        { method: "GET", headers: { "Content-Type": "application/json" } }
+      throw new Error(
+        "A chave informada é muito curta para ser uma chave válida do Google AI Studio.",
       );
+    }
+
+    try {
+      const testResp = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
+        method: "GET",
+        headers: { "x-goog-api-key": rawKey },
+        signal: AbortSignal.timeout(12000),
+      });
       if (!testResp.ok) {
-        const errText = await testResp.text();
-        console.warn("[gemini-admin] Chave inválida antes de salvar:", errText);
-        throw new Error("A Google recusou esta chave. Verifique no Google AI Studio se ela está ativa.");
+        throw new Error(
+          "A Google recusou esta chave. Verifique no Google AI Studio se ela está ativa.",
+        );
       }
-    } catch (apiErr: any) {
-      throw new Error(apiErr.message || "Não foi possível validar a chave com a Google.");
+    } catch (apiErr: unknown) {
+      throw new Error(
+        apiErr instanceof Error ? apiErr.message : "Não foi possível validar a chave com a Google.",
+      );
     }
 
-    const supabase = getServiceSupabase();
-    if (!supabase) throw new Error("Banco de dados indisponível.");
-
-    const { data: plans } = await supabase
-      .from("plans")
-      .select("id, features")
-      .in("slug", ["pro", "free"]);
-
-    for (const plan of plans ?? []) {
-      const current =
-        plan.features && typeof plan.features === "object"
-          ? (plan.features as Record<string, unknown>)
-          : {};
-      const next = { ...current, [GEMINI_KEY_FEATURE]: rawKey };
-
-      await supabase
-        .from("plans")
-        .update({ features: next as unknown as Database["public"]["Tables"]["plans"]["Update"]["features"] })
-        .eq("id", plan.id);
-    }
+    const { error } = await supabase
+      .from("payment_gateway_settings")
+      .update({ gemini_api_key: rawKey, updated_at: new Date().toISOString() })
+      .eq("id", "default");
+    if (error) throw new Error(`Não foi possível salvar a chave do Gemini: ${error.message}`);
 
     return {
       success: true,
       configured: true,
       masked: maskKey(rawKey),
-      message: "Chave salva com sucesso no banco de dados! Acesso generativo ativo para o Studio.",
+      message: "Chave compartilhada salva com segurança. Acesso generativo ativo para o Studio.",
     };
   });

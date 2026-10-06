@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { CinematicPageData, CreativePlan, CinematicConceptOption } from "./types";
 import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
@@ -36,6 +37,7 @@ function getSupabaseServerClient() {
  * 1. Extração rica do Google Maps para o Cinematic Studio
  */
 export const lookupMapsForCinematicFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((d: { urlOrQuery: string }) => d)
   .handler(async ({ data }) => {
     const raw = (data.urlOrQuery || "").trim();
@@ -54,12 +56,18 @@ export const lookupMapsForCinematicFn = createServerFn({ method: "POST" })
     const first = profiles[0];
     const firstAny = first as any;
     const name = first?.name || clean.name || raw.replace(/^https?:\/\/[^\s]+/gi, "").trim();
-    const address = firstAny?.address || firstAny?.placeDetails?.address || (first?.city ? `Brasil - ${first.city}` : clean.city ? `Brasil - ${clean.city}` : undefined);
+    const address =
+      firstAny?.address ||
+      firstAny?.placeDetails?.address ||
+      (first?.city ? `Brasil - ${first.city}` : clean.city ? `Brasil - ${clean.city}` : undefined);
     const whatsapp = first?.whatsapp || first?.phone || undefined;
     const rating = first?.rating || 4.9;
     const reviewsCount = first?.reviews_count || 128;
     const niche = first?.niche || "Experiência Exclusiva";
-    const openingHours = firstAny?.openingHours || firstAny?.placeDetails?.openingHours || "Consulte horários para reservas";
+    const openingHours =
+      firstAny?.openingHours ||
+      firstAny?.placeDetails?.openingHours ||
+      "Consulte horários para reservas";
     const photos: string[] = firstAny?.photos || firstAny?.placeDetails?.photos || [];
 
     return {
@@ -79,6 +87,7 @@ export const lookupMapsForCinematicFn = createServerFn({ method: "POST" })
  * 2. Direção de Arte e Refinamento por IA (Gemini) para Scrollytelling
  */
 export const refineCinematicWithAiFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((d: { currentData: CinematicPageData; userInstruction: string }) => d)
   .handler(async ({ data }) => {
     const { currentData, userInstruction } = data;
@@ -88,14 +97,7 @@ export const refineCinematicWithAiFn = createServerFn({ method: "POST" })
       return currentData;
     }
 
-    const dbOrEnvKey = await resolveGeminiApiKey();
-    const apiKey = (
-      dbOrEnvKey ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_STUDIO_KEY ||
-      (process.env as any).VITE_GEMINI_API_KEY ||
-      ""
-    ).trim();
+    const apiKey = (await resolveGeminiApiKey()) || "";
 
     if (apiKey) {
       try {
@@ -194,21 +196,19 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
   ]
 }`;
 
-        const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+        const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
         for (const model of models) {
           try {
             const resp = await fetch(
-              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
-                apiKey
-              )}`,
+              `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
               {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
+                headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
                 body: JSON.stringify({
                   contents: [{ role: "user", parts: [{ text: prompt }] }],
                   generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
                 }),
-              }
+              },
             );
 
             if (resp.ok) {
@@ -227,10 +227,15 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
                     hero: {
                       ...currentData.hero,
                       ...parsed.hero,
-                      backgroundImage: currentData.hero.backgroundImage || parsed.hero.backgroundImage,
-                      backgroundVideo: currentData.hero.backgroundVideo || parsed.hero.backgroundVideo,
+                      backgroundImage:
+                        currentData.hero.backgroundImage || parsed.hero.backgroundImage,
+                      backgroundVideo:
+                        currentData.hero.backgroundVideo || parsed.hero.backgroundVideo,
                     },
-                    gallery: (parsed.gallery && parsed.gallery.length > 0) ? parsed.gallery : currentData.gallery,
+                    gallery:
+                      parsed.gallery && parsed.gallery.length > 0
+                        ? parsed.gallery
+                        : currentData.gallery,
                   };
                 }
               }
@@ -248,7 +253,14 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
     const lower = instruction.toLowerCase();
     const updated = JSON.parse(JSON.stringify(currentData)) as CinematicPageData;
 
-    if (lower.includes("neo") || lower.includes("pop") || lower.includes("jovem") || lower.includes("burger") || lower.includes("bebida") || lower.includes("fitness")) {
+    if (
+      lower.includes("neo") ||
+      lower.includes("pop") ||
+      lower.includes("jovem") ||
+      lower.includes("burger") ||
+      lower.includes("bebida") ||
+      lower.includes("fitness")
+    ) {
       updated.archetype = "neo-pop-d2c";
       updated.theme.accent = "#ccff00";
       updated.theme.secondaryAccent = "#ff0055";
@@ -257,7 +269,8 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
       updated.theme.borderStyle = "pill";
       updated.hero.tagline = "ENERGY & HIGH VIBE";
       updated.hero.title = `Sabor de Alta Voltagem na ${updated.businessName}`;
-      updated.hero.subtitle = "Fórmulas puras, intensidade máxima e atitude autêntica sem concessões.";
+      updated.hero.subtitle =
+        "Fórmulas puras, intensidade máxima e atitude autêntica sem concessões.";
       updated.hero.floatingBadge = "⚡ EDIÇÃO LIMITADA 2026";
       updated.marquee = [
         { id: "m1", text: "ZERO COMPROMISSOS COM O MEDÍOCRE", icon: "⚡" },
@@ -265,7 +278,13 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
         { id: "m3", text: "DESIGN QUE PULSA", icon: "💎" },
         { id: "m4", text: "ENERGIA LIMPA E DIRETA", icon: "🚀" },
       ];
-    } else if (lower.includes("tech") || lower.includes("cyber") || lower.includes("software") || lower.includes("dados") || lower.includes("barbearia")) {
+    } else if (
+      lower.includes("tech") ||
+      lower.includes("cyber") ||
+      lower.includes("software") ||
+      lower.includes("dados") ||
+      lower.includes("barbearia")
+    ) {
       updated.archetype = "cyber-tech";
       updated.theme.accent = "#00f0ff";
       updated.theme.secondaryAccent = "#38bdf8";
@@ -274,7 +293,8 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
       updated.theme.borderStyle = "sharp";
       updated.hero.tagline = "[SYS::01] HIGH PRECISION ENGINE";
       updated.hero.title = `A Nova Dimensão da ${updated.businessName}`;
-      updated.hero.subtitle = "Arquitetura avançada, corte milimétrico e velocidade computacional aplicada ao mundo real.";
+      updated.hero.subtitle =
+        "Arquitetura avançada, corte milimétrico e velocidade computacional aplicada ao mundo real.";
       updated.hero.floatingBadge = "STATUS: ONLINE 99.99%";
       updated.marquee = [
         { id: "m1", text: "SISTEMAS CALIBRADOS", icon: "⚙️" },
@@ -282,7 +302,13 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
         { id: "m3", text: "PRECISÃO MILIMÉTRICA", icon: "📐" },
         { id: "m4", text: "SEGURANÇA CRIPTOGRAFADA", icon: "🛡️" },
       ];
-    } else if (lower.includes("clínica") || lower.includes("estética") || lower.includes("dermatologia") || lower.includes("odonto") || lower.includes("spa")) {
+    } else if (
+      lower.includes("clínica") ||
+      lower.includes("estética") ||
+      lower.includes("dermatologia") ||
+      lower.includes("odonto") ||
+      lower.includes("spa")
+    ) {
       updated.archetype = "clean-biotech";
       updated.theme.accent = "#10b981";
       updated.theme.secondaryAccent = "#06b6d4";
@@ -291,7 +317,8 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
       updated.theme.borderStyle = "glass";
       updated.hero.tagline = "CIÊNCIA, LONGEVIDADE & EQUILÍBRIO";
       updated.hero.title = `A Harmonização Natural na ${updated.businessName}`;
-      updated.hero.subtitle = "Protocolos regenerativos de ponta desenhados para realçar sua essência com sutileza e rigor biomédico.";
+      updated.hero.subtitle =
+        "Protocolos regenerativos de ponta desenhados para realçar sua essência com sutileza e rigor biomédico.";
       updated.hero.floatingBadge = "CERTIFICAÇÃO INTERNACIONAL";
       updated.marquee = [
         { id: "m1", text: "TECNOLOGIA BIOCELULAR", icon: "🌿" },
@@ -299,7 +326,13 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
         { id: "m3", text: "RESULTADOS PREVISÍVEIS", icon: "✨" },
         { id: "m4", text: "ATENDIMENTO INDIVIDUALIZADO", icon: "🩺" },
       ];
-    } else if (lower.includes("brutal") || lower.includes("tatuagem") || lower.includes("tattoo") || lower.includes("arte") || lower.includes("preto")) {
+    } else if (
+      lower.includes("brutal") ||
+      lower.includes("tatuagem") ||
+      lower.includes("tattoo") ||
+      lower.includes("arte") ||
+      lower.includes("preto")
+    ) {
       updated.archetype = "dark-brutalist";
       updated.theme.accent = "#ffffff";
       updated.theme.secondaryAccent = "#a1a1aa";
@@ -308,7 +341,8 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
       updated.theme.borderStyle = "subtle";
       updated.hero.tagline = "ESTÉTICA CRUA & SEM FILTROS";
       updated.hero.title = `A Marca Perpétua da ${updated.businessName}`;
-      updated.hero.subtitle = "Sem ornamentos descartáveis. Apenas contraste visceral, técnica implacável e assinatura única.";
+      updated.hero.subtitle =
+        "Sem ornamentos descartáveis. Apenas contraste visceral, técnica implacável e assinatura única.";
       updated.hero.floatingBadge = "ZERO COMPLACÊNCIA";
       updated.marquee = [
         { id: "m1", text: "TRAÇO DEFINITIVO", icon: "⚔️" },
@@ -337,30 +371,24 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
  * 3. Salvar & Publicar a Landing Page Cinematográfica no Supabase
  */
 export const saveCinematicPageFn = createServerFn({ method: "POST" })
-  .validator(
-    (d: {
-      data: CinematicPageData;
-      userId: string;
-      pageId?: string;
-      publish?: boolean;
-    }) => d
-  )
-  .handler(async ({ data: input }) => {
-    const supabase = getSupabaseServerClient();
-    if (!supabase) {
-      throw new Error("Erro de conexão com o banco de dados.");
-    }
-
-    const { data, userId, pageId, publish = true } = input;
+  .middleware([requireSupabaseAuth])
+  .validator((d: { data: CinematicPageData; pageId?: string; publish?: boolean }) => d)
+  .handler(async ({ data: input, context }) => {
+    const supabase = context.supabase;
+    const userId = context.userId;
+    const { data, pageId, publish = true } = input;
     const baseSlug = slugify(data.businessName || "pagina-cinematica");
     const suffix = crypto.randomUUID().slice(0, 5);
     const resolvedSlug = pageId ? undefined : `${baseSlug}-${suffix}`;
 
     const effectiveFont = (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
-    const effectiveMode = data.theme?.mode || (data.theme?.bg?.includes("#fff") || data.theme?.bg?.includes("#f8") ? "light" : "dark");
-    const effectiveRadius = (data.theme as any)?.borderRadius || data.theme?.borderStyle || "rounded";
+    const effectiveMode =
+      data.theme?.mode ||
+      (data.theme?.bg?.includes("#fff") || data.theme?.bg?.includes("#f8") ? "light" : "dark");
+    const effectiveRadius =
+      (data.theme as any)?.borderRadius || data.theme?.borderStyle || "rounded";
     const effectiveBoxEffect = (data.theme as any)?.boxEffect || "glass";
-    const effectiveArchetype = (data.archetype || (data.theme as any)?.archetype || "cinematic");
+    const effectiveArchetype = data.archetype || (data.theme as any)?.archetype || "cinematic";
 
     const customThemeObj = {
       parallax: Boolean(data.theme.parallaxEnabled),
@@ -376,7 +404,8 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
       archetype: effectiveArchetype,
       headingStyle: (data.theme as any)?.headingStyle || "default",
       borderRadius: effectiveRadius,
-      border_radius: effectiveRadius === "sharp" ? "0px" : effectiveRadius === "pill" ? "28px" : "16px",
+      border_radius:
+        effectiveRadius === "sharp" ? "0px" : effectiveRadius === "pill" ? "28px" : "16px",
       boxEffect: effectiveBoxEffect,
     };
 
@@ -424,6 +453,7 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
           social_links: socialLinks as any,
         })
         .eq("id", savedId)
+        .eq("user_id", userId)
         .select("id, slug")
         .single();
 
@@ -463,29 +493,34 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
 
     // Sincroniza os itens na tabela catalog_items (para alimentar catálogo, loja e pedidos nativamente)
     if (savedId && data.highlights && Array.isArray(data.highlights)) {
-      try {
-        await supabase.from("catalog_items").delete().eq("page_id", savedId);
+      const { error: deleteError } = await supabase
+        .from("catalog_items")
+        .delete()
+        .eq("page_id", savedId);
+      if (deleteError) {
+        throw new Error(`Erro ao substituir os itens do catálogo: ${deleteError.message}`);
+      }
 
-        if (data.highlights.length > 0) {
-          const catalogRows = data.highlights.map((item, idx) => {
-            const rawPrice = item.price
-              ? parseFloat(item.price.replace(/[^\d,.-]/g, "").replace(",", "."))
-              : 0;
-            return {
-              page_id: savedId,
-              title: item.title,
-              description: item.description,
-              price: isNaN(rawPrice) ? 0 : rawPrice,
-              image_url: item.image || null,
-              badge: item.badge || null,
-              is_available: true,
-              display_order: idx,
-            };
-          });
-          await supabase.from("catalog_items").insert(catalogRows);
+      if (data.highlights.length > 0) {
+        const catalogRows = data.highlights.map((item, idx) => {
+          const rawPrice = item.price
+            ? parseFloat(item.price.replace(/[^\d,.-]/g, "").replace(",", "."))
+            : 0;
+          return {
+            page_id: savedId,
+            title: item.title,
+            description: item.description,
+            price: isNaN(rawPrice) ? 0 : rawPrice,
+            image_url: item.image || null,
+            badge: item.badge || null,
+            is_available: true,
+            display_order: idx,
+          };
+        });
+        const { error: insertError } = await supabase.from("catalog_items").insert(catalogRows);
+        if (insertError) {
+          throw new Error(`Erro ao salvar os itens do catálogo: ${insertError.message}`);
         }
-      } catch (catErr) {
-        console.warn("Aviso ao sincronizar catalog_items:", catErr);
       }
     }
 
@@ -508,6 +543,7 @@ export const saveCinematicPageFn = createServerFn({ method: "POST" })
  * - "proposal_plan": Gera Opções A e B quando o usuário pede explicitamente propostas/conceitos novos
  */
 export const createCreativePitchFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator(
     (d: {
       businessName: string;
@@ -516,21 +552,13 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
       currentData: CinematicPageData;
       conversationHistory?: Array<{ sender: "user" | "agent"; text: string }>;
       apiKey?: string;
-    }) => d
+    }) => d,
   )
   .handler(async ({ data: input }): Promise<import("./types").CreativePitchResponse> => {
     const { businessName, niche, userMessage, currentData, conversationHistory = [] } = input;
     const instruction = (userMessage || "").trim();
 
-    const dbOrEnvKey = await resolveGeminiApiKey();
-    const apiKey = (
-      input.apiKey ||
-      dbOrEnvKey ||
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_STUDIO_KEY ||
-      (process.env as any).VITE_GEMINI_API_KEY ||
-      ""
-    ).trim();
+    const apiKey = (input.apiKey || (await resolveGeminiApiKey()) || "").trim();
 
     if (!apiKey) {
       return {
@@ -643,28 +671,29 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
       }
 
       // Adiciona o turno atual do usuário
-      if (contentsPayload.length > 0 && contentsPayload[contentsPayload.length - 1].role === "user") {
+      if (
+        contentsPayload.length > 0 &&
+        contentsPayload[contentsPayload.length - 1].role === "user"
+      ) {
         contentsPayload[contentsPayload.length - 1].parts[0].text += `\n${instruction}`;
       } else {
         contentsPayload.push({ role: "user", parts: [{ text: instruction }] });
       }
 
-      const models = ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"];
+      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
       for (const model of models) {
         try {
           const resp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(
-              apiKey
-            )}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
             {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
+              headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
               body: JSON.stringify({
                 system_instruction: { parts: [{ text: systemPrompt }] },
                 contents: contentsPayload,
                 generationConfig: { responseMimeType: "application/json", temperature: 0.6 },
               }),
-            }
+            },
           );
 
           if (resp.ok) {
@@ -710,7 +739,10 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
               if (textOutput.trim().length > 5) {
                 return {
                   actionType: "conversation",
-                  agentMessage: textOutput.replace(/```json/gi, "").replace(/```/g, "").trim(),
+                  agentMessage: textOutput
+                    .replace(/```json/gi, "")
+                    .replace(/```/g, "")
+                    .trim(),
                   suggestions: [
                     "Aplicar essas ideias no site",
                     "Ativar vista explodida (Anime.js)",
@@ -740,12 +772,19 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
       console.warn("[CreativePitch] Erro na chamada com IA:", err);
     }
 
-
     // Heurística Fallback inteligente com Intent Classification se a API falhar
-    const isQuestion = /\?|o que você acha|qual|como|opini|ideia|pense|dá pra|consegue|expli/i.test(instruction);
-    const isDeconstruction = /desconstru|planta|explodida|animejs|anime\.js|camada|camadas|hamb[uú]rguer|carro|ve[ií]culo|cl[ií]nica|odonto|casa/i.test(instruction);
+    const isQuestion = /\?|o que você acha|qual|como|opini|ideia|pense|dá pra|consegue|expli/i.test(
+      instruction,
+    );
+    const isDeconstruction =
+      /desconstru|planta|explodida|animejs|anime\.js|camada|camadas|hamb[uú]rguer|carro|ve[ií]culo|cl[ií]nica|odonto|casa/i.test(
+        instruction,
+      );
     const isBlueprint = /blueprint|raio-x|raio x|especificaç|specs|reebok/i.test(instruction);
-    const isColorOrTheme = /cor|cores|paleta|fundo|preto|dourado|azul|verde|clean|escuro|claro|dark|light|tema/i.test(instruction);
+    const isColorOrTheme =
+      /cor|cores|paleta|fundo|preto|dourado|azul|verde|clean|escuro|claro|dark|light|tema/i.test(
+        instruction,
+      );
     const isProposal = /opç[õo]es|propostas|conceito|conceitos|pitch|duas opç/i.test(instruction);
 
     // 1. Fallback Conversacional (Responde e debate ideias)
@@ -769,34 +808,106 @@ Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Ani
       const isBurger = /hamb[uú]rguer|burger|lanche|comida/i.test(instruction);
       const isCar = /carro|ve[ií]culo|auto|moto/i.test(instruction);
 
-      const category = isArchitecture ? "architecture" : isBurger ? "gastronomy" : isCar ? "automotive" : "custom";
+      const category = isArchitecture
+        ? "architecture"
+        : isBurger
+          ? "gastronomy"
+          : isCar
+            ? "automotive"
+            : "custom";
       const headline = isArchitecture
         ? "Engenharia Arquitetônica Desconstruída"
         : isBurger
-        ? "Arquitetura do Sabor em Camadas"
-        : isCar
-        ? "Engenharia e Performance Desconstruída"
-        : "Precisão Estrutural em Camadas";
+          ? "Arquitetura do Sabor em Camadas"
+          : isCar
+            ? "Engenharia e Performance Desconstruída"
+            : "Precisão Estrutural em Camadas";
 
       const layers = isArchitecture
         ? [
-            { id: "l_1", tag: "[CAMADA 01]", icon: "🏛️", name: "Cobertura & Conforto Térmico", detail: "Isolamento termoacústico e telhado com captação solar." },
-            { id: "l_2", tag: "[CAMADA 02]", icon: "📐", name: "Planta Baixa & Layout dos Ambientes", detail: "Integração fluida de espaços com iluminação natural." },
-            { id: "l_3", tag: "[CAMADA 03]", icon: "⚙️", name: "Infraestrutura Hidráulica & Automação", detail: "Tubulações inteligentes embutidas com redundância." },
-            { id: "l_4", tag: "[CAMADA 04]", icon: "🧱", name: "Fundações & Radier Estrutural", detail: "Cálculo milimétrico de carga para durabilidade de décadas." },
+            {
+              id: "l_1",
+              tag: "[CAMADA 01]",
+              icon: "🏛️",
+              name: "Cobertura & Conforto Térmico",
+              detail: "Isolamento termoacústico e telhado com captação solar.",
+            },
+            {
+              id: "l_2",
+              tag: "[CAMADA 02]",
+              icon: "📐",
+              name: "Planta Baixa & Layout dos Ambientes",
+              detail: "Integração fluida de espaços com iluminação natural.",
+            },
+            {
+              id: "l_3",
+              tag: "[CAMADA 03]",
+              icon: "⚙️",
+              name: "Infraestrutura Hidráulica & Automação",
+              detail: "Tubulações inteligentes embutidas com redundância.",
+            },
+            {
+              id: "l_4",
+              tag: "[CAMADA 04]",
+              icon: "🧱",
+              name: "Fundações & Radier Estrutural",
+              detail: "Cálculo milimétrico de carga para durabilidade de décadas.",
+            },
           ]
         : isBurger
-        ? [
-            { id: "l_1", tag: "[CAMADA 01]", icon: "🍞", name: "Pão Brioche Selado na Manteiga", detail: "Massa leve e dourada com fermentação artesanal." },
-            { id: "l_2", tag: "[CAMADA 02]", icon: "🧀", name: "Cheddar Inglês Cremoso", detail: "Queijo derretido no ponto exato sobre a carne." },
-            { id: "l_3", tag: "[CAMADA 03]", icon: "🥩", name: "Blend Especial 180g na Brasa", detail: "Corte nobre com crostinha defumada e suculência máxima." },
-            { id: "l_4", tag: "[CAMADA 04]", icon: "🥓", name: "Bacon Crocante Artesanal", detail: "Fatias espessas defumadas por 8 horas em lenha nobre." },
-          ]
-        : [
-            { id: "l_1", tag: "[CAMADA 01]", icon: "✨", name: "Camada Superior & Acabamento", detail: "Superfície de alta precisão com acabamento aeroespacial." },
-            { id: "l_2", tag: "[CAMADA 02]", icon: "⚙️", name: "Mecanismo Central Ativo", detail: "Distribuição inteligente de força e absorção de impacto." },
-            { id: "l_3", tag: "[CAMADA 03]", icon: "🔬", name: "Núcleo de Engenharia & Rigidez", detail: "Estrutura principal projetada para máxima eficiência." },
-          ];
+          ? [
+              {
+                id: "l_1",
+                tag: "[CAMADA 01]",
+                icon: "🍞",
+                name: "Pão Brioche Selado na Manteiga",
+                detail: "Massa leve e dourada com fermentação artesanal.",
+              },
+              {
+                id: "l_2",
+                tag: "[CAMADA 02]",
+                icon: "🧀",
+                name: "Cheddar Inglês Cremoso",
+                detail: "Queijo derretido no ponto exato sobre a carne.",
+              },
+              {
+                id: "l_3",
+                tag: "[CAMADA 03]",
+                icon: "🥩",
+                name: "Blend Especial 180g na Brasa",
+                detail: "Corte nobre com crostinha defumada e suculência máxima.",
+              },
+              {
+                id: "l_4",
+                tag: "[CAMADA 04]",
+                icon: "🥓",
+                name: "Bacon Crocante Artesanal",
+                detail: "Fatias espessas defumadas por 8 horas em lenha nobre.",
+              },
+            ]
+          : [
+              {
+                id: "l_1",
+                tag: "[CAMADA 01]",
+                icon: "✨",
+                name: "Camada Superior & Acabamento",
+                detail: "Superfície de alta precisão com acabamento aeroespacial.",
+              },
+              {
+                id: "l_2",
+                tag: "[CAMADA 02]",
+                icon: "⚙️",
+                name: "Mecanismo Central Ativo",
+                detail: "Distribuição inteligente de força e absorção de impacto.",
+              },
+              {
+                id: "l_3",
+                tag: "[CAMADA 03]",
+                icon: "🔬",
+                name: "Núcleo de Engenharia & Rigidez",
+                detail: "Estrutura principal projetada para máxima eficiência.",
+              },
+            ];
 
       return {
         actionType: "direct_update",
@@ -805,7 +916,8 @@ Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Ani
           deconstruction: {
             headline,
             tagline: "VISTA EXPLODIDA INTERATIVA • ANIME.JS",
-            subtitle: "Clique nas camadas para explorar cada elemento estrutural em detalhe e profundidade.",
+            subtitle:
+              "Clique nas camadas para explorar cada elemento estrutural em detalhe e profundidade.",
             category,
             layers,
           },
@@ -863,7 +975,8 @@ Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Ani
         hero: {
           ...currentData.hero,
           title: `A Excelência Autêntica da ${businessName}`,
-          subtitle: "Onde o tempo desacelera para dar lugar à contemplação dos sentidos, atendimento com hora marcada e à excelência autoral.",
+          subtitle:
+            "Onde o tempo desacelera para dar lugar à contemplação dos sentidos, atendimento com hora marcada e à excelência autoral.",
           floatingBadge: "★ 4.9 NO GOOGLE • EXCLUSIVIDADE",
         },
       },
@@ -890,7 +1003,8 @@ Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Ani
         hero: {
           ...currentData.hero,
           title: `A Nova Assinatura da ${businessName}`,
-          subtitle: "Design contemporâneo, rigor milimétrico e precisão para quem não aceita o comum. Atendimento com agendamento direto.",
+          subtitle:
+            "Design contemporâneo, rigor milimétrico e precisão para quem não aceita o comum. Atendimento com agendamento direto.",
           floatingBadge: "● VAGAS PARA ESTA SEMANA",
         },
       },
@@ -923,7 +1037,6 @@ Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Ani
     };
   });
 
-
 export interface ExtractedServiceItem {
   title: string;
   description: string;
@@ -940,6 +1053,7 @@ export interface ExtractedPdfDocumentResult {
  * 5. Extração e Estruturação de Cardápios, Tabelas de Preços e Catálogos de Documentos PDF
  */
 export const extractServicesFromPdfTextFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((d: { text: string; businessName?: string; niche?: string }) => d)
   .handler(async ({ data }): Promise<ExtractedPdfDocumentResult> => {
     const { text, businessName = "Empresa", niche = "Geral" } = data;
@@ -952,12 +1066,7 @@ export const extractServicesFromPdfTextFn = createServerFn({ method: "POST" })
       };
     }
 
-    const apiKey = (
-      process.env.GEMINI_API_KEY ||
-      process.env.GOOGLE_AI_STUDIO_KEY ||
-      (process.env as any).VITE_GEMINI_API_KEY ||
-      ""
-    ).trim();
+    const apiKey = (await resolveGeminiApiKey()) || "";
 
     if (apiKey) {
       try {
@@ -995,13 +1104,14 @@ RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS A
   ]
 }`;
 
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const endpoint =
+          "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent";
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 14000);
 
         const response = await fetch(endpoint, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
           signal: controller.signal,
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
@@ -1029,7 +1139,9 @@ RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS A
                 summary: parsed.summary || `Serviços extraídos do documento de ${businessName}.`,
                 items: parsed.items.map((it: any) => ({
                   title: String(it.title || "Item Especializado").trim(),
-                  description: String(it.description || "Atendimento e experiência de alta qualidade.").trim(),
+                  description: String(
+                    it.description || "Atendimento e experiência de alta qualidade.",
+                  ).trim(),
                   price: it.price ? String(it.price).trim() : "Sob Consulta",
                   badge: it.badge ? String(it.badge).trim() : "Destaque",
                 })),
@@ -1055,11 +1167,17 @@ RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS A
       const line = lines[i];
       const priceMatch = line.match(pricePattern);
       if (priceMatch) {
-        const titleCandidate = line.replace(pricePattern, "").replace(/[-–|:.]+/g, " ").trim();
+        const titleCandidate = line
+          .replace(pricePattern, "")
+          .replace(/[-–|:.]+/g, " ")
+          .trim();
         if (titleCandidate.length >= 3 && titleCandidate.length <= 60) {
           candidates.push({
             title: titleCandidate,
-            description: lines[i + 1] && lines[i + 1].length < 120 ? lines[i + 1] : "Procedimento e experiência de padrão exclusivo.",
+            description:
+              lines[i + 1] && lines[i + 1].length < 120
+                ? lines[i + 1]
+                : "Procedimento e experiência de padrão exclusivo.",
             price: priceMatch[0].startsWith("R$") ? priceMatch[0] : `R$ ${priceMatch[0]}`,
             badge: "Destaque",
           });
@@ -1068,20 +1186,20 @@ RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS A
     }
 
     return {
-      summary: candidates.length > 0
-        ? `Identificados ${candidates.length} itens comerciais no documento.`
-        : "Documento processado com sucesso.",
-      items: candidates.length > 0
-        ? candidates
-        : [
-            {
-              title: "Procedimento Especializado",
-              description: "Atendimento completo com rigor e excelência técnica.",
-              price: "Sob Consulta",
-              badge: "Principal",
-            },
-          ],
+      summary:
+        candidates.length > 0
+          ? `Identificados ${candidates.length} itens comerciais no documento.`
+          : "Documento processado com sucesso.",
+      items:
+        candidates.length > 0
+          ? candidates
+          : [
+              {
+                title: "Procedimento Especializado",
+                description: "Atendimento completo com rigor e excelência técnica.",
+                price: "Sob Consulta",
+                badge: "Principal",
+              },
+            ],
     };
   });
-
-

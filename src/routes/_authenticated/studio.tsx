@@ -47,11 +47,7 @@ import {
   removeGeminiKey,
   GEMINI_KEY_UPDATED_EVENT,
 } from "@/modules/prospecting/GeminiAuditorService";
-import {
-  getGeminiApiKeyStatusFn,
-  saveGeminiApiKeyFn,
-  testGeminiApiKeyFn,
-} from "@/modules/ai/gemini-admin.functions";
+import { getGeminiApiKeyStatusFn, testGeminiApiKeyFn } from "@/modules/ai/gemini-admin.functions";
 import type {
   CinematicPageData,
   CinematicGalleryItem,
@@ -72,11 +68,36 @@ import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
 import { z } from "zod";
 
 const TEMPLATE_OPTIONS = [
-  { id: "cinematic-glass", name: "Landing Page Cinematográfica", desc: "Visual imersivo de alta conversão, hero marcante e glassmorphism", icon: "✨" },
-  { id: "restaurant-menu", name: "Delivery & Cardápio iFood", desc: "Cardápio com fotos, categorias e pedido direto no WhatsApp", icon: "🍔" },
-  { id: "store-showcase", name: "Loja & E-commerce (Carrinho)", desc: "Vitrine de produtos com sacola de compras e checkout WhatsApp", icon: "🛍️" },
-  { id: "site-maquina", name: "Site Institucional Máquina", desc: "Apresentação de autoridade, diferenciais, serviços e depoimentos", icon: "🏢" },
-  { id: "clinic-care", name: "Clínica & Especialidades", desc: "Agendamento, especialidades e bio profissional para saúde", icon: "🩺" },
+  {
+    id: "cinematic-glass",
+    name: "Landing Page Cinematográfica",
+    desc: "Visual imersivo de alta conversão, hero marcante e glassmorphism",
+    icon: "✨",
+  },
+  {
+    id: "restaurant-menu",
+    name: "Delivery & Cardápio iFood",
+    desc: "Cardápio com fotos, categorias e pedido direto no WhatsApp",
+    icon: "🍔",
+  },
+  {
+    id: "store-showcase",
+    name: "Loja & E-commerce (Carrinho)",
+    desc: "Vitrine de produtos com sacola de compras e checkout WhatsApp",
+    icon: "🛍️",
+  },
+  {
+    id: "site-maquina",
+    name: "Site Institucional Máquina",
+    desc: "Apresentação de autoridade, diferenciais, serviços e depoimentos",
+    icon: "🏢",
+  },
+  {
+    id: "clinic-care",
+    name: "Clínica & Especialidades",
+    desc: "Agendamento, especialidades e bio profissional para saúde",
+    icon: "🩺",
+  },
 ];
 
 function convertBioPageToCinematic(bio: any): CinematicPageData {
@@ -84,7 +105,9 @@ function convertBioPageToCinematic(bio: any): CinematicPageData {
   const customTheme = socialLinks.custom_theme || {};
   const defaults = createDefaultCinematicData();
 
-  const googlePhotos: string[] = Array.isArray(socialLinks.google_photos) ? socialLinks.google_photos : [];
+  const googlePhotos: string[] = Array.isArray(socialLinks.google_photos)
+    ? socialLinks.google_photos
+    : [];
   const galleryItems: CinematicGalleryItem[] = googlePhotos.map((url: string, i: number) => ({
     id: `photo-${i}`,
     url,
@@ -92,14 +115,20 @@ function convertBioPageToCinematic(bio: any): CinematicPageData {
     category: "Ambiente",
   }));
 
-  const highlights: CinematicHighlight[] = (socialLinks.suggested_services || []).map((s: any, i: number) => ({
-    id: `hl-${i}`,
-    title: s.name || s.title || "Serviço Especializado",
-    description: s.description || "",
-    price: s.price ? (typeof s.price === "number" ? `R$ ${s.price.toFixed(2)}` : String(s.price)) : undefined,
-    badge: s.badge || "Destaque",
-    image: s.image_url || undefined,
-  }));
+  const highlights: CinematicHighlight[] = (socialLinks.suggested_services || []).map(
+    (s: any, i: number) => ({
+      id: `hl-${i}`,
+      title: s.name || s.title || "Serviço Especializado",
+      description: s.description || "",
+      price: s.price
+        ? typeof s.price === "number"
+          ? `R$ ${s.price.toFixed(2)}`
+          : String(s.price)
+        : undefined,
+      badge: s.badge || "Destaque",
+      image: s.image_url || undefined,
+    }),
+  );
 
   const reviews = (socialLinks.testimonials || []).map((t: any) => ({
     author: t.author || t.name || "Cliente Satisfeito",
@@ -130,7 +159,9 @@ function convertBioPageToCinematic(bio: any): CinematicPageData {
       title: bio.display_name ? `Bem-vindo(a) à ${bio.display_name}` : defaults.hero.title,
       subtitle: bio.description || defaults.hero.subtitle,
       backgroundImage: bio.cover_url || googlePhotos[0] || defaults.hero.backgroundImage,
-      floatingBadge: socialLinks.google_rating ? `★ ${socialLinks.google_rating} NO GOOGLE` : defaults.hero.floatingBadge,
+      floatingBadge: socialLinks.google_rating
+        ? `★ ${socialLinks.google_rating} NO GOOGLE`
+        : defaults.hero.floatingBadge,
       ctaText: bio.whatsapp_button_label || "Falar no WhatsApp",
       ctaLink: bio.whatsapp ? `https://wa.me/55${bio.whatsapp.replace(/\D/g, "")}` : "#contato",
     },
@@ -173,7 +204,9 @@ function buildInitialCreativePlan(current: CinematicPageData): CreativePlan {
       hero: {
         ...current.hero,
         title: current.hero.title || `A Experiência Autêntica na ${name}`,
-        subtitle: current.hero.subtitle || "Onde cada detalhe sensorial é lapidado com maestria. Atendimento com agendamento prioritário.",
+        subtitle:
+          current.hero.subtitle ||
+          "Onde cada detalhe sensorial é lapidado com maestria. Atendimento com agendamento prioritário.",
         tagline: "ASSINATURA NOBRE 2026",
         floatingBadge: `★ ${rating.toFixed(1)} NO GOOGLE • EXCLUSIVIDADE`,
       },
@@ -209,7 +242,8 @@ function buildInitialCreativePlan(current: CinematicPageData): CreativePlan {
       hero: {
         ...current.hero,
         title: `O Novo Padrão da ${name} em Sua Região`,
-        subtitle: "Design contemporâneo, rigor técnico e excelência para quem exige o melhor sem burocracia.",
+        subtitle:
+          "Design contemporâneo, rigor técnico e excelência para quem exige o melhor sem burocracia.",
         tagline: "ALTA PERFORMANCE 2026",
         floatingBadge: "● AGENDAMENTO VIP NO WHATSAPP",
       },
@@ -315,7 +349,7 @@ export default function CinematicStudioPage() {
         setDbKeyConfigured(Boolean(res.configured));
         if (res.masked) setDbKeyMasked(res.masked);
         setIsFromEnv(Boolean(res.isFromEnv));
-        if (res.configured) {
+        if (res.configured && !getSavedGeminiKey()) {
           setGeminiKey("configured_in_database");
         }
       })
@@ -339,17 +373,13 @@ export default function CinematicStudioPage() {
     }
     setIsTestingKey(true);
     try {
-      const res = await saveGeminiApiKeyFn({ data: { apiKey: clean } });
-      if (res.success) {
-        setDbKeyConfigured(true);
-        if (res.masked) setDbKeyMasked(res.masked);
-        setGeminiKey("configured_in_database");
-        setInputKey("");
-        setShowKeyModal(false);
-        toast.success(res.message || "Chave salva com sucesso no Banco de Dados!");
-      }
+      saveGeminiKey(clean);
+      setGeminiKey(clean);
+      setInputKey("");
+      setShowKeyModal(false);
+      toast.success("Chave salva neste navegador.");
     } catch (err: any) {
-      toast.error(err.message || "Erro ao salvar chave no banco de dados.");
+      toast.error(err.message || "Erro ao salvar chave neste navegador.");
     } finally {
       setIsTestingKey(false);
     }
@@ -374,14 +404,11 @@ export default function CinematicStudioPage() {
 
   const handleRemoveGeminiKey = async () => {
     try {
-      await saveGeminiApiKeyFn({ data: { apiKey: "" } });
       removeGeminiKey();
-      setDbKeyConfigured(false);
-      setDbKeyMasked("");
       setGeminiKey("");
       setInputKey("");
       setShowKeyModal(false);
-      toast.info("Chave da IA removida do banco de dados.");
+      toast.info("Chave pessoal removida deste navegador.");
     } catch (err: any) {
       toast.error(err.message || "Erro ao remover chave.");
     }
@@ -405,7 +432,9 @@ export default function CinematicStudioPage() {
   const [publishedModalOpen, setPublishedModalOpen] = useState(false);
 
   // Sub-abas do Painel de Ajustes (Unificado com o Clean Builder)
-  const [adjustmentTab, setAdjustmentTab] = useState<"texts" | "products" | "design" | "media" | "contact">("texts");
+  const [adjustmentTab, setAdjustmentTab] = useState<
+    "texts" | "products" | "design" | "media" | "contact"
+  >("texts");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const logoInputRef = useRef<HTMLInputElement>(null);
@@ -557,7 +586,10 @@ export default function CinematicStudioPage() {
             caption: `Ambiente e detalhes da ${result.name}`,
             category: "Espaço",
           }));
-          updated.gallery = [...newGallery, ...prev.gallery.filter((g) => !g.id.startsWith("g-maps-"))];
+          updated.gallery = [
+            ...newGallery,
+            ...prev.gallery.filter((g) => !g.id.startsWith("g-maps-")),
+          ];
           if (newGallery[0]) {
             updated.hero.backgroundImage = newGallery[0].url;
           }
@@ -599,7 +631,9 @@ export default function CinematicStudioPage() {
     if (!files || files.length === 0) return;
 
     const fileList = Array.from(files);
-    const pdfFiles = fileList.filter((f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"));
+    const pdfFiles = fileList.filter(
+      (f) => f.type === "application/pdf" || f.name.toLowerCase().endsWith(".pdf"),
+    );
     const imageFiles = fileList.filter((f) => f.type.startsWith("image/"));
 
     // A) Processamento Inteligente de Documentos PDF
@@ -648,7 +682,9 @@ export default function CinematicStudioPage() {
           }));
 
           const itemsFormatted = res.items
-            .map((it) => `• **${it.title}**${it.price ? ` (${it.price})` : ""}\n  _${it.description}_`)
+            .map(
+              (it) => `• **${it.title}**${it.price ? ` (${it.price})` : ""}\n  _${it.description}_`,
+            )
             .join("\n\n");
 
           setMessages((prev) => [
@@ -758,17 +794,35 @@ export default function CinematicStudioPage() {
     const trimmedPrompt = promptToUse.trim();
 
     // 3.1. Detecção Inteligente de Link ou Comando do Google Maps no Chat
-    const mapsUrlMatch = trimmedPrompt.match(/https?:\/\/(?:maps\.app\.goo\.gl|[a-z0-9.]*google\.[a-z.]+\/maps|goo\.gl\/maps)[^\s]*/i) ||
-      trimmedPrompt.match(/https?:\/\/(?:www\.)?google\.[a-z.]+\/search[^\s]*/i);
-    const mapsCommandMatch = /^(?:importar|puxar|extrair|buscar dados|ficha do google|google maps)\s*[:\-]?\s*(.+)/i.exec(trimmedPrompt);
-    const searchIntentMatch = /(?:busque|procure|pesquise|puxe|encontre)\s+(?:fotos?|imagens?|dados|informaç[^\s]*|card[^\s]*|ficha|do\s+local|da\s+empresa)/i.test(trimmedPrompt);
+    const mapsUrlMatch =
+      trimmedPrompt.match(
+        /https?:\/\/(?:maps\.app\.goo\.gl|[a-z0-9.]*google\.[a-z.]+\/maps|goo\.gl\/maps)[^\s]*/i,
+      ) || trimmedPrompt.match(/https?:\/\/(?:www\.)?google\.[a-z.]+\/search[^\s]*/i);
+    const mapsCommandMatch =
+      /^(?:importar|puxar|extrair|buscar dados|ficha do google|google maps)\s*[:\-]?\s*(.+)/i.exec(
+        trimmedPrompt,
+      );
+    const searchIntentMatch =
+      /(?:busque|procure|pesquise|puxe|encontre)\s+(?:fotos?|imagens?|dados|informaç[^\s]*|card[^\s]*|ficha|do\s+local|da\s+empresa)/i.test(
+        trimmedPrompt,
+      );
 
     if (mapsUrlMatch || mapsCommandMatch || searchIntentMatch) {
-      let queryToLookup = mapsUrlMatch ? mapsUrlMatch[0] : (mapsCommandMatch ? mapsCommandMatch[1].trim() : "");
+      let queryToLookup = mapsUrlMatch
+        ? mapsUrlMatch[0]
+        : mapsCommandMatch
+          ? mapsCommandMatch[1].trim()
+          : "";
       if (!queryToLookup && searchIntentMatch) {
-        queryToLookup = trimmedPrompt
-          .replace(/(?:busque|procure|pesquise|puxe|encontre)\s+(?:fotos?|imagens?|dados|informaç[^\s]*|card[^\s]*|ficha|do\s+local|da\s+empresa)?/gi, "")
-          .trim() || data.businessName || data.niche;
+        queryToLookup =
+          trimmedPrompt
+            .replace(
+              /(?:busque|procure|pesquise|puxe|encontre)\s+(?:fotos?|imagens?|dados|informaç[^\s]*|card[^\s]*|ficha|do\s+local|da\s+empresa)?/gi,
+              "",
+            )
+            .trim() ||
+          data.businessName ||
+          data.niche;
       }
 
       const userMsg: StudioChatMessage = {
@@ -807,7 +861,9 @@ export default function CinematicStudioPage() {
         text: m.text,
       }));
 
-      const activeKey = (geminiKey || getSavedGeminiKey() || "").trim();
+      const activeKey = (
+        geminiKey === "configured_in_database" ? "" : geminiKey || getSavedGeminiKey() || ""
+      ).trim();
       if (!activeKey) {
         setShowKeyModal(true);
       }
@@ -882,7 +938,8 @@ export default function CinematicStudioPage() {
       hero: {
         ...prev.hero,
         ...(option.previewData.hero || {}),
-        backgroundImage: prev.hero.backgroundImage || option.previewData.hero?.backgroundImage || "",
+        backgroundImage:
+          prev.hero.backgroundImage || option.previewData.hero?.backgroundImage || "",
       },
     }));
 
@@ -890,7 +947,7 @@ export default function CinematicStudioPage() {
 
     // Marca a opção aprovada na mensagem correspondente
     setMessages((prev) =>
-      prev.map((m) => (m.id === messageId ? { ...m, appliedOptionId: option.id } : m))
+      prev.map((m) => (m.id === messageId ? { ...m, appliedOptionId: option.id } : m)),
     );
 
     // Envia confirmação carinhosa do Agente
@@ -930,10 +987,13 @@ export default function CinematicStudioPage() {
       const cleanWhatsapp = (data.whatsapp || "").replace(/\D/g, "");
       const effectiveTemplate = "cinematic-glass";
       const effectiveFont = (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
-      const effectiveMode = data.theme?.mode || (data.theme?.bg?.includes("#fff") || data.theme?.bg?.includes("#f8") ? "light" : "dark");
-      const effectiveRadius = (data.theme as any)?.borderRadius || data.theme?.borderStyle || "rounded";
+      const effectiveMode =
+        data.theme?.mode ||
+        (data.theme?.bg?.includes("#fff") || data.theme?.bg?.includes("#f8") ? "light" : "dark");
+      const effectiveRadius =
+        (data.theme as any)?.borderRadius || data.theme?.borderStyle || "rounded";
       const effectiveBoxEffect = (data.theme as any)?.boxEffect || "glass";
-      const effectiveArchetype = (data.archetype || (data.theme as any)?.archetype || "cinematic");
+      const effectiveArchetype = data.archetype || (data.theme as any)?.archetype || "cinematic";
       const effectiveSpeed = data.marqueeSpeed || 50;
 
       const customThemeObj = {
@@ -950,7 +1010,8 @@ export default function CinematicStudioPage() {
         archetype: effectiveArchetype,
         headingStyle: (data.theme as any)?.headingStyle || "default",
         borderRadius: effectiveRadius,
-        border_radius: effectiveRadius === "sharp" ? "0px" : effectiveRadius === "pill" ? "28px" : "16px",
+        border_radius:
+          effectiveRadius === "sharp" ? "0px" : effectiveRadius === "pill" ? "28px" : "16px",
         boxEffect: effectiveBoxEffect,
         marqueeSpeed: effectiveSpeed,
       };
@@ -1028,13 +1089,14 @@ export default function CinematicStudioPage() {
         finalSlug = updated.slug;
       } else {
         // Cria nova página
-        const baseSlug = (data.businessName || "minha-pagina")
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-+|-+$/g, "")
-          .slice(0, 32) || "pagina";
+        const baseSlug =
+          (data.businessName || "minha-pagina")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 32) || "pagina";
         const suffix = crypto.randomUUID().slice(0, 5);
         const newSlug = `${baseSlug}-${suffix}`;
 
@@ -1213,7 +1275,9 @@ export default function CinematicStudioPage() {
               type="button"
               onClick={() => setPreviewMode("desktop")}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                previewMode === "desktop" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
+                previewMode === "desktop"
+                  ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               <Monitor className="h-3.5 w-3.5" />
@@ -1223,7 +1287,9 @@ export default function CinematicStudioPage() {
               type="button"
               onClick={() => setPreviewMode("mobile")}
               className={`flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors ${
-                previewMode === "mobile" ? "bg-zinc-800 text-zinc-100 shadow-xs" : "text-zinc-400 hover:text-zinc-200"
+                previewMode === "mobile"
+                  ? "bg-zinc-800 text-zinc-100 shadow-xs"
+                  : "text-zinc-400 hover:text-zinc-200"
               }`}
             >
               <Smartphone className="h-3.5 w-3.5" />
@@ -1256,10 +1322,16 @@ export default function CinematicStudioPage() {
                 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
                 : "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25 animate-pulse"
             }`}
-            title={dbKeyConfigured || geminiKey ? "Cérebro da IA Conectado no Banco de Dados (Google Gemini)" : "Conectar Chave da IA no Banco de Dados"}
+            title={
+              dbKeyConfigured || geminiKey
+                ? "Cérebro da IA Conectado no Banco de Dados (Google Gemini)"
+                : "Conectar Chave da IA no Banco de Dados"
+            }
           >
             <KeyRound className="h-3.5 w-3.5 shrink-0" />
-            <span className="hidden sm:inline">{dbKeyConfigured || geminiKey ? "IA Conectada" : "Conectar IA"}</span>
+            <span className="hidden sm:inline">
+              {dbKeyConfigured || geminiKey ? "IA Conectada" : "Conectar IA"}
+            </span>
             <span className="sm:hidden">{dbKeyConfigured || geminiKey ? "IA" : "🔑 IA"}</span>
           </button>
 
@@ -1269,7 +1341,11 @@ export default function CinematicStudioPage() {
             disabled={isSaving}
             className="flex items-center gap-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-100 border border-zinc-700/60 font-medium text-xs px-3 sm:px-3.5 py-1.5 rounded-lg shadow-sm transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer"
           >
-            {isSaving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+            {isSaving ? (
+              <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Save className="h-3.5 w-3.5" />
+            )}
             <span>{isSaving ? "Publicando..." : "Publicar"}</span>
           </button>
         </div>
@@ -1343,9 +1419,7 @@ export default function CinematicStudioPage() {
                 {/* Saudação Central Estilo Claude.ai (apenas quando não houver mensagens) */}
                 {messages.length === 0 && (
                   <div className="flex flex-1 flex-col items-center justify-center py-12 px-4 my-auto text-center max-w-lg mx-auto w-full select-none">
-                    <div className="text-3xl sm:text-4xl text-[#d97706] mb-3 font-serif">
-                      ✳
-                    </div>
+                    <div className="text-3xl sm:text-4xl text-[#d97706] mb-3 font-serif">✳</div>
                     <h2 className="text-xl sm:text-2xl font-serif tracking-tight text-zinc-100 font-normal mb-2">
                       {getGreeting()}
                     </h2>
@@ -1360,7 +1434,9 @@ export default function CinematicStudioPage() {
                           <span>Ativar Inteligência Generativa (IA)</span>
                         </div>
                         <p className="text-[11px] text-zinc-300 leading-relaxed mb-3">
-                          Para eu dialogar como o ChatGPT ou Claude, entender comandos livres e desenhar o site ao vivo, conecte sua chave do Google Gemini (100% gratuita).
+                          Para eu dialogar como o ChatGPT ou Claude, entender comandos livres e
+                          desenhar o site ao vivo, conecte sua chave do Google Gemini (100%
+                          gratuita).
                         </p>
                         <button
                           type="button"
@@ -1396,7 +1472,9 @@ export default function CinematicStudioPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          handleSendMessage("Elabore uma nova proposta de direção de arte com 2 opções conceituais exclusivas para este negócio.");
+                          handleSendMessage(
+                            "Elabore uma nova proposta de direção de arte com 2 opções conceituais exclusivas para este negócio.",
+                          );
                         }}
                         className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
                       >
@@ -1428,7 +1506,9 @@ export default function CinematicStudioPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          handleSendMessage("Reescreva a Headline e o Subtítulo da Hero com copywriting magnético, poético e sensorial de alta conversão.");
+                          handleSendMessage(
+                            "Reescreva a Headline e o Subtítulo da Hero com copywriting magnético, poético e sensorial de alta conversão.",
+                          );
                         }}
                         className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
                       >
@@ -1445,37 +1525,45 @@ export default function CinematicStudioPage() {
                               : {
                                   tagline: "[SPEC::BLUEPRINT] ARQUITETURA & PRECISÃO",
                                   headline: `Engenharia & Rigor • ${prev.businessName || "Alta Performance"}`,
-                                  subtitle: "Cada dimensão foi calibrada milimetricamente para superar os limites do padrão convencional.",
-                                  productImage: prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
+                                  subtitle:
+                                    "Cada dimensão foi calibrada milimetricamente para superar os limites do padrão convencional.",
+                                  productImage:
+                                    prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
                                   specs: [
                                     {
                                       id: "spec_1",
                                       tag: "[SPEC::01]",
                                       title: "RESPOSTA DINÂMICA",
-                                      description: "Calibragem biomecânica de precisão e retorno energético imediato sob alta intensidade.",
+                                      description:
+                                        "Calibragem biomecânica de precisão e retorno energético imediato sob alta intensidade.",
                                     },
                                     {
                                       id: "spec_2",
                                       tag: "[SPEC::02]",
                                       title: "ESTRUTURA INDEFORMÁVEL",
-                                      description: "Composição de polímero aeroespacial com resistência extrema ao desgaste e deformações.",
+                                      description:
+                                        "Composição de polímero aeroespacial com resistência extrema ao desgaste e deformações.",
                                     },
                                     {
                                       id: "spec_3",
                                       tag: "[SPEC::03]",
                                       title: "TRAÇÃO MULTIDIRECIONAL",
-                                      description: "Geometria de contato contínuo com dispersão ativa para máxima estabilidade em qualquer superfície.",
+                                      description:
+                                        "Geometria de contato contínuo com dispersão ativa para máxima estabilidade em qualquer superfície.",
                                     },
                                     {
                                       id: "spec_4",
                                       tag: "[SPEC::04]",
                                       title: "VENTILAÇÃO TERMOATIVA",
-                                      description: "Fluxo de troca de calor acelerado que preserva a temperatura ideal durante todo o ciclo.",
+                                      description:
+                                        "Fluxo de troca de calor acelerado que preserva a temperatura ideal durante todo o ciclo.",
                                     },
                                   ],
                                 },
                           }));
-                          toast.success("Seção de Raio-X Técnico (Reebok Style) alternada com sucesso!");
+                          toast.success(
+                            "Seção de Raio-X Técnico (Reebok Style) alternada com sucesso!",
+                          );
                         }}
                         className="flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
                       >
@@ -1493,37 +1581,43 @@ export default function CinematicStudioPage() {
                               : {
                                   tagline: "[ANATOMIA & DESCONSTRUÇÃO TÉCNICA]",
                                   headline: `A Engenharia Oculta • ${prev.businessName || "Visão Detalhada"}`,
-                                  subtitle: "Desconstrua cada camada e compreenda a ciência, precisão e rigor aplicados a cada elemento.",
+                                  subtitle:
+                                    "Desconstrua cada camada e compreenda a ciência, precisão e rigor aplicados a cada elemento.",
                                   category: "architecture",
-                                  blueprintImage: prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
+                                  blueprintImage:
+                                    prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
                                   layers: [
                                     {
                                       id: "l_1",
                                       tag: "[CAMADA 01]",
                                       icon: "🏛️",
                                       name: "Fachada & Cobertura Térmica",
-                                      detail: "Painéis de isolamento acústico e controle bioclimático passivo.",
+                                      detail:
+                                        "Painéis de isolamento acústico e controle bioclimático passivo.",
                                     },
                                     {
                                       id: "l_2",
                                       tag: "[CAMADA 02]",
                                       icon: "📐",
                                       name: "Planta Baixa & Modulação",
-                                      detail: "Cotas milimétricas e distribuição fluida de circulação integrada.",
+                                      detail:
+                                        "Cotas milimétricas e distribuição fluida de circulação integrada.",
                                     },
                                     {
                                       id: "l_3",
                                       tag: "[CAMADA 03]",
                                       icon: "⚙️",
                                       name: "Infraestrutura Hidráulica & Elétrica",
-                                      detail: "Sistemas inteligentes embutidos com redundância e telemetria.",
+                                      detail:
+                                        "Sistemas inteligentes embutidos com redundância e telemetria.",
                                     },
                                     {
                                       id: "l_4",
                                       tag: "[CAMADA 04]",
                                       icon: "🧱",
                                       name: "Fundações & Radier Protendido",
-                                      detail: "Cálculo estrutural para estabilidade de longo prazo sem fissuras.",
+                                      detail:
+                                        "Cálculo estrutural para estabilidade de longo prazo sem fissuras.",
                                     },
                                   ],
                                 },
@@ -1540,12 +1634,12 @@ export default function CinematicStudioPage() {
                 )}
 
                 {messages.map((msg) => (
+                  <div
+                    key={msg.id}
+                    className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
+                  >
                     <div
-                      key={msg.id}
-                      className={`flex flex-col ${msg.sender === "user" ? "items-end" : "items-start"}`}
-                    >
-                      <div
-                        className={`text-[13px] leading-relaxed shadow-sm ${
+                      className={`text-[13px] leading-relaxed shadow-sm ${
                         msg.sender === "user"
                           ? "bg-zinc-800 text-zinc-100 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[88%] border border-zinc-700/50"
                           : "bg-zinc-900/60 border border-zinc-800/80 text-zinc-200 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[92%] backdrop-blur-xs"
@@ -1560,7 +1654,9 @@ export default function CinematicStudioPage() {
                       )}
 
                       {/* Texto Principal */}
-                      {msg.text && <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>}
+                      {msg.text && (
+                        <p className="whitespace-pre-line leading-relaxed">{msg.text}</p>
+                      )}
 
                       {/* Card de Google Maps Extraído */}
                       {msg.meta && msg.meta.name && (
@@ -1618,25 +1714,30 @@ export default function CinematicStudioPage() {
                               <Sparkles className="h-3 w-3 text-zinc-300" />
                               <span>Proposta Conceitual</span>
                             </div>
-                            <p className="text-xs text-zinc-200 font-medium">{msg.plan.conceptSummary}</p>
+                            <p className="text-xs text-zinc-200 font-medium">
+                              {msg.plan.conceptSummary}
+                            </p>
                             {msg.plan.rationale && (
-                              <p className="text-[11px] text-zinc-400 leading-relaxed">{msg.plan.rationale}</p>
+                              <p className="text-[11px] text-zinc-400 leading-relaxed">
+                                {msg.plan.rationale}
+                              </p>
                             )}
                           </div>
 
                           {/* Seções Recomendadas */}
-                          {msg.plan.recommendedSections && msg.plan.recommendedSections.length > 0 && (
-                            <div className="flex flex-wrap gap-1 pt-0.5">
-                              {msg.plan.recommendedSections.map((sec, idx) => (
-                                <span
-                                  key={idx}
-                                  className="rounded-full border border-zinc-800 bg-zinc-800/60 px-2 py-0.5 text-[9px] font-medium text-zinc-400"
-                                >
-                                  {sec}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                          {msg.plan.recommendedSections &&
+                            msg.plan.recommendedSections.length > 0 && (
+                              <div className="flex flex-wrap gap-1 pt-0.5">
+                                {msg.plan.recommendedSections.map((sec, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="rounded-full border border-zinc-800 bg-zinc-800/60 px-2 py-0.5 text-[9px] font-medium text-zinc-400"
+                                  >
+                                    {sec}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
 
                           {/* Grade de 2 Colunas para Opção A e Opção B */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
@@ -1651,8 +1752,8 @@ export default function CinematicStudioPage() {
                                     isApplied
                                       ? "border-zinc-500 bg-zinc-800/90 ring-1 ring-zinc-500/40"
                                       : isPreviewing
-                                      ? "border-zinc-400 bg-zinc-800/60 ring-1 ring-zinc-400/40"
-                                      : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-700"
+                                        ? "border-zinc-400 bg-zinc-800/60 ring-1 ring-zinc-400/40"
+                                        : "border-zinc-800 bg-zinc-950/60 hover:border-zinc-700"
                                   }`}
                                 >
                                   <div className="space-y-2">
@@ -1679,7 +1780,9 @@ export default function CinematicStudioPage() {
 
                                     {/* Nome e Título de Impacto */}
                                     <div>
-                                      <h4 className="text-xs font-semibold text-zinc-100 leading-snug">{opt.name}</h4>
+                                      <h4 className="text-xs font-semibold text-zinc-100 leading-snug">
+                                        {opt.name}
+                                      </h4>
                                       <p className="mt-1 text-[11px] text-zinc-300 italic line-clamp-2">
                                         "{opt.heroHeadline}"
                                       </p>
@@ -1854,7 +1957,11 @@ export default function CinematicStudioPage() {
                         disabled={isLookingUpMaps || !mapsQuery.trim()}
                         className="rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700/60 font-medium text-xs px-3 py-1.5 transition-colors disabled:opacity-40"
                       >
-                        {isLookingUpMaps ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : "Importar"}
+                        {isLookingUpMaps ? (
+                          <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          "Importar"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -1870,7 +1977,9 @@ export default function CinematicStudioPage() {
                         marqueeSpeed: 180,
                         theme: { ...prev.theme, marqueeSpeed: 180 },
                       }));
-                      toast.success("Velocidade da faixa ajustada para 180s (Ultra Lenta / Flutuante)!");
+                      toast.success(
+                        "Velocidade da faixa ajustada para 180s (Ultra Lenta / Flutuante)!",
+                      );
                     }}
                     className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
                   >
@@ -1881,7 +1990,9 @@ export default function CinematicStudioPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      handleSendMessage("Elabore uma nova proposta de direção de arte com 2 opções conceituais ricas para meu negócio.");
+                      handleSendMessage(
+                        "Elabore uma nova proposta de direção de arte com 2 opções conceituais ricas para meu negócio.",
+                      );
                     }}
                     className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
                   >
@@ -1913,7 +2024,9 @@ export default function CinematicStudioPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      handleSendMessage("Reescreva a Headline e o Subtítulo da Hero com copywriting magnético, poético e sensorial de alta conversão sem clichês.");
+                      handleSendMessage(
+                        "Reescreva a Headline e o Subtítulo da Hero com copywriting magnético, poético e sensorial de alta conversão sem clichês.",
+                      );
                     }}
                     className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
                   >
@@ -1923,7 +2036,9 @@ export default function CinematicStudioPage() {
                   <button
                     type="button"
                     onClick={() => {
-                      handleSendMessage("Sugira 3 a 4 serviços de alto ticket com preços e tempo de atendimento ideais para meu posicionamento.");
+                      handleSendMessage(
+                        "Sugira 3 a 4 serviços de alto ticket com preços e tempo de atendimento ideais para meu posicionamento.",
+                      );
                     }}
                     className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-zinc-100 hover:border-zinc-700 transition-colors cursor-pointer"
                   >
@@ -1940,37 +2055,45 @@ export default function CinematicStudioPage() {
                           : {
                               tagline: "[SPEC::BLUEPRINT] ARQUITETURA & PRECISÃO",
                               headline: `Engenharia & Rigor • ${prev.businessName || "Alta Performance"}`,
-                              subtitle: "Cada dimensão foi calibrada milimetricamente para superar os limites do padrão convencional.",
-                              productImage: prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
+                              subtitle:
+                                "Cada dimensão foi calibrada milimetricamente para superar os limites do padrão convencional.",
+                              productImage:
+                                prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
                               specs: [
                                 {
                                   id: "spec_1",
                                   tag: "[SPEC::01]",
                                   title: "RESPOSTA DINÂMICA",
-                                  description: "Calibragem biomecânica de precisão e retorno energético imediato sob alta intensidade.",
+                                  description:
+                                    "Calibragem biomecânica de precisão e retorno energético imediato sob alta intensidade.",
                                 },
                                 {
                                   id: "spec_2",
                                   tag: "[SPEC::02]",
                                   title: "ESTRUTURA INDEFORMÁVEL",
-                                  description: "Composição de polímero aeroespacial com resistência extrema ao desgaste e deformações.",
+                                  description:
+                                    "Composição de polímero aeroespacial com resistência extrema ao desgaste e deformações.",
                                 },
                                 {
                                   id: "spec_3",
                                   tag: "[SPEC::03]",
                                   title: "TRAÇÃO MULTIDIRECIONAL",
-                                  description: "Geometria de contato contínuo com dispersão ativa para máxima estabilidade em qualquer superfície.",
+                                  description:
+                                    "Geometria de contato contínuo com dispersão ativa para máxima estabilidade em qualquer superfície.",
                                 },
                                 {
                                   id: "spec_4",
                                   tag: "[SPEC::04]",
                                   title: "VENTILAÇÃO TERMOATIVA",
-                                  description: "Fluxo de troca de calor acelerado que preserva a temperatura ideal durante todo o ciclo.",
+                                  description:
+                                    "Fluxo de troca de calor acelerado que preserva a temperatura ideal durante todo o ciclo.",
                                 },
                               ],
                             },
                       }));
-                      toast.success("Seção de Raio-X Técnico (Reebok Style) alternada com sucesso!");
+                      toast.success(
+                        "Seção de Raio-X Técnico (Reebok Style) alternada com sucesso!",
+                      );
                     }}
                     className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-medium bg-zinc-900 border border-zinc-800 text-zinc-300 hover:text-amber-300 hover:border-amber-400/40 transition-colors cursor-pointer"
                   >
@@ -1988,37 +2111,43 @@ export default function CinematicStudioPage() {
                           : {
                               tagline: "[ANATOMIA & DESCONSTRUÇÃO TÉCNICA]",
                               headline: `A Engenharia Oculta • ${prev.businessName || "Visão Detalhada"}`,
-                              subtitle: "Desconstrua cada camada e compreenda a ciência, precisão e rigor aplicados a cada elemento.",
+                              subtitle:
+                                "Desconstrua cada camada e compreenda a ciência, precisão e rigor aplicados a cada elemento.",
                               category: "architecture",
-                              blueprintImage: prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
+                              blueprintImage:
+                                prev.hero?.backgroundImage || prev.gallery?.[0]?.url || "",
                               layers: [
                                 {
                                   id: "l_1",
                                   tag: "[CAMADA 01]",
                                   icon: "🏛️",
                                   name: "Fachada & Cobertura Térmica",
-                                  detail: "Painéis de isolamento acústico e controle bioclimático passivo.",
+                                  detail:
+                                    "Painéis de isolamento acústico e controle bioclimático passivo.",
                                 },
                                 {
                                   id: "l_2",
                                   tag: "[CAMADA 02]",
                                   icon: "📐",
                                   name: "Planta Baixa & Modulação",
-                                  detail: "Cotas milimétricas e distribuição fluida de circulação integrada.",
+                                  detail:
+                                    "Cotas milimétricas e distribuição fluida de circulação integrada.",
                                 },
                                 {
                                   id: "l_3",
                                   tag: "[CAMADA 03]",
                                   icon: "⚙️",
                                   name: "Infraestrutura Hidráulica & Elétrica",
-                                  detail: "Sistemas inteligentes embutidos com redundância e telemetria.",
+                                  detail:
+                                    "Sistemas inteligentes embutidos com redundância e telemetria.",
                                 },
                                 {
                                   id: "l_4",
                                   tag: "[CAMADA 04]",
                                   icon: "🧱",
                                   name: "Fundações & Radier Protendido",
-                                  detail: "Cálculo estrutural para estabilidade de longo prazo sem fissuras.",
+                                  detail:
+                                    "Cálculo estrutural para estabilidade de longo prazo sem fissuras.",
                                 },
                               ],
                             },
@@ -2199,7 +2328,11 @@ export default function CinematicStudioPage() {
                       <div className="flex items-center gap-3">
                         <div className="h-12 w-12 rounded-full border border-zinc-800 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
                           {data.avatarUrl ? (
-                            <img src={data.avatarUrl} alt="Logo" className="h-full w-full object-cover" />
+                            <img
+                              src={data.avatarUrl}
+                              alt="Logo"
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <ImageIcon className="h-5 w-5 text-zinc-500" />
                           )}
@@ -2211,7 +2344,11 @@ export default function CinematicStudioPage() {
                             disabled={uploadingLogo}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-200 transition cursor-pointer disabled:opacity-50"
                           >
-                            {uploadingLogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                            {uploadingLogo ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Upload className="h-3.5 w-3.5" />
+                            )}
                             <span>{data.avatarUrl ? "Trocar Logotipo" : "Enviar Logotipo"}</span>
                           </button>
                           <input
@@ -2233,7 +2370,11 @@ export default function CinematicStudioPage() {
                       <div className="flex items-center gap-3">
                         <div className="h-14 w-20 rounded-lg border border-zinc-800 bg-zinc-900 overflow-hidden shrink-0 flex items-center justify-center">
                           {data.hero.backgroundImage ? (
-                            <img src={data.hero.backgroundImage} alt="Capa" className="h-full w-full object-cover" />
+                            <img
+                              src={data.hero.backgroundImage}
+                              alt="Capa"
+                              className="h-full w-full object-cover"
+                            />
                           ) : (
                             <ImageIcon className="h-5 w-5 text-zinc-500" />
                           )}
@@ -2245,14 +2386,21 @@ export default function CinematicStudioPage() {
                             disabled={uploadingCover}
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-xs font-medium text-zinc-200 transition cursor-pointer disabled:opacity-50"
                           >
-                            {uploadingCover ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                            {uploadingCover ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Upload className="h-3.5 w-3.5" />
+                            )}
                             <span>Trocar Foto de Capa</span>
                           </button>
                           <input
                             type="url"
                             value={data.hero.backgroundImage || ""}
                             onChange={(e) =>
-                              setData({ ...data, hero: { ...data.hero, backgroundImage: e.target.value } })
+                              setData({
+                                ...data,
+                                hero: { ...data.hero, backgroundImage: e.target.value },
+                              })
                             }
                             placeholder="Ou cole a URL da imagem de capa..."
                             className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-2.5 py-1 text-[11px] text-zinc-300 placeholder-zinc-600 focus:border-zinc-700 focus:outline-none font-mono"
@@ -2263,7 +2411,9 @@ export default function CinematicStudioPage() {
 
                     {/* Dados Básicos da Marca */}
                     <div>
-                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">Nome do Negócio</label>
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Nome do Negócio
+                      </label>
                       <input
                         type="text"
                         value={data.businessName}
@@ -2274,7 +2424,9 @@ export default function CinematicStudioPage() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">Tagline do Hero (Caixa Alta)</label>
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Tagline do Hero (Caixa Alta)
+                      </label>
                       <input
                         type="text"
                         value={data.hero.tagline}
@@ -2287,7 +2439,9 @@ export default function CinematicStudioPage() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">Título Principal do Hero</label>
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Título Principal do Hero
+                      </label>
                       <input
                         type="text"
                         value={data.hero.title}
@@ -2300,7 +2454,9 @@ export default function CinematicStudioPage() {
                     </div>
 
                     <div>
-                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">Subtítulo Narrativo</label>
+                      <label className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Subtítulo Narrativo
+                      </label>
                       <textarea
                         rows={2}
                         value={data.hero.subtitle}
@@ -2314,7 +2470,9 @@ export default function CinematicStudioPage() {
 
                     <div className="grid grid-cols-2 gap-2">
                       <div>
-                        <label className="text-[10px] text-zinc-400 uppercase font-semibold">Texto do Botão CTA</label>
+                        <label className="text-[10px] text-zinc-400 uppercase font-semibold">
+                          Texto do Botão CTA
+                        </label>
                         <input
                           type="text"
                           value={data.hero.ctaText || "Solicitar Atendimento VIP"}
@@ -2326,7 +2484,9 @@ export default function CinematicStudioPage() {
                         />
                       </div>
                       <div>
-                        <label className="text-[10px] text-zinc-400 uppercase font-semibold">Link / Destino do Botão</label>
+                        <label className="text-[10px] text-zinc-400 uppercase font-semibold">
+                          Link / Destino do Botão
+                        </label>
                         <input
                           type="text"
                           value={data.hero.ctaLink || "#vitrine"}
@@ -2421,16 +2581,21 @@ export default function CinematicStudioPage() {
                       </button>
                     </div>
 
-                    {(!data.highlights || data.highlights.length === 0) ? (
+                    {!data.highlights || data.highlights.length === 0 ? (
                       <div className="p-8 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 text-zinc-400 text-xs space-y-2">
                         <ShoppingBag className="h-8 w-8 mx-auto text-zinc-600" />
                         <p className="font-medium text-zinc-300">Nenhum item na vitrine ainda</p>
-                        <p className="text-[11px] text-zinc-500">Clique em "+ Adicionar Item" para cadastrar pratos, produtos ou serviços.</p>
+                        <p className="text-[11px] text-zinc-500">
+                          Clique em "+ Adicionar Item" para cadastrar pratos, produtos ou serviços.
+                        </p>
                       </div>
                     ) : (
                       <div className="space-y-3">
                         {data.highlights.map((item, idx) => (
-                          <div key={item.id || idx} className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5 space-y-3">
+                          <div
+                            key={item.id || idx}
+                            className="rounded-xl border border-zinc-800 bg-zinc-950/70 p-3.5 space-y-3"
+                          >
                             <div className="flex items-center justify-between border-b border-zinc-800/60 pb-2">
                               <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">
                                 Item #{idx + 1}
@@ -2452,7 +2617,9 @@ export default function CinematicStudioPage() {
                             </div>
 
                             <div>
-                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">Nome do Produto / Serviço</label>
+                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">
+                                Nome do Produto / Serviço
+                              </label>
                               <input
                                 type="text"
                                 value={item.title}
@@ -2471,7 +2638,9 @@ export default function CinematicStudioPage() {
 
                             <div className="grid grid-cols-2 gap-2">
                               <div>
-                                <label className="text-[9px] text-zinc-400 uppercase font-semibold">Preço ou Valor</label>
+                                <label className="text-[9px] text-zinc-400 uppercase font-semibold">
+                                  Preço ou Valor
+                                </label>
                                 <input
                                   type="text"
                                   value={item.price || ""}
@@ -2488,7 +2657,9 @@ export default function CinematicStudioPage() {
                                 />
                               </div>
                               <div>
-                                <label className="text-[9px] text-zinc-400 uppercase font-semibold">Selo / Badge</label>
+                                <label className="text-[9px] text-zinc-400 uppercase font-semibold">
+                                  Selo / Badge
+                                </label>
                                 <input
                                   type="text"
                                   value={item.badge || ""}
@@ -2507,7 +2678,9 @@ export default function CinematicStudioPage() {
                             </div>
 
                             <div>
-                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">Descrição / Ingredientes</label>
+                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">
+                                Descrição / Ingredientes
+                              </label>
                               <textarea
                                 rows={2}
                                 value={item.description || ""}
@@ -2525,10 +2698,16 @@ export default function CinematicStudioPage() {
                             </div>
 
                             <div>
-                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">Foto do Produto (URL)</label>
+                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">
+                                Foto do Produto (URL)
+                              </label>
                               <div className="mt-1 flex items-center gap-2">
                                 {item.image && (
-                                  <img src={item.image} alt="" className="w-8 h-8 rounded-lg object-cover border border-zinc-800 shrink-0" />
+                                  <img
+                                    src={item.image}
+                                    alt=""
+                                    className="w-8 h-8 rounded-lg object-cover border border-zinc-800 shrink-0"
+                                  />
                                 )}
                                 <input
                                   type="url"
@@ -2558,21 +2737,30 @@ export default function CinematicStudioPage() {
                   <div className="space-y-4 animate-in fade-in-50 duration-150">
                     {/* Modelo de Site Ativo */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Modelo de Site Ativo:</span>
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Modelo de Site Ativo:
+                      </span>
                       <div className="relative">
                         <select
                           value={(data as any).templateId || "cinematic-glass"}
                           onChange={(e) => {
-                            setData((prev) => ({
-                              ...prev,
-                              templateId: e.target.value,
-                            } as any));
+                            setData(
+                              (prev) =>
+                                ({
+                                  ...prev,
+                                  templateId: e.target.value,
+                                }) as any,
+                            );
                             toast.success("Modelo de site atualizado!");
                           }}
                           className="w-full appearance-none rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-100 focus:border-zinc-600 focus:outline-none cursor-pointer"
                         >
                           {TEMPLATE_OPTIONS.map((tmpl) => (
-                            <option key={tmpl.id} value={tmpl.id} className="bg-zinc-900 text-zinc-100">
+                            <option
+                              key={tmpl.id}
+                              value={tmpl.id}
+                              className="bg-zinc-900 text-zinc-100"
+                            >
                               {tmpl.icon} {tmpl.name}
                             </option>
                           ))}
@@ -2585,7 +2773,9 @@ export default function CinematicStudioPage() {
 
                     {/* Modo Visual (Dark vs Light) */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Modo Visual:</span>
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Modo Visual:
+                      </span>
                       <div className="grid grid-cols-2 gap-2">
                         <button
                           type="button"
@@ -2595,13 +2785,18 @@ export default function CinematicStudioPage() {
                               theme: {
                                 ...prev.theme,
                                 mode: "dark",
-                                bg: prev.theme.bg && (prev.theme.bg === "#ffffff" || prev.theme.bg.startsWith("#f")) ? "#09090b" : prev.theme.bg || "#09090b",
+                                bg:
+                                  prev.theme.bg &&
+                                  (prev.theme.bg === "#ffffff" || prev.theme.bg.startsWith("#f"))
+                                    ? "#09090b"
+                                    : prev.theme.bg || "#09090b",
                               },
                             }));
                             toast.success("Modo Escuro ativado.");
                           }}
                           className={`flex items-center justify-center gap-2 rounded-lg border py-2.5 text-xs font-semibold transition-all ${
-                            data.theme?.mode !== "light" && (!data.theme?.bg || !data.theme?.bg.startsWith("#f"))
+                            data.theme?.mode !== "light" &&
+                            (!data.theme?.bg || !data.theme?.bg.startsWith("#f"))
                               ? "border-amber-400/80 bg-zinc-800 text-amber-300 shadow-sm"
                               : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
                           }`}
@@ -2623,7 +2818,8 @@ export default function CinematicStudioPage() {
                             toast.success("Modo Claro ativado.");
                           }}
                           className={`flex items-center justify-center gap-2 rounded-lg border py-2.5 text-xs font-semibold transition-all ${
-                            data.theme?.mode === "light" || (data.theme?.bg && data.theme?.bg.startsWith("#f"))
+                            data.theme?.mode === "light" ||
+                            (data.theme?.bg && data.theme?.bg.startsWith("#f"))
                               ? "border-amber-400/80 bg-zinc-100 text-zinc-900 shadow-sm"
                               : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
                           }`}
@@ -2636,7 +2832,9 @@ export default function CinematicStudioPage() {
 
                     {/* Seletor de Arquétipo Visual */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Arquétipo de Design:</span>
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Arquétipo de Design:
+                      </span>
                       <div className="grid grid-cols-2 gap-2">
                         {[
                           {
@@ -2644,35 +2842,58 @@ export default function CinematicStudioPage() {
                             label: "Cinemático Glass",
                             desc: "Glassmorphism, desfoque e profundidade",
                             icon: "🎬",
-                            setup: { headingStyle: "default", borderRadius: "rounded", boxEffect: "glass" },
+                            setup: {
+                              headingStyle: "default",
+                              borderRadius: "rounded",
+                              boxEffect: "glass",
+                            },
                           },
                           {
                             id: "neobrutalism",
                             label: "Neobrutalismo Pop",
                             desc: "Bordas pretas 3D, sombras duras e alta energia",
                             icon: "⚡",
-                            setup: { headingStyle: "uppercase", borderRadius: "rounded", boxEffect: "solid" },
+                            setup: {
+                              headingStyle: "uppercase",
+                              borderRadius: "rounded",
+                              boxEffect: "solid",
+                            },
                           },
                           {
                             id: "editorial",
                             label: "Editorial Suíço",
                             desc: "Cantos retos, itálico nobre e minimalismo Vogue",
                             icon: "🏛️",
-                            setup: { headingStyle: "italic", borderRadius: "sharp", fontFamily: "serif", fontHeading: "serif" },
+                            setup: {
+                              headingStyle: "italic",
+                              borderRadius: "sharp",
+                              fontFamily: "serif",
+                              fontHeading: "serif",
+                            },
                           },
                           {
                             id: "bento",
                             label: "Bento High-Tech",
                             desc: "Pílulas arredondadas, gradientes e SaaS moderno",
                             icon: "🍱",
-                            setup: { headingStyle: "gradient", borderRadius: "pill", fontFamily: "display", fontHeading: "display" },
+                            setup: {
+                              headingStyle: "gradient",
+                              borderRadius: "pill",
+                              fontFamily: "display",
+                              fontHeading: "display",
+                            },
                           },
                         ].map((arq) => {
                           const isSelected =
                             data.archetype === arq.id ||
-                            (arq.id === "editorial" && (data.archetype === "luxury-editorial" as any)) ||
-                            (arq.id === "neobrutalism" && ((data.archetype as any) === "neo-pop-d2c" || (data.archetype as any) === "dark-brutalist")) ||
-                            (arq.id === "bento" && ((data.archetype as any) === "clean-biotech" || (data.archetype as any) === "cyber-tech"));
+                            (arq.id === "editorial" &&
+                              data.archetype === ("luxury-editorial" as any)) ||
+                            (arq.id === "neobrutalism" &&
+                              ((data.archetype as any) === "neo-pop-d2c" ||
+                                (data.archetype as any) === "dark-brutalist")) ||
+                            (arq.id === "bento" &&
+                              ((data.archetype as any) === "clean-biotech" ||
+                                (data.archetype as any) === "cyber-tech"));
 
                           return (
                             <button
@@ -2686,9 +2907,20 @@ export default function CinematicStudioPage() {
                                     ...prev.theme,
                                     archetype: arq.id as any,
                                     headingStyle: arq.setup.headingStyle as any,
-                                    borderRadius: (arq.setup as any).borderRadius || prev.theme?.borderRadius || "rounded",
-                                    boxEffect: (arq.setup as any).boxEffect || prev.theme?.boxEffect || "glass",
-                                    ...(arq.setup as any).fontFamily ? { fontFamily: (arq.setup as any).fontFamily, fontHeading: (arq.setup as any).fontHeading } : {},
+                                    borderRadius:
+                                      (arq.setup as any).borderRadius ||
+                                      prev.theme?.borderRadius ||
+                                      "rounded",
+                                    boxEffect:
+                                      (arq.setup as any).boxEffect ||
+                                      prev.theme?.boxEffect ||
+                                      "glass",
+                                    ...((arq.setup as any).fontFamily
+                                      ? {
+                                          fontFamily: (arq.setup as any).fontFamily,
+                                          fontHeading: (arq.setup as any).fontHeading,
+                                        }
+                                      : {}),
                                   },
                                 }));
                                 toast.success(`Arquétipo ${arq.label} aplicado!`);
@@ -2701,9 +2933,13 @@ export default function CinematicStudioPage() {
                             >
                               <div className="flex items-center gap-1.5">
                                 <span>{arq.icon}</span>
-                                <span className="block text-xs font-semibold text-zinc-200">{arq.label}</span>
+                                <span className="block text-xs font-semibold text-zinc-200">
+                                  {arq.label}
+                                </span>
                               </div>
-                              <span className="block text-[9px] text-zinc-400 mt-1 leading-tight">{arq.desc}</span>
+                              <span className="block text-[9px] text-zinc-400 mt-1 leading-tight">
+                                {arq.desc}
+                              </span>
                             </button>
                           );
                         })}
@@ -2712,24 +2948,86 @@ export default function CinematicStudioPage() {
 
                     {/* Seletor de Paleta */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Paleta de Cores:</span>
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Paleta de Cores:
+                      </span>
                       <div className="grid grid-cols-6 gap-2">
                         {(data.theme?.mode === "light"
                           ? [
-                              { id: "light-amber", name: "Branco & Âmbar", bg: "#f8fafc", accent: "#f59e0b" },
-                              { id: "light-emerald", name: "Gelo & Esmeralda", bg: "#f0fdf4", accent: "#059669" },
-                              { id: "light-gold", name: "Marfim & Ouro", bg: "#faf7f2", accent: "#b45309" },
-                              { id: "light-sapphire", name: "Nuvem & Safira", bg: "#f8fafc", accent: "#2563eb" },
-                              { id: "light-violet", name: "Lavanda & Violeta", bg: "#faf5ff", accent: "#7c3aed" },
-                              { id: "light-mono", name: "Minimal Preto & Branco", bg: "#ffffff", accent: "#09090b" },
+                              {
+                                id: "light-amber",
+                                name: "Branco & Âmbar",
+                                bg: "#f8fafc",
+                                accent: "#f59e0b",
+                              },
+                              {
+                                id: "light-emerald",
+                                name: "Gelo & Esmeralda",
+                                bg: "#f0fdf4",
+                                accent: "#059669",
+                              },
+                              {
+                                id: "light-gold",
+                                name: "Marfim & Ouro",
+                                bg: "#faf7f2",
+                                accent: "#b45309",
+                              },
+                              {
+                                id: "light-sapphire",
+                                name: "Nuvem & Safira",
+                                bg: "#f8fafc",
+                                accent: "#2563eb",
+                              },
+                              {
+                                id: "light-violet",
+                                name: "Lavanda & Violeta",
+                                bg: "#faf5ff",
+                                accent: "#7c3aed",
+                              },
+                              {
+                                id: "light-mono",
+                                name: "Minimal Preto & Branco",
+                                bg: "#ffffff",
+                                accent: "#09090b",
+                              },
                             ]
                           : [
-                              { id: "dark-gold", name: "Âmbar Solar", bg: "#0a0a0c", accent: "#f59e0b" },
-                              { id: "dark-emerald", name: "Esmeralda Nobre", bg: "#06130d", accent: "#10b981" },
-                              { id: "dark-titanium", name: "Grafite & Titânio", bg: "#09090b", accent: "#d4d4d8" },
-                              { id: "dark-champagne", name: "Champagne Sóbrio", bg: "#0c0a09", accent: "#d4af37" },
-                              { id: "dark-violet", name: "Cyber Violeta", bg: "#0c0714", accent: "#a855f7" },
-                              { id: "dark-sapphire", name: "Safira Noturno", bg: "#080c16", accent: "#3b82f6" },
+                              {
+                                id: "dark-gold",
+                                name: "Âmbar Solar",
+                                bg: "#0a0a0c",
+                                accent: "#f59e0b",
+                              },
+                              {
+                                id: "dark-emerald",
+                                name: "Esmeralda Nobre",
+                                bg: "#06130d",
+                                accent: "#10b981",
+                              },
+                              {
+                                id: "dark-titanium",
+                                name: "Grafite & Titânio",
+                                bg: "#09090b",
+                                accent: "#d4d4d8",
+                              },
+                              {
+                                id: "dark-champagne",
+                                name: "Champagne Sóbrio",
+                                bg: "#0c0a09",
+                                accent: "#d4af37",
+                              },
+                              {
+                                id: "dark-violet",
+                                name: "Cyber Violeta",
+                                bg: "#0c0714",
+                                accent: "#a855f7",
+                              },
+                              {
+                                id: "dark-sapphire",
+                                name: "Safira Noturno",
+                                bg: "#080c16",
+                                accent: "#3b82f6",
+                              },
                             ]
                         ).map((pal) => (
                           <button
@@ -2750,7 +3048,10 @@ export default function CinematicStudioPage() {
                             }`}
                             style={{ backgroundColor: pal.bg }}
                           >
-                            <span className="h-3 w-3 rounded-full border border-black/20" style={{ backgroundColor: pal.accent }} />
+                            <span
+                              className="h-3 w-3 rounded-full border border-black/20"
+                              style={{ backgroundColor: pal.accent }}
+                            />
                           </button>
                         ))}
                       </div>
@@ -2758,7 +3059,9 @@ export default function CinematicStudioPage() {
 
                     {/* Seletor de Tipografia Completa */}
                     <div className="space-y-1.5">
-                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">Tipografia Global:</span>
+                      <span className="text-[10px] text-zinc-400 uppercase font-semibold">
+                        Tipografia Global:
+                      </span>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         {[
                           { id: "sans", label: "Inter (Moderna)", sample: "Aa Sans" },
@@ -2767,7 +3070,8 @@ export default function CinematicStudioPage() {
                           { id: "cormorant", label: "Cormorant (Poética)", sample: "Aa Cormorant" },
                           { id: "mono", label: "Courier (Cyber Mono)", sample: "Aa Mono" },
                         ].map((f) => {
-                          const currentFont = (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
+                          const currentFont =
+                            (data.theme as any)?.fontFamily || data.theme?.fontHeading || "sans";
                           const isSelected = currentFont === f.id;
                           return (
                             <button
@@ -2790,8 +3094,12 @@ export default function CinematicStudioPage() {
                                   : "border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200"
                               }`}
                             >
-                              <span className="block text-[11px] font-semibold text-zinc-200 truncate">{f.label}</span>
-                              <span className="block text-[9px] text-zinc-400 mt-0.5">{f.sample}</span>
+                              <span className="block text-[11px] font-semibold text-zinc-200 truncate">
+                                {f.label}
+                              </span>
+                              <span className="block text-[9px] text-zinc-400 mt-0.5">
+                                {f.sample}
+                              </span>
                             </button>
                           );
                         })}
@@ -2801,7 +3109,9 @@ export default function CinematicStudioPage() {
                     {/* Efeitos dos Cards & Arredondamento */}
                     <div className="grid grid-cols-2 gap-3 pt-1">
                       <div className="space-y-1.5">
-                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">Efeito dos Cards:</span>
+                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">
+                          Efeito dos Cards:
+                        </span>
                         <div className="flex flex-col gap-1.5">
                           {[
                             { id: "glass", label: "Vidro / Glass" },
@@ -2830,7 +3140,9 @@ export default function CinematicStudioPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">Arredondamento:</span>
+                        <span className="text-[10px] text-zinc-400 uppercase font-semibold">
+                          Arredondamento:
+                        </span>
                         <div className="flex flex-col gap-1.5">
                           {[
                             { id: "rounded", label: "Suave (16px)" },
@@ -2843,7 +3155,11 @@ export default function CinematicStudioPage() {
                               onClick={() =>
                                 setData((prev) => ({
                                   ...prev,
-                                  theme: { ...prev.theme, borderRadius: rad.id as any, borderStyle: rad.id as any },
+                                  theme: {
+                                    ...prev.theme,
+                                    borderRadius: rad.id as any,
+                                    borderStyle: rad.id as any,
+                                  },
                                 }))
                               }
                               className={`rounded-lg border px-2.5 py-1.5 text-left text-[11px] transition-all ${
@@ -2862,7 +3178,9 @@ export default function CinematicStudioPage() {
                     {/* Toggle de Parallax GPU */}
                     <label className="flex items-center justify-between rounded-xl border border-zinc-800 bg-zinc-900/40 p-3 cursor-pointer">
                       <div>
-                        <span className="block text-xs font-semibold text-zinc-200">Efeito Parallax GPU (60 FPS)</span>
+                        <span className="block text-xs font-semibold text-zinc-200">
+                          Efeito Parallax GPU (60 FPS)
+                        </span>
                         <span className="block text-[10px] text-zinc-400">
                           Profundidade 3D suave acelerada por hardware.
                         </span>
@@ -2931,15 +3249,17 @@ export default function CinematicStudioPage() {
                               <span className="text-xs font-mono font-bold text-amber-400 bg-amber-400/10 px-2 py-0.5 rounded-md border border-amber-400/20">
                                 {data.marqueeSpeed || 50}s{" "}
                                 <span className="text-[9px] font-sans font-normal text-zinc-400">
-                                  ({(data.marqueeSpeed || 50) >= 150
+                                  (
+                                  {(data.marqueeSpeed || 50) >= 150
                                     ? "Ultra Lenta / Flutuante (Editorial)"
                                     : (data.marqueeSpeed || 50) >= 100
-                                    ? "Muito Lenta & Relaxada"
-                                    : (data.marqueeSpeed || 50) >= 65
-                                    ? "Lenta & Elegante"
-                                    : (data.marqueeSpeed || 50) >= 35
-                                    ? "Suave (Recomendado)"
-                                    : "Dinâmica / Rápida"})
+                                      ? "Muito Lenta & Relaxada"
+                                      : (data.marqueeSpeed || 50) >= 65
+                                        ? "Lenta & Elegante"
+                                        : (data.marqueeSpeed || 50) >= 35
+                                          ? "Suave (Recomendado)"
+                                          : "Dinâmica / Rápida"}
+                                  )
                                 </span>
                               </span>
                             </div>
@@ -2965,7 +3285,9 @@ export default function CinematicStudioPage() {
                                         marqueeSpeed: p.speed,
                                         theme: { ...prev.theme, marqueeSpeed: p.speed },
                                       }));
-                                      toast.success(`Velocidade da faixa: ${p.label} (${p.speed}s)!`);
+                                      toast.success(
+                                        `Velocidade da faixa: ${p.label} (${p.speed}s)!`,
+                                      );
                                     }}
                                     className={`py-1.5 px-1 rounded-lg text-center transition-all cursor-pointer ${
                                       isSelected
@@ -2973,8 +3295,12 @@ export default function CinematicStudioPage() {
                                         : "border border-zinc-800 bg-zinc-950/40 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700"
                                     }`}
                                   >
-                                    <span className="block text-[10px] leading-tight font-medium truncate">{p.label}</span>
-                                    <span className="block text-[9px] text-zinc-500 font-mono">{p.desc}</span>
+                                    <span className="block text-[10px] leading-tight font-medium truncate">
+                                      {p.label}
+                                    </span>
+                                    <span className="block text-[9px] text-zinc-500 font-mono">
+                                      {p.desc}
+                                    </span>
                                   </button>
                                 );
                               })}
@@ -3035,7 +3361,10 @@ export default function CinematicStudioPage() {
                               const textVal = typeof item === "string" ? item : item.text;
                               const iconVal = typeof item === "object" ? item.icon || "" : "";
                               return (
-                                <div key={item.id || idx} className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 p-2">
+                                <div
+                                  key={item.id || idx}
+                                  className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 p-2"
+                                >
                                   <input
                                     type="text"
                                     value={iconVal}
@@ -3047,7 +3376,11 @@ export default function CinematicStudioPage() {
                                         const nextMarquee = [...(prev.marquee || [])];
                                         const current = nextMarquee[idx];
                                         if (typeof current === "string") {
-                                          nextMarquee[idx] = { id: `m_${idx}`, text: current, icon: newIcon };
+                                          nextMarquee[idx] = {
+                                            id: `m_${idx}`,
+                                            text: current,
+                                            icon: newIcon,
+                                          };
                                         } else {
                                           nextMarquee[idx] = { ...current, icon: newIcon };
                                         }
@@ -3095,7 +3428,9 @@ export default function CinematicStudioPage() {
                           </div>
 
                           <div className="pt-1">
-                            <span className="block text-[10px] text-zinc-500 mb-1.5">Sugestões rápidas para adicionar:</span>
+                            <span className="block text-[10px] text-zinc-500 mb-1.5">
+                              Sugestões rápidas para adicionar:
+                            </span>
                             <div className="flex flex-wrap gap-1.5">
                               {[
                                 { text: "★ 4.9 NO GOOGLE", icon: "★" },
@@ -3112,7 +3447,11 @@ export default function CinematicStudioPage() {
                                       ...prev,
                                       marquee: [
                                         ...(prev.marquee || []),
-                                        { id: `sug_${Date.now()}_${sIdx}`, text: sug.text, icon: sug.icon },
+                                        {
+                                          id: `sug_${Date.now()}_${sIdx}`,
+                                          text: sug.text,
+                                          icon: sug.icon,
+                                        },
                                       ],
                                     }));
                                     toast.success(`"${sug.text}" adicionada!`);
@@ -3171,7 +3510,8 @@ export default function CinematicStudioPage() {
                       />
                       {data.hero.backgroundVideo && (
                         <p className="text-[10px] text-emerald-400 flex items-center gap-1 font-medium">
-                          <CheckCircle2 className="h-3 w-3" /> Vídeo ativo em loop no Hero (substitui foto de fundo)
+                          <CheckCircle2 className="h-3 w-3" /> Vídeo ativo em loop no Hero
+                          (substitui foto de fundo)
                         </p>
                       )}
                     </div>
@@ -3201,7 +3541,9 @@ export default function CinematicStudioPage() {
                         <div className="p-8 text-center rounded-2xl border border-dashed border-zinc-800 bg-zinc-950/40 text-zinc-400 text-xs space-y-2">
                           <ImageIcon className="h-8 w-8 mx-auto text-zinc-600" />
                           <p className="font-medium text-zinc-300">Nenhuma foto no acervo</p>
-                          <p className="text-[11px] text-zinc-500">Clique em "+ Adicionar Fotos" para enviar fotos do negócio.</p>
+                          <p className="text-[11px] text-zinc-500">
+                            Clique em "+ Adicionar Fotos" para enviar fotos do negócio.
+                          </p>
                         </div>
                       ) : (
                         <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
@@ -3221,7 +3563,11 @@ export default function CinematicStudioPage() {
                                   : "border-zinc-800 hover:border-zinc-600"
                               }`}
                             >
-                              <img src={photo.url} alt="" className="h-full w-full object-cover group-hover:scale-105 transition-transform" />
+                              <img
+                                src={photo.url}
+                                alt=""
+                                className="h-full w-full object-cover group-hover:scale-105 transition-transform"
+                              />
                               {data.hero.backgroundImage === photo.url && (
                                 <span className="absolute top-1.5 right-1.5 rounded-full bg-amber-400 text-zinc-950 text-[8px] font-bold px-1.5 py-0.5 shadow">
                                   Capa
@@ -3323,7 +3669,9 @@ export default function CinematicStudioPage() {
                           min="1.0"
                           max="5.0"
                           value={data.rating || 5.0}
-                          onChange={(e) => setData({ ...data, rating: parseFloat(e.target.value) || 5.0 })}
+                          onChange={(e) =>
+                            setData({ ...data, rating: parseFloat(e.target.value) || 5.0 })
+                          }
                           className="w-24 rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-bold text-amber-400 text-center focus:border-zinc-600 focus:outline-none"
                         />
                         <div className="flex items-center gap-1 text-amber-400 text-sm">
@@ -3346,8 +3694,14 @@ export default function CinematicStudioPage() {
                   disabled={isSaving}
                   className="w-full flex items-center justify-center gap-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-zinc-950 font-bold py-2.5 px-4 text-xs shadow-lg shadow-amber-500/10 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 cursor-pointer"
                 >
-                  {isSaving ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  <span>{isSaving ? "Salvando & Publicando..." : "Salvar & Publicar Alterações"}</span>
+                  {isSaving ? (
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Save className="h-4 w-4" />
+                  )}
+                  <span>
+                    {isSaving ? "Salvando & Publicando..." : "Salvar & Publicar Alterações"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -3466,7 +3820,11 @@ export default function CinematicStudioPage() {
                 onClick={handleCopyLink}
                 className="flex items-center gap-1 rounded-lg bg-zinc-800 px-3 py-1.5 font-medium text-xs text-zinc-200 hover:text-white hover:bg-zinc-700 transition-colors"
               >
-                {copiedLink ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                {copiedLink ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
                 <span>{copiedLink ? "Copiado!" : "Copiar"}</span>
               </button>
             </div>
@@ -3530,17 +3888,24 @@ export default function CinematicStudioPage() {
             </div>
 
             <div className="space-y-3.5 text-xs text-zinc-300">
-              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] leading-relaxed">
-                <strong>🔒 Segurança Máxima:</strong> Sua chave é gravada diretamente no servidor do Supabase através de Server Functions autenticadas. Ela <strong>nunca fica exposta no navegador</strong> nem nos sites publicados para seus clientes.
+              <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-[11px] leading-relaxed">
+                <strong>Importante:</strong> A chave pessoal fica no armazenamento deste navegador e
+                é enviada ao servidor apenas para chamar o Gemini. Ela não é incluída nos sites
+                publicados. Para configurar uma chave compartilhada, use a seção Gemini na área
+                administrativa.
               </div>
 
               <p className="leading-relaxed text-zinc-400 text-[11px]">
-                Com a IA ativa, o Copiloto dialoga livremente com inteligência real (como o ChatGPT e Claude), refina seu design ao vivo, programa animações de desconstrução (Anime.js) e cria propostas conceituais completas.
+                Com a IA ativa, o Copiloto dialoga livremente com inteligência real (como o ChatGPT
+                e Claude), refina seu design ao vivo, programa animações de desconstrução (Anime.js)
+                e cria propostas conceituais completas.
               </p>
 
               <div className="p-3 rounded-xl bg-zinc-900/80 border border-zinc-800/80 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-medium text-zinc-400">Como obter sua chave gratuita:</span>
+                  <span className="text-[11px] font-medium text-zinc-400">
+                    Como obter sua chave gratuita:
+                  </span>
                   <a
                     href="https://aistudio.google.com/app/apikey"
                     target="_blank"
@@ -3553,14 +3918,16 @@ export default function CinematicStudioPage() {
                 </div>
                 <ul className="text-[11px] text-zinc-400 list-disc list-inside space-y-0.5">
                   <li>Leva menos de 10 segundos e é 100% gratuito (sem cartão)</li>
-                  <li>Clique em <strong>"Create API key"</strong> no Google AI Studio</li>
+                  <li>
+                    Clique em <strong>"Create API key"</strong> no Google AI Studio
+                  </li>
                   <li>Aceita qualquer formato de chave emitido pela Google</li>
                 </ul>
               </div>
 
               <div className="space-y-1.5">
                 <label className="text-[11px] font-semibold text-zinc-300 flex items-center justify-between">
-                  <span>Chave da API do Google Gemini</span>
+                  <span>Chave pessoal do Google Gemini</span>
                   {dbKeyConfigured && (
                     <span className="text-[10px] text-emerald-400 font-mono">
                       Gravada no Banco ({dbKeyMasked})
@@ -3572,7 +3939,11 @@ export default function CinematicStudioPage() {
                     type={showKeyPassword ? "text" : "password"}
                     value={inputKey}
                     onChange={(e) => setInputKey(e.target.value)}
-                    placeholder={dbKeyConfigured ? "Chave ativa no banco. Cole uma nova para substituir..." : "Cole sua chave da Google aqui..."}
+                    placeholder={
+                      dbKeyConfigured
+                        ? "Chave compartilhada disponível; ou cole sua chave pessoal..."
+                        : "Cole sua chave pessoal da Google aqui..."
+                    }
                     className="w-full rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2.5 text-xs text-zinc-100 placeholder-zinc-500 focus:border-amber-500 focus:outline-none pr-10 font-mono"
                   />
                   <button
@@ -3580,7 +3951,11 @@ export default function CinematicStudioPage() {
                     onClick={() => setShowKeyPassword((prev) => !prev)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-200"
                   >
-                    {showKeyPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                    {showKeyPassword ? (
+                      <EyeOff className="h-3.5 w-3.5" />
+                    ) : (
+                      <Eye className="h-3.5 w-3.5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -3588,13 +3963,13 @@ export default function CinematicStudioPage() {
 
             <div className="flex items-center justify-between pt-3 border-t border-zinc-800/80">
               <div>
-                {(dbKeyConfigured || geminiKey) && (
+                {geminiKey && geminiKey !== "configured_in_database" && (
                   <button
                     type="button"
                     onClick={handleRemoveGeminiKey}
                     className="text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer"
                   >
-                    Remover do Banco
+                    Remover chave pessoal
                   </button>
                 )}
               </div>
@@ -3606,7 +3981,11 @@ export default function CinematicStudioPage() {
                   disabled={isTestingKey || (!inputKey.trim() && !dbKeyConfigured)}
                   className="rounded-xl border border-zinc-700/60 bg-zinc-800 px-3 py-2 text-xs font-medium text-zinc-200 hover:bg-zinc-700 hover:text-white transition-colors disabled:opacity-40 cursor-pointer"
                 >
-                  {isTestingKey ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : "Testar Conexão"}
+                  {isTestingKey ? (
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    "Testar Conexão"
+                  )}
                 </button>
 
                 <button
@@ -3615,7 +3994,7 @@ export default function CinematicStudioPage() {
                   disabled={isTestingKey || !inputKey.trim()}
                   className="rounded-xl bg-amber-500 px-3.5 py-2 text-xs font-bold text-zinc-950 hover:bg-amber-400 transition-all shadow-md shadow-amber-950/30 disabled:opacity-40 cursor-pointer active:scale-95"
                 >
-                  Salvar no Banco
+                  Salvar neste navegador
                 </button>
               </div>
             </div>

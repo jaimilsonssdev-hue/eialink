@@ -1,4 +1,3 @@
-import { getSavedGeminiKey } from "@/modules/prospecting/GeminiAuditorService";
 import { useState, useEffect, useRef } from "react";
 import {
   Sparkles,
@@ -305,13 +304,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
-  const [overrideKey, setOverrideKey] = useState(() => {
-    try {
-      return localStorage.getItem(LOCAL_STORAGE_KEY) || "";
-    } catch {
-      return "";
-    }
-  });
+  const [overrideKey, setOverrideKey] = useState("");
   const [showKeyConfig, setShowKeyConfig] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loadingStep, setLoadingStep] = useState("");
@@ -630,7 +623,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
             city: finalClientCity,
             servicesCount: currentContext?.servicesCount ?? undefined,
           },
-          overrideApiKey: overrideKey.trim() || getSavedGeminiKey() || undefined,
+          overrideApiKey: overrideKey.trim() || undefined,
           avoidDirectionId: avoidDirectionId || undefined,
         },
       });

@@ -13,7 +13,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { chatCopilotEditFn } from "@/modules/ai/copilot.functions";
-import { getSavedGeminiKey, saveGeminiKey } from "@/modules/prospecting/GeminiAuditorService";
+import { saveGeminiKey } from "@/modules/prospecting/GeminiAuditorService";
 import { toast } from "sonner";
 
 export interface ChatMessage {
@@ -60,7 +60,7 @@ export function CopilotChatDrawer({
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showKeyConfig, setShowKeyConfig] = useState(false);
-  const [apiKey, setApiKey] = useState(getSavedGeminiKey() || "");
+  const [apiKey, setApiKey] = useState("");
   const [undoHistory, setUndoHistory] = useState<Record<string, any>[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -100,7 +100,7 @@ export function CopilotChatDrawer({
     setIsLoading(true);
 
     try {
-      const cleanKey = apiKey.trim() || getSavedGeminiKey() || "";
+      const cleanKey = apiKey.trim();
       if (apiKey.trim()) {
         saveGeminiKey(apiKey.trim());
       }

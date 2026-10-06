@@ -154,8 +154,15 @@ export const Route = (createFileRoute as any)("/api/public/payments/asaas-webhoo
           const asaasConfig = await AsaasService.resolveConfig();
           const configuredToken = asaasConfig.webhookToken;
 
-          if (configuredToken && configuredToken !== tokenHeader) {
-            console.warn("[Asaas Webhook] Token inválido ou ausente recebido:", tokenHeader);
+          if (!configuredToken) {
+            console.error("[Asaas Webhook] Token de autenticação não configurado.");
+            return Response.json(
+              { error: "Webhook authentication is not configured" },
+              { status: 503 },
+            );
+          }
+          if (configuredToken !== tokenHeader) {
+            console.warn("[Asaas Webhook] Token inválido ou ausente recebido.");
             return Response.json({ error: "Unauthorized token" }, { status: 401 });
           }
 

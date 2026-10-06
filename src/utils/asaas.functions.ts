@@ -71,6 +71,7 @@ export const getAsaasPublicConfigFn = createServerFn({ method: "GET" }).handler(
  * 2. Cria cobrança Pix no Asaas e retorna QR Code Dinâmico
  */
 export const createAsaasPixCheckoutFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (data: {
       planKey: "pro_yearly" | "pro_yearly_pix" | "pro_monthly";
@@ -81,8 +82,12 @@ export const createAsaasPixCheckoutFn = createServerFn({ method: "POST" })
       customerPhone?: string;
     }) => data
   )
-  .handler(async ({ data }) => {
-    const plan = PLAN_PRICES[data.planKey] || PLAN_PRICES.pro_yearly;
+  .handler(async ({ data, context }) => {
+    if (data.userId !== context.userId) {
+      throw new Error("A cobrança só pode ser criada para a conta autenticada.");
+    }
+    const plan = PLAN_PRICES[data.planKey];
+    if (!plan) throw new Error("Plano de pagamento inválido.");
 
     // 1. Cria ou busca cliente no Asaas
     const customer = await AsaasService.createOrGetCustomer({
@@ -124,6 +129,7 @@ export const createAsaasPixCheckoutFn = createServerFn({ method: "POST" })
  * 3. Cria cobrança Cartão de Crédito no Asaas
  */
 export const createAsaasCardCheckoutFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator(
     (data: {
       planKey: "pro_yearly" | "pro_monthly";
@@ -134,8 +140,12 @@ export const createAsaasCardCheckoutFn = createServerFn({ method: "POST" })
       holderInfo: AsaasCreditCardHolderInfo;
     }) => data
   )
-  .handler(async ({ data }) => {
-    const plan = PLAN_PRICES[data.planKey] || PLAN_PRICES.pro_yearly;
+  .handler(async ({ data, context }) => {
+    if (data.userId !== context.userId) {
+      throw new Error("A cobrança só pode ser criada para a conta autenticada.");
+    }
+    const plan = PLAN_PRICES[data.planKey];
+    if (!plan) throw new Error("Plano de pagamento inválido.");
 
     // 1. Cria ou busca cliente no Asaas
     const customer = await AsaasService.createOrGetCustomer({
@@ -206,56 +216,57 @@ export const createAsaasCardCheckoutFn = createServerFn({ method: "POST" })
  * 4. Consulta status de um pagamento Pix/Cartão e ativa assinatura se confirmado
  */
 export const checkAsaasPaymentStatusFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: { paymentId: string; userId: string }) => data)
-  .handler(async ({ data }) => {
-    try {
-      const payment = await AsaasService.getPayment(data.paymentId);
-      const isPaid = payment.status === "CONFIRMED" || payment.status === "RECEIVED";
+  .handler(async ({ data, context }) => {
+    if (data.userId !== context.userId) {
+      throw new Error("Você só pode consultar pagamentos da sua própria conta.");
+    }
 
-      if (isPaid && data.userId) {
-        const supabase = createServiceSupabase();
-        const isYearly = payment.value >= 197;
-        const periodEnd = new Date();
-        if (isYearly) {
-          periodEnd.setFullYear(periodEnd.getFullYear() + 1);
-        } else {
-          periodEnd.setDate(periodEnd.getDate() + 30);
-        }
+    const payment = await AsaasService.getPayment(data.paymentId);
+    if (payment.externalReference !== context.userId) {
+      throw new Error("Este pagamento não pertence à conta autenticada.");
+    }
+    const isPaid = payment.status === "CONFIRMED" || payment.status === "RECEIVED";
 
-        const { data: proPlan } = await supabase
-          .from("plans")
-          .select("id")
-          .eq("slug", isYearly ? "pro-yearly" : "pro-monthly")
-          .maybeSingle();
-
-        const proPlanId = proPlan?.id;
-
-        if (proPlanId) {
-          await supabase.from("subscriptions").upsert(
-            {
-              user_id: data.userId,
-              plan_id: proPlanId,
-              status: "active",
-              billing_interval: isYearly ? "yearly" : "monthly",
-              current_period_end: periodEnd.toISOString(),
-              notes: `Ativado via Asaas (${payment.billingType} - ${payment.id})`,
-            },
-            { onConflict: "user_id" }
-          );
-        }
+    if (isPaid) {
+      const supabase = createServiceSupabase();
+      const isYearly = payment.value >= 197;
+      const periodEnd = new Date();
+      if (isYearly) {
+        periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+      } else {
+        periodEnd.setDate(periodEnd.getDate() + 30);
       }
 
-      return {
-        isPaid,
-        status: payment.status,
-      };
-    } catch (e: any) {
-      console.warn("[checkAsaasPaymentStatusFn] Erro ao consultar pagamento:", e);
-      return {
-        isPaid: false,
-        status: "PENDING",
-      };
+      const { data: proPlan, error: planError } = await supabase
+        .from("plans")
+        .select("id")
+        .eq("slug", isYearly ? "pro-yearly" : "pro-monthly")
+        .maybeSingle();
+      if (planError) throw new Error(`Não foi possível consultar o plano: ${planError.message}`);
+      if (!proPlan) throw new Error("O plano correspondente ao pagamento não está configurado.");
+
+      const { error: subscriptionError } = await supabase.from("subscriptions").upsert(
+        {
+          user_id: context.userId,
+          plan_id: proPlan.id,
+          status: "active",
+          billing_interval: isYearly ? "yearly" : "monthly",
+          current_period_end: periodEnd.toISOString(),
+          notes: `Ativado via Asaas (${payment.billingType} - ${payment.id})`,
+        },
+        { onConflict: "user_id" },
+      );
+      if (subscriptionError) {
+        throw new Error(`Não foi possível ativar a assinatura: ${subscriptionError.message}`);
+      }
     }
+
+    return {
+      isPaid,
+      status: payment.status,
+    };
   });
 
 /**

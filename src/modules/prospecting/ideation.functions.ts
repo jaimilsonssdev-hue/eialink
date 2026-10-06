@@ -164,7 +164,7 @@ Regras de Copy: Sem clichês ("o melhor da cidade"). Use tom sensorial, autorida
 
     const keyStatus = await invokeGeminiGateway<{ configured: boolean }>(context.supabase, {
       action: "status",
-    });
+    }, context.accessToken);
     if (!keyStatus.configured) {
       return fallbackDossier;
     }
@@ -220,7 +220,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
                 responseMimeType: "application/json",
               },
             },
-          });
+          }, context.accessToken);
 
           if (resp.ok) {
             const json = await resp.json();

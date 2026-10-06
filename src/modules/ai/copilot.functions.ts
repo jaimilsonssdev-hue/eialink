@@ -481,7 +481,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
               temperature: 0.7,
             },
           },
-        });
+        }, context.accessToken);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -547,7 +547,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
               input: userPrompt,
               response_mime_type: "application/json",
             },
-          });
+          }, context.accessToken);
 
           if (!response.ok) {
             const errText = await response.text();
@@ -1306,7 +1306,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
               temperature: 0.95,
             },
           },
-        });
+        }, context.accessToken);
 
         if (!response.ok) {
           const errorText = await response.text();
@@ -2920,7 +2920,7 @@ SUAS REGRAS DE OURO:
               responseMimeType: "application/json",
             },
           },
-        });
+        }, context.accessToken);
 
         if (response.ok) {
           const resJson = await response.json();

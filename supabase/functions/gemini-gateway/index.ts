@@ -9,6 +9,9 @@ const corsHeaders = {
 const allowedModels = new Set(["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"]);
 const superAdminEmail = "jaimilsonvendas@gmail.com";
 const maxPayloadBytes = 1_000_000;
+// Gemini storage is in this project; user sessions remain owned by the original auth project.
+const authProjectUrl = "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+const authProjectPublishableKey = "sb_publishable_7cbVuf-q1wh7nqSeCXM1Ag_FMhRT2fS";
 
 type GatewayAction =
   | { action: "status" }
@@ -41,15 +44,6 @@ function getSecretKey() {
   const legacyKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
   if (legacyKey) return legacyKey;
   throw new Error("A chave secreta do Supabase não está disponível na Edge Function.");
-}
-
-function getPublishableKey() {
-  const keys = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS");
-  if (keys) {
-    const parsed = JSON.parse(keys) as Record<string, string>;
-    if (parsed.default) return parsed.default;
-  }
-  return Deno.env.get("SUPABASE_ANON_KEY") || null;
 }
 
 async function getConfiguredKey(adminClient: ReturnType<typeof createClient>) {
@@ -86,12 +80,11 @@ Deno.serve(async (request) => {
     if (!token) return jsonResponse({ error: "Autenticação obrigatória." }, 401);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const publishableKey = getPublishableKey();
-    if (!supabaseUrl || !publishableKey) {
-      throw new Error("Configuração de autenticação do Supabase indisponível.");
+    if (!supabaseUrl) {
+      throw new Error("Configuração do banco de dados do Gateway indisponível.");
     }
 
-    const userClient = createClient(supabaseUrl, publishableKey, {
+    const userClient = createClient(authProjectUrl, authProjectPublishableKey, {
       global: { headers: { Authorization: `Bearer ${token}` } },
       auth: { persistSession: false, autoRefreshToken: false },
     });

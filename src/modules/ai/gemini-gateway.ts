@@ -1,6 +1,8 @@
-import { FunctionsHttpError } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+
+const gatewayUrl = "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gemini-gateway";
+const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
 export type GeminiGatewayRequest =
   | { action: "status" }
@@ -22,37 +24,60 @@ export type GeminiGatewayRequest =
 export async function invokeGeminiGateway<T>(
   supabase: SupabaseClient<Database>,
   body: GeminiGatewayRequest,
+  accessToken?: string,
 ): Promise<T> {
-  const { data, error } = await supabase.functions.invoke<T>("gemini-gateway", { body });
-  if (error) {
-    if (error instanceof FunctionsHttpError) {
-      const response = error.context.clone();
-      const payload = (await response.json().catch(() => null)) as {
-        error?: string;
-        message?: string;
-      } | null;
-      if (payload?.error || payload?.message) {
-        throw new Error(payload.error || payload.message);
-      }
-    }
-    throw new Error(`Gateway Gemini indisponível: ${error.message}`);
+  const sessionResult = accessToken ? null : await supabase.auth.getSession();
+  if (sessionResult?.error) {
+    throw new Error(
+      `Não foi possível recuperar a sessão para o Gateway Gemini: ${sessionResult.error.message}`,
+    );
   }
-  if (data === null) {
+  const token = accessToken || sessionResult?.data.session?.access_token;
+  if (!token) {
+    throw new Error("Sessão autenticada necessária para acessar o Gateway Gemini.");
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(gatewayUrl, {
+      method: "POST",
+      headers: {
+        apikey: gatewayPublishableKey,
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+  } catch (error) {
+    throw new Error(
+      `Gateway Gemini indisponível: ${error instanceof Error ? error.message : "falha de rede"}`,
+    );
+  }
+
+  const result = (await response.json().catch(() => null)) as
+    (T & { error?: string; message?: string }) | null;
+  if (!response.ok) {
+    throw new Error(
+      result?.error || result?.message || `Gateway Gemini indisponível (HTTP ${response.status}).`,
+    );
+  }
+  if (result === null) {
     throw new Error("O gateway Gemini retornou uma resposta vazia.");
   }
-  return data;
+  return result;
 }
 
 export async function requestGemini(
   supabase: SupabaseClient<Database>,
   body: Extract<GeminiGatewayRequest, { action: "generateContent" | "interactions" }>,
+  accessToken?: string,
 ): Promise<Response> {
   const result = await invokeGeminiGateway<{
     ok: boolean;
     status: number;
     payload?: unknown;
     message?: string;
-  }>(supabase, body);
+  }>(supabase, body, accessToken);
   const payload = result.payload ?? {
     error: { message: result.message || "Falha na API Gemini." },
   };

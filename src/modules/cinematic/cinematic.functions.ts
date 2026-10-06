@@ -203,7 +203,7 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
               contents: [{ role: "user", parts: [{ text: prompt }] }],
               generationConfig: { responseMimeType: "application/json", temperature: 0.7 },
             },
-          });
+          }, context.accessToken);
 
           if (resp.ok) {
             const resJson = await resp.json();
@@ -669,7 +669,7 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
               contents: contentsPayload,
               generationConfig: { responseMimeType: "application/json", temperature: 0.6 },
             },
-          });
+          }, context.accessToken);
 
           if (resp.ok) {
             const resJson = await resp.json();
@@ -1089,7 +1089,7 @@ RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS A
             responseMimeType: "application/json",
           },
         },
-      });
+      }, context.accessToken);
 
       clearTimeout(timeoutId);
 

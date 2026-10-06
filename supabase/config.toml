@@ -1,4 +1,5 @@
 project_id = "gctwvvnjcxnsjiovhmsv"
 
 [functions.gemini-gateway]
-verify_jwt = true
+# The function validates the legacy project's user JWT itself.
+verify_jwt = false

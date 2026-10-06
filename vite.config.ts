@@ -9,7 +9,7 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 const supabaseUrl =
   process.env.VITE_SUPABASE_URL ||
   process.env.SUPABASE_URL ||
-  "https://nitzhrmcbotdriajaxhw.supabase.co";
+  "https://gctwvvnjcxnsjiovhmsv.supabase.co";
 const supabasePublishableKey =
   process.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   process.env.SUPABASE_PUBLISHABLE_KEY ||

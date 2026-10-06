@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 const SUPABASE_TOKEN = process.env.SUPABASE_ACCESS_TOKEN || process.env.SUPABASE_TOKEN || '';
-const PROJECT_REF = process.env.SUPABASE_PROJECT_ID || 'gctwvvnjcxnsjiovhmsv';
+const PROJECT_REF = process.env.SUPABASE_PROJECT_ID || 'nitzhrmcbotdriajaxhw';
 const MIGRATIONS_DIR = path.resolve('supabase/migrations');
 
 function executeSql(sql) {

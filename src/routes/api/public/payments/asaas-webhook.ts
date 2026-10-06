@@ -9,7 +9,7 @@ function getSupabase() {
     const url =
       process.env.SUPABASE_URL ||
       process.env.VITE_SUPABASE_URL ||
-      "https://gctwvvnjcxnsjiovhmsv.supabase.co";
+      "https://nitzhrmcbotdriajaxhw.supabase.co";
     const key =
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.SUPABASE_PUBLISHABLE_KEY ||

@@ -28,8 +28,7 @@ export function getSavedGeminiKey(): string | null {
     const local = localStorage.getItem(GEMINI_KEY_STORAGE);
     if (local && local.trim()) return local.trim();
   }
-  const envKey = (import.meta as any).env?.VITE_GEMINI_API_KEY;
-  return envKey ? String(envKey).trim() : null;
+  return null;
 }
 
 /**
@@ -60,13 +59,18 @@ export function removeGeminiKey(): void {
 /**
  * Testa a conexão com o Google AI via ModelService.ListModels e descobre o melhor modelo ativo.
  */
-export async function testGeminiKey(key: string): Promise<{ ok: boolean; message: string; activeModel?: string }> {
+export async function testGeminiKey(
+  key: string,
+): Promise<{ ok: boolean; message: string; activeModel?: string }> {
   const cleanKey = key.trim();
   if (!cleanKey) {
     return { ok: false, message: "A chave não pode estar em branco." };
   }
   if (cleanKey.length < 10) {
-    return { ok: false, message: "A chave informada é muito curta para ser uma chave válida do Google AI Studio." };
+    return {
+      ok: false,
+      message: "A chave informada é muito curta para ser uma chave válida do Google AI Studio.",
+    };
   }
 
   try {
@@ -74,12 +78,12 @@ export async function testGeminiKey(key: string): Promise<{ ok: boolean; message
     const timeout = setTimeout(() => controller.abort(), 12000);
 
     // Consulta os modelos suportados pelo projeto do usuário (ListModels)
-    const listEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(cleanKey)}`;
+    const listEndpoint = "https://generativelanguage.googleapis.com/v1beta/models";
 
     const response = await fetch(listEndpoint, {
       method: "GET",
       signal: controller.signal,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-goog-api-key": cleanKey },
     });
 
     clearTimeout(timeout);
@@ -94,23 +98,20 @@ export async function testGeminiKey(key: string): Promise<{ ok: boolean; message
     }
 
     const data = await response.json().catch(() => ({}));
-    const rawModels: Array<{ name?: string; supportedGenerationMethods?: string[] }> = data.models || [];
+    const rawModels: Array<{ name?: string; supportedGenerationMethods?: string[] }> =
+      data.models || [];
 
     // Filtra modelos disponíveis que suportam geração de texto
-    const contentModels = rawModels.filter((m) =>
-      Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes("generateContent")
+    const contentModels = rawModels.filter(
+      (m) =>
+        Array.isArray(m.supportedGenerationMethods) &&
+        m.supportedGenerationMethods.includes("generateContent"),
     );
 
     // Lista ordenada dos modelos preferidos do ecossistema Gemini
-    const priority = [
-      "gemini-3.5-flash",
-      "gemini-3.5-flash-lite",
-      "gemini-3.6-flash",
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-    ];
+    const priority = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
 
-    let chosenModel = "gemini-3.5-flash";
+    let chosenModel = "gemini-2.5-flash";
 
     if (contentModels.length > 0) {
       let found = false;
@@ -146,7 +147,10 @@ export async function testGeminiKey(key: string): Promise<{ ok: boolean; message
 /**
  * Gera auditoria heurística inteligente local (Fallback 100% resiliente sem dependência de API externa).
  */
-export function generateHeuristicAudit(company: ProspectedCompany, demoUrl?: string): CompanyAuditResult {
+export function generateHeuristicAudit(
+  company: ProspectedCompany,
+  demoUrl?: string,
+): CompanyAuditResult {
   const name = company.name;
   const niche = company.niche || "Negócio Local";
   const city = company.city || "sua região";
@@ -162,7 +166,9 @@ export function generateHeuristicAudit(company: ProspectedCompany, demoUrl?: str
 
   // Avaliação de Forças
   if (rating && rating >= 4.5 && reviews >= 10) {
-    strengths.push(`Excelente reputação no Google Maps: nota ${rating.toFixed(1)} com ${reviews} avaliações reais de clientes.`);
+    strengths.push(
+      `Excelente reputação no Google Maps: nota ${rating.toFixed(1)} com ${reviews} avaliações reais de clientes.`,
+    );
   } else if (rating && rating >= 4.0) {
     strengths.push(`Avaliação positiva consolidada no Google Maps (nota ${rating.toFixed(1)}).`);
   } else {
@@ -170,7 +176,9 @@ export function generateHeuristicAudit(company: ProspectedCompany, demoUrl?: str
   }
 
   if (company.whatsapp || company.phone) {
-    strengths.push("Canal direto de atendimento via telefone/WhatsApp cadastrado para contato rápido.");
+    strengths.push(
+      "Canal direto de atendimento via telefone/WhatsApp cadastrado para contato rápido.",
+    );
   }
   if (company.instagram) {
     strengths.push(`Presença social ativa com perfil público no Instagram (${company.instagram}).`);
@@ -178,16 +186,26 @@ export function generateHeuristicAudit(company: ProspectedCompany, demoUrl?: str
 
   // Avaliação de Vulnerabilidades
   if (!hasWebsite) {
-    vulnerabilities.push("Ausência de site institucional ou página oficial para apresentar serviços, fotos e diferenciais de forma profissional.");
-    vulnerabilities.push("Perda diária de clientes que pesquisam no Google pelo celular e priorizam concorrentes que oferecem agendamento em 1 clique.");
+    vulnerabilities.push(
+      "Ausência de site institucional ou página oficial para apresentar serviços, fotos e diferenciais de forma profissional.",
+    );
+    vulnerabilities.push(
+      "Perda diária de clientes que pesquisam no Google pelo celular e priorizam concorrentes que oferecem agendamento em 1 clique.",
+    );
   } else {
-    vulnerabilities.push("Página atual não possui fluxo otimizado de conversão para agendamentos imediatos no WhatsApp.");
+    vulnerabilities.push(
+      "Página atual não possui fluxo otimizado de conversão para agendamentos imediatos no WhatsApp.",
+    );
   }
 
-  vulnerabilities.push("Atendimento manual que gera demora na resposta fora do horário comercial, reduzindo a taxa de conversão de novos contatos.");
+  vulnerabilities.push(
+    "Atendimento manual que gera demora na resposta fora do horário comercial, reduzindo a taxa de conversão de novos contatos.",
+  );
 
   const executiveSummary = `${name} possui ótima reputação local (${rating ? `nota ${rating} com ${reviews} avaliações` : "empresa ativa em " + city}), porém ${
-    !hasWebsite ? "não possui presença digital oficial nem botão de agendamento ágil" : "sua estrutura digital atual não retém clientes que buscam atendimento rápido no WhatsApp"
+    !hasWebsite
+      ? "não possui presença digital oficial nem botão de agendamento ágil"
+      : "sua estrutura digital atual não retém clientes que buscam atendimento rápido no WhatsApp"
   }. Há uma oportunidade imediata de aumentar o faturamento em 25% a 40% com um biolink moderno de alta conversão.`;
 
   const consultativePitch = matchDemo
@@ -270,7 +288,8 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
 }`;
 
   // Modelo ativo pré-descoberto ou candidatos modernos
-  const savedModel = typeof window !== "undefined" ? localStorage.getItem(GEMINI_ACTIVE_MODEL_STORAGE) : null;
+  const savedModel =
+    typeof window !== "undefined" ? localStorage.getItem(GEMINI_ACTIVE_MODEL_STORAGE) : null;
   const candidateModels = [
     ...(savedModel ? [savedModel] : []),
     "gemini-3.5-flash",
@@ -285,7 +304,7 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
   for (const model of models) {
     try {
       const cleanModel = model.replace(/^models\//, "");
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent`;
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 12000);
@@ -293,7 +312,7 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
       const response = await fetch(endpoint, {
         method: "POST",
         signal: controller.signal,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
@@ -313,10 +332,16 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
       const data = await response.json();
       const candidate = data.candidates?.[0];
       const parts = candidate?.content?.parts || [];
-      const nonThought = parts.filter((p: any) => !p.thought && typeof p.text === "string" && p.text.trim());
-      const rawText = nonThought.length > 0
-        ? nonThought.map((p: any) => p.text).join("\n")
-        : parts.map((p: any) => p.text).filter(Boolean).join("\n");
+      const nonThought = parts.filter(
+        (p: any) => !p.thought && typeof p.text === "string" && p.text.trim(),
+      );
+      const rawText =
+        nonThought.length > 0
+          ? nonThought.map((p: any) => p.text).join("\n")
+          : parts
+              .map((p: any) => p.text)
+              .filter(Boolean)
+              .join("\n");
       if (!rawText) continue;
 
       const codeBlockMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
@@ -336,12 +361,14 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
         reviewsCount: company.reviews_count ?? 0,
         hasWebsite: Boolean(company.has_website),
         demoUrl: matchDemo,
-        strengths: Array.isArray(parsed.strengths) && parsed.strengths.length > 0
-          ? parsed.strengths
-          : ["Boa autoridade local cadastrada no Google."],
-        vulnerabilities: Array.isArray(parsed.vulnerabilities) && parsed.vulnerabilities.length > 0
-          ? parsed.vulnerabilities
-          : ["Falta de presença digital otimizada para celular."],
+        strengths:
+          Array.isArray(parsed.strengths) && parsed.strengths.length > 0
+            ? parsed.strengths
+            : ["Boa autoridade local cadastrada no Google."],
+        vulnerabilities:
+          Array.isArray(parsed.vulnerabilities) && parsed.vulnerabilities.length > 0
+            ? parsed.vulnerabilities
+            : ["Falta de presença digital otimizada para celular."],
         executiveSummary: parsed.executiveSummary || `Diagnóstico gerado para ${company.name}.`,
         consultativePitch: parsed.consultativePitch || "",
         source: "gemini",

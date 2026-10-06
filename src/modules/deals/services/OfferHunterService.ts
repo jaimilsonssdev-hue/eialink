@@ -192,10 +192,9 @@ REGRAS OBRIGATÓRIAS:
 }`;
 
     const modelsToTry = [
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-pro",
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-pro",
     ];
     let rawJsonContent: string | null = null;
     let lastError = "";
@@ -203,13 +202,12 @@ REGRAS OBRIGATÓRIAS:
     for (const modelName of modelsToTry) {
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
-            apiKey,
-          )}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-goog-api-key": apiKey,
             },
             body: JSON.stringify({
               system_instruction: {
@@ -531,10 +529,9 @@ REGRAS OBRIGATÓRIAS:
 }`;
 
     const modelsToTry = [
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-      "gemini-2.0-flash-lite",
-      "gemini-1.5-pro",
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-pro",
     ];
     let rawJsonContent: string | null = null;
     let lastError = "";
@@ -542,13 +539,12 @@ REGRAS OBRIGATÓRIAS:
     for (const modelName of modelsToTry) {
       try {
         const response = await fetch(
-          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(
-            apiKey,
-          )}`,
+          `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent`,
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              "x-goog-api-key": apiKey,
             },
             body: JSON.stringify({
               system_instruction: {

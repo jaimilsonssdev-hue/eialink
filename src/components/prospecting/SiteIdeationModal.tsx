@@ -43,7 +43,6 @@ interface SiteIdeationModalProps {
     instagram?: string | null;
     photos?: string[];
   } | null;
-  userId: string;
 }
 
 const TEMPLATE_CHOICES = [
@@ -61,12 +60,7 @@ const ARCHETYPE_CHOICES = [
   { id: "cinematic", name: "Glassmorphism", icon: "✨", badge: "Vidro & Glow Neon" },
 ];
 
-export function SiteIdeationModal({
-  open,
-  onOpenChange,
-  lead,
-  userId,
-}: SiteIdeationModalProps) {
+export function SiteIdeationModal({ open, onOpenChange, lead }: SiteIdeationModalProps) {
   const navigate = useNavigate();
   const [loadingSynthesis, setLoadingSynthesis] = useState(false);
   const [generatingSite, setGeneratingSite] = useState(false);
@@ -135,7 +129,6 @@ export function SiteIdeationModal({
     try {
       const res = await createSiteFromIdeationDossierFn({
         data: {
-          userId,
           businessName: lead.name,
           niche: lead.niche,
           city: lead.city,
@@ -193,7 +186,8 @@ export function SiteIdeationModal({
                 Sintetizando inteligência do Google Maps & Instagram...
               </p>
               <p className="text-xs text-zinc-400 max-w-sm">
-                Aplicando arquétipo visual, copywriting sensorial e curadoria de fotos para montar o Super Prompt.
+                Aplicando arquétipo visual, copywriting sensorial e curadoria de fotos para montar o
+                Super Prompt.
               </p>
             </div>
           </div>
@@ -220,7 +214,9 @@ export function SiteIdeationModal({
                       <span>{t.icon}</span>
                       <span className="truncate">{t.name}</span>
                     </div>
-                    {selectedTemplate === t.id && <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />}
+                    {selectedTemplate === t.id && (
+                      <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -247,10 +243,14 @@ export function SiteIdeationModal({
                       <span>{a.icon}</span>
                       <div>
                         <p className="leading-tight">{a.name}</p>
-                        <p className="text-[10px] text-zinc-400 font-normal leading-tight">{a.badge}</p>
+                        <p className="text-[10px] text-zinc-400 font-normal leading-tight">
+                          {a.badge}
+                        </p>
                       </div>
                     </div>
-                    {selectedArchetype === a.id && <Check className="h-3.5 w-3.5 text-purple-400 shrink-0" />}
+                    {selectedArchetype === a.id && (
+                      <Check className="h-3.5 w-3.5 text-purple-400 shrink-0" />
+                    )}
                   </button>
                 ))}
               </div>
@@ -259,14 +259,13 @@ export function SiteIdeationModal({
             {/* 2. Headline & Proposta de Valor */}
             <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
               <span className="text-xs font-bold uppercase tracking-wider text-zinc-400 flex items-center gap-1.5">
-                <MessageSquare className="h-3.5 w-3.5 text-violet-400" /> Copywriting Sensorial (Sem Clichês)
+                <MessageSquare className="h-3.5 w-3.5 text-violet-400" /> Copywriting Sensorial (Sem
+                Clichês)
               </span>
               <h3 className="text-base font-bold text-white font-display leading-tight">
                 "{dossier.heroHeadline}"
               </h3>
-              <p className="text-xs text-zinc-300 leading-relaxed">
-                {dossier.heroSubtitle}
-              </p>
+              <p className="text-xs text-zinc-300 leading-relaxed">{dossier.heroSubtitle}</p>
               <div className="pt-2 border-t border-white/10 text-xs text-emerald-300 flex items-center gap-1.5">
                 <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
                 <span>{dossier.valueProposition}</span>

@@ -750,6 +750,7 @@ export type Database = {
           asaas_environment: string
           asaas_webhook_token: string | null
           created_at: string
+          gemini_api_key: string | null
           id: string
           pix_key: string | null
           pix_key_type: string | null
@@ -762,6 +763,7 @@ export type Database = {
           asaas_environment?: string
           asaas_webhook_token?: string | null
           created_at?: string
+          gemini_api_key?: string | null
           id?: string
           pix_key?: string | null
           pix_key_type?: string | null
@@ -774,6 +776,7 @@ export type Database = {
           asaas_environment?: string
           asaas_webhook_token?: string | null
           created_at?: string
+          gemini_api_key?: string | null
           id?: string
           pix_key?: string | null
           pix_key_type?: string | null

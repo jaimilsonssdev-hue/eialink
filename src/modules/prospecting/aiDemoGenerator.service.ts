@@ -1,6 +1,6 @@
 /**
  * aiDemoGenerator.service.ts
- * 
+ *
  * Esteira Inteligente: Google Places ➔ IA Gemini ➔ Site Pronto
  * Conecta os dados reais raspados do Google (nome, endereço, notas, avaliações, horários)
  * diretamente à IA Gemini para diagnosticar a especialidade autêntica da empresa,
@@ -9,11 +9,7 @@
  */
 
 import { getSavedGeminiKey } from "./GeminiAuditorService";
-import {
-  detectNicheKey,
-  getPresetForCompany,
-  NICHE_GALLERIES,
-} from "./nichePresets";
+import { detectNicheKey, getPresetForCompany, NICHE_GALLERIES } from "./nichePresets";
 
 export interface ScrapedCompanyPayload {
   companyName: string;
@@ -44,11 +40,11 @@ export interface NicheArchetypeConfig {
 
 export interface AiPageBlueprint {
   detectedSpecialty: string; // Ex: "Clínica de Estética Corporal e Pós-Operatório"
-  nicheKey: string;          // Ex: "estetica_corporal"
-  headline: string;          // Headline magnética e autêntica
-  manifesto: string;         // Copy persuasiva sobre a empresa
-  theme: string;             // Ex: "gold", "noir", "emerald", "rose", etc.
-  differentials: string[];   // 3 a 4 diferenciais extraídos das avaliações e dados reais
+  nicheKey: string; // Ex: "estetica_corporal"
+  headline: string; // Headline magnética e autêntica
+  manifesto: string; // Copy persuasiva sobre a empresa
+  theme: string; // Ex: "gold", "noir", "emerald", "rose", etc.
+  differentials: string[]; // 3 a 4 diferenciais extraídos das avaliações e dados reais
   services: Array<{
     name: string;
     description: string;
@@ -68,11 +64,7 @@ export interface AiPageBlueprint {
 /**
  * Modelos preferenciais do Gemini para geração ultra-rápida e precisa em JSON
  */
-const PREFERRED_GEMINI_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
-  "gemini-1.5-flash",
-];
+const PREFERRED_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
 
 /**
  * Gera o blueprint completo de uma página de demonstração a partir dos dados raspados do Google.
@@ -80,7 +72,7 @@ const PREFERRED_GEMINI_MODELS = [
  * recorre imediatamente ao fallback determinístico de presets com os dados reais de reviews.
  */
 export async function generateAiPageBlueprintFromScrapedData(
-  payload: ScrapedCompanyPayload
+  payload: ScrapedCompanyPayload,
 ): Promise<AiPageBlueprint> {
   const companyName = payload.companyName.trim() || "Empresa";
   const city = payload.city?.trim() || "sua região";
@@ -108,7 +100,10 @@ export async function generateAiPageBlueprintFromScrapedData(
         return enrichBlueprintImages(aiResult, payload);
       }
     } catch (err) {
-      console.warn("[aiDemoGenerator] Falha ou timeout no Gemini, aplicando fallback heurístico:", err);
+      console.warn(
+        "[aiDemoGenerator] Falha ou timeout no Gemini, aplicando fallback heurístico:",
+        err,
+      );
     }
   }
 
@@ -122,12 +117,15 @@ export async function generateAiPageBlueprintFromScrapedData(
 async function requestGeminiBlueprint(
   payload: ScrapedCompanyPayload,
   apiKey: string,
-  instagramSnippet = ""
+  instagramSnippet = "",
 ): Promise<AiPageBlueprint | null> {
   const reviewsSummary = (payload.reviews || [])
     .filter((r) => r.text && r.text.trim().length > 5)
     .slice(0, 5)
-    .map((r, i) => `[Review ${i + 1} - ${r.author || "Cliente"} (${r.rating || 5}★)]: "${r.text?.trim()}"`)
+    .map(
+      (r, i) =>
+        `[Review ${i + 1} - ${r.author || "Cliente"} (${r.rating || 5}★)]: "${r.text?.trim()}"`,
+    )
     .join("\n");
 
   const prompt = `
@@ -205,10 +203,10 @@ Responda APENAS com um objeto JSON válido seguindo esta estrutura exata:
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 12000);
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
       const response = await fetch(endpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         signal: controller.signal,
         body: JSON.stringify({
           contents: [{ parts: [{ text: prompt }] }],
@@ -242,15 +240,18 @@ Responda APENAS com um objeto JSON válido seguindo esta estrutura exata:
           detectedSpecialty: parsed.detectedSpecialty || payload.niche || "Especialidade Premium",
           nicheKey: parsed.nicheKey || detectNicheKey(payload.niche, payload.companyName),
           headline: parsed.headline,
-          manifesto: parsed.manifesto || `Bem-vindo à ${payload.companyName}. Excelência e dedicação em cada atendimento.`,
+          manifesto:
+            parsed.manifesto ||
+            `Bem-vindo à ${payload.companyName}. Excelência e dedicação em cada atendimento.`,
           theme: parsed.theme || "emerald",
-          differentials: Array.isArray(parsed.differentials) && parsed.differentials.length > 0
-            ? parsed.differentials
-            : [
-                `Avaliação ${payload.rating || 5.0} estrelas no Google`,
-                "Atendimento humanizado e personalizado",
-                "Ambiente climatizado e estrutura moderna",
-              ],
+          differentials:
+            Array.isArray(parsed.differentials) && parsed.differentials.length > 0
+              ? parsed.differentials
+              : [
+                  `Avaliação ${payload.rating || 5.0} estrelas no Google`,
+                  "Atendimento humanizado e personalizado",
+                  "Ambiente climatizado e estrutura moderna",
+                ],
           services: parsed.services.map((srv: any) => ({
             name: srv.name || "Serviço Especializado",
             description: srv.description || "Atendimento com máxima excelência e cuidado.",
@@ -258,14 +259,17 @@ Responda APENAS com um objeto JSON válido seguindo esta estrutura exata:
             price: typeof srv.price === "number" ? srv.price : null,
             image_url: srv.image_url || null,
           })),
-          testimonials: Array.isArray(parsed.testimonials) && parsed.testimonials.length > 0
-            ? parsed.testimonials.map((t: any) => ({
-                author: t.author || "Cliente Google",
-                text: t.text || "Excelente atendimento e profissionais incríveis!",
-                rating: typeof t.rating === "number" ? t.rating : 5,
-              }))
-            : buildTestimonialsFromReviews(payload.reviews),
-          whatsappMessage: parsed.whatsappMessage || `Olá! Gostaria de saber mais sobre os serviços da ${payload.companyName}.`,
+          testimonials:
+            Array.isArray(parsed.testimonials) && parsed.testimonials.length > 0
+              ? parsed.testimonials.map((t: any) => ({
+                  author: t.author || "Cliente Google",
+                  text: t.text || "Excelente atendimento e profissionais incríveis!",
+                  rating: typeof t.rating === "number" ? t.rating : 5,
+                }))
+              : buildTestimonialsFromReviews(payload.reviews),
+          whatsappMessage:
+            parsed.whatsappMessage ||
+            `Olá! Gostaria de saber mais sobre os serviços da ${payload.companyName}.`,
           source: "gemini",
         };
       }
@@ -281,7 +285,7 @@ Responda APENAS com um objeto JSON válido seguindo esta estrutura exata:
  * Constrói depoimentos limpos a partir das avaliações reais do Google
  */
 function buildTestimonialsFromReviews(
-  reviews?: Array<{ author?: string; text?: string; rating?: number }> | null
+  reviews?: Array<{ author?: string; text?: string; rating?: number }> | null,
 ): Array<{ author: string; text: string; rating: number }> {
   if (reviews && reviews.length > 0) {
     const valid = reviews
@@ -289,7 +293,9 @@ function buildTestimonialsFromReviews(
       .slice(0, 3)
       .map((r) => ({
         author: r.author?.trim() || "Cliente Google",
-        text: r.text?.trim() || "Atendimento impecável, equipe extremamente atenciosa e resultado maravilhoso!",
+        text:
+          r.text?.trim() ||
+          "Atendimento impecável, equipe extremamente atenciosa e resultado maravilhoso!",
         rating: r.rating || 5,
       }));
 
@@ -313,9 +319,7 @@ function buildTestimonialsFromReviews(
 /**
  * Gera fallback instantâneo e determinístico utilizando os presets curados do nicho
  */
-function generateDeterministicFallbackBlueprint(
-  payload: ScrapedCompanyPayload
-): AiPageBlueprint {
+function generateDeterministicFallbackBlueprint(payload: ScrapedCompanyPayload): AiPageBlueprint {
   const companyName = payload.companyName.trim() || "Sua Empresa";
   const city = payload.city?.trim() || "sua região";
   const nicheKey = detectNicheKey(payload.niche, companyName);
@@ -324,8 +328,12 @@ function generateDeterministicFallbackBlueprint(
   const headline = preset.generateHeadline(companyName, city);
   const manifesto = preset.generateDescription(companyName, city);
 
-  const ratingText = payload.rating ? `Nota ${payload.rating} no Google Maps` : "Reconhecimento comprovado pelos clientes";
-  const reviewsCountText = payload.reviewsCount ? `Mais de ${payload.reviewsCount} clientes atendidos` : "Atendimento humanizado";
+  const ratingText = payload.rating
+    ? `Nota ${payload.rating} no Google Maps`
+    : "Reconhecimento comprovado pelos clientes";
+  const reviewsCountText = payload.reviewsCount
+    ? `Mais de ${payload.reviewsCount} clientes atendidos`
+    : "Atendimento humanizado";
 
   const differentials = [
     ratingText,
@@ -366,7 +374,7 @@ function generateDeterministicFallbackBlueprint(
  */
 function enrichBlueprintImages(
   blueprint: AiPageBlueprint,
-  payload: ScrapedCompanyPayload
+  payload: ScrapedCompanyPayload,
 ): AiPageBlueprint {
   const gallery = NICHE_GALLERIES[blueprint.nicheKey] || NICHE_GALLERIES.geral;
   const covers = gallery?.covers || NICHE_GALLERIES.geral.covers;
@@ -433,7 +441,9 @@ export async function fetchJinaBusinessIntelligence(params: {
 
         if (res.ok) {
           const text = await res.text();
-          const bioMatches = text.match(/(?:seguidores|publicações|posts|stories)[^\n\r]*[\n\r]+([^\n\r]{20,250})/i);
+          const bioMatches = text.match(
+            /(?:seguidores|publicações|posts|stories)[^\n\r]*[\n\r]+([^\n\r]{20,250})/i,
+          );
           if (bioMatches && bioMatches[1]) {
             instagramSnippet = bioMatches[1].trim();
           } else {
@@ -585,7 +595,7 @@ export function generateNicheBentoCards(
   city?: string | null,
   rating?: number | null,
   reviewsCount?: number | null,
-  differentials?: string[]
+  differentials?: string[],
 ): Array<{
   id: string;
   title: string;
@@ -594,12 +604,22 @@ export function generateNicheBentoCards(
   size: "large" | "medium";
 }> {
   const starsText = rating ? `★ ${rating.toFixed(1)} no Google Maps` : "Reconhecimento Comprovado";
-  const countText = reviewsCount ? `Mais de ${reviewsCount} clientes atendidos e avaliados` : "Avaliações 5 estrelas verificadas";
+  const countText = reviewsCount
+    ? `Mais de ${reviewsCount} clientes atendidos e avaliados`
+    : "Avaliações 5 estrelas verificadas";
 
-  const diff1 = differentials?.[0] || `${starsText} com nota máxima. Atendimento com hora marcada e pontualidade.`;
-  const diff2 = differentials?.[1] || "Ambiente exclusivo com climatização, conforto acústico e total privacidade.";
-  const diff3 = differentials?.[2] || "Protocolos modernos com produtos rigorosamente certificados e acompanhamento pós-atendimento.";
-  const diff4 = differentials?.[3] || `Localização de fácil acesso em ${city || "região central"} com comodidade e agilidade.`;
+  const diff1 =
+    differentials?.[0] ||
+    `${starsText} com nota máxima. Atendimento com hora marcada e pontualidade.`;
+  const diff2 =
+    differentials?.[1] ||
+    "Ambiente exclusivo com climatização, conforto acústico e total privacidade.";
+  const diff3 =
+    differentials?.[2] ||
+    "Protocolos modernos com produtos rigorosamente certificados e acompanhamento pós-atendimento.";
+  const diff4 =
+    differentials?.[3] ||
+    `Localização de fácil acesso em ${city || "região central"} com comodidade e agilidade.`;
 
   return [
     {
@@ -639,16 +659,18 @@ export function generateNicheFaq(
   companyName: string,
   nicheKey: string,
   city?: string | null,
-  address?: string | null
+  address?: string | null,
 ): Array<{ question: string; answer: string }> {
   return [
     {
       question: `Como funciona o agendamento ou pedido na ${companyName}?`,
-      answer: "O atendimento é 100% humanizado e direto pelo WhatsApp. Basta clicar nos botões desta página para conversar com nossa equipe e escolher seu horário ou produto com confirmação imediata.",
+      answer:
+        "O atendimento é 100% humanizado e direto pelo WhatsApp. Basta clicar nos botões desta página para conversar com nossa equipe e escolher seu horário ou produto com confirmação imediata.",
     },
     {
       question: "Quais são as opções de pagamento aceitas?",
-      answer: "Aceitamos PIX, cartões de crédito e débito, e condições especiais de parcelamento para planos e procedimentos.",
+      answer:
+        "Aceitamos PIX, cartões de crédito e débito, e condições especiais de parcelamento para planos e procedimentos.",
     },
     {
       question: "Onde o estabelecimento está localizado?",
@@ -658,7 +680,8 @@ export function generateNicheFaq(
     },
     {
       question: "Preciso agendar com antecedência?",
-      answer: "Recomendamos o agendamento prévio pelo WhatsApp para garantir seu horário sem tempo de espera, embora atendamos encaixes conforme disponibilidade do dia.",
+      answer:
+        "Recomendamos o agendamento prévio pelo WhatsApp para garantir seu horário sem tempo de espera, embora atendamos encaixes conforme disponibilidade do dia.",
     },
   ];
 }
@@ -668,7 +691,7 @@ export function generateNicheFaq(
  */
 export function generateNicheComparison(
   companyName: string,
-  nicheKey: string
+  nicheKey: string,
 ): {
   headline: string;
   usLabel: string;
@@ -715,7 +738,7 @@ export function generateNicheComparison(
 export function generateNicheMarquee(
   companyName: string,
   nicheKey: string,
-  rating?: number | null
+  rating?: number | null,
 ): string[] {
   return [
     `★ ${rating || 4.9} AVALIAÇÃO GOOGLE`,

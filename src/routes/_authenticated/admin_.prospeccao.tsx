@@ -3195,7 +3195,6 @@ function ProspectingPage() {
         open={Boolean(ideationLead)}
         onOpenChange={(open) => !open && setIdeationLead(null)}
         lead={ideationLead}
-        userId={currentUserId}
       />
     </div>
   );

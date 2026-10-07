@@ -18,6 +18,9 @@ import {
   saveStudioGeminiKeyFn,
   testStudioGeminiKeyFn,
 } from "@/modules/studio/studio.functions";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export function GoogleGeminiAdminCard() {
   const [apiKey, setApiKey] = useState("");

@@ -7,6 +7,7 @@ import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessL
 import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
 import type { ProspectDraft } from "@/modules/prospecting/types";
 import { requestGemini, SITE_BUILDER_MODELS } from "@/modules/ai/gemini-gateway";
+import { detectNicheCategory, getNicheDirectives } from "@/modules/ai/niche-prompts";
 
 function slugify(value: string) {
   return value
@@ -549,15 +550,19 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
   .handler(async ({ data: input, context }): Promise<import("./types").CreativePitchResponse> => {
     const { businessName, niche, userMessage, currentData, conversationHistory = [] } = input;
     const instruction = (userMessage || "").trim();
+    const nicheCategory = detectNicheCategory(niche, businessName, instruction);
+    const nicheDirectives = getNicheDirectives(nicheCategory, businessName);
     let lastProviderError = "O Gemini não retornou uma resposta válida.";
 
     try {
       const systemPrompt = `Você é o Agente Diretor de Arte Criativo, Arquiteto de Software e Parceiro de Design da plataforma EIA Link.
 Você é uma IA generativa de altíssimo nível (com a mesma profundidade, naturalidade e fluidez que o Claude 3.7 Sonnet e ChatGPT 4o).
-Você está dialogando em tempo real com o usuário no Cinematic Studio para conceber, debater e refinar a experiência digital de alta conversão do negócio "${businessName}" (Nicho: "${niche}").
+Você está dialogando em tempo real com o usuário no Studio para conceber, debater e refinar a experiência digital de alta conversão do negócio "${businessName}" (Nicho: "${niche}", Categoria Detectada: "${nicheCategory}").
 
 ESTADO ATUAL DA PÁGINA (CinematicPageData):
 ${JSON.stringify(currentData, null, 2)}
+
+${nicheDirectives}
 
 SUA CAIXA DE FERRAMENTAS & RECURSOS NO SISTEMA:
 1. ANIME.JS v4 & VISTA EXPLODIDA EM CAMADAS ('deconstruction'):
@@ -671,7 +676,6 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
             action: "generateContent",
             model,
             apiKeyOverride: input.apiKey || undefined,
-            knowledgeQuery: `${instruction}\n${businessName}\n${niche}`,
             payload: {
               systemInstruction: { parts: [{ text: systemPrompt }] },
               contents: contentsPayload,
@@ -1057,13 +1061,23 @@ Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Ani
 
     // Se o usuário NÃO pediu expressamente opções/conceitos novos, responde de forma conversacional e prestativa:
     if (!isProposal) {
+      let advice = `Entendi sua visão: **"${instruction}"**.\n\nComo seu Diretor de Arte e Estrategista Digital para **${businessName}** (${niche}), estou pronto para estruturar a página com alta conversão, copywriting persuasivo e design impecável.`;
+      if (nicheCategory === "delivery") {
+        advice += `\n\n🍔 **Para o seu Delivery / Restaurante:** Posso organizar o cardápio com combos especiais, tempo médio de entrega, fotos apetitosas e ligar o botão direto de pedidos no WhatsApp.`;
+      } else if (nicheCategory === "ecommerce") {
+        advice += `\n\n🛍️ **Para sua Loja Virtual:** Posso criar a vitrine categorizada com produtos em destaque, sacola de compras, parcelamento e selos de frete rápido.`;
+      } else {
+        advice += `\n\n✨ **Para seus Serviços:** Posso estruturar seções com proposta única de valor, prova social, diferenciais e botão prioritário de agendamento no WhatsApp.`;
+      }
+      advice += `\n\nO que você gostaria de fazer primeiro? Você pode me pedir para mudar cores, adicionar produtos/combos, reescrever textos ou ativar novas seções!`;
+
       return {
         actionType: "conversation",
-        agentMessage: `Entendi sua mensagem: **"${instruction}"**.\n\nPara que eu consiga criar e transformar elementos de forma 100% generativa (como no Lovable ou ChatGPT), a conexão com o Google Gemini precisa de uma chave de API válida.\n\n💡 Você pode conectar uma chave gratuita em 15 segundos clicando em **🔑 Conectar IA** no topo, ou me pedir ajustes pontuais de cores, textos, seções e produtos diretamente!`,
+        agentMessage: advice,
         suggestions: [
-          "Como obter chave gratuita do Google AI",
+          nicheCategory === "delivery" ? "Adicionar combos no cardápio" : "Adicionar novo produto ou serviço",
           "Mudar a paleta de cores",
-          "Adicionar novo produto ou serviço",
+          "Reescrever headline com foco em conversão",
         ],
       };
     }

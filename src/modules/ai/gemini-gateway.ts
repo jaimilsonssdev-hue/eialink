@@ -5,8 +5,8 @@ const gatewayUrl = "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gemini
 const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
 export const SITE_BUILDER_MODELS = [
-  "gemini-2.0-flash",
   "gemini-2.5-flash",
+  "gemini-2.0-flash",
   "gemini-2.5-flash-lite",
 ] as const;
 const retryableGeminiStatuses = new Set([408, 429, 500, 502, 503, 504]);
@@ -27,7 +27,7 @@ async function callGoogleGeminiDirect(
         "x-goog-api-key": apiKey.trim(),
       },
       body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(15000),
     });
     return res;
   } catch (err) {
@@ -84,6 +84,12 @@ export async function invokeGeminiGateway<T>(
     throw new Error("Sessão autenticada necessária para acessar o Gateway Gemini.");
   }
 
+  // Remove knowledgeQuery to avoid edge function crashing when ai_knowledge_sources table is absent
+  const payloadToSend =
+    body && typeof body === "object" && "knowledgeQuery" in body
+      ? { ...body, knowledgeQuery: undefined }
+      : body;
+
   let response: Response;
   try {
     response = await fetch(gatewayUrl, {
@@ -93,8 +99,8 @@ export async function invokeGeminiGateway<T>(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(12000),
+      body: JSON.stringify(payloadToSend),
+      signal: AbortSignal.timeout(15000),
     });
   } catch (error) {
     throw new Error(

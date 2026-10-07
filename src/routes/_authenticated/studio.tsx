@@ -1432,21 +1432,25 @@ export default function CinematicStudioPage() {
               setShowKeyModal(true);
             }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-              getSavedGeminiKey()
+              getSavedGeminiKey() || dbKeyConfigured
                 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
                 : "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25 animate-pulse"
             }`}
             title={
               getSavedGeminiKey()
                 ? "Chave Google AI conectada neste navegador (Respostas Generativas Ativas)"
+                : dbKeyConfigured
+                ? "Chave do Google Gemini ativa no Banco de Dados (IA Ativa)"
                 : "Conectar Chave Gratuita do Google AI Studio para ativar inteligência generativa"
             }
           >
             <KeyRound className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden sm:inline">
-              {getSavedGeminiKey() ? "IA Conectada" : "🔑 Conectar IA"}
+              {getSavedGeminiKey() || dbKeyConfigured ? "IA Conectada" : "🔑 Conectar IA"}
             </span>
-            <span className="sm:hidden">{getSavedGeminiKey() ? "IA Ativa" : "🔑 IA"}</span>
+            <span className="sm:hidden">
+              {getSavedGeminiKey() || dbKeyConfigured ? "IA Ativa" : "🔑 IA"}
+            </span>
           </button>
 
           <button
@@ -4039,15 +4043,27 @@ export default function CinematicStudioPage() {
                 </ul>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-semibold text-zinc-300 flex items-center justify-between">
-                  <span>Chave pessoal do Google Gemini</span>
-                  {dbKeyConfigured && (
-                    <span className="text-[10px] text-emerald-400 font-mono">
-                      Gravada no Banco ({dbKeyMasked})
-                    </span>
-                  )}
-                </label>
+                {dbKeyConfigured && (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 space-y-1">
+                    <p className="font-semibold flex items-center gap-1.5 text-emerald-300">
+                      <Sparkles className="h-4 w-4 text-emerald-400 shrink-0" />
+                      Chave Master ativa no Banco de Dados ({dbKeyMasked || "Ativa"})
+                    </p>
+                    <p className="text-[11px] text-emerald-400/90 leading-relaxed">
+                      O Studio já está conectado e operacional com o Google Gemini. O preenchimento abaixo é totalmente opcional caso você deseje utilizar uma chave pessoal neste navegador.
+                    </p>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-semibold text-zinc-300 flex items-center justify-between">
+                    <span>Chave pessoal do Google Gemini (Opcional)</span>
+                    {dbKeyConfigured && (
+                      <span className="text-[10px] text-emerald-400 font-mono">
+                        Master no Banco: {dbKeyMasked}
+                      </span>
+                    )}
+                  </label>
                 <div className="relative">
                   <input
                     type={showKeyPassword ? "text" : "password"}

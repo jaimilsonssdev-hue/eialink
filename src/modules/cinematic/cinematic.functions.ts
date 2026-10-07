@@ -738,34 +738,34 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
             }
           } else {
             const errBody = await resp.text();
-            lastProviderError = `Gemini recusou a solicitação (HTTP ${resp.status}): ${errBody.slice(0, 500)}`;
-            console.warn(`[CreativePitch] Erro HTTP ${resp.status} no modelo ${model}:`, errBody);
+            let parsedErrMsg = "";
+            try {
+              const jsonErr = JSON.parse(errBody);
+              parsedErrMsg = jsonErr.error?.message || jsonErr.message || "";
+            } catch {
+              parsedErrMsg = errBody.slice(0, 300);
+            }
 
-            if (
-              resp.status === 400 ||
-              resp.status === 401 ||
-              resp.status === 403 ||
-              resp.status === 503 ||
+            lastProviderError = `Modelo ${model} retornou ${resp.status}: ${parsedErrMsg || errBody.slice(0, 300)}`;
+            console.warn(`[CreativePitch] Erro no modelo ${model}:`, { status: resp.status, error: parsedErrMsg });
+
+            const isKeyExplicitlyInvalid =
               errBody.includes("API_KEY_INVALID") ||
               errBody.includes("API key not valid") ||
-              errBody.includes("chave compartilhada")
-            ) {
-              const isInvalidKey =
-                errBody.includes("API_KEY_INVALID") || errBody.includes("API key not valid");
+              (resp.status === 503 && errBody.includes("chave compartilhada do Gemini ainda não foi configurada"));
+
+            if (isKeyExplicitlyInvalid) {
               return {
                 actionType: "conversation",
-                agentMessage: `🔑 **Atenção: A inteligência generativa precisa da sua chave do Google Gemini conectada.**\n\n${
-                  isInvalidKey
-                    ? "A chave informada foi recusada pela Google (chave expirada ou inválida)."
-                    : "Nenhuma chave ativa da API do Gemini foi configurada para conversar em tempo real."
-                }\n\n👉 **Como ativar em 15 segundos:**\n1. Gere sua chave gratuita no [Google AI Studio](https://aistudio.google.com/app/apikey).\n2. Clique em **🔑 Conectar IA** no topo da tela e cole a chave.\n\nCom a chave salva, o assistente atenderá todos os seus comandos conversacionais como o Claude ou ChatGPT!`,
+                agentMessage: `⚠️ **A Google recusou a chave de API fornecida (${parsedErrMsg || "Chave inválida ou expirada"}).**\n\nPor favor, acesse o [Google AI Studio](https://aistudio.google.com/app/apikey), gere uma nova chave gratuita e cole em **🔑 Conectar IA** no topo para atualizar.`,
                 suggestions: [
-                  "Como gerar chave gratuita no AI Studio",
+                  "Como gerar nova chave no Google AI Studio",
                   "Mudar as cores da página",
                   "Adicionar novo produto ou serviço",
                 ],
               };
             }
+            // Para outros erros (ex: modelo específico indisponível), o loop CONTINUA para o próximo modelo!
           }
         } catch (modelErr) {
           lastProviderError =

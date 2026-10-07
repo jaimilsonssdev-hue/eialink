@@ -404,9 +404,28 @@ export default function CinematicStudioPage() {
   };
 
   const handleTestGeminiKey = async () => {
-    const clean = inputKey.trim();
+    const clean = inputKey.trim() || getSavedGeminiKey() || "";
+    if (!clean) {
+      toast.error("Cole ou digite uma chave de API para testar.");
+      return;
+    }
     setIsTestingKey(true);
     try {
+      // 1. Teste direto instantâneo com a Google (CORS liberado pelo AI Studio)
+      const direct = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${clean}`,
+        { signal: AbortSignal.timeout(8000) },
+      ).catch(() => null);
+
+      if (direct && direct.ok) {
+        toast.success("✅ Conexão com Google AI Studio validada com sucesso!");
+        return;
+      } else if (direct && (direct.status === 400 || direct.status === 403)) {
+        toast.error("❌ A Google recusou a chave. Verifique se copiou corretamente do AI Studio.");
+        return;
+      }
+
+      // 2. Fallback via gateway
       const res = await invokeGeminiGateway<{ ok: boolean; message: string }>(supabase, {
         action: "test",
         apiKey: clean || undefined,
@@ -932,8 +951,9 @@ export default function CinematicStudioPage() {
         text: m.text,
       }));
 
+      const savedKey = getSavedGeminiKey() || "";
       const activeKey = (
-        geminiKey === "configured_in_database" ? "" : geminiKey || getSavedGeminiKey() || ""
+        savedKey || (geminiKey !== "configured_in_database" ? geminiKey : "")
       ).trim();
       if (!activeKey && !dbKeyConfigured) {
         setShowKeyModal(true);
@@ -989,6 +1009,15 @@ export default function CinematicStudioPage() {
       };
 
       setMessages((prev) => [...prev, agentMsg]);
+
+      if (
+        agentMessage.includes("🔑 Conectar IA") ||
+        agentMessage.includes("chave do Google Gemini") ||
+        agentMessage.includes("Google AI Studio")
+      ) {
+        setInputKey(getSavedGeminiKey() || "");
+        setShowKeyModal(true);
+      }
     } catch (err: any) {
       console.error("[Studio Chat] Falha ao consultar agente:", err);
       setMessages((prev) => [
@@ -1403,21 +1432,21 @@ export default function CinematicStudioPage() {
               setShowKeyModal(true);
             }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${
-              dbKeyConfigured || geminiKey
+              getSavedGeminiKey()
                 ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/20"
                 : "bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25 animate-pulse"
             }`}
             title={
-              dbKeyConfigured || geminiKey
-                ? "Cérebro da IA Conectado no Banco de Dados (Google Gemini)"
-                : "Conectar Chave da IA no Banco de Dados"
+              getSavedGeminiKey()
+                ? "Chave Google AI conectada neste navegador (Respostas Generativas Ativas)"
+                : "Conectar Chave Gratuita do Google AI Studio para ativar inteligência generativa"
             }
           >
             <KeyRound className="h-3.5 w-3.5 shrink-0" />
             <span className="hidden sm:inline">
-              {dbKeyConfigured || geminiKey ? "IA Conectada" : "Conectar IA"}
+              {getSavedGeminiKey() ? "IA Conectada" : "🔑 Conectar IA"}
             </span>
-            <span className="sm:hidden">{dbKeyConfigured || geminiKey ? "IA" : "🔑 IA"}</span>
+            <span className="sm:hidden">{getSavedGeminiKey() ? "IA Ativa" : "🔑 IA"}</span>
           </button>
 
           <button
@@ -1512,7 +1541,7 @@ export default function CinematicStudioPage() {
                       Como posso ajudar a transformar sua vitrine digital hoje?
                     </p>
 
-                    {!geminiKey && (
+                    {!getSavedGeminiKey() && (
                       <div className="mb-5 p-3.5 rounded-xl border border-amber-500/35 bg-amber-500/10 text-left max-w-sm w-full backdrop-blur-sm shadow-lg shadow-amber-950/20">
                         <div className="flex items-center gap-2 text-amber-300 font-semibold text-xs mb-1.5">
                           <KeyRound className="h-4 w-4 shrink-0 text-amber-400" />

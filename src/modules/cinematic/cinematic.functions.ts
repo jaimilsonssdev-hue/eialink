@@ -648,12 +648,18 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
         }
       }
 
-      // Adiciona o turno atual do usuário
-      if (
-        contentsPayload.length > 0 &&
-        contentsPayload[contentsPayload.length - 1].role === "user"
-      ) {
-        contentsPayload[contentsPayload.length - 1].parts[0].text += `\n${instruction}`;
+      // O Google Gemini EXIGE estritamente que o primeiro turno de contents seja 'user'
+      while (contentsPayload.length > 0 && contentsPayload[0].role === "model") {
+        contentsPayload.shift();
+      }
+
+      // Adiciona o turno atual do usuário garantindo alternância
+      if (contentsPayload.length === 0) {
+        contentsPayload.push({ role: "user", parts: [{ text: instruction }] });
+      } else if (contentsPayload[contentsPayload.length - 1].role === "user") {
+        if (!contentsPayload[contentsPayload.length - 1].parts[0].text.includes(instruction)) {
+          contentsPayload[contentsPayload.length - 1].parts[0].text += `\n${instruction}`;
+        }
       } else {
         contentsPayload.push({ role: "user", parts: [{ text: instruction }] });
       }
@@ -734,15 +740,31 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
             const errBody = await resp.text();
             lastProviderError = `Gemini recusou a solicitação (HTTP ${resp.status}): ${errBody.slice(0, 500)}`;
             console.warn(`[CreativePitch] Erro HTTP ${resp.status} no modelo ${model}:`, errBody);
-            if (resp.status === 400 || resp.status === 403) {
-              if (errBody.includes("API_KEY_INVALID") || errBody.includes("API key not valid")) {
-                return {
-                  actionType: "conversation",
-                  agentMessage: `⚠️ **A chave do Google Gemini conectada não é válida ou foi revogada.**\n\nPor favor, gere uma nova chave gratuita no [Google AI Studio](https://aistudio.google.com/app/apikey) e clique em **🔑 Conectar IA** no topo da tela para atualizar.`,
-                  suggestions: ["Abrir Google AI Studio", "Como pegar chave gratuita"],
-                };
-              }
-              lastProviderError = `Gemini retornou conteúdo sem formato de resposta reconhecido (${model}).`;
+
+            if (
+              resp.status === 400 ||
+              resp.status === 401 ||
+              resp.status === 403 ||
+              resp.status === 503 ||
+              errBody.includes("API_KEY_INVALID") ||
+              errBody.includes("API key not valid") ||
+              errBody.includes("chave compartilhada")
+            ) {
+              const isInvalidKey =
+                errBody.includes("API_KEY_INVALID") || errBody.includes("API key not valid");
+              return {
+                actionType: "conversation",
+                agentMessage: `🔑 **Atenção: A inteligência generativa precisa da sua chave do Google Gemini conectada.**\n\n${
+                  isInvalidKey
+                    ? "A chave informada foi recusada pela Google (chave expirada ou inválida)."
+                    : "Nenhuma chave ativa da API do Gemini foi configurada para conversar em tempo real."
+                }\n\n👉 **Como ativar em 15 segundos:**\n1. Gere sua chave gratuita no [Google AI Studio](https://aistudio.google.com/app/apikey).\n2. Clique em **🔑 Conectar IA** no topo da tela e cole a chave.\n\nCom a chave salva, o assistente atenderá todos os seus comandos conversacionais como o Claude ou ChatGPT!`,
+                suggestions: [
+                  "Como gerar chave gratuita no AI Studio",
+                  "Mudar as cores da página",
+                  "Adicionar novo produto ou serviço",
+                ],
+              };
             }
           }
         } catch (modelErr) {
@@ -1033,7 +1055,20 @@ Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Ani
       }
     }
 
-    // 4. Fallback de Proposta Conceitual Completa (Opção A e Opção B)
+    // Se o usuário NÃO pediu expressamente opções/conceitos novos, responde de forma conversacional e prestativa:
+    if (!isProposal) {
+      return {
+        actionType: "conversation",
+        agentMessage: `Entendi sua mensagem: **"${instruction}"**.\n\nPara que eu consiga criar e transformar elementos de forma 100% generativa (como no Lovable ou ChatGPT), a conexão com o Google Gemini precisa de uma chave de API válida.\n\n💡 Você pode conectar uma chave gratuita em 15 segundos clicando em **🔑 Conectar IA** no topo, ou me pedir ajustes pontuais de cores, textos, seções e produtos diretamente!`,
+        suggestions: [
+          "Como obter chave gratuita do Google AI",
+          "Mudar a paleta de cores",
+          "Adicionar novo produto ou serviço",
+        ],
+      };
+    }
+
+    // 4. Fallback de Proposta Conceitual Completa (Opção A e Opção B - apenas quando pedido explicitamente)
     const planId = `plan_${Date.now()}`;
     const optionA: CinematicConceptOption = {
       id: "option_a",

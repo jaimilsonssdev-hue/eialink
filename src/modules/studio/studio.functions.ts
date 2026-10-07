@@ -64,7 +64,6 @@ export const executeStudioCopilotFn = createServerFn({ method: "POST" })
  * 2. Testa a chave do Google AI Studio em tempo real contra a API oficial da Google
  */
 export const testStudioGeminiKeyFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .validator((d: { apiKey?: string }) => d)
   .handler(async ({ data }) => {
     let keyToTest = (data.apiKey || "").trim();
@@ -81,7 +80,6 @@ export const testStudioGeminiKeyFn = createServerFn({ method: "POST" })
  * 3. Salva a chave do Google Gemini no banco de dados para uso global no sistema
  */
 export const saveStudioGeminiKeyFn = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .validator((d: { apiKey: string }) => d)
   .handler(async ({ data }) => {
     const cleanKey = (data.apiKey || "").trim();

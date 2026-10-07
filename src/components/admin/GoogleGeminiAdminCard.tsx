@@ -75,6 +75,10 @@ export function GoogleGeminiAdminCard() {
     setSaving(true);
     try {
       const clean = apiKey.trim();
+      if (typeof window !== "undefined") {
+        if (clean) localStorage.setItem("eialink_gemini_api_key", clean);
+        else localStorage.removeItem("eialink_gemini_api_key");
+      }
       const res = await saveStudioGeminiKeyFn({ data: { apiKey: clean } });
       setConfigured(res.configured);
       if (res.configured) {
@@ -111,6 +115,9 @@ export function GoogleGeminiAdminCard() {
   async function handleRemove() {
     setSaving(true);
     try {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("eialink_gemini_api_key");
+      }
       await saveStudioGeminiKeyFn({ data: { apiKey: "" } });
       setConfigured(false);
       setMasked("");

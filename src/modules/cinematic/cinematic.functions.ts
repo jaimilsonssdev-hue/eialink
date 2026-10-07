@@ -6,7 +6,7 @@ import type { CinematicPageData, CreativePlan, CinematicConceptOption } from "./
 import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 import { lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
 import type { ProspectDraft } from "@/modules/prospecting/types";
-import { requestGemini } from "@/modules/ai/gemini-gateway";
+import { requestGemini, SITE_BUILDER_MODELS } from "@/modules/ai/gemini-gateway";
 
 function slugify(value: string) {
   return value
@@ -193,7 +193,7 @@ RETORNE RIGOROSAMENTE E APENAS O JSON NO FORMATO DE CinematicPageData VÁLIDO (S
   ]
 }`;
 
-      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
+      const models = SITE_BUILDER_MODELS;
       for (const model of models) {
         try {
           const resp = await requestGemini(context.supabase, {
@@ -658,7 +658,7 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
         contentsPayload.push({ role: "user", parts: [{ text: instruction }] });
       }
 
-      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
+      const models = SITE_BUILDER_MODELS;
       for (const model of models) {
         try {
           const resp = await requestGemini(context.supabase, {

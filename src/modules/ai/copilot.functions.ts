@@ -4,7 +4,7 @@ import { z } from "zod";
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { requestGemini } from "./gemini-gateway";
+import { requestGemini, SITE_BUILDER_MODELS } from "./gemini-gateway";
 import { PremiumBetaProposalSchema, type PremiumBetaProposal } from "./premiumProposal.schema";
 import {
   adaptProposalToExistingStructures,
@@ -455,7 +455,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
     let lastError = "";
     let rawContent: string | null = null;
 
-    const finalModelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
+    const finalModelsToTry = SITE_BUILDER_MODELS;
 
     const errorLogs: string[] = [];
 
@@ -535,7 +535,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
 
     // 2. Fallback: Interactions API caso generateContent falhe
     if (!rawContent) {
-      const interactionModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
+      const interactionModels = SITE_BUILDER_MODELS;
       for (const modelName of interactionModels) {
         try {
           const response = await requestGemini(context.supabase, {
@@ -1280,7 +1280,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
 
     promptParts.push({ text: userPrompt });
 
-    const finalModelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
+    const finalModelsToTry = SITE_BUILDER_MODELS;
 
     let rawContent: string | null = null;
     let lastError = "";
@@ -2901,7 +2901,7 @@ SUAS REGRAS DE OURO:
     }
 
     // Modelos oficiais ativos do Google Gemini
-    const modelsToTry = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"];
+    const modelsToTry = SITE_BUILDER_MODELS;
 
     let rawContent: string | null = null;
     const errorLogs: string[] = [];

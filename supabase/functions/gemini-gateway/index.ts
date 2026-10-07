@@ -6,7 +6,13 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const allowedModels = new Set(["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"]);
+const allowedModels = new Set([
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
+  "gemini-2.5-pro",
+  "gemini-3.1-flash-lite",
+  "gemini-3.8-flash",
+]);
 const superAdminEmail = "jaimilsonvendas@gmail.com";
 const maxPayloadBytes = 1_000_000;
 // Gemini storage is in this project; user sessions remain owned by the original auth project.

@@ -4,6 +4,8 @@ import type { Database } from "@/integrations/supabase/types";
 const gatewayUrl = "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gemini-gateway";
 const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
+export const SITE_BUILDER_MODELS = ["gemini-3.8-flash", "gemini-3.1-flash-lite"] as const;
+
 export type GeminiGatewayRequest =
   | { action: "status" }
   | { action: "save"; apiKey: string }

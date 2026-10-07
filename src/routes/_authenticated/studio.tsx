@@ -349,7 +349,7 @@ export default function CinematicStudioPage() {
   const chatStorageKey = userId ? `eialink:studio-chat:${userId}` : "";
   const [geminiKey, setGeminiKey] = useState<string>(() => getSavedGeminiKey() || "");
   const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
-  const [inputKey, setInputKey] = useState<string>("");
+  const [inputKey, setInputKey] = useState<string>(() => getSavedGeminiKey() || "");
   const [isTestingKey, setIsTestingKey] = useState(false);
   const [showKeyPassword, setShowKeyPassword] = useState(false);
   const [dbKeyConfigured, setDbKeyConfigured] = useState(false);
@@ -393,9 +393,8 @@ export default function CinematicStudioPage() {
     try {
       saveGeminiKey(clean);
       setGeminiKey(clean);
-      setInputKey("");
       setShowKeyModal(false);
-      toast.success("Chave salva neste navegador.");
+      toast.success("Chave salva neste navegador e conectada com sucesso!");
     } catch (err: any) {
       toast.error(err.message || "Erro ao salvar chave neste navegador.");
     } finally {
@@ -1011,9 +1010,10 @@ export default function CinematicStudioPage() {
       setMessages((prev) => [...prev, agentMsg]);
 
       if (
-        agentMessage.includes("🔑 Conectar IA") ||
-        agentMessage.includes("chave do Google Gemini") ||
-        agentMessage.includes("Google AI Studio")
+        !dbKeyConfigured &&
+        (agentMessage.includes("🔑 Conectar IA") ||
+          agentMessage.includes("chave do Google Gemini") ||
+          agentMessage.includes("Google AI Studio"))
       ) {
         setInputKey(getSavedGeminiKey() || "");
         setShowKeyModal(true);
@@ -1428,7 +1428,7 @@ export default function CinematicStudioPage() {
           <button
             type="button"
             onClick={() => {
-              setInputKey("");
+              setInputKey(getSavedGeminiKey() || "");
               setShowKeyModal(true);
             }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-semibold transition-all cursor-pointer ${

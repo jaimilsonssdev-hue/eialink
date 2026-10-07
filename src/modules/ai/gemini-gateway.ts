@@ -5,6 +5,8 @@ const gatewayUrl = "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gemini
 const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
 export const SITE_BUILDER_MODELS = ["gemini-3.8-flash", "gemini-3.1-flash-lite"] as const;
+const retryableGeminiStatuses = new Set([408, 429, 500, 502, 503, 504]);
+const maxGeminiAttempts = 3;
 
 export type GeminiGatewayRequest =
   | { action: "status" }
@@ -89,12 +91,29 @@ export async function requestGemini(
   body: Extract<GeminiGatewayRequest, { action: "generateContent" | "interactions" }>,
   accessToken?: string,
 ): Promise<Response> {
-  const result = await invokeGeminiGateway<{
+  let result: {
     ok: boolean;
     status: number;
     payload?: unknown;
     message?: string;
-  }>(supabase, body, accessToken);
+  };
+  for (let attempt = 0; ; attempt++) {
+    result = await invokeGeminiGateway<{
+      ok: boolean;
+      status: number;
+      payload?: unknown;
+      message?: string;
+    }>(supabase, body, accessToken);
+    if (
+      result.ok ||
+      !retryableGeminiStatuses.has(result.status) ||
+      attempt >= maxGeminiAttempts - 1
+    ) {
+      break;
+    }
+    const backoff = 1000 * 2 ** attempt + Math.random() * 250;
+    await new Promise((resolve) => setTimeout(resolve, backoff));
+  }
   const payload = result.payload ?? {
     error: { message: result.message || "Falha na API Gemini." },
   };

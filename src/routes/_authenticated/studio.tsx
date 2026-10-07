@@ -274,6 +274,17 @@ function getGreeting() {
   return "Boa noite, como vão as coisas?";
 }
 
+function isStudioChatMessage(value: unknown): value is StudioChatMessage {
+  if (!value || typeof value !== "object") return false;
+  const message = value as Record<string, unknown>;
+  return (
+    typeof message.id === "string" &&
+    (message.sender === "user" || message.sender === "agent") &&
+    typeof message.text === "string" &&
+    typeof message.timestamp === "string"
+  );
+}
+
 export const Route = createFileRoute("/_authenticated/studio")({
   component: CinematicStudioPage,
   validateSearch: z.object({
@@ -333,6 +344,9 @@ export default function CinematicStudioPage() {
   const [aiPrompt, setAiPrompt] = useState("");
   const [isRefiningAi, setIsRefiningAi] = useState(false);
   const [messages, setMessages] = useState<StudioChatMessage[]>([]);
+  const [loadedChatStorageKey, setLoadedChatStorageKey] = useState("");
+  const historyPersistenceErrorShown = useRef(false);
+  const chatStorageKey = userId ? `eialink:studio-chat:${userId}` : "";
   const [geminiKey, setGeminiKey] = useState<string>(() => getSavedGeminiKey() || "");
   const [showKeyModal, setShowKeyModal] = useState<boolean>(false);
   const [inputKey, setInputKey] = useState<string>("");
@@ -498,6 +512,56 @@ export default function CinematicStudioPage() {
       }
     });
   }, []);
+
+  useEffect(() => {
+    if (!chatStorageKey) return;
+    setLoadedChatStorageKey("");
+    try {
+      const savedMessages = window.localStorage.getItem(chatStorageKey);
+      if (!savedMessages) {
+        setMessages([]);
+      } else {
+        const parsed: unknown = JSON.parse(savedMessages);
+        if (!Array.isArray(parsed)) {
+          throw new Error("O histórico salvo não está no formato esperado.");
+        }
+        const restoredMessages = parsed.filter(isStudioChatMessage);
+        if (restoredMessages.length !== parsed.length) {
+          throw new Error("O histórico salvo contém mensagens inválidas.");
+        }
+        setMessages(restoredMessages);
+      }
+      historyPersistenceErrorShown.current = false;
+    } catch (error) {
+      console.error("[Studio] Não foi possível restaurar o histórico local:", error);
+      try {
+        window.localStorage.removeItem(chatStorageKey);
+      } catch (storageError) {
+        console.error("[Studio] Não foi possível remover o histórico inválido:", storageError);
+      }
+      setMessages([]);
+      toast.error("Não foi possível recuperar o histórico anterior; uma nova conversa foi iniciada.");
+    }
+    setLoadedChatStorageKey(chatStorageKey);
+  }, [chatStorageKey]);
+
+  useEffect(() => {
+    if (!chatStorageKey || loadedChatStorageKey !== chatStorageKey) return;
+    try {
+      if (messages.length === 0) {
+        window.localStorage.removeItem(chatStorageKey);
+      } else {
+        window.localStorage.setItem(chatStorageKey, JSON.stringify(messages));
+      }
+      historyPersistenceErrorShown.current = false;
+    } catch (error) {
+      console.error("[Studio] Não foi possível salvar o histórico local:", error);
+      if (!historyPersistenceErrorShown.current) {
+        toast.error("O navegador não conseguiu salvar o histórico desta conversa.");
+        historyPersistenceErrorShown.current = true;
+      }
+    }
+  }, [chatStorageKey, loadedChatStorageKey, messages]);
 
   // Carrega página pelo ID se informado na URL (?page=...)
   useEffect(() => {
@@ -885,6 +949,16 @@ export default function CinematicStudioPage() {
           apiKey: activeKey || undefined,
         },
       });
+      if (
+        !pitch ||
+        typeof pitch !== "object" ||
+        typeof pitch.actionType !== "string" ||
+        typeof pitch.agentMessage !== "string"
+      ) {
+        throw new Error(
+          "O agente retornou uma resposta vazia ou incompleta. Tente enviar a mensagem novamente.",
+        );
+      }
 
       // Se for uma atualização direta (direct_update) com dados modificados:
       if (pitch.actionType === "direct_update" && pitch.updatedData) {

@@ -8,17 +8,32 @@ export type GeminiGatewayRequest =
   | { action: "status" }
   | { action: "save"; apiKey: string }
   | { action: "test"; apiKey?: string }
+  | { action: "knowledgeList" }
+  | {
+      action: "knowledgeSave";
+      source: {
+        id?: string;
+        title: string;
+        kind: "skill" | "reference";
+        content: string;
+        tags: string[];
+        active: boolean;
+      };
+    }
+  | { action: "knowledgeDelete"; id: string }
   | {
       action: "generateContent";
       model: string;
       payload: Record<string, unknown>;
       apiKeyOverride?: string;
+      knowledgeQuery?: string;
     }
   | {
       action: "interactions";
       model: string;
       payload: Record<string, unknown>;
       apiKeyOverride?: string;
+      knowledgeQuery?: string;
     };
 
 export async function invokeGeminiGateway<T>(

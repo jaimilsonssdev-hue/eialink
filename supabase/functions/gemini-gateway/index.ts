@@ -17,12 +17,35 @@ type GatewayAction =
   | { action: "status" }
   | { action: "save"; apiKey: string }
   | { action: "test"; apiKey?: string }
+  | { action: "knowledgeList" }
+  | {
+      action: "knowledgeSave";
+      source: {
+        id?: string;
+        title: string;
+        kind: "skill" | "reference";
+        content: string;
+        tags: string[];
+        active: boolean;
+      };
+    }
+  | { action: "knowledgeDelete"; id: string }
   | {
       action: "generateContent" | "interactions";
       model: string;
       payload: Record<string, unknown>;
       apiKeyOverride?: string;
+      knowledgeQuery?: string;
     };
+
+type KnowledgeSource = {
+  id: string;
+  title: string;
+  kind: "skill" | "reference";
+  content: string;
+  tags: string[];
+  active: boolean;
+};
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -54,6 +77,64 @@ async function getConfiguredKey(adminClient: ReturnType<typeof createClient>) {
     .maybeSingle();
   if (error) throw new Error(`Não foi possível ler a configuração do Gemini: ${error.message}`);
   return (data?.gemini_api_key as string | null)?.trim() || null;
+}
+
+function tokenize(value: string) {
+  return [...new Set(
+    value
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .match(/[a-z0-9]{3,}/g) || [],
+  )];
+}
+
+async function findKnowledgeContext(
+  adminClient: ReturnType<typeof createClient>,
+  query: string,
+) {
+  const { data, error } = await adminClient
+    .from("ai_knowledge_sources")
+    .select("title, kind, content, tags")
+    .eq("active", true);
+  if (error) throw new Error(`Não foi possível consultar as referências da IA: ${error.message}`);
+
+  const terms = tokenize(query);
+  if (!data?.length || !terms.length) return "";
+
+  const sources = data as Array<Pick<KnowledgeSource, "title" | "kind" | "content" | "tags">>;
+  const skills = sources
+    .filter((source) => source.kind === "skill")
+    .slice(0, 3);
+  const references = sources
+    .filter((source) => source.kind === "reference")
+    .map((source) => {
+      const titleTerms = tokenize(source.title);
+      const tagTerms = tokenize(source.tags.join(" "));
+      const contentTerms = new Set(tokenize(source.content));
+      const score = terms.reduce(
+        (total, term) =>
+          total +
+          (titleTerms.includes(term) ? 5 : 0) +
+          (tagTerms.includes(term) ? 3 : 0) +
+          (contentTerms.has(term) ? 1 : 0),
+        0,
+      );
+      return { source, score };
+    })
+    .filter(({ score }) => score > 0)
+    .sort((left, right) => right.score - left.score)
+    .slice(0, 3)
+    .map(({ source }) => source);
+
+  const selected = [...skills, ...references];
+  if (!selected.length) return "";
+  return `\n\nCONTEXTO DA BIBLIOTECA DO SUPERADMIN (use apenas quando pertinente; fatos não presentes aqui não devem ser inventados):\n${selected
+    .map(
+      (source) =>
+        `[${source.kind === "skill" ? "SKILL" : "REFERÊNCIA"}: ${source.title}]\n${source.content.slice(0, 5000)}`,
+    )
+    .join("\n\n")}`;
 }
 
 async function testKey(apiKey: string) {
@@ -120,6 +201,78 @@ Deno.serve(async (request) => {
         masked: key ? maskKey(key) : "",
         isFromEnv: false,
       });
+    }
+
+    if (body.action === "knowledgeList") {
+      if (!isSuperAdmin) {
+        return jsonResponse({ error: "A biblioteca da IA é restrita ao superadministrador." }, 403);
+      }
+      const { data, error } = await adminClient
+        .from("ai_knowledge_sources")
+        .select("id, title, kind, content, tags, active, updated_at")
+        .order("updated_at", { ascending: false });
+      if (error) throw new Error(`Não foi possível carregar a biblioteca da IA: ${error.message}`);
+      return jsonResponse({ sources: data || [] });
+    }
+
+    if (body.action === "knowledgeSave") {
+      if (!isSuperAdmin) {
+        return jsonResponse({ error: "A biblioteca da IA é restrita ao superadministrador." }, 403);
+      }
+      const source = body.source;
+      if (
+        !source ||
+        typeof source.title !== "string" ||
+        !["skill", "reference"].includes(source.kind) ||
+        typeof source.content !== "string" ||
+        !Array.isArray(source.tags) ||
+        typeof source.active !== "boolean"
+      ) {
+        return jsonResponse({ error: "Os dados da referência ou skill são inválidos." }, 400);
+      }
+      const title = source.title.trim();
+      const content = source.content.trim();
+      const tags = source.tags
+        .filter((tag): tag is string => typeof tag === "string")
+        .map((tag) => tag.trim().slice(0, 60))
+        .filter(Boolean)
+        .slice(0, 20);
+      if (!title || title.length > 160 || !content || content.length > 50_000) {
+        return jsonResponse({
+          error: "Informe um título (até 160 caracteres) e conteúdo (até 50.000 caracteres).",
+        }, 400);
+      }
+      const { data, error } = await adminClient
+        .from("ai_knowledge_sources")
+        .upsert(
+          {
+            ...(source.id ? { id: source.id } : {}),
+            title,
+            kind: source.kind,
+            content,
+            tags,
+            active: source.active,
+            created_by: authData.user.id,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" },
+        )
+        .select("id, title, kind, content, tags, active, updated_at")
+        .single();
+      if (error) throw new Error(`Não foi possível salvar a referência da IA: ${error.message}`);
+      return jsonResponse({ source: data });
+    }
+
+    if (body.action === "knowledgeDelete") {
+      if (!isSuperAdmin) {
+        return jsonResponse({ error: "A biblioteca da IA é restrita ao superadministrador." }, 403);
+      }
+      if (typeof body.id !== "string" || !/^[0-9a-f-]{36}$/i.test(body.id)) {
+        return jsonResponse({ error: "Identificador da referência inválido." }, 400);
+      }
+      const { error } = await adminClient.from("ai_knowledge_sources").delete().eq("id", body.id);
+      if (error) throw new Error(`Não foi possível excluir a referência da IA: ${error.message}`);
+      return jsonResponse({ success: true });
     }
 
     if (body.action === "save") {
@@ -222,20 +375,66 @@ Deno.serve(async (request) => {
         body.action === "generateContent"
           ? `https://generativelanguage.googleapis.com/v1beta/models/${body.model}:generateContent`
           : "https://generativelanguage.googleapis.com/v1beta/interactions";
+      let payload = body.payload;
+      if (body.knowledgeQuery?.trim()) {
+        const context = await findKnowledgeContext(adminClient, body.knowledgeQuery.trim());
+        if (context && body.action === "generateContent") {
+          const systemInstruction = payload.systemInstruction;
+          if (
+            systemInstruction &&
+            typeof systemInstruction === "object" &&
+            !Array.isArray(systemInstruction)
+          ) {
+            const instruction = systemInstruction as { parts?: Array<{ text?: string }> };
+            payload = {
+              ...payload,
+              systemInstruction: {
+                ...systemInstruction,
+                parts: [
+                  ...(instruction.parts || []),
+                  { text: context },
+                ],
+              },
+            };
+          } else {
+            const contents = Array.isArray(payload.contents) ? payload.contents : [];
+            payload = {
+              ...payload,
+              contents: [
+                { role: "user", parts: [{ text: `Contexto de referência da plataforma:${context}` }] },
+                ...contents,
+              ],
+            };
+          }
+        } else if (context && body.action === "interactions") {
+          payload = {
+            ...payload,
+            system_instruction: `${String(payload.system_instruction || "")}${context}`,
+          };
+        }
+      }
+      const enrichedPayloadSize = new TextEncoder().encode(JSON.stringify(payload)).byteLength;
+      if (enrichedPayloadSize > maxPayloadBytes) {
+        return jsonResponse({
+          ok: false,
+          status: 413,
+          message: "A solicitação Gemini com referências excede o limite permitido.",
+        });
+      }
       const upstream = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
-        body: JSON.stringify(body.payload),
+        body: JSON.stringify(payload),
         signal: AbortSignal.timeout(90000),
       });
-      const payload = await upstream.json().catch(() => ({}));
+      const upstreamPayload = await upstream.json().catch(() => ({}));
       return jsonResponse({
         ok: upstream.ok,
         status: upstream.status,
-        payload,
+        payload: upstreamPayload,
         message: upstream.ok
           ? undefined
-          : (payload as { error?: { message?: string } }).error?.message ||
+          : (upstreamPayload as { error?: { message?: string } }).error?.message ||
             `Erro da API Google (HTTP ${upstream.status}).`,
       });
     }

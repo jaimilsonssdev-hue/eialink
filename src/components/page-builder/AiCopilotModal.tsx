@@ -597,7 +597,7 @@ export function AiCopilotModal({ isOpen, onClose, currentContext, onApply }: AiC
           return {
             name: item.name,
             mimeType: item.type.startsWith("image/") ? "image/jpeg" : item.type,
-            base64: publicUrl ? "" : base64Data, // Não envia base64 pesado quando a URL pública já existe
+            base64: base64Data,
             publicUrl: publicUrl || undefined,
             role: item.role,
           };

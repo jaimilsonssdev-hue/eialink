@@ -923,7 +923,9 @@ export default function CinematicStudioPage() {
         {
           id: `agent-err-${Date.now()}`,
           sender: "agent",
-          text: "Houve uma instabilidade temporária ao conectar com a IA, mas você pode continuar ajustando na aba de Ajustes manuais.",
+          text: err instanceof Error
+            ? `Não consegui conectar ao agente de IA: ${err.message}`
+            : "Não consegui conectar ao agente de IA. Tente novamente em instantes.",
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);

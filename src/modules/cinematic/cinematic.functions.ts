@@ -549,6 +549,7 @@ export const createCreativePitchFn = createServerFn({ method: "POST" })
   .handler(async ({ data: input, context }): Promise<import("./types").CreativePitchResponse> => {
     const { businessName, niche, userMessage, currentData, conversationHistory = [] } = input;
     const instruction = (userMessage || "").trim();
+    let lastProviderError = "O Gemini não retornou uma resposta válida.";
 
     try {
       const systemPrompt = `Você é o Agente Diretor de Arte Criativo, Arquiteto de Software e Parceiro de Design da plataforma EIA Link.
@@ -664,8 +665,9 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
             action: "generateContent",
             model,
             apiKeyOverride: input.apiKey || undefined,
+            knowledgeQuery: `${instruction}\n${businessName}\n${niche}`,
             payload: {
-              system_instruction: { parts: [{ text: systemPrompt }] },
+              systemInstruction: { parts: [{ text: systemPrompt }] },
               contents: contentsPayload,
               generationConfig: { responseMimeType: "application/json", temperature: 0.6 },
             },
@@ -725,9 +727,12 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
                   ],
                 };
               }
+            } else {
+              lastProviderError = `Gemini retornou resposta vazia (${model}).`;
             }
           } else {
             const errBody = await resp.text();
+            lastProviderError = `Gemini recusou a solicitação (HTTP ${resp.status}): ${errBody.slice(0, 500)}`;
             console.warn(`[CreativePitch] Erro HTTP ${resp.status} no modelo ${model}:`, errBody);
             if (resp.status === 400 || resp.status === 403) {
               if (errBody.includes("API_KEY_INVALID") || errBody.includes("API key not valid")) {
@@ -737,15 +742,25 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
                   suggestions: ["Abrir Google AI Studio", "Como pegar chave gratuita"],
                 };
               }
+              lastProviderError = `Gemini retornou conteúdo sem formato de resposta reconhecido (${model}).`;
             }
           }
         } catch (modelErr) {
+          lastProviderError =
+            modelErr instanceof Error ? modelErr.message : "Falha ao consultar o Gemini.";
           console.warn(`[CreativePitch] Falha com modelo ${model}:`, modelErr);
         }
       }
     } catch (err) {
       console.warn("[CreativePitch] Erro na chamada com IA:", err);
+      throw new Error(
+        `Não foi possível consultar o Gemini para editar o site: ${
+          err instanceof Error ? err.message : "falha desconhecida"
+        }`,
+      );
     }
+
+    throw new Error(`O agente de IA não conseguiu responder. ${lastProviderError}`);
 
     // Heurística Fallback inteligente com Intent Classification se a API falhar
     const isQuestion = /\?|o que você acha|qual|como|opini|ideia|pense|dá pra|consegue|expli/i.test(

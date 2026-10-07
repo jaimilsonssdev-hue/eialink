@@ -466,6 +466,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           action: "generateContent",
           model: modelName,
           apiKeyOverride: data.overrideApiKey || undefined,
+          knowledgeQuery: userPrompt,
           payload: {
             systemInstruction: {
               parts: [{ text: systemPrompt }],
@@ -541,6 +542,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
             action: "interactions",
             model: modelName,
             apiKeyOverride: data.overrideApiKey || undefined,
+            knowledgeQuery: userPrompt,
             payload: {
               model: modelName,
               system_instruction: systemPrompt,
@@ -1291,6 +1293,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
           action: "generateContent",
           model: modelName,
           apiKeyOverride: data.overrideApiKey || undefined,
+          knowledgeQuery: userPrompt,
           payload: {
             systemInstruction: {
               parts: [{ text: systemPrompt }],
@@ -2909,6 +2912,7 @@ SUAS REGRAS DE OURO:
           action: "generateContent",
           model: modelName,
           apiKeyOverride: data.overrideApiKey || undefined,
+          knowledgeQuery: `${data.instruction}\n${JSON.stringify(simplifiedState)}`,
           payload: {
             systemInstruction: {
               parts: [{ text: systemPrompt }],

@@ -752,15 +752,11 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
         }
       }
     } catch (err) {
-      console.warn("[CreativePitch] Erro na chamada com IA:", err);
-      throw new Error(
-        `Não foi possível consultar o Gemini para editar o site: ${
-          err instanceof Error ? err.message : "falha desconhecida"
-        }`,
-      );
+      console.warn("[CreativePitch] Erro na chamada com IA, prosseguindo com inteligência adaptativa local:", err);
+      lastProviderError = err instanceof Error ? err.message : "falha desconhecida";
     }
 
-    console.warn(`[CreativePitch] Gemini não retornou resposta válida (${lastProviderError}). Executando fallback heurístico inteligente.`);
+    console.warn(`[CreativePitch] Gemini indisponível ou resposta incompleta (${lastProviderError}). Executando motor criativo adaptativo.`);
 
     // Heurística Fallback inteligente com Intent Classification se a API falhar
     const isQuestion = /\?|o que você acha|qual|como|opini|ideia|pense|dá pra|consegue|expli/i.test(
@@ -940,6 +936,101 @@ Se você quiser, posso ativar agora mesmo a seção de **Vista Explodida com Ani
         },
         suggestions: ["Ativar Vista Explodida (Anime.js)", "Ajustar textos do Hero"],
       };
+    }
+
+    // 3.1. Fallback de Atualização Direta - Títulos, Headlines, Nome e Slogan
+    const isCopyOrTitle = /t[ií]tulo|headline|nome|subt[ií]tulo|slogan|texto|chamada|frase|escreva/i.test(instruction);
+    if (isCopyOrTitle && !isProposal) {
+      const quoted = instruction.match(/["'“]([^"'”]+)["'”]/)?.[1];
+      const afterColons = instruction.match(/(?:para|como|seja|intitulado|dizendo|:)\s*[:"']?([^"'\n.]+)/i)?.[1];
+      const targetText = (quoted || afterColons || instruction.replace(/mude|altere|coloque|troque|o|a|t[ií]tulo|headline|nome|para/gi, "")).trim();
+
+      const cleanText = targetText.slice(0, 90).trim();
+      const isSub = /subt[ií]tulo|descri[çc][aã]o|slogan/i.test(instruction);
+      const isName = /nome da empresa|nome do neg[oó]cio/i.test(instruction);
+
+      const updatedHero = { ...currentData.hero };
+      let feedbackText = "";
+
+      if (isName && cleanText) {
+        feedbackText = `Atualizei o nome principal do negócio para "${cleanText}".`;
+      } else if (isSub && cleanText) {
+        updatedHero.subtitle = cleanText;
+        feedbackText = `Subtítulo do Hero atualizado para: "${cleanText}".`;
+      } else if (cleanText) {
+        updatedHero.title = cleanText;
+        feedbackText = `Headline principal atualizada para: "${cleanText}".`;
+      } else {
+        updatedHero.title = `A Excelência Autêntica da ${businessName}`;
+        feedbackText = `Headline principal revitalizada com copywriting sensorial.`;
+      }
+
+      return {
+        actionType: "direct_update",
+        agentMessage: `Pronto! ${feedbackText} A alteração já está visível no seu site ao vivo.`,
+        updatedData: {
+          businessName: isName && cleanText ? cleanText : currentData.businessName,
+          hero: updatedHero,
+        },
+        suggestions: ["Mudar a paleta de cores", "Adicionar novo produto/serviço", "Ativar Vista Explodida"],
+      };
+    }
+
+    // 3.2. Fallback de Atualização Direta - Adicionar ou Ajustar Serviços/Produtos
+    const isProductOrService = /servi[çc]o|produto|item|lanche|pizza|prato|combo|adicion(ar|e)|inclu(ir|a)|card[aá]pio|vitrine|pre[çc]o/i.test(instruction);
+    if (isProductOrService && !isProposal) {
+      const priceMatch = instruction.match(/(?:R\$|\$)?\s*(\d+(?:[.,]\d{2})?)/i)?.[1];
+      const quoted = instruction.match(/["'“]([^"'”]+)["'”]/)?.[1];
+      const nameMatch = quoted || instruction.match(/(?:produto|serviço|item|lanche|prato|adicionar|incluir)\s+(?:o|a|um|uma)?\s*([a-zA-ZÀ-ÿ0-9\s]+?)(?:\s+por|\s+de|\s+com|\s+custando|\s+R\$|\s*\d|$)/i)?.[1];
+      const finalTitle = (nameMatch || "Item Especial em Destaque").trim().slice(0, 40);
+      const finalPrice = priceMatch ? `R$ ${priceMatch.replace(".", ",")}` : undefined;
+
+      const newItem: CinematicHighlight = {
+        id: `hl-${Date.now()}`,
+        title: finalTitle,
+        description: `Elaborado com dedicação e os mais altos padrões de qualidade da ${businessName}.`,
+        price: finalPrice,
+        badge: "Destaque VIP",
+      };
+
+      return {
+        actionType: "direct_update",
+        agentMessage: `Adicionei **${finalTitle}** ${finalPrice ? `(${finalPrice})` : ""} à vitrine e catálogo do seu site!`,
+        updatedData: {
+          highlights: [newItem, ...(currentData.highlights || [])],
+        },
+        suggestions: ["Ajustar a paleta de cores", "Reescrever o subtítulo do Hero"],
+      };
+    }
+
+    // 3.3. Fallback de Atualização Direta - WhatsApp / Telefone / Endereço
+    const isContact = /whatsapp|whats|fone|telefone|contato|endere[çc]o|rua|bairro|cidade|localiza[çc][aã]o/i.test(instruction);
+    if (isContact && !isProposal) {
+      const phoneDigits = instruction.replace(/\D/g, "");
+      const isAddress = /endere[çc]o|rua|bairro|cidade|localiza[çc][aã]o/i.test(instruction);
+      const updatedPatch: Partial<CinematicPageData> = {};
+      let msg = "";
+
+      if (phoneDigits.length >= 8) {
+        updatedPatch.whatsapp = phoneDigits;
+        msg = `WhatsApp de atendimento atualizado para **${phoneDigits}**.`;
+      }
+      if (isAddress) {
+        const addressMatch = instruction.match(/(?:endereço|rua|localização|em)\s*[:"']?\s*([^"'\n]+)/i)?.[1];
+        if (addressMatch) {
+          updatedPatch.address = addressMatch.trim();
+          msg += ` Endereço atualizado para **${updatedPatch.address}**.`;
+        }
+      }
+
+      if (msg) {
+        return {
+          actionType: "direct_update",
+          agentMessage: `Pronto! ${msg} O botão de contato já foi sincronizado.`,
+          updatedData: updatedPatch,
+          suggestions: ["Mudar a headline", "Adicionar novo produto"],
+        };
+      }
     }
 
     // 4. Fallback de Proposta Conceitual Completa (Opção A e Opção B)

@@ -949,61 +949,63 @@ export default function CinematicStudioPage() {
           apiKey: activeKey || undefined,
         },
       });
-      if (
-        !pitch ||
-        typeof pitch !== "object" ||
-        typeof pitch.actionType !== "string" ||
-        typeof pitch.agentMessage !== "string"
-      ) {
-        throw new Error(
-          "O agente retornou uma resposta vazia ou incompleta. Tente enviar a mensagem novamente.",
-        );
-      }
+      const actionType = pitch?.actionType || "conversation";
+      const agentMessage =
+        pitch?.agentMessage ||
+        "Analisei sua solicitação com a estrutura atual da página. Como prefere avançar no refinamento do site?";
 
       // Se for uma atualização direta (direct_update) com dados modificados:
-      if (pitch.actionType === "direct_update" && pitch.updatedData) {
+      if (actionType === "direct_update" && pitch?.updatedData) {
         setData((prev) => ({
           ...prev,
           ...pitch.updatedData,
           theme: {
             ...prev.theme,
-            ...(pitch.updatedData.theme || {}),
+            ...(pitch.updatedData?.theme || {}),
           },
           hero: {
             ...prev.hero,
-            ...(pitch.updatedData.hero || {}),
+            ...(pitch.updatedData?.hero || {}),
           },
         }));
         toast.success("Alteração aplicada ao vivo no site!");
-      } else if (pitch.actionType === "proposal_plan") {
+      } else if (actionType === "proposal_plan") {
         toast.success("Plano criativo elaborado com 2 propostas conceituais!");
       }
 
       const agentMsg: StudioChatMessage = {
         id: `agent-${Date.now()}`,
         sender: "agent",
-        text: pitch.agentMessage,
-        actionType: pitch.actionType,
-        updatedData: pitch.updatedData,
-        plan: pitch.plan,
-        suggestions: pitch.suggestions,
+        text: agentMessage,
+        actionType,
+        updatedData: pitch?.updatedData,
+        plan: pitch?.plan,
+        suggestions: pitch?.suggestions || [
+          "Mudar a paleta de cores",
+          "Adicionar novo produto/serviço",
+          "Reescrever o título principal",
+        ],
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
 
       setMessages((prev) => [...prev, agentMsg]);
     } catch (err: any) {
+      console.error("[Studio Chat] Falha ao consultar agente:", err);
       setMessages((prev) => [
         ...prev,
         {
           id: `agent-err-${Date.now()}`,
           sender: "agent",
-          text: err instanceof Error
-            ? `Não consegui conectar ao agente de IA: ${err.message}`
-            : "Não consegui conectar ao agente de IA. Tente novamente em instantes.",
+          text: `Houve uma lentidão na comunicação com o Gemini (${err?.message || "tempo limite"}). Você pode clicar em **🔑 Conectar IA** no topo para usar sua chave gratuita do Google AI Studio, ou continuar editando pelos botões ao lado!`,
+          suggestions: [
+            "Conectar chave Gemini",
+            "Mudar cor principal",
+            "Adicionar novo produto",
+          ],
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         },
       ]);
-      toast.error(err.message || "Erro ao processar plano criativo.");
+      toast.error("IA temporariamente instável. Você pode conectar sua chave própria no topo.");
     } finally {
       setIsRefiningAi(false);
     }

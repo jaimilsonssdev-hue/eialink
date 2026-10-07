@@ -7,12 +7,33 @@ const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 export const SITE_BUILDER_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
-  "gemini-2.5-pro",
-  "gemini-3.8-flash",
-  "gemini-3.1-flash-lite",
 ] as const;
 const retryableGeminiStatuses = new Set([408, 429, 500, 502, 503, 504]);
-const maxGeminiAttempts = 3;
+const maxGeminiAttempts = 2;
+
+async function callGoogleGeminiDirect(
+  apiKey: string,
+  model: string,
+  payload: Record<string, unknown>,
+): Promise<Response | null> {
+  try {
+    const cleanModel = model.replace(/^models\//, "");
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent`;
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey.trim(),
+      },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(12000),
+    });
+    return res;
+  } catch (err) {
+    console.warn("[GoogleGeminiDirect] Falha na chamada direta:", err);
+    return null;
+  }
+}
 
 export type GeminiGatewayRequest =
   | { action: "status" }
@@ -72,6 +93,7 @@ export async function invokeGeminiGateway<T>(
         "Content-Type": "application/json",
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(12000),
     });
   } catch (error) {
     throw new Error(
@@ -97,29 +119,52 @@ export async function requestGemini(
   body: Extract<GeminiGatewayRequest, { action: "generateContent" | "interactions" }>,
   accessToken?: string,
 ): Promise<Response> {
+  // 1. Tenta chamada direta e ultra-rápida se houver chave fornecida ou no ambiente
+  const directKey =
+    body.apiKeyOverride?.trim() ||
+    (typeof process !== "undefined" && process.env?.GEMINI_API_KEY?.trim()) ||
+    null;
+
+  if (directKey && body.action === "generateContent") {
+    const directRes = await callGoogleGeminiDirect(directKey, body.model, body.payload);
+    if (directRes && (directRes.ok || directRes.status === 400 || directRes.status === 403)) {
+      return directRes;
+    }
+  }
+
+  // 2. Fallback: Gateway com tolerância e tempo de resposta controlado
   let result: {
     ok: boolean;
     status: number;
     payload?: unknown;
     message?: string;
-  };
-  for (let attempt = 0; ; attempt++) {
-    result = await invokeGeminiGateway<{
-      ok: boolean;
-      status: number;
-      payload?: unknown;
-      message?: string;
-    }>(supabase, body, accessToken);
-    if (
-      result.ok ||
-      !retryableGeminiStatuses.has(result.status) ||
-      attempt >= maxGeminiAttempts - 1
-    ) {
-      break;
+  } = { ok: false, status: 503, message: "Gateway indisponível" };
+
+  try {
+    for (let attempt = 0; attempt < maxGeminiAttempts; attempt++) {
+      result = await invokeGeminiGateway<{
+        ok: boolean;
+        status: number;
+        payload?: unknown;
+        message?: string;
+      }>(supabase, body, accessToken);
+      if (
+        result.ok ||
+        !retryableGeminiStatuses.has(result.status) ||
+        attempt >= maxGeminiAttempts - 1
+      ) {
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 600));
     }
-    const backoff = 1000 * 2 ** attempt + Math.random() * 250;
-    await new Promise((resolve) => setTimeout(resolve, backoff));
+  } catch (err) {
+    result = {
+      ok: false,
+      status: 503,
+      message: err instanceof Error ? err.message : "Falha ao consultar gateway da IA.",
+    };
   }
+
   const payload = result.payload ?? {
     error: { message: result.message || "Falha na API Gemini." },
   };

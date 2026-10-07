@@ -760,7 +760,7 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
       );
     }
 
-    throw new Error(`O agente de IA não conseguiu responder. ${lastProviderError}`);
+    console.warn(`[CreativePitch] Gemini não retornou resposta válida (${lastProviderError}). Executando fallback heurístico inteligente.`);
 
     // Heurística Fallback inteligente com Intent Classification se a API falhar
     const isQuestion = /\?|o que você acha|qual|como|opini|ideia|pense|dá pra|consegue|expli/i.test(

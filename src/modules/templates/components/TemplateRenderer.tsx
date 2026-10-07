@@ -62,7 +62,10 @@ export function TemplateRenderer({
   const socialObj = (bio.social_links as Record<string, any>) || {};
   const cinematicData = (socialObj.cinematic_data || socialObj.cinematicData) as CinematicPageData | undefined;
 
-  if (cinematicData) {
+  if (
+    cinematicData &&
+    (bio.template_id === "cinematic-glass" || bio.template_id === "cinematic-scrolly" || !bio.template_id)
+  ) {
     const customTheme = socialObj.custom_theme || socialObj.theme || {};
     const appliedArchetype = customTheme.archetype || cinematicData.archetype || (cinematicData.theme as any)?.archetype || "cinematic";
     const appliedHeadingStyle = customTheme.headingStyle || (cinematicData.theme as any)?.headingStyle || "default";

@@ -935,7 +935,7 @@ export default function CinematicStudioPage() {
       const activeKey = (
         geminiKey === "configured_in_database" ? "" : geminiKey || getSavedGeminiKey() || ""
       ).trim();
-      if (!activeKey) {
+      if (!activeKey && !dbKeyConfigured) {
         setShowKeyModal(true);
       }
 

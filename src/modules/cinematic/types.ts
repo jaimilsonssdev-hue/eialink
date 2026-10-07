@@ -111,6 +111,7 @@ export interface TechnicalBlueprintSection {
 
 export interface CinematicPageData {
   id?: string;
+  templateId?: string;
   businessName: string;
   niche: string;
   whatsapp: string;
@@ -201,4 +202,3 @@ export interface CreativePitchResponse {
   plan?: CreativePlan;
   suggestions?: string[];
 }
-

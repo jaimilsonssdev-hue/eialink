@@ -10,11 +10,13 @@ const allowedModels = new Set([
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
   "gemini-2.5-pro",
+  "gemini-2.0-flash",
   "gemini-3.1-flash-lite",
   "gemini-3.8-flash",
 ]);
 const superAdminEmail = "jaimilsonvendas@gmail.com";
 const maxPayloadBytes = 1_000_000;
+const geminiRequestTimeoutMs = 30_000;
 // Gemini storage is in this project; user sessions remain owned by the original auth project.
 const authProjectUrl = "https://gctwvvnjcxnsjiovhmsv.supabase.co";
 const authProjectPublishableKey = "sb_publishable_7cbVuf-q1wh7nqSeCXM1Ag_FMhRT2fS";
@@ -431,7 +433,7 @@ Deno.serve(async (request) => {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-goog-api-key": apiKey },
         body: JSON.stringify(payload),
-        signal: AbortSignal.timeout(90000),
+        signal: AbortSignal.timeout(geminiRequestTimeoutMs),
       });
       const upstreamPayload = await upstream.json().catch(() => ({}));
       return jsonResponse({
@@ -447,6 +449,14 @@ Deno.serve(async (request) => {
 
     return jsonResponse({ error: "Ação não reconhecida." }, 400);
   } catch (error) {
+    if (error instanceof Error && /timed out|signal timed out/i.test(error.message)) {
+      const timeoutSeconds = geminiRequestTimeoutMs / 1000;
+      console.error(`[gemini-gateway] upstream timed out after ${timeoutSeconds}s`);
+      return jsonResponse(
+        { error: `O Gemini não respondeu dentro de ${timeoutSeconds} segundos.` },
+        504,
+      );
+    }
     console.error(
       "[gemini-gateway] request failed:",
       error instanceof Error ? error.message : "Unknown error",

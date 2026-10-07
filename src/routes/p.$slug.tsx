@@ -597,7 +597,7 @@ function PublicBio() {
 
   // PRIORIDADE MÁXIMA: Se a página possui dados do Studio Cinematográfico (cinematicData),
   // renderiza SEMPRE a experiência Cinematográfica completa (textos, bento grid, marquee, etc.)
-  if (cinematicData) {
+  if (cinematicData && isCinematic) {
     const customTheme = rawSocial.custom_theme || rawSocial.theme || {};
     const appliedArchetype = customTheme.archetype || cinematicData.archetype || (cinematicData.theme as any)?.archetype || "cinematic";
     const appliedHeadingStyle = customTheme.headingStyle || (cinematicData.theme as any)?.headingStyle || "default";
@@ -774,5 +774,4 @@ function PublicBio() {
     </div>
   );
 }
-
 

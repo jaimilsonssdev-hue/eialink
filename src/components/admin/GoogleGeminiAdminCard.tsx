@@ -14,10 +14,10 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { invokeGeminiGateway } from "@/modules/ai/gemini-gateway";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import {
+  saveStudioGeminiKeyFn,
+  testStudioGeminiKeyFn,
+} from "@/modules/studio/studio.functions";
 
 export function GoogleGeminiAdminCard() {
   const [apiKey, setApiKey] = useState("");
@@ -41,14 +41,22 @@ export function GoogleGeminiAdminCard() {
         } = await supabase.auth.getUser();
         if (userError) throw userError;
         setCanManage(user?.email?.toLowerCase() === "jaimilsonvendas@gmail.com");
-        const res = await invokeGeminiGateway<{
-          configured: boolean;
-          masked: string;
-          isFromEnv: boolean;
-        }>(supabase, { action: "status" });
-        setConfigured(Boolean(res.configured));
-        setMasked(res.masked || "");
-        setIsFromEnv(Boolean(res.isFromEnv));
+
+        const { data, error } = await supabase
+          .from("payment_gateway_settings" as any)
+          .select("gemini_api_key")
+          .eq("id", "default")
+          .maybeSingle();
+
+        const dbKey = (data as any)?.gemini_api_key;
+        if (dbKey && typeof dbKey === "string" && dbKey.trim().length > 5) {
+          setConfigured(true);
+          const clean = dbKey.trim();
+          setMasked(`${clean.slice(0, 4)}••••••••${clean.slice(-4)}`);
+        } else {
+          setConfigured(false);
+          setMasked("");
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erro desconhecido.";
         setStatusError(`Não foi possível verificar a configuração Gemini: ${message}`);
@@ -63,17 +71,14 @@ export function GoogleGeminiAdminCard() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await invokeGeminiGateway<{
-        configured: boolean;
-        masked?: string;
-        message: string;
-      }>(supabase, { action: "save", apiKey });
-      setConfigured(Boolean(res.configured));
+      const clean = apiKey.trim();
+      const res = await saveStudioGeminiKeyFn({ data: { apiKey: clean } });
+      setConfigured(res.configured);
       if (res.configured) {
-        setMasked(res.masked || `${apiKey.slice(0, 4)}••••••••${apiKey.slice(-4)}`);
+        setMasked(`${clean.slice(0, 4)}••••••••${clean.slice(-4)}`);
         setApiKey("");
         setShowKey(false);
-        toast.success(res.message || "Chave do Google Gemini salva no banco de dados!");
+        toast.success("Chave do Google Gemini salva no banco de dados e ativa para o Studio!");
       } else {
         setMasked("");
         toast.success("Chave removida do banco de dados.");
@@ -88,9 +93,8 @@ export function GoogleGeminiAdminCard() {
   async function handleTest() {
     setTesting(true);
     try {
-      const res = await invokeGeminiGateway<{ ok: boolean; message: string }>(supabase, {
-        action: "test",
-        apiKey: apiKey.trim() || undefined,
+      const res = await testStudioGeminiKeyFn({
+        data: { apiKey: apiKey.trim() || undefined },
       });
       if (res.ok) toast.success(res.message);
       else toast.error(res.message);
@@ -104,7 +108,7 @@ export function GoogleGeminiAdminCard() {
   async function handleRemove() {
     setSaving(true);
     try {
-      await invokeGeminiGateway(supabase, { action: "save", apiKey: "" });
+      await saveStudioGeminiKeyFn({ data: { apiKey: "" } });
       setConfigured(false);
       setMasked("");
       setApiKey("");

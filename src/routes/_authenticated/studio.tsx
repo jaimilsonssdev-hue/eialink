@@ -59,11 +59,13 @@ import type {
 import { createDefaultCinematicData, LUXURY_PALETTES } from "@/modules/cinematic/defaults";
 import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
 import {
-  lookupMapsForCinematicFn,
-  createCreativePitchFn,
-  saveCinematicPageFn,
-  extractServicesFromPdfTextFn,
-} from "@/modules/cinematic/cinematic.functions";
+  lookupMapsForStudioFn,
+  executeStudioCopilotFn,
+  testStudioGeminiKeyFn,
+  saveStudioGeminiKeyFn,
+  saveStudioPageFn,
+} from "@/modules/studio/studio.functions";
+import { extractServicesFromPdfTextFn } from "@/modules/cinematic/cinematic.functions";
 import { extractAssetsFromPdf } from "@/lib/pdf-extractor";
 import { z } from "zod";
 
@@ -393,10 +395,17 @@ export default function CinematicStudioPage() {
     try {
       saveGeminiKey(clean);
       setGeminiKey(clean);
+
+      // Salva no banco de dados para todo o sistema (Admin + Studio + Servidor)
+      await saveStudioGeminiKeyFn({ data: { apiKey: clean } }).catch((err) => {
+        console.warn("Aviso ao salvar no banco:", err);
+      });
+      setDbKeyConfigured(true);
+
       setShowKeyModal(false);
-      toast.success("Chave salva neste navegador e conectada com sucesso!");
+      toast.success("Chave salva e conectada com sucesso!");
     } catch (err: any) {
-      toast.error(err.message || "Erro ao salvar chave neste navegador.");
+      toast.error(err?.message || "Erro ao salvar chave.");
     } finally {
       setIsTestingKey(false);
     }
@@ -410,32 +419,16 @@ export default function CinematicStudioPage() {
     }
     setIsTestingKey(true);
     try {
-      // 1. Teste direto instantâneo com a Google (CORS liberado pelo AI Studio)
-      const direct = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${clean}`,
-        { signal: AbortSignal.timeout(8000) },
-      ).catch(() => null);
-
-      if (direct && direct.ok) {
-        toast.success("✅ Conexão com Google AI Studio validada com sucesso!");
-        return;
-      } else if (direct && (direct.status === 400 || direct.status === 403)) {
-        toast.error("❌ A Google recusou a chave. Verifique se copiou corretamente do AI Studio.");
-        return;
-      }
-
-      // 2. Fallback via gateway
-      const res = await invokeGeminiGateway<{ ok: boolean; message: string }>(supabase, {
-        action: "test",
-        apiKey: clean || undefined,
+      const res = await testStudioGeminiKeyFn({
+        data: { apiKey: clean || undefined },
       });
       if (res.ok) {
-        toast.success(res.message || "Conexão com Google AI validada!");
+        toast.success(res.message || "Conexão com Google AI Studio validada!");
       } else {
-        toast.error(res.message || "Falha na validação da chave.");
+        toast.error(res.message || "A Google recusou a chave. Verifique a chave inserida.");
       }
     } catch (e: any) {
-      toast.error(e?.message || "Erro ao testar chave.");
+      toast.error(e?.message || "Erro ao testar chave com o Google AI Studio.");
     } finally {
       setIsTestingKey(false);
     }
@@ -652,7 +645,7 @@ export default function CinematicStudioPage() {
         ]);
       }
 
-      const result = await lookupMapsForCinematicFn({ data: { urlOrQuery: currentQuery } });
+      const result = await lookupMapsForStudioFn({ data: { urlOrQuery: currentQuery } });
 
       let pulledPhotos: string[] = [];
       setData((prev: CinematicPageData) => {
@@ -958,7 +951,7 @@ export default function CinematicStudioPage() {
         setShowKeyModal(true);
       }
 
-      const pitch = await createCreativePitchFn({
+      const pitch = await executeStudioCopilotFn({
         data: {
           businessName: data.businessName,
           niche: data.niche,
@@ -1285,12 +1278,9 @@ export default function CinematicStudioPage() {
     } catch (err: any) {
       console.error("Erro no salvamento direto, tentando fallback:", err);
       try {
-        const fallbackRes = await saveCinematicPageFn({
+        const fallbackRes = await saveStudioPageFn({
           data: {
-            data,
-            userId: userId || "",
-            pageId,
-            publish: true,
+            pageData: { ...data, id: pageId || undefined },
           },
         });
         if (fallbackRes.success) {
@@ -3686,6 +3676,30 @@ export default function CinematicStudioPage() {
                                 alt=""
                                 className="h-full w-full object-cover group-hover:scale-105 transition-transform"
                               />
+                              {/* Botão de Lixeira (Excluir Foto do Acervo) */}
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setData((prev) => {
+                                    const nextGallery = prev.gallery.filter((_, i) => i !== idx);
+                                    let nextBg = prev.hero.backgroundImage;
+                                    if (prev.hero.backgroundImage === photo.url) {
+                                      nextBg = nextGallery[0]?.url || "";
+                                    }
+                                    return {
+                                      ...prev,
+                                      gallery: nextGallery,
+                                      hero: { ...prev.hero, backgroundImage: nextBg },
+                                    };
+                                  });
+                                  toast.info("Foto removida da galeria!");
+                                }}
+                                className="absolute top-1.5 left-1.5 p-1 rounded-full bg-black/75 hover:bg-red-600 text-zinc-200 hover:text-white transition-all opacity-70 group-hover:opacity-100 z-10 shadow-md cursor-pointer"
+                                title="Excluir esta foto"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </button>
                               {data.hero.backgroundImage === photo.url && (
                                 <span className="absolute top-1.5 right-1.5 rounded-full bg-amber-400 text-zinc-950 text-[8px] font-bold px-1.5 py-0.5 shadow">
                                   Capa

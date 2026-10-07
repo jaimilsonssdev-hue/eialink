@@ -467,7 +467,7 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           model: modelName,
           apiKeyOverride: data.overrideApiKey || undefined,
           payload: {
-            system_instruction: {
+            systemInstruction: {
               parts: [{ text: systemPrompt }],
             },
             contents: [
@@ -1292,7 +1292,7 @@ Como Diretor de Arte e Arquiteto de Produto de Elite:
           model: modelName,
           apiKeyOverride: data.overrideApiKey || undefined,
           payload: {
-            system_instruction: {
+            systemInstruction: {
               parts: [{ text: systemPrompt }],
             },
             contents: [
@@ -2910,7 +2910,7 @@ SUAS REGRAS DE OURO:
           model: modelName,
           apiKeyOverride: data.overrideApiKey || undefined,
           payload: {
-            system_instruction: {
+            systemInstruction: {
               parts: [{ text: systemPrompt }],
             },
             contents,
@@ -2945,36 +2945,48 @@ SUAS REGRAS DE OURO:
       );
     }
 
+    let parsed: {
+      assistantReply?: string;
+      patch?: Record<string, any>;
+      suggestions?: string[];
+    };
     try {
-      const parsed = JSON.parse(rawContent);
-      const patch = parsed.patch || {};
-
-      // Fallback de segurança para garantir que as fotos importadas vão para o patch se a IA não tiver setado
-      if (extractedImages.length > 0) {
-        if (!patch.avatar_url && !currentBio.avatar_url) {
-          patch.avatar_url = extractedImages[0].publicUrl;
-        }
-        if (!patch.cover_url && !currentBio.cover_url && extractedImages.length > 1) {
-          patch.cover_url = extractedImages[1].publicUrl;
-        }
-      }
-
-      return {
-        assistantReply:
-          parsed.assistantReply ||
-          "Ajustei os detalhes da sua página conforme solicitado! Veja como ficou na prévia ao lado.",
-        patch,
-        suggestions: parsed.suggestions || [
-          "Mudar paleta para tons dourados",
-          "Tornar a headline mais vendedora",
-          "Adicionar botão com WhatsApp",
-        ],
-      };
+      parsed = JSON.parse(rawContent);
     } catch {
-      return {
-        assistantReply: "Fiz o ajuste solicitado! Veja a atualização ao lado.",
-        patch: {},
-        suggestions: [],
-      };
+      throw new Error("O Gemini retornou uma resposta inválida. Tente novamente.");
     }
+
+    if (
+      !parsed ||
+      typeof parsed !== "object" ||
+      !parsed.patch ||
+      typeof parsed.patch !== "object" ||
+      Array.isArray(parsed.patch)
+    ) {
+      throw new Error("O Gemini não retornou uma edição válida para aplicar. Tente reformular o pedido.");
+    }
+
+    const patch = parsed.patch;
+
+    // Fallback de segurança para garantir que as fotos importadas vão para o patch se a IA não tiver setado
+    if (extractedImages.length > 0) {
+      if (!patch.avatar_url && !currentBio.avatar_url) {
+        patch.avatar_url = extractedImages[0].publicUrl;
+      }
+      if (!patch.cover_url && !currentBio.cover_url && extractedImages.length > 1) {
+        patch.cover_url = extractedImages[1].publicUrl;
+      }
+    }
+
+    return {
+      assistantReply:
+        parsed.assistantReply ||
+        "Ajustei os detalhes da sua página conforme solicitado! Veja como ficou na prévia ao lado.",
+      patch,
+      suggestions: parsed.suggestions || [
+        "Mudar paleta para tons dourados",
+        "Tornar a headline mais vendedora",
+        "Adicionar botão com WhatsApp",
+      ],
+    };
   });

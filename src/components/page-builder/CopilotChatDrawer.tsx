@@ -142,7 +142,7 @@ export function CopilotChatDrawer({
         {
           id: `error-${Date.now()}`,
           role: "assistant",
-          content: `⚠️ Não consegui aplicar essa alteração: ${errMsg}. Verifique se a sua chave do Gemini está configurada.`,
+          content: `⚠️ Não consegui concluir essa solicitação: ${errMsg}`,
           timestamp: new Date(),
         },
       ]);

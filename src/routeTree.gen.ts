@@ -37,6 +37,7 @@ import { Route as AuthenticatedPagesRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedRequestsRouteImport } from './routes/_authenticated/requests'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedStudioRouteImport } from './routes/_authenticated/studio'
+import { Route as AuthenticatedStudioProRouteImport } from './routes/_authenticated/studio-pro'
 import { Route as AgendarSlugRouteImport } from './routes/agendar.$slug'
 import { Route as ApiManifestRouteImport } from './routes/api/manifest'
 import { Route as CheckoutReturnRouteImport } from './routes/checkout.return'
@@ -190,6 +191,11 @@ const AuthenticatedStudioRoute = AuthenticatedStudioRouteImport.update({
   path: '/studio',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStudioProRoute = AuthenticatedStudioProRouteImport.update({
+  id: '/studio-pro',
+  path: '/studio-pro',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AgendarSlugRoute = AgendarSlugRouteImport.update({
   id: '/agendar/$slug',
   path: '/agendar/$slug',
@@ -283,6 +289,8 @@ export interface FileRoutesByFullPath {
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/studio': typeof AuthenticatedStudioRoute
+  '/studio-pro': typeof AuthenticatedStudioProRoute
+  '/studio-pro': typeof AuthenticatedStudioProRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -367,6 +375,7 @@ export interface FileRoutesById {
   '/_authenticated/requests': typeof AuthenticatedRequestsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/studio': typeof AuthenticatedStudioRoute
+  '/_authenticated/studio-pro': typeof AuthenticatedStudioProRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -727,6 +736,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/studio-pro': {
+      id: '/_authenticated/studio-pro'
+      path: '/studio-pro'
+      fullPath: '/studio-pro'
+      preLoaderRoute: typeof AuthenticatedStudioProRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/agendar/$slug': {
       id: '/agendar/$slug'
       path: '/agendar/$slug'
@@ -832,6 +848,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStudioRoute: typeof AuthenticatedStudioRoute
+  AuthenticatedStudioProRoute: typeof AuthenticatedStudioProRoute
   AuthenticatedAdminNfcRoute: typeof AuthenticatedAdminNfcRoute
   AuthenticatedAdminProspeccaoRoute: typeof AuthenticatedAdminProspeccaoRoute
   AuthenticatedAdminVendasRoute: typeof AuthenticatedAdminVendasRoute
@@ -855,6 +872,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStudioRoute: AuthenticatedStudioRoute,
+  AuthenticatedStudioProRoute: AuthenticatedStudioProRoute,
   AuthenticatedAdminNfcRoute: AuthenticatedAdminNfcRoute,
   AuthenticatedAdminProspeccaoRoute: AuthenticatedAdminProspeccaoRoute,
   AuthenticatedAdminVendasRoute: AuthenticatedAdminVendasRoute,

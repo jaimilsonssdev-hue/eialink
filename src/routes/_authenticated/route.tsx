@@ -70,11 +70,18 @@ function AuthedLayout() {
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
           {
-            to: "/studio",
-            label: "Studio & Editor",
-            icon: Clapperboard,
-            badge: "IA + Ajustes",
+            to: "/studio-pro",
+            label: "Studio Pro",
+            icon: Sparkles,
+            badge: "Novo (Lovable)",
             badgeClassName: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
+          },
+          {
+            to: "/studio",
+            label: "Studio Clássico",
+            icon: Clapperboard,
+            badge: "IA",
+            badgeClassName: "bg-zinc-800 text-zinc-300 border border-white/10 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
           },
           { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
         ],
@@ -341,7 +348,9 @@ function AuthedLayout() {
         </header>
         <main
           className={
-            pathname === "/studio"
+            pathname.startsWith("/studio-pro")
+              ? "w-full h-[calc(100vh-3.5rem)] md:h-screen p-0 m-0 overflow-hidden"
+              : pathname === "/studio"
               ? "app-content mx-auto p-4 sm:p-5 md:p-8 max-w-[1600px]"
               : "app-content mx-auto p-4 sm:p-5 md:p-8 max-w-7xl"
           }

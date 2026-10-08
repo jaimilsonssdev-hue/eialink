@@ -283,6 +283,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       businessAddress?: string;
       businessWhatsapp?: string;
       businessSlug?: string;
+      attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
     }) => d,
   )
   .handler(async ({ data: input, context }) => {
@@ -332,6 +333,19 @@ ${input.existingHtml}
 Retorne o HTML completo atualizado com a alteração solicitada.`;
     }
 
+    const serverParts: any[] = [];
+    if (input.attachments && input.attachments.length > 0) {
+      for (const att of input.attachments) {
+        serverParts.push({
+          inlineData: {
+            mimeType: att.mimeType,
+            data: att.dataBase64,
+          },
+        });
+      }
+    }
+    serverParts.push({ text: userPrompt });
+
     let responseText = "";
     let lastCapturedError: any = null;
     const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash"];
@@ -343,7 +357,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
         try {
           const response = await ai.models.generateContent({
             model: modelCandidate,
-            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            contents: [{ role: "user", parts: serverParts }],
             config: {
               systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
               temperature: 0.7,
@@ -473,6 +487,7 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
       prompt: string;
       history?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
       apiKey?: string;
+      attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
     }) => d,
   )
   .handler(async ({ data: input, context }) => {
@@ -500,11 +515,24 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
       parts: [{ text: msg.content }],
     }));
 
+    const userParts: any[] = [];
+    if (input.attachments && input.attachments.length > 0) {
+      for (const att of input.attachments) {
+        userParts.push({
+          inlineData: {
+            mimeType: att.mimeType,
+            data: att.dataBase64,
+          },
+        });
+      }
+    }
+    userParts.push({ text: input.prompt });
+
     const response = await ai.models.generateContent({
       model: "gemini-3.8-flash",
       contents: [
         ...formattedHistory,
-        { role: "user", parts: [{ text: input.prompt }] },
+        { role: "user", parts: userParts },
       ],
       config: {
         systemInstruction: BRIEFING_SYSTEM_PROMPT,

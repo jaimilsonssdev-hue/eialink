@@ -20,6 +20,7 @@ import {
   planSiteBriefing,
   generateSiteHtml,
   getGeminiApiKey,
+  type MultimodalAttachment,
 } from "@/modules/studiopro/lib/creativeEngineService";
 import {
   generateCreativeSiteFn,
@@ -27,11 +28,21 @@ import {
   syncCreativeStudioProjectFn,
 } from "@/modules/studio/studio.functions";
 import { toast } from "sonner";
+import { FileText } from "lucide-react";
 
 export function CreativeChatPanel() {
   const [input, setInput] = useState("");
   const [showModeDropdown, setShowModeDropdown] = useState(false);
-  const [attachedImages, setAttachedImages] = useState<string[]>([]);
+  const [attachedFiles, setAttachedFiles] = useState<
+    Array<{
+      id: string;
+      name: string;
+      mimeType: string;
+      size: number;
+      dataBase64: string;
+      previewUrl?: string;
+    }>
+  >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
@@ -55,16 +66,39 @@ export function CreativeChatPanel() {
     if (!files || files.length === 0) return;
 
     Array.from(files).forEach((file) => {
-      if (!file.type.startsWith("image/")) {
-        toast.error("Por favor, selecione apenas arquivos de imagem.");
+      const isImg = file.type.startsWith("image/");
+      const isPdf = file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+      const isText = file.type.includes("text") || file.name.toLowerCase().endsWith(".csv") || file.name.toLowerCase().endsWith(".txt");
+
+      if (!isImg && !isPdf && !isText) {
+        toast.error(`Formato de "${file.name}" não suportado. Envie imagens, PDFs ou textos.`);
         return;
       }
+
+      if (file.size > 20 * 1024 * 1024) {
+        toast.error(`O arquivo "${file.name}" excede o limite de 20MB.`);
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (uploadEvent) => {
-        const base64 = uploadEvent.target?.result as string;
-        if (base64) {
-          setAttachedImages((prev) => [...prev, base64]);
-          toast.success(`Foto "${file.name}" anexada com sucesso!`);
+        const fullDataUrl = uploadEvent.target?.result as string;
+        if (fullDataUrl) {
+          const base64Pure = fullDataUrl.includes(",") ? fullDataUrl.split(",")[1] : fullDataUrl;
+          const mime = file.type || (isPdf ? "application/pdf" : "text/plain");
+
+          setAttachedFiles((prev) => [
+            ...prev,
+            {
+              id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              name: file.name,
+              mimeType: mime,
+              size: file.size,
+              dataBase64: base64Pure,
+              previewUrl: isImg ? fullDataUrl : undefined,
+            },
+          ]);
+          toast.success(`"${file.name}" anexado com sucesso!`);
         }
       };
       reader.readAsDataURL(file);
@@ -75,16 +109,22 @@ export function CreativeChatPanel() {
 
   async function handleSend() {
     const text = input.trim();
-    if ((!text && attachedImages.length === 0) || isGenerating) return;
+    if ((!text && attachedFiles.length === 0) || isGenerating) return;
+
+    const currentAttachments: MultimodalAttachment[] = attachedFiles.map((f) => ({
+      name: f.name,
+      mimeType: f.mimeType,
+      dataBase64: f.dataBase64,
+    }));
 
     let fullPrompt = text;
-    if (attachedImages.length > 0) {
-      fullPrompt = `${text}\n[Obs: O usuário anexou ${attachedImages.length} foto(s) de referência para incluir/aplicar no design do site]`;
+    if (attachedFiles.length > 0) {
+      const fileNames = attachedFiles.map((f) => f.name).join(", ");
+      fullPrompt = `${text}\n\n[BASE DE CONHECIMENTO & ARQUIVOS ANEXADOS]:\nForam anexados ${attachedFiles.length} documento(s)/foto(s): ${fileNames}.\nAnalise os documentos/fotos anexados com atenção máxima para extrair produtos, serviços, preços reais e identidade da marca para a geração!`;
     }
 
     setInput("");
-    const currentAttachments = [...attachedImages];
-    setAttachedImages([]);
+    setAttachedFiles([]);
 
     const userMsgId = `user-${Date.now()}`;
     addChatMessage({
@@ -92,6 +132,7 @@ export function CreativeChatPanel() {
       role: "user",
       content: fullPrompt,
       timestamp: Date.now(),
+      attachments: currentAttachments,
     });
 
     try {
@@ -109,6 +150,7 @@ export function CreativeChatPanel() {
                 prompt: fullPrompt,
                 history: messages.map((m) => ({ role: m.role, content: m.content })),
                 apiKey: clientApiKey,
+                attachments: currentAttachments,
               },
             }),
             timeoutPromise,
@@ -116,7 +158,7 @@ export function CreativeChatPanel() {
           briefing = res.briefing;
         } catch (serverErr: any) {
           console.warn("[CreativeChat] Fallback para briefing local:", serverErr);
-          briefing = await planSiteBriefing(fullPrompt, messages, clientApiKey);
+          briefing = await planSiteBriefing(fullPrompt, messages, clientApiKey, currentAttachments);
         }
         setIsGenerating(false);
 
@@ -150,6 +192,7 @@ export function CreativeChatPanel() {
                 projectId: activeProject?.id,
                 projectName: activeProject?.name,
                 apiKey: clientApiKey,
+                attachments: currentAttachments,
               },
             }),
             timeoutPromise,
@@ -157,7 +200,7 @@ export function CreativeChatPanel() {
           newHtml = res.html;
         } catch (serverErr) {
           console.warn("[CreativeChat] Fallback para geração direta do cliente:", serverErr);
-          newHtml = await generateSiteHtml(fullPrompt, isIteration ? currentHtml : undefined, clientApiKey);
+          newHtml = await generateSiteHtml(fullPrompt, isIteration ? currentHtml : undefined, clientApiKey, currentAttachments);
         }
         setIsGenerating(false);
 
@@ -371,23 +414,47 @@ export function CreativeChatPanel() {
 
       {/* Input de Comando Lovable */}
       <div className="p-3 border-t border-white/[0.08] bg-zinc-950/80 backdrop-blur-md">
-        {/* Pré-visualização de fotos anexadas */}
-        {attachedImages.length > 0 && (
+        {/* Pré-visualização de arquivos e fotos anexadas */}
+        {attachedFiles.length > 0 && (
           <div className="flex items-center gap-2 mb-2 p-2 rounded-xl bg-zinc-900 border border-white/[0.08] overflow-x-auto custom-scrollbar">
-            {attachedImages.map((img, idx) => (
-              <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden border border-white/20 shrink-0 group">
-                <img src={img} alt="Anexo" className="w-full h-full object-cover" />
+            {attachedFiles.map((file) => (
+              <div
+                key={file.id}
+                className="relative flex items-center gap-2 p-1.5 pr-6 rounded-lg bg-zinc-800 border border-white/10 shrink-0 text-left group"
+              >
+                {file.previewUrl ? (
+                  <img
+                    src={file.previewUrl}
+                    alt={file.name}
+                    className="w-8 h-8 rounded object-cover border border-white/10 shrink-0"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+                    <FileText size={16} />
+                  </div>
+                )}
+                <div className="flex flex-col min-w-0 max-w-[120px]">
+                  <span className="text-[11px] font-medium text-zinc-200 truncate">
+                    {file.name}
+                  </span>
+                  <span className="text-[9px] text-zinc-400">
+                    {(file.size / 1024).toFixed(0)} KB
+                  </span>
+                </div>
                 <button
                   type="button"
-                  onClick={() => setAttachedImages((prev) => prev.filter((_, i) => i !== idx))}
-                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                  onClick={() =>
+                    setAttachedFiles((prev) => prev.filter((item) => item.id !== file.id))
+                  }
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-zinc-700/80 hover:bg-rose-500/80 text-zinc-300 hover:text-white flex items-center justify-center transition-colors"
+                  title="Remover anexo"
                 >
-                  <X size={12} />
+                  <X size={11} />
                 </button>
               </div>
             ))}
-            <span className="text-[10px] text-zinc-400">
-              {attachedImages.length} foto(s) anexada(s)
+            <span className="text-[10px] text-zinc-400 shrink-0 pl-1">
+              {attachedFiles.length} anexo(s)
             </span>
           </div>
         )}
@@ -397,7 +464,7 @@ export function CreativeChatPanel() {
             type="file"
             ref={fileInputRef}
             onChange={handleFileUpload}
-            accept="image/*"
+            accept="image/*,application/pdf,.pdf,.csv,.txt"
             multiple
             className="hidden"
           />
@@ -413,8 +480,8 @@ export function CreativeChatPanel() {
             }}
             placeholder={
               currentHtml
-                ? "Peça uma alteração (ex: 'coloque fundo escuro e use a foto anexada')..."
-                : "Descreva a empresa para planejar o site..."
+                ? "Peça uma alteração (ex: 'atualize o cardápio com os preços do PDF anexado')..."
+                : "Descreva a empresa ou anexe fotos/PDF de cardápio para planejar..."
             }
             rows={2}
             className="w-full bg-transparent p-3 text-[13px] text-zinc-100 placeholder:text-zinc-500 outline-none resize-none leading-relaxed"
@@ -427,10 +494,10 @@ export function CreativeChatPanel() {
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isGenerating}
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800/80 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 text-xs transition-colors border border-white/[0.06]"
-                title="Anexar imagem ou foto da empresa"
+                title="Anexar fotos, cardápio PDF, tabelas ou documentos"
               >
-                <ImageIcon size={13} />
-                <span className="text-[11px]">Foto</span>
+                <Paperclip size={13} />
+                <span className="text-[11px]">Foto / PDF</span>
               </button>
 
               <span className="text-[10px] text-zinc-500 hidden sm:inline">
@@ -440,7 +507,7 @@ export function CreativeChatPanel() {
 
             <button
               onClick={handleSend}
-              disabled={(!input.trim() && attachedImages.length === 0) || isGenerating}
+              disabled={(!input.trim() && attachedFiles.length === 0) || isGenerating}
               className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-black font-semibold hover:bg-emerald-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md active:scale-95"
             >
               <Send size={13} />

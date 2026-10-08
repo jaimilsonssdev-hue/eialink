@@ -1,11 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 import { getResolvedGeminiKeyFn } from "@/modules/ai/gemini-admin.functions";
 
+export interface MultimodalAttachment {
+  name: string;
+  mimeType: string;
+  dataBase64: string; // base64 puro sem data:...;base64,
+}
+
 export interface ChatMessage {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
   timestamp: number;
+  attachments?: MultimodalAttachment[];
 }
 
 export interface GenerationStep {
@@ -174,19 +181,47 @@ export async function planSiteBriefing(
   prompt: string,
   history: ChatMessage[] = [],
   apiKey?: string,
+  attachments?: MultimodalAttachment[],
 ): Promise<string> {
   const client = await createGoogleAiClientAsync(apiKey);
 
-  const formattedHistory = history.map((msg) => ({
-    role: msg.role === "assistant" ? "model" : "user",
-    parts: [{ text: msg.content }],
-  }));
+  const formattedHistory = history.map((msg) => {
+    const parts: any[] = [];
+    if (msg.attachments && msg.attachments.length > 0) {
+      for (const att of msg.attachments) {
+        parts.push({
+          inlineData: {
+            mimeType: att.mimeType,
+            data: att.dataBase64,
+          },
+        });
+      }
+    }
+    parts.push({ text: msg.content });
+    return {
+      role: msg.role === "assistant" ? "model" : "user",
+      parts,
+    };
+  });
+
+  const currentUserParts: any[] = [];
+  if (attachments && attachments.length > 0) {
+    for (const att of attachments) {
+      currentUserParts.push({
+        inlineData: {
+          mimeType: att.mimeType,
+          data: att.dataBase64,
+        },
+      });
+    }
+  }
+  currentUserParts.push({ text: prompt });
 
   const response = await client.models.generateContent({
     model: "gemini-3.8-flash",
     contents: [
       ...formattedHistory,
-      { role: "user", parts: [{ text: prompt }] },
+      { role: "user", parts: currentUserParts },
     ],
     config: {
       systemInstruction: BRIEFING_SYSTEM_PROMPT,
@@ -208,6 +243,7 @@ export async function generateSiteHtml(
   briefingOrPrompt: string,
   existingHtml?: string,
   apiKey?: string,
+  attachments?: MultimodalAttachment[],
 ): Promise<string> {
   const client = await createGoogleAiClientAsync(apiKey);
 
@@ -223,6 +259,19 @@ ${existingHtml}
 Retorne o HTML completo atualizado com a alteração solicitada.`;
   }
 
+  const currentUserParts: any[] = [];
+  if (attachments && attachments.length > 0) {
+    for (const att of attachments) {
+      currentUserParts.push({
+        inlineData: {
+          mimeType: att.mimeType,
+          data: att.dataBase64,
+        },
+      });
+    }
+  }
+  currentUserParts.push({ text: userPrompt });
+
   let raw = "";
   let lastCapturedError: any = null;
   // Modelos suportados pela Google: 3.8 Flash como primário e 3.5 Flash como contingência imediata
@@ -236,7 +285,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
       try {
         const response = await client.models.generateContent({
           model: modelCandidate,
-          contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+          contents: [{ role: "user", parts: currentUserParts }],
           config: {
             systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
             temperature: 0.7,

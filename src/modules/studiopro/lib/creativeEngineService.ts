@@ -118,7 +118,7 @@ export async function planSiteBriefing(
   }));
 
   const response = await client.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.8-flash",
     contents: [
       ...formattedHistory,
       { role: "user", parts: [{ text: prompt }] },
@@ -155,7 +155,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
   }
 
   const response = await client.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.8-flash",
     contents: [{ role: "user", parts: [{ text: userPrompt }] }],
     config: {
       systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,

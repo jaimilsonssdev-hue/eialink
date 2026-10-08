@@ -124,107 +124,13 @@ function AuthedLayout() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const isStudio = pathname.startsWith("/studio");
+  const isStudio = pathname.startsWith("/studio") || pathname.startsWith("/studio-pro");
 
-  // Layout isolado para o Cinematic Studio (Sem cascas móveis extras, flush bottom)
+  // Layout isolado para o Estúdio Criativo e Cinematic Studio (Sem conflito de sidebar fixa)
   if (isStudio) {
     return (
-      <div className="fixed inset-0 z-30 h-dvh w-full bg-zinc-950 flex flex-col overflow-hidden md:static md:inset-auto md:min-h-screen md:h-screen md:flex-row">
-        {/* Sidebar no Desktop */}
-        <aside className="app-sidebar hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 md:left-0 z-40 bg-[#08070d] border-r border-white/[0.08]">
-          <div className="app-sidebar-header p-5 flex items-center justify-between">
-            <Link
-              to="/dashboard"
-              className="app-brand flex items-center gap-2 font-display font-bold text-zinc-100"
-            >
-              <span className="grid h-8 w-8 place-items-center rounded-lg bg-zinc-800 text-zinc-200 border border-zinc-700/60">
-                <Sparkles className="h-4 w-4" />
-              </span>
-              <span>
-                EIA <b>LINK</b>
-              </span>
-            </Link>
-          </div>
-          <div className="px-3 pb-4">
-            <ThemeToggle />
-          </div>
-          <nav className="px-3 space-y-4 overflow-y-auto max-h-[calc(100vh-180px)]">
-            {navGroups.map((group) => (
-              <div key={group.title} className="space-y-1">
-                <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                  {group.title}
-                </p>
-                {group.items.map(({ to, label, icon: Icon, badge, badgeClassName }) => {
-                  const active = pathname === to;
-                  return (
-                    <Link
-                      key={to}
-                      to={to as any}
-                      className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${active ? "is-active" : ""}`}
-                    >
-                      <div className="flex items-center gap-3 truncate">
-                        <Icon className="h-4 w-4 shrink-0" />
-                        <span className="truncate">{label}</span>
-                      </div>
-                      {badge && (
-                        <span className={badgeClassName || "rounded-full bg-zinc-800 text-zinc-300 text-[10px] font-medium px-2 py-0.5 border border-white/10"}>
-                          {badge}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            ))}
-
-            {isAdmin && (
-              <div className="border-t border-border pt-3 space-y-1">
-                <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                  Super Admin
-                </p>
-                <Link
-                  to="/admin"
-                  className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin" ? "is-active" : ""}`}
-                >
-                  <Shield className="h-4 w-4 shrink-0 text-zinc-400" />
-                  <span>Painel Admin</span>
-                </Link>
-                <Link
-                  to="/admin/prospeccao"
-                  className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin/prospeccao" ? "is-active" : ""}`}
-                >
-                  <Target className="h-4 w-4 shrink-0 text-zinc-400" />
-                  <span>Prospecção</span>
-                </Link>
-                <Link
-                  to="/admin/vendas"
-                  className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${pathname === "/admin/vendas" ? "is-active" : ""}`}
-                >
-                  <div className="flex items-center gap-3">
-                    <BookOpen className="h-4 w-4 shrink-0 text-emerald-400" />
-                    <span>Playbook Vendas</span>
-                  </div>
-                  <span className="rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-1.5 py-0.2 border border-emerald-500/30">
-                    PDF
-                  </span>
-                </Link>
-              </div>
-            )}
-          </nav>
-          <div className="absolute bottom-4 left-3 right-3">
-            <button
-              onClick={signOut}
-              className="app-nav-link flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm"
-            >
-              <LogOut className="h-4 w-4" /> Sair
-            </button>
-          </div>
-        </aside>
-
-        {/* Studio Content: tela cheia nativa no mobile, sem containers aninhados */}
-        <div className="w-full h-full flex-1 md:ml-64 flex flex-col overflow-hidden bg-zinc-950">
-          <Outlet />
-        </div>
+      <div className="fixed inset-0 z-30 h-dvh w-full bg-zinc-950 flex flex-col overflow-hidden">
+        <Outlet />
       </div>
     );
   }

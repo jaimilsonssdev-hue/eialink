@@ -54,11 +54,39 @@ export function CreativeDashboard() {
   };
 
   return (
-    <div className="min-h-full flex flex-col items-center justify-between p-4 md:p-8 bg-[#09090d] text-zinc-100 relative overflow-hidden">
-      {/* Luz ambiente com gradiente suave */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-tr from-emerald-500/10 via-blue-500/10 to-purple-500/10 rounded-full blur-[140px] pointer-events-none" />
+    <div className="min-h-screen w-full flex flex-col items-center justify-between bg-[#09090d] text-zinc-100 relative overflow-hidden">
+      {/* Top Header Bar do Estúdio Criativo */}
+      <header className="w-full h-14 border-b border-white/[0.08] bg-zinc-950/70 backdrop-blur-md px-4 md:px-8 flex items-center justify-between shrink-0 z-20">
+        <a
+          href="/dashboard"
+          className="flex items-center gap-2 text-zinc-400 hover:text-white text-xs font-medium transition-colors"
+        >
+          <span className="grid h-6 w-6 place-items-center rounded-lg bg-zinc-800 text-zinc-300 border border-white/10 text-[10px]">
+            ←
+          </span>
+          <span>Voltar ao Painel</span>
+        </a>
 
-      <div className="w-full max-w-2xl mx-auto flex flex-col items-center pt-12 md:pt-16 z-10">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+            <Sparkles size={12} />
+          </div>
+          <span className="text-xs font-bold text-zinc-200">
+            Estúdio Criativo
+          </span>
+        </div>
+
+        <div className="w-24 flex justify-end">
+          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase">
+            Gemini
+          </span>
+        </div>
+      </header>
+
+      {/* Luz ambiente com gradiente suave */}
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[450px] bg-gradient-to-tr from-emerald-500/10 via-blue-500/10 to-purple-500/10 rounded-full blur-[140px] pointer-events-none" />
+
+      <div className="w-full max-w-2xl mx-auto flex flex-col items-center pt-8 md:pt-14 px-4 z-10">
         {/* Badge do topo */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-white/[0.08] text-xs font-medium text-zinc-300 mb-6 backdrop-blur-md shadow-sm">
           <Sparkles size={13} className="text-emerald-400" />

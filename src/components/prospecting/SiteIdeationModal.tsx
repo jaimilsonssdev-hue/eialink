@@ -141,11 +141,11 @@ export function SiteIdeationModal({ open, onOpenChange, lead }: SiteIdeationModa
         },
       });
 
-      toast.success("Site gerado com sucesso! Abrindo no Studio...");
+      toast.success("Site gerado com sucesso! Abrindo no Estúdio Criativo...");
       onOpenChange(false);
-      // Redireciona para o Studio passando a página criada
+      // Redireciona para o Estúdio Criativo (Gemini 3.8 Flash) passando a página criada
       navigate({
-        to: "/studio",
+        to: "/studio-pro",
         search: { page: res.slug } as any,
       });
     } catch (err: any) {

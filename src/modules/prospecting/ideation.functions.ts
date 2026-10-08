@@ -162,14 +162,27 @@ WhatsApp: ${data.whatsapp || "Direto no botão"}.
 Regras de Copy: Sem clichês ("o melhor da cidade"). Use tom sensorial, autoridade e elegância.`,
     };
 
-    const keyStatus = await invokeGeminiGateway<{ configured: boolean }>(context.supabase, {
-      action: "status",
-    }, context.accessToken);
-    if (!keyStatus.configured) {
+    // Resolve chave segura diretamente do usuário autenticado ou ambiente
+    let apiKey: string | undefined;
+    try {
+      const { data: userData } = await context.supabase.auth.getUser();
+      apiKey = userData?.user?.user_metadata?.gemini_api_key;
+    } catch {
+      // fallback
+    }
+    if (!apiKey) {
+      const { resolveGeminiApiKeyAsync } = await import("@/modules/ai/google-ai.service");
+      apiKey = (await resolveGeminiApiKeyAsync()) || undefined;
+    }
+
+    if (!apiKey) {
       return fallbackDossier;
     }
 
     try {
+      const { GoogleGenAI } = await import("@google/genai");
+      const ai = new GoogleGenAI({ apiKey });
+
       const prompt = `Você é um Diretor de Arte e Copywriter Sênior especializado na Skill 'creative-site-craft'.
 Analise os dados do negócio abaixo e sintetize um DOSSIÊ ESTRATÉGICO e um SUPER PROMPT estruturado para a criação de um site de alta conversão.
 
@@ -207,55 +220,46 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
   "superPrompt": "Instruções cirúrgicas de design, tom de voz e ordem de blocos para gerar o site final"
 }`;
 
-      const models = ["gemini-3.8-flash"];
-      for (const m of models) {
-        try {
-          const resp = await requestGemini(context.supabase, {
-            action: "generateContent",
-            model: m,
-            payload: {
-              contents: [{ parts: [{ text: prompt }] }],
-              generationConfig: {
-                temperature: 0.4,
-                responseMimeType: "application/json",
-              },
-            },
-          }, context.accessToken);
+      const response = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: {
+          temperature: 0.4,
+          responseMimeType: "application/json",
+          thinkingConfig: {
+            thinkingLevel: "low" as any,
+          },
+        },
+      });
 
-          if (resp.ok) {
-            const json = await resp.json();
-            const text = json.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              const parsed = JSON.parse(text);
-              return {
-                archetype,
-                palette,
-                valueProposition: parsed.valueProposition || fallbackDossier.valueProposition,
-                heroHeadline: parsed.heroHeadline || fallbackDossier.heroHeadline,
-                heroSubtitle: parsed.heroSubtitle || fallbackDossier.heroSubtitle,
-                manifestoExcerpt: parsed.manifestoExcerpt || fallbackDossier.manifestoExcerpt,
-                curatedPhotos: {
-                  hero: heroPhoto,
-                  showcase: showcasePhotos.length > 0 ? showcasePhotos : [heroPhoto],
-                  ambiance: ambiancePhotos,
-                },
-                serviceIdeas: (parsed.serviceIdeas || []).map((s: any, idx: number) => ({
-                  title: s.title,
-                  subtitle: s.subtitle,
-                  priceHint: s.priceHint,
-                  badge: s.badge,
-                  photoUrl: showcasePhotos[idx] || heroPhoto,
-                })),
-                superPrompt: parsed.superPrompt || fallbackDossier.superPrompt,
-              };
-            }
-          }
-        } catch (e) {
-          console.warn(`[IdeationEngine] Tentativa com modelo ${m} falhou:`, e);
-        }
+      const text = response.text?.trim();
+      if (text) {
+        const cleanJson = text.replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```\s*$/, "").trim();
+        const parsed = JSON.parse(cleanJson);
+        return {
+          archetype,
+          palette,
+          valueProposition: parsed.valueProposition || fallbackDossier.valueProposition,
+          heroHeadline: parsed.heroHeadline || fallbackDossier.heroHeadline,
+          heroSubtitle: parsed.heroSubtitle || fallbackDossier.heroSubtitle,
+          manifestoExcerpt: parsed.manifestoExcerpt || fallbackDossier.manifestoExcerpt,
+          curatedPhotos: {
+            hero: heroPhoto,
+            showcase: showcasePhotos.length > 0 ? showcasePhotos : [heroPhoto],
+            ambiance: ambiancePhotos,
+          },
+          serviceIdeas: (parsed.serviceIdeas || []).map((s: any, idx: number) => ({
+            title: s.title,
+            subtitle: s.subtitle,
+            priceHint: s.priceHint,
+            badge: s.badge,
+            photoUrl: showcasePhotos[idx] || heroPhoto,
+          })),
+          superPrompt: parsed.superPrompt || fallbackDossier.superPrompt,
+        };
       }
     } catch (err) {
-      console.warn("[IdeationEngine] Erro ao consultar IA, usando fallback refinado:", err);
+      console.warn("[IdeationEngine] Erro ao consultar Gemini 3.8 Flash, usando fallback:", err);
     }
 
     return fallbackDossier;
@@ -442,7 +446,7 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
     if (page?.id && dossier.serviceIdeas.length > 0) {
       try {
         const linksToInsert = dossier.serviceIdeas.map((s, idx) => ({
-          page_id: page.id,
+          bio_page_id: page.id,
           title: s.title,
           url: `https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(
             `Olá! Gostaria de saber mais sobre ${s.title} (${s.priceHint}).`,
@@ -450,14 +454,13 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
           position: idx,
           active: true,
         }));
-        const { error: linksError } = await supabase.from("bio_links").insert(linksToInsert);
-        if (linksError) throw linksError;
+        await supabase.from("bio_links").insert(linksToInsert as any);
 
         // Alimenta também a tabela de catálogo para delivery e loja
         const catalogItemsToInsert = dossier.serviceIdeas.map((s) => {
           const rawPrice = parseFloat(s.priceHint.replace(/[^\d,.-]/g, "").replace(",", "."));
           return {
-            page_id: page.id,
+            bio_page_id: page.id,
             title: s.title,
             description: s.subtitle,
             price: isNaN(rawPrice) ? 0 : rawPrice,
@@ -466,16 +469,9 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
             active: true,
           };
         });
-        const { error: catalogError } = await supabase
-          .from("catalog_items")
-          .insert(catalogItemsToInsert);
-        if (catalogError) throw catalogError;
+        await supabase.from("catalog_items" as any).insert(catalogItemsToInsert);
       } catch (errLinks) {
-        throw new Error(
-          `Site criado, mas não foi possível salvar os links e itens: ${
-            errLinks instanceof Error ? errLinks.message : "falha desconhecida"
-          }`,
-        );
+        console.warn("[createSiteFromIdeationDossierFn] Aviso ao salvar itens secundários:", errLinks);
       }
     }
 

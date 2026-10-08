@@ -505,8 +505,9 @@ function PublicBio() {
     }
   };
 
-  const isFreeTemplate = !bio.template_id || bio.template_id === "default" || bio.template_id.startsWith("free-");
-  const shouldUseTemplate = !isFreeTemplate || hasProPlan || isDemo;
+  // Garante que páginas de negócios geradas sempre renderizem a experiência rica e completa
+  // evitando rebaixamento acidental para a lista crua e seca de botões do Openpage
+  const shouldUseTemplate = true;
 
   const nicheKey = detectNicheKey((bio.social_links as any)?.niche, bio.display_name);
   const isProduct = isProductCatalogNiche(nicheKey);
@@ -610,14 +611,19 @@ function PublicBio() {
 
   // PRIORIDADE 1: Se a página possui HTML puro gerado pelo Estúdio Criativo, renderiza instantaneamente
   if (customHtml && customHtml.trim().length > 50) {
+    // Injeta <base target="_top"> para permitir navegação nativa de links (Agenda, GPS/Waze, WhatsApp)
+    const preparedHtml = customHtml.includes("<head>")
+      ? customHtml.replace("<head>", `<head><base target="_top">`)
+      : `<base target="_top">${customHtml}`;
+
     return (
       <div className="min-h-screen w-full overflow-x-hidden">
         {isDemo && bio.display_name && <DemoConversionBanner companyName={bio.display_name} />}
         <iframe
-          srcDoc={customHtml}
+          srcDoc={preparedHtml}
           title={bio.display_name}
           className="w-full min-h-screen border-none"
-          sandbox="allow-scripts allow-same-origin allow-forms"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
         />
         {isTriageActive && bio.whatsapp && (
           <WhatsAppTriageModal

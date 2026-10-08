@@ -280,6 +280,9 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       projectId?: string;
       projectName?: string;
       apiKey?: string;
+      businessAddress?: string;
+      businessWhatsapp?: string;
+      businessSlug?: string;
     }) => d,
   )
   .handler(async ({ data: input, context }) => {
@@ -306,6 +309,18 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
     const ai = new GoogleGenAI({ apiKey: resolvedKey });
 
     let userPrompt = input.briefingOrPrompt;
+
+    // Injeta metadados de ferramentas do ecossistema EiaLink
+    const businessContextParts: string[] = [];
+    if (input.projectName) businessContextParts.push(`Nome Oficial: "${input.projectName}"`);
+    if (input.businessAddress) businessContextParts.push(`Endereço Verificado (usar no Mapa/GPS/Waze): "${input.businessAddress}"`);
+    if (input.businessWhatsapp) businessContextParts.push(`WhatsApp Oficial (usar no botão pulsante e CTAs): "${input.businessWhatsapp}"`);
+    if (input.businessSlug) businessContextParts.push(`Link de Agendamento Online da plataforma: "/agendar/${input.businessSlug}"`);
+
+    if (businessContextParts.length > 0) {
+      userPrompt += `\n\n[DADOS DE INTEGRAÇÃO DO ECOSSISTEMA EIALINK]:\n${businessContextParts.join("\n")}\nPor favor, certifique-se de preencher a seção de Localização (com iframe e botões de GPS Waze/Maps), o botão de Agendamento Online e o WhatsApp flutuante utilizando estes dados reais!`;
+    }
+
     if (input.existingHtml && input.existingHtml.length > 50) {
       userPrompt = `MODIFICAÇÃO NO SITE EXISTENTE:
 O usuário solicitou o seguinte ajuste:

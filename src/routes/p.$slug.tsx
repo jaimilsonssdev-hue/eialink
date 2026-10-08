@@ -597,8 +597,34 @@ function PublicBio() {
   const rawSocial = (bio.social_links as Record<string, any>) || {};
   const studioproConfig = (rawSocial.studiopro_config || rawSocial.studioproConfig) as SiteConfig | undefined;
   const isStudioPro = effectiveTemplateId === "studiopro" || Boolean(studioproConfig);
+  const customHtml = rawSocial.custom_html as string | undefined;
 
-  // PRIORIDADE ABSOLUTA: Se a página possui configuração do Studio Pro, renderiza com fidelidade nativa do Studio Pro
+  // PRIORIDADE 1: Se a página possui HTML puro gerado pelo Estúdio Criativo, renderiza instantaneamente
+  if (customHtml && customHtml.trim().length > 50) {
+    return (
+      <div className="min-h-screen w-full overflow-x-hidden">
+        {isDemo && bio.display_name && <DemoConversionBanner companyName={bio.display_name} />}
+        <iframe
+          srcDoc={customHtml}
+          title={bio.display_name}
+          className="w-full min-h-screen border-none"
+          sandbox="allow-scripts allow-same-origin allow-forms"
+        />
+        {isTriageActive && bio.whatsapp && (
+          <WhatsAppTriageModal
+            isOpen={isTriageOpen}
+            onClose={() => setIsTriageOpen(false)}
+            phone={bio.whatsapp}
+            config={triageConfig}
+            baseMessage={bio.whatsapp_message}
+            bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
+          />
+        )}
+      </div>
+    );
+  }
+
+  // PRIORIDADE 2: Se a página possui configuração do Studio Pro antigo, renderiza com o StudioProPublicViewer
   if (studioproConfig && isStudioPro) {
     return (
       <div className="min-h-screen w-full overflow-x-hidden">

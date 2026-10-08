@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_authenticated/studio-pro")({
   head: () => ({
     meta: [
       {
-        title: "Studio Pro — Criador de Sites com IA (Gemini 3.8 Flash)",
+        title: "Estúdio Criativo — Criador de Sites com IA (Google Gemini)",
       },
     ],
   }),

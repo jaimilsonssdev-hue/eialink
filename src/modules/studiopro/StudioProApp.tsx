@@ -1,126 +1,95 @@
-import React, { useEffect, useState } from 'react'
-import { StudioProRouterProvider, useLocation, useNavigate } from '@/modules/studiopro/lib/router'
-import { ErrorBoundary } from '@/modules/studiopro/layout/ErrorBoundary'
-import { AppLayout } from '@/modules/studiopro/layout/AppLayout'
-import { Dashboard } from '@/modules/studiopro/routes/Dashboard'
-import { Editor } from '@/modules/studiopro/routes/Editor'
-import { Settings } from '@/modules/studiopro/routes/Settings'
-import { Components } from '@/modules/studiopro/routes/Components'
-import { Deploy } from '@/modules/studiopro/routes/Deploy'
-import { useKeyboardShortcuts } from '@/modules/studiopro/lib/useKeyboardShortcuts'
-import { supabase } from '@/integrations/supabase/client'
-import { useConfigStore } from '@/modules/studiopro/store/configStore'
-import { useEditorStore } from '@/modules/studiopro/store/editorStore'
-import { buildStudioProConfigFromLead } from '@/modules/studiopro/lib/buildStudioProConfigFromLead'
-import { toast } from 'sonner'
-import type { SiteConfig } from '@/modules/studiopro/blocks/types'
+import React, { useEffect, useState } from "react";
+import {
+  StudioProRouterProvider,
+  useLocation,
+} from "@/modules/studiopro/lib/router";
+import { CreativeTopNav } from "@/modules/studiopro/layout/CreativeTopNav";
+import { CreativeDashboard } from "@/modules/studiopro/routes/CreativeDashboard";
+import { CreativeChatPanel } from "@/modules/studiopro/editor/CreativeChatPanel";
+import { CreativeCanvas } from "@/modules/studiopro/editor/CreativeCanvas";
+import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
+import { supabase } from "@/integrations/supabase/client";
 
-function StudioProContent() {
-  useKeyboardShortcuts()
-  const { pathname } = useLocation()
+function CreativeEditorView() {
+  return (
+    <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
+      {/* Chat / Copiloto à esquerda (estilo Lovable) */}
+      <div className="w-full md:w-[380px] lg:w-[420px] h-[45%] md:h-full shrink-0">
+        <CreativeChatPanel />
+      </div>
 
-  let activeView: React.ReactNode = <Dashboard />
-  if (pathname === '/editor' || pathname.startsWith('/editor')) {
-    activeView = <Editor />
-  } else if (pathname === '/settings' || pathname.startsWith('/settings')) {
-    activeView = <Settings />
-  } else if (pathname === '/components' || pathname.startsWith('/components')) {
-    activeView = <Components />
-  } else if (pathname === '/deploy' || pathname.startsWith('/deploy')) {
-    activeView = <Deploy />
-  } else {
-    activeView = <Dashboard />
+      {/* Canvas / Preview Iframe à direita */}
+      <div className="flex-1 h-[55%] md:h-full">
+        <CreativeCanvas />
+      </div>
+    </div>
+  );
+}
+
+function StudioContent() {
+  const { pathname } = useLocation();
+
+  if (pathname === "/editor" || pathname.startsWith("/editor")) {
+    return (
+      <div className="flex flex-col h-screen w-screen overflow-hidden pt-12 bg-[#09090b]">
+        <CreativeTopNav />
+        <CreativeEditorView />
+      </div>
+    );
   }
 
-  return <AppLayout>{activeView}</AppLayout>
+  return (
+    <div className="min-h-screen w-screen bg-[#09090b]">
+      <CreativeDashboard />
+    </div>
+  );
 }
 
-interface StudioProAppProps {
-  pageId?: string
-  projectId?: string
+interface CreativeStudioAppProps {
+  pageId?: string;
+  projectId?: string;
 }
 
-function PageLoader({ pageId }: { pageId?: string }) {
-  const navigate = useNavigate()
-  const setConfig = useConfigStore((s) => s.setConfig)
-  const setEialinkPage = useEditorStore((s) => s.setEialinkPage)
+export function StudioProApp({ pageId }: CreativeStudioAppProps) {
+  const { createProject, selectProject, updateActiveProjectHtml } =
+    useCreativeStudioStore();
 
+  // Carrega lead da prospecção automaticamente caso venha com ?page=UUID
   useEffect(() => {
-    if (!pageId) return
+    if (!pageId) return;
 
-    let isMounted = true
-    async function loadPage() {
+    async function loadPageFromProspecting() {
       try {
         const { data, error } = await supabase
-          .from('bio_pages')
-          .select('*')
-          .eq('id', pageId)
-          .single()
+          .from("bio_pages")
+          .select("*")
+          .eq("id", pageId)
+          .single();
 
-        if (error || !data) {
-          toast.error('Página não encontrada no EiaLink')
-          return
+        if (error || !data) return;
+
+        const rawSocial = (data.social_links as Record<string, any>) || {};
+        const existingHtml = rawSocial.custom_html || "";
+
+        const projId = createProject(data.display_name, data.id, data.slug);
+        selectProject(projId);
+
+        if (existingHtml) {
+          updateActiveProjectHtml(existingHtml);
         }
-
-        if (!isMounted) return
-
-        setEialinkPage({
-          id: data.id,
-          slug: data.slug,
-          title: data.title,
-        })
-
-        const rawSocial = (data.social_links as Record<string, any>) || {}
-        const existingConfig = (rawSocial.studiopro_config || rawSocial.studioproConfig) as SiteConfig | undefined
-
-        if (existingConfig && existingConfig.blocks?.length) {
-          setConfig(existingConfig)
-        } else {
-          // Generate an initial Studio Pro config based on page data
-          const generated = buildStudioProConfigFromLead({
-            name: data.title,
-            niche: rawSocial.niche,
-            city: rawSocial.city,
-            whatsapp: rawSocial.whatsapp || data.whatsapp,
-            address: rawSocial.address,
-            rating: rawSocial.google_rating,
-            reviews_count: rawSocial.reviews_count,
-            instagram: rawSocial.instagram,
-            photos: rawSocial.google_photos || rawSocial.instagram_photos || [],
-          })
-          setConfig(generated)
-        }
-
-        navigate('/editor')
-        toast.success(`Carregado: ${data.title} (${data.slug}.eialink.com.br)`)
-      } catch (err: any) {
-        toast.error(err.message || 'Erro ao carregar página')
+      } catch (e) {
+        console.warn("Aviso ao carregar página da prospecção:", e);
       }
     }
 
-    void loadPage()
-    return () => {
-      isMounted = false
-    }
-  }, [pageId, navigate, setConfig, setEialinkPage])
-
-  return null
-}
-
-export function StudioProApp({ pageId, projectId }: StudioProAppProps) {
-  // Determine if URL query param has ?page=
-  const effectivePageId = pageId || (typeof window !== 'undefined' ? new URLSearchParams(window.location.search).get('page') || undefined : undefined)
+    loadPageFromProspecting();
+  }, [pageId, createProject, selectProject, updateActiveProjectHtml]);
 
   return (
-    <ErrorBoundary>
-      <StudioProRouterProvider initialPath={effectivePageId ? '/editor' : '/'}>
-        <PageLoader pageId={effectivePageId} />
-        <div className="studio-pro-app w-full h-full min-h-screen bg-bg-0 text-text-0 antialiased selection:bg-green selection:text-black">
-          <StudioProContent />
-        </div>
-      </StudioProRouterProvider>
-    </ErrorBoundary>
-  )
+    <StudioProRouterProvider>
+      <StudioContent />
+    </StudioProRouterProvider>
+  );
 }
 
-export default StudioProApp
+export default StudioProApp;

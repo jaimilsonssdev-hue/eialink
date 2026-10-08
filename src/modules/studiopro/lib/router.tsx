@@ -100,6 +100,8 @@ export function NavLink({
   )
 }
 
+export const Link = NavLink;
+
 export function Outlet({ routes }: { routes?: Record<string, React.ReactNode> }) {
   const { pathname } = useContext(RouterContext)
   if (routes && routes[pathname]) {

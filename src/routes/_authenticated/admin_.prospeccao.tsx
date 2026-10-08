@@ -81,6 +81,11 @@ import {
 } from "@/modules/prospecting/copyTemplates";
 import { POPULAR_CNAES } from "@/modules/prospecting/cnaePresets";
 import { NICHE_PRESETS_VARIANTS, detectNicheKey, CANONICAL_NICHES, getCanonicalNicheMeta, getVariantsForNiche } from "@/modules/prospecting/nichePresets";
+import {
+  getProspectNicheCategory,
+  generateSpecializedProspectSiteFn,
+  type ProspectNicheCategory,
+} from "@/modules/prospecting/specializedGenerators.functions";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -688,12 +693,49 @@ function ProspectingPage() {
     }
   }
 
+  async function handleSpecializedGenerate(
+    company: ProspectedCompany,
+    forceCat?: ProspectNicheCategory,
+  ) {
+    setCreatingPageId(company.id);
+    setFeedback(null);
+    const meta = getProspectNicheCategory(company.niche, company.name);
+    const targetCategory = forceCat || meta.category;
+
+    try {
+      setFeedback(`🚀 ${meta.loadingLabel} com Gemini 3.8 Flash...`);
+      const res = await generateSpecializedProspectSiteFn({
+        data: {
+          companyId: company.id,
+          businessName: company.name,
+          niche: company.niche || "Geral",
+          city: company.city || "Brasil",
+          whatsapp: company.whatsapp ?? company.phone ?? undefined,
+          address: company.address ?? undefined,
+          rating: company.rating ?? undefined,
+          reviewsCount: company.reviews_count ?? undefined,
+          instagram: company.instagram ?? undefined,
+          photos: (company as any).photos || [],
+          forceCategory: targetCategory,
+        },
+      });
+
+      setFeedback(`🎉 ${meta.label} gerado com sucesso! Link: ${res.url}`);
+      invalidate();
+    } catch (err: any) {
+      console.error(err);
+      setFeedback(`Erro ao gerar: ${err.message}`);
+    } finally {
+      setCreatingPageId(null);
+    }
+  }
+
   async function handleGenerateAiSite(company: ProspectedCompany) {
-    await handleGenerateDemo(company, "ai");
+    await handleSpecializedGenerate(company);
   }
 
   async function handleGenerateSiteMaquina(company: ProspectedCompany) {
-    await handleGenerateDemo(company, "site-maquina");
+    await handleSpecializedGenerate(company);
   }
 
   async function handleRegenerateDemo(company: ProspectedCompany) {
@@ -852,7 +894,10 @@ function ProspectingPage() {
     const company = typeof input === "object" ? input : null;
 
     // 1. URL da demo nas notas ou website
-    const urlMatch = notes.match(/https?:\/\/[^\s)]+/) || (company?.website?.includes("eialink.com.br") ? [company.website] : null);
+    const urlMatch =
+      notes.match(/https?:\/\/[^\s)]+/) ||
+      notes.match(/\/p\/[a-z0-9-]+/) ||
+      (company?.website?.includes("eialink.com.br") ? [company.website] : null);
     let url = urlMatch ? urlMatch[0] : null;
 
     // 2. Extrai slug da URL se existir (/p/slug ou subdominio.eialink.com.br)
@@ -2487,7 +2532,7 @@ function ProspectingPage() {
               <ProspectingKanban
                 companies={filtered}
                 onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
-                onGenerateDemo={handleOpenIdeation}
+                onGenerateDemo={(company) => handleSpecializedGenerate(company)}
                 creatingPageId={creatingPageId}
                 onRegenerateDemo={handleRegenerateDemo}
                 regeneratingPageId={regeneratingPageId}
@@ -2598,31 +2643,21 @@ function ProspectingPage() {
                       </a>
                     ) : (
                       (() => {
-                        const nKey = detectNicheKey(company.niche, company.name);
-                        const isFood = ["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nKey);
-                        const isShop = ["moda", "otica", "calcados", "loja", "varejo", "joias"].includes(nKey);
+                        const meta = getProspectNicheCategory(company.niche, company.name);
+                        const isGeneratingThis = creatingPageId === company.id;
                         return (
                           <button
-                            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold shadow-xs transition-all cursor-pointer ${
-                              isFood
-                                ? "border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
-                                : isShop
-                                  ? "border-pink-500/50 bg-pink-500/15 text-pink-300 hover:bg-pink-500/25"
-                                  : "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
-                            }`}
-                            onClick={() => handleOpenIdeation(company)}
-                            title={
-                              isFood
-                                ? "Gerar Cardápio Delivery no formato iFood"
-                                : isShop
-                                  ? "Gerar Catálogo & Vitrine de Loja"
-                                  : "Ideação Estratégica & Site no Estúdio"
-                            }
+                            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
+                            onClick={() => handleSpecializedGenerate(company)}
+                            disabled={isGeneratingThis}
+                            title={meta.buttonLabel}
                           >
-                            <Sparkles className="h-3.5 w-3.5" />
-                            <span>
-                              {isFood ? "Gerar Cardápio 🍔" : isShop ? "Gerar Loja 🛍️" : "Gerar Site ⚡"}
-                            </span>
+                            {isGeneratingThis ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <span>{meta.icon}</span>
+                            )}
+                            <span>{isGeneratingThis ? "Gerando..." : meta.buttonLabel}</span>
                           </button>
                         );
                       })()
@@ -2931,31 +2966,21 @@ function ProspectingPage() {
                             </>
                           ) : (
                             (() => {
-                              const nKey = detectNicheKey(company.niche, company.name);
-                              const isFood = ["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nKey);
-                              const isShop = ["moda", "otica", "calcados", "loja", "varejo", "joias"].includes(nKey);
+                              const meta = getProspectNicheCategory(company.niche, company.name);
+                              const isGeneratingThis = creatingPageId === company.id;
                               return (
                                 <button
-                                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all cursor-pointer ${
-                                    isFood
-                                      ? "border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
-                                      : isShop
-                                        ? "border-pink-500/50 bg-pink-500/15 text-pink-300 hover:bg-pink-500/25"
-                                        : "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
-                                  }`}
-                                  onClick={() => handleOpenIdeation(company)}
-                                  title={
-                                    isFood
-                                      ? "Gerar Cardápio Delivery no formato iFood"
-                                      : isShop
-                                        ? "Gerar Catálogo & Vitrine de Loja"
-                                        : "Ideação Estratégica & Site no Estúdio"
-                                  }
+                                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
+                                  onClick={() => handleSpecializedGenerate(company)}
+                                  disabled={isGeneratingThis}
+                                  title={meta.buttonLabel}
                                 >
-                                  <Sparkles className="h-3.5 w-3.5" />
-                                  <span>
-                                    {isFood ? "Gerar Cardápio 🍔" : isShop ? "Gerar Loja 🛍️" : "Gerar Site ⚡"}
-                                  </span>
+                                  {isGeneratingThis ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <span>{meta.icon}</span>
+                                  )}
+                                  <span>{isGeneratingThis ? "Gerando..." : meta.buttonLabel}</span>
                                 </button>
                               );
                             })()

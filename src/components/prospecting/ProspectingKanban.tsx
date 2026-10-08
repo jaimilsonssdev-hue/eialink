@@ -37,6 +37,7 @@ import type {
   ProspectStatus,
 } from "@/modules/prospecting/types";
 import { detectNicheKey, getCanonicalNicheMeta } from "@/modules/prospecting/nichePresets";
+import { getProspectNicheCategory } from "@/modules/prospecting/specializedGenerators.functions";
 
 export interface DemoInfoResult {
   url: string | null;
@@ -410,24 +411,30 @@ export function ProspectingKanban({
                                   <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                                   <span>Ver Site Pronto</span>
                                 </a>
-                              ) : (
-                                <button
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onGenerateDemo(company);
-                                  }}
-                                  disabled={creatingPageId === company.id}
-                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 text-xs font-bold transition-all whitespace-nowrap disabled:opacity-60 cursor-pointer shadow-xs"
-                                  title="Ideação Estratégica & Super Prompt com IA"
-                                >
-                                  {creatingPageId === company.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0 text-emerald-400" />
-                                  ) : (
-                                    <Sparkles className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
-                                  )}
-                                  <span>{creatingPageId === company.id ? "Ideando..." : "Ideação & Site ⚡"}</span>
-                                </button>
+                               ) : (
+                                (() => {
+                                  const meta = getProspectNicheCategory(company.niche, company.name);
+                                  const isGenerating = creatingPageId === company.id;
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onGenerateDemo(company);
+                                      }}
+                                      disabled={isGenerating}
+                                      className={`inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-xs font-bold transition-all whitespace-nowrap disabled:opacity-60 cursor-pointer shadow-xs ${meta.buttonClass}`}
+                                      title={meta.buttonLabel}
+                                    >
+                                      {isGenerating ? (
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                      ) : (
+                                        <span>{meta.icon}</span>
+                                      )}
+                                      <span>{isGenerating ? "Gerando..." : meta.buttonLabel}</span>
+                                    </button>
+                                  );
+                                })()
                               )}
                             </div>
 

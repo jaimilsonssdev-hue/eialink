@@ -401,6 +401,26 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
       ],
     };
 
+    // Gera o código HTML completo e responsivo da página com base no Dossiê e Gemini
+    let customHtml = "";
+    try {
+      const { generateSiteHtml } = await import("@/modules/studiopro/lib/creativeEngineService");
+      const promptForSite = `Gere o site completo para a empresa "${data.businessName}" (${data.niche} em ${data.city}).
+Título: "${dossier.heroHeadline}".
+Subtítulo: "${dossier.heroSubtitle}".
+Diferencial: "${dossier.valueProposition}".
+Manifesto: "${dossier.manifestoExcerpt}".
+Serviços e Preços: ${JSON.stringify(dossier.serviceIdeas)}.
+WhatsApp Oficial: ${cleanWhatsapp}.
+Endereço: ${data.address || `${data.city}, Brasil`}.
+Nota no Google: ${data.rating ?? 4.9}.
+Super Prompt: ${dossier.superPrompt}`;
+
+      customHtml = await generateSiteHtml(promptForSite, undefined, apiKey);
+    } catch (genErr) {
+      console.warn("[createSiteFromIdeationDossierFn] Aviso na geração com Gemini:", genErr);
+    }
+
     // Salva no banco de dados Supabase na tabela bio_pages
     const { data: page, error } = await supabase
       .from("bio_pages")
@@ -418,6 +438,7 @@ export const createSiteFromIdeationDossierFn = createServerFn({ method: "POST" }
         google_reviews_count: 120,
         published: true,
         template_id: chosenTemplateId,
+        custom_html: customHtml || undefined,
         background_style: "cinematic",
         social_links: {
           is_demo: false,

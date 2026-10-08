@@ -607,7 +607,10 @@ function PublicBio() {
   const rawSocial = (bio.social_links as Record<string, any>) || {};
   const studioproConfig = (rawSocial.studiopro_config || rawSocial.studioproConfig) as SiteConfig | undefined;
   const isStudioPro = effectiveTemplateId === "studiopro" || Boolean(studioproConfig);
-  const customHtml = rawSocial.custom_html as string | undefined;
+  const customHtml =
+    ((bio as any).custom_html as string | undefined) ||
+    (rawSocial.custom_html as string | undefined) ||
+    ((bio.social_links as any)?.custom_html as string | undefined);
 
   // PRIORIDADE 1: Se a página possui HTML puro gerado pelo Estúdio Criativo, renderiza instantaneamente
   if (customHtml && customHtml.trim().length > 50) {

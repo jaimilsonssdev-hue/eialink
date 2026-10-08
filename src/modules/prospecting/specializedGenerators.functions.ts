@@ -302,7 +302,7 @@ Fotos: ${JSON.stringify(realPhotos.slice(0, 5))}`;
   </div>
 </body>
 </html>`;
-      } else {
+      } else if (category === "shop") {
         generatedHtml = `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -340,6 +340,111 @@ Fotos: ${JSON.stringify(realPhotos.slice(0, 5))}`;
   </main>
 </body>
 </html>`;
+      } else {
+        generatedHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
+  <title>${data.businessName} — Site Oficial</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 min-h-screen pb-20 selection:bg-emerald-500 selection:text-black">
+  <header class="sticky top-0 z-40 bg-zinc-950/80 backdrop-blur-md border-b border-white/10 px-4 py-3.5">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="text-lg font-extrabold tracking-tight text-white">${data.businessName}</span>
+      </div>
+      <div class="flex items-center gap-3">
+        <a href="/agendar/${finalSlug}" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-xs font-semibold hover:bg-emerald-500/20 transition-all">
+          <span>🗓️ Agendar Horário</span>
+        </a>
+        <a href="https://wa.me/${cleanWhatsapp}" class="px-4 py-1.5 rounded-full bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400 transition-all shadow-md">
+          WhatsApp Oficial
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <section class="relative pt-12 pb-16 px-4 overflow-hidden">
+    <div class="max-w-3xl mx-auto text-center space-y-4 relative z-10">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900 border border-white/10 text-xs text-zinc-300">
+        <span class="text-amber-400 font-bold">★ ${data.rating ?? 4.9}</span>
+        <span>${data.reviewsCount ?? 120} avaliações no Google Maps</span>
+      </div>
+      <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+        Excelência e cuidado para você em <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">${data.city}</span>
+      </h1>
+      <p class="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
+        Atendimento exclusivo, especializado em ${data.niche}. Agende seu horário ou tire suas dúvidas diretamente conosco.
+      </p>
+      <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
+        <a href="/agendar/${finalSlug}" class="px-6 py-3 rounded-2xl bg-emerald-500 text-black font-bold text-sm shadow-xl hover:bg-emerald-400 transition-all flex items-center gap-2">
+          <span>🗓️ Agendar Horário Online</span>
+        </a>
+        <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Vim pelo site da ${data.businessName} e gostaria de mais informações.`)}" class="px-6 py-3 rounded-2xl bg-zinc-900 border border-white/10 text-white font-semibold text-sm hover:bg-zinc-800 transition-all flex items-center gap-2">
+          <span>Falar no WhatsApp</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="max-w-4xl mx-auto px-4 mb-12">
+    <div class="relative h-64 sm:h-96 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
+      <img src="${realPhotos[0] || "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=80"}" class="w-full h-full object-cover" alt="${data.businessName}">
+      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent"></div>
+    </div>
+  </div>
+
+  <section class="max-w-4xl mx-auto px-4 py-8">
+    <h2 class="text-xl sm:text-2xl font-bold text-white mb-6 text-center">Nossos Principais Serviços</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="p-5 rounded-2xl bg-zinc-900 border border-white/10 space-y-2">
+        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Atendimento Especializado</span>
+        <h3 class="text-lg font-bold text-white">Consulta & Diagnóstico</h3>
+        <p class="text-xs text-zinc-400">Avaliação minuciosa com foco nas suas necessidades reais e plano de ação personalizado.</p>
+        <div class="pt-2">
+          <a href="/agendar/${finalSlug}" class="text-xs text-emerald-400 font-semibold hover:underline">Reservar Horário →</a>
+        </div>
+      </div>
+      <div class="p-5 rounded-2xl bg-zinc-900 border border-white/10 space-y-2">
+        <span class="text-xs font-bold text-teal-400 uppercase tracking-wider">Procedimento Completo</span>
+        <h3 class="text-lg font-bold text-white">Tratamento Premium</h3>
+        <p class="text-xs text-zinc-400">Técnicas modernas e equipamentos de ponta para garantir conforto e resultados superiores.</p>
+        <div class="pt-2">
+          <a href="https://wa.me/${cleanWhatsapp}" class="text-xs text-teal-400 font-semibold hover:underline">Consultar Valores →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="max-w-4xl mx-auto px-4 py-8">
+    <div class="p-6 rounded-3xl bg-zinc-900 border border-white/10 space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h2 class="text-lg font-bold text-white">📍 Onde Estamos</h2>
+          <p class="text-xs text-zinc-400">${destinationAddress}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-white transition-all">Google Maps</a>
+          <a href="https://waze.com/ul?q=${encodedAddress}" class="px-4 py-2 rounded-xl bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 hover:bg-cyan-500/30 text-xs font-semibold transition-all">Waze</a>
+        </div>
+      </div>
+      <iframe src="https://maps.google.com/maps?q=${encodedAddress}&output=embed" class="w-full h-56 rounded-2xl border border-white/10" loading="lazy"></iframe>
+    </div>
+  </section>
+
+  <div class="fixed bottom-5 right-5 z-50">
+    <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Vim pelo site da ${data.businessName} e gostaria de agendar um atendimento.`)}" class="flex items-center gap-2 px-4 py-3 rounded-full bg-emerald-500 text-black font-bold text-xs shadow-2xl hover:scale-105 transition-all">
+      <span>Atendimento no WhatsApp</span>
+    </a>
+  </div>
+</body>
+</html>`;
       }
     }
 
@@ -368,6 +473,11 @@ Fotos: ${JSON.stringify(realPhotos.slice(0, 5))}`;
           is_demo: false,
           category,
           photos: realPhotos,
+          custom_html: generatedHtml,
+          agenda_enabled: true,
+          ai_concierge_enabled: true,
+          whatsapp_enabled: true,
+          gps_enabled: true,
         } as any,
       })
       .select()

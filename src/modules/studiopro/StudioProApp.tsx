@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import {
   StudioProRouterProvider,
   useLocation,
+  useNavigate,
 } from "@/modules/studiopro/lib/router";
 import { CreativeTopNav } from "@/modules/studiopro/layout/CreativeTopNav";
 import { CreativeDashboard } from "@/modules/studiopro/routes/CreativeDashboard";
@@ -10,25 +11,104 @@ import { CreativeCanvas } from "@/modules/studiopro/editor/CreativeCanvas";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { supabase } from "@/integrations/supabase/client";
 import { listCreativeStudioProjectsFn } from "@/modules/studio/studio.functions";
+import { MessageSquare, Eye, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 function CreativeEditorView() {
+  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
+  const [desktopChatOpen, setDesktopChatOpen] = useState(true);
+  const { getActiveProject } = useCreativeStudioStore();
+  const activeProject = getActiveProject();
+
+  // Se o site acabou de ser gerado e não estávamos no preview no mobile, facilita a transição
+  useEffect(() => {
+    if (activeProject?.html && activeProject.html.length > 100) {
+      // Deixa disponível para o usuário ver o site
+    }
+  }, [activeProject?.html]);
+
   return (
-    <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden">
-      {/* Chat / Copiloto à esquerda (estilo Lovable) */}
-      <div className="w-full md:w-[380px] lg:w-[420px] h-[45%] md:h-full shrink-0">
-        <CreativeChatPanel />
+    <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+      {/* Barra de Alternância de Abas Exclusiva para Mobile (< md) */}
+      <div className="flex md:hidden items-center justify-between px-3 py-1.5 bg-zinc-950 border-b border-white/[0.08] shrink-0">
+        <div className="flex items-center gap-1 bg-zinc-900 p-0.5 rounded-xl border border-white/10 w-full max-w-xs mx-auto">
+          <button
+            type="button"
+            onClick={() => setMobileTab("chat")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              mobileTab === "chat"
+                ? "bg-emerald-500 text-black font-bold shadow-sm"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            <MessageSquare size={13} />
+            <span>Copiloto IA</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("preview")}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              mobileTab === "preview"
+                ? "bg-emerald-500 text-black font-bold shadow-sm"
+                : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            <Eye size={13} />
+            <span>Prévia do Site</span>
+            {activeProject?.html && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse ml-0.5" />
+            )}
+          </button>
+        </div>
       </div>
 
-      {/* Canvas / Preview Iframe à direita */}
-      <div className="flex-1 h-[55%] md:h-full">
-        <CreativeCanvas />
+      {/* Conteúdo do Editor com Responsividade Completa */}
+      <div className="flex-1 flex flex-col md:flex-row h-full overflow-hidden relative">
+        {/* Chat / Copiloto: No mobile exibe se mobileTab === 'chat'; no desktop controla com desktopChatOpen */}
+        <div
+          className={`${
+            mobileTab === "chat" ? "flex" : "hidden"
+          } md:flex flex-col ${
+            desktopChatOpen ? "md:w-[380px] lg:w-[420px]" : "md:hidden"
+          } w-full h-full shrink-0 border-r border-white/[0.06] bg-zinc-950 transition-all`}
+        >
+          <CreativeChatPanel />
+        </div>
+
+        {/* Canvas / Prévia do Site: No mobile exibe se mobileTab === 'preview'; no desktop ocupa 100% ou restante */}
+        <div
+          className={`${
+            mobileTab === "preview" ? "flex" : "hidden"
+          } md:flex flex-1 flex-col h-full bg-[#08070b] overflow-hidden relative`}
+        >
+          {/* Botão Desktop para Recolher/Expandir Chat */}
+          <div className="hidden md:flex absolute top-2.5 left-2.5 z-30">
+            <button
+              type="button"
+              onClick={() => setDesktopChatOpen((prev) => !prev)}
+              className="p-1.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/10 shadow-lg transition-all"
+              title={desktopChatOpen ? "Recolher painel de chat" : "Abrir painel de chat"}
+            >
+              {desktopChatOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+            </button>
+          </div>
+
+          <CreativeCanvas />
+        </div>
       </div>
     </div>
   );
 }
 
-function StudioContent() {
+function StudioContent({ pageId }: { pageId?: string }) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  // Se veio com pageId e está na raiz, direciona para o editor diretamente
+  useEffect(() => {
+    if (pageId && pathname !== "/editor") {
+      navigate("/editor");
+    }
+  }, [pageId, pathname, navigate]);
 
   if (pathname === "/editor" || pathname.startsWith("/editor")) {
     return (
@@ -52,8 +132,13 @@ interface CreativeStudioAppProps {
 }
 
 export function StudioProApp({ pageId }: CreativeStudioAppProps) {
-  const { createProject, selectProject, updateActiveProjectHtml, setProjects } =
-    useCreativeStudioStore();
+  const {
+    projects,
+    createProject,
+    selectProject,
+    updateActiveProjectHtml,
+    setProjects,
+  } = useCreativeStudioStore();
 
   // Sincroniza projetos da nuvem para que o que foi feito no Mobile apareça no Desktop e vice-versa
   useEffect(() => {
@@ -70,7 +155,7 @@ export function StudioProApp({ pageId }: CreativeStudioAppProps) {
     syncCloudProjects();
   }, [setProjects]);
 
-  // Carrega lead da prospecção automaticamente caso venha com ?page=UUID
+  // Carrega lead da prospecção automaticamente caso venha com ?page=UUID com DEDUPLICAÇÃO
   useEffect(() => {
     if (!pageId) return;
 
@@ -85,13 +170,26 @@ export function StudioProApp({ pageId }: CreativeStudioAppProps) {
         if (error || !data) return;
 
         const rawSocial = (data.social_links as Record<string, any>) || {};
-        const existingHtml = rawSocial.custom_html || "";
+        const existingHtml = (data as any).custom_html || rawSocial.custom_html || "";
 
-        const projId = createProject(data.display_name, data.id, data.slug);
-        selectProject(projId);
+        // Deduplica: procura se já existe projeto registrado para esta página
+        const existingProj = projects.find(
+          (p) => p.eialinkPageId === data.id || (data.slug && p.slug === data.slug),
+        );
 
-        if (existingHtml) {
-          updateActiveProjectHtml(existingHtml);
+        if (existingProj) {
+          selectProject(existingProj.id);
+          // Se o banco tiver HTML mais recente, atualiza o projeto ativo
+          if (existingHtml && (!existingProj.html || existingProj.html.length < 50)) {
+            updateActiveProjectHtml(existingHtml);
+          }
+        } else {
+          // Cria apenas se realmente não existir projeto para este lead
+          const projId = createProject(data.display_name, data.id, data.slug);
+          selectProject(projId);
+          if (existingHtml) {
+            updateActiveProjectHtml(existingHtml);
+          }
         }
       } catch (e) {
         console.warn("Aviso ao carregar página da prospecção:", e);
@@ -99,11 +197,11 @@ export function StudioProApp({ pageId }: CreativeStudioAppProps) {
     }
 
     loadPageFromProspecting();
-  }, [pageId, createProject, selectProject, updateActiveProjectHtml]);
+  }, [pageId, createProject, selectProject, updateActiveProjectHtml, projects]);
 
   return (
     <StudioProRouterProvider>
-      <StudioContent />
+      <StudioContent pageId={pageId} />
     </StudioProRouterProvider>
   );
 }

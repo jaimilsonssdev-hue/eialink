@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "@/modules/studiopro/lib/router";
 import {
   Sparkles,
@@ -7,19 +7,92 @@ import {
   ChevronLeft,
   CheckCircle2,
   Copy,
+  SlidersHorizontal,
+  Calendar,
+  Bot,
+  MapPin,
+  MessageCircle,
 } from "lucide-react";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export function CreativeTopNav() {
-  const { getActiveProject } = useCreativeStudioStore();
+  const { getActiveProject, updateActiveProjectHtml } = useCreativeStudioStore();
   const [publishing, setPublishing] = useState(false);
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
 
+  // Modal de Ferramentas / Features
+  const [showFeaturesModal, setShowFeaturesModal] = useState(false);
+  const [features, setFeatures] = useState({
+    agenda_enabled: true,
+    ai_concierge_enabled: true,
+    gps_enabled: true,
+    whatsapp_enabled: true,
+  });
+
   const activeProject = getActiveProject();
   const hasHtml = Boolean(activeProject?.html);
+
+  // Carrega configurações de ferramentas caso a página já tenha salva
+  useEffect(() => {
+    if (!activeProject?.eialinkPageId) return;
+
+    supabase
+      .from("bio_pages")
+      .select("social_links")
+      .eq("id", activeProject.eialinkPageId)
+      .single()
+      .then(({ data }) => {
+        if (data?.social_links) {
+          const s = data.social_links as Record<string, any>;
+          setFeatures({
+            agenda_enabled: s.agenda_enabled !== false,
+            ai_concierge_enabled: s.ai_concierge_enabled !== false,
+            gps_enabled: s.gps_enabled !== false,
+            whatsapp_enabled: s.whatsapp_enabled !== false,
+          });
+        }
+      });
+  }, [activeProject?.eialinkPageId]);
+
+  async function handleToggleFeature(key: keyof typeof features) {
+    const updated = { ...features, [key]: !features[key] };
+    setFeatures(updated);
+
+    if (activeProject?.eialinkPageId) {
+      try {
+        const { data: curPage } = await supabase
+          .from("bio_pages")
+          .select("social_links")
+          .eq("id", activeProject.eialinkPageId)
+          .single();
+
+        const curSocial = (curPage?.social_links as Record<string, any>) || {};
+        await supabase
+          .from("bio_pages")
+          .update({
+            social_links: {
+              ...curSocial,
+              ...updated,
+            },
+          })
+          .eq("id", activeProject.eialinkPageId);
+
+        toast.success("Configuração de recurso salva!");
+      } catch (e) {
+        console.warn("Aviso ao salvar recurso:", e);
+      }
+    }
+  }
 
   async function handlePublish() {
     if (!activeProject || !activeProject.html) {
@@ -29,18 +102,28 @@ export function CreativeTopNav() {
 
     setPublishing(true);
     try {
-      // Se possui eialinkPageId vinculado (vindo da prospecção ou salvo)
       const pageId = activeProject.eialinkPageId;
       let finalSlug = activeProject.slug || activeProject.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
       if (pageId) {
-        // Atualiza a página no Supabase para renderizar este HTML direto na Cloudflare
+        // Recupera dados atuais de social_links para não apagar dados anteriores
+        const { data: curPage } = await supabase
+          .from("bio_pages")
+          .select("social_links")
+          .eq("id", pageId)
+          .single();
+
+        const curSocial = (curPage?.social_links as Record<string, any>) || {};
+
         const { error } = await supabase
           .from("bio_pages")
           .update({
+            custom_html: activeProject.html,
             social_links: {
+              ...curSocial,
               custom_html: activeProject.html,
               is_creative_studio: true,
+              ...features,
               updated_at: new Date().toISOString(),
             },
             published: true,
@@ -63,14 +146,14 @@ export function CreativeTopNav() {
   }
 
   return (
-    <header className="h-12 bg-[#0a0a0f] border-b border-white/[0.08] flex items-center justify-between px-4 fixed top-0 left-0 right-0 z-50">
-      <div className="flex items-center gap-3">
+    <header className="h-12 bg-[#0a0a0f] border-b border-white/[0.08] flex items-center justify-between px-3 sm:px-4 fixed top-0 left-0 right-0 z-50">
+      <div className="flex items-center gap-2 sm:gap-3">
         <Link
           to="/"
           className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-xs transition-colors"
         >
           <ChevronLeft size={16} />
-          <span>Voltar</span>
+          <span className="hidden sm:inline">Voltar</span>
         </Link>
 
         <div className="h-4 w-px bg-white/10" />
@@ -79,16 +162,27 @@ export function CreativeTopNav() {
           <div className="w-5 h-5 rounded-md bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
             <Sparkles size={11} />
           </div>
-          <span className="text-xs font-semibold text-zinc-200">
+          <span className="text-xs font-semibold text-zinc-200 truncate max-w-[120px] sm:max-w-xs">
             {activeProject?.name || "Estúdio Criativo"}
           </span>
-          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full uppercase">
-            AI Engine
+          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full uppercase hidden md:inline">
+            Gemini 3.8
           </span>
         </div>
       </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-2">
+        {/* Botão de Controle de Ferramentas / Recursos */}
+        <button
+          type="button"
+          onClick={() => setShowFeaturesModal(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-medium transition-all border border-white/10"
+          title="Ligar ou desligar Agenda, Atendente, GPS e WhatsApp"
+        >
+          <SlidersHorizontal size={13} className="text-emerald-400" />
+          <span className="hidden sm:inline">Recursos</span>
+        </button>
+
         <button
           onClick={handlePublish}
           disabled={!hasHtml || publishing}
@@ -98,6 +192,137 @@ export function CreativeTopNav() {
           <span>{publishing ? "Publicando..." : "Publicar"}</span>
         </button>
       </div>
+
+      {/* Modal de Recursos & Ferramentas Nativas */}
+      <Dialog open={showFeaturesModal} onOpenChange={setShowFeaturesModal}>
+        <DialogContent className="max-w-md bg-zinc-950 border border-white/10 text-white p-5 shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2 text-white">
+              <SlidersHorizontal className="h-4 w-4 text-emerald-400" />
+              Recursos & Ferramentas da Página
+            </DialogTitle>
+            <DialogDescription className="text-xs text-zinc-400">
+              Ligue ou desligue as funcionalidades nativas do site conforme o perfil do cliente.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 pt-2">
+            {/* 1. Agenda Online */}
+            <div className="flex items-start justify-between p-3 rounded-2xl bg-zinc-900/80 border border-white/10 gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Calendar size={14} className="text-emerald-400" />
+                  <span className="text-xs font-bold text-zinc-200">Agenda Online & Reservas</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Permite que os clientes agendem horários no link <code>/agendar</code>.
+                </p>
+                <div className="pt-1">
+                  <a
+                    href="/agenda"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-emerald-400 hover:underline inline-flex items-center gap-1 font-semibold"
+                  >
+                    Gerenciar Horários no Painel da Agenda <ExternalLink size={10} />
+                  </a>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleToggleFeature("agenda_enabled")}
+                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${
+                  features.agenda_enabled ? "bg-emerald-500" : "bg-zinc-700"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+                    features.agenda_enabled ? "right-1" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 2. Atendente com IA */}
+            <div className="flex items-start justify-between p-3 rounded-2xl bg-zinc-900/80 border border-white/10 gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Bot size={14} className="text-teal-400" />
+                  <span className="text-xs font-bold text-zinc-200">Atendente Virtual com IA</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Chat concierge que tira dúvidas e atende clientes 24/7.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleToggleFeature("ai_concierge_enabled")}
+                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${
+                  features.ai_concierge_enabled ? "bg-emerald-500" : "bg-zinc-700"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+                    features.ai_concierge_enabled ? "right-1" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 3. Mapa Interativo & GPS */}
+            <div className="flex items-start justify-between p-3 rounded-2xl bg-zinc-900/80 border border-white/10 gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <MapPin size={14} className="text-cyan-400" />
+                  <span className="text-xs font-bold text-zinc-200">Mapa & GPS (Maps / Waze)</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Iframe com localização e botões diretos de rota no Google Maps e Waze.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleToggleFeature("gps_enabled")}
+                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${
+                  features.gps_enabled ? "bg-emerald-500" : "bg-zinc-700"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+                    features.gps_enabled ? "right-1" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 4. WhatsApp Flutuante */}
+            <div className="flex items-start justify-between p-3 rounded-2xl bg-zinc-900/80 border border-white/10 gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <MessageCircle size={14} className="text-emerald-400" />
+                  <span className="text-xs font-bold text-zinc-200">WhatsApp Oficial Pulsante</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Botão flutuante no canto da tela para contato imediato.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleToggleFeature("whatsapp_enabled")}
+                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${
+                  features.whatsapp_enabled ? "bg-emerald-500" : "bg-zinc-700"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+                    features.whatsapp_enabled ? "right-1" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal de Publicação */}
       {showPublishModal && publishedUrl && (
@@ -138,7 +363,7 @@ export function CreativeTopNav() {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 text-black text-xs font-bold hover:bg-emerald-400"
               >
-                <span>Acessar Site</span>
+                <span>Acessar</span>
                 <ExternalLink size={12} />
               </a>
             </div>
@@ -148,4 +373,3 @@ export function CreativeTopNav() {
     </header>
   );
 }
-

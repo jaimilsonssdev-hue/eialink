@@ -100,32 +100,56 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
 
       selectProject: (id) => set({ activeProjectId: id }),
 
-      updateActiveProjectHtml: (html) =>
-        set((state) => ({
-          projects: state.projects.map((p) =>
+      updateActiveProjectHtml: (html) => {
+        set((state) => {
+          const updated = state.projects.map((p) =>
             p.id === state.activeProjectId
               ? { ...p, html, updatedAt: Date.now() }
               : p,
-          ),
-        })),
+          );
+          const active = updated.find((p) => p.id === state.activeProjectId);
+          if (active) {
+            import("@/modules/studio/studio.functions").then(({ syncCreativeStudioProjectFn }) => {
+              syncCreativeStudioProjectFn({ data: { project: active } }).catch(() => {});
+            });
+          }
+          return { projects: updated };
+        });
+      },
 
-      updateActiveProjectBriefing: (briefing) =>
-        set((state) => ({
-          projects: state.projects.map((p) =>
+      updateActiveProjectBriefing: (briefing) => {
+        set((state) => {
+          const updated = state.projects.map((p) =>
             p.id === state.activeProjectId
               ? { ...p, briefing, updatedAt: Date.now() }
               : p,
-          ),
-        })),
+          );
+          const active = updated.find((p) => p.id === state.activeProjectId);
+          if (active) {
+            import("@/modules/studio/studio.functions").then(({ syncCreativeStudioProjectFn }) => {
+              syncCreativeStudioProjectFn({ data: { project: active } }).catch(() => {});
+            });
+          }
+          return { projects: updated };
+        });
+      },
 
-      addChatMessage: (msg) =>
-        set((state) => ({
-          projects: state.projects.map((p) =>
+      addChatMessage: (msg) => {
+        set((state) => {
+          const updated = state.projects.map((p) =>
             p.id === state.activeProjectId
               ? { ...p, messages: [...p.messages, msg], updatedAt: Date.now() }
               : p,
-          ),
-        })),
+          );
+          const active = updated.find((p) => p.id === state.activeProjectId);
+          if (active) {
+            import("@/modules/studio/studio.functions").then(({ syncCreativeStudioProjectFn }) => {
+              syncCreativeStudioProjectFn({ data: { project: active } }).catch(() => {});
+            });
+          }
+          return { projects: updated };
+        });
+      },
 
       deleteProject: (id) =>
         set((state) => ({

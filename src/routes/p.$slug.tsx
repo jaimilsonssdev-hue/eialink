@@ -576,9 +576,18 @@ function PublicBio() {
     }
   }
 
-  // Se for uma demonstração de prospecção sem template definido ou com "default", promove para o Site Institucional Máquina de Sites
+  // Se for uma demonstração de prospecção sem template definido ou com "default":
+  // Se for gastronomia, mantém o cardápio (restaurant-menu)
+  // Se for loja/varejo, mantém a vitrine (store-showcase)
+  // Caso contrário, promove para o Site Institucional Máquina de Sites
   if (isDemo && (!bio.template_id || bio.template_id === "default")) {
-    effectiveTemplateId = "site-maquina";
+    if (["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nicheKey)) {
+      effectiveTemplateId = "restaurant-menu";
+    } else if (["moda", "otica", "calcados", "loja", "varejo", "joias"].includes(nicheKey)) {
+      effectiveTemplateId = "store-showcase";
+    } else {
+      effectiveTemplateId = "site-maquina";
+    }
   }
 
   // Se o avatar gravado for foto genérica de pessoas do Unsplash e o nicho não for pessoal,

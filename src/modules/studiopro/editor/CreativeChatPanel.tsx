@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Sparkles,
   Send,
@@ -10,6 +10,10 @@ import {
   ChevronDown,
   Layers,
   Wand2,
+  Paperclip,
+  Image as ImageIcon,
+  X,
+  AlertTriangle,
 } from "lucide-react";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import {
@@ -26,6 +30,8 @@ import { toast } from "sonner";
 export function CreativeChatPanel() {
   const [input, setInput] = useState("");
   const [showModeDropdown, setShowModeDropdown] = useState(false);
+  const [attachedImages, setAttachedImages] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const {
     getActiveProject,
@@ -43,35 +49,71 @@ export function CreativeChatPanel() {
   const messages = activeProject?.messages || [];
   const currentHtml = activeProject?.html || "";
 
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    Array.from(files).forEach((file) => {
+      if (!file.type.startsWith("image/")) {
+        toast.error("Por favor, selecione apenas arquivos de imagem.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        const base64 = uploadEvent.target?.result as string;
+        if (base64) {
+          setAttachedImages((prev) => [...prev, base64]);
+          toast.success(`Foto "${file.name}" anexada com sucesso!`);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
+    if (e.target) e.target.value = "";
+  }
+
   async function handleSend() {
     const text = input.trim();
-    if (!text || isGenerating) return;
+    if ((!text && attachedImages.length === 0) || isGenerating) return;
+
+    let fullPrompt = text;
+    if (attachedImages.length > 0) {
+      fullPrompt = `${text}\n[Obs: O usuário anexou ${attachedImages.length} foto(s) de referência para incluir/aplicar no design do site]`;
+    }
 
     setInput("");
+    const currentAttachments = [...attachedImages];
+    setAttachedImages([]);
+
     const userMsgId = `user-${Date.now()}`;
     addChatMessage({
       id: userMsgId,
       role: "user",
-      content: text,
+      content: fullPrompt,
       timestamp: Date.now(),
     });
 
     try {
       if (mode === "plan" && !currentHtml) {
-        // MODO 1: Planejar primeiro com Gemini 3.8 Flash
-        setIsGenerating(true, "Elaborando plano estratégico de design com Gemini 3.8 Flash...");
+        setIsGenerating(true, "Elaborando plano estratégico com Gemini 3.8 Flash...");
         let briefing = "";
         try {
-          const res = await planCreativeSiteBriefingFn({
-            data: {
-              prompt: text,
-              history: messages.map((m) => ({ role: m.role, content: m.content })),
-            },
-          });
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Tempo limite excedido na nuvem")), 25000),
+          );
+          const res = await Promise.race([
+            planCreativeSiteBriefingFn({
+              data: {
+                prompt: fullPrompt,
+                history: messages.map((m) => ({ role: m.role, content: m.content })),
+              },
+            }),
+            timeoutPromise,
+          ]);
           briefing = res.briefing;
-        } catch (serverErr) {
+        } catch (serverErr: any) {
           console.warn("[CreativeChat] Fallback para briefing local:", serverErr);
-          briefing = await planSiteBriefing(text, messages);
+          briefing = await planSiteBriefing(fullPrompt, messages);
         }
         setIsGenerating(false);
 
@@ -83,31 +125,40 @@ export function CreativeChatPanel() {
           timestamp: Date.now(),
         });
       } else {
-        // MODO 2: Construir / Ajustar com Gemini 3.8 Flash
         const isIteration = Boolean(currentHtml);
         setIsGenerating(
           true,
           isIteration
             ? "Aplicando ajustes no site com Gemini 3.8 Flash..."
-            : "Gerando código completo do site no padrão Lovable com Gemini 3.8 Flash...",
+            : "Gerando site completo com Gemini 3.8 Flash...",
         );
 
         let newHtml = "";
         try {
-          const res = await generateCreativeSiteFn({
-            data: {
-              briefingOrPrompt: text,
-              existingHtml: isIteration ? currentHtml : undefined,
-              projectId: activeProject?.id,
-              projectName: activeProject?.name,
-            },
-          });
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 45000),
+          );
+          const res = await Promise.race([
+            generateCreativeSiteFn({
+              data: {
+                briefingOrPrompt: fullPrompt,
+                existingHtml: isIteration ? currentHtml : undefined,
+                projectId: activeProject?.id,
+                projectName: activeProject?.name,
+              },
+            }),
+            timeoutPromise,
+          ]);
           newHtml = res.html;
         } catch (serverErr) {
-          console.warn("[CreativeChat] Fallback para geração direta:", serverErr);
-          newHtml = await generateSiteHtml(text, isIteration ? currentHtml : undefined);
+          console.warn("[CreativeChat] Fallback para geração direta do cliente:", serverErr);
+          newHtml = await generateSiteHtml(fullPrompt, isIteration ? currentHtml : undefined);
         }
         setIsGenerating(false);
+
+        if (!newHtml || newHtml.length < 50) {
+          throw new Error("A IA retornou uma resposta vazia. Tente clicar em gerar novamente.");
+        }
 
         updateActiveProjectHtml(newHtml);
         addChatMessage({
@@ -118,7 +169,7 @@ export function CreativeChatPanel() {
             : "🎉 Seu site foi gerado com sucesso! Você pode ver a prévia ao lado ou pedir ajustes finos por aqui.",
           timestamp: Date.now(),
         });
-        toast.success("Site gerado e salvo na nuvem com sucesso!");
+        toast.success("Site gerado e sincronizado com sucesso!");
       }
     } catch (err: any) {
       setIsGenerating(false);
@@ -128,7 +179,7 @@ export function CreativeChatPanel() {
       addChatMessage({
         id: `err-${Date.now()}`,
         role: "system",
-        content: `⚠️ Não foi possível processar: ${msg}`,
+        content: `⚠️ Não foi possível processar: ${msg}. Por favor, clique novamente ou verifique se sua chave do Google AI Studio está configurada.`,
         timestamp: Date.now(),
       });
     }
@@ -144,32 +195,50 @@ export function CreativeChatPanel() {
       );
       let html = "";
       try {
-        const res = await generateCreativeSiteFn({
-          data: {
-            briefingOrPrompt: activeProject.briefing,
-            projectId: activeProject.id,
-            projectName: activeProject.name,
-          },
-        });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 45000),
+        );
+        const res = await Promise.race([
+          generateCreativeSiteFn({
+            data: {
+              briefingOrPrompt: activeProject.briefing,
+              projectId: activeProject.id,
+              projectName: activeProject.name,
+            },
+          }),
+          timeoutPromise,
+        ]);
         html = res.html;
-      } catch (serverErr) {
+      } catch (serverErr: any) {
         console.warn("[CreativeChat] Fallback para geração direta:", serverErr);
         html = await generateSiteHtml(activeProject.briefing);
       }
       setIsGenerating(false);
+
+      if (!html || html.length < 50) {
+        throw new Error("O site não pôde ser gerado. Tente novamente.");
+      }
 
       updateActiveProjectHtml(html);
       addChatMessage({
         id: `ai-build-${Date.now()}`,
         role: "assistant",
         content:
-          "🚀 O site foi totalmente construído e salvo na nuvem! Você pode pedir refinamentos aqui ou clicar em 'Publicar' para subir no Cloudflare.",
+          "🚀 O site foi totalmente construído e salvo na nuvem! Você pode pedir refinamentos aqui, usar o editor visual ou clicar em 'Publicar' para subir no Cloudflare.",
         timestamp: Date.now(),
       });
       toast.success("Site gerado e sincronizado com sucesso!");
     } catch (err: any) {
       setIsGenerating(false);
-      toast.error(err.message || "Erro ao gerar site.");
+      console.error(err);
+      const msg = err.message || "Erro ao gerar site.";
+      toast.error(msg);
+      addChatMessage({
+        id: `err-${Date.now()}`,
+        role: "system",
+        content: `⚠️ Falha ao construir o site: ${msg}. Tente clicar em "Aprovar & Gerar Site" novamente.`,
+        timestamp: Date.now(),
+      });
     }
   }
 
@@ -294,7 +363,37 @@ export function CreativeChatPanel() {
 
       {/* Input de Comando Lovable */}
       <div className="p-3 border-t border-white/[0.08] bg-zinc-950/80 backdrop-blur-md">
+        {/* Pré-visualização de fotos anexadas */}
+        {attachedImages.length > 0 && (
+          <div className="flex items-center gap-2 mb-2 p-2 rounded-xl bg-zinc-900 border border-white/[0.08] overflow-x-auto custom-scrollbar">
+            {attachedImages.map((img, idx) => (
+              <div key={idx} className="relative w-12 h-12 rounded-lg overflow-hidden border border-white/20 shrink-0 group">
+                <img src={img} alt="Anexo" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => setAttachedImages((prev) => prev.filter((_, i) => i !== idx))}
+                  className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white transition-opacity"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+            <span className="text-[10px] text-zinc-400">
+              {attachedImages.length} foto(s) anexada(s)
+            </span>
+          </div>
+        )}
+
         <div className="relative rounded-2xl bg-zinc-900 border border-white/[0.09] focus-within:border-emerald-500/60 transition-all shadow-lg">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept="image/*"
+            multiple
+            className="hidden"
+          />
+
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -306,7 +405,7 @@ export function CreativeChatPanel() {
             }}
             placeholder={
               currentHtml
-                ? "Peça uma alteração (ex: 'coloque fundo escuro e troque a foto')..."
+                ? "Peça uma alteração (ex: 'coloque fundo escuro e use a foto anexada')..."
                 : "Descreva a empresa para planejar o site..."
             }
             rows={2}
@@ -314,15 +413,26 @@ export function CreativeChatPanel() {
           />
 
           <div className="flex items-center justify-between px-3 pb-2 pt-1">
-            <div className="flex items-center gap-1">
-              <span className="text-[10px] text-zinc-500">
-                Shift+Enter para quebrar linha
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isGenerating}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800/80 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 text-xs transition-colors border border-white/[0.06]"
+                title="Anexar imagem ou foto da empresa"
+              >
+                <ImageIcon size={13} />
+                <span className="text-[11px]">Foto</span>
+              </button>
+
+              <span className="text-[10px] text-zinc-500 hidden sm:inline">
+                Shift+Enter quebra linha
               </span>
             </div>
 
             <button
               onClick={handleSend}
-              disabled={!input.trim() || isGenerating}
+              disabled={(!input.trim() && attachedImages.length === 0) || isGenerating}
               className="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-black font-semibold hover:bg-emerald-400 transition-all disabled:opacity-30 disabled:cursor-not-allowed shadow-md active:scale-95"
             >
               <Send size={13} />

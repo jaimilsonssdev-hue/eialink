@@ -2597,14 +2597,35 @@ function ProspectingPage() {
                         <span>Ver Demo</span>
                       </a>
                     ) : (
-                      <button
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 px-3 py-2 text-xs font-semibold hover:bg-emerald-500/25 shadow-xs transition-all cursor-pointer"
-                        onClick={() => handleOpenIdeation(company)}
-                        title="Ideação Estratégica, Super Prompt & Escolha de Modelo"
-                      >
-                        <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                        <span>Ideação & Site ⚡</span>
-                      </button>
+                      (() => {
+                        const nKey = detectNicheKey(company.niche, company.name);
+                        const isFood = ["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nKey);
+                        const isShop = ["moda", "otica", "calcados", "loja", "varejo", "joias"].includes(nKey);
+                        return (
+                          <button
+                            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold shadow-xs transition-all cursor-pointer ${
+                              isFood
+                                ? "border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                                : isShop
+                                  ? "border-pink-500/50 bg-pink-500/15 text-pink-300 hover:bg-pink-500/25"
+                                  : "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                            }`}
+                            onClick={() => handleOpenIdeation(company)}
+                            title={
+                              isFood
+                                ? "Gerar Cardápio Delivery no formato iFood"
+                                : isShop
+                                  ? "Gerar Catálogo & Vitrine de Loja"
+                                  : "Ideação Estratégica & Site no Estúdio"
+                            }
+                          >
+                            <Sparkles className="h-3.5 w-3.5" />
+                            <span>
+                              {isFood ? "Gerar Cardápio 🍔" : isShop ? "Gerar Loja 🛍️" : "Gerar Site ⚡"}
+                            </span>
+                          </button>
+                        );
+                      })()
                     )}
 
                     {whatsappLink(company) ? (
@@ -2909,14 +2930,35 @@ function ProspectingPage() {
                               )}
                             </>
                           ) : (
-                            <button
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 px-3 py-1.5 text-xs font-semibold hover:bg-emerald-500/25 shadow-md transition-all cursor-pointer"
-                              onClick={() => handleOpenIdeation(company)}
-                              title="Ideação Estratégica, Super Prompt & Escolha de Modelo"
-                            >
-                              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                              <span>Ideação & Site ⚡</span>
-                            </button>
+                            (() => {
+                              const nKey = detectNicheKey(company.niche, company.name);
+                              const isFood = ["restaurante", "delivery", "sorveteria", "bebidas", "hamburgueria", "pizzaria", "cafeteria", "japones"].includes(nKey);
+                              const isShop = ["moda", "otica", "calcados", "loja", "varejo", "joias"].includes(nKey);
+                              return (
+                                <button
+                                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all cursor-pointer ${
+                                    isFood
+                                      ? "border-amber-500/50 bg-amber-500/15 text-amber-300 hover:bg-amber-500/25"
+                                      : isShop
+                                        ? "border-pink-500/50 bg-pink-500/15 text-pink-300 hover:bg-pink-500/25"
+                                        : "border-emerald-500/50 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25"
+                                  }`}
+                                  onClick={() => handleOpenIdeation(company)}
+                                  title={
+                                    isFood
+                                      ? "Gerar Cardápio Delivery no formato iFood"
+                                      : isShop
+                                        ? "Gerar Catálogo & Vitrine de Loja"
+                                        : "Ideação Estratégica & Site no Estúdio"
+                                  }
+                                >
+                                  <Sparkles className="h-3.5 w-3.5" />
+                                  <span>
+                                    {isFood ? "Gerar Cardápio 🍔" : isShop ? "Gerar Loja 🛍️" : "Gerar Site ⚡"}
+                                  </span>
+                                </button>
+                              );
+                            })()
                           )}
 
                           {whatsappLink(company) ? (

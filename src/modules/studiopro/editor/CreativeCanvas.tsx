@@ -78,17 +78,19 @@ export function CreativeCanvas() {
 
         <div className="flex items-center gap-2">
           {html && (
-            <button
-              onClick={() => {
-                const blob = new Blob([html], { type: "text/html" });
-                const url = URL.createObjectURL(blob);
-                window.open(url, "_blank");
-              }}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors"
-            >
-              <ExternalLink size={13} />
-              <span>Abrir em aba cheia</span>
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  const blob = new Blob([html], { type: "text/html" });
+                  const url = URL.createObjectURL(blob);
+                  window.open(url, "_blank");
+                }}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-900 transition-colors border border-white/[0.06]"
+              >
+                <ExternalLink size={13} />
+                <span className="hidden sm:inline">Aba Cheia</span>
+              </button>
+            </>
           )}
         </div>
       </div>

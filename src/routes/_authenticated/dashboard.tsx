@@ -53,6 +53,7 @@ function Dashboard() {
   const access = usePlanAccess();
   const { data: profile } = useQuery({
     queryKey: ["profile-me"],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return null;
@@ -66,6 +67,7 @@ function Dashboard() {
   });
   const { data: bio } = useQuery({
     queryKey: ["bio-me"],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return null;
@@ -81,6 +83,7 @@ function Dashboard() {
   });
   const { data: isAdmin } = useQuery({
     queryKey: ["is-admin-dashboard"],
+    staleTime: 120_000,
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       if (!u.user) return false;
@@ -96,6 +99,7 @@ function Dashboard() {
   const { data: linksCount } = useQuery({
     queryKey: ["links-count", bio?.id],
     enabled: !!bio?.id,
+    staleTime: 60_000,
     queryFn: async () => {
       const { count } = await supabase
         .from("bio_links")
@@ -107,6 +111,7 @@ function Dashboard() {
   const { data: stats } = useQuery({
     queryKey: ["stats-me", bio?.id],
     enabled: !!bio?.id,
+    staleTime: 30_000,
     queryFn: async () => {
       const { data } = await supabase
         .from("analytics_events")
@@ -122,6 +127,7 @@ function Dashboard() {
   });
   const { data: requestsCount } = useQuery({
     queryKey: ["requests-count"],
+    staleTime: 60_000,
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
       const { count } = await supabase
@@ -176,14 +182,14 @@ function Dashboard() {
       title: "Configurar Nome & WhatsApp",
       desc: "Garante que o cliente fale direto com você.",
       done: Boolean(bio?.display_name?.trim()) && (bio?.whatsapp?.replace(/\D/g, "").length ?? 0) >= 10,
-      link: "/studio",
+      link: "/studio-pro",
     },
     {
       id: "carousel",
       title: "Criar Carrossel Instagram de Produtos",
       desc: "Fotos 4:5 reais dos seus produtos ou pratos com botão Zap.",
       done: carouselItemsCount > 0,
-      link: "/studio",
+      link: "/studio-pro",
     },
     {
       id: "agenda",
@@ -204,7 +210,7 @@ function Dashboard() {
       title: "Colocar Link na Bio do Instagram",
       desc: "Receba as primeiras visitas e pedidos.",
       done: (stats?.views ?? 0) > 0,
-      link: publicUrl || "/studio",
+      link: publicUrl || "/studio-pro",
       isExternal: Boolean(publicUrl),
     },
   ];
@@ -235,26 +241,18 @@ function Dashboard() {
           </div>
           <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-white font-display leading-tight">
             Olá, {profile?.full_name?.split(" ")[0] ?? "empreendedor"}.<br />
-            Sua presença merece <span className="text-zinc-200 underline decoration-amber-400/40 decoration-2 underline-offset-4">mais destaque.</span>
+            Sua presença merece <span className="text-zinc-200 underline decoration-emerald-400/40 decoration-2 underline-offset-4">mais destaque.</span>
           </h1>
           <p className="text-sm sm:text-base text-zinc-400 max-w-2xl leading-relaxed">
-            Seus produtos no estilo Instagram, agendamento 24h e integração de balcão com WhatsApp.
+            Crie sites modernos, receba agendamentos no Google Agenda e converta visitas em mensagens de WhatsApp.
           </p>
 
           <div className="flex flex-wrap items-center gap-3 pt-2">
             <Link
-              to="/studio"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-zinc-100 text-zinc-950 font-semibold text-xs sm:text-sm shadow-md transition-all hover:scale-[1.01]"
+              to="/studio-pro"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs sm:text-sm shadow-md shadow-emerald-500/10 transition-all hover:scale-[1.01]"
             >
-              <PanelsTopLeft className="h-4 w-4" /> Personalizar no Studio IA
-            </Link>
-            <Link
-              to="/studio"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-zinc-800/80 hover:bg-zinc-700/80 border border-white/10 text-white font-semibold text-xs sm:text-sm shadow-sm transition-all hover:scale-[1.01]"
-              title="Gerar proposta de site completa com briefing e fotos via IA Gateway"
-            >
-              <Sparkles className="h-4 w-4 text-purple-300" />
-              <span>Gerar Proposta com Fotos (Studio IA)</span>
+              <Sparkles className="h-4 w-4" /> Criar no Estúdio Criativo (Gemini)
             </Link>
             {bio && (
               <FlashDealModal
@@ -268,7 +266,7 @@ function Dashboard() {
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-zinc-950 font-bold text-xs sm:text-sm shadow-md shadow-amber-500/10 transition-all hover:scale-[1.01] cursor-pointer"
                   >
                     <Zap className="h-4 w-4 fill-zinc-950 text-zinc-950" />
-                    <span>⚡ Publicar Oferta (Flash / Mural)</span>
+                    <span>⚡ Publicar Oferta</span>
                   </button>
                 }
               />
@@ -280,7 +278,7 @@ function Dashboard() {
                 rel="noopener"
                 className="inline-flex items-center gap-1.5 px-3 py-2 text-xs sm:text-sm font-semibold text-zinc-400 hover:text-white transition-colors"
               >
-                Ver página <ExternalLink className="h-3.5 w-3.5" />
+                Ver página pública <ExternalLink className="h-3.5 w-3.5" />
               </a>
             )}
           </div>
@@ -613,55 +611,42 @@ function Dashboard() {
         </div>
       )}
 
-      {bio && (
-        <CrossTrafficManager bioPageId={bio.id} pageTitle={bio.display_name} className="mt-6" />
-      )}
-
-      {bio && (
-        <div className="space-y-6 mt-6">
-          <CashbackSettingsCard bioPageId={bio.id} />
-          <CounterValidationCard bioPageId={bio.id} businessName={bio.display_name} />
-          <RetentionGuardianCard bioPageId={bio.id} businessName={bio.display_name} />
-        </div>
-      )}
-
       <div className="space-y-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Comece por aqui</p>
-          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white font-display mt-0.5">Deixe sua página pronta para vender</h2>
+          <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Acesso Rápido</p>
+          <h2 className="text-lg sm:text-xl font-bold tracking-tight text-white font-display mt-0.5">Gerenciamento da sua Presença</h2>
         </div>
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <QuickCard
+            icon={Sparkles}
+            title="Estúdio Criativo"
+            to="/studio-pro"
+            desc="Crie e refine sites modernos com IA no padrão Lovable"
+            color="#34d399"
+          />
+          <QuickCard
             icon={PanelsTopLeft}
             title="Minha Página"
-            to="/studio"
-            desc="Personalize capa, perfil, contato e links no Studio IA"
-            color="var(--brand-pink)"
+            to="/pages"
+            desc="Gerencie suas páginas criadas e links públicos"
+            color="#38bdf8"
           />
           <QuickCard
             icon={BarChart3}
-            title="Ver Analytics"
+            title="Métricas & Vendas"
             to="/analytics"
-            desc="Gráficos de acessos e origem do tráfego"
-            color="var(--brand-pink)"
+            desc="Acompanhe visualizações e cliques no WhatsApp"
+            color="#a78bfa"
           />
           <QuickCard
-            icon={Sparkles}
-            title="Diagnóstico"
-            to="/diagnostic"
-            desc="Descubra seu score digital e oportunidades"
-            color="var(--brand-amber)"
-          />
-          <QuickCard
-            icon={TrendingUp}
-            title="Centro de Crescimento"
-            to="/growth"
-            desc="Dicas e táticas para crescer faturamento"
-            color="var(--brand-lime)"
+            icon={Calendar}
+            title="Agendamento"
+            to="/agenda"
+            desc="Configure horários e sincronize com o Google Agenda"
+            color="#f59e0b"
           />
         </div>
       </div>
-      <TemplateMarketplace />
     </div>
   );
 }

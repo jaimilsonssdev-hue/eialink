@@ -73,15 +73,8 @@ function AuthedLayout() {
             to: "/studio-pro",
             label: "Estúdio Criativo",
             icon: Sparkles,
-            badge: "Novo (Lovable)",
+            badge: "Gemini",
             badgeClassName: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
-          },
-          {
-            to: "/studio",
-            label: "Studio Clássico",
-            icon: Clapperboard,
-            badge: "IA",
-            badgeClassName: "bg-zinc-800 text-zinc-300 border border-white/10 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
           },
           { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
         ],
@@ -108,7 +101,7 @@ function AuthedLayout() {
 
   const mobileNavItems = useMemo(() => {
     const homeItem = { to: "/dashboard", label: "Início", icon: LayoutDashboard };
-    const studioItem = { to: "/studio", label: "Studio", icon: Clapperboard };
+    const studioItem = { to: "/studio-pro", label: "Estúdio", icon: Sparkles };
     const pagesItem = { to: "/pages", label: "Páginas", icon: PanelsTopLeft };
 
     let salesItem = { to: "/agenda", label: "Agenda", icon: CalendarDays };

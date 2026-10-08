@@ -9,6 +9,7 @@ import { CreativeChatPanel } from "@/modules/studiopro/editor/CreativeChatPanel"
 import { CreativeCanvas } from "@/modules/studiopro/editor/CreativeCanvas";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { supabase } from "@/integrations/supabase/client";
+import { listCreativeStudioProjectsFn } from "@/modules/studio/studio.functions";
 
 function CreativeEditorView() {
   return (
@@ -51,8 +52,23 @@ interface CreativeStudioAppProps {
 }
 
 export function StudioProApp({ pageId }: CreativeStudioAppProps) {
-  const { createProject, selectProject, updateActiveProjectHtml } =
+  const { createProject, selectProject, updateActiveProjectHtml, setProjects } =
     useCreativeStudioStore();
+
+  // Sincroniza projetos da nuvem para que o que foi feito no Mobile apareça no Desktop e vice-versa
+  useEffect(() => {
+    async function syncCloudProjects() {
+      try {
+        const res = await listCreativeStudioProjectsFn();
+        if (res?.projects && res.projects.length > 0) {
+          setProjects(res.projects as any);
+        }
+      } catch (err) {
+        console.warn("[StudioProApp] Não foi possível carregar projetos da nuvem:", err);
+      }
+    }
+    syncCloudProjects();
+  }, [setProjects]);
 
   // Carrega lead da prospecção automaticamente caso venha com ?page=UUID
   useEffect(() => {

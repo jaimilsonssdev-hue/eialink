@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
@@ -287,7 +287,16 @@ function isStudioChatMessage(value: unknown): value is StudioChatMessage {
   );
 }
 
+
 export const Route = createFileRoute("/_authenticated/studio")({
+  beforeLoad: ({ search }) => {
+    throw redirect({
+      to: "/studio-pro",
+      search: {
+        page: search.page,
+      },
+    });
+  },
   component: CinematicStudioPage,
   validateSearch: z.object({
     page: z.string().optional(),

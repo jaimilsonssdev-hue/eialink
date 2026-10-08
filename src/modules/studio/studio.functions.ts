@@ -262,3 +262,291 @@ export const saveStudioPageFn = createServerFn({ method: "POST" })
     };
   });
 
+import {
+  BRIEFING_SYSTEM_PROMPT,
+  CODE_GENERATION_SYSTEM_PROMPT,
+} from "@/modules/studiopro/lib/creativeEngineService";
+
+/**
+ * 6. Gera o site completo em HTML/Tailwind com Gemini 3.8 Flash no servidor
+ * e persiste automaticamente na tabela bio_pages do usuário logado
+ */
+export const generateCreativeSiteFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    (d: {
+      briefingOrPrompt: string;
+      existingHtml?: string;
+      projectId?: string;
+      projectName?: string;
+      apiKey?: string;
+    }) => d,
+  )
+  .handler(async ({ data: input, context }) => {
+    const supabase = context.supabase;
+    const userId = context.userId;
+
+    let resolvedKey = input.apiKey?.trim();
+    if (!resolvedKey) {
+      resolvedKey = (await resolveGeminiApiKeyAsync()) || undefined;
+    }
+    if (!resolvedKey) {
+      throw new Error("Chave do Google AI Studio não configurada. Configure no painel Admin.");
+    }
+
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey: resolvedKey });
+
+    let userPrompt = input.briefingOrPrompt;
+    if (input.existingHtml && input.existingHtml.length > 50) {
+      userPrompt = `MODIFICAÇÃO NO SITE EXISTENTE:
+O usuário solicitou o seguinte ajuste:
+"${input.briefingOrPrompt}"
+
+Aqui está o código HTML atual da página que deve ser modificado preservando todo o restante da estrutura e melhorando com o novo ajuste:
+${input.existingHtml}
+
+Retorne o HTML completo atualizado com a alteração solicitada.`;
+    }
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+      config: {
+        systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
+        temperature: 0.7,
+      },
+    });
+
+    let raw = response.text?.trim() || "";
+    if (raw.startsWith("```html")) {
+      raw = raw.replace(/^```html\s*/i, "");
+    } else if (raw.startsWith("```")) {
+      raw = raw.replace(/^```\s*/, "");
+    }
+    if (raw.endsWith("```")) {
+      raw = raw.replace(/```\s*$/, "");
+    }
+    const cleanHtml = raw.trim();
+
+    let savedPageId = input.projectId;
+    let savedSlug = "";
+
+    try {
+      const pageName = input.projectName || "Site Criativo";
+      const slugCandidate = slugify(pageName);
+
+      const { data: existing } = await supabase
+        .from("bio_pages")
+        .select("id, slug, social_links")
+        .eq("user_id", userId)
+        .eq("title", pageName)
+        .maybeSingle();
+
+      const existingSocial = (existing?.social_links as any) || {};
+      const updatedSocial = {
+        ...existingSocial,
+        custom_html: cleanHtml,
+        creative_studio_project: {
+          id: input.projectId || existing?.id || `proj-${Date.now()}`,
+          name: pageName,
+          briefing: input.briefingOrPrompt,
+          html: cleanHtml,
+          updatedAt: Date.now(),
+        },
+      };
+
+      if (existing) {
+        await supabase
+          .from("bio_pages")
+          .update({
+            social_links: updatedSocial,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id);
+        savedPageId = existing.id;
+        savedSlug = existing.slug;
+      } else {
+        const uniqueSlug = `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
+        const { data: created } = await supabase
+          .from("bio_pages")
+          .insert({
+            user_id: userId,
+            title: pageName,
+            display_name: pageName,
+            slug: uniqueSlug,
+            template: "cinematic-glass",
+            is_published: true,
+            social_links: updatedSocial,
+          })
+          .select("id, slug")
+          .single();
+        savedPageId = created?.id;
+        savedSlug = created?.slug || uniqueSlug;
+      }
+    } catch (dbErr) {
+      console.warn("[Studio] Erro ao sincronizar bio_page no banco:", dbErr);
+    }
+
+    return {
+      ok: true,
+      html: cleanHtml,
+      pageId: savedPageId,
+      slug: savedSlug,
+    };
+  });
+
+/**
+ * 7. Elabora plano/briefing estratégico via Gemini 3.8 Flash no servidor
+ */
+export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    (d: {
+      prompt: string;
+      history?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
+      apiKey?: string;
+    }) => d,
+  )
+  .handler(async ({ data: input }) => {
+    let resolvedKey = input.apiKey?.trim();
+    if (!resolvedKey) {
+      resolvedKey = (await resolveGeminiApiKeyAsync()) || undefined;
+    }
+    if (!resolvedKey) {
+      throw new Error("Chave do Google AI Studio não configurada. Configure no painel Admin.");
+    }
+
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey: resolvedKey });
+
+    const formattedHistory = (input.history || []).map((msg) => ({
+      role: msg.role === "assistant" ? "model" : "user",
+      parts: [{ text: msg.content }],
+    }));
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: [
+        ...formattedHistory,
+        { role: "user", parts: [{ text: input.prompt }] },
+      ],
+      config: {
+        systemInstruction: BRIEFING_SYSTEM_PROMPT,
+        temperature: 0.7,
+      },
+    });
+
+    return {
+      ok: true,
+      briefing: response.text?.trim() || "Plano estratégico elaborado com sucesso.",
+    };
+  });
+
+/**
+ * 8. Sincroniza projeto do Estúdio Criativo na nuvem (Supabase)
+ */
+export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    (d: {
+      project: {
+        id: string;
+        name: string;
+        html: string;
+        briefing?: string;
+        messages: any[];
+        slug?: string;
+      };
+    }) => d,
+  )
+  .handler(async ({ data: input, context }) => {
+    const supabase = context.supabase;
+    const userId = context.userId;
+    const proj = input.project;
+
+    const { data: existing } = await supabase
+      .from("bio_pages")
+      .select("id, slug, social_links")
+      .eq("user_id", userId)
+      .eq("title", proj.name)
+      .maybeSingle();
+
+    const existingSocial = (existing?.social_links as any) || {};
+    const updatedSocial = {
+      ...existingSocial,
+      custom_html: proj.html,
+      creative_studio_project: proj,
+    };
+
+    if (existing) {
+      await supabase
+        .from("bio_pages")
+        .update({
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id);
+      return { success: true, pageId: existing.id, slug: existing.slug };
+    } else {
+      const slugCandidate = slugify(proj.name || "site-criativo");
+      const uniqueSlug = `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
+      const { data: created } = await supabase
+        .from("bio_pages")
+        .insert({
+          user_id: userId,
+          title: proj.name || "Site Criativo",
+          display_name: proj.name || "Site Criativo",
+          slug: uniqueSlug,
+          template: "cinematic-glass",
+          is_published: true,
+          social_links: updatedSocial,
+        })
+        .select("id, slug")
+        .single();
+      return { success: true, pageId: created?.id, slug: created?.slug || uniqueSlug };
+    }
+  });
+
+/**
+ * 9. Lista projetos salvos no Supabase para sincronizar Desktop & Mobile
+ */
+export const listCreativeStudioProjectsFn = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const supabase = context.supabase;
+    const userId = context.userId;
+
+    const { data, error } = await supabase
+      .from("bio_pages")
+      .select("id, title, display_name, slug, social_links, updated_at, created_at")
+      .eq("user_id", userId)
+      .order("updated_at", { ascending: false });
+
+    if (error || !data) return { projects: [] };
+
+    const projects = data
+      .map((row) => {
+        const social = (row.social_links as any) || {};
+        const csp = social.creative_studio_project;
+        const html = social.custom_html || "";
+        if (!csp && !html) return null;
+
+        return {
+          id: csp?.id || row.id,
+          name: csp?.name || row.display_name || row.title || "Site Criativo",
+          html: csp?.html || html,
+          briefing: csp?.briefing || "",
+          eialinkPageId: row.id,
+          slug: row.slug,
+          createdAt: new Date(row.created_at).getTime(),
+          updatedAt: new Date(row.updated_at).getTime(),
+          status: "published" as const,
+          messages: Array.isArray(csp?.messages) ? csp.messages : [],
+        };
+      })
+      .filter(Boolean);
+
+    return { projects };
+  });
+

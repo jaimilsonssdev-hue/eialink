@@ -16,6 +16,11 @@ import {
   planSiteBriefing,
   generateSiteHtml,
 } from "@/modules/studiopro/lib/creativeEngineService";
+import {
+  generateCreativeSiteFn,
+  planCreativeSiteBriefingFn,
+  syncCreativeStudioProjectFn,
+} from "@/modules/studio/studio.functions";
 import { toast } from "sonner";
 
 export function CreativeChatPanel() {
@@ -53,9 +58,21 @@ export function CreativeChatPanel() {
 
     try {
       if (mode === "plan" && !currentHtml) {
-        // MODO 1: Planejar primeiro
-        setIsGenerating(true, "Elaborando plano estratégico de design...");
-        const briefing = await planSiteBriefing(text, messages);
+        // MODO 1: Planejar primeiro com Gemini 3.8 Flash
+        setIsGenerating(true, "Elaborando plano estratégico de design com Gemini 3.8 Flash...");
+        let briefing = "";
+        try {
+          const res = await planCreativeSiteBriefingFn({
+            data: {
+              prompt: text,
+              history: messages.map((m) => ({ role: m.role, content: m.content })),
+            },
+          });
+          briefing = res.briefing;
+        } catch (serverErr) {
+          console.warn("[CreativeChat] Fallback para briefing local:", serverErr);
+          briefing = await planSiteBriefing(text, messages);
+        }
         setIsGenerating(false);
 
         updateActiveProjectBriefing(briefing);
@@ -66,16 +83,30 @@ export function CreativeChatPanel() {
           timestamp: Date.now(),
         });
       } else {
-        // MODO 2: Construir / Ajustar
+        // MODO 2: Construir / Ajustar com Gemini 3.8 Flash
         const isIteration = Boolean(currentHtml);
         setIsGenerating(
           true,
           isIteration
-            ? "Aplicando ajustes e refinando visual..."
-            : "Gerando código completo do site no padrão Lovable...",
+            ? "Aplicando ajustes no site com Gemini 3.8 Flash..."
+            : "Gerando código completo do site no padrão Lovable com Gemini 3.8 Flash...",
         );
 
-        const newHtml = await generateSiteHtml(text, isIteration ? currentHtml : undefined);
+        let newHtml = "";
+        try {
+          const res = await generateCreativeSiteFn({
+            data: {
+              briefingOrPrompt: text,
+              existingHtml: isIteration ? currentHtml : undefined,
+              projectId: activeProject?.id,
+              projectName: activeProject?.name,
+            },
+          });
+          newHtml = res.html;
+        } catch (serverErr) {
+          console.warn("[CreativeChat] Fallback para geração direta:", serverErr);
+          newHtml = await generateSiteHtml(text, isIteration ? currentHtml : undefined);
+        }
         setIsGenerating(false);
 
         updateActiveProjectHtml(newHtml);
@@ -87,7 +118,7 @@ export function CreativeChatPanel() {
             : "🎉 Seu site foi gerado com sucesso! Você pode ver a prévia ao lado ou pedir ajustes finos por aqui.",
           timestamp: Date.now(),
         });
-        toast.success("Site atualizado na tela!");
+        toast.success("Site gerado e salvo na nuvem com sucesso!");
       }
     } catch (err: any) {
       setIsGenerating(false);
@@ -107,8 +138,24 @@ export function CreativeChatPanel() {
     if (!activeProject?.briefing || isGenerating) return;
 
     try {
-      setIsGenerating(true, "Construindo o site completo a partir do plano aprovado...");
-      const html = await generateSiteHtml(activeProject.briefing);
+      setIsGenerating(
+        true,
+        "Construindo o site completo com Gemini 3.8 Flash a partir do plano aprovado...",
+      );
+      let html = "";
+      try {
+        const res = await generateCreativeSiteFn({
+          data: {
+            briefingOrPrompt: activeProject.briefing,
+            projectId: activeProject.id,
+            projectName: activeProject.name,
+          },
+        });
+        html = res.html;
+      } catch (serverErr) {
+        console.warn("[CreativeChat] Fallback para geração direta:", serverErr);
+        html = await generateSiteHtml(activeProject.briefing);
+      }
       setIsGenerating(false);
 
       updateActiveProjectHtml(html);
@@ -116,10 +163,10 @@ export function CreativeChatPanel() {
         id: `ai-build-${Date.now()}`,
         role: "assistant",
         content:
-          "🚀 O site foi totalmente construído e aplicado! Diga o que deseja refinar ou clique em 'Publicar' para subir no Cloudflare.",
+          "🚀 O site foi totalmente construído e salvo na nuvem! Você pode pedir refinamentos aqui ou clicar em 'Publicar' para subir no Cloudflare.",
         timestamp: Date.now(),
       });
-      toast.success("Site gerado com sucesso!");
+      toast.success("Site gerado e sincronizado com sucesso!");
     } catch (err: any) {
       setIsGenerating(false);
       toast.error(err.message || "Erro ao gerar site.");

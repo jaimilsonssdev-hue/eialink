@@ -27,6 +27,7 @@ interface CreativeEngineState {
   setMode: (mode: "build" | "chat" | "plan") => void;
   setPreviewDevice: (device: "desktop" | "tablet" | "mobile") => void;
   setIsGenerating: (isGenerating: boolean, statusMessage?: string) => void;
+  setProjects: (projects: CreativeProject[]) => void;
   createProject: (name: string, eialinkPageId?: string, slug?: string) => string;
   selectProject: (id: string | null) => void;
   updateActiveProjectHtml: (html: string) => void;
@@ -50,6 +51,23 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
       setPreviewDevice: (previewDevice) => set({ previewDevice }),
       setIsGenerating: (isGenerating, statusMessage = "") =>
         set({ isGenerating, statusMessage }),
+      setProjects: (projects) => {
+        set((state) => {
+          // Merge mantendo projetos existentes e priorizando os remotos atualizados
+          const map = new Map<string, CreativeProject>();
+          projects.forEach((p) => map.set(p.id, p));
+          state.projects.forEach((p) => {
+            if (!map.has(p.id)) map.set(p.id, p);
+          });
+          const merged = Array.from(map.values()).sort(
+            (a, b) => b.updatedAt - a.updatedAt,
+          );
+          return {
+            projects: merged,
+            activeProjectId: state.activeProjectId || (merged[0]?.id ?? null),
+          };
+        });
+      },
 
       createProject: (name, eialinkPageId, slug) => {
         const id = `project-${Date.now()}`;

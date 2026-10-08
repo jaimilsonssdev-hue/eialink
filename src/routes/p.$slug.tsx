@@ -27,6 +27,8 @@ import { DealPopup } from "@/components/public-profile/DealPopup";
 import { LoyaltyCustomerWalletModal } from "@/components/loyalty/LoyaltyCustomerWalletModal";
 import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
 import type { CinematicPageData } from "@/modules/cinematic/types";
+import { StudioProPublicViewer } from "@/modules/studiopro/StudioProPublicViewer";
+import type { SiteConfig } from "@/modules/studiopro/blocks/types";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -593,10 +595,35 @@ function PublicBio() {
   const isStore = effectiveTemplateId === "store-showcase" || effectiveTemplateId === "storefront";
   const isFullPageChat = effectiveTemplateId === "ai-chat-agent";
   const rawSocial = (bio.social_links as Record<string, any>) || {};
+  const studioproConfig = (rawSocial.studiopro_config || rawSocial.studioproConfig) as SiteConfig | undefined;
+  const isStudioPro = effectiveTemplateId === "studiopro" || Boolean(studioproConfig);
+
+  // PRIORIDADE ABSOLUTA: Se a página possui configuração do Studio Pro, renderiza com fidelidade nativa do Studio Pro
+  if (studioproConfig && isStudioPro) {
+    return (
+      <div className="min-h-screen w-full overflow-x-hidden">
+        <StudioProPublicViewer
+          config={studioproConfig}
+          isDemo={isDemo}
+          companyName={bio.display_name}
+        />
+        {isTriageActive && bio.whatsapp && (
+          <WhatsAppTriageModal
+            isOpen={isTriageOpen}
+            onClose={() => setIsTriageOpen(false)}
+            phone={bio.whatsapp}
+            config={triageConfig}
+            baseMessage={bio.whatsapp_message}
+            bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
+          />
+        )}
+      </div>
+    );
+  }
+
   const cinematicData = (rawSocial.cinematic_data || rawSocial.cinematicData) as CinematicPageData | undefined;
 
-  // PRIORIDADE MÁXIMA: Se a página possui dados do Studio Cinematográfico (cinematicData),
-  // renderiza SEMPRE a experiência Cinematográfica completa (textos, bento grid, marquee, etc.)
+  // Se a página possui dados do Studio Cinematográfico (cinematicData), renderiza experiência Cinematográfica
   if (cinematicData && isCinematic) {
     const customTheme = rawSocial.custom_theme || rawSocial.theme || {};
     const appliedArchetype = customTheme.archetype || cinematicData.archetype || (cinematicData.theme as any)?.archetype || "cinematic";

@@ -290,7 +290,6 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRoute
   '/studio': typeof AuthenticatedStudioRoute
   '/studio-pro': typeof AuthenticatedStudioProRoute
-  '/studio-pro': typeof AuthenticatedStudioProRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -332,6 +331,7 @@ export interface FileRoutesByTo {
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/studio': typeof AuthenticatedStudioRoute
+  '/studio-pro': typeof AuthenticatedStudioProRoute
   '/agendar/$slug': typeof AgendarSlugRoute
   '/api/manifest': typeof ApiManifestRoute
   '/checkout/return': typeof CheckoutReturnRoute
@@ -419,6 +419,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/settings'
     | '/studio'
+    | '/studio-pro'
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'
@@ -460,6 +461,7 @@ export interface FileRouteTypes {
     | '/requests'
     | '/settings'
     | '/studio'
+    | '/studio-pro'
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'
@@ -502,6 +504,7 @@ export interface FileRouteTypes {
     | '/_authenticated/requests'
     | '/_authenticated/settings'
     | '/_authenticated/studio'
+    | '/_authenticated/studio-pro'
     | '/agendar/$slug'
     | '/api/manifest'
     | '/checkout/return'

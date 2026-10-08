@@ -666,8 +666,8 @@ function ProspectingPage() {
         cid: cidMatch ? cidMatch[1] : null,
         preferredTemplateId: isAi ? "cinematic-glass" : "site-maquina",
       });
-      const modelVariant = (page.social_links as any)?.model_variant || (isAi ? "Landing Page Cinematográfica (Studio IA)" : "Site Institucional Máquina de Sites");
-      const url = `https://eialink.com.br/p/${page.slug}`;
+      const modelVariant = (page.social_links as any)?.model_variant || "Landing Page Studio Pro (Lovable)";
+      const url = `https://${page.slug}.eialink.com.br`;
       const newNotes = company.notes
         ? `${company.notes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
         : `Demo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`;
@@ -678,7 +678,7 @@ function ProspectingPage() {
         companyUpdates.phone = page.whatsapp;
       }
       await ProspectingService.updateCompany(company.id, companyUpdates);
-      setFeedback(`🎉 ${isAi ? "Site com IA (Studio Cinematográfico)" : "Site Institucional"} gerado no modelo "${modelVariant}" para ${company.name}! O link já foi anexado para envio no WhatsApp e no Instagram.`);
+      setFeedback(`🎉 Site Studio Pro gerado para ${company.name}! Subdomínio ativo: ${url}. O link já foi anexado para envio.`);
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao gerar página de demonstração.";
@@ -852,12 +852,15 @@ function ProspectingPage() {
     const company = typeof input === "object" ? input : null;
 
     // 1. URL da demo nas notas ou website
-    const urlMatch = notes.match(/https?:\/\/[^\s)]+/) || (company?.website?.includes("/p/") ? [company.website] : null);
+    const urlMatch = notes.match(/https?:\/\/[^\s)]+/) || (company?.website?.includes("eialink.com.br") ? [company.website] : null);
     let url = urlMatch ? urlMatch[0] : null;
 
-    // 2. Extrai slug da URL se existir
+    // 2. Extrai slug da URL se existir (/p/slug ou subdominio.eialink.com.br)
     const slugMatch = url ? url.match(/\/p\/([^/?#\s)]+)/) : null;
-    let slug = slugMatch ? slugMatch[1].toLowerCase().trim() : null;
+    const subMatch = url ? url.match(/https?:\/\/([a-z0-9-]+)\.eialink\.com\.br/i) : null;
+    let slug = slugMatch
+      ? slugMatch[1].toLowerCase().trim()
+      : (subMatch && subMatch[1] !== "www" && subMatch[1] !== "app" ? subMatch[1].toLowerCase().trim() : null);
 
     // 3. ID da página: a partir de (id:uuid), pelo slug em demoPagesBySlug ou pelo nome da empresa
     const idMatch = notes.match(/\(id:([a-f0-9-]+)\)/i);
@@ -875,7 +878,7 @@ function ProspectingPage() {
       matchedPage = demoPagesByName.get(company.name.toLowerCase().trim());
       if (matchedPage) {
         pageId = matchedPage.id;
-        if (!url) url = `https://eialink.com.br/p/${matchedPage.slug}`;
+        if (!url) url = `https://${matchedPage.slug}.eialink.com.br`;
         if (!slug) slug = matchedPage.slug.toLowerCase().trim();
       }
     }
@@ -1194,10 +1197,10 @@ function ProspectingPage() {
                       </HoverCard>
                       {demo.pageId && (
                         <Link
-                          to="/studio"
+                          to="/studio-pro"
                           search={{ page: demo.pageId }}
                           className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-zinc-200 hover:border-zinc-500/40 hover:bg-zinc-800/40 transition-all w-full sm:w-auto"
-                          title="Editar no Studio IA"
+                          title="Editar no Studio Pro (IA)"
                         >
                           <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
                           <span>Editar</span>
@@ -2198,7 +2201,7 @@ function ProspectingPage() {
 
                                 {/* Personalizar no Builder */}
                                 <Link
-                                  to="/studio"
+                                  to="/studio-pro"
                                   search={{ page: page.id }}
                                   className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-purple-300 hover:border-purple-500/40 hover:bg-purple-500/10 transition-all"
                                   title="Ajustar dados e fotos no Builder"
@@ -2695,9 +2698,9 @@ function ProspectingPage() {
                         </DropdownMenuItem>
                         {demo.pageId && (
                           <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                            <Link to="/studio" search={{ page: demo.pageId }}>
+                            <Link to="/studio-pro" search={{ page: demo.pageId }}>
                               <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                              <span>Editar no Studio</span>
+                              <span>Editar no Studio Pro</span>
                             </Link>
                           </DropdownMenuItem>
                         )}
@@ -2895,7 +2898,7 @@ function ProspectingPage() {
                               </HoverCard>
                               {demo.pageId && (
                                 <Link
-                                  to="/studio"
+                                  to="/studio-pro"
                                   search={{ page: demo.pageId }}
                                   className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
                                   title="Editar no Construtor"
@@ -3047,16 +3050,16 @@ function ProspectingPage() {
                                   ) : (
                                     <Globe2 className="h-3.5 w-3.5 mr-2 text-sky-400" />
                                   )}
-                                  <span>Gerar Site Máquina (Direto)</span>
+                                  <span>Gerar com Studio Pro (IA)</span>
                                 </DropdownMenuItem>
 
                                 {demo.url && (
                                   <>
                                     {demo.pageId && (
                                       <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                        <Link to="/studio" search={{ page: demo.pageId }}>
+                                        <Link to="/studio-pro" search={{ page: demo.pageId }}>
                                           <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                          <span>Editar no Studio</span>
+                                          <span>Editar no Studio Pro</span>
                                         </Link>
                                       </DropdownMenuItem>
                                     )}

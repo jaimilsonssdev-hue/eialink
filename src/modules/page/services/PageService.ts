@@ -22,6 +22,7 @@ import {
 } from "@/modules/page/page.functions";
 import { resolveBioMediaUrl } from "@/lib/bio-media";
 import { CommercialSettingsService } from "@/modules/settings/services/CommercialSettingsService";
+import { buildStudioProConfigFromLead } from "@/modules/studiopro/lib/buildStudioProConfigFromLead";
 
 export type OwnedPage = Tables<"bio_pages">;
 
@@ -311,6 +312,21 @@ export const PageService = {
       faq: faqItems,
     };
 
+    const studioproConfig = buildStudioProConfigFromLead({
+      companyName: sanitizedCompanyName,
+      niche: effectiveNicheKey,
+      city: city || null,
+      address: realAddress,
+      whatsapp: finalWhatsapp,
+      rating: realRating,
+      reviewsCount: realReviewsCount,
+      openingHours: realHours,
+      reviews: activeReviews,
+      photos: realPhotos,
+      coverUrl: realCover,
+      avatarUrl: realAvatar,
+    });
+
     const { data, error } = await supabase
       .from("bio_pages")
       .insert({
@@ -321,7 +337,7 @@ export const PageService = {
         whatsapp_button_label: preset.whatsapp_button_label,
         whatsapp_message: aiBlueprint.whatsappMessage || preset.whatsapp_message(sanitizedCompanyName),
         instagram: instagram ?? null,
-        template_id: preferredTemplateId || "cinematic-glass",
+        template_id: preferredTemplateId || "studiopro",
         theme: aiBlueprint.theme || preset.theme,
         cover_url: realCover,
         avatar_url: realAvatar,
@@ -335,7 +351,8 @@ export const PageService = {
           city: city || null,
           google_rating: realRating,
           reviews_count: realReviewsCount,
-          model_variant: "Landing Page Cinematográfica (Studio IA)",
+          model_variant: "Landing Page Studio Pro (Lovable)",
+          studiopro_config: studioproConfig,
           cinematic_data: cinematicData,
           custom_theme: {
             parallax: true,

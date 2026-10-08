@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { PublicPricingSection } from "@/components/billing/PublicPricingSection";
 import {
@@ -56,6 +56,14 @@ import {
 import { pageSlugFromHostname } from "@/lib/public-page-url";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    if (typeof window !== "undefined") {
+      const slug = pageSlugFromHostname(window.location.hostname);
+      if (slug) {
+        throw redirect({ to: "/p/$slug", params: { slug } });
+      }
+    }
+  },
   head: () => ({
     meta: [
       { title: "EiaLink — A Infraestrutura de Alta Conversão para Negócios Locais e Criadores" },

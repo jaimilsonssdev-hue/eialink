@@ -7,6 +7,7 @@ export const Route = createFileRoute("/_authenticated/studio-pro")({
   validateSearch: z.object({
     tab: z.string().optional(),
     project: z.string().optional(),
+    page: z.string().optional(),
   }),
   head: () => ({
     meta: [
@@ -18,8 +19,8 @@ export const Route = createFileRoute("/_authenticated/studio-pro")({
 });
 
 function StudioProRoutePage() {
-  return <StudioProApp />;
+  const { page, project } = Route.useSearch();
+  return <StudioProApp pageId={page} projectId={project} />;
 }
 
 export default StudioProRoutePage;
-

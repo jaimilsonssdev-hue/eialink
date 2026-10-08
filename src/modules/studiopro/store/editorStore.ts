@@ -10,6 +10,10 @@ interface EditorState {
   shortcutsModalOpen: boolean
   previewMode: boolean
   activeProjectId: string | null
+  // EiaLink Page link
+  eialinkPageId: string | null
+  eialinkPageSlug: string | null
+  eialinkPageTitle: string | null
   // Generation state
   isGenerating: boolean
   generationPrompt: string | null
@@ -21,6 +25,7 @@ interface EditorState {
   toggleShortcutsModal: () => void
   togglePreview: () => void
   setActiveProject: (id: string | null) => void
+  setEialinkPage: (info: { id: string; slug: string; title: string } | null) => void
   setGenerating: (prompt: string | null) => void
   setGenerationError: (err: string | null) => void
   clearGeneration: () => void
@@ -34,6 +39,9 @@ export const useEditorStore = create<EditorState>()((set) => ({
   shortcutsModalOpen: false,
   previewMode: false,
   activeProjectId: null,
+  eialinkPageId: null,
+  eialinkPageSlug: null,
+  eialinkPageTitle: null,
   isGenerating: false,
   generationPrompt: null,
   generationError: null,
@@ -44,6 +52,12 @@ export const useEditorStore = create<EditorState>()((set) => ({
   toggleShortcutsModal: () => set((s) => ({ shortcutsModalOpen: !s.shortcutsModalOpen })),
   togglePreview: () => set((s) => ({ previewMode: !s.previewMode, ...(!s.previewMode ? { selectedBlockId: null } : {}) })),
   setActiveProject: (id) => set({ activeProjectId: id }),
+  setEialinkPage: (info) =>
+    set({
+      eialinkPageId: info?.id ?? null,
+      eialinkPageSlug: info?.slug ?? null,
+      eialinkPageTitle: info?.title ?? null,
+    }),
   setGenerating: (prompt) => set({ isGenerating: !!prompt, generationPrompt: prompt, generationError: null }),
   setGenerationError: (err) => set({ generationError: err }),
   clearGeneration: () => set({ isGenerating: false, generationPrompt: null }),

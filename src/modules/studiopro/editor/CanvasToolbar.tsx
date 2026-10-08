@@ -13,6 +13,8 @@ import {
   HelpCircle,
   Download,
   Loader2,
+  CloudUpload,
+  ExternalLink,
 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEditorStore, type Viewport } from "@/modules/studiopro/store/editorStore"
@@ -20,6 +22,7 @@ import { useConfigStore } from "@/modules/studiopro/store/configStore"
 import { useProjectsStore } from "@/modules/studiopro/store/projectsStore"
 import type { PageConfig } from "@/modules/studiopro/blocks/types"
 import { exportToHTML, downloadHTML } from "@/modules/studiopro/lib/export-html"
+import { supabase } from "@/integrations/supabase/client"
 
 const viewports: { value: Viewport; icon: typeof Monitor; label: string }[] = [
   { value: 'desktop', icon: Monitor, label: 'Desktop' },
@@ -175,15 +178,73 @@ export function CanvasToolbar() {
   const config = useConfigStore((s) => s.config)
   const [showAddPage, setShowAddPage] = useState(false)
   const [exporting, setExporting] = useState(false)
+  const [savingEialink, setSavingEialink] = useState(false)
+
+  const eialinkPageId = useEditorStore((s) => s.eialinkPageId)
+  const eialinkPageSlug = useEditorStore((s) => s.eialinkPageSlug)
+  const eialinkPageTitle = useEditorStore((s) => s.eialinkPageTitle)
 
   const activeProject = activeProjectId ? projects.find((p) => p.id === activeProjectId) : null
-  const projectName = activeProject?.name || configName
+  const projectName = eialinkPageTitle || activeProject?.name || configName
+
+  async function handleSaveEialink() {
+    if (!eialinkPageId) {
+      toast.info('Para salvar no EiaLink, acesse este site a partir do menu Prospecção.')
+      return
+    }
+    setSavingEialink(true)
+    try {
+      const { data: existing, error: fetchErr } = await supabase
+        .from('bio_pages')
+        .select('social_links')
+        .eq('id', eialinkPageId)
+        .single()
+
+      if (fetchErr) throw fetchErr
+
+      const currentSocial = (existing?.social_links as Record<string, any>) || {}
+      const updatedSocial = {
+        ...currentSocial,
+        studiopro_config: config,
+        model_variant: 'Landing Page Studio Pro (Lovable)',
+      }
+
+      const { error: updateErr } = await supabase
+        .from('bio_pages')
+        .update({
+          social_links: updatedSocial,
+          template_id: 'studiopro',
+          published: true,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', eialinkPageId)
+
+      if (updateErr) throw updateErr
+
+      const domain = `${eialinkPageSlug || 'site'}.eialink.com.br`
+      const fullUrl = `https://${domain}`
+      toast.success(
+        `Site atualizado e publicado no Cloudflare! (${domain})`,
+        {
+          action: {
+            label: 'Abrir site',
+            onClick: () => window.open(fullUrl, '_blank'),
+          },
+          duration: 6000,
+        }
+      )
+    } catch (err: any) {
+      toast.error(err.message || 'Erro ao salvar no EiaLink')
+    } finally {
+      setSavingEialink(false)
+    }
+  }
 
   async function handleExport() {
     setExporting(true)
     try {
       const html = await exportToHTML(config, { settings: activeProject?.settings })
-      const filename = `${(activeProject?.name || config.name || 'site').toLowerCase().replace(/\s+/g, '-')}.html`
+      const filename = `${(eialinkPageSlug || activeProject?.name || config.name || 'site').toLowerCase().replace(/\s+/g, '-')}.html`
       downloadHTML(html, filename)
       toast('HTML exported')
     } catch {
@@ -201,10 +262,22 @@ export function CanvasToolbar() {
           className="cursor-pointer hover:text-text-1 transition-colors"
           onClick={() => navigate('/')}
         >
-          Projects
+          Projetos
         </span>
         <span>/</span>
-        <span className="text-text-0 font-medium max-w-[120px] truncate">{projectName}</span>
+        <span className="text-text-0 font-medium max-w-[140px] truncate">{projectName}</span>
+        {eialinkPageSlug && (
+          <a
+            href={`https://${eialinkPageSlug}.eialink.com.br`}
+            target="_blank"
+            rel="noreferrer"
+            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green/10 text-green border border-green/20 text-[10.5px] font-mono hover:bg-green/20 transition-all shrink-0 ml-1"
+            title="Abrir no subdomínio Cloudflare"
+          >
+            <span>{eialinkPageSlug}.eialink.com.br</span>
+            <ExternalLink size={10} />
+          </a>
+        )}
       </div>
 
       <div className="w-px h-5 bg-border-default mx-1.5 shrink-0" />
@@ -346,17 +419,37 @@ export function CanvasToolbar() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="h-7 px-3 rounded-lg bg-green text-bg-0 text-[11.5px] font-semibold hover:bg-green/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5"
+          className="h-7 px-2.5 rounded-lg border border-border-default text-text-2 text-[11px] hover:text-text-0 hover:bg-bg-3 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+          title="Exportar código fonte HTML autônomo"
         >
           {exporting ? (
             <>
               <Loader2 size={12} className="animate-spin" />
-              <span>Exporting...</span>
+              <span>Exportando...</span>
             </>
           ) : (
             <>
               <Download size={12} />
-              <span>Export</span>
+              <span>HTML</span>
+            </>
+          )}
+        </button>
+
+        <button
+          onClick={handleSaveEialink}
+          disabled={savingEialink}
+          className="h-7 px-3 rounded-lg bg-green text-bg-0 text-[11.5px] font-semibold hover:bg-green/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-[0_0_12px_rgba(34,197,94,0.3)]"
+          title="Salvar alterações e publicar no Cloudflare"
+        >
+          {savingEialink ? (
+            <>
+              <Loader2 size={12} className="animate-spin" />
+              <span>Publicando...</span>
+            </>
+          ) : (
+            <>
+              <CloudUpload size={13} />
+              <span>Publicar</span>
             </>
           )}
         </button>

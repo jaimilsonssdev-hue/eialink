@@ -145,11 +145,18 @@ async function findKnowledgeContext(
 }
 
 async function testKey(apiKey: string) {
-  const response = await fetch("https://generativelanguage.googleapis.com/v1beta/models", {
-    method: "GET",
-    headers: { "x-goog-api-key": apiKey },
-    signal: AbortSignal.timeout(12000),
-  });
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "ping" }] }],
+        generationConfig: { maxOutputTokens: 2 },
+      }),
+      signal: AbortSignal.timeout(12000),
+    },
+  );
   const payload = await response.json().catch(() => ({}));
   return { response, payload };
 }
@@ -337,17 +344,15 @@ Deno.serve(async (request) => {
       if (!apiKey) return jsonResponse({ ok: false, message: "Nenhuma chave Gemini configurada." });
       const { response, payload } = await testKey(apiKey);
       if (!response.ok) {
+        const errorMsg = (payload as { error?: { message?: string } })?.error?.message;
         return jsonResponse({
           ok: false,
-          message: `A Google recusou a chave (HTTP ${response.status}).`,
+          message: errorMsg || `A Google recusou a chave (HTTP ${response.status}).`,
         });
       }
-      const models = (payload as { models?: Array<{ name?: string }> }).models || [];
       return jsonResponse({
         ok: true,
-        message: models.some((model) => model.name?.includes("gemini"))
-          ? "Chave validada; modelos Gemini disponíveis."
-          : "Chave validada com a Google.",
+        message: "Google AI Studio conectado com sucesso! Modelo Gemini 3.8 Flash operacional.",
       });
     }
 

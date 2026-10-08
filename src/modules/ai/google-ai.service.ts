@@ -1,7 +1,5 @@
 export const ACTIVE_GEMINI_MODELS = [
   "gemini-3.8-flash",
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
 ] as const;
 
 export type ActiveGeminiModel = (typeof ACTIVE_GEMINI_MODELS)[number];
@@ -91,7 +89,8 @@ export async function resolveGeminiApiKeyAsync(override?: string): Promise<strin
 }
 
 /**
- * Valida a chave diretamente contra a API oficial da Google em tempo real.
+ * Valida a chave diretamente contra a API oficial da Google em tempo real
+ * acionando especificamente o modelo gemini-3.8-flash.
  */
 export async function testGoogleGeminiKey(apiKey: string): Promise<{ ok: boolean; message: string }> {
   const cleanKey = apiKey.trim();
@@ -100,28 +99,41 @@ export async function testGoogleGeminiKey(apiKey: string): Promise<{ ok: boolean
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models?key=${cleanKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${cleanKey}`;
     const res = await fetch(url, {
-      method: "GET",
-      signal: AbortSignal.timeout(8000),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: "ping" }] }],
+        generationConfig: { maxOutputTokens: 2 },
+      }),
+      signal: AbortSignal.timeout(10000),
     });
 
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      const msg = errData?.error?.message || `A Google recusou a chave (HTTP ${res.status}).`;
-      return { ok: false, message: msg };
+    if (res.ok) {
+      return {
+        ok: true,
+        message: "Google AI Studio conectado com sucesso! Modelo Gemini 3.8 Flash 100% operacional.",
+      };
     }
 
-    const data = await res.json().catch(() => ({}));
-    const models = Array.isArray(data?.models) ? data.models : [];
-    const hasGemini = models.some((m: { name?: string }) => m.name?.includes("gemini"));
+    const errData = await res.json().catch(() => ({}));
+    const rawMsg = errData?.error?.message || `A Google recusou a chave (HTTP ${res.status}).`;
 
-    return {
-      ok: true,
-      message: hasGemini
-        ? "Chave do Google AI Studio validada com sucesso! Modelos Gemini operacionais."
-        : "Chave validada com o Google AI Studio.",
-    };
+    // Se for erro de autenticação ou chave inválida
+    if (res.status === 400 || res.status === 403) {
+      if (rawMsg.includes("API_KEY_INVALID") || rawMsg.includes("API key not valid")) {
+        return { ok: false, message: "Chave de API inválida ou revogada no Google AI Studio." };
+      }
+      return { ok: false, message: `Google recusou o acesso: ${rawMsg}` };
+    }
+
+    // Se o modelo responder quota ou outro status
+    if (res.status === 429) {
+      return { ok: true, message: "Chave válida no Google AI Studio (limite de taxa temporário atingido)." };
+    }
+
+    return { ok: false, message: rawMsg };
   } catch (err) {
     return {
       ok: false,

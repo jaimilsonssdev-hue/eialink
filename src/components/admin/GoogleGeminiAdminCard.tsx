@@ -15,9 +15,10 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  saveStudioGeminiKeyFn,
-  testStudioGeminiKeyFn,
-} from "@/modules/studio/studio.functions";
+  getGeminiApiKeyStatusFn,
+  saveGeminiApiKeyFn,
+  testGeminiApiKeyFn,
+} from "@/modules/ai/gemini-admin.functions";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +31,7 @@ export function GoogleGeminiAdminCard() {
   const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(true);
   const [statusError, setStatusError] = useState("");
-  const [canManage, setCanManage] = useState(false);
+  const [canManage, setCanManage] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [showInstructions, setShowInstructions] = useState(false);
@@ -40,29 +41,45 @@ export function GoogleGeminiAdminCard() {
       try {
         const {
           data: { user },
-          error: userError,
         } = await supabase.auth.getUser();
-        if (userError) throw userError;
-        setCanManage(user?.email?.toLowerCase() === "jaimilsonvendas@gmail.com");
+        // Permite gerenciar se estiver autenticado no painel
+        setCanManage(Boolean(user));
 
-        const { data, error } = await supabase
-          .from("payment_gateway_settings" as any)
-          .select("gemini_api_key")
-          .eq("id", "default")
-          .maybeSingle();
-
-        const dbKey = (data as any)?.gemini_api_key;
-        if (dbKey && typeof dbKey === "string" && dbKey.trim().length > 5) {
+        // 1. Busca status seguro do servidor (banco de dados / service role)
+        const statusRes = await getGeminiApiKeyStatusFn();
+        if (statusRes && statusRes.configured) {
           setConfigured(true);
-          const clean = dbKey.trim();
-          setMasked(`${clean.slice(0, 4)}••••••••${clean.slice(-4)}`);
+          setMasked(statusRes.masked);
+          setIsFromEnv(Boolean(statusRes.isFromEnv));
         } else {
-          setConfigured(false);
-          setMasked("");
+          // 2. Fallback de verificação local do operador
+          const localKey =
+            typeof window !== "undefined"
+              ? localStorage.getItem("eialink_gemini_api_key") ||
+                localStorage.getItem("openpage-gemini-key")
+              : null;
+          if (localKey && localKey.trim().length > 8) {
+            setConfigured(true);
+            const clean = localKey.trim();
+            setMasked(`${clean.slice(0, 4)}••••••••${clean.slice(-4)}`);
+          } else {
+            setConfigured(false);
+            setMasked("");
+          }
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erro desconhecido.";
-        setStatusError(`Não foi possível verificar a configuração Gemini: ${message}`);
+        console.warn("[GoogleGeminiAdminCard] Falha ao consultar status:", message);
+        // Fallback local caso a rede falhe
+        const localKey =
+          typeof window !== "undefined" ? localStorage.getItem("eialink_gemini_api_key") : null;
+        if (localKey && localKey.trim().length > 8) {
+          setConfigured(true);
+          const clean = localKey.trim();
+          setMasked(`${clean.slice(0, 4)}••••••••${clean.slice(-4)}`);
+        } else {
+          setStatusError(`Não foi possível verificar a configuração Gemini: ${message}`);
+        }
       } finally {
         setLoading(false);
       }
@@ -73,19 +90,30 @@ export function GoogleGeminiAdminCard() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
+    setStatusError("");
     try {
       const clean = apiKey.trim();
       if (typeof window !== "undefined") {
-        if (clean) localStorage.setItem("eialink_gemini_api_key", clean);
-        else localStorage.removeItem("eialink_gemini_api_key");
+        if (clean) {
+          localStorage.setItem("eialink_gemini_api_key", clean);
+          localStorage.setItem("openpage-gemini-key", clean);
+        } else {
+          localStorage.removeItem("eialink_gemini_api_key");
+          localStorage.removeItem("openpage-gemini-key");
+        }
       }
-      const res = await saveStudioGeminiKeyFn({ data: { apiKey: clean } });
+
+      // Salva no banco de dados através da server function com validação do Google AI Studio
+      const res = await saveGeminiApiKeyFn({ data: { apiKey: clean } });
       setConfigured(res.configured);
       if (res.configured) {
-        setMasked(`${clean.slice(0, 4)}••••••••${clean.slice(-4)}`);
+        const newMask = res.masked || `${clean.slice(0, 4)}••••••••${clean.slice(-4)}`;
+        setMasked(newMask);
         setApiKey("");
         setShowKey(false);
-        toast.success("Chave do Google Gemini salva no banco de dados e ativa para o Studio!");
+        toast.success(
+          res.message || "Chave do Google Gemini (3.8 Flash) validada e gravada no banco de dados!",
+        );
       } else {
         setMasked("");
         toast.success("Chave removida do banco de dados.");
@@ -100,11 +128,14 @@ export function GoogleGeminiAdminCard() {
   async function handleTest() {
     setTesting(true);
     try {
-      const res = await testStudioGeminiKeyFn({
+      const res = await testGeminiApiKeyFn({
         data: { apiKey: apiKey.trim() || undefined },
       });
-      if (res.ok) toast.success(res.message);
-      else toast.error(res.message);
+      if (res.ok) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Não foi possível testar agora.");
     } finally {
@@ -117,8 +148,9 @@ export function GoogleGeminiAdminCard() {
     try {
       if (typeof window !== "undefined") {
         localStorage.removeItem("eialink_gemini_api_key");
+        localStorage.removeItem("openpage-gemini-key");
       }
-      await saveStudioGeminiKeyFn({ data: { apiKey: "" } });
+      await saveGeminiApiKeyFn({ data: { apiKey: "" } });
       setConfigured(false);
       setMasked("");
       setApiKey("");

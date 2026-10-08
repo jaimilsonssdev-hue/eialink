@@ -207,7 +207,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
   "superPrompt": "Instruções cirúrgicas de design, tom de voz e ordem de blocos para gerar o site final"
 }`;
 
-      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+      const models = ["gemini-3.8-flash"];
       for (const m of models) {
         try {
           const resp = await requestGemini(context.supabase, {

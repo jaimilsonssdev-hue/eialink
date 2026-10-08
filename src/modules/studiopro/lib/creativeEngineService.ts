@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { getResolvedGeminiKeyFn } from "@/modules/ai/gemini-admin.functions";
 
 export interface ChatMessage {
   id: string;
@@ -30,8 +31,45 @@ export function getGeminiApiKey(): string {
 }
 
 /**
+ * Resolve a chave de forma assíncrona, sincronizando do banco de dados Supabase
+ * caso o navegador/dispositivo ainda não a tenha em cache local.
+ */
+export async function resolveCreativeStudioApiKeyAsync(customKey?: string): Promise<string> {
+  if (customKey && customKey.trim().length > 10) {
+    return customKey.trim();
+  }
+
+  const local = getGeminiApiKey();
+  if (local) return local;
+
+  // Busca a chave salva no banco de dados do superadmin
+  try {
+    const remote = await getResolvedGeminiKeyFn();
+    if (remote?.apiKey && remote.apiKey.trim().length > 10) {
+      const clean = remote.apiKey.trim();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("eialink_gemini_api_key", clean);
+        localStorage.setItem("openpage-gemini-key", clean);
+      }
+      return clean;
+    }
+  } catch (err) {
+    console.warn("[CreativeEngine] Falha ao sincronizar chave remota do banco:", err);
+  }
+
+  throw new Error(
+    "Chave da API do Google AI Studio não encontrada. Configure sua chave no painel de Configurações.",
+  );
+}
+
+/**
  * Cria ou retorna cliente oficial do Google AI Studio usando @google/genai
  */
+export async function createGoogleAiClientAsync(customKey?: string) {
+  const key = await resolveCreativeStudioApiKeyAsync(customKey);
+  return new GoogleGenAI({ apiKey: key });
+}
+
 export function createGoogleAiClient(customKey?: string) {
   const key = customKey || getGeminiApiKey();
   if (!key) {
@@ -110,7 +148,7 @@ export async function planSiteBriefing(
   history: ChatMessage[] = [],
   apiKey?: string,
 ): Promise<string> {
-  const client = createGoogleAiClient(apiKey);
+  const client = await createGoogleAiClientAsync(apiKey);
 
   const formattedHistory = history.map((msg) => ({
     role: msg.role === "assistant" ? "model" : "user",
@@ -140,7 +178,7 @@ export async function generateSiteHtml(
   existingHtml?: string,
   apiKey?: string,
 ): Promise<string> {
-  const client = createGoogleAiClient(apiKey);
+  const client = await createGoogleAiClientAsync(apiKey);
 
   let userPrompt = briefingOrPrompt;
   if (existingHtml && existingHtml.length > 50) {

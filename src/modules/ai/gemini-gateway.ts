@@ -6,7 +6,6 @@ const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
 export const SITE_BUILDER_MODELS = [
   "gemini-3.8-flash",
-  "gemini-2.5-flash",
 ] as const;
 const retryableGeminiStatuses = new Set([408, 429, 500, 502, 503, 504]);
 const maxGeminiAttempts = 2;

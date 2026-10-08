@@ -1,4 +1,4 @@
-import { renderMarkdown } from "@/modules/studiopro/lib/markdown'
+import { renderMarkdown } from "@/modules/studiopro/lib/markdown"
 import type { BlockConfig } from '../types'
 
 export function ContentBlock({ block }: { block: BlockConfig }) {

@@ -1,7 +1,7 @@
 import { Outlet, useLocation } from "@/modules/studiopro/lib/router"
 import { TopNav } from './TopNav'
 import { Toaster } from 'sonner'
-import { ShortcutsModal } from "@/modules/studiopro/editor/ShortcutsModal'
+import { ShortcutsModal } from "@/modules/studiopro/editor/ShortcutsModal"
 
 export function AppLayout({ children }: { children?: React.ReactNode }) {
   const location = useLocation()

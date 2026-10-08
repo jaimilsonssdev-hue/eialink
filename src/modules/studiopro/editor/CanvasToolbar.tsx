@@ -15,11 +15,11 @@ import {
   Loader2,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useEditorStore, type Viewport } from "@/modules/studiopro/store/editorStore'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useProjectsStore } from "@/modules/studiopro/store/projectsStore'
-import type { PageConfig } from "@/modules/studiopro/blocks/types'
-import { exportToHTML, downloadHTML } from "@/modules/studiopro/lib/export-html'
+import { useEditorStore, type Viewport } from "@/modules/studiopro/store/editorStore"
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useProjectsStore } from "@/modules/studiopro/store/projectsStore"
+import type { PageConfig } from "@/modules/studiopro/blocks/types"
+import { exportToHTML, downloadHTML } from "@/modules/studiopro/lib/export-html"
 
 const viewports: { value: Viewport; icon: typeof Monitor; label: string }[] = [
   { value: 'desktop', icon: Monitor, label: 'Desktop' },

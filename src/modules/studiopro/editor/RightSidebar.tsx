@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { MousePointer2 } from 'lucide-react'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
 import { PropertiesPanel } from './PropertiesPanel'
 import { DesignPanel } from './DesignPanel'
 

@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
 import { ChevronDown } from 'lucide-react'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import type { ThemeConfig } from "@/modules/studiopro/blocks/types'
-import { themePresets, resolveTheme, googleFontOptions } from "@/modules/studiopro/lib/theme-presets'
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import type { ThemeConfig } from "@/modules/studiopro/blocks/types"
+import { themePresets, resolveTheme, googleFontOptions } from "@/modules/studiopro/lib/theme-presets"
 
 function ColorInput({ value, onInput, onChange }: { value: string; onInput: (v: string) => void; onChange: (v: string) => void }) {
   return (

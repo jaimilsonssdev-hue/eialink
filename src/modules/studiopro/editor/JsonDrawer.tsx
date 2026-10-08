@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
 
 function escapeHtml(str: string): string {
   return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')

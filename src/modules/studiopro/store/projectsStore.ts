@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { SiteConfig } from "@/modules/studiopro/blocks/types'
+import type { SiteConfig } from "@/modules/studiopro/blocks/types"
 
 export interface Project {
   id: string

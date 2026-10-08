@@ -1,4 +1,4 @@
-import type { ThemeConfig } from "@/modules/studiopro/blocks/types'
+import type { ThemeConfig } from "@/modules/studiopro/blocks/types"
 
 export const defaultTheme: ThemeConfig = {
   bg0: '#09090b',

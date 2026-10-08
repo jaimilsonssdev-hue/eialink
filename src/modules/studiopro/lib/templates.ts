@@ -1,4 +1,4 @@
-import type { SiteConfig } from "@/modules/studiopro/blocks/types'
+import type { SiteConfig } from "@/modules/studiopro/blocks/types"
 import { themePresets } from './theme-presets'
 
 interface Template {

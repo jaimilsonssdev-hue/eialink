@@ -1,6 +1,6 @@
-import type { SiteConfig } from "@/modules/studiopro/blocks/types'
-import { exportSiteToHTML } from "@/modules/studiopro/lib/export-html'
-import type { ProjectSettings } from "@/modules/studiopro/store/projectsStore'
+import type { SiteConfig } from "@/modules/studiopro/blocks/types"
+import { exportSiteToHTML } from "@/modules/studiopro/lib/export-html"
+import type { ProjectSettings } from "@/modules/studiopro/store/projectsStore"
 
 interface DeployApiResponse {
   url?: string

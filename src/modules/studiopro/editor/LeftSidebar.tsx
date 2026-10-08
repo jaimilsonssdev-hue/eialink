@@ -2,10 +2,10 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { Search, Layout, Type, Grid3X3, DollarSign, Megaphone, PanelBottom, MessageSquare, BarChart3, HelpCircle, Users, Mail, Newspaper, Image, Plus, Minus, Flag, FileText, ImageIcon, Play, GalleryHorizontalEnd } from 'lucide-react'
 import { LayersPanel } from './LayersPanel'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { blockMetadata } from "@/modules/studiopro/lib/block-metadata'
-import type { BlockType, BlockConfig } from "@/modules/studiopro/blocks/types'
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { blockMetadata } from "@/modules/studiopro/lib/block-metadata"
+import type { BlockType, BlockConfig } from "@/modules/studiopro/blocks/types"
 
 const blockIcons: Record<BlockType, typeof Layout> = {
   navbar: Layout, hero: Type, features: Grid3X3, pricing: DollarSign,

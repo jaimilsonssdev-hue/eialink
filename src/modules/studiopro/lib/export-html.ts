@@ -1,5 +1,5 @@
-import type { SiteConfig, BlockConfig } from "@/modules/studiopro/blocks/types'
-import { resolveTheme } from "@/modules/studiopro/lib/theme-presets'
+import type { SiteConfig, BlockConfig } from "@/modules/studiopro/blocks/types"
+import { resolveTheme } from "@/modules/studiopro/lib/theme-presets"
 
 export interface ExportSiteSettings {
   siteName?: string

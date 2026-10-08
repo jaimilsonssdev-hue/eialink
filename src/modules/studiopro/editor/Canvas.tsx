@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
 import { CanvasEmpty } from './CanvasEmpty'
-import { BlockWrapper } from "@/modules/studiopro/blocks/BlockWrapper'
-import { RenderBlock } from "@/modules/studiopro/blocks/registry'
-import { resolveTheme, themeToCSS } from "@/modules/studiopro/lib/theme-presets'
-import { useGoogleFonts } from "@/modules/studiopro/lib/useGoogleFonts'
+import { BlockWrapper } from "@/modules/studiopro/blocks/BlockWrapper"
+import { RenderBlock } from "@/modules/studiopro/blocks/registry"
+import { resolveTheme, themeToCSS } from "@/modules/studiopro/lib/theme-presets"
+import { useGoogleFonts } from "@/modules/studiopro/lib/useGoogleFonts"
 
 export function Canvas() {
   const blocks = useConfigStore((s) => {

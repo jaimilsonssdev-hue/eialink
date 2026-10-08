@@ -3,11 +3,11 @@ import { useNavigate } from "@/modules/studiopro/lib/router"
 import { toast } from 'sonner'
 import { Search, Sparkles, Trash2, FolderOpen, Copy, Pencil, Layers, Briefcase, UtensilsCrossed, Building2, BookOpen } from 'lucide-react'
 import { NavLink } from "@/modules/studiopro/lib/router"
-import { useProjectsStore, type Project } from "@/modules/studiopro/store/projectsStore'
-import { useConfigStore, defaultConfig } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { hexToRgb } from "@/modules/studiopro/lib/theme-presets'
-import { templateMeta, buildTemplate } from "@/modules/studiopro/lib/templates'
+import { useProjectsStore, type Project } from "@/modules/studiopro/store/projectsStore"
+import { useConfigStore, defaultConfig } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { hexToRgb } from "@/modules/studiopro/lib/theme-presets"
+import { templateMeta, buildTemplate } from "@/modules/studiopro/lib/templates"
 
 const templateIcons: Record<string, typeof Briefcase> = {
   Briefcase, UtensilsCrossed, Building2, BookOpen,

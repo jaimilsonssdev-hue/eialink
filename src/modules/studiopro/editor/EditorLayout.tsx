@@ -9,12 +9,12 @@ import { RightSidebar } from './RightSidebar'
 import { JsonDrawer } from './JsonDrawer'
 import { VersionHistory } from './VersionHistory'
 import { GenerationOverlay } from './GenerationOverlay'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { useProjectsStore } from "@/modules/studiopro/store/projectsStore'
-import { generateSiteConfig } from "@/modules/studiopro/lib/generate-site'
-import { templateMeta, buildTemplate } from "@/modules/studiopro/lib/templates'
-import { hexToRgb } from "@/modules/studiopro/lib/theme-presets'
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { useProjectsStore } from "@/modules/studiopro/store/projectsStore"
+import { generateSiteConfig } from "@/modules/studiopro/lib/generate-site"
+import { templateMeta, buildTemplate } from "@/modules/studiopro/lib/templates"
+import { hexToRgb } from "@/modules/studiopro/lib/theme-presets"
 
 const templateIcons: Record<string, typeof Briefcase> = {
   Briefcase, UtensilsCrossed, Building2, BookOpen,

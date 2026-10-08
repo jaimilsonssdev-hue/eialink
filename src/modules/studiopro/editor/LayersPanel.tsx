@@ -22,10 +22,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { blockMetadata } from "@/modules/studiopro/lib/block-metadata'
-import type { BlockType, BlockConfig } from "@/modules/studiopro/blocks/types'
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { blockMetadata } from "@/modules/studiopro/lib/block-metadata"
+import type { BlockType, BlockConfig } from "@/modules/studiopro/blocks/types"
 
 const blockIcons: Record<BlockType, typeof Layout> = {
   navbar: Layout, hero: Type, features: Grid3X3, pricing: DollarSign,

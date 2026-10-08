@@ -3,8 +3,8 @@ import {
   Settings2, Search as SearchIcon, Key, Check,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useProjectsStore, type ProjectSettings } from "@/modules/studiopro/store/projectsStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
+import { useProjectsStore, type ProjectSettings } from "@/modules/studiopro/store/projectsStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
 
 type SettingsTab = 'general' | 'seo' | 'api'
 

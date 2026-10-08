@@ -1,6 +1,6 @@
 import { useEffect, useReducer } from 'react'
 import { X } from 'lucide-react'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
 
 const steps = [
   { label: 'Analyzing prompt', duration: 3 },

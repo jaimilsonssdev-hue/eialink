@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNavigate, useLocation } from "@/modules/studiopro/lib/router"
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
 
 export function useKeyboardShortcuts() {
   const navigate = useNavigate()

@@ -2,12 +2,12 @@ import { useState, useMemo } from 'react'
 import { useNavigate, useLocation } from "@/modules/studiopro/lib/router"
 import { Plus, Code, Search } from 'lucide-react'
 import { toast } from 'sonner'
-import { blockMetadata, categories } from "@/modules/studiopro/lib/block-metadata'
-import { RenderBlock } from "@/modules/studiopro/blocks/registry'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { resolveTheme, themeToCSS } from "@/modules/studiopro/lib/theme-presets'
-import type { BlockConfig } from "@/modules/studiopro/blocks/types'
+import { blockMetadata, categories } from "@/modules/studiopro/lib/block-metadata"
+import { RenderBlock } from "@/modules/studiopro/blocks/registry"
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { resolveTheme, themeToCSS } from "@/modules/studiopro/lib/theme-presets"
+import type { BlockConfig } from "@/modules/studiopro/blocks/types"
 
 let componentBlockIdSeq = 0
 

@@ -11,11 +11,11 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { toast } from 'sonner'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { useProjectsStore } from "@/modules/studiopro/store/projectsStore'
-import { exportToHTML, downloadHTML, previewHTML } from "@/modules/studiopro/lib/export-html'
-import { publishSite } from "@/modules/studiopro/lib/publish-site'
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { useProjectsStore } from "@/modules/studiopro/store/projectsStore"
+import { exportToHTML, downloadHTML, previewHTML } from "@/modules/studiopro/lib/export-html"
+import { publishSite } from "@/modules/studiopro/lib/publish-site"
 
 const readyOptions = [
   { icon: Download, label: 'Static HTML', description: 'Download a standalone HTML file', action: 'html' },

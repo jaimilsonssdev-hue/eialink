@@ -1,6 +1,6 @@
 import { useRef, useEffect, useCallback } from 'react'
 import { X } from 'lucide-react'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
 
 const shortcutGroups = [
   {

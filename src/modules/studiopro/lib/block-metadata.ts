@@ -1,4 +1,4 @@
-import type { BlockType } from "@/modules/studiopro/blocks/types'
+import type { BlockType } from "@/modules/studiopro/blocks/types"
 
 export interface BlockMeta {
   type: BlockType

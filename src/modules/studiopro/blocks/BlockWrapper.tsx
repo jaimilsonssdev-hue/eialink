@@ -1,9 +1,9 @@
 import { type ReactNode, useRef, useEffect } from 'react'
 import { Copy, Trash2, ChevronUp, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
-import { useConfigStore } from "@/modules/studiopro/store/configStore'
-import { useEditorStore } from "@/modules/studiopro/store/editorStore'
-import { useScrollReveal } from "@/modules/studiopro/lib/useScrollReveal'
+import { useConfigStore } from "@/modules/studiopro/store/configStore"
+import { useEditorStore } from "@/modules/studiopro/store/editorStore"
+import { useScrollReveal } from "@/modules/studiopro/lib/useScrollReveal"
 import type { BlockConfig } from './types'
 
 interface Props {

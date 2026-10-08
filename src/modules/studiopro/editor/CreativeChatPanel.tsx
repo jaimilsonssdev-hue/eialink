@@ -19,6 +19,7 @@ import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudio
 import {
   planSiteBriefing,
   generateSiteHtml,
+  getGeminiApiKey,
 } from "@/modules/studiopro/lib/creativeEngineService";
 import {
   generateCreativeSiteFn,
@@ -97,15 +98,17 @@ export function CreativeChatPanel() {
       if (mode === "plan" && !currentHtml) {
         setIsGenerating(true, "Elaborando plano estratégico com Gemini 3.8 Flash...");
         let briefing = "";
+        const clientApiKey = getGeminiApiKey() || undefined;
         try {
           const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Tempo limite excedido na nuvem")), 25000),
+            setTimeout(() => reject(new Error("Tempo limite excedido na nuvem")), 35000),
           );
           const res = await Promise.race([
             planCreativeSiteBriefingFn({
               data: {
                 prompt: fullPrompt,
                 history: messages.map((m) => ({ role: m.role, content: m.content })),
+                apiKey: clientApiKey,
               },
             }),
             timeoutPromise,
@@ -113,7 +116,7 @@ export function CreativeChatPanel() {
           briefing = res.briefing;
         } catch (serverErr: any) {
           console.warn("[CreativeChat] Fallback para briefing local:", serverErr);
-          briefing = await planSiteBriefing(fullPrompt, messages);
+          briefing = await planSiteBriefing(fullPrompt, messages, clientApiKey);
         }
         setIsGenerating(false);
 
@@ -134,9 +137,10 @@ export function CreativeChatPanel() {
         );
 
         let newHtml = "";
+        const clientApiKey = getGeminiApiKey() || undefined;
         try {
           const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 45000),
+            setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 50000),
           );
           const res = await Promise.race([
             generateCreativeSiteFn({
@@ -145,6 +149,7 @@ export function CreativeChatPanel() {
                 existingHtml: isIteration ? currentHtml : undefined,
                 projectId: activeProject?.id,
                 projectName: activeProject?.name,
+                apiKey: clientApiKey,
               },
             }),
             timeoutPromise,
@@ -152,7 +157,7 @@ export function CreativeChatPanel() {
           newHtml = res.html;
         } catch (serverErr) {
           console.warn("[CreativeChat] Fallback para geração direta do cliente:", serverErr);
-          newHtml = await generateSiteHtml(fullPrompt, isIteration ? currentHtml : undefined);
+          newHtml = await generateSiteHtml(fullPrompt, isIteration ? currentHtml : undefined, clientApiKey);
         }
         setIsGenerating(false);
 
@@ -194,9 +199,11 @@ export function CreativeChatPanel() {
         "Construindo o site completo com Gemini 3.8 Flash a partir do plano aprovado...",
       );
       let html = "";
+      const clientApiKey = getGeminiApiKey() || undefined;
+
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 45000),
+          setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 50000),
         );
         const res = await Promise.race([
           generateCreativeSiteFn({
@@ -204,6 +211,7 @@ export function CreativeChatPanel() {
               briefingOrPrompt: activeProject.briefing,
               projectId: activeProject.id,
               projectName: activeProject.name,
+              apiKey: clientApiKey,
             },
           }),
           timeoutPromise,
@@ -211,7 +219,7 @@ export function CreativeChatPanel() {
         html = res.html;
       } catch (serverErr: any) {
         console.warn("[CreativeChat] Fallback para geração direta:", serverErr);
-        html = await generateSiteHtml(activeProject.briefing);
+        html = await generateSiteHtml(activeProject.briefing, undefined, clientApiKey);
       }
       setIsGenerating(false);
 

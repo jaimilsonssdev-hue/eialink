@@ -288,6 +288,14 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
 
     let resolvedKey = input.apiKey?.trim();
     if (!resolvedKey) {
+      try {
+        const { data: userData } = await supabase.auth.getUser();
+        resolvedKey = userData?.user?.user_metadata?.gemini_api_key;
+      } catch (authErr) {
+        console.warn("[Studio] Falha ao extrair chave de user_metadata:", authErr);
+      }
+    }
+    if (!resolvedKey) {
       resolvedKey = (await resolveGeminiApiKeyAsync()) || undefined;
     }
     if (!resolvedKey) {
@@ -310,11 +318,12 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
     }
 
     let responseText = "";
-    const modelsToTry = ["gemini-3.8-flash", "gemini-2.5-flash"];
+    let lastCapturedError: any = null;
+    const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash"];
 
     for (const modelCandidate of modelsToTry) {
       let attempts = 0;
-      const maxAttempts = 2;
+      const maxAttempts = 3;
       while (attempts < maxAttempts) {
         try {
           const response = await ai.models.generateContent({
@@ -323,23 +332,33 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
             config: {
               systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
               temperature: 0.7,
+              thinkingConfig: {
+                thinkingLevel: "low" as any,
+              },
             },
           });
           responseText = response.text?.trim() || "";
           if (responseText) break;
         } catch (apiErr: any) {
+          lastCapturedError = apiErr;
           const errStr = JSON.stringify(apiErr || {});
-          const isOverloaded =
-            apiErr?.status === 503 ||
-            apiErr?.code === 503 ||
+          const status = apiErr?.status || apiErr?.code;
+          const isTransient =
+            status === 503 ||
+            status === 429 ||
             errStr.includes("503") ||
             errStr.includes("UNAVAILABLE") ||
+            errStr.includes("RESOURCE_EXHAUSTED") ||
             errStr.includes("high demand");
-          if (isOverloaded && attempts < maxAttempts - 1) {
+
+          if (isTransient && attempts < maxAttempts - 1) {
             attempts++;
-            await new Promise((r) => setTimeout(r, 1200));
+            const delayMs = Math.round(1200 * Math.pow(2, attempts - 1) + Math.random() * 400);
+            console.warn(`[StudioServer] Tentativa ${attempts} de ${maxAttempts} para ${modelCandidate}. Aguardando ${delayMs}ms...`);
+            await new Promise((r) => setTimeout(r, delayMs));
             continue;
           }
+          console.warn(`[StudioServer] Modelo ${modelCandidate} falhou, tentando contingência:`, apiErr?.message || apiErr);
           break;
         }
       }
@@ -347,7 +366,8 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
     }
 
     if (!responseText) {
-      throw new Error("O Google AI Studio está com alta demanda momentânea no momento. Por favor, tente clicar novamente em alguns instantes.");
+      const errDetails = lastCapturedError?.message || (typeof lastCapturedError === "object" ? JSON.stringify(lastCapturedError) : "Erro de resposta");
+      throw new Error(`Falha na API Google AI Studio: ${errDetails}. Clique em "Aprovar & Gerar Site" para tentar novamente.`);
     }
 
     let raw = responseText;
@@ -440,8 +460,16 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
       apiKey?: string;
     }) => d,
   )
-  .handler(async ({ data: input }) => {
+  .handler(async ({ data: input, context }) => {
     let resolvedKey = input.apiKey?.trim();
+    if (!resolvedKey) {
+      try {
+        const { data: userData } = await context.supabase.auth.getUser();
+        resolvedKey = userData?.user?.user_metadata?.gemini_api_key;
+      } catch (authErr) {
+        console.warn("[Studio] Falha ao extrair chave de user_metadata no briefing:", authErr);
+      }
+    }
     if (!resolvedKey) {
       resolvedKey = (await resolveGeminiApiKeyAsync()) || undefined;
     }
@@ -466,6 +494,9 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
       config: {
         systemInstruction: BRIEFING_SYSTEM_PROMPT,
         temperature: 0.7,
+        thinkingConfig: {
+          thinkingLevel: "low" as any,
+        },
       },
     });
 

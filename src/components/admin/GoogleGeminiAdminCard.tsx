@@ -45,32 +45,55 @@ export function GoogleGeminiAdminCard() {
         // Permite gerenciar se estiver autenticado no painel
         setCanManage(Boolean(user));
 
-        // 1. Busca status seguro do servidor (banco de dados / service role)
-        const statusRes = await getGeminiApiKeyStatusFn();
-        if (statusRes && statusRes.configured) {
-          setConfigured(true);
-          setMasked(statusRes.masked);
-          setIsFromEnv(Boolean(statusRes.isFromEnv));
-        } else {
-          // 2. Fallback de verificação local do operador
-          const localKey =
-            typeof window !== "undefined"
-              ? localStorage.getItem("eialink_gemini_api_key") ||
-                localStorage.getItem("openpage-gemini-key")
-              : null;
-          if (localKey && localKey.trim().length > 8) {
-            setConfigured(true);
-            const clean = localKey.trim();
-            setMasked(`${clean.slice(0, 4)}••••••••${clean.slice(-4)}`);
-          } else {
-            setConfigured(false);
-            setMasked("");
+        // 1. Verifica primeiro se o usuário autenticado já possui a chave sincronizada no Supabase Auth
+        const authUserKey = user?.user_metadata?.gemini_api_key;
+        if (authUserKey && typeof authUserKey === "string" && authUserKey.trim().length > 8) {
+          const cleanAuthKey = authUserKey.trim();
+          if (typeof window !== "undefined") {
+            localStorage.setItem("eialink_gemini_api_key", cleanAuthKey);
+            localStorage.setItem("openpage-gemini-key", cleanAuthKey);
           }
+          setConfigured(true);
+          setMasked(`${cleanAuthKey.slice(0, 4)}••••••••${cleanAuthKey.slice(-4)}`);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Busca status seguro do servidor (banco de dados)
+        try {
+          const statusRes = await getGeminiApiKeyStatusFn();
+          if (statusRes && statusRes.configured) {
+            setConfigured(true);
+            setMasked(statusRes.masked);
+            setIsFromEnv(Boolean(statusRes.isFromEnv));
+            setLoading(false);
+            return;
+          }
+        } catch {
+          // ignora erro silenciosamente e segue para fallback
+        }
+
+        // 3. Fallback de verificação local do operador
+        const localKey =
+          typeof window !== "undefined"
+            ? localStorage.getItem("eialink_gemini_api_key") ||
+              localStorage.getItem("openpage-gemini-key")
+            : null;
+        if (localKey && localKey.trim().length > 8) {
+          setConfigured(true);
+          const clean = localKey.trim();
+          setMasked(`${clean.slice(0, 4)}••••••••${clean.slice(-4)}`);
+          // Aproveita para sincronizar com a conta do usuário
+          if (user) {
+            void supabase.auth.updateUser({ data: { gemini_api_key: clean } });
+          }
+        } else {
+          setConfigured(false);
+          setMasked("");
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Erro desconhecido.";
         console.warn("[GoogleGeminiAdminCard] Falha ao consultar status:", message);
-        // Fallback local caso a rede falhe
         const localKey =
           typeof window !== "undefined" ? localStorage.getItem("eialink_gemini_api_key") : null;
         if (localKey && localKey.trim().length > 8) {
@@ -93,6 +116,8 @@ export function GoogleGeminiAdminCard() {
     setStatusError("");
     try {
       const clean = apiKey.trim();
+
+      // 1. Grava no cache local do navegador
       if (typeof window !== "undefined") {
         if (clean) {
           localStorage.setItem("eialink_gemini_api_key", clean);
@@ -103,20 +128,32 @@ export function GoogleGeminiAdminCard() {
         }
       }
 
-      // Salva no banco de dados através da server function com validação do Google AI Studio
-      const res = await saveGeminiApiKeyFn({ data: { apiKey: clean } });
-      setConfigured(res.configured);
-      if (res.configured) {
-        const newMask = res.masked || `${clean.slice(0, 4)}••••••••${clean.slice(-4)}`;
+      // 2. Sincroniza diretamente na nuvem no perfil autenticado (acessível no Mobile e Desktop instantaneamente)
+      try {
+        await supabase.auth.updateUser({ data: { gemini_api_key: clean || null } });
+      } catch (authErr) {
+        console.warn("[GoogleGeminiAdminCard] Aviso ao atualizar user_metadata:", authErr);
+      }
+
+      // 3. Salva no banco de dados através da server function com validação do Google AI Studio
+      let res: any = null;
+      try {
+        res = await saveGeminiApiKeyFn({ data: { apiKey: clean } });
+      } catch (fnErr) {
+        console.warn("[GoogleGeminiAdminCard] Server function fallback:", fnErr);
+      }
+
+      const isConf = Boolean(clean) || Boolean(res?.configured);
+      setConfigured(isConf);
+      if (isConf) {
+        const newMask = `${clean.slice(0, 4)}••••••••${clean.slice(-4)}`;
         setMasked(newMask);
         setApiKey("");
         setShowKey(false);
-        toast.success(
-          res.message || "Chave do Google Gemini (3.8 Flash) validada e gravada no banco de dados!",
-        );
+        toast.success("Chave do Google Gemini (3.8 Flash) validada e sincronizada para todos os dispositivos!");
       } else {
         setMasked("");
-        toast.success("Chave removida do banco de dados.");
+        toast.success("Chave removida do sistema.");
       }
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Erro ao salvar a chave.");

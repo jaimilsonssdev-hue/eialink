@@ -30,8 +30,10 @@ export function getGeminiApiKey(): string {
   return "";
 }
 
+import { supabase } from "@/integrations/supabase/client";
+
 /**
- * Resolve a chave de forma assíncrona, sincronizando do banco de dados Supabase
+ * Resolve a chave de forma assíncrona, sincronizando do Supabase (user_metadata)
  * caso o navegador/dispositivo ainda não a tenha em cache local.
  */
 export async function resolveCreativeStudioApiKeyAsync(customKey?: string): Promise<string> {
@@ -42,7 +44,23 @@ export async function resolveCreativeStudioApiKeyAsync(customKey?: string): Prom
   const local = getGeminiApiKey();
   if (local) return local;
 
-  // Busca a chave salva no banco de dados do superadmin
+  // 1. Tenta recuperar dos metadados do usuário logado no Supabase (sincronização Desktop <-> Mobile)
+  try {
+    const { data: userData } = await supabase.auth.getUser();
+    const userKey = userData?.user?.user_metadata?.gemini_api_key;
+    if (userKey && typeof userKey === "string" && userKey.trim().length > 10) {
+      const clean = userKey.trim();
+      if (typeof window !== "undefined") {
+        localStorage.setItem("eialink_gemini_api_key", clean);
+        localStorage.setItem("openpage-gemini-key", clean);
+      }
+      return clean;
+    }
+  } catch (authErr) {
+    console.warn("[CreativeEngine] Não foi possível obter chave via auth metadata:", authErr);
+  }
+
+  // 2. Busca a chave salva pelo endpoint do servidor
   try {
     const remote = await getResolvedGeminiKeyFn();
     if (remote?.apiKey && remote.apiKey.trim().length > 10) {
@@ -54,7 +72,7 @@ export async function resolveCreativeStudioApiKeyAsync(customKey?: string): Prom
       return clean;
     }
   } catch (err) {
-    console.warn("[CreativeEngine] Falha ao sincronizar chave remota do banco:", err);
+    console.warn("[CreativeEngine] Falha ao sincronizar chave remota do servidor:", err);
   }
 
   throw new Error(
@@ -164,6 +182,9 @@ export async function planSiteBriefing(
     config: {
       systemInstruction: BRIEFING_SYSTEM_PROMPT,
       temperature: 0.7,
+      thinkingConfig: {
+        thinkingLevel: "low" as any,
+      },
     },
   });
 
@@ -172,6 +193,7 @@ export async function planSiteBriefing(
 
 /**
  * Etapa 2: Gerar ou Refinar o Site Completo em HTML/Tailwind nativo
+ * Implementa backoff exponencial e contingência automática com modelos Gemini 3
  */
 export async function generateSiteHtml(
   briefingOrPrompt: string,
@@ -193,11 +215,14 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
   }
 
   let raw = "";
-  const modelsToTry = ["gemini-3.8-flash", "gemini-2.5-flash"];
+  let lastCapturedError: any = null;
+  // Modelos suportados pela Google: 3.8 Flash como primário e 3.5 Flash como contingência imediata
+  const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash"];
 
   for (const modelCandidate of modelsToTry) {
     let attempts = 0;
-    const maxAttempts = 2;
+    const maxAttempts = 3;
+
     while (attempts < maxAttempts) {
       try {
         const response = await client.models.generateContent({
@@ -206,32 +231,50 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
           config: {
             systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
             temperature: 0.7,
+            thinkingConfig: {
+              thinkingLevel: "low" as any,
+            },
           },
         });
+
         raw = response.text?.trim() || "";
         if (raw) break;
       } catch (err: any) {
+        lastCapturedError = err;
         const errStr = JSON.stringify(err || {});
-        const isOverloaded =
-          err?.status === 503 ||
-          err?.code === 503 ||
+        const status = err?.status || err?.code;
+        const isTransient =
+          status === 503 ||
+          status === 429 ||
           errStr.includes("503") ||
           errStr.includes("UNAVAILABLE") ||
+          errStr.includes("RESOURCE_EXHAUSTED") ||
           errStr.includes("high demand");
-        if (isOverloaded && attempts < maxAttempts - 1) {
+
+        if (isTransient && attempts < maxAttempts - 1) {
           attempts++;
-          await new Promise((r) => setTimeout(r, 1200));
+          // Backoff exponencial com jitter: 1.2s -> 2.5s -> 4s
+          const delayMs = Math.round(1200 * Math.pow(2, attempts - 1) + Math.random() * 400);
+          console.warn(`[CreativeEngine] Tentativa ${attempts} de ${maxAttempts} para ${modelCandidate}. Aguardando ${delayMs}ms...`);
+          await new Promise((r) => setTimeout(r, delayMs));
           continue;
         }
+
+        // Erro não transitório ou esgotadas as tentativas para este modelo, passa para o próximo modelo
+        console.warn(`[CreativeEngine] Modelo ${modelCandidate} falhou, chaveando contingência:`, err?.message || err);
         break;
       }
     }
+
     if (raw) break;
   }
 
   if (!raw) {
+    const errorDetails =
+      lastCapturedError?.message ||
+      (typeof lastCapturedError === "object" ? JSON.stringify(lastCapturedError) : "Falha na geração");
     throw new Error(
-      "O Google AI Studio está com alta demanda momentânea no momento. Por favor, tente clicar novamente em alguns instantes.",
+      `Não foi possível gerar o site no Google AI Studio: ${errorDetails}. Por favor, clique novamente para tentar a geração.`,
     );
   }
   

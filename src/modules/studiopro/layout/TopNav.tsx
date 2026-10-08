@@ -3,9 +3,9 @@ import { LayoutDashboard, Pencil, Settings, Menu, X, Star } from 'lucide-react'
 import { useState } from 'react'
 
 const links = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/editor', label: 'Editor', icon: Pencil },
-  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/', label: 'Início', icon: LayoutDashboard },
+  { to: '/editor', label: 'Editor Visual', icon: Pencil },
+  { to: '/settings', label: 'Configurações', icon: Settings },
 ]
 
 export function TopNav() {

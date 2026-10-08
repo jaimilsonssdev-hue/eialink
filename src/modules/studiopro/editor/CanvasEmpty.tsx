@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { Plus, Sparkles } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConfigStore } from "@/modules/studiopro/store/configStore"
 import { useEditorStore } from "@/modules/studiopro/store/editorStore"
@@ -19,21 +19,24 @@ export function CanvasEmpty() {
     }
     addBlock(block)
     selectBlock(block.id)
-    toast('Hero block added')
+    toast.success('Bloco de Destaque adicionado!')
   }
 
   return (
-    <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-10 relative z-[1]">
-      <h3 className="text-lg font-semibold text-text-1">Start building</h3>
-      <p className="text-[13px] text-text-3 max-w-[360px] leading-relaxed">
-        Add your first component from the library, or use the Components page to browse all blocks.
+    <div className="flex-1 flex flex-col items-center justify-center gap-3 text-center p-8 relative z-[1]">
+      <div className="w-12 h-12 rounded-2xl bg-bg-2 border border-border-default flex items-center justify-center text-green shadow-[0_0_20px_rgba(34,197,94,0.15)]">
+        <Sparkles size={22} />
+      </div>
+      <h3 className="text-base font-display font-semibold text-text-0">Comece a construir seu site</h3>
+      <p className="text-xs text-text-2 max-w-xs leading-relaxed">
+        Adicione seu primeiro bloco da biblioteca ou explore os componentes para estruturar sua página.
       </p>
       <button
         onClick={handleAddBlock}
-        className="px-3.5 py-1.5 rounded-md bg-green text-black text-[12.5px] font-semibold border border-green hover:bg-green-dim transition-colors flex items-center gap-1.5"
+        className="px-4 py-2 rounded-xl bg-green text-black text-xs font-semibold hover:bg-green-dim active:scale-[0.98] transition-all flex items-center gap-1.5 shadow-md"
       >
         <Plus size={14} />
-        Add Hero Block
+        Adicionar Destaque Principal
       </button>
     </div>
   )

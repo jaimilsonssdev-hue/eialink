@@ -36,11 +36,25 @@ const blockIcons: Record<BlockType, typeof Layout> = {
 }
 
 const blockLabels: Record<BlockType, string> = {
-  navbar: 'Navbar', hero: 'Hero', features: 'Features', pricing: 'Pricing',
-  cta: 'CTA', footer: 'Footer', testimonials: 'Testimonials', stats: 'Stats',
-  faq: 'FAQ', team: 'Team', contact: 'Contact', newsletter: 'Newsletter',
-  logocloud: 'Logo Cloud', divider: 'Divider', banner: 'Banner',
-  content: 'Content', image: 'Image', video: 'Video', gallery: 'Gallery',
+  navbar: 'Topo & Menu',
+  hero: 'Destaque Principal',
+  features: 'Serviços & Recursos',
+  pricing: 'Planos & Preços',
+  cta: 'Chamada para Ação',
+  footer: 'Rodapé',
+  testimonials: 'Depoimentos',
+  stats: 'Estatísticas & Métricas',
+  faq: 'Perguntas Frequentes',
+  team: 'Nossa Equipe',
+  contact: 'Contato & Localização',
+  newsletter: 'Inscrição Newsletter',
+  logocloud: 'Logos & Clientes',
+  divider: 'Divisor de Seção',
+  banner: 'Faixa Informativa',
+  content: 'Texto & Artigo',
+  image: 'Imagem em Destaque',
+  video: 'Vídeo Apresentação',
+  gallery: 'Galeria de Fotos',
 }
 
 function SortableLayer({ block, isSelected, onSelect, onDuplicate, onRemove }: {
@@ -64,41 +78,41 @@ function SortableLayer({ block, isSelected, onSelect, onDuplicate, onRemove }: {
       ref={setNodeRef}
       style={style}
       onClick={onSelect}
-      className={`group px-2.5 py-2 rounded-md text-[12.5px] flex items-center gap-2 transition-all cursor-pointer select-none relative ${
-        isSelected ? 'bg-green-glow text-green' : 'text-text-1 hover:bg-bg-3 hover:text-text-0'
+      className={`group px-2.5 py-2 rounded-lg text-[13px] flex items-center gap-2.5 transition-all cursor-pointer select-none relative ${
+        isSelected ? 'bg-emerald-500/10 text-emerald-400 font-medium border border-emerald-500/20' : 'text-neutral-300 hover:bg-neutral-900 hover:text-white border border-transparent'
       }`}
     >
       <div
         {...attributes}
         {...listeners}
-        className="opacity-0 group-hover:opacity-100 transition-opacity text-text-3 cursor-grab active:cursor-grabbing"
-        aria-label={`Drag to reorder ${blockLabels[block.type]}`}
+        className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-500 cursor-grab active:cursor-grabbing"
+        aria-label={`Arrastar para reordenar ${blockLabels[block.type]}`}
       >
-        <GripVertical size={12} />
+        <GripVertical size={13} />
       </div>
 
-      <div className={`w-[26px] h-[26px] rounded flex items-center justify-center text-[11px] shrink-0 border ${
-        isSelected ? 'border-green/30 bg-green-glow' : 'border-border-default bg-bg-3'
+      <div className={`w-[28px] h-[28px] rounded-md flex items-center justify-center text-[11px] shrink-0 border ${
+        isSelected ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400' : 'border-neutral-800 bg-neutral-900 text-neutral-400'
       }`}>
-        <Icon size={13} />
+        <Icon size={14} />
       </div>
 
-      <span className="font-medium flex-1">{blockLabels[block.type]}</span>
+      <span className="font-medium flex-1 truncate">{blockLabels[block.type]}</span>
 
-      <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
         <button
           onClick={(e) => { e.stopPropagation(); onDuplicate() }}
-          className="w-[22px] h-[22px] rounded flex items-center justify-center text-text-3 hover:bg-bg-4 hover:text-text-0 transition-all"
-          aria-label={`Duplicate ${blockLabels[block.type]}`}
+          className="w-[24px] h-[24px] rounded flex items-center justify-center text-neutral-400 hover:bg-neutral-800 hover:text-white transition-all"
+          title={`Duplicar ${blockLabels[block.type]}`}
         >
-          <Copy size={11} />
+          <Copy size={12} />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onRemove() }}
-          className="w-[22px] h-[22px] rounded flex items-center justify-center text-text-3 hover:bg-status-red/10 hover:text-status-red transition-all"
-          aria-label={`Remove ${blockLabels[block.type]}`}
+          className="w-[24px] h-[24px] rounded flex items-center justify-center text-neutral-400 hover:bg-red-500/10 hover:text-red-400 transition-all"
+          title={`Remover ${blockLabels[block.type]}`}
         >
-          <Trash2 size={11} />
+          <Trash2 size={12} />
         </button>
       </div>
     </div>
@@ -119,19 +133,19 @@ function AddComponentPopover({ onAdd, onClose }: { onAdd: (type: BlockType) => v
   }, {})
 
   return (
-    <div className="absolute bottom-[52px] left-2 right-2 bg-bg-2 border border-border-default rounded-lg p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-10 max-h-[280px] overflow-y-auto">
+    <div className="absolute bottom-[52px] left-2 right-2 bg-neutral-900 border border-neutral-800 rounded-xl p-2 shadow-[0_12px_32px_rgba(0,0,0,0.6)] z-20 max-h-[300px] overflow-y-auto custom-scrollbar">
       <input
         autoFocus
         type="text"
-        placeholder="Search components..."
+        placeholder="Buscar componente..."
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         onKeyDown={(e) => e.key === 'Escape' && onClose()}
-        className="w-full px-2 py-1.5 rounded border border-border-default bg-bg-3 text-text-0 text-[11.5px] outline-none focus:border-green mb-1"
+        className="w-full px-2.5 py-1.5 rounded-lg border border-neutral-700 bg-neutral-950 text-neutral-100 text-[12px] outline-none focus:border-emerald-500 mb-2 placeholder:text-neutral-500"
       />
       {Object.entries(grouped).map(([category, items]) => (
-        <div key={category}>
-          <div className="text-[9px] font-semibold uppercase tracking-wider text-text-3 px-1.5 pt-2 pb-1">
+        <div key={category} className="mb-2">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 px-1.5 py-1">
             {category}
           </div>
           {items.map((meta) => {
@@ -140,22 +154,22 @@ function AddComponentPopover({ onAdd, onClose }: { onAdd: (type: BlockType) => v
               <button
                 key={meta.type}
                 onClick={() => { onAdd(meta.type); onClose() }}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-[12px] text-text-1 hover:bg-bg-3 hover:text-text-0 transition-colors text-left"
+                className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-[12px] text-neutral-300 hover:bg-neutral-800 hover:text-white transition-colors text-left"
               >
-                <div className="w-[22px] h-[22px] rounded border border-border-default bg-bg-3 flex items-center justify-center text-[10px] shrink-0">
+                <div className="w-[24px] h-[24px] rounded border border-neutral-750 bg-neutral-950 flex items-center justify-center text-[10px] shrink-0 text-neutral-400">
                   <Icon size={12} />
                 </div>
-                <span>{meta.label}</span>
-                <span className="ml-auto text-[10px] text-text-3">{meta.variants.length}v</span>
+                <span className="font-medium truncate">{meta.label}</span>
+                <span className="ml-auto text-[10px] text-neutral-500 font-mono">{meta.variants.length} var</span>
               </button>
             )
           })}
         </div>
       ))}
       {filtered.length === 0 && (
-        <div className="px-2 py-3 text-center text-[11px] text-text-3 flex items-center justify-center gap-1.5">
-          <Search size={12} />
-          No components match "{search}"
+        <div className="px-2 py-4 text-center text-[12px] text-neutral-500 flex items-center justify-center gap-1.5">
+          <Search size={13} />
+          Nenhum componente encontrado para "{search}"
         </div>
       )}
     </div>
@@ -199,19 +213,19 @@ export function LayersPanel() {
     }
     addBlock(block)
     selectBlock(block.id)
-    toast(`${meta.label} added`)
+    toast.success(`${meta.label} adicionado à página`)
   }
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden relative">
-      <div className="px-3 pt-2.5 pb-1.5 flex items-center justify-between">
-        <span className="text-[10px] font-semibold uppercase tracking-wider text-text-3">
-          Layers
+      <div className="px-3 pt-3 pb-2 flex items-center justify-between">
+        <span className="text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+          Camadas da Página
         </span>
-        <span className="text-[10px] text-text-3">{blocks.length}</span>
+        <span className="text-[10px] font-medium bg-neutral-800 text-neutral-400 px-2 py-0.5 rounded-full">{blocks.length}</span>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-2 pb-2">
+      <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-1 custom-scrollbar">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={blocks.map((b) => b.id)} strategy={verticalListSortingStrategy}>
             {blocks.map((block) => (
@@ -220,16 +234,16 @@ export function LayersPanel() {
                 block={block}
                 isSelected={selectedBlockId === block.id}
                 onSelect={() => selectBlock(block.id)}
-                onDuplicate={() => { duplicateBlock(block.id); toast('Block duplicated') }}
+                onDuplicate={() => { duplicateBlock(block.id); toast.success('Bloco duplicado com sucesso') }}
                 onRemove={() => {
                   if (selectedBlockId === block.id) selectBlock(null)
                   removeBlock(block.id)
-                  toast('Block removed', {
+                  toast('Bloco removido', {
                     action: {
-                      label: 'Undo',
+                      label: 'Desfazer',
                       onClick: () => {
                         useConfigStore.getState().undo()
-                        toast('Block restored')
+                        toast.success('Bloco restaurado')
                       },
                     },
                     duration: 3000,
@@ -242,13 +256,13 @@ export function LayersPanel() {
       </div>
 
       {/* Add component */}
-      <div className="p-2 border-t border-border-subtle relative">
+      <div className="p-2 border-t border-neutral-800/80 relative">
         <button
           onClick={() => setShowPopover(!showPopover)}
-          className="w-full py-2 rounded-md border border-dashed border-border-default text-text-2 text-xs flex items-center justify-center gap-1.5 transition-all hover:border-green hover:text-green hover:bg-green-glow2"
+          className="w-full py-2.5 rounded-xl border border-dashed border-neutral-700 text-neutral-400 text-xs font-medium flex items-center justify-center gap-2 transition-all hover:border-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/5 active:scale-[0.98]"
         >
-          <Plus size={13} />
-          Add Component
+          <Plus size={14} />
+          Adicionar Componente
         </button>
         {showPopover && (
           <AddComponentPopover onAdd={handleAddBlock} onClose={() => setShowPopover(false)} />

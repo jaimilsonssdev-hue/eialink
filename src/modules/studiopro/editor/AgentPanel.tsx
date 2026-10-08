@@ -25,17 +25,17 @@ const initialMessages: ChatMessage[] = [
   {
     id: '1',
     role: 'agent',
-    text: 'Hi! I can help you build and modify your site. Try asking me to add sections, change content, or tweak styles.',
+    text: 'Olá! Sou o assistente de IA do Studio Pro. Posso criar novas seções, ajustar textos, trocar temas de cores e formatar seu site instantaneamente. Como posso te ajudar hoje?',
   },
 ]
 
 function TypingIndicator() {
   return (
-    <div className="self-start flex gap-1 px-4 py-3 bg-green-glow rounded-xl rounded-bl-sm border border-green/10">
+    <div className="self-start flex gap-1 px-4 py-3 bg-emerald-500/10 rounded-xl rounded-bl-sm border border-emerald-500/20">
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="w-1.5 h-1.5 rounded-full bg-green opacity-40"
+          className="w-1.5 h-1.5 rounded-full bg-emerald-400 opacity-40"
           style={{
             animation: 'typeDot 1.4s infinite',
             animationDelay: `${i * 0.2}s`,
@@ -52,20 +52,20 @@ function TypingIndicator() {
   )
 }
 
-// Pattern matching for demo agent responses
+// Pattern matching for agent responses (PT-BR and EN)
 function generateResponse(input: string, blocks: { id: string; type: string; variant: string; props: Record<string, unknown> }[]): ChatMessage | { action: 'addBlock'; block: BlockConfig; message: string } | { action: 'removeBlock'; blockId: string; message: string } | { action: 'changeVariant'; blockId: string; variant: string; message: string } | { action: 'changeTheme'; themeId: string; message: string } {
   const lower = input.toLowerCase()
   const heroBlock = blocks.find((b) => b.type === 'hero')
 
-  // Change headline
-  if (lower.includes('change') && lower.includes('headline') && heroBlock) {
-    const match = input.match(/["'](.+?)["']/) || input.match(/to\s+(.+)/i)
-    const newHeadline = match?.[1]?.trim() || 'Your New Headline'
-    const oldHeadline = String(heroBlock.props.headline || 'Build websites with JSON')
+  // Change headline: "mudar título para ...", "alterar headline para ...", "change headline to ..."
+  if ((lower.includes('título') || lower.includes('titulo') || lower.includes('headline')) && (lower.includes('mudar') || lower.includes('alterar') || lower.includes('trocar') || lower.includes('change')) && heroBlock) {
+    const match = input.match(/["'](.+?)["']/) || input.match(/(?:para|to)\s+(.+)/i)
+    const newHeadline = match?.[1]?.trim() || 'Transforme seu Negócio Hoje'
+    const oldHeadline = String(heroBlock.props.headline || 'Construa sites rápidos')
     return {
       id: `msg-${Date.now()}`,
       role: 'agent',
-      text: `I'll update the hero headline for you.`,
+      text: `Vou atualizar o título principal do destaque para você.`,
       patch: {
         path: `blocks[${blocks.indexOf(heroBlock)}].props.headline`,
         blockId: heroBlock.id,
@@ -77,11 +77,20 @@ function generateResponse(input: string, blocks: { id: string; type: string; var
     }
   }
 
-  // Add block: "add a pricing section", "add FAQ", "add testimonials"
-  const addMatch = lower.match(/add\s+(?:a\s+)?(\w+)/)
+  // Add block: "adicionar precos", "adicionar depoimentos", "add pricing"
+  const addMatch = lower.match(/(?:adicionar|colocar|criar|add)\s+(?:um\s+|uma\s+|a\s+)?(\w+)/)
   if (addMatch) {
-    const blockType = addMatch[1].replace(/s$/, '') // strip trailing s
-    const meta = blockMetadata.find((b) => b.type === blockType || b.label.toLowerCase().includes(blockType))
+    let key = addMatch[1].replace(/s$/, '')
+    if (key === 'preco' || key === 'preço' || key === 'plano') key = 'pricing'
+    if (key === 'depoimento') key = 'testimonials'
+    if (key === 'servico' || key === 'serviço' || key === 'recurso') key = 'features'
+    if (key === 'contato') key = 'contact'
+    if (key === 'duvida' || key === 'dúvida' || key === 'pergunta') key = 'faq'
+    if (key === 'equipe') key = 'team'
+    if (key === 'rodape' || key === 'rodapé') key = 'footer'
+    if (key === 'topo' || key === 'menu') key = 'navbar'
+
+    const meta = blockMetadata.find((b) => b.type === key || b.label.toLowerCase().includes(key))
     if (meta) {
       const block: BlockConfig = {
         id: `block-${Date.now()}`,
@@ -89,49 +98,39 @@ function generateResponse(input: string, blocks: { id: string; type: string; var
         variant: meta.variants[0],
         props: { ...meta.defaultProps },
       }
-      return { action: 'addBlock', block, message: `Adding a ${meta.label} block.` }
+      return { action: 'addBlock', block, message: `Adicionando o bloco ${meta.label} à página.` }
     }
   }
 
-  // Remove block: "remove the FAQ", "delete the pricing"
-  const removeMatch = lower.match(/(?:remove|delete)\s+(?:the\s+)?(\w+)/)
+  // Remove block: "remover faq", "excluir precos", "delete pricing"
+  const removeMatch = lower.match(/(?:remover|excluir|deletar|remove|delete)\s+(?:o\s+|a\s+|the\s+)?(\w+)/)
   if (removeMatch) {
-    const blockType = removeMatch[1].replace(/s$/, '')
-    const found = blocks.find((b) => b.type === blockType || b.type.includes(blockType))
+    let key = removeMatch[1].replace(/s$/, '')
+    if (key === 'preco' || key === 'preço' || key === 'plano') key = 'pricing'
+    if (key === 'depoimento') key = 'testimonials'
+    if (key === 'faq') key = 'faq'
+    const found = blocks.find((b) => b.type === key || b.type.includes(key))
     if (found) {
-      return { action: 'removeBlock', blockId: found.id, message: `Removing the ${found.type} block.` }
+      return { action: 'removeBlock', blockId: found.id, message: `Removendo o bloco ${found.type} da página.` }
     }
   }
 
-  // Change variant: "make the hero a split layout", "change hero to minimal"
-  const variantMatch = lower.match(/(?:make|change|switch)\s+(?:the\s+)?(\w+)\s+(?:to\s+|a\s+)?(\w+)/)
-  if (variantMatch) {
-    const blockType = variantMatch[1]
-    const variant = variantMatch[2]
-    const found = blocks.find((b) => b.type === blockType || b.type.includes(blockType))
-    if (found) {
-      const meta = blockMetadata.find((b) => b.type === found.type)
-      const matchedVariant = meta?.variants.find((v) => v.includes(variant))
-      if (matchedVariant) {
-        return { action: 'changeVariant', blockId: found.id, variant: matchedVariant, message: `Changing ${found.type} to ${matchedVariant} variant.` }
-      }
+  // Change theme: "tema escuro", "tema azul", "switch to midnight"
+  if (lower.includes('tema') || lower.includes('theme') || lower.includes('cor')) {
+    if (lower.includes('escuro') || lower.includes('dark') || lower.includes('midnight') || lower.includes('noite')) {
+      const preset = themePresets.find((p) => p.id === 'midnight' || p.id === 'dark') || themePresets[1]
+      return { action: 'changeTheme', themeId: preset.id, message: `Aplicando o tema escuro (${preset.name}).` }
     }
-  }
-
-  // Change theme: "make it blue", "switch to ocean theme", "use midnight theme"
-  const themeMatch = lower.match(/(?:make it|switch to|use|apply)\s+(?:the\s+)?(\w+)\s*(?:theme)?/)
-  if (themeMatch) {
-    const themeName = themeMatch[1]
-    const preset = themePresets.find((p) => p.id.includes(themeName) || p.name.toLowerCase().includes(themeName))
-    if (preset) {
-      return { action: 'changeTheme', themeId: preset.id, message: `Switching to the ${preset.name} theme.` }
+    if (lower.includes('azul') || lower.includes('ocean')) {
+      const preset = themePresets.find((p) => p.id === 'ocean') || themePresets[0]
+      return { action: 'changeTheme', themeId: preset.id, message: `Aplicando a paleta de cores oceano.` }
     }
   }
 
   return {
     id: `msg-${Date.now()}`,
     role: 'agent',
-    text: "I can help with your site. Try:\n- \"Change the headline to 'New Title'\"\n- \"Add a pricing section\"\n- \"Remove the FAQ\"\n- \"Make the hero a split layout\"\n- \"Switch to midnight theme\"",
+    text: "Posso ajudar a transformar seu site! Experimente pedir:\n- \"Mudar título para 'Sua Empresa em Destaque'\"\n- \"Adicionar seção de preços\"\n- \"Adicionar depoimentos\"\n- \"Remover perguntas frequentes\"\n- \"Mudar para tema escuro\"",
   }
 }
 
@@ -152,21 +151,21 @@ export function AgentPanel() {
 
   function handleApply(msg: ChatMessage) {
     if (!msg.patch?.blockId || !msg.patch?.propKey || !msg.patch?.value) {
-      toast.error('Cannot apply: missing patch data')
+      toast.error('Não foi possível aplicar: dados ausentes')
       return
     }
     updateBlockProps(msg.patch.blockId, { [msg.patch.propKey]: msg.patch.value })
     setMessages((prev) =>
       prev.map((m) => (m.id === msg.id ? { ...m, applied: true } : m))
     )
-    toast('Patch applied')
+    toast.success('Alteração aplicada com sucesso')
   }
 
   function handleReject(msg: ChatMessage) {
     setMessages((prev) =>
       prev.map((m) => (m.id === msg.id ? { ...m, applied: false, patch: undefined } : m))
     )
-    toast('Patch rejected')
+    toast('Alteração descartada')
   }
 
   function handleSend() {
@@ -195,18 +194,18 @@ export function AgentPanel() {
 
         if (response.action === 'addBlock') {
           addBlock(response.block)
-          toast(`${response.block.type} block added`)
+          toast.success(`Bloco ${response.block.type} adicionado`)
         } else if (response.action === 'removeBlock') {
           removeBlock(response.blockId)
-          toast('Block removed')
+          toast('Bloco removido da página')
         } else if (response.action === 'changeVariant') {
           updateBlock(response.blockId, { variant: response.variant })
-          toast(`Variant changed to ${response.variant}`)
+          toast.success(`Estilo alterado para ${response.variant}`)
         } else if (response.action === 'changeTheme') {
           const preset = themePresets.find((p) => p.id === response.themeId)
           if (preset) {
             setTheme(preset.theme)
-            toast(`Theme changed to ${preset.name}`)
+            toast.success(`Tema atualizado para ${preset.name}`)
           }
         }
       } else {
@@ -222,55 +221,55 @@ export function AgentPanel() {
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5">
+      <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 custom-scrollbar">
         {messages.map((msg) => (
           <div
             key={msg.id}
-            className={`max-w-[94%] px-3 py-2.5 rounded-xl text-[12.5px] leading-relaxed ${
+            className={`max-w-[94%] px-3.5 py-2.5 rounded-xl text-[12.5px] leading-relaxed ${
               msg.role === 'user'
-                ? 'self-end bg-bg-3 text-text-0 rounded-br-sm'
-                : 'self-start bg-green-glow text-text-0 rounded-bl-sm border border-green/10'
+                ? 'self-end bg-neutral-800 text-white rounded-br-sm'
+                : 'self-start bg-emerald-500/10 text-neutral-150 rounded-bl-sm border border-emerald-500/20 shadow-sm'
             }`}
           >
             {msg.text}
 
             {/* JSON patch diff */}
             {msg.patch && (
-              <div className="bg-bg-2 border border-border-default rounded-md p-2 mt-2 font-mono text-[10.5px] leading-relaxed">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-sans text-[9px] font-semibold uppercase tracking-wider text-text-3">
-                    JSON Patch
+              <div className="bg-neutral-950 border border-neutral-800 rounded-lg p-2.5 mt-2 font-mono text-[11px] leading-relaxed">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="font-sans text-[10px] font-bold uppercase tracking-wider text-neutral-400">
+                    Ajuste Sugerido
                   </span>
                   {!msg.applied && (
-                    <div className="flex gap-1">
+                    <div className="flex gap-1.5">
                       <button
                         onClick={() => handleApply(msg)}
-                        className="px-1.5 py-0.5 rounded text-[9px] bg-green/20 text-green hover:bg-green/30 transition-colors flex items-center gap-0.5"
+                        className="px-2 py-0.5 rounded text-[10px] bg-emerald-500 text-black font-semibold hover:bg-emerald-400 transition-colors flex items-center gap-1"
                       >
-                        <Check size={9} /> Apply
+                        <Check size={10} /> Aplicar
                       </button>
                       <button
                         onClick={() => handleReject(msg)}
-                        className="px-1.5 py-0.5 rounded text-[9px] bg-status-red/10 text-status-red hover:bg-status-red/20 transition-colors flex items-center gap-0.5"
+                        className="px-2 py-0.5 rounded text-[10px] bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors flex items-center gap-1"
                       >
-                        <X size={9} /> Reject
+                        <X size={10} /> Recusar
                       </button>
                     </div>
                   )}
                   {msg.applied && (
-                    <span className="text-[9px] text-green font-medium flex items-center gap-0.5">
-                      <Check size={9} /> Applied
+                    <span className="text-[10px] text-emerald-400 font-semibold flex items-center gap-1">
+                      <Check size={10} /> Aplicado com sucesso
                     </span>
                   )}
                 </div>
-                <div className="text-text-3 text-[10px] mb-1">{msg.patch.path}</div>
+                <div className="text-neutral-500 text-[10px] mb-1">{msg.patch.path}</div>
                 {msg.patch.removed?.map((line, i) => (
-                  <div key={`r-${i}`} className="text-status-red line-through opacity-60">
+                  <div key={`r-${i}`} className="text-red-400 line-through opacity-70">
                     - {line}
                   </div>
                 ))}
                 {msg.patch.added?.map((line, i) => (
-                  <div key={`a-${i}`} className="text-green">
+                  <div key={`a-${i}`} className="text-emerald-400 font-medium">
                     + {line}
                   </div>
                 ))}
@@ -283,30 +282,30 @@ export function AgentPanel() {
       </div>
 
       {/* Input */}
-      <div className="p-2.5 border-t border-border-default">
-        <div className="flex gap-1.5">
+      <div className="p-3 border-t border-neutral-800/80 bg-neutral-950/60">
+        <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Ask the agent..."
+            placeholder="Diga à IA o que alterar na página..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSend() }}
-            className="flex-1 px-3 py-2 rounded-lg border border-border-default bg-bg-2 text-text-0 text-[13px] outline-none focus:border-green placeholder:text-text-3"
+            className="flex-1 px-3 py-2 rounded-xl border border-neutral-750 bg-neutral-900 text-neutral-100 text-[12.5px] outline-none focus:border-emerald-500 placeholder:text-neutral-500"
           />
           <button
             onClick={handleSend}
-            className="w-9 h-9 rounded-lg bg-green flex items-center justify-center text-black shrink-0 hover:bg-green-dim transition-colors"
-            aria-label="Send message"
+            className="w-9 h-9 rounded-xl bg-emerald-500 flex items-center justify-center text-black shrink-0 hover:bg-emerald-400 transition-colors shadow-sm active:scale-95"
+            aria-label="Enviar mensagem"
           >
             <Send size={14} />
           </button>
         </div>
-        <div className="flex gap-1 mt-1.5 flex-wrap">
-          {['Change the headline', 'Add a pricing section', 'Make the hero split', 'Switch to midnight theme'].map((hint) => (
+        <div className="flex gap-1.5 mt-2 flex-wrap">
+          {['Mudar título', 'Adicionar preços', 'Adicionar depoimentos', 'Mudar tema'].map((hint) => (
             <span
               key={hint}
               onClick={() => handleHint(hint)}
-              className="px-2 py-0.5 rounded-full text-[10.5px] text-text-2 border border-border-default bg-bg-2 cursor-pointer hover:border-green hover:text-green hover:bg-green-glow transition-all"
+              className="px-2.5 py-1 rounded-full text-[11px] font-medium text-neutral-400 border border-neutral-800 bg-neutral-900/80 cursor-pointer hover:border-emerald-500/50 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all active:scale-95"
             >
               {hint}
             </span>

@@ -99,87 +99,89 @@ export function DesignPanel() {
   return (
     <div className="px-3.5 py-3.5">
       {/* Preset grid */}
-      <div className="mb-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-text-3 mb-2">Presets</div>
-        <div className="grid grid-cols-2 gap-1.5">
+      <div className="mb-5">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2.5">
+          Paletas de Cores Prontas
+        </div>
+        <div className="grid grid-cols-2 gap-2">
           {themePresets.map((preset) => (
             <button
               key={preset.id}
               onClick={() => setTheme(preset.theme)}
-              className={`p-2 rounded-lg border transition-all text-left ${
+              className={`p-2.5 rounded-xl border transition-all text-left ${
                 activePresetId === preset.id
-                  ? 'border-green bg-green/5'
-                  : 'border-border-default bg-bg-2 hover:border-border-hover hover:bg-bg-3'
+                  ? 'border-emerald-500 bg-emerald-500/10 ring-1 ring-emerald-500/30'
+                  : 'border-neutral-800 bg-neutral-900/60 hover:border-neutral-700 hover:bg-neutral-850'
               }`}
             >
-              <div className="flex gap-0.5 mb-1.5">
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: preset.theme.bg0 }} />
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: preset.theme.bg2 }} />
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: preset.theme.accent }} />
-                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: preset.theme.text0 }} />
+              <div className="flex gap-1 mb-2">
+                <div className="w-3.5 h-3.5 rounded-sm shadow-sm" style={{ backgroundColor: preset.theme.bg0 }} />
+                <div className="w-3.5 h-3.5 rounded-sm shadow-sm" style={{ backgroundColor: preset.theme.bg2 }} />
+                <div className="w-3.5 h-3.5 rounded-sm shadow-sm" style={{ backgroundColor: preset.theme.accent }} />
+                <div className="w-3.5 h-3.5 rounded-sm shadow-sm" style={{ backgroundColor: preset.theme.text0 }} />
               </div>
-              <div className="text-[10px] font-medium truncate">{preset.name}</div>
+              <div className="text-[11px] font-semibold text-neutral-200 truncate">{preset.name}</div>
             </button>
           ))}
         </div>
       </div>
 
       {/* Color sections */}
-      <div className="space-y-2 mb-4">
+      <div className="space-y-2.5 mb-5">
         <ColorSection
-          title="Backgrounds"
+          title="Cores de Fundo"
           defaultOpen
           colors={[
-            { key: 'bg0', label: 'Base' },
-            { key: 'bg1', label: 'Surface 1' },
-            { key: 'bg2', label: 'Surface 2' },
-            { key: 'bg3', label: 'Surface 3' },
-            { key: 'bg4', label: 'Surface 4' },
-            { key: 'bg5', label: 'Surface 5' },
+            { key: 'bg0', label: 'Fundo Principal' },
+            { key: 'bg1', label: 'Superfície Card 1' },
+            { key: 'bg2', label: 'Superfície Card 2' },
+            { key: 'bg3', label: 'Superfície Card 3' },
+            { key: 'bg4', label: 'Fundo Flutuante' },
+            { key: 'bg5', label: 'Fundo Destaque' },
           ]}
         />
         <ColorSection
-          title="Text"
+          title="Tipografia & Textos"
           colors={[
-            { key: 'text0', label: 'Primary' },
-            { key: 'text1', label: 'Secondary' },
-            { key: 'text2', label: 'Muted' },
-            { key: 'text3', label: 'Dimmed' },
+            { key: 'text0', label: 'Texto Principal' },
+            { key: 'text1', label: 'Texto Secundário' },
+            { key: 'text2', label: 'Texto Suave' },
+            { key: 'text3', label: 'Texto Apagado' },
           ]}
         />
         <ColorSection
-          title="Accent"
+          title="Destaque & Botões (Accent)"
           defaultOpen
           colors={[
-            { key: 'accent', label: 'Accent' },
-            { key: 'accentDim', label: 'Accent Dim' },
+            { key: 'accent', label: 'Cor de Destaque' },
+            { key: 'accentDim', label: 'Destaque Translúcido' },
           ]}
         />
         <ColorSection
-          title="Borders"
+          title="Bordas & Divisores"
           colors={[
-            { key: 'borderDefault', label: 'Default' },
-            { key: 'borderSubtle', label: 'Subtle' },
-            { key: 'borderHover', label: 'Hover' },
+            { key: 'borderDefault', label: 'Borda Padrão' },
+            { key: 'borderSubtle', label: 'Borda Sutil' },
+            { key: 'borderHover', label: 'Borda Hover' },
           ]}
         />
       </div>
 
       {/* Fonts */}
-      <div className="mb-4">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-text-3 mb-2">Fonts</div>
-        <div className="space-y-2.5">
+      <div className="mb-5">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2.5">Fontes do Google</div>
+        <div className="space-y-3">
           {([
-            { key: 'fontSans' as const, label: 'Body' },
-            { key: 'fontDisplay' as const, label: 'Display' },
-            { key: 'fontMono' as const, label: 'Mono' },
+            { key: 'fontSans' as const, label: 'Corpo do Texto (Sans)' },
+            { key: 'fontDisplay' as const, label: 'Títulos & Destaques (Display)' },
+            { key: 'fontMono' as const, label: 'Numerais & Códigos (Mono)' },
           ]).map(({ key, label }) => (
             <div key={key}>
-              <label className="block text-[10.5px] text-text-2 mb-1">{label}</label>
+              <label className="block text-[11px] font-medium text-neutral-400 mb-1.5">{label}</label>
               <select
                 value={resolved[key]}
                 onChange={(e) => updateTheme({ [key]: e.target.value })}
-                className="w-full px-2 py-1.5 rounded-lg border border-border-default bg-bg-2 text-text-0 text-[11px] outline-none focus:border-green cursor-pointer"
+                className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-100 text-[12px] outline-none focus:border-emerald-500 cursor-pointer"
                 style={{ fontFamily: `"${resolved[key]}", sans-serif` }}
               >
                 {googleFontOptions.map((f) => (
@@ -193,28 +195,28 @@ export function DesignPanel() {
 
       {/* Radius */}
       <div>
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-text-3 mb-2">Radius</div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="text-[11px] font-bold uppercase tracking-wider text-neutral-400 mb-2.5">Arredondamento de Cantos</div>
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-[10.5px] text-text-2 mb-1">Default</label>
+            <label className="block text-[11px] font-medium text-neutral-400 mb-1.5">Padrão (px)</label>
             <input
               type="number"
               min={0}
               max={24}
               value={resolved.radius}
               onChange={(e) => updateTheme({ radius: Number(e.target.value) })}
-              className="w-full px-2 py-1.5 rounded-lg border border-border-default bg-bg-2 text-text-0 text-[11px] outline-none focus:border-green"
+              className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-100 text-[12px] outline-none focus:border-emerald-500"
             />
           </div>
           <div>
-            <label className="block text-[10.5px] text-text-2 mb-1">Large</label>
+            <label className="block text-[11px] font-medium text-neutral-400 mb-1.5">Cards Grandes (px)</label>
             <input
               type="number"
               min={0}
               max={32}
               value={resolved.radiusLg}
               onChange={(e) => updateTheme({ radiusLg: Number(e.target.value) })}
-              className="w-full px-2 py-1.5 rounded-lg border border-border-default bg-bg-2 text-text-0 text-[11px] outline-none focus:border-green"
+              className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-100 text-[12px] outline-none focus:border-emerald-500"
             />
           </div>
         </div>

@@ -9,9 +9,9 @@ import { useEditorStore } from "@/modules/studiopro/store/editorStore"
 type SettingsTab = 'general' | 'seo' | 'api'
 
 const tabDefs: { value: SettingsTab; label: string; icon: typeof Settings2 }[] = [
-  { value: 'general', label: 'General', icon: Settings2 },
-  { value: 'seo', label: 'SEO', icon: SearchIcon },
-  { value: 'api', label: 'API Keys', icon: Key },
+  { value: 'general', label: 'Geral', icon: Settings2 },
+  { value: 'seo', label: 'SEO & Google', icon: SearchIcon },
+  { value: 'api', label: 'Chaves de API', icon: Key },
 ]
 
 function useSettingsState() {
@@ -48,7 +48,7 @@ function useSettingsState() {
 function FieldGroup({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="mb-5">
-      <label className="block text-[11.5px] text-text-2 mb-1.5 font-medium">{label}</label>
+      <label className="block text-[12px] text-neutral-400 mb-1.5 font-medium">{label}</label>
       {children}
     </div>
   )
@@ -61,7 +61,7 @@ function ControlledInput({ settingsKey, placeholder, settings }: { settingsKey: 
       value={settings.data[settingsKey] || ''}
       placeholder={placeholder}
       onChange={(e) => settings.update(settingsKey, e.target.value)}
-      className="w-full px-3 py-2 rounded-lg border border-border-default bg-bg-2 text-text-0 text-[13px] outline-none focus:border-green placeholder:text-text-3 transition-colors"
+      className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-100 text-[13px] outline-none focus:border-emerald-500 placeholder:text-neutral-500 transition-colors"
     />
   )
 }
@@ -72,7 +72,7 @@ function ControlledTextarea({ settingsKey, rows = 3, settings }: { settingsKey: 
       value={settings.data[settingsKey] || ''}
       rows={rows}
       onChange={(e) => settings.update(settingsKey, e.target.value)}
-      className="w-full px-3 py-2 rounded-lg border border-border-default bg-bg-2 text-text-0 text-[13px] outline-none focus:border-green resize-y transition-colors"
+      className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-100 text-[13px] outline-none focus:border-emerald-500 resize-y transition-colors placeholder:text-neutral-500"
     />
   )
 }
@@ -80,17 +80,27 @@ function ControlledTextarea({ settingsKey, rows = 3, settings }: { settingsKey: 
 function GeneralPanel({ settings }: { settings: ReturnType<typeof useSettingsState> }) {
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">General</h2>
-      <FieldGroup label="Site Name"><ControlledInput settingsKey="siteName" settings={settings} /></FieldGroup>
-      <FieldGroup label="Site Description"><ControlledTextarea settingsKey="siteDescription" settings={settings} /></FieldGroup>
-      <FieldGroup label="Favicon URL"><ControlledInput settingsKey="faviconUrl" placeholder="https://example.com/favicon.ico" settings={settings} /></FieldGroup>
-      <FieldGroup label="Language">
+      <h2 className="text-lg font-bold text-neutral-100 mb-4">Configurações Gerais</h2>
+      <FieldGroup label="Nome do Site ou Empresa">
+        <ControlledInput settingsKey="siteName" placeholder="Ex: Minha Empresa Link" settings={settings} />
+      </FieldGroup>
+      <FieldGroup label="Descrição Curta do Negócio">
+        <ControlledTextarea settingsKey="siteDescription" settings={settings} />
+      </FieldGroup>
+      <FieldGroup label="URL do Ícone (Favicon)">
+        <ControlledInput settingsKey="faviconUrl" placeholder="https://exemplo.com/favicon.ico" settings={settings} />
+      </FieldGroup>
+      <FieldGroup label="Idioma Principal do Site">
         <select
-          value={settings.data.language || 'English'}
+          value={settings.data.language || 'Português (Brasil)'}
           onChange={(e) => settings.update('language', e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-border-default bg-bg-2 text-text-0 text-[13px] outline-none focus:border-green cursor-pointer"
+          className="w-full px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-100 text-[13px] outline-none focus:border-emerald-500 cursor-pointer"
         >
-          <option>English</option><option>German</option><option>Spanish</option><option>French</option>
+          <option value="Português (Brasil)">Português (Brasil)</option>
+          <option value="English">English</option>
+          <option value="Español">Español</option>
+          <option value="Deutsch">Deutsch</option>
+          <option value="Français">Français</option>
         </select>
       </FieldGroup>
     </div>
@@ -98,23 +108,29 @@ function GeneralPanel({ settings }: { settings: ReturnType<typeof useSettingsSta
 }
 
 function SeoPanel({ settings }: { settings: ReturnType<typeof useSettingsState> }) {
-  const title = settings.data.seoTitle || 'My Website - Build with OpenPage'
-  const description = settings.data.seoDescription || 'A beautiful website built with structured JSON config.'
-  const domain = settings.data.customDomain || 'mywebsite.com'
+  const title = settings.data.seoTitle || 'Meu Site Profissional'
+  const description = settings.data.seoDescription || 'Conheça nossos produtos e serviços de excelência com atendimento rápido.'
+  const domain = settings.data.customDomain || 'minhaempresa.eialink.com.br'
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">SEO</h2>
-      <FieldGroup label="Page Title"><ControlledInput settingsKey="seoTitle" settings={settings} /></FieldGroup>
-      <FieldGroup label="Meta Description"><ControlledTextarea settingsKey="seoDescription" settings={settings} /></FieldGroup>
-      <FieldGroup label="OG Image URL"><ControlledInput settingsKey="ogImageUrl" placeholder="https://example.com/og.png" settings={settings} /></FieldGroup>
+      <h2 className="text-lg font-bold text-neutral-100 mb-4">SEO & Buscas do Google</h2>
+      <FieldGroup label="Título da Página (Tag Title)">
+        <ControlledInput settingsKey="seoTitle" placeholder="Ex: Minha Empresa | Especialista no Setor" settings={settings} />
+      </FieldGroup>
+      <FieldGroup label="Descrição para Buscas (Meta Description)">
+        <ControlledTextarea settingsKey="seoDescription" settings={settings} />
+      </FieldGroup>
+      <FieldGroup label="URL da Imagem de Compartilhamento (OpenGraph Image)">
+        <ControlledInput settingsKey="ogImageUrl" placeholder="https://exemplo.com/preview.png" settings={settings} />
+      </FieldGroup>
 
       {/* Live Google preview */}
-      <div className="mt-6 p-4 rounded-xl bg-bg-2 border border-border-default">
-        <div className="text-[10px] font-semibold uppercase tracking-wider text-text-3 mb-3">Google Preview</div>
-        <div className="text-[#8ab4f8] text-sm hover:underline cursor-pointer">{title}</div>
+      <div className="mt-6 p-4 rounded-xl bg-neutral-900/90 border border-neutral-800">
+        <div className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-3">Prévia no Google</div>
+        <div className="text-[#8ab4f8] text-sm hover:underline cursor-pointer font-medium">{title}</div>
         <div className="text-[#bdc1c6] text-[11px] mt-0.5">https://{domain}</div>
-        <div className="text-[#9aa0a6] text-[11.5px] mt-1 leading-relaxed">
+        <div className="text-[#9aa0a6] text-[12px] mt-1 leading-relaxed">
           {description}
         </div>
       </div>
@@ -161,45 +177,47 @@ function ApiPanel({ settings }: { settings: ReturnType<typeof useSettingsState> 
 
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">API Keys</h2>
+      <h2 className="text-lg font-bold text-neutral-100 mb-4">Chaves de API & Conexões</h2>
 
-      <FieldGroup label="Deploy Access Key">
+      <FieldGroup label="Chave de Implementação Direta (Cloudflare)">
         <ControlledInput
           settingsKey="deployAccessKey"
-          placeholder="Must match OPENPAGE_DEPLOY_KEY on server"
+          placeholder="Chave de acesso automático de deploy"
           settings={settings}
         />
-        <p className="text-[11px] text-text-3 mt-1.5">
-          Required for one-click publishing. Stored in your project settings.
+        <p className="text-[11px] text-neutral-500 mt-1.5">
+          Permite a publicação imediata de sites em 1 clique hospedados na infraestrutura Cloudflare.
         </p>
       </FieldGroup>
 
-      <FieldGroup label="Gemini API Key">
+      <FieldGroup label="Chave de API Gemini (Google AI Studio)">
         <div className="flex gap-2">
           <input
             type={showKey ? 'text' : 'password'}
             value={geminiKey}
             placeholder="AIza..."
             onChange={(e) => handleKeyChange(e.target.value)}
-            className="flex-1 px-3 py-2 rounded-lg border border-border-default bg-bg-2 text-text-0 text-[13px] outline-none focus:border-green placeholder:text-text-3 transition-colors font-mono"
+            className="flex-1 px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-100 text-[13px] outline-none focus:border-emerald-500 placeholder:text-neutral-500 transition-colors font-mono"
           />
           <button
             onClick={() => setShowKey(!showKey)}
-            className="px-3 py-2 rounded-lg border border-border-default bg-bg-2 text-text-2 text-[12px] hover:text-text-0 hover:bg-bg-3 transition-colors shrink-0"
+            className="px-3 py-2 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-400 text-[12px] hover:text-white hover:bg-neutral-800 transition-colors shrink-0"
           >
-            {showKey ? 'Hide' : 'Show'}
+            {showKey ? 'Ocultar' : 'Exibir'}
           </button>
           <button
             onClick={handleTest}
             disabled={!geminiKey || testing}
-            className="px-3 py-2 rounded-lg bg-green/10 text-green text-[12px] font-medium hover:bg-green/20 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3.5 py-2 rounded-xl bg-emerald-500/10 text-emerald-400 text-[12px] font-semibold hover:bg-emerald-500/20 transition-colors shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {testing ? 'Testing...' : 'Test'}
+            {testing ? 'Testando...' : 'Testar Conexão'}
           </button>
         </div>
-        <p className="text-[11px] text-text-3 mt-1.5">
-          Used for client-side AI generation. Get one at{' '}
-          <span className="text-text-2">aistudio.google.com</span>
+        <p className="text-[11px] text-neutral-500 mt-1.5">
+          Utilizada para gerar e personalizar sites em tempo real via IA. Obtenha gratuitamente em{' '}
+          <a href="https://aistudio.google.com" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">
+            aistudio.google.com
+          </a>
         </p>
       </FieldGroup>
 
@@ -218,32 +236,32 @@ export function Settings() {
   }
 
   return (
-    <div className="h-full flex flex-col md:flex-row overflow-hidden">
+    <div className="h-full flex flex-col md:flex-row overflow-hidden bg-neutral-950">
       {/* Sidebar */}
-      <div className="md:w-52 bg-bg-1 border-b md:border-b-0 md:border-r border-border-default p-2 shrink-0 flex md:flex-col gap-1 overflow-x-auto">
+      <div className="md:w-56 bg-neutral-900/60 border-b md:border-b-0 md:border-r border-neutral-800 p-3 shrink-0 flex md:flex-col gap-1.5 overflow-x-auto">
         {tabDefs.map(({ value, label, icon: Icon }, i) => (
           <button
             key={value}
             onClick={() => setActiveTab(value)}
             style={{ animationDelay: `${i * 40}ms` }}
-            className={`shrink-0 md:w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12.5px] transition-all text-left animate-fade-in-up ${
+            className={`shrink-0 md:w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-[13px] font-medium transition-all text-left animate-fade-in-up ${
               activeTab === value
-                ? 'bg-bg-3 text-text-0'
-                : 'text-text-2 hover:text-text-0 hover:bg-bg-2'
+                ? 'bg-neutral-800 text-emerald-400 shadow-sm'
+                : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
             }`}
           >
-            <Icon size={14} />
+            <Icon size={15} />
             {label}
           </button>
         ))}
       </div>
 
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-2xl relative">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 max-w-2xl relative custom-scrollbar">
         {settings.showSaved && (
-          <div className="absolute top-3 right-6 flex items-center gap-1.5 text-green text-[11px] animate-fade-in">
-            <Check size={12} />
-            Saved
+          <div className="absolute top-4 right-8 flex items-center gap-1.5 text-emerald-400 text-[12px] font-medium bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20 animate-fade-in">
+            <Check size={13} />
+            Salvo com sucesso
           </div>
         )}
         <div key={activeTab} className="animate-fade-in-up">

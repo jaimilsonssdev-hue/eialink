@@ -15,24 +15,24 @@ const templateIcons: Record<string, typeof Briefcase> = {
 
 const suggestions = [
   {
-    label: 'SaaS landing page',
-    prompt: 'Create a SaaS landing page for a project management tool called "FlowBoard". Include a hero with a compelling headline about team productivity, a features grid highlighting task boards, real-time collaboration, and analytics. Add a pricing section with Free, Pro ($12/mo), and Enterprise tiers. Use a clean, modern dark theme with blue accents.',
+    label: 'Landing page SaaS',
+    prompt: 'Crie uma landing page de alta conversão para um software de gestão de equipes chamado "FlowBoard". Inclua um destaque persuasivo sobre produtividade, grade de recursos com quadros de tarefas e colaboração em tempo real, além de tabela de preços e tema escuro com detalhes em verde.',
   },
   {
-    label: 'Portfolio site',
-    prompt: 'Create a portfolio site for a freelance product designer named Alex Chen. Include a hero section with a strong personal headline, a project gallery showcasing 4-6 case studies with titles and descriptions, a testimonials section with client quotes, an about/bio section, and a contact form. Use a minimal, sophisticated aesthetic with warm neutral tones.',
+    label: 'Portfólio Profissional',
+    prompt: 'Crie um site moderno de portfólio para um consultor e arquiteto de soluções. Inclua seção de apresentação, galeria de projetos e estudos de caso, depoimentos de clientes e botão direto para contato via WhatsApp.',
   },
   {
-    label: 'Restaurant website',
-    prompt: 'Create a website for an upscale Italian restaurant called "Trattoria Luna". Include a hero with an inviting headline about authentic cuisine, a features section highlighting handmade pasta, wood-fired pizza, and a curated wine list. Add a content block with the chef\'s philosophy, a testimonials section with diner reviews, and a CTA to make reservations. Use warm, earthy tones with gold accents.',
+    label: 'Restaurante & Gastronomia',
+    prompt: 'Crie uma página elegante para uma pizzaria e restaurante artesanal chamado "La Cantina". Destaque as massas e forno a lenha, ambiente aconchegante, avaliações dos clientes e chamada clara para reservas e delivery.',
   },
   {
-    label: 'AI startup',
-    prompt: 'Create a landing page for an AI startup called "NeuralFlow" that builds intelligent document processing tools. Include a hero with a bold headline about automating workflows, a features grid with smart extraction, multi-language support, and enterprise security. Add a stats section with impressive numbers, a pricing comparison table, customer testimonials from CTOs, and a strong CTA. Use a sleek dark theme with green accents.',
+    label: 'Startup de IA',
+    prompt: 'Crie uma página futurista e confiável para uma startup de inteligência artificial que automatiza documentos e processos. Inclua métricas impressionantes, integração, planos empresariais e chamada para demonstração gratuita.',
   },
 ]
 
-const filters = ['All', 'Published', 'Drafts'] as const
+const filters = ['Todos', 'Publicados', 'Rascunhos'] as const
 type Filter = (typeof filters)[number]
 
 const fallbackAccents = ['#22c55e', '#3b82f6', '#f472b6', '#8b5cf6', '#e8a838', '#06b6d4', '#10b981', '#ef4444']
@@ -57,7 +57,7 @@ function PromptSection() {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   function startBlank() {
-    const id = addProject('Untitled Project')
+    const id = addProject('Novo Projeto')
     setActiveProject(id)
     setConfig(defaultConfig)
     navigate('/editor')
@@ -83,27 +83,35 @@ function PromptSection() {
     navigate('/editor')
   }
 
-  const hasGeminiKey = !!localStorage.getItem('openpage-gemini-key')
+  const hasGeminiKey = !!(typeof window !== 'undefined' && (localStorage.getItem('openpage-gemini-key') || localStorage.getItem('eialink_gemini_api_key')))
   const isFocused = prompt.length > 0
 
   return (
     <div className="relative overflow-hidden">
       {/* Ambient glow */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-green/[0.07] rounded-full blur-[150px]" />
+        <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[500px] bg-emerald-500/[0.08] rounded-full blur-[150px]" />
       </div>
 
-      <div className="relative flex flex-col items-center pt-16 pb-6 px-6">
-        <h1 className="text-[36px] font-display font-bold tracking-tight mb-2 text-center animate-fade-in-up stagger-1">What will you build?</h1>
-        <p className="text-text-2 text-[15px] mb-8 text-center animate-fade-in-up stagger-2">Describe your site and AI generates the layout, copy, and theme.</p>
+      <div className="relative flex flex-col items-center pt-14 pb-6 px-4 md:px-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-medium mb-3">
+          <Sparkles size={12} />
+          <span>Criador Inteligente de Sites & Landing Pages</span>
+        </div>
+        <h1 className="text-[32px] md:text-[40px] font-display font-bold tracking-tight mb-2.5 text-center text-white animate-fade-in-up">
+          O que você gostaria de criar hoje?
+        </h1>
+        <p className="text-neutral-400 text-[14px] md:text-[15px] mb-7 text-center max-w-xl animate-fade-in-up">
+          Descreva seu negócio e a inteligência artificial criará o layout completo, textos de alta conversão e tema visual sob medida.
+        </p>
 
         {/* Prompt card - gradient border wrapper */}
-        <div className={`w-full max-w-[680px] rounded-2xl p-px transition-all duration-300 animate-scale-in stagger-3 ${
+        <div className={`w-full max-w-[680px] rounded-2xl p-px transition-all duration-300 shadow-2xl ${
           isFocused
-            ? 'bg-gradient-to-b from-green/40 via-green/20 to-green/5 shadow-[0_0_80px_rgba(34,197,94,0.15)]'
-            : 'bg-gradient-to-b from-border-hover via-border-default to-border-subtle shadow-[0_0_60px_rgba(34,197,94,0.06)] hover:from-green/25 hover:via-green/10 hover:to-green/5 hover:shadow-[0_0_80px_rgba(34,197,94,0.1)]'
+            ? 'bg-gradient-to-b from-emerald-500/50 via-emerald-500/20 to-emerald-500/5 shadow-[0_0_80px_rgba(16,185,129,0.15)] ring-1 ring-emerald-500/30'
+            : 'bg-gradient-to-b from-neutral-750 via-neutral-800 to-neutral-900 hover:from-emerald-500/30 hover:via-neutral-800 hover:to-neutral-900'
         }`}>
-          <div className="bg-bg-1 rounded-[15px] overflow-hidden">
+          <div className="bg-neutral-925 rounded-[15px] overflow-hidden border border-neutral-800/80">
             <textarea
               ref={textareaRef}
               value={prompt}
@@ -114,36 +122,36 @@ function PromptSection() {
                 }
               }}
               rows={3}
-              placeholder="A landing page for a modern fitness app with dark theme..."
-              className="w-full px-5 pt-5 pb-3 bg-transparent text-text-0 text-[14px] placeholder:text-text-3 resize-none leading-relaxed"
+              placeholder="Ex: Uma landing page moderna para uma consultoria financeira com destaque para resultados, depoimentos e botão para WhatsApp..."
+              className="w-full px-5 pt-5 pb-3 bg-transparent text-white text-[14px] placeholder:text-neutral-500 resize-none leading-relaxed outline-none"
             />
 
             {/* Bottom bar */}
-            <div className="flex items-center justify-between px-4 pb-3 pt-1">
-              <div className="flex items-center gap-1.5 animate-fade-in stagger-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 pb-3 pt-1 gap-2 border-t border-neutral-850">
+              <div className="flex items-center gap-1.5 overflow-x-auto py-1">
                 {suggestions.map((s) => (
                   <button
                     key={s.label}
                     onClick={() => { setPrompt(s.prompt); textareaRef.current?.focus() }}
-                    className="px-2.5 py-1 rounded-full text-text-3 text-[11px] border border-border-default hover:text-text-0 hover:bg-bg-3 hover:border-border-hover transition-all"
+                    className="px-2.5 py-1 rounded-full text-neutral-400 text-[11px] font-medium border border-neutral-800 bg-neutral-900/60 hover:text-white hover:bg-neutral-800 hover:border-neutral-700 transition-all shrink-0 active:scale-95"
                   >
                     {s.label}
                   </button>
                 ))}
               </div>
-              <div className="flex items-center gap-2 shrink-0 ml-3">
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
                 {prompt.trim() && (
-                  <span className="text-[10px] text-text-3 hidden sm:inline">
-                    {navigator.platform?.includes('Mac') ? '\u2318' : 'Ctrl'}+Enter
+                  <span className="text-[10px] text-neutral-500 hidden sm:inline font-mono">
+                    {navigator.platform?.includes('Mac') ? '⌘' : 'Ctrl'}+Enter
                   </span>
                 )}
                 <button
                   onClick={() => generate(prompt)}
                   disabled={!prompt.trim()}
-                  className="px-5 py-2.5 rounded-xl bg-green text-black text-[13px] font-semibold hover:bg-green-dim active:scale-[0.97] transition-all disabled:opacity-20 disabled:cursor-not-allowed inline-flex items-center gap-2 shadow-[0_0_20px_rgba(34,197,94,0.3)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)]"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-500 text-black text-[13px] font-bold hover:bg-emerald-400 active:scale-[0.97] transition-all disabled:opacity-30 disabled:cursor-not-allowed inline-flex items-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]"
                 >
                   <Sparkles size={14} />
-                  Generate
+                  Gerar Site
                 </button>
               </div>
             </div>
@@ -151,7 +159,7 @@ function PromptSection() {
         </div>
 
         {/* Template cards */}
-        <div className="w-full max-w-[680px] mt-5 grid grid-cols-2 md:grid-cols-4 gap-2.5 animate-fade-in-up stagger-5">
+        <div className="w-full max-w-[680px] mt-6 grid grid-cols-2 md:grid-cols-4 gap-3 animate-fade-in-up">
           {templateMeta.map((tpl) => {
             const rgb = hexToRgb(tpl.accent)
             const Icon = templateIcons[tpl.icon] || Layers
@@ -159,26 +167,22 @@ function PromptSection() {
               <button
                 key={tpl.id}
                 onClick={() => startFromTemplate(tpl.id, tpl.name)}
-                className="group relative bg-bg-1 border border-border-default rounded-xl p-3.5 text-left transition-all hover:border-border-hover card-lift hover:card-lift-hover active:scale-[0.97]"
+                className="group relative bg-neutral-900/70 border border-neutral-800 rounded-xl p-3.5 text-left transition-all hover:border-neutral-700 hover:bg-neutral-850 active:scale-[0.98]"
               >
-                <div
-                  className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none"
-                  style={{ background: `rgba(${rgb}, 0.06)` }}
-                />
                 <div className="relative">
-                  <div className="flex items-center gap-2 mb-2.5">
+                  <div className="flex items-center gap-2 mb-2">
                     <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all opacity-70 group-hover:opacity-100 group-hover:scale-110"
-                      style={{ background: `rgba(${rgb}, 0.12)`, color: tpl.accent }}
+                      className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-all group-hover:scale-105"
+                      style={{ background: `rgba(${rgb}, 0.15)`, color: tpl.accent }}
                     >
                       <Icon size={14} />
                     </div>
-                    <div className="text-[12.5px] font-semibold text-text-0">{tpl.name}</div>
+                    <div className="text-[12.5px] font-semibold text-neutral-200 truncate">{tpl.name}</div>
                   </div>
-                  <div className="text-[10.5px] text-text-2 leading-snug">{tpl.description}</div>
-                  <div className="mt-2.5 flex items-center gap-1 text-[10px] text-text-3">
+                  <div className="text-[11px] text-neutral-400 leading-snug line-clamp-2">{tpl.description}</div>
+                  <div className="mt-2.5 flex items-center gap-1 text-[10px] text-neutral-500 font-medium">
                     <Layers size={10} />
-                    {tpl.blockCount} blocks
+                    {tpl.blockCount} seções
                   </div>
                 </div>
               </button>
@@ -187,20 +191,20 @@ function PromptSection() {
         </div>
 
         {/* Start blank + API key hint */}
-        <div className="mt-3 flex flex-col items-center gap-1.5">
+        <div className="mt-4 flex flex-col items-center gap-1.5">
           <button
             onClick={startBlank}
-            className="text-text-3 text-[11px] hover:text-text-1 transition-colors"
+            className="text-neutral-400 text-[12px] hover:text-white transition-colors underline-offset-4 hover:underline"
           >
-            or start blank
+            ou começar com página em branco
           </button>
           {!hasGeminiKey && (
-            <p className="text-text-3 text-[10.5px]">
-              Using template mode.{' '}
-              <NavLink to="/settings" className="text-green hover:text-green-dim transition-colors">
-                Add a Gemini API key
+            <p className="text-neutral-500 text-[11px] text-center">
+              Modo padrão ativo.{' '}
+              <NavLink to="/settings" className="text-emerald-400 hover:underline font-medium">
+                Conecte sua chave Gemini gratuita
               </NavLink>
-              {' '}for AI-generated sites.
+              {' '}para desbloquear a criação total com IA.
             </p>
           )}
         </div>
@@ -208,7 +212,6 @@ function PromptSection() {
     </div>
   )
 }
-
 function ProjectCard({ project }: { project: Project }) {
   const navigate = useNavigate()
   const renameProject = useProjectsStore((s) => s.renameProject)
@@ -263,47 +266,47 @@ function ProjectCard({ project }: { project: Project }) {
   return (
     <div
       onClick={openProject}
-      className="group bg-bg-1 border border-border-default rounded-xl overflow-hidden cursor-pointer card-lift hover:border-border-hover hover:card-lift-hover"
+      className="group bg-neutral-900/70 border border-neutral-800 rounded-2xl overflow-hidden cursor-pointer transition-all hover:border-neutral-700 hover:bg-neutral-850 hover:shadow-xl hover:-translate-y-0.5"
     >
       {/* Thumbnail */}
-      <div className="h-32 bg-bg-2 relative overflow-hidden">
+      <div className="h-32 bg-neutral-950 relative overflow-hidden">
         <div
-          className="absolute inset-0 opacity-[0.04] group-hover:opacity-[0.08] transition-opacity duration-300"
+          className="absolute inset-0 opacity-[0.06] group-hover:opacity-[0.12] transition-opacity duration-300"
           style={{ background: `linear-gradient(135deg, ${accent}, transparent)` }}
         />
 
         {/* Action buttons */}
-        <div className="absolute top-2 right-2 z-10 flex gap-1">
+        <div className="absolute top-2.5 right-2.5 z-10 flex gap-1.5">
           <button
-            onClick={(e) => { e.stopPropagation(); duplicateProject(project.id); toast('Project duplicated') }}
-            aria-label={`Duplicate ${project.name}`}
-            className="p-1.5 rounded-md border bg-bg-0/80 border-border-default text-text-3 opacity-0 group-hover:opacity-100 hover:text-green hover:border-green/30 transition-all"
+            onClick={(e) => { e.stopPropagation(); duplicateProject(project.id); toast.success('Projeto duplicado') }}
+            aria-label={`Duplicar ${project.name}`}
+            className="p-1.5 rounded-lg border bg-neutral-900/90 border-neutral-750 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-emerald-400 hover:border-emerald-500/40 transition-all"
           >
-            <Copy size={12} />
+            <Copy size={13} />
           </button>
           <button
             onClick={handleDelete}
-            aria-label={confirming ? `Confirm delete ${project.name}` : `Delete ${project.name}`}
-            className={`rounded-md border transition-all ${
+            aria-label={confirming ? `Confirmar exclusão de ${project.name}` : `Excluir ${project.name}`}
+            className={`rounded-lg border transition-all ${
               confirming
-                ? 'px-2 py-1 bg-status-red/90 border-status-red text-white text-[10px] font-medium opacity-100'
-                : 'p-1.5 bg-bg-0/80 border-border-default text-text-3 opacity-0 group-hover:opacity-100 hover:text-status-red hover:border-status-red/30'
+                ? 'px-2.5 py-1 bg-red-600 border-red-500 text-white text-[11px] font-bold opacity-100 shadow-md'
+                : 'p-1.5 bg-neutral-900/90 border-neutral-750 text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-red-400 hover:border-red-500/40'
             }`}
           >
-            {confirming ? 'Delete?' : <Trash2 size={12} />}
+            {confirming ? 'Excluir?' : <Trash2 size={13} />}
           </button>
         </div>
 
-        {/* Wireframe - varies by project name hash */}
-        <div className="absolute inset-3 flex flex-col gap-1.5 p-2.5">
+        {/* Wireframe preview */}
+        <div className="absolute inset-3 flex flex-col gap-1.5 p-2">
           {layout === 0 && (
             <>
-              <div className="h-2 rounded-sm w-2/3" style={{ background: `rgba(${rgb}, 0.15)` }} />
-              <div className="h-1.5 bg-bg-4/40 rounded-sm w-1/2" />
+              <div className="h-2 rounded-sm w-2/3" style={{ background: `rgba(${rgb}, 0.25)` }} />
+              <div className="h-1.5 bg-neutral-800 rounded-sm w-1/2" />
               <div className="flex gap-1.5 mt-auto">
-                <div className="flex-1 h-6 rounded" style={{ background: `rgba(${rgb}, 0.07)` }} />
-                <div className="flex-1 h-6 rounded" style={{ background: `rgba(${rgb}, 0.07)` }} />
-                <div className="flex-1 h-6 rounded" style={{ background: `rgba(${rgb}, 0.07)` }} />
+                <div className="flex-1 h-6 rounded-md" style={{ background: `rgba(${rgb}, 0.1)` }} />
+                <div className="flex-1 h-6 rounded-md" style={{ background: `rgba(${rgb}, 0.1)` }} />
+                <div className="flex-1 h-6 rounded-md" style={{ background: `rgba(${rgb}, 0.1)` }} />
               </div>
             </>
           )}
@@ -311,26 +314,26 @@ function ProjectCard({ project }: { project: Project }) {
             <>
               <div className="flex gap-2 flex-1">
                 <div className="flex-1 flex flex-col gap-1">
-                  <div className="h-2 rounded-sm w-3/4" style={{ background: `rgba(${rgb}, 0.15)` }} />
-                  <div className="h-1.5 bg-bg-4/40 rounded-sm w-full" />
-                  <div className="h-1.5 bg-bg-4/40 rounded-sm w-2/3" />
-                  <div className="h-4 rounded w-1/2 mt-auto" style={{ background: `rgba(${rgb}, 0.12)` }} />
+                  <div className="h-2 rounded-sm w-3/4" style={{ background: `rgba(${rgb}, 0.25)` }} />
+                  <div className="h-1.5 bg-neutral-800 rounded-sm w-full" />
+                  <div className="h-1.5 bg-neutral-800 rounded-sm w-2/3" />
+                  <div className="h-4 rounded-md w-1/2 mt-auto" style={{ background: `rgba(${rgb}, 0.15)` }} />
                 </div>
-                <div className="w-16 rounded" style={{ background: `rgba(${rgb}, 0.06)` }} />
+                <div className="w-16 rounded-md" style={{ background: `rgba(${rgb}, 0.1)` }} />
               </div>
             </>
           )}
           {layout === 2 && (
             <>
               <div className="flex justify-center mt-1">
-                <div className="h-2 rounded-sm w-1/3" style={{ background: `rgba(${rgb}, 0.15)` }} />
+                <div className="h-2 rounded-sm w-1/3" style={{ background: `rgba(${rgb}, 0.25)` }} />
               </div>
               <div className="flex justify-center">
-                <div className="h-1.5 bg-bg-4/40 rounded-sm w-2/3" />
+                <div className="h-1.5 bg-neutral-800 rounded-sm w-2/3" />
               </div>
-              <div className="flex gap-1 mt-auto justify-center">
-                <div className="w-12 h-4 rounded" style={{ background: `rgba(${rgb}, 0.12)` }} />
-                <div className="w-12 h-4 rounded bg-bg-4/30" />
+              <div className="flex gap-1.5 mt-auto justify-center">
+                <div className="w-12 h-4 rounded-md" style={{ background: `rgba(${rgb}, 0.15)` }} />
+                <div className="w-12 h-4 rounded-md bg-neutral-800" />
               </div>
             </>
           )}
@@ -338,7 +341,7 @@ function ProjectCard({ project }: { project: Project }) {
       </div>
 
       {/* Body */}
-      <div className="px-4 py-3">
+      <div className="px-4 py-3 bg-neutral-900/40">
         {editing ? (
           <input
             ref={inputRef}
@@ -350,28 +353,28 @@ function ProjectCard({ project }: { project: Project }) {
               if (e.key === 'Escape') { setName(project.name); setEditing(false) }
             }}
             onClick={(e) => e.stopPropagation()}
-            className="text-[13px] font-semibold mb-1 bg-transparent border-b border-green outline-none w-full"
+            className="text-[13px] font-semibold mb-1 bg-transparent border-b border-emerald-500 outline-none w-full text-white"
           />
         ) : (
           <div
-            className="text-[13px] font-semibold mb-1 transition-colors text-text-0 flex items-center gap-1.5 group/name"
+            className="text-[13px] font-semibold mb-1 transition-colors text-neutral-200 flex items-center gap-1.5 group/name"
             onDoubleClick={(e) => { e.stopPropagation(); setEditing(true) }}
-            title="Double-click to rename"
+            title="Clique duplo para renomear"
           >
             <span className="truncate">{project.name}</span>
-            <Pencil size={10} className="text-text-3 opacity-0 group-hover:opacity-100 group-hover/name:opacity-60 transition-opacity shrink-0" />
+            <Pencil size={11} className="text-neutral-500 opacity-0 group-hover:opacity-100 group-hover/name:opacity-70 transition-opacity shrink-0" />
           </div>
         )}
-        <div className="text-[10.5px] text-text-2 flex items-center gap-2">
+        <div className="text-[11px] text-neutral-400 flex items-center gap-2">
           <span className="flex items-center gap-1.5">
             <span
               className={`w-1.5 h-1.5 rounded-full ${
-                project.status === 'published' ? 'bg-green' : 'bg-status-yellow'
+                project.status === 'published' ? 'bg-emerald-400' : 'bg-amber-400'
               }`}
             />
-            {project.status === 'published' ? 'Published' : 'Draft'}
+            {project.status === 'published' ? 'Publicado' : 'Rascunho'}
           </span>
-          <span className="text-text-3">{project.updatedAt}</span>
+          <span className="text-neutral-500">{project.updatedAt}</span>
         </div>
       </div>
     </div>
@@ -380,42 +383,42 @@ function ProjectCard({ project }: { project: Project }) {
 
 export function Dashboard() {
   const projects = useProjectsStore((s) => s.projects)
-  const [filter, setFilter] = useState<Filter>('All')
+  const [filter, setFilter] = useState<Filter>('Todos')
   const [search, setSearch] = useState('')
 
   const filtered = projects.filter((p) => {
-    if (filter === 'Published' && p.status !== 'published') return false
-    if (filter === 'Drafts' && p.status !== 'draft') return false
+    if (filter === 'Publicados' && p.status !== 'published') return false
+    if (filter === 'Rascunhos' && p.status !== 'draft') return false
     if (search && !p.name.toLowerCase().includes(search.toLowerCase())) return false
     return true
   })
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="h-full overflow-y-auto custom-scrollbar bg-neutral-950">
       <PromptSection />
 
       {/* Projects section */}
       {projects.length > 0 && (
         <>
           <div className="px-4 md:px-12 pt-4">
-            <div className="border-t border-border-subtle" />
+            <div className="border-t border-neutral-800/80" />
           </div>
 
-          <div className="px-4 md:px-12 pt-5 flex flex-col sm:flex-row gap-2 items-start sm:items-center sm:justify-between">
+          <div className="px-4 md:px-12 pt-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <h2 className="text-[13px] font-semibold text-text-1 animate-fade-in">
-                Your projects
-                <span className="text-text-3 font-normal ml-1.5">({projects.length})</span>
+              <h2 className="text-[14px] font-bold text-neutral-200 animate-fade-in">
+                Seus Projetos
+                <span className="text-neutral-500 font-normal ml-1.5">({projects.length})</span>
               </h2>
-              <div className="flex gap-1">
+              <div className="flex gap-1.5">
                 {filters.map((f) => (
                   <button
                     key={f}
                     onClick={() => setFilter(f)}
-                    className={`px-2.5 py-1 rounded-full text-[11px] transition-all ${
+                    className={`px-3 py-1 rounded-full text-[11px] font-medium transition-all ${
                       filter === f
-                        ? 'text-text-0 bg-bg-3 border border-border-default'
-                        : 'text-text-2 border border-transparent hover:text-text-1 hover:bg-bg-2'
+                        ? 'text-white bg-neutral-800 border border-neutral-700 shadow-sm'
+                        : 'text-neutral-400 border border-transparent hover:text-white hover:bg-neutral-800/60'
                     }`}
                   >
                     {f}
@@ -423,23 +426,23 @@ export function Dashboard() {
                 ))}
               </div>
             </div>
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <Search
-                size={13}
-                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-text-3"
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500"
               />
               <input
                 type="text"
-                placeholder="Search..."
+                placeholder="Buscar projetos..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-7 pr-3 py-1.5 rounded-md border border-border-default bg-bg-2 text-text-0 text-[12px] w-44 outline-none focus:border-green placeholder:text-text-3"
+                className="pl-8 pr-3 py-1.5 rounded-xl border border-neutral-800 bg-neutral-900 text-neutral-100 text-[12px] w-full sm:w-52 outline-none focus:border-emerald-500 placeholder:text-neutral-500"
               />
             </div>
           </div>
 
           {filtered.length > 0 ? (
-            <div className="px-4 md:px-12 pt-4 pb-12 grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3.5">
+            <div className="px-4 md:px-12 pt-4 pb-14 grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
               {filtered.map((p, i) => (
                 <div key={p.id} className="animate-fade-in-up" style={{ animationDelay: `${i * 50}ms` }}>
                   <ProjectCard project={p} />
@@ -447,14 +450,14 @@ export function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="px-4 md:px-12 pt-8 pb-12 flex flex-col items-center text-center">
-              <FolderOpen size={28} className="text-text-3 mb-2" />
-              <p className="text-text-2 text-[13px]">No projects match your filter</p>
+            <div className="px-4 md:px-12 pt-10 pb-16 flex flex-col items-center text-center">
+              <FolderOpen size={32} className="text-neutral-600 mb-2.5" />
+              <p className="text-neutral-400 text-[13px]">Nenhum projeto encontrado para este filtro</p>
               <button
-                onClick={() => { setFilter('All'); setSearch('') }}
-                className="mt-2 text-green text-[12px] hover:text-green-dim transition-colors"
+                onClick={() => { setFilter('Todos'); setSearch('') }}
+                className="mt-2.5 text-emerald-400 text-[12px] font-medium hover:underline transition-colors"
               >
-                Clear filters
+                Limpar filtros de busca
               </button>
             </div>
           )}

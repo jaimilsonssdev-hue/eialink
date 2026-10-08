@@ -25,9 +25,9 @@ import { exportToHTML, downloadHTML } from "@/modules/studiopro/lib/export-html"
 import { supabase } from "@/integrations/supabase/client"
 
 const viewports: { value: Viewport; icon: typeof Monitor; label: string }[] = [
-  { value: 'desktop', icon: Monitor, label: 'Desktop' },
+  { value: 'desktop', icon: Monitor, label: 'Computador' },
   { value: 'tablet', icon: Tablet, label: 'Tablet' },
-  { value: 'mobile', icon: Smartphone, label: 'Mobile' },
+  { value: 'mobile', icon: Smartphone, label: 'Celular' },
 ]
 
 function AddPagePopover({ onAdd, onClose }: { onAdd: (name: string, path: string) => void; onClose: () => void }) {
@@ -46,10 +46,10 @@ function AddPagePopover({ onAdd, onClose }: { onAdd: (name: string, path: string
   }
 
   return (
-    <div className="absolute top-full left-0 mt-1 bg-bg-2 border border-border-default rounded-lg p-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-20 w-52">
-      <div className="space-y-2">
+    <div className="absolute top-full left-0 mt-1 bg-bg-2 border border-border-default rounded-xl p-3 shadow-2xl z-30 w-60 animate-fade-in-up">
+      <div className="space-y-2.5">
         <div>
-          <label className="block text-[10px] text-text-3 mb-0.5">Page name</label>
+          <label className="block text-[11px] text-text-2 mb-1 font-medium">Nome da página</label>
           <input
             ref={inputRef}
             value={name}
@@ -58,27 +58,35 @@ function AddPagePopover({ onAdd, onClose }: { onAdd: (name: string, path: string
               if (!path || path === '/') setPath(`/${e.target.value.toLowerCase().replace(/\s+/g, '-')}`)
             }}
             onKeyDown={(e) => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') onClose() }}
-            placeholder="About"
-            className="w-full px-2 py-1.5 rounded border border-border-default bg-bg-3 text-text-0 text-[11.5px] outline-none focus:border-green"
+            placeholder="Ex: Sobre Nós"
+            className="w-full px-2.5 py-1.5 rounded-lg border border-border-default bg-bg-3 text-text-0 text-xs outline-none focus:border-green transition-colors"
           />
         </div>
         <div>
-          <label className="block text-[10px] text-text-3 mb-0.5">Path</label>
+          <label className="block text-[11px] text-text-2 mb-1 font-medium">Caminho (URL)</label>
           <input
             value={path}
             onChange={(e) => setPath(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') submit(); if (e.key === 'Escape') onClose() }}
-            placeholder="/about"
-            className="w-full px-2 py-1.5 rounded border border-border-default bg-bg-3 text-text-0 text-[11.5px] outline-none focus:border-green font-mono"
+            placeholder="/sobre"
+            className="w-full px-2.5 py-1.5 rounded-lg border border-border-default bg-bg-3 text-text-0 text-xs outline-none focus:border-green font-mono transition-colors"
           />
         </div>
-        <button
-          onClick={submit}
-          disabled={!name.trim()}
-          className="w-full py-1.5 rounded bg-green text-black text-[11px] font-semibold hover:bg-green-dim transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          Add Page
-        </button>
+        <div className="flex gap-1.5 pt-1">
+          <button
+            onClick={onClose}
+            className="flex-1 py-1.5 rounded-lg border border-border-default text-text-2 text-xs font-medium hover:bg-bg-3 transition-colors"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={submit}
+            disabled={!name.trim()}
+            className="flex-1 py-1.5 rounded-lg bg-green text-black text-xs font-semibold hover:bg-green-dim transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            Criar
+          </button>
+        </div>
       </div>
     </div>
   )
@@ -117,41 +125,41 @@ function PageTab({ page, isActive, onClick, onRename, onDelete, canDelete }: {
           if (e.key === 'Enter') commitRename()
           if (e.key === 'Escape') { setName(page.name); setEditing(false) }
         }}
-        className="px-2 py-1 rounded text-xs bg-bg-3 border border-green outline-none w-20"
-        onClick={(e) => e.stopPropagation()}
+        className="h-7 px-2 rounded-lg border border-green bg-bg-3 text-text-0 text-xs outline-none font-medium w-24"
       />
     )
   }
 
   return (
-    <div className="relative">
+    <div className="relative group">
       <button
         onClick={onClick}
-        onDoubleClick={(e) => { e.stopPropagation(); setEditing(true) }}
         onContextMenu={(e) => { e.preventDefault(); setShowContext(true) }}
-        className={`px-2 py-1 rounded text-xs transition-all ${
-          isActive ? 'bg-bg-3 text-text-0' : 'text-text-3 hover:text-text-1 hover:bg-bg-2'
+        className={`h-7 px-2.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 ${
+          isActive
+            ? 'bg-bg-3 text-text-0 border border-border-default/60 shadow-sm'
+            : 'text-text-2 hover:text-text-0 hover:bg-bg-2'
         }`}
         title={`${page.name} (${page.path})`}
       >
-        {page.name}
+        <span>{page.name}</span>
       </button>
       {showContext && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setShowContext(false)} />
-          <div className="absolute top-full left-0 mt-1 bg-bg-2 border border-border-default rounded-lg p-1 shadow-[0_8px_24px_rgba(0,0,0,0.4)] z-20 min-w-[100px]">
+          <div className="absolute top-full left-0 mt-1 bg-bg-2 border border-border-default rounded-xl p-1 shadow-2xl z-20 min-w-[120px] animate-fade-in-up">
             <button
               onClick={() => { setShowContext(false); setEditing(true) }}
-              className="w-full text-left px-2.5 py-1.5 rounded text-[11px] text-text-1 hover:bg-bg-3 hover:text-text-0 transition-colors"
+              className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs text-text-1 hover:bg-bg-3 hover:text-text-0 transition-colors"
             >
-              Rename
+              Renomear
             </button>
             {canDelete && (
               <button
                 onClick={() => { setShowContext(false); onDelete() }}
-                className="w-full text-left px-2.5 py-1.5 rounded text-[11px] text-text-1 hover:bg-status-red/10 hover:text-status-red transition-colors"
+                className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs text-status-red hover:bg-status-red/10 transition-colors"
               >
-                Delete
+                Excluir
               </button>
             )}
           </div>
@@ -189,7 +197,7 @@ export function CanvasToolbar() {
 
   async function handleSaveEialink() {
     if (!eialinkPageId) {
-      toast.info('Para salvar no EiaLink, acesse este site a partir do menu Prospecção.')
+      toast.info('Para salvar no EiaLink, acesse este site a partir da aba Prospecção.')
       return
     }
     setSavingEialink(true)
@@ -224,7 +232,7 @@ export function CanvasToolbar() {
       const domain = `${eialinkPageSlug || 'site'}.eialink.com.br`
       const fullUrl = `https://${domain}`
       toast.success(
-        `Site atualizado e publicado no Cloudflare! (${domain})`,
+        `Site publicado no Cloudflare! (${domain})`,
         {
           action: {
             label: 'Abrir site',
@@ -246,44 +254,47 @@ export function CanvasToolbar() {
       const html = await exportToHTML(config, { settings: activeProject?.settings })
       const filename = `${(eialinkPageSlug || activeProject?.name || config.name || 'site').toLowerCase().replace(/\s+/g, '-')}.html`
       downloadHTML(html, filename)
-      toast('HTML exported')
+      toast.success('Código HTML exportado!')
     } catch {
-      toast.error('Export failed')
+      toast.error('Falha ao exportar HTML')
     } finally {
       setExporting(false)
     }
   }
 
   return (
-    <div className="h-10 bg-bg-1 border-b border-border-default flex items-center px-3 gap-1">
-      {/* Breadcrumb */}
+    <div className="h-11 bg-bg-1/95 backdrop-blur-md border-b border-border-default/70 flex items-center px-2.5 sm:px-4 gap-1.5 shrink-0 z-20">
+      {/* Breadcrumb / Project Identifier */}
       <div className="flex items-center gap-1.5 text-xs text-text-3 shrink-0">
         <span
-          className="cursor-pointer hover:text-text-1 transition-colors"
+          className="hidden sm:inline cursor-pointer hover:text-text-1 transition-colors"
           onClick={() => navigate('/')}
         >
           Projetos
         </span>
-        <span>/</span>
-        <span className="text-text-0 font-medium max-w-[140px] truncate">{projectName}</span>
+        <span className="hidden sm:inline">/</span>
+        <span className="text-text-0 font-semibold max-w-[110px] sm:max-w-[150px] truncate">
+          {projectName}
+        </span>
         {eialinkPageSlug && (
           <a
             href={`https://${eialinkPageSlug}.eialink.com.br`}
             target="_blank"
             rel="noreferrer"
-            className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green/10 text-green border border-green/20 text-[10.5px] font-mono hover:bg-green/20 transition-all shrink-0 ml-1"
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green/10 text-green border border-green/20 text-[10px] font-mono hover:bg-green/20 transition-all shrink-0 ml-0.5"
             title="Abrir no subdomínio Cloudflare"
           >
-            <span>{eialinkPageSlug}.eialink.com.br</span>
+            <span className="hidden sm:inline">{eialinkPageSlug}.eialink.com.br</span>
+            <span className="sm:hidden">.eialink</span>
             <ExternalLink size={10} />
           </a>
         )}
       </div>
 
-      <div className="w-px h-5 bg-border-default mx-1.5 shrink-0" />
+      <div className="hidden sm:block w-px h-5 bg-border-default mx-1 shrink-0" />
 
       {/* Page tabs */}
-      <div className="flex items-center gap-0.5 relative overflow-x-auto">
+      <div className="hidden md:flex items-center gap-1 relative overflow-x-auto no-scrollbar">
         {pages.map((page) => (
           <PageTab
             key={page.id}
@@ -298,11 +309,11 @@ export function CanvasToolbar() {
         <div className="relative">
           <button
             onClick={() => setShowAddPage(!showAddPage)}
-            className="w-6 h-6 rounded flex items-center justify-center text-text-3 hover:text-green hover:bg-bg-2 transition-all"
-            title="Add page"
-            aria-label="Add page"
+            className="w-6 h-6 rounded-lg flex items-center justify-center text-text-3 hover:text-green hover:bg-bg-2 transition-all"
+            title="Adicionar página"
+            aria-label="Adicionar página"
           >
-            <Plus size={12} />
+            <Plus size={13} />
           </button>
           {showAddPage && (
             <AddPagePopover
@@ -313,138 +324,127 @@ export function CanvasToolbar() {
         </div>
       </div>
 
-      {/* Right side */}
+      {/* Right side controls */}
       <div className="ml-auto flex items-center gap-1 shrink-0">
-        {/* Viewport toggle */}
-        {viewports.map(({ value, icon: Icon, label }) => (
+        {/* Viewport switch (Desktop only or tablet) */}
+        <div className="hidden sm:flex items-center bg-bg-2 p-0.5 rounded-lg border border-border-default/60">
+          {viewports.map(({ value, icon: Icon, label }) => (
+            <button
+              key={value}
+              title={label}
+              aria-label={label}
+              aria-pressed={viewport === value}
+              onClick={() => setViewport(value)}
+              className={`w-6 h-6 rounded flex items-center justify-center text-xs transition-all ${
+                viewport === value
+                  ? 'bg-bg-3 text-text-0 shadow-sm'
+                  : 'text-text-3 hover:text-text-1 hover:bg-bg-3/50'
+              }`}
+            >
+              <Icon size={13} />
+            </button>
+          ))}
+        </div>
+
+        {/* Undo/Redo (Hidden on very narrow mobile) */}
+        <div className="hidden sm:flex items-center gap-0.5">
           <button
-            key={value}
-            title={label}
-            aria-label={label}
-            aria-pressed={viewport === value}
-            onClick={() => setViewport(value)}
-            className={`w-7 h-7 rounded flex items-center justify-center text-xs transition-all ${
-              viewport === value
-                ? 'bg-bg-3 text-text-0'
-                : 'text-text-3 hover:text-text-1 hover:bg-bg-3'
-            }`}
+            onClick={() => {
+              const label = undoStack[undoStack.length - 1]?.label
+              undo()
+              if (label) toast(`Desfazer: ${label}`, { duration: 1500 })
+            }}
+            disabled={!canUndo()}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-bg-2 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+            title="Desfazer (Ctrl+Z)"
           >
-            <Icon size={14} />
+            <Undo2 size={13} />
           </button>
-        ))}
-
-        <div className="w-px h-5 bg-border-default mx-1" />
-
-        {/* Undo/Redo */}
-        <button
-          onClick={() => {
-            const label = undoStack[undoStack.length - 1]?.label
-            undo()
-            if (label) toast(`Undo: ${label}`, { duration: 1500 })
-          }}
-          disabled={!canUndo()}
-          className="w-7 h-7 rounded flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-bg-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Undo"
-          aria-label="Undo"
-        >
-          <Undo2 size={14} />
-        </button>
-        <button
-          onClick={() => {
-            const label = redoStack[redoStack.length - 1]?.label
-            redo()
-            if (label) toast(`Redo: ${label}`, { duration: 1500 })
-          }}
-          disabled={!canRedo()}
-          className="w-7 h-7 rounded flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-bg-3 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          title="Redo"
-          aria-label="Redo"
-        >
-          <Redo2 size={14} />
-        </button>
-
-        <div className="w-px h-5 bg-border-default mx-1" />
+          <button
+            onClick={() => {
+              const label = redoStack[redoStack.length - 1]?.label
+              redo()
+              if (label) toast(`Refazer: ${label}`, { duration: 1500 })
+            }}
+            disabled={!canRedo()}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-bg-2 transition-all disabled:opacity-20 disabled:cursor-not-allowed"
+            title="Refazer (Ctrl+Y)"
+          >
+            <Redo2 size={13} />
+          </button>
+        </div>
 
         {/* Preview toggle */}
         <button
           onClick={togglePreview}
-          className={`h-7 px-2 rounded flex items-center gap-1 text-[11px] transition-all ${
-            previewMode ? 'bg-green-glow text-green' : 'text-text-3 hover:text-text-1 hover:bg-bg-3'
+          className={`h-7 px-2.5 rounded-lg flex items-center gap-1.5 text-xs font-medium transition-all ${
+            previewMode
+              ? 'bg-green/15 text-green border border-green/30 shadow-sm'
+              : 'text-text-2 hover:text-text-0 hover:bg-bg-2'
           }`}
-          title="Preview (P)"
-          aria-label="Toggle preview mode"
-          aria-pressed={previewMode}
+          title="Prévia do site"
         >
           <Eye size={13} />
-          <span>Preview</span>
+          <span className="hidden sm:inline">{previewMode ? 'Editando' : 'Prévia'}</span>
         </button>
 
-        {/* JSON drawer toggle */}
-        <button
-          onClick={toggleJsonDrawer}
-          className={`h-7 px-2 rounded flex items-center gap-1 text-[11px] transition-all ${
-            jsonDrawerOpen ? 'bg-green-glow text-green' : 'text-text-3 hover:text-text-1 hover:bg-bg-3'
-          }`}
-          title="JSON (J)"
-          aria-label="Toggle JSON drawer"
-          aria-pressed={jsonDrawerOpen}
-        >
-          <Code size={13} />
-          <span>JSON</span>
-        </button>
+        {/* JSON & History desktop buttons */}
+        <div className="hidden lg:flex items-center gap-1">
+          <button
+            onClick={toggleJsonDrawer}
+            className={`h-7 px-2 rounded-lg flex items-center gap-1 text-xs transition-all ${
+              jsonDrawerOpen ? 'bg-green/15 text-green' : 'text-text-3 hover:text-text-1 hover:bg-bg-2'
+            }`}
+            title="Ver código JSON"
+          >
+            <Code size={13} />
+            <span>JSON</span>
+          </button>
 
-        {/* History */}
-        <button
-          onClick={toggleHistory}
-          className="h-7 px-2 rounded flex items-center gap-1 text-[11px] text-text-3 hover:text-text-1 hover:bg-bg-3 transition-all"
-          title="History (H)"
-          aria-label="Toggle version history"
-        >
-          <Clock size={13} />
-          <span>History</span>
-        </button>
+          <button
+            onClick={toggleHistory}
+            className="h-7 px-2 rounded-lg flex items-center gap-1 text-xs text-text-3 hover:text-text-1 hover:bg-bg-2 transition-all"
+            title="Histórico de alterações"
+          >
+            <Clock size={13} />
+            <span>Histórico</span>
+          </button>
 
-        {/* Shortcuts help */}
-        <button
-          onClick={toggleShortcutsModal}
-          className="w-7 h-7 rounded flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-bg-3 transition-all"
-          title="Keyboard shortcuts (?)"
-          aria-label="Show keyboard shortcuts"
-        >
-          <HelpCircle size={14} />
-        </button>
+          <button
+            onClick={toggleShortcutsModal}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-text-3 hover:text-text-1 hover:bg-bg-2 transition-all"
+            title="Atalhos do teclado"
+          >
+            <HelpCircle size={13} />
+          </button>
+        </div>
 
-        <div className="w-px h-5 bg-border-default mx-1" />
-
+        {/* Export HTML */}
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="h-7 px-2.5 rounded-lg border border-border-default text-text-2 text-[11px] hover:text-text-0 hover:bg-bg-3 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1"
+          className="hidden sm:flex h-7 px-2.5 rounded-lg border border-border-default text-text-2 text-xs font-medium hover:text-text-0 hover:bg-bg-2 transition-all disabled:opacity-30 disabled:cursor-not-allowed items-center gap-1"
           title="Exportar código fonte HTML autônomo"
         >
           {exporting ? (
-            <>
-              <Loader2 size={12} className="animate-spin" />
-              <span>Exportando...</span>
-            </>
+            <Loader2 size={12} className="animate-spin" />
           ) : (
-            <>
-              <Download size={12} />
-              <span>HTML</span>
-            </>
+            <Download size={12} />
           )}
+          <span>Exportar</span>
         </button>
 
+        {/* Publicar no Cloudflare (Lovable Highlight CTA) */}
         <button
           onClick={handleSaveEialink}
           disabled={savingEialink}
-          className="h-7 px-3 rounded-lg bg-green text-bg-0 text-[11.5px] font-semibold hover:bg-green/90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-[0_0_12px_rgba(34,197,94,0.3)]"
-          title="Salvar alterações e publicar no Cloudflare"
+          className="h-7 px-3 rounded-lg bg-green text-black text-xs font-semibold hover:bg-green-dim active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 shadow-[0_0_12px_rgba(34,197,94,0.25)]"
+          title="Publicar alterações no Cloudflare"
         >
           {savingEialink ? (
             <>
-              <Loader2 size={12} className="animate-spin" />
-              <span>Publicando...</span>
+              <Loader2 size={13} className="animate-spin" />
+              <span>Salvando...</span>
             </>
           ) : (
             <>
@@ -457,3 +457,5 @@ export function CanvasToolbar() {
     </div>
   )
 }
+
+export default CanvasToolbar

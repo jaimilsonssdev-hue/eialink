@@ -309,16 +309,48 @@ ${input.existingHtml}
 Retorne o HTML completo atualizado com a alteração solicitada.`;
     }
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
-      contents: [{ role: "user", parts: [{ text: userPrompt }] }],
-      config: {
-        systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-        temperature: 0.7,
-      },
-    });
+    let responseText = "";
+    const modelsToTry = ["gemini-3.8-flash", "gemini-2.5-flash"];
 
-    let raw = response.text?.trim() || "";
+    for (const modelCandidate of modelsToTry) {
+      let attempts = 0;
+      const maxAttempts = 2;
+      while (attempts < maxAttempts) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelCandidate,
+            contents: [{ role: "user", parts: [{ text: userPrompt }] }],
+            config: {
+              systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
+              temperature: 0.7,
+            },
+          });
+          responseText = response.text?.trim() || "";
+          if (responseText) break;
+        } catch (apiErr: any) {
+          const errStr = JSON.stringify(apiErr || {});
+          const isOverloaded =
+            apiErr?.status === 503 ||
+            apiErr?.code === 503 ||
+            errStr.includes("503") ||
+            errStr.includes("UNAVAILABLE") ||
+            errStr.includes("high demand");
+          if (isOverloaded && attempts < maxAttempts - 1) {
+            attempts++;
+            await new Promise((r) => setTimeout(r, 1200));
+            continue;
+          }
+          break;
+        }
+      }
+      if (responseText) break;
+    }
+
+    if (!responseText) {
+      throw new Error("O Google AI Studio está com alta demanda momentânea no momento. Por favor, tente clicar novamente em alguns instantes.");
+    }
+
+    let raw = responseText;
     if (raw.startsWith("```html")) {
       raw = raw.replace(/^```html\s*/i, "");
     } else if (raw.startsWith("```")) {

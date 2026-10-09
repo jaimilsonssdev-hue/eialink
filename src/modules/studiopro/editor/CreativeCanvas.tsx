@@ -14,8 +14,10 @@ import {
   Upload,
   PanelLeftClose,
   PanelLeftOpen,
+  Palette,
 } from "lucide-react";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
+import { DesignStyleModal } from "@/modules/studiopro/editor/DesignStyleModal";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -47,6 +49,7 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
 
   // Estado para troca de imagem
   const [imageModalOpen, setImageModalOpen] = useState(false);
+  const [designModalOpen, setDesignModalOpen] = useState(false);
   const [selectedImgIndex, setSelectedImgIndex] = useState<number | null>(null);
   const [currentImgSrc, setCurrentImgSrc] = useState<string>("");
   const [newImgUrl, setNewImgUrl] = useState<string>("");
@@ -332,6 +335,18 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
             </div>
           )}
 
+          {html && (
+            <button
+              type="button"
+              onClick={() => setDesignModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+              title="Personalizar Fontes, Cores, Efeitos e Fotos"
+            >
+              <Palette size={13} />
+              <span className="hidden sm:inline">Design & Estilo</span>
+            </button>
+          )}
+
           {isVisualEditing && hasUnsavedChanges && (
             <button
               type="button"
@@ -478,6 +493,12 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Design & Estilo Visual No-Code */}
+      <DesignStyleModal
+        open={designModalOpen}
+        onOpenChange={setDesignModalOpen}
+      />
     </div>
   );
 }

@@ -94,12 +94,12 @@ function StudioContent({ pageId }: { pageId?: string }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
 
-  // Se veio com pageId e está na raiz, direciona para o editor diretamente
+  // Se veio com pageId e está na raiz inicial, direciona para o editor diretamente
   useEffect(() => {
-    if (pageId && pathname !== "/editor") {
+    if (pageId && (pathname === "/" || pathname === "")) {
       navigate("/editor");
     }
-  }, [pageId, pathname, navigate]);
+  }, [pageId]);
 
   if (pathname === "/editor" || pathname.startsWith("/editor")) {
     return (

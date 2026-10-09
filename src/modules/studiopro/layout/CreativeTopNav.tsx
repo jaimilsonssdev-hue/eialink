@@ -12,7 +12,9 @@ import {
   Bot,
   MapPin,
   MessageCircle,
+  Palette,
 } from "lucide-react";
+import { DesignStyleModal } from "@/modules/studiopro/editor/DesignStyleModal";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -32,6 +34,7 @@ export function CreativeTopNav() {
 
   // Modal de Ferramentas / Features
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
+  const [showDesignModal, setShowDesignModal] = useState(false);
   const [features, setFeatures] = useState({
     agenda_enabled: true,
     ai_concierge_enabled: true,
@@ -41,6 +44,45 @@ export function CreativeTopNav() {
 
   const activeProject = getActiveProject();
   const hasHtml = Boolean(activeProject?.html);
+
+  // Retorno seguro ao painel ou páginas sem ficar preso no desktop
+  const handleBack = () => {
+    try {
+      const search = window.location.search;
+      const params = new URLSearchParams(search);
+      const pageId = params.get("page") || activeProject?.eialinkPageId;
+      const projectId = params.get("project");
+
+      if (document.referrer) {
+        if (document.referrer.includes("/pages")) {
+          window.location.href = "/pages";
+          return;
+        }
+        if (document.referrer.includes("/admin/prospeccao")) {
+          window.location.href = "/admin/prospeccao";
+          return;
+        }
+        if (document.referrer.includes("/dashboard")) {
+          window.location.href = "/dashboard";
+          return;
+        }
+      }
+
+      if (pageId) {
+        window.location.href = "/pages";
+        return;
+      }
+
+      if (projectId) {
+        window.location.href = "/admin/prospeccao";
+        return;
+      }
+
+      window.location.href = "/admin/prospeccao";
+    } catch {
+      window.location.href = "/pages";
+    }
+  };
 
   // Carrega configurações de ferramentas caso a página já tenha salva
   useEffect(() => {
@@ -195,18 +237,12 @@ function applyFeaturesToHtml(
       <div className="flex items-center gap-2 sm:gap-3">
         <button
           type="button"
-          onClick={() => {
-            if (window.history.length > 1) {
-              window.history.back();
-            } else {
-              window.location.href = "/admin/prospeccao";
-            }
-          }}
+          onClick={handleBack}
           className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-xs transition-colors cursor-pointer"
-          title="Voltar"
+          title="Voltar ao Painel ou Páginas"
         >
           <ChevronLeft size={16} />
-          <span className="hidden sm:inline">Voltar</span>
+          <span className="hidden sm:inline font-semibold">Voltar</span>
         </button>
 
         <div className="h-4 w-px bg-white/10" />
@@ -225,6 +261,17 @@ function applyFeaturesToHtml(
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Botão de Design & Estilo Visual No-Code */}
+        <button
+          type="button"
+          onClick={() => setShowDesignModal(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-all border border-emerald-500/30 shadow-xs cursor-pointer"
+          title="Personalizar tipografia, gradientes de fundo, botões e efeitos modernos"
+        >
+          <Palette size={13} />
+          <span className="hidden sm:inline">Design & Estilo</span>
+        </button>
+
         {/* Botão de Controle de Ferramentas / Recursos */}
         <button
           type="button"
@@ -423,6 +470,12 @@ function applyFeaturesToHtml(
           </div>
         </div>
       )}
+
+      {/* Modal de Personalização Visual No-Code (Tipografia, Cores, Efeitos e Fotos) */}
+      <DesignStyleModal
+        open={showDesignModal}
+        onOpenChange={setShowDesignModal}
+      />
     </header>
   );
 }

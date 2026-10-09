@@ -195,3 +195,4 @@ export const ARCHETYPES: Record<string, ArchetypeVisualSpec> = {
 export function getVisualArchetype(category: string): ArchetypeVisualSpec {
   return ARCHETYPES[category] || ARCHETYPES.service;
 }
+

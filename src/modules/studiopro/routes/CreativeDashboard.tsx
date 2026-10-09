@@ -58,7 +58,13 @@ export function CreativeDashboard() {
       {/* Top Header Bar do Estúdio Criativo */}
       <header className="w-full h-14 border-b border-white/[0.08] bg-zinc-950/70 backdrop-blur-md px-4 md:px-8 flex items-center justify-between shrink-0 z-20">
         <a
-          href="/dashboard"
+          href="/admin/prospeccao"
+          onClick={(e) => {
+            if (document.referrer && (document.referrer.includes("/pages") || document.referrer.includes("/admin/prospeccao") || document.referrer.includes("/dashboard"))) {
+              e.preventDefault();
+              window.location.href = document.referrer;
+            }
+          }}
           className="flex items-center gap-2 text-zinc-400 hover:text-white text-xs font-medium transition-colors"
         >
           <span className="grid h-6 w-6 place-items-center rounded-lg bg-zinc-800 text-zinc-300 border border-white/10 text-[10px]">

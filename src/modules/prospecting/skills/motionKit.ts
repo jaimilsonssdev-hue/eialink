@@ -95,3 +95,4 @@ export function renderSocialProof(rating: number, reviewsCount: number, badges: 
   </div>
   `;
 }
+

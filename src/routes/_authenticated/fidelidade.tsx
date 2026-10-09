@@ -498,3 +498,4 @@ function LoyaltyPage() {
 }
 
 export default LoyaltyPage;
+

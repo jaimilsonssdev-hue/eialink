@@ -2,6 +2,12 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { GoogleGenAI } from "@google/genai";
 import { resolveGeminiApiKeyAsync } from "@/modules/ai/google-ai.service";
+import {
+  getVisualArchetype,
+  getMotionStyles,
+  renderMarquee,
+  renderSocialProof,
+} from "./skills";
 
 export type ProspectNicheCategory = "food" | "shop" | "barber" | "service" | "industry";
 
@@ -870,6 +876,7 @@ function buildFoodDeliveryHtml(opts: {
 }): string {
   const { businessName, cleanWhatsapp, destinationAddress, encodedAddress, rating, reviewsCount, subNiche, finalSlug } = opts;
   const itemsJson = JSON.stringify(subNiche.items);
+  const archetype = getVisualArchetype("food");
 
   // Seleciona itens em destaque para o carrossel superior
   const featuredItems = subNiche.items.filter((it, idx) => it.isFeatured || idx < 3);
@@ -882,6 +889,9 @@ function buildFoodDeliveryHtml(opts: {
   <base target="_top">
   <title>Cardápio Digital — ${businessName}</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ${getMotionStyles()}
+  </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-sans pb-28 selection:bg-amber-500 selection:text-black">
   <!-- Banner de Capa -->
@@ -918,6 +928,9 @@ function buildFoodDeliveryHtml(opts: {
         </div>
       </div>
     </div>
+
+    <!-- Faixa Animada Contínua (Motion Kit Skill) -->
+    ${renderMarquee(archetype.marqueePhrases, { bgClass: "bg-zinc-900/90 border border-white/10 rounded-2xl", textClass: "text-amber-300" })}
 
     <!-- Faixa de Cupom de Boas-Vindas -->
     <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-zinc-900 border border-amber-500/30 flex items-center justify-between gap-3 shadow-lg">
@@ -1610,6 +1623,7 @@ function buildBarberShopHtml(opts: {
   finalSlug: string;
 }): string {
   const { businessName, city, cleanWhatsapp, destinationAddress, encodedAddress, rating, reviewsCount, subNiche, finalSlug } = opts;
+  const archetype = getVisualArchetype("barber");
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -1619,6 +1633,9 @@ function buildBarberShopHtml(opts: {
   <base target="_top">
   <title>${businessName} — Barbearia & Agendamento</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ${getMotionStyles()}
+  </style>
 </head>
 <body class="bg-[#0a0a0d] text-zinc-100 font-sans pb-24 selection:bg-amber-500 selection:text-black">
   <!-- TopBar -->
@@ -1654,6 +1671,9 @@ function buildBarberShopHtml(opts: {
       </a>
     </div>
   </section>
+
+  <!-- Faixa Animada (Motion Kit Skill) -->
+  ${renderMarquee(archetype.marqueePhrases, { bgClass: "bg-zinc-900 border-y border-white/10 my-4", textClass: "text-amber-400" })}
 
   <!-- Foto Hero -->
   <div class="max-w-4xl mx-auto px-4 mb-10">
@@ -1760,6 +1780,7 @@ function buildShopCatalogHtml(opts: {
 }): string {
   const { businessName, city, niche, cleanWhatsapp, destinationAddress, encodedAddress, subNiche, finalSlug } = opts;
   const itemsJson = JSON.stringify(subNiche.items);
+  const archetype = getVisualArchetype("shop");
   const featuredItems = subNiche.items.filter((item, idx) => item.isFeatured || idx < 3);
 
   return `<!DOCTYPE html>
@@ -1771,8 +1792,7 @@ function buildShopCatalogHtml(opts: {
   <title>${businessName} — Vitrine & Loja Oficial</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    ${getMotionStyles()}
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-sans pb-32 selection:bg-pink-500 selection:text-white">
@@ -1812,6 +1832,9 @@ function buildShopCatalogHtml(opts: {
         </div>
       </div>
     </div>
+
+    <!-- Faixa Animada Contínua (Motion Kit Skill) -->
+    ${renderMarquee(archetype.marqueePhrases, { bgClass: "bg-zinc-900/90 border border-white/10 rounded-2xl", textClass: "text-pink-300" })}
 
     <!-- Faixa de Cupom de Boas-Vindas Interativa -->
     <div id="coupon-banner" class="p-3.5 bg-gradient-to-r from-pink-500/20 via-pink-500/10 to-transparent border border-pink-500/30 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
@@ -2358,6 +2381,7 @@ function buildServiceProHtml(opts: {
   finalSlug: string;
 }): string {
   const { businessName, city, niche, cleanWhatsapp, destinationAddress, encodedAddress, rating, subNiche, finalSlug } = opts;
+  const archetype = getVisualArchetype("service");
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -2367,6 +2391,9 @@ function buildServiceProHtml(opts: {
   <base target="_top">
   <title>${businessName} — Atendimento Oficial</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ${getMotionStyles()}
+  </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 font-sans pb-24 selection:bg-emerald-500 selection:text-black">
   <header class="p-4 border-b border-white/10 flex items-center justify-between max-w-4xl mx-auto">
@@ -2397,6 +2424,9 @@ function buildServiceProHtml(opts: {
       </a>
     </div>
   </section>
+
+  <!-- Faixa Animada (Motion Kit Skill) -->
+  ${renderMarquee(archetype.marqueePhrases, { bgClass: "bg-zinc-900 border-y border-emerald-500/20 my-4", textClass: "text-emerald-300" })}
 
   <div class="max-w-4xl mx-auto px-4 mb-10">
     <div class="relative h-64 sm:h-96 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
@@ -2467,6 +2497,7 @@ function buildIndustryB2bHtml(opts: {
   finalSlug: string;
 }): string {
   const { businessName, city, cleanWhatsapp, destinationAddress, encodedAddress, rating, reviewsCount, subNiche } = opts;
+  const archetype = getVisualArchetype("industry");
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -2476,6 +2507,9 @@ function buildIndustryB2bHtml(opts: {
   <base target="_top">
   <title>${businessName} — Indústria, Equipamentos & Soluções B2B</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ${getMotionStyles()}
+  </style>
 </head>
 <body class="bg-[#090d16] text-zinc-100 font-sans pb-24 selection:bg-sky-500 selection:text-black">
   <!-- Topbar Corporativa B2B -->
@@ -2496,6 +2530,9 @@ function buildIndustryB2bHtml(opts: {
       </a>
     </div>
   </header>
+
+  <!-- Faixa Animada (Motion Kit Skill) -->
+  ${renderMarquee(archetype.marqueePhrases, { bgClass: "bg-[#0c1427] border-y border-sky-500/20", textClass: "text-sky-300" })}
 
   <!-- Hero Industrial de Alto Impacto -->
   <section class="relative overflow-hidden pt-8 pb-12 border-b border-white/5">

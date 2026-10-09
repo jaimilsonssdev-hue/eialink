@@ -33,6 +33,8 @@ export interface DynamicLink {
   instagram_username?: string | null;
   whatsapp_number?: string | null;
   vcard_data?: VCardData | null;
+  lock_password?: string | null; // Senha PIN de bloqueio do chip físico contra regravação (ex: EIA9, 2026)
+  status_reason?: string | null; // Motivo da suspensão (ex: "inadimplente", "pausado", "cancelado")
   notes?: string | null;
   created_at: string;
   updated_at?: string;

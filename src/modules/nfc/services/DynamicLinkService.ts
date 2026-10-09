@@ -3,6 +3,7 @@ import {
   saveDynamicLinkFn,
   deleteDynamicLinkFn,
   resolveDynamicLinkFn,
+  toggleDynamicLinkStatusFn,
 } from "../nfc.functions";
 import type { DynamicLink, VCardData } from "../types";
 
@@ -27,6 +28,13 @@ export const DynamicLinkService = {
    */
   async delete(id: string) {
     return deleteDynamicLinkFn({ data: { id } });
+  },
+
+  /**
+   * Liga ou Desliga a plaquinha (Ativar / Suspender por Inadimplência)
+   */
+  async toggleActive(id: string, active: boolean, status_reason?: string) {
+    return toggleDynamicLinkStatusFn({ data: { id, active, status_reason } });
   },
 
   /**

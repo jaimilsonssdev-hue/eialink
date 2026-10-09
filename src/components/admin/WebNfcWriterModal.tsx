@@ -18,6 +18,8 @@ import {
   ExternalLink,
   RotateCw,
   Zap,
+  Lock,
+  ShieldCheck,
 } from "lucide-react";
 import { WebNfcService } from "@/modules/nfc/services/WebNfcService";
 import { DynamicLinkService } from "@/modules/nfc/services/DynamicLinkService";
@@ -35,10 +37,12 @@ export function WebNfcWriterModal({ link, isOpen, onClose }: WebNfcWriterModalPr
   const [status, setStatus] = useState<WriteStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [copiedPassword, setCopiedPassword] = useState(false);
   const [isSupported, setIsSupported] = useState(true);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const shortUrl = link ? DynamicLinkService.getShortUrl(link.code) : "";
+  const lockPassword = link?.lock_password || "EIA9";
 
   useEffect(() => {
     if (isOpen) {
@@ -99,11 +103,18 @@ export function WebNfcWriterModal({ link, isOpen, onClose }: WebNfcWriterModalPr
     setTimeout(() => setCopied(false), 2500);
   }
 
+  function handleCopyPassword() {
+    if (!lockPassword) return;
+    navigator.clipboard.writeText(lockPassword);
+    setCopiedPassword(true);
+    setTimeout(() => setCopiedPassword(false), 2500);
+  }
+
   if (!link) return null;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-md bg-card border-border text-foreground p-6 rounded-2xl">
+      <DialogContent className="max-w-md bg-card border-border text-foreground p-6 rounded-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="text-center sm:text-left space-y-1.5">
           <div className="flex items-center justify-between">
             <Badge
@@ -153,6 +164,36 @@ export function WebNfcWriterModal({ link, isOpen, onClose }: WebNfcWriterModalPr
             </div>
             <p className="text-[11px] text-muted-foreground">
               Destino atual: <span className="text-foreground">{link.target_url || "Configurado"}</span>
+            </p>
+          </div>
+
+          {/* Caixa de Senha de Bloqueio Anti-Regravação */}
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-amber-300 flex items-center gap-1.5">
+                <Lock className="h-3.5 w-3.5" />
+                Senha de Bloqueio do Chip (Anti-Regravação):
+              </span>
+              <Badge variant="outline" className="text-[10px] text-amber-300 border-amber-500/40 bg-amber-500/20">
+                Proteção NTAG
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between gap-2 bg-background border border-border rounded-lg px-3 py-2 font-mono text-[11px] text-amber-400 select-all">
+              <span className="font-bold tracking-widest">{lockPassword}</span>
+              <button
+                onClick={handleCopyPassword}
+                className="text-muted-foreground hover:text-foreground shrink-0"
+                title="Copiar Senha"
+              >
+                {copiedPassword ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5" />
+                )}
+              </button>
+            </div>
+            <p className="text-[11px] text-amber-200/90 leading-relaxed">
+              No app NFC Tools, use <strong>Outros &gt; Definir Senha</strong> com esta chave. O cartão físico ficará protegido e o cliente <strong>não conseguirá regravar</strong> para outro link!
             </p>
           </div>
 
@@ -290,27 +331,50 @@ export function WebNfcWriterModal({ link, isOpen, onClose }: WebNfcWriterModalPr
                     Toque em <strong>Escrever &gt; Adicionar um registro &gt; URL/URI</strong> e cole.
                   </li>
                   <li>
-                    Toque em <strong>Escrever</strong> e encoste a plaquinha de acrílico.
+                    Toque em <strong>Escrever</strong> e encoste a plaquinha ou cartão de acrílico.
+                  </li>
+                  <li className="text-amber-300 font-medium pt-1">
+                    🔒 <strong>Trava de Segurança:</strong> Vá na aba <strong>Outros &gt; Definir Senha</strong>, cole o PIN <strong>{lockPassword}</strong> e encoste novamente para travar contra regravações não autorizadas!
                   </li>
                 </ol>
               </div>
 
-              <Button
-                onClick={handleCopyUrl}
-                className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold shadow-md"
-              >
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 mr-2" />
-                    URL Curta Copiada!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Copiar URL para NFC Tools
-                  </>
-                )}
-              </Button>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <Button
+                  onClick={handleCopyUrl}
+                  className="w-full h-10 rounded-xl bg-primary hover:bg-primary/90 text-white text-xs font-semibold shadow-md"
+                >
+                  {copied ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1.5 text-emerald-400" />
+                      URL Copiada!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-4 w-4 mr-1.5" />
+                      Copiar URL Dinâmica
+                    </>
+                  )}
+                </Button>
+
+                <Button
+                  variant="outline"
+                  onClick={handleCopyPassword}
+                  className="w-full h-10 rounded-xl border-amber-500/40 text-amber-300 hover:bg-amber-500/10 text-xs font-semibold"
+                >
+                  {copiedPassword ? (
+                    <>
+                      <Check className="h-4 w-4 mr-1.5 text-emerald-400" />
+                      Senha Copiada!
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="h-4 w-4 mr-1.5" />
+                      Copiar Senha ({lockPassword})
+                    </>
+                  )}
+                </Button>
+              </div>
             </div>
           )}
         </div>

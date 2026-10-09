@@ -176,6 +176,8 @@ export const saveDynamicLinkFn = createServerFn({ method: "POST" })
       instagram_username: data.link.instagram_username?.trim() || null,
       whatsapp_number: data.link.whatsapp_number?.trim() || null,
       vcard_data: data.link.vcard_data || null,
+      lock_password: data.link.lock_password?.trim() || "EIA9",
+      status_reason: data.link.status_reason?.trim() || null,
       notes: data.link.notes?.trim() || null,
       created_at: data.link.created_at || now,
       updated_at: now,
@@ -254,7 +256,63 @@ export const deleteDynamicLinkFn = createServerFn({ method: "POST" })
   });
 
 /**
- * 4. Resolver código curto (/r/$code), registrar estatística de clique/tap e retornar destino
+ * 4. Alternar status Ativo/Desligado (Ligar / Desligar por Inadimplência ou Pausa)
+ */
+export const toggleDynamicLinkStatusFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (data: { id: string; active: boolean; status_reason?: string | null }) => {
+      if (!data.id) throw new Error("ID do link é obrigatório.");
+      return data;
+    },
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase: userSupabase, userId, claims } = context;
+    const isAdmin = await checkIsAdmin(userSupabase, userId, claims.email as string);
+    if (!isAdmin) {
+      throw new Error("Apenas administradores podem alterar o status de ativação.");
+    }
+
+    const supabase = getServiceSupabase();
+    if (!supabase) throw new Error("Serviço de banco de dados indisponível.");
+
+    const { data: plans } = await supabase.from("plans").select("id, features");
+    if (!plans || plans.length === 0) return { success: false };
+
+    let updatedLink: DynamicLink | null = null;
+    const now = new Date().toISOString();
+
+    for (const plan of plans) {
+      const features = (plan.features as Record<string, unknown>) || {};
+      const links = (features.nfc_dynamic_links as DynamicLink[]) || [];
+      const idx = links.findIndex((l) => l.id === data.id);
+
+      if (idx >= 0) {
+        links[idx] = {
+          ...links[idx],
+          active: data.active,
+          status_reason: data.active ? null : data.status_reason || "inadimplente",
+          updated_at: now,
+        };
+        updatedLink = links[idx];
+
+        await supabase
+          .from("plans")
+          .update({
+            features: {
+              ...features,
+              nfc_dynamic_links: links,
+            } as unknown as Json,
+          })
+          .eq("id", plan.id);
+      }
+    }
+
+    return { success: true, link: updatedLink };
+  });
+
+/**
+ * 5. Resolver código curto (/r/$code), registrar estatística de clique/tap e retornar destino
  */
 export const resolveDynamicLinkFn = createServerFn({ method: "POST" })
   .inputValidator((data: { code: string }) => {
@@ -279,8 +337,9 @@ export const resolveDynamicLinkFn = createServerFn({ method: "POST" })
       const features = (targetPlan.features as Record<string, unknown>) || {};
       const links = (features.nfc_dynamic_links as DynamicLink[]) || [];
 
+      // Procura pelo código curto
       const foundIndex = links.findIndex(
-        (l) => l.active && l.code.toLowerCase() === cleanCode,
+        (l) => l.code.toLowerCase() === cleanCode,
       );
 
       if (foundIndex === -1) {
@@ -289,7 +348,27 @@ export const resolveDynamicLinkFn = createServerFn({ method: "POST" })
 
       const link = links[foundIndex];
 
-      // Incrementa contador de acessos e salva assincronamente
+      // Se o link estiver desligado / suspenso por inadimplência
+      if (!link.active) {
+        return {
+          found: true,
+          isSuspended: true,
+          statusReason: link.status_reason || "inadimplente",
+          link: {
+            id: link.id,
+            code: link.code,
+            title: link.title,
+            company_name: link.company_name,
+            type: link.type,
+            active: false,
+            target_url: "",
+            clicks_count: link.clicks_count || 0,
+            created_at: link.created_at,
+          } as DynamicLink,
+        };
+      }
+
+      // Se estiver ativo, incrementa contador de acessos e salva assincronamente
       link.clicks_count = (link.clicks_count || 0) + 1;
       link.last_accessed_at = new Date().toISOString();
       links[foundIndex] = link;
@@ -308,6 +387,7 @@ export const resolveDynamicLinkFn = createServerFn({ method: "POST" })
 
       return {
         found: true,
+        isSuspended: false,
         link,
       };
     } catch (err) {

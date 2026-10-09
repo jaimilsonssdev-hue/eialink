@@ -10,6 +10,9 @@ import {
   UserCheck,
   ExternalLink,
   Download,
+  PowerOff,
+  RefreshCw,
+  MessageCircle,
 } from "lucide-react";
 import { DynamicLinkService } from "@/modules/nfc/services/DynamicLinkService";
 import { ComandaService } from "@/modules/comanda/services/ComandaService";
@@ -28,6 +31,11 @@ function DynamicRedirectPage() {
   const [loadingText, setLoadingText] = useState("Localizando destino...");
   const [pixData, setPixData] = useState<DynamicLink | null>(null);
   const [vcardData, setVcardData] = useState<DynamicLink | null>(null);
+  const [suspendedData, setSuspendedData] = useState<{
+    companyName: string;
+    title: string;
+    reason?: string | null;
+  } | null>(null);
   const [copiedPix, setCopiedPix] = useState(false);
 
   useEffect(() => {
@@ -42,11 +50,21 @@ function DynamicRedirectPage() {
       try {
         // 1. Tenta resolver na Central de Links Dinâmicos / Plaquinhas NFC
         setLoadingText("Conectando à plaquinha...");
-        const nfcRes = await DynamicLinkService.resolve(code);
+        const nfcRes = (await DynamicLinkService.resolve(code)) as any;
 
         if (isCancelled) return;
 
         if (nfcRes?.found && nfcRes.link) {
+          // Se o administrador desligou a plaquinha (inadimplência ou cancelamento)
+          if (nfcRes.isSuspended) {
+            setSuspendedData({
+              companyName: nfcRes.link.company_name || "Estabelecimento",
+              title: nfcRes.link.title || "Cartão Inteligente",
+              reason: nfcRes.statusReason || "inadimplente",
+            });
+            return;
+          }
+
           const link = nfcRes.link;
 
           // Se for Plaquinha Pix e possuir chave Pix cadastrada
@@ -108,6 +126,70 @@ function DynamicRedirectPage() {
     navigator.clipboard.writeText(pixData.pix_key);
     setCopiedPix(true);
     setTimeout(() => setCopiedPix(false), 3000);
+  }
+
+  // Tela dedicada quando a plaquinha está desligada / suspensa por inadimplência
+  if (suspendedData) {
+    const whatsappHelpUrl = `https://wa.me/5573999998888?text=${encodeURIComponent(
+      `Olá! Preciso regularizar o acesso da minha plaquinha inteligente (${suspendedData.companyName} - código: ${code}). Poderiam me orientar?`,
+    )}`;
+
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950 text-white selection:bg-rose-500 selection:text-white">
+        <Card className="w-full max-w-sm border-rose-500/30 bg-slate-900/95 backdrop-blur-xl shadow-2xl rounded-3xl text-center overflow-hidden border">
+          <div className="bg-gradient-to-b from-rose-950/80 to-slate-900 p-7 text-white text-center border-b border-rose-500/20">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 border border-rose-500/30 shadow-inner mb-3">
+              <PowerOff className="h-8 w-8" />
+            </div>
+            <span className="inline-block px-3 py-1 rounded-full bg-rose-500/20 text-rose-300 font-semibold text-[11px] tracking-wide uppercase mb-1 border border-rose-500/30">
+              Cartão Desligado / Pausado
+            </span>
+            <h2 className="text-xl font-bold text-white mt-1">
+              {suspendedData.companyName}
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {suspendedData.title}
+            </p>
+          </div>
+
+          <CardContent className="p-6 space-y-5">
+            <div className="rounded-2xl bg-slate-950/80 border border-slate-800/80 p-4 text-xs text-slate-300 text-left space-y-2 leading-relaxed">
+              <p>
+                Este cartão inteligente de aproximação física está <strong>temporariamente inativo</strong> pela administração da plataforma.
+              </p>
+              <p className="text-slate-400 text-[11px]">
+                Se você é o proprietário ou administrador deste estabelecimento, entre em contato para regularizar o plano e reativar o redirecionamento instantaneamente.
+              </p>
+            </div>
+
+            <div className="space-y-2.5">
+              <Button
+                asChild
+                className="w-full h-11 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/50"
+              >
+                <a href={whatsappHelpUrl} target="_blank" rel="noreferrer">
+                  <MessageCircle className="h-4 w-4 mr-2" />
+                  Regularizar no WhatsApp da Central
+                </a>
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => window.location.reload()}
+                className="w-full h-10 text-xs rounded-xl border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white"
+              >
+                <RefreshCw className="h-3.5 w-3.5 mr-2" />
+                Já paguei, testar novamente
+              </Button>
+            </div>
+
+            <div className="pt-2 text-[10px] text-slate-500 font-mono">
+              EIA Link • Gestão Inteligente de Hardware NFC
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   // Tela dedicada de Pagamento Pix Balcão

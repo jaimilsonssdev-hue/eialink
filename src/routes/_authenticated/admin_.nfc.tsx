@@ -26,6 +26,9 @@ import {
   Sparkles,
   QrCode,
   CheckCircle2,
+  Power,
+  PowerOff,
+  Lock,
 } from "lucide-react";
 import { DynamicLinkService } from "@/modules/nfc/services/DynamicLinkService";
 import { WebNfcService } from "@/modules/nfc/services/WebNfcService";
@@ -79,6 +82,7 @@ function AdminNfcPage() {
   const queryClient = useQueryClient();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Modais
   const [writerLink, setWriterLink] = useState<DynamicLink | null>(null);
@@ -111,11 +115,19 @@ function AdminNfcPage() {
     },
   });
 
+  const toggleMutation = useMutation({
+    mutationFn: ({ id, active, reason }: { id: string; active: boolean; reason?: string }) =>
+      DynamicLinkService.toggleActive(id, active, reason),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nfc-dynamic-links"] });
+    },
+  });
+
   // KPIs
   const totalLinks = links.length;
+  const activeLinks = links.filter((l) => l.active !== false).length;
+  const suspendedLinks = links.filter((l) => l.active === false).length;
   const totalTaps = links.reduce((acc, l) => acc + (l.clicks_count || 0), 0);
-  const googlePlaques = links.filter((l) => l.type === "google_review").length;
-  const pixPlaques = links.filter((l) => l.type === "pix").length;
 
   // Filtro
   const filteredLinks = useMemo(() => {
@@ -125,9 +137,13 @@ function AdminNfcPage() {
         l.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         l.code.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesType = typeFilter === "all" || l.type === typeFilter;
-      return matchesSearch && matchesType;
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && l.active !== false) ||
+        (statusFilter === "suspended" && l.active === false);
+      return matchesSearch && matchesType && matchesStatus;
     });
-  }, [links, searchTerm, typeFilter]);
+  }, [links, searchTerm, typeFilter, statusFilter]);
 
   function handleOpenCreate() {
     setEditLink({
@@ -137,6 +153,7 @@ function AdminNfcPage() {
       code: "",
       target_url: "",
       active: true,
+      lock_password: "EIA9",
       clicks_count: 0,
     });
     setIsFormOpen(true);
@@ -265,38 +282,38 @@ function AdminNfcPage() {
         <Card className="rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground">Aproximações & Scans</p>
-              <h3 className="text-2xl font-bold text-emerald-400 mt-1">{totalTaps}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Total de acessos registrados</p>
+              <p className="text-xs font-medium text-muted-foreground">Ligadas (Ativas)</p>
+              <h3 className="text-2xl font-bold text-emerald-400 mt-1">{activeLinks}</h3>
+              <p className="text-[11px] text-emerald-500/80 mt-0.5">Redirecionando normalmente</p>
             </div>
             <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+              <Power className="h-5 w-5" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="rounded-xl border border-border bg-card p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Desligadas (Pausadas)</p>
+              <h3 className="text-2xl font-bold text-rose-400 mt-1">{suspendedLinks}</h3>
+              <p className="text-[11px] text-rose-400/80 mt-0.5">Inadimplência ou corte</p>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+              <PowerOff className="h-5 w-5" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="rounded-xl border border-border bg-card p-5 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground">Aproximações & Scans</p>
+              <h3 className="text-2xl font-bold text-sky-400 mt-1">{totalTaps}</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5">Total de toques registrados</p>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
               <BarChart3 className="h-5 w-5" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="rounded-xl border border-border bg-card p-5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Google 5 Estrelas</p>
-              <h3 className="text-2xl font-bold text-amber-400 mt-1">{googlePlaques}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Plaquinhas de avaliação</p>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-              <Star className="h-5 w-5 fill-amber-400" />
-            </div>
-          </div>
-        </Card>
-
-        <Card className="rounded-xl border border-border bg-card p-5 shadow-xs">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground">Pix Balcão</p>
-              <h3 className="text-2xl font-bold text-teal-400 mt-1">{pixPlaques}</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">Plaquinhas de pagamento</p>
-            </div>
-            <div className="h-10 w-10 rounded-xl bg-teal-500/10 text-teal-400 flex items-center justify-center">
-              <CreditCard className="h-5 w-5" />
             </div>
           </div>
         </Card>
@@ -308,24 +325,34 @@ function AdminNfcPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <div>
               <CardTitle className="text-base font-semibold tracking-tight text-foreground">
-                Plaquinhas e Links Ativos
+                Plaquinhas e Links Cadastrados
               </CardTitle>
               <CardDescription className="text-xs text-muted-foreground">
-                Qualquer alteração no link de destino entra em vigor imediatamente sem alterar o acrílico físico.
+                Ligue ou desligue o acesso instantaneamente por inadimplência e altere destinos a qualquer momento.
               </CardDescription>
             </div>
 
-            {/* Barra de Busca e Filtro de Tipo */}
-            <div className="flex items-center gap-2">
+            {/* Barra de Busca e Filtros */}
+            <div className="flex flex-wrap items-center gap-2">
               <div className="relative">
                 <Search className="h-3.5 w-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   placeholder="Buscar plaquinha ou empresa..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8 h-9 text-xs w-[200px] sm:w-[240px] rounded-lg"
+                  className="pl-8 h-9 text-xs w-[180px] sm:w-[220px] rounded-lg"
                 />
               </div>
+
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 text-xs rounded-lg border border-border bg-background px-2.5 text-foreground"
+              >
+                <option value="all">Todos os Status</option>
+                <option value="active">Ligadas (Ativas)</option>
+                <option value="suspended">Desligadas (Pausadas)</option>
+              </select>
 
               <select
                 value={typeFilter}
@@ -354,25 +381,26 @@ function AdminNfcPage() {
                   <TableHead className="text-xs font-semibold">Tipo de Produto</TableHead>
                   <TableHead className="text-xs font-semibold">Link Curto (/r/)</TableHead>
                   <TableHead className="text-xs font-semibold">Destino Atual</TableHead>
-                  <TableHead className="text-xs font-semibold text-center">Acessos</TableHead>
+                  <TableHead className="text-xs font-semibold text-center">Status / Acesso</TableHead>
+                  <TableHead className="text-xs font-semibold text-center">Toques</TableHead>
                   <TableHead className="text-xs font-semibold text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 text-xs text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center py-12 text-xs text-muted-foreground">
                       Carregando plaquinhas e links dinâmicos...
                     </TableCell>
                   </TableRow>
                 ) : filteredLinks.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-12 space-y-3">
+                    <TableCell colSpan={7} className="text-center py-12 space-y-3">
                       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-muted text-muted-foreground">
                         <Radio className="h-6 w-6" />
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Nenhuma plaquinha cadastrada ainda.
+                        Nenhuma plaquinha encontrada para os filtros selecionados.
                       </p>
                       <Button
                         size="sm"
@@ -388,6 +416,7 @@ function AdminNfcPage() {
                   filteredLinks.map((link) => {
                     const shortUrl = DynamicLinkService.getShortUrl(link.code);
                     const isCopied = copiedCode === link.code;
+                    const isLinkActive = link.active !== false;
 
                     return (
                       <TableRow key={link.id} className="hover:bg-muted/30 transition-colors">
@@ -425,12 +454,45 @@ function AdminNfcPage() {
                         </TableCell>
 
                         {/* Destino Atual */}
-                        <TableCell className="max-w-[220px]">
+                        <TableCell className="max-w-[200px]">
                           <div className="truncate text-xs text-muted-foreground" title={link.target_url}>
                             {link.type === "pix"
                               ? `Chave: ${link.pix_key || "Não definida"}`
                               : link.target_url || "Destino não configurado"}
                           </div>
+                        </TableCell>
+
+                        {/* Interruptor de Status (Ligar / Desligar) */}
+                        <TableCell className="text-center">
+                          <button
+                            type="button"
+                            disabled={toggleMutation.isPending}
+                            onClick={() => {
+                              const nextState = !isLinkActive;
+                              toggleMutation.mutate({
+                                id: link.id,
+                                active: nextState,
+                                reason: nextState ? undefined : "inadimplente",
+                              });
+                            }}
+                            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all cursor-pointer ${
+                              isLinkActive
+                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20"
+                                : "bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20"
+                            }`}
+                            title={
+                              isLinkActive
+                                ? "Plaquinha Ligada. Clique para DESLIGAR (bloquear por inadimplência)."
+                                : "Plaquinha Desligada. Clique para LIGAR (reativar acesso)."
+                            }
+                          >
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                isLinkActive ? "bg-emerald-400 animate-pulse" : "bg-rose-400"
+                              }`}
+                            />
+                            <span>{isLinkActive ? "Ligada" : "Desligada"}</span>
+                          </button>
                         </TableCell>
 
                         {/* Acessos */}
@@ -736,6 +798,63 @@ function AdminNfcPage() {
                   />
                 </div>
               )}
+
+              {/* Status de Ativação (Ligar / Desligar por Inadimplência) */}
+              <div className="space-y-1.5 pt-2 border-t border-border/60">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <Power className="h-3.5 w-3.5 text-primary" />
+                    Status da Plaquinha (Interruptor em Nuvem)
+                  </label>
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] ${
+                      editLink.active !== false
+                        ? "text-emerald-400 border-emerald-500/30 bg-emerald-500/10"
+                        : "text-rose-400 border-rose-500/30 bg-rose-500/10"
+                    }`}
+                  >
+                    {editLink.active !== false ? "Ligada (Ativa)" : "Desligada (Pausada)"}
+                  </Badge>
+                </div>
+                <select
+                  value={editLink.active !== false ? "active" : "suspended"}
+                  onChange={(e) =>
+                    setEditLink((prev) => ({
+                      ...prev,
+                      active: e.target.value === "active",
+                      status_reason: e.target.value === "suspended" ? "inadimplente" : null,
+                    }))
+                  }
+                  className="w-full h-9 text-xs rounded-lg border border-border bg-background px-3 text-foreground"
+                >
+                  <option value="active">Ligada (Ativa) — Redireciona normalmente</option>
+                  <option value="suspended">Desligada (Pausada) — Bloqueio por Inadimplência ou Cancelamento</option>
+                </select>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Quando desligada, quem aproxima o celular vê uma tela de regularização amigável em vez de acessar a loja.
+                </p>
+              </div>
+
+              {/* Senha de Bloqueio do Chip Físico (Anti-Regravação) */}
+              <div className="space-y-1.5 pt-2 border-t border-border/60">
+                <label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5 text-amber-400" />
+                  Senha de Bloqueio do Chip NFC (Anti-Regravação)
+                </label>
+                <Input
+                  placeholder="Ex: EIA9 ou 2026"
+                  maxLength={8}
+                  value={editLink.lock_password || "EIA9"}
+                  onChange={(e) =>
+                    setEditLink((prev) => ({ ...prev, lock_password: e.target.value.trim().toUpperCase() }))
+                  }
+                  className="h-9 text-xs font-mono bg-background"
+                />
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Senha gravada no chip NTAG (via NFC Tools ou gravador). Impede que o cliente ou terceiros regravem o cartão para apontar para outro site.
+                </p>
+              </div>
             </div>
           )}
 

@@ -86,6 +86,7 @@ import {
   generateSpecializedProspectSiteFn,
   type ProspectNicheCategory,
 } from "@/modules/prospecting/specializedGenerators.functions";
+import { getGeminiApiKey } from "@/modules/studiopro/lib/creativeEngineService";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -717,6 +718,7 @@ function ProspectingPage() {
           instagram: company.instagram ?? undefined,
           photos: (company as any).photos || [],
           forceCategory: targetCategory,
+          clientGeminiKey: getGeminiApiKey() || undefined,
         },
       });
 

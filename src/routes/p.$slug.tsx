@@ -694,6 +694,13 @@ function PublicBio() {
           />
         )}
         {renderAiChatWidget()}
+        <LoyaltyCustomerWalletModal
+          bioPageId={bio.id}
+          businessName={bio.display_name}
+          slug={bio.slug}
+          instagram={bio.instagram}
+          claimTokenId={claimTokenId}
+        />
       </div>
     );
   }
@@ -718,6 +725,13 @@ function PublicBio() {
           />
         )}
         {renderAiChatWidget()}
+        <LoyaltyCustomerWalletModal
+          bioPageId={bio.id}
+          businessName={bio.display_name}
+          slug={bio.slug}
+          instagram={bio.instagram}
+          claimTokenId={claimTokenId}
+        />
       </div>
     );
   }
@@ -775,6 +789,13 @@ function PublicBio() {
           />
         )}
         {renderAiChatWidget()}
+        <LoyaltyCustomerWalletModal
+          bioPageId={bio.id}
+          businessName={bio.display_name}
+          slug={bio.slug}
+          instagram={bio.instagram}
+          claimTokenId={claimTokenId}
+        />
       </div>
     );
   }

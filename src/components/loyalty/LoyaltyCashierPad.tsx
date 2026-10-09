@@ -56,6 +56,7 @@ export function LoyaltyCashierPad({
 
   // Modal QR Code na Tela
   const [activeToken, setActiveToken] = useState<LoyaltyPointToken | null>(null);
+  const [qrCodeDataUrl, setQrCodeDataUrl] = useState<string>("");
   const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [countdown, setCountdown] = useState(300); // 5 minutos
 
@@ -84,6 +85,11 @@ export function LoyaltyCashierPad({
   const ratio = settings?.pointsRatio || 1;
   const computedPoints = customPoints !== null ? customPoints : Math.round(numAmount * ratio);
 
+  const baseOrigin = typeof window !== "undefined" ? window.location.origin : "https://eialink.com.br";
+  const claimUrl = activeToken
+    ? `${baseOrigin}/p/${slug || "loja"}?claim=${activeToken.tokenId}&page=${bioPageId}`
+    : "";
+
   // 1. Gera QR Code para a Tela do Caixa (Cliente no balcão)
   const handleGenerateScreenQr = async () => {
     if (computedPoints <= 0) {
@@ -94,7 +100,7 @@ export function LoyaltyCashierPad({
     setLoading(true);
     try {
       const token = await LoyaltyService.createPointToken({
-        businessPageId,
+        businessPageId: bioPageId,
         businessName,
         points: computedPoints,
         purchaseAmount: numAmount > 0 ? numAmount : undefined,
@@ -103,7 +109,11 @@ export function LoyaltyCashierPad({
         validityMinutes: 5,
       });
 
+      const url = `${baseOrigin}/p/${slug || "loja"}?claim=${token.tokenId}&page=${bioPageId}`;
+      const qrDataUrl = await LoyaltyService.getQrCodeUrl(url, 400);
+
       setActiveToken(token);
+      setQrCodeDataUrl(qrDataUrl);
       setCountdown(300);
       setIsQrModalOpen(true);
       toast.success(`QR Code de +${computedPoints} pontos gerado na tela!`);
@@ -124,7 +134,7 @@ export function LoyaltyCashierPad({
     setLoading(true);
     try {
       const token = await LoyaltyService.createPointToken({
-        businessPageId,
+        businessPageId: bioPageId,
         businessName,
         points: computedPoints,
         purchaseAmount: numAmount > 0 ? numAmount : undefined,
@@ -133,7 +143,11 @@ export function LoyaltyCashierPad({
         validityMinutes: 60 * 24 * 7, // 7 dias para delivery
       });
 
+      const url = `${baseOrigin}/p/${slug || "loja"}?claim=${token.tokenId}&page=${bioPageId}`;
+      const qrDataUrl = await LoyaltyService.getQrCodeUrl(url, 400);
+
       setActiveToken(token);
+      setQrCodeDataUrl(qrDataUrl);
       setIsPrintModalOpen(true);
     } catch (err: any) {
       toast.error(err.message || "Erro ao gerar cupom térmico.");
@@ -157,12 +171,6 @@ export function LoyaltyCashierPad({
     setCustomPoints(null);
     setSelectedMission(null);
   };
-
-  const baseOrigin = typeof window !== "undefined" ? window.location.origin : "https://eialink.com.br";
-  const claimUrl = activeToken
-    ? `${baseOrigin}/p/${slug || "loja"}?claim=${activeToken.tokenId}`
-    : "";
-  const qrCodeUrl = activeToken ? LoyaltyService.getQrCodeUrl(claimUrl, 400) : "";
 
   return (
     <Card className={`border-zinc-800 bg-zinc-950/70 shadow-lg text-zinc-100 ${className}`}>
@@ -312,9 +320,9 @@ export function LoyaltyCashierPad({
           </DialogHeader>
 
           <div className="my-3 p-4 bg-white rounded-2xl shadow-xl inline-block mx-auto border-4 border-amber-500/30">
-            {qrCodeUrl && (
+            {qrCodeDataUrl && (
               <img
-                src={qrCodeUrl}
+                src={qrCodeDataUrl}
                 alt="QR Code de Pontos"
                 className="w-52 h-52 object-contain mx-auto block"
               />
@@ -346,7 +354,7 @@ export function LoyaltyCashierPad({
             <ThermalReceiptPrint
               token={activeToken}
               claimUrl={claimUrl}
-              qrCodeUrl={qrCodeUrl}
+              qrCodeUrl={qrCodeDataUrl}
               onClose={() => setIsPrintModalOpen(false)}
             />
           )}

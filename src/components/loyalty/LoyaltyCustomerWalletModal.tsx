@@ -117,7 +117,7 @@ export function LoyaltyCustomerWalletModal({
 
     setClaimingToken(true);
     try {
-      const res = await LoyaltyService.claimPointToken(claimTokenId, clean, customerName);
+      const res = await LoyaltyService.claimPointToken(claimTokenId, clean, customerName, bioPageId);
 
       // Salva dados no navegador do cliente para visitas futuras
       localStorage.setItem(`loyalty_phone_${bioPageId}`, clean);

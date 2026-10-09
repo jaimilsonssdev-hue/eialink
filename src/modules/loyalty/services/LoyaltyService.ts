@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import QRCode from "qrcode";
 import type {
   LoyaltyProgramSettings,
   LoyaltyCustomerBalance,
@@ -123,7 +124,30 @@ export const LoyaltyService = {
       isRedeemed: false,
     };
 
-    // Salva token no registro local sincronizado
+    // 1. Salva no banco de dados Supabase na bio_page (cross-device para o celular do cliente)
+    try {
+      const { data: page } = await supabase
+        .from("bio_pages")
+        .select("social_links")
+        .eq("id", businessPageId)
+        .maybeSingle();
+
+      if (page) {
+        const social = (page.social_links as Record<string, any>) || {};
+        const existingTokens: LoyaltyPointToken[] = Array.isArray(social.loyalty_tokens) ? social.loyalty_tokens : [];
+        const updatedTokens = [token, ...existingTokens.filter((t) => t.tokenId !== token.tokenId)].slice(0, 100);
+        social.loyalty_tokens = updatedTokens;
+
+        await supabase
+          .from("bio_pages")
+          .update({ social_links: social as any })
+          .eq("id", businessPageId);
+      }
+    } catch (e) {
+      console.warn("[LoyaltyService] Aviso ao persistir token no Supabase:", e);
+    }
+
+    // 2. Salva token no registro local sincronizado como cache
     this.saveTokenToRegistry(token);
 
     return token;
@@ -131,19 +155,41 @@ export const LoyaltyService = {
 
   /**
    * Resgata um token de pontos escaneado pelo cliente.
-   * Verifica expiração e garante uso único estrito.
+   * Verifica expiração e garante uso único estrito tanto local quanto no Supabase.
    */
   async claimPointToken(
     tokenId: string,
     customerWhatsapp: string,
-    customerName?: string
+    customerName?: string,
+    businessPageId?: string
   ): Promise<{ success: boolean; earnedPoints: number; newTotalPoints: number; message: string }> {
     const cleanWhatsapp = customerWhatsapp.replace(/\D/g, "");
     if (!cleanWhatsapp || cleanWhatsapp.length < 10) {
       throw new Error("Por favor, digite um WhatsApp válido com DDD.");
     }
 
-    const token = this.getTokenFromRegistry(tokenId);
+    // 1. Tenta recuperar do registry local
+    let token = this.getTokenFromRegistry(tokenId);
+
+    // 2. Se não estiver no local (caso o cliente esteja no celular escaneando do caixa), busca no Supabase
+    if (!token && businessPageId) {
+      try {
+        const { data: page } = await supabase
+          .from("bio_pages")
+          .select("social_links")
+          .eq("id", businessPageId)
+          .maybeSingle();
+
+        if (page) {
+          const social = (page.social_links as Record<string, any>) || {};
+          const list: LoyaltyPointToken[] = Array.isArray(social.loyalty_tokens) ? social.loyalty_tokens : [];
+          token = list.find((t) => t.tokenId === tokenId) || null;
+        }
+      } catch (err) {
+        console.warn("[LoyaltyService] Erro ao buscar token no Supabase:", err);
+      }
+    }
+
     if (!token) {
       throw new Error("QR Code de pontos inválido ou não encontrado.");
     }
@@ -162,7 +208,32 @@ export const LoyaltyService = {
     token.redeemedByWhatsapp = cleanWhatsapp;
     token.redeemedByName = customerName;
     token.redeemedAt = now.toISOString();
+
     this.saveTokenToRegistry(token);
+
+    // Atualiza status no Supabase
+    try {
+      const pageIdToUpdate = token.businessPageId || businessPageId;
+      if (pageIdToUpdate) {
+        const { data: page } = await supabase
+          .from("bio_pages")
+          .select("social_links")
+          .eq("id", pageIdToUpdate)
+          .maybeSingle();
+
+        if (page) {
+          const social = (page.social_links as Record<string, any>) || {};
+          const list: LoyaltyPointToken[] = Array.isArray(social.loyalty_tokens) ? social.loyalty_tokens : [];
+          social.loyalty_tokens = list.map((t) => (t.tokenId === token?.tokenId ? token : t));
+          await supabase
+            .from("bio_pages")
+            .update({ social_links: social as any })
+            .eq("id", pageIdToUpdate);
+        }
+      }
+    } catch (e) {
+      console.warn("[LoyaltyService] Erro ao sincronizar resgate no Supabase:", e);
+    }
 
     // Credita pontos no banco de dados Supabase (tabela customer_store_cashback)
     const { data: existing } = await (supabase as any)
@@ -333,12 +404,25 @@ export const LoyaltyService = {
   },
 
   /**
-   * Gera a URL do QR Code em vetor SVG de alta nitidez para tela ou impressão térmica.
+   * Gera a URL do QR Code em base64 Data URL 100% local e offline (sem requisições externas).
    */
-  getQrCodeUrl(claimUrl: string, size = 300): string {
-    return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&format=svg&margin=0&data=${encodeURIComponent(
-      claimUrl
-    )}`;
+  async getQrCodeUrl(claimUrl: string, size = 300): Promise<string> {
+    try {
+      return await QRCode.toDataURL(claimUrl, {
+        width: size,
+        margin: 1,
+        color: {
+          dark: "#000000",
+          light: "#ffffff",
+        },
+        errorCorrectionLevel: "M",
+      });
+    } catch (e) {
+      console.warn("[LoyaltyService] Erro ao gerar QRCode local, usando fallback:", e);
+      return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&format=svg&margin=0&data=${encodeURIComponent(
+        claimUrl
+      )}`;
+    }
   },
 
   // Helpers de armazenamento de tokens

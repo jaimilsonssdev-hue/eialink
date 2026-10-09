@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -17,6 +17,7 @@ import {
   ShoppingBag,
   Trash2,
   Flame,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,22 +59,30 @@ interface CouponItem {
 
 function LoyaltyPage() {
   const [activeTab, setActiveTab] = useState("cashier");
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
 
-  // Busca a página principal da empresa
-  const { data: bioPage, isLoading: loadingBio } = useQuery({
-    queryKey: ["loyalty-bio-page"],
+  // Busca as páginas da empresa
+  const { data: bioPages = [], isLoading: loadingBio } = useQuery({
+    queryKey: ["loyalty-bio-pages"],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return null;
+      if (!u.user) return [];
       const { data } = await supabase
         .from("bio_pages")
         .select("*")
         .eq("user_id", u.user.id)
         .order("updated_at", { ascending: false });
-      const realPages = (data ?? []).filter((p) => !(p.social_links as any)?.is_demo);
-      return realPages[0] || data?.[0] || null;
+      return data || [];
     },
   });
+
+  const bioPage = useMemo(() => {
+    if (selectedPageId) {
+      return bioPages.find((p) => p.id === selectedPageId) || bioPages[0] || null;
+    }
+    const realPages = bioPages.filter((p) => !(p.social_links as any)?.is_demo);
+    return realPages[0] || bioPages[0] || null;
+  }, [bioPages, selectedPageId]);
 
   // Configurações do programa de fidelidade
   const [settings, setSettings] = useState<LoyaltyProgramSettings | null>(null);
@@ -179,8 +188,25 @@ function LoyaltyPage() {
           </p>
         </div>
 
-        {bioPage && (
-          <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {bioPages.length > 1 && (
+            <div className="relative">
+              <select
+                value={bioPage?.id || ""}
+                onChange={(e) => setSelectedPageId(e.target.value)}
+                className="appearance-none rounded-xl border border-border/80 bg-background px-3 py-2 text-xs font-bold text-foreground focus:outline-none pr-8 cursor-pointer shadow-2xs"
+              >
+                {bioPages.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.display_name} ({p.slug})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            </div>
+          )}
+
+          {bioPage && (
             <Button
               variant="outline"
               onClick={() => setIsSettingsOpen(true)}
@@ -189,8 +215,8 @@ function LoyaltyPage() {
               <Settings2 className="h-4 w-4" />
               <span>Regras do Programa</span>
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Cards de Resumo */}

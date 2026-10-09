@@ -88,7 +88,7 @@ export const Route = createFileRoute("/p/$slug")({
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const bookingStore = supabase as never as { from: (table: "booking_settings") => any };
-    const { data: booking } = (renderFullPage && isHealth)
+    const { data: booking } = renderFullPage
       ? await bookingStore
           .from("booking_settings")
           .select("active")
@@ -456,7 +456,10 @@ function PublicBio() {
 
   const socialConfig = (bio.social_links as Record<string, any>) || {};
   const isTriageActive = Boolean(socialConfig.triage_enabled);
-  const isAiChatActive = Boolean(socialConfig.ai_chat_enabled);
+  const isAiChatActive =
+    (Boolean(socialConfig.ai_chat_enabled || socialConfig.ai_concierge_enabled || (bio.social_links as any)?.ai_chat_enabled || (bio.social_links as any)?.ai_concierge_enabled) || isDemo) &&
+    socialConfig.ai_concierge_enabled !== false &&
+    socialConfig.ai_chat_enabled !== false;
 
   const triageConfig: TriageConfig = {
     enabled: isTriageActive,
@@ -513,7 +516,14 @@ function PublicBio() {
   const isProduct = isProductCatalogNiche(nicheKey);
   const isHealth = isHealthBookingNiche(nicheKey);
 
-  const isServiceBookingNiche = isHealth || nicheKey === "barbearia" || nicheKey === "beleza";
+  const isServiceBookingNiche =
+    isHealth ||
+    nicheKey === "barbearia" ||
+    nicheKey === "beleza" ||
+    nicheKey === "estetica_facial" ||
+    nicheKey === "estetica_corporal" ||
+    nicheKey === "spa" ||
+    Boolean((bio.social_links as any)?.agenda_enabled);
 
   // Auto-correção dinâmica e isolamento estrito de nichos:
   // 1. Template de terapia (therapy-wellbeing) é ESTRITAMENTE reservado para psicologia
@@ -613,6 +623,38 @@ function PublicBio() {
     (rawSocial.custom_html as string | undefined) ||
     ((bio.social_links as any)?.custom_html as string | undefined);
 
+  const renderAiChatWidget = () => {
+    if (!isAiChatActive || effectiveTemplateId === "ai-chat-agent") return null;
+    return (
+      <>
+        {!isAiChatOpen && (
+          <button
+            type="button"
+            onClick={() => setIsAiChatOpen(true)}
+            className="fixed left-4 bottom-20 sm:bottom-6 z-40 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-card/95 hover:bg-card border border-sky-500/50 text-foreground text-xs font-bold shadow-xl backdrop-blur-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
+            aria-label="Falar com Atendente Virtual"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500" />
+            </span>
+            <span>💬 Atendente Virtual</span>
+          </button>
+        )}
+
+        {isAiChatOpen && (
+          <AiAssistantChat
+            bio={bio}
+            products={products}
+            isFullPage={false}
+            onClose={() => setIsAiChatOpen(false)}
+            onTrack={track}
+          />
+        )}
+      </>
+    );
+  };
+
   // PRIORIDADE 1: Se a página possui HTML puro gerado pelo Estúdio Criativo, renderiza instantaneamente
   if (customHtml && customHtml.trim().length > 50) {
     const isAgendaDisabled = rawSocial.agenda_enabled === false;
@@ -633,7 +675,7 @@ function PublicBio() {
       : `<base target="_top">${dynamicStyles}${customHtml}`;
 
     return (
-      <div className="min-h-screen w-full overflow-x-hidden flex flex-col">
+      <div className="min-h-screen w-full overflow-x-hidden flex flex-col relative">
         {isDemo && bio.display_name && <DemoConversionBanner companyName={bio.display_name} />}
         <iframe
           srcDoc={preparedHtml}
@@ -651,6 +693,7 @@ function PublicBio() {
             bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
           />
         )}
+        {renderAiChatWidget()}
       </div>
     );
   }
@@ -674,6 +717,7 @@ function PublicBio() {
             bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
           />
         )}
+        {renderAiChatWidget()}
       </div>
     );
   }
@@ -730,6 +774,7 @@ function PublicBio() {
             bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
           />
         )}
+        {renderAiChatWidget()}
       </div>
     );
   }
@@ -801,34 +846,7 @@ function PublicBio() {
         )}
 
         {/* Atendente Virtual Interativo (Chat com IA / Typebot) */}
-        {isAiChatActive && effectiveTemplateId !== "ai-chat-agent" && (
-          <>
-            {!isAiChatOpen && (
-              <button
-                type="button"
-                onClick={() => setIsAiChatOpen(true)}
-                className="fixed left-4 bottom-20 sm:bottom-6 z-40 inline-flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-card/95 hover:bg-card border border-sky-500/50 text-foreground text-xs font-bold shadow-xl backdrop-blur-xl transition-all hover:scale-105 active:scale-95 cursor-pointer"
-                aria-label="Falar com Atendente Virtual"
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-sky-500" />
-                </span>
-                <span>💬 Atendente Virtual</span>
-              </button>
-            )}
-
-            {isAiChatOpen && (
-              <AiAssistantChat
-                bio={bio}
-                products={products}
-                isFullPage={false}
-                onClose={() => setIsAiChatOpen(false)}
-                onTrack={track}
-              />
-            )}
-          </>
-        )}
+        {renderAiChatWidget()}
       </div>
 
       {/* Barra de Conversão Fixa no Mobile (Apenas para BioLinks, sem poluir Lojas ou Site Completo) */}

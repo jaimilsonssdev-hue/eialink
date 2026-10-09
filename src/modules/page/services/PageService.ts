@@ -368,6 +368,12 @@ export const PageService = {
           google_photos: realPhotos,
           instagram_photos: realPhotos,
           apify_scraped: Boolean(apifyInstagramData),
+          agenda_enabled: true,
+          booking_active: true,
+          ai_chat_enabled: true,
+          ai_concierge_enabled: true,
+          whatsapp_enabled: true,
+          gps_enabled: true,
         },
         published: true,
       })
@@ -421,8 +427,16 @@ export const PageService = {
       await supabase.from("catalog_items").insert(catalogInserts);
     }
 
-    // 2. Configura e Ativa o Sistema de Agendamentos SOMENTE para nichos de saúde/clínica
-    if (isHealth) {
+    // 2. Configura e Ativa o Sistema de Agendamentos para nichos de serviço, saúde, barbearia, estética ou demos
+    const shouldEnableBooking =
+      isHealth ||
+      effectiveNicheKey === "barbearia" ||
+      effectiveNicheKey === "beleza" ||
+      effectiveNicheKey === "estetica_facial" ||
+      effectiveNicheKey === "estetica_corporal" ||
+      effectiveNicheKey === "spa" ||
+      Boolean(isDemo);
+    if (shouldEnableBooking) {
       try {
         await supabase.from("booking_settings").insert({
           bio_page_id: data.id,

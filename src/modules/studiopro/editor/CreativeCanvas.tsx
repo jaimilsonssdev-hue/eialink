@@ -12,6 +12,8 @@ import {
   Undo2,
   X,
   Upload,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from "lucide-react";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { toast } from "sonner";
@@ -23,7 +25,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-export function CreativeCanvas() {
+export interface CreativeCanvasProps {
+  desktopChatOpen?: boolean;
+  onToggleDesktopChat?: () => void;
+}
+
+export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: CreativeCanvasProps = {}) {
   const {
     getActiveProject,
     previewDevice,
@@ -237,41 +244,58 @@ export function CreativeCanvas() {
     <div className="flex-1 flex flex-col h-full bg-[#08070b] overflow-hidden relative">
       {/* Barra de Ferramentas Superior do Canvas */}
       <div className="h-12 border-b border-white/[0.06] bg-zinc-950/80 backdrop-blur-md px-4 flex items-center justify-between shrink-0 z-20">
-        {/* Seletores de Dispositivo */}
-        <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-xl border border-white/[0.08]">
-          <button
-            onClick={() => setPreviewDevice("desktop")}
-            className={`p-1.5 rounded-lg text-xs transition-colors ${
-              previewDevice === "desktop"
-                ? "bg-emerald-500/10 text-emerald-400 font-medium"
-                : "text-zinc-400 hover:text-zinc-200"
-            }`}
-            title="Desktop"
-          >
-            <Monitor size={14} />
-          </button>
-          <button
-            onClick={() => setPreviewDevice("tablet")}
-            className={`p-1.5 rounded-lg text-xs transition-colors ${
-              previewDevice === "tablet"
-                ? "bg-emerald-500/10 text-emerald-400 font-medium"
-                : "text-zinc-400 hover:text-zinc-200"
-            }`}
-            title="Tablet"
-          >
-            <Tablet size={14} />
-          </button>
-          <button
-            onClick={() => setPreviewDevice("mobile")}
-            className={`p-1.5 rounded-lg text-xs transition-colors ${
-              previewDevice === "mobile"
-                ? "bg-emerald-500/10 text-emerald-400 font-medium"
-                : "text-zinc-400 hover:text-zinc-200"
-            }`}
-            title="Celular"
-          >
-            <Smartphone size={14} />
-          </button>
+        {/* Controles da Esquerda: Recolher Chat e Seletores de Dispositivo */}
+        <div className="flex items-center gap-2">
+          {onToggleDesktopChat && (
+            <button
+              type="button"
+              onClick={onToggleDesktopChat}
+              className="hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/[0.08] text-xs transition-colors"
+              title={desktopChatOpen ? "Recolher Copiloto IA" : "Abrir Copiloto IA"}
+            >
+              {desktopChatOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
+              <span className="text-[11px] font-medium hidden lg:inline">
+                {desktopChatOpen ? "Recolher Chat" : "Abrir Chat"}
+              </span>
+            </button>
+          )}
+
+          {/* Seletores de Dispositivo */}
+          <div className="flex items-center gap-1.5 bg-zinc-900/80 p-1 rounded-xl border border-white/[0.08]">
+            <button
+              onClick={() => setPreviewDevice("desktop")}
+              className={`p-1.5 rounded-lg text-xs transition-colors ${
+                previewDevice === "desktop"
+                  ? "bg-emerald-500/10 text-emerald-400 font-medium"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+              title="Desktop"
+            >
+              <Monitor size={14} />
+            </button>
+            <button
+              onClick={() => setPreviewDevice("tablet")}
+              className={`p-1.5 rounded-lg text-xs transition-colors ${
+                previewDevice === "tablet"
+                  ? "bg-emerald-500/10 text-emerald-400 font-medium"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+              title="Tablet"
+            >
+              <Tablet size={14} />
+            </button>
+            <button
+              onClick={() => setPreviewDevice("mobile")}
+              className={`p-1.5 rounded-lg text-xs transition-colors ${
+                previewDevice === "mobile"
+                  ? "bg-emerald-500/10 text-emerald-400 font-medium"
+                  : "text-zinc-400 hover:text-zinc-200"
+              }`}
+              title="Celular"
+            >
+              <Smartphone size={14} />
+            </button>
+          </div>
         </div>
 
         {/* Alternador de Modo: Visualização vs Editor Visual (Point & Click) */}

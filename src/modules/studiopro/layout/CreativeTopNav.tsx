@@ -64,9 +64,53 @@ export function CreativeTopNav() {
       });
   }, [activeProject?.eialinkPageId]);
 
+function applyFeaturesToHtml(
+  sourceHtml: string,
+  featureFlags: {
+    agenda_enabled: boolean;
+    ai_concierge_enabled: boolean;
+    gps_enabled: boolean;
+    whatsapp_enabled: boolean;
+  },
+): string {
+  if (!sourceHtml) return sourceHtml;
+
+  let styleRules = "";
+  if (!featureFlags.agenda_enabled) {
+    styleRules += `[data-feature="agenda"], a[href*="/agendar"], .feature-agenda { display: none !important; } `;
+  }
+  if (!featureFlags.ai_concierge_enabled) {
+    styleRules += `[data-feature="concierge"], [data-feature="ai-chat"], .feature-concierge { display: none !important; } `;
+  }
+  if (!featureFlags.gps_enabled) {
+    styleRules += `[data-feature="gps"], [data-feature="map"], iframe[src*="maps"], a[href*="maps.google"], a[href*="waze.com"], .feature-gps { display: none !important; } `;
+  }
+  if (!featureFlags.whatsapp_enabled) {
+    styleRules += `[data-feature="whatsapp"], a[href*="wa.me"], a[href*="whatsapp.com"], .feature-whatsapp { display: none !important; } `;
+  }
+
+  const styleTag = `<style id="eialink-feature-overrides">${styleRules}</style>`;
+
+  if (sourceHtml.includes('id="eialink-feature-overrides"')) {
+    return sourceHtml.replace(/<style id="eialink-feature-overrides">[\s\S]*?<\/style>/i, styleTag);
+  }
+
+  if (sourceHtml.includes("</head>")) {
+    return sourceHtml.replace("</head>", `${styleTag}</head>`);
+  }
+  return `${styleTag}${sourceHtml}`;
+}
+
   async function handleToggleFeature(key: keyof typeof features) {
     const updated = { ...features, [key]: !features[key] };
     setFeatures(updated);
+
+    // Aplica na hora no HTML ativo para o usuário ver o Canvas mudar imediatamente
+    let updatedHtml = activeProject?.html || "";
+    if (activeProject?.html) {
+      updatedHtml = applyFeaturesToHtml(activeProject.html, updated);
+      updateActiveProjectHtml(updatedHtml);
+    }
 
     if (activeProject?.eialinkPageId) {
       try {
@@ -82,12 +126,14 @@ export function CreativeTopNav() {
           .update({
             social_links: {
               ...curSocial,
+              ...(updatedHtml ? { custom_html: updatedHtml } : {}),
               ...updated,
+              updated_at: new Date().toISOString(),
             },
           })
           .eq("id", activeProject.eialinkPageId);
 
-        toast.success("Configuração de recurso salva!");
+        toast.success("Recurso atualizado no site!");
       } catch (e) {
         console.warn("Aviso ao salvar recurso:", e);
       }
@@ -118,7 +164,6 @@ export function CreativeTopNav() {
         const { error } = await supabase
           .from("bio_pages")
           .update({
-            custom_html: activeProject.html,
             social_links: {
               ...curSocial,
               custom_html: activeProject.html,

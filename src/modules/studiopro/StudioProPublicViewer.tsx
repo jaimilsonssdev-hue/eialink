@@ -4,6 +4,7 @@ import { RenderBlock } from "./blocks/registry";
 import { resolveTheme, themeToCSS } from "./lib/theme-presets";
 import { useGoogleFonts } from "./lib/useGoogleFonts";
 import { DemoConversionBanner } from "@/components/public/DemoConversionBanner";
+import "./studiopro.css";
 
 export function StudioProPublicViewer({
   config,
@@ -27,7 +28,7 @@ export function StudioProPublicViewer({
 
   return (
     <div
-      className="studiopro-viewer min-h-screen w-full overflow-x-hidden antialiased"
+      className="studiopro-viewer scroll-revealed min-h-screen w-full overflow-x-hidden antialiased"
       style={{
         ...cssVars,
         backgroundColor: theme.bg0,

@@ -601,6 +601,7 @@ function PublicBio() {
     effectiveAvatarUrl = generateSvgAvatar(bio.display_name, nicheKey);
   }
 
+  const isSiteMaquina = effectiveTemplateId === "site-maquina";
   const isCinematic = effectiveTemplateId === "cinematic-glass" || effectiveTemplateId === "cinematic-scrolly" || !effectiveTemplateId;
   const isStore = effectiveTemplateId === "store-showcase" || effectiveTemplateId === "storefront";
   const isFullPageChat = effectiveTemplateId === "ai-chat-agent";
@@ -614,18 +615,30 @@ function PublicBio() {
 
   // PRIORIDADE 1: Se a página possui HTML puro gerado pelo Estúdio Criativo, renderiza instantaneamente
   if (customHtml && customHtml.trim().length > 50) {
-    // Injeta <base target="_top"> para permitir navegação nativa de links (Agenda, GPS/Waze, WhatsApp)
+    const isAgendaDisabled = rawSocial.agenda_enabled === false;
+    const isAiDisabled = rawSocial.ai_concierge_enabled === false;
+    const isGpsDisabled = rawSocial.gps_enabled === false;
+    const isWhatsappDisabled = rawSocial.whatsapp_enabled === false;
+
+    let dynamicStyles = "<style>";
+    if (isAgendaDisabled) dynamicStyles += `[data-feature="agenda"], a[href*="/agendar"], .feature-agenda { display: none !important; }`;
+    if (isAiDisabled) dynamicStyles += `[data-feature="concierge"], [data-feature="ai-chat"], .feature-concierge { display: none !important; }`;
+    if (isGpsDisabled) dynamicStyles += `[data-feature="gps"], [data-feature="map"], iframe[src*="maps"], a[href*="maps.google"], a[href*="waze.com"], .feature-gps { display: none !important; }`;
+    if (isWhatsappDisabled) dynamicStyles += `[data-feature="whatsapp"], a[href*="wa.me"], a[href*="whatsapp.com"], .feature-whatsapp { display: none !important; }`;
+    dynamicStyles += "</style>";
+
+    // Injeta <base target="_top"> para permitir navegação nativa de links (Agenda, GPS/Waze, WhatsApp) e estilos dinâmicos
     const preparedHtml = customHtml.includes("<head>")
-      ? customHtml.replace("<head>", `<head><base target="_top">`)
-      : `<base target="_top">${customHtml}`;
+      ? customHtml.replace("<head>", `<head><base target="_top">${dynamicStyles}`)
+      : `<base target="_top">${dynamicStyles}${customHtml}`;
 
     return (
-      <div className="min-h-screen w-full overflow-x-hidden">
+      <div className="min-h-screen w-full overflow-x-hidden flex flex-col">
         {isDemo && bio.display_name && <DemoConversionBanner companyName={bio.display_name} />}
         <iframe
           srcDoc={preparedHtml}
           title={bio.display_name}
-          className="w-full min-h-screen border-none"
+          className="w-full flex-1 min-h-screen border-none block"
           sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
         />
         {isTriageActive && bio.whatsapp && (

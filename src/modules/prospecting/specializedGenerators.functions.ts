@@ -202,7 +202,7 @@ Endereço: ${destinationAddress}.
 Fotos: ${JSON.stringify(realPhotos.slice(0, 5))}`;
         }
 
-        const response = await ai.models.generateContent({
+        const geminiPromise = ai.models.generateContent({
           model: "gemini-3.8-flash",
           contents: [
             { role: "user", parts: [{ text: `${systemInstruction}\n\n${promptTask}` }] },
@@ -213,10 +213,15 @@ Fotos: ${JSON.stringify(realPhotos.slice(0, 5))}`;
           },
         });
 
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("Timeout Gemini 15s")), 15000),
+        );
+
+        const response = await Promise.race([geminiPromise, timeoutPromise]);
         const text = response.text?.trim() || "";
         generatedHtml = text.replace(/^```html\s*/i, "").replace(/^```\s*/, "").replace(/```\s*$/, "").trim();
       } catch (geminiErr) {
-        console.warn("[SpecializedGenerators] Erro na chamada Gemini 3.8 Flash:", geminiErr);
+        console.warn("[SpecializedGenerators] Gemini 3.8 Flash não respondeu em tempo ou deu erro, ativando fallback garantido:", geminiErr);
       }
     }
 
@@ -449,7 +454,7 @@ Fotos: ${JSON.stringify(realPhotos.slice(0, 5))}`;
     }
 
     // Salva a página oficial no banco de dados na tabela bio_pages
-    const templateId = category === "food" ? "restaurant-menu" : category === "shop" ? "store-showcase" : "creative-pro";
+    const templateId = category === "food" ? "restaurant-menu" : category === "shop" ? "store-showcase" : "site-maquina";
 
     const { data: page, error: pageErr } = await supabase
       .from("bio_pages")
@@ -457,21 +462,19 @@ Fotos: ${JSON.stringify(realPhotos.slice(0, 5))}`;
         user_id: context.userId,
         slug: finalSlug,
         display_name: data.businessName,
-        bio: `${data.niche} em ${data.city}`,
+        description: `${data.niche} em ${data.city}. Conheça nossos produtos e serviços e fale conosco.`,
         whatsapp: cleanWhatsapp,
-        address: destinationAddress,
-        niche: data.niche,
-        city: data.city,
-        state: "BR",
-        google_rating: data.rating || 4.9,
-        google_reviews_count: data.reviewsCount || 120,
         published: true,
         template_id: templateId,
-        custom_html: generatedHtml,
-        background_style: category === "food" ? "warm" : "modern",
+        theme: category === "food" ? "amber" : category === "shop" ? "rose" : "emerald",
         social_links: {
-          is_demo: false,
+          is_demo: true,
           category,
+          niche: data.niche,
+          city: data.city,
+          address: destinationAddress,
+          google_rating: data.rating || 4.9,
+          reviews_count: data.reviewsCount || 120,
           photos: realPhotos,
           custom_html: generatedHtml,
           agenda_enabled: true,
@@ -480,7 +483,7 @@ Fotos: ${JSON.stringify(realPhotos.slice(0, 5))}`;
           gps_enabled: true,
         } as any,
       })
-      .select()
+      .select("id, slug")
       .single();
 
     if (pageErr) {

@@ -80,19 +80,10 @@ function CreativeEditorView() {
             mobileTab === "preview" ? "flex" : "hidden"
           } md:flex flex-1 flex-col h-full bg-[#08070b] overflow-hidden relative`}
         >
-          {/* Botão Desktop para Recolher/Expandir Chat */}
-          <div className="hidden md:flex absolute top-2.5 left-2.5 z-30">
-            <button
-              type="button"
-              onClick={() => setDesktopChatOpen((prev) => !prev)}
-              className="p-1.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-zinc-400 hover:text-white border border-white/10 shadow-lg transition-all"
-              title={desktopChatOpen ? "Recolher painel de chat" : "Abrir painel de chat"}
-            >
-              {desktopChatOpen ? <PanelLeftClose size={14} /> : <PanelLeftOpen size={14} />}
-            </button>
-          </div>
-
-          <CreativeCanvas />
+          <CreativeCanvas
+            desktopChatOpen={desktopChatOpen}
+            onToggleDesktopChat={() => setDesktopChatOpen((prev) => !prev)}
+          />
         </div>
       </div>
     </div>

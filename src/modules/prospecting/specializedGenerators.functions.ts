@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { GoogleGenAI } from "@google/genai";
 import { resolveGeminiApiKeyAsync } from "@/modules/ai/google-ai.service";
 
-export type ProspectNicheCategory = "food" | "shop" | "barber" | "service";
+export type ProspectNicheCategory = "food" | "shop" | "barber" | "service" | "industry";
 
 export interface NicheActionMeta {
   category: ProspectNicheCategory;
@@ -16,7 +16,7 @@ export interface NicheActionMeta {
 
 /**
  * Classificação rigorosa de nicho para o radar de prospecção.
- * Barbearias são estritamente isoladas ANTES de checagens gastronômicas (evitando colisão com 'bar').
+ * Barbearias e Indústrias/Fábricas são estritamente isoladas com layouts próprios.
  */
 export function getProspectNicheCategory(niche?: string | null, name?: string | null): NicheActionMeta {
   const text = `${niche ?? ""} ${name ?? ""}`.toLowerCase();
@@ -34,7 +34,20 @@ export function getProspectNicheCategory(niche?: string | null, name?: string | 
     };
   }
 
-  // 2. Gastronomia, Restaurantes, Delivery e Alimentação
+  // 2. Indústria, Fábrica, B2B, Energia Solar & Manufatura (ex: Fábrica DSun)
+  const isIndustry = /f[aá]brica|ind[uú]stria|solar|fotovolt|distribuidor|usinagem|caldeiraria|manufatura|pain[eé]is|metal[uú]rgica|\bdsun\b/i.test(text);
+  if (isIndustry) {
+    return {
+      category: "industry",
+      label: "Fábrica & B2B",
+      buttonLabel: "Gerar Fábrica/B2B",
+      icon: "🏭",
+      buttonClass: "border-sky-500/30 bg-sky-500/10 text-sky-300 hover:bg-sky-500/20",
+      loadingLabel: "Montando Site Industrial & Orçamento B2B",
+    };
+  }
+
+  // 3. Gastronomia, Restaurantes, Delivery e Alimentação
   const isFood = /restauran|lanche|burger|hamburguer|pizza|pizzaria|a[cç]a[ií]|sorvet|delivery|comida|marmita|a[cç]ougue|padaria|confeitaria|sushi|japon[eê]s|churrasco|espetinho|pastel|hot\s*dog|choperia|cervejaria|\bbar\b(?!\s*be)/i.test(text);
   if (isFood) {
     const isIceCream = /sorvet|a[cç]a[ií]|gelato/i.test(text);
@@ -50,7 +63,7 @@ export function getProspectNicheCategory(niche?: string | null, name?: string | 
     };
   }
 
-  // 3. Comércio, Lojas de Varejo e Vitrines
+  // 4. Comércio, Lojas de Varejo e Vitrines
   const isShop = /loja|moda|roupa|calcado|calçado|otica|ótica|boutique|bijuteria|reloj|acessorio|eletr[oô]nic|celular|smartphone|farmacia|drogaria|pet\s*shop|floricultura|moveis|móveis|colch[oõ]es|auto\s*pe[cç]as/i.test(text);
   if (isShop) {
     return {
@@ -63,7 +76,7 @@ export function getProspectNicheCategory(niche?: string | null, name?: string | 
     };
   }
 
-  // 4. Serviços em Geral, Clínicas, Saúde e Consultórios
+  // 5. Serviços em Geral, Clínicas, Saúde e Consultórios
   return {
     category: "service",
     label: "Site Profissional",
@@ -323,6 +336,85 @@ export function getSubNicheData(
     };
   }
 
+  // Indústria, Fábrica, Energia Solar & B2B
+  if (category === "industry") {
+    const isSolar = /solar|fotovolt|pain[eé]is|energia|dsun/i.test(combined);
+    const photos = hasUserPhotos
+      ? userPhotos
+      : isSolar
+      ? [
+          "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=80",
+          "https://images.unsplash.com/photo-1508873696983-2df5293cb325?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1545208942-e1c9c916524b?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=800&q=80",
+        ]
+      : [
+          "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=1200&q=80",
+          "https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&w=800&q=80",
+          "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=800&q=80",
+        ];
+
+    return {
+      subType: isSolar ? "solar" : "industry",
+      title: isSolar ? "Fabricação & Soluções em Energia Solar B2B" : "Indústria & Manufatura de Alta Precisão",
+      photos,
+      categories: ["Todos", "Equipamentos & Módulos", "Sistemas & Soluções", "Projetos de Engenharia"],
+      items: isSolar
+        ? [
+            {
+              title: "Módulos Fotovoltaicos Monocristalinos Tier 1",
+              desc: "Painéis solares de alta eficiência energética (550W+), tecnologia half-cell e garantia de performance de 25 anos.",
+              price: 680.0,
+              img: photos[0],
+              badge: "Alta Eficiência ⚡",
+              category: "Equipamentos & Módulos",
+            },
+            {
+              title: "Inversores Fotovoltaicos On-Grid e Híbridos Trifásicos",
+              desc: "Equipamentos com certificação Inmetro, monitoramento inteligente via Wi-Fi e proteção contra surtos.",
+              price: 3450.0,
+              img: photos[1] || photos[0],
+              badge: "Garantia 10 Anos",
+              category: "Sistemas & Soluções",
+            },
+            {
+              title: "Estruturas de Fixação em Alumínio Estrutural e Aço Galvanizado",
+              desc: "Suportes reforçados com alta resistência a intempéries e ventos fortes, adequados para solo e telhados industriais.",
+              price: 490.0,
+              img: photos[2] || photos[0],
+              badge: "Norma NBR",
+              category: "Equipamentos & Módulos",
+            },
+            {
+              title: "Projeto de Engenharia Turnkey & Homologação",
+              desc: "Dimensionamento técnico, elaboração de ART, memorial descritivo e aprovação completa junto à concessionária de energia.",
+              price: 1800.0,
+              img: photos[3] || photos[0],
+              badge: "Corporativo B2B",
+              category: "Projetos de Engenharia",
+            },
+          ]
+        : [
+            {
+              title: "Equipamentos Industriais Sob Demanda",
+              desc: "Fabricação sob medida conforme desenho técnico e rigorosos padrões de controle de qualidade.",
+              price: 2500.0,
+              img: photos[0],
+              badge: "ISO 9001",
+              category: "Equipamentos & Módulos",
+            },
+            {
+              title: "Manufatura & Usinagem de Precisão",
+              desc: "Processos industriais de alta repetibilidade com maquinário CNC de última geração e tolerâncias micrométricas.",
+              price: 1200.0,
+              img: photos[1] || photos[0],
+              badge: "Alta Precisão",
+              category: "Sistemas & Soluções",
+            },
+          ],
+    };
+  }
+
   // Demais nichos (Clínicas, Consultórios, Serviços em Geral)
   const photos = hasUserPhotos
     ? userPhotos
@@ -509,6 +601,19 @@ Regras:
         subNiche,
         finalSlug,
       });
+    } else if (category === "industry") {
+      generatedHtml = buildIndustryB2bHtml({
+        businessName: data.businessName,
+        city: data.city,
+        niche: data.niche,
+        cleanWhatsapp,
+        destinationAddress,
+        encodedAddress,
+        rating: data.rating ?? 4.9,
+        reviewsCount: data.reviewsCount ?? 120,
+        subNiche,
+        finalSlug,
+      });
     } else {
       generatedHtml = buildServiceProHtml({
         businessName: data.businessName,
@@ -533,6 +638,17 @@ Regras:
         ? "store-showcase"
         : "site-maquina";
 
+    const isBookingNiche = category === "barber" || category === "service";
+
+    const assistantPrompt = category === "industry"
+      ? `Você é o especialista comercial da empresa "${data.businessName}". Seu papel é atender empresas e parceiros com excelência, tirar dúvidas técnicas sobre equipamentos, energia solar e soluções industriais, e encaminhar solicitações de orçamento para o WhatsApp (${cleanWhatsapp}).`
+      : category === "food"
+      ? `Você é a atendente virtual oficial da empresa "${data.businessName}". Seu papel é recepcionar os clientes com cordialidade, tirar dúvidas sobre o cardápio e encaminhar pedidos para a sacola online ou WhatsApp (${cleanWhatsapp}).`
+      : category === "barber"
+      ? `Você é o assistente virtual da barbearia "${data.businessName}". Seu papel é tirar dúvidas sobre cortes e barba e direcionar para o agendamento online (/agendar/${finalSlug}) ou WhatsApp (${cleanWhatsapp}).`
+      : `Você é a atendente virtual oficial da empresa "${data.businessName}", localizada em ${destinationAddress}.
+Seu papel é recepcionar os clientes com cordialidade, tirar dúvidas sobre os serviços e direcionar para o WhatsApp (${cleanWhatsapp}) ou agendamento online (/agendar/${finalSlug}).`;
+
     const { data: page, error: pageErr } = await supabase
       .from("bio_pages")
       .insert({
@@ -543,7 +659,7 @@ Regras:
         whatsapp: cleanWhatsapp,
         published: true,
         template_id: templateId,
-        theme: category === "food" ? "amber" : category === "barber" ? "dark" : category === "shop" ? "rose" : "emerald",
+        theme: category === "food" ? "amber" : category === "barber" ? "dark" : category === "shop" ? "rose" : category === "industry" ? "sky" : "emerald",
         social_links: {
           is_demo: true,
           category,
@@ -555,15 +671,14 @@ Regras:
           reviews_count: data.reviewsCount || 120,
           photos: subNiche.photos,
           custom_html: generatedHtml,
-          agenda_enabled: true,
-          booking_active: true,
+          agenda_enabled: isBookingNiche,
+          booking_active: isBookingNiche,
           ai_chat_enabled: true,
           ai_concierge_enabled: true,
           whatsapp_enabled: true,
           gps_enabled: true,
           assistant_name: `${data.businessName} - Atendente`,
-          assistant_prompt: `Você é a atendente virtual oficial da empresa "${data.businessName}", localizada em ${destinationAddress}.
-Seu papel é recepcionar os clientes com cordialidade, tirar dúvidas sobre o cardápio/serviços e direcionar para o WhatsApp (${cleanWhatsapp}) ou agendamento online (/agendar/${finalSlug}).`,
+          assistant_prompt: assistantPrompt,
           suggested_services: subNiche.items.map((it) => ({
             name: it.title,
             description: it.desc,
@@ -581,40 +696,42 @@ Seu papel é recepcionar os clientes com cordialidade, tirar dúvidas sobre o ca
       throw new Error(`Falha ao salvar página: ${pageErr.message}`);
     }
 
-    // 5. Cadastra agenda pronta: booking_settings, booking_availability, booking_services
-    try {
-      await (supabase as any).from("booking_settings").insert({
-        bio_page_id: page.id,
-        active: true,
-        timezone: "America/Sao_Paulo",
-        slot_interval_minutes: 30,
-        min_notice_hours: 1,
-        max_days_ahead: 30,
-      });
-
-      const weekdays = [1, 2, 3, 4, 5, 6];
-      await (supabase as any).from("booking_availability").insert(
-        weekdays.map((day) => ({
+    // 5. Cadastra agenda pronta apenas se for nicho de serviço com agendamento
+    if (isBookingNiche) {
+      try {
+        await (supabase as any).from("booking_settings").insert({
           bio_page_id: page.id,
-          weekday: day,
-          start_time: "08:00",
-          end_time: day === 6 ? "13:00" : "18:00",
           active: true,
-        })),
-      );
+          timezone: "America/Sao_Paulo",
+          slot_interval_minutes: 30,
+          min_notice_hours: 1,
+          max_days_ahead: 30,
+        });
 
-      const bookingServices = subNiche.items.slice(0, 6).map((item, idx) => ({
-        bio_page_id: page.id,
-        name: item.title,
-        description: item.desc,
-        duration_minutes: category === "barber" ? (item.title.toLowerCase().includes("combo") ? 60 : 35) : 30,
-        price: item.price,
-        position: idx,
-        active: true,
-      }));
-      await (supabase as any).from("booking_services").insert(bookingServices);
-    } catch (bookingErr) {
-      console.warn("[generateSpecializedProspectSiteFn] Aviso ao popular agenda:", bookingErr);
+        const weekdays = [1, 2, 3, 4, 5, 6];
+        await (supabase as any).from("booking_availability").insert(
+          weekdays.map((day) => ({
+            bio_page_id: page.id,
+            weekday: day,
+            start_time: "08:00",
+            end_time: day === 6 ? "13:00" : "18:00",
+            active: true,
+          })),
+        );
+
+        const bookingServices = subNiche.items.slice(0, 6).map((item, idx) => ({
+          bio_page_id: page.id,
+          name: item.title,
+          description: item.desc,
+          duration_minutes: category === "barber" ? (item.title.toLowerCase().includes("combo") ? 60 : 35) : 30,
+          price: item.price,
+          position: idx,
+          active: true,
+        }));
+        await (supabase as any).from("booking_services").insert(bookingServices);
+      } catch (bookingErr) {
+        console.warn("[generateSpecializedProspectSiteFn] Aviso ao popular agenda:", bookingErr);
+      }
     }
 
     // 6. Cadastra produtos no catálogo para visualização e edição no dashboard
@@ -625,9 +742,13 @@ Seu papel é recepcionar os clientes com cordialidade, tirar dúvidas sobre o ca
         description: item.desc,
         price: item.price,
         image_url: item.img || null,
-        button_label: category === "barber" || category === "service" ? "Agendar" : "Adicionar à Sacola",
-        button_url: category === "barber" || category === "service" ? `/agendar/${page.slug}` : null,
-        type: category === "food" || category === "shop" ? "product" : "service",
+        button_label: isBookingNiche
+          ? "Agendar"
+          : category === "industry"
+          ? "Solicitar Orçamento"
+          : "Adicionar à Sacola",
+        button_url: isBookingNiche ? `/agendar/${page.slug}` : null,
+        type: category === "food" || category === "shop" || category === "industry" ? "product" : "service",
         position: idx,
         active: true,
       }));
@@ -708,7 +829,7 @@ function buildFoodDeliveryHtml(opts: {
       <div class="mt-3 flex items-center justify-between text-xs pt-3 border-t border-white/5">
         <span class="text-amber-400 font-semibold">★ ${rating} (${reviewsCount} avaliações no Google)</span>
         <div class="flex items-center gap-3">
-          <a href="/agendar/${finalSlug}" target="_top" class="text-amber-400 hover:underline font-bold">🗓️ Reservar Mesa</a>
+          <span class="text-emerald-400 font-semibold flex items-center gap-1">🛵 Pedidos Online</span>
           <a href="https://wa.me/${cleanWhatsapp}" target="_blank" class="text-emerald-400 hover:underline flex items-center gap-1 font-medium">WhatsApp →</a>
         </div>
       </div>
@@ -778,7 +899,7 @@ function buildFoodDeliveryHtml(opts: {
   </div>
 
   <!-- Modal / Drawer da Sacola & Checkout WhatsApp -->
-  <div id="cart-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div id="cart-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="w-full max-w-lg bg-zinc-900 rounded-t-3xl sm:rounded-3xl border border-white/10 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
         <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -959,12 +1080,25 @@ function buildFoodDeliveryHtml(opts: {
 
     function openCartModal() {
       const modal = document.getElementById('cart-modal');
-      if (modal) modal.classList.remove('hidden');
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+      }
     }
 
     function closeCartModal() {
       const modal = document.getElementById('cart-modal');
-      if (modal) modal.classList.add('hidden');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+      }
+    }
+
+    const modalBackdrop = document.getElementById('cart-modal');
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener('click', function(e) {
+        if (e.target === this) closeCartModal();
+      });
     }
 
     function checkoutWhatsApp(phone, storeName) {
@@ -977,7 +1111,11 @@ function buildFoodDeliveryHtml(opts: {
       const paymentMethod = document.getElementById('client-payment')?.value || 'Pix';
       const notes = (document.getElementById('client-notes')?.value || '').trim();
 
-      let msg = '🍔 *NOVO PEDIDO - ' + storeName.toUpperCase() + '*\\n\\n';
+      const isSweet = /a[cç]a[ií]|sorvet|gelat|doce/i.test(storeName);
+      const isPizza = /pizza/i.test(storeName);
+      const headerEmoji = isSweet ? '🍧' : isPizza ? '🍕' : '🍔';
+
+      let msg = headerEmoji + ' *NOVO PEDIDO - ' + storeName.toUpperCase() + '*\\n\\n';
       if (clientName) msg += '👤 *Cliente:* ' + clientName + '\\n';
       msg += '🛵 *Tipo:* ' + (isDeliveryMode ? 'Entrega no Endereço' : 'Retirada no Balcão') + '\\n';
       if (isDeliveryMode && clientAddress) {
@@ -1275,7 +1413,7 @@ function buildShopCatalogHtml(opts: {
   </div>
 
   <!-- Modal Sacola -->
-  <div id="cart-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+  <div id="cart-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="w-full max-w-lg bg-zinc-900 rounded-t-3xl sm:rounded-3xl border border-white/10 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
         <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -1376,12 +1514,25 @@ function buildShopCatalogHtml(opts: {
 
     function openCartModal() {
       const modal = document.getElementById('cart-modal');
-      if (modal) modal.classList.remove('hidden');
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+      }
     }
 
     function closeCartModal() {
       const modal = document.getElementById('cart-modal');
-      if (modal) modal.classList.add('hidden');
+      if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+      }
+    }
+
+    const modalBackdrop = document.getElementById('cart-modal');
+    if (modalBackdrop) {
+      modalBackdrop.addEventListener('click', function(e) {
+        if (e.target === this) closeCartModal();
+      });
     }
 
     function checkoutWhatsApp(phone, storeName) {
@@ -1509,6 +1660,253 @@ function buildServiceProHtml(opts: {
       <span>Atendimento no WhatsApp</span>
     </a>
   </div>
+</body>
+</html>`;
+}
+
+/**
+ * Construtor HTML Especializado para Indústrias, Fábricas e Energia Solar (B2B Corporativo)
+ */
+function buildIndustryB2bHtml(opts: {
+  businessName: string;
+  city: string;
+  niche: string;
+  cleanWhatsapp: string;
+  destinationAddress: string;
+  encodedAddress: string;
+  rating: number;
+  reviewsCount: number;
+  subNiche: SubNicheInfo;
+  finalSlug: string;
+}): string {
+  const { businessName, city, cleanWhatsapp, destinationAddress, encodedAddress, rating, reviewsCount, subNiche } = opts;
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
+  <title>${businessName} — Indústria, Equipamentos & Soluções B2B</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#090d16] text-zinc-100 font-sans pb-24 selection:bg-sky-500 selection:text-black">
+  <!-- Topbar Corporativa B2B -->
+  <header class="border-b border-white/10 bg-[#090d16]/90 backdrop-blur-md sticky top-0 z-30">
+    <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 font-black text-sm">
+          🏭
+        </div>
+        <div>
+          <span class="font-extrabold text-sm sm:text-base tracking-tight text-white block leading-tight">${businessName}</span>
+          <span class="text-[10px] text-sky-400 font-medium">Fabricação & Fornecimento B2B</span>
+        </div>
+      </div>
+      <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Gostaria de falar com o departamento comercial da ${businessName}.`)}" target="_blank" class="px-3.5 py-1.5 rounded-full bg-sky-500 hover:bg-sky-400 text-black font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+        <span>Falar com Comercial</span>
+        <span>→</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Industrial de Alto Impacto -->
+  <section class="relative overflow-hidden pt-8 pb-12 border-b border-white/5">
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+      <img src="${subNiche.photos[0]}" class="w-full h-full object-cover filter blur-sm" alt="${businessName}">
+    </div>
+    <div class="max-w-5xl mx-auto px-4 relative z-10">
+      <div class="max-w-2xl space-y-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-sky-500/10 text-sky-300 border border-sky-500/20">
+          <span class="w-2 h-2 rounded-full bg-sky-400 animate-pulse"></span>
+          <span>Fornecimento Direto de Fábrica · ${city} e Região</span>
+        </div>
+        <h1 class="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+          Soluções de Engenharia, Equipamentos e Alta Performance Industrial
+        </h1>
+        <p class="text-xs sm:text-sm text-zinc-300 leading-relaxed">
+          Atendemos empresas, instaladores e indústrias com produtos certificados, suporte técnico de engenharia e garantia estendida de fábrica.
+        </p>
+        <div class="pt-2 flex flex-wrap gap-3">
+          <a href="#cotacao-b2b" class="px-5 py-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-black font-extrabold text-xs sm:text-sm shadow-xl transition-all flex items-center gap-2">
+            <span>📋 Solicitar Cotação B2B</span>
+          </a>
+          <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Gostaria de consultar o catálogo técnico e preços corporativos da ${businessName}.`)}" target="_blank" class="px-5 py-3 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 border border-white/10 text-white font-bold text-xs sm:text-sm transition-all flex items-center gap-2">
+            <span>💬 WhatsApp Direto</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- Métricas / Selos de Credibilidade -->
+      <div class="mt-10 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="p-3.5 rounded-2xl bg-zinc-900/80 border border-white/10 text-center space-y-1">
+          <div class="text-sky-400 text-lg">🏭</div>
+          <div class="font-extrabold text-sm text-white">Fabricação Direta</div>
+          <div class="text-[10px] text-zinc-400">Sem intermediários</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-zinc-900/80 border border-white/10 text-center space-y-1">
+          <div class="text-sky-400 text-lg">🛡️</div>
+          <div class="font-extrabold text-sm text-white">Garantia Técnica</div>
+          <div class="text-[10px] text-zinc-400">Laudo & Certificação</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-zinc-900/80 border border-white/10 text-center space-y-1">
+          <div class="text-sky-400 text-lg">🚚</div>
+          <div class="font-extrabold text-sm text-white">Pronta Entrega</div>
+          <div class="text-[10px] text-zinc-400">Logística Ágil</div>
+        </div>
+        <div class="p-3.5 rounded-2xl bg-zinc-900/80 border border-white/10 text-center space-y-1">
+          <div class="text-sky-400 text-lg">⭐</div>
+          <div class="font-extrabold text-sm text-white">${rating} / 5.0</div>
+          <div class="text-[10px] text-zinc-400">${reviewsCount} avaliações Google</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Catálogo de Equipamentos & Soluções -->
+  <section class="max-w-5xl mx-auto px-4 py-10 space-y-6">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <div>
+        <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">Catálogo Técnico & Equipamentos</h2>
+        <p class="text-xs text-zinc-400 mt-0.5">Selecione uma solução para solicitar proposta comercial com especificação completa</p>
+      </div>
+    </div>
+
+    <!-- Filtro de Categorias -->
+    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar" id="industry-categories">
+      ${subNiche.categories
+        .map(
+          (cat, idx) =>
+            `<button type="button" onclick="filterCategory('${cat}', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer ${
+              idx === 0
+                ? "bg-sky-500 text-black font-bold shadow-md"
+                : "bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white"
+            }">${cat}</button>`,
+        )
+        .join("")}
+    </div>
+
+    <!-- Grid de Produtos Técnicos -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" id="products-grid">
+      ${subNiche.items
+        .map(
+          (item) => `
+        <div class="product-card flex flex-col justify-between p-4 rounded-2xl bg-zinc-900/90 border border-white/10 hover:border-sky-500/40 transition-all gap-4" data-category="${item.category || ''}">
+          <div class="space-y-3">
+            <div class="relative h-44 rounded-xl overflow-hidden border border-white/5 bg-zinc-950">
+              <img src="${item.img}" class="w-full h-full object-cover" alt="${item.title}">
+              ${item.badge ? `<span class="absolute top-2.5 left-2.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500 text-black uppercase tracking-wider">${item.badge}</span>` : ""}
+            </div>
+            <div>
+              <h3 class="font-bold text-sm sm:text-base text-white">${item.title}</h3>
+              <p class="text-xs text-zinc-400 mt-1 leading-relaxed">${item.desc}</p>
+            </div>
+          </div>
+          <div class="pt-3 border-t border-white/5 flex items-center justify-between gap-2">
+            <div>
+              <span class="text-[10px] text-zinc-500 block uppercase font-bold">Faixa / Cotação</span>
+              <span class="font-bold text-sky-400 text-sm">Sob Consulta B2B</span>
+            </div>
+            <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Gostaria de solicitar um orçamento corporativo e ficha técnica para o equipamento: *${item.title}* na empresa ${businessName}.`)}" target="_blank" class="px-3.5 py-2 rounded-xl bg-sky-500/10 hover:bg-sky-500 text-sky-300 hover:text-black border border-sky-500/30 text-xs font-bold transition-all flex items-center gap-1.5">
+              <span>Solicitar Cotação</span>
+              <span>→</span>
+            </a>
+          </div>
+        </div>
+      `,
+        )
+        .join("")}
+    </div>
+  </section>
+
+  <!-- Seção de Cotação Corporativa Direta -->
+  <section id="cotacao-b2b" class="max-w-5xl mx-auto px-4 py-8">
+    <div class="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-zinc-900 to-[#0e1626] border border-sky-500/20 shadow-2xl space-y-6">
+      <div class="max-w-xl space-y-2">
+        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-sky-500/10 text-sky-300 border border-sky-500/30 uppercase tracking-wider">Atendimento Comercial B2B</span>
+        <h2 class="text-xl sm:text-2xl font-black text-white tracking-tight">Precisa de um Projeto ou Grande Volume?</h2>
+        <p class="text-xs sm:text-sm text-zinc-300">Nossa equipe de engenharia e vendas técnicas prepara uma proposta detalhada com prazos, condições corporativas e especificações completas.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+        <input id="quote-company" type="text" placeholder="Nome da Sua Empresa / Responsável" class="px-3.5 py-2.5 rounded-xl bg-zinc-800/80 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500">
+        <input id="quote-city" type="text" placeholder="Cidade / Estado da Instalação" class="px-3.5 py-2.5 rounded-xl bg-zinc-800/80 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-sky-500">
+        <button type="button" onclick="sendCorporateQuote('${cleanWhatsapp}', '${businessName}')" class="px-5 py-2.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-black font-extrabold text-xs shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+          <span>Enviar Pedido de Cotação</span>
+          <span>→</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Localização da Fábrica / Planta Industrial -->
+  <section class="max-w-5xl mx-auto px-4 py-8">
+    <div class="p-6 rounded-3xl bg-zinc-900/80 border border-white/10 space-y-4">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <span>📍 Planta Industrial & Atendimento Comercial</span>
+          </h2>
+          <p class="text-xs text-zinc-400 mt-0.5">${destinationAddress}</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}" target="_blank" class="px-3.5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-white transition-all">Google Maps</a>
+          <a href="https://waze.com/ul?q=${encodedAddress}" target="_blank" class="px-3.5 py-2 rounded-xl bg-sky-500/20 text-sky-300 border border-sky-500/30 hover:bg-sky-500/30 text-xs font-semibold transition-all">Waze</a>
+        </div>
+      </div>
+      <iframe src="https://maps.google.com/maps?q=${encodedAddress}&output=embed" class="w-full h-56 rounded-2xl border border-white/10" loading="lazy"></iframe>
+    </div>
+  </section>
+
+  <!-- Botão Flutuante de Contato Comercial -->
+  <div class="fixed bottom-5 right-5 z-40">
+    <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Gostaria de falar com o atendimento comercial da ${businessName}.`)}" target="_blank" class="flex items-center gap-2 px-4 py-3 rounded-full bg-sky-500 hover:bg-sky-400 text-black font-extrabold text-xs shadow-2xl transition-all hover:scale-105 active:scale-95 cursor-pointer">
+      <span>💬 Falar no WhatsApp</span>
+    </a>
+  </div>
+
+  <script>
+    function filterCategory(cat, btn) {
+      document.querySelectorAll('.category-pill').forEach(b => {
+        b.className = 'category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white';
+      });
+      if (btn) {
+        btn.className = 'category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-sky-500 text-black font-bold shadow-md';
+      }
+
+      document.querySelectorAll('.product-card').forEach(card => {
+        const itemCat = card.getAttribute('data-category') || '';
+        if (cat === 'Todos' || !cat || itemCat.toLowerCase() === cat.toLowerCase() || itemCat === '') {
+          card.style.display = 'flex';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    }
+
+    function sendCorporateQuote(phone, company) {
+      const clientCompany = (document.getElementById('quote-company')?.value || '').trim();
+      const clientCity = (document.getElementById('quote-city')?.value || '').trim();
+
+      let msg = '🏭 *SOLICITAÇÃO DE COTAÇÃO B2B - ' + company.toUpperCase() + '*\\n\\n';
+      if (clientCompany) msg += '🏢 *Empresa / Solicitante:* ' + clientCompany + '\\n';
+      if (clientCity) msg += '📍 *Localização da Demanda:* ' + clientCity + '\\n';
+      msg += '\\nOlá! Gostaria de uma cotação e atendimento comercial para aquisição de equipamentos e projetos.';
+
+      const cleanPhone = phone.replace(/\\D/g, '');
+      const url = 'https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(msg);
+      window.open(url, '_blank');
+    }
+
+    // Previne que links hash # quebrem o iframe
+    document.querySelectorAll('a[href^="#"]').forEach(a => {
+      a.addEventListener('click', e => {
+        e.preventDefault();
+        const target = document.querySelector(a.getAttribute('href'));
+        if (target) target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  </script>
 </body>
 </html>`;
 }

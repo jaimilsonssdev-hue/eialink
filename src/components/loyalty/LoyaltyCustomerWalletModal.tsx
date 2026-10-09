@@ -187,6 +187,11 @@ export function LoyaltyCustomerWalletModal({
     ? Math.min(100, Math.round((currentPoints / nextReward.pointsCost) * 100))
     : 100;
 
+  // Se o programa de fidelidade não estiver explicitamente ativo e não houver token/trigger, não renderiza botão flutuante
+  if (!claimTokenId && !triggerButton && !settings?.active) {
+    return null;
+  }
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>

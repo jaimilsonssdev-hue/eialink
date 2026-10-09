@@ -193,13 +193,21 @@ function applyFeaturesToHtml(
   return (
     <header className="h-12 bg-[#0a0a0f] border-b border-white/[0.08] flex items-center justify-between px-3 sm:px-4 fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center gap-2 sm:gap-3">
-        <Link
-          to="/"
-          className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-xs transition-colors"
+        <button
+          type="button"
+          onClick={() => {
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              window.location.href = "/admin/prospeccao";
+            }
+          }}
+          className="flex items-center gap-1.5 text-zinc-400 hover:text-white text-xs transition-colors cursor-pointer"
+          title="Voltar"
         >
           <ChevronLeft size={16} />
           <span className="hidden sm:inline">Voltar</span>
-        </Link>
+        </button>
 
         <div className="h-4 w-px bg-white/10" />
 

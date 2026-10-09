@@ -874,6 +874,45 @@ export default function CinematicStudioPage() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const [uploadingProductIdx, setUploadingProductIdx] = useState<number | null>(null);
+
+  const handleProductImageUpload = async (idx: number, file: File) => {
+    if (!file) return;
+    setUploadingProductIdx(idx);
+    try {
+      let finalUrl = "";
+      if (userId) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `cinematic/${userId}/${crypto.randomUUID()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("bio-media").upload(path, file, {
+          upsert: true,
+        });
+        if (!upErr) {
+          const { data: pubData } = supabase.storage.from("bio-media").getPublicUrl(path);
+          if (pubData?.publicUrl) finalUrl = pubData.publicUrl;
+        }
+      }
+      if (!finalUrl) {
+        finalUrl = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.readAsDataURL(file);
+        });
+      }
+      setData((prev) => {
+        const list = [...(prev.highlights || [])];
+        list[idx] = { ...list[idx], image: finalUrl };
+        return { ...prev, highlights: list };
+      });
+      toast.success("Foto do item atualizada com sucesso!");
+    } catch (err: any) {
+      console.error("Erro ao fazer upload da imagem do produto:", err);
+      toast.error("Erro ao enviar imagem. Verifique o arquivo.");
+    } finally {
+      setUploadingProductIdx(null);
+    }
+  };
+
   // 3. Diálogo e Plano Criativo com o Agente Diretor de Arte
   const handleSendMessage = async (promptOverride?: string) => {
     const promptToUse = promptOverride || aiPrompt;
@@ -1329,13 +1368,20 @@ export default function CinematicStudioPage() {
       <header className="flex h-12 shrink-0 items-center justify-between border-b border-zinc-800/80 bg-zinc-950/90 px-3 sm:px-4 backdrop-blur-md z-30">
         {/* Esquerda: Voltar para Páginas + Status Ativo + Título do Projeto */}
         <div className="flex items-center gap-2.5 min-w-0">
-          <Link
-            to="/pages"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors"
-            title="Voltar para Minhas Páginas"
+          <button
+            type="button"
+            onClick={() => {
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = "/admin/prospeccao";
+              }
+            }}
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 transition-colors cursor-pointer"
+            title="Voltar"
           >
             <ArrowLeft className="h-4 w-4" />
-          </Link>
+          </button>
 
           <div className="flex items-center gap-2 min-w-0">
             <span className="relative flex h-2 w-2 shrink-0">
@@ -2815,16 +2861,46 @@ export default function CinematicStudioPage() {
                             </div>
 
                             <div>
-                              <label className="text-[9px] text-zinc-400 uppercase font-semibold">
-                                Foto do Produto (URL)
-                              </label>
+                              <div className="flex items-center justify-between">
+                                <label className="text-[9px] text-zinc-400 uppercase font-semibold">
+                                  Foto do Produto
+                                </label>
+                                <label className="text-[10px] text-emerald-400 hover:text-emerald-300 font-medium cursor-pointer flex items-center gap-1 transition-colors">
+                                  {uploadingProductIdx === idx ? (
+                                    <>
+                                      <Loader2 className="w-3 h-3 animate-spin" />
+                                      <span>Enviando...</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Upload className="w-3 h-3" />
+                                      <span>Upload Foto</span>
+                                    </>
+                                  )}
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    disabled={uploadingProductIdx === idx}
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleProductImageUpload(idx, file);
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
+                              </div>
                               <div className="mt-1 flex items-center gap-2">
-                                {item.image && (
+                                {item.image ? (
                                   <img
                                     src={item.image}
                                     alt=""
-                                    className="w-8 h-8 rounded-lg object-cover border border-zinc-800 shrink-0"
+                                    className="w-9 h-9 rounded-lg object-cover border border-zinc-800 shrink-0 bg-zinc-900"
                                   />
+                                ) : (
+                                  <div className="w-9 h-9 rounded-lg border border-dashed border-zinc-800 bg-zinc-900/50 flex items-center justify-center shrink-0 text-zinc-600">
+                                    <ImageIcon className="w-4 h-4" />
+                                  </div>
                                 )}
                                 <input
                                   type="url"
@@ -2837,7 +2913,7 @@ export default function CinematicStudioPage() {
                                       return { ...prev, highlights: list };
                                     });
                                   }}
-                                  placeholder="https://exemplo.com/foto.jpg"
+                                  placeholder="https://exemplo.com/foto.jpg ou clique em Upload Foto"
                                   className="flex-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-1.5 text-[11px] text-zinc-300 font-mono focus:border-zinc-700 focus:outline-none"
                                 />
                               </div>

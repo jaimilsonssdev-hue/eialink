@@ -87,13 +87,21 @@ export function getProspectNicheCategory(niche?: string | null, name?: string | 
   };
 }
 
+export interface ItemOption {
+  name: string;
+  price: number;
+}
+
 export interface SubNicheItem {
   title: string;
   desc: string;
   price: number;
+  originalPrice?: number;
   img: string;
   badge?: string;
   category: string;
+  isFeatured?: boolean;
+  options?: ItemOption[];
 }
 
 export interface SubNicheInfo {
@@ -448,6 +456,66 @@ export function getSubNicheData(
   };
 }
 
+export function enrichItemsWithOptions(items: SubNicheItem[], subType: string): SubNicheItem[] {
+  return items.map((it, idx) => {
+    const isFeatured = idx < 2 || Boolean(it.badge?.includes("Mais") || it.badge?.includes("Top") || it.badge?.includes("1"));
+    if (it.options && it.options.length > 0) {
+      return { ...it, isFeatured };
+    }
+
+    let defaultOptions: ItemOption[] = [];
+    if (subType === "icecream") {
+      defaultOptions = [
+        { name: "Leite Ninho Extra", price: 3.0 },
+        { name: "Nutella Pura Especial", price: 5.0 },
+        { name: "Morangos Frescos Selecionados", price: 4.0 },
+        { name: "Granola Crocante Tradicional", price: 2.0 },
+        { name: "Paçoca Artesanal Triturada", price: 2.5 },
+      ];
+    } else if (subType === "burger") {
+      defaultOptions = [
+        { name: "Bacon Crocante Duplo", price: 5.0 },
+        { name: "Cheddar Melt Cremoso Extra", price: 4.0 },
+        { name: "Maionese Especial da Casa (Pote)", price: 3.5 },
+        { name: "Cebola Caramelizada", price: 3.0 },
+        { name: "Batata Frita Individual Crocante", price: 9.9 },
+      ];
+    } else if (subType === "pizza") {
+      defaultOptions = [
+        { name: "Borda Catupiry Legítimo Recheada", price: 12.0 },
+        { name: "Borda Cheddar Cremoso Recheada", price: 10.0 },
+        { name: "Bacon Crocante Salpicado Extra", price: 6.0 },
+        { name: "Parmesão Italiano Gratinado", price: 5.0 },
+      ];
+    } else if (subType === "japanese") {
+      defaultOptions = [
+        { name: "Cream Cheese Philadelphia Extra", price: 5.0 },
+        { name: "Molho Tarê Artesanal (Pote)", price: 3.0 },
+        { name: "Gengibre e Wasabi Extra", price: 4.0 },
+        { name: "Crispy de Couve Crocante", price: 3.5 },
+      ];
+    } else if (subType === "clothing" || subType === "fashion" || subType === "shop" || subType === "store") {
+      defaultOptions = [
+        { name: "Embalagem Especial com Laço para Presente", price: 5.0 },
+        { name: "Sacola Ecológica Reforçada", price: 3.5 },
+        { name: "Cartão de Dedicatória com Mensagem", price: 2.5 },
+      ];
+    } else {
+      defaultOptions = [
+        { name: "Complemento Especial da Casa", price: 4.0 },
+        { name: "Molho / Acompanhamento Extra", price: 3.5 },
+        { name: "Bebida Refrigerante Lata Gelada", price: 6.0 },
+      ];
+    }
+
+    return {
+      ...it,
+      isFeatured,
+      options: defaultOptions,
+    };
+  });
+}
+
 export interface GenerateSpecializedInput {
   companyId?: string;
   businessName: string;
@@ -566,6 +634,8 @@ Regras:
 
     // 3. Constrói o HTML com base na arquitetura determinística 100% interativa
     let generatedHtml = "";
+    subNiche.items = enrichItemsWithOptions(subNiche.items, subNiche.subType);
+
     if (category === "food") {
       generatedHtml = buildFoodDeliveryHtml({
         businessName: data.businessName,
@@ -784,7 +854,8 @@ Seu papel é recepcionar os clientes com cordialidade, tirar dúvidas sobre os s
   });
 
 /**
- * Construtor HTML Especializado para Delivery & Cardápios com Carrinho Interativo
+ * Construtor HTML Especializado para Delivery & Cardápios estilo iFood
+ * Inclui: Modal de Produto com Adicionais, Carrossel de Destaques, Faixa de Cupons, Fidelidade e Sacola Interativa
  */
 function buildFoodDeliveryHtml(opts: {
   businessName: string;
@@ -799,6 +870,9 @@ function buildFoodDeliveryHtml(opts: {
 }): string {
   const { businessName, cleanWhatsapp, destinationAddress, encodedAddress, rating, reviewsCount, subNiche, finalSlug } = opts;
   const itemsJson = JSON.stringify(subNiche.items);
+
+  // Seleciona itens em destaque para o carrossel superior
+  const featuredItems = subNiche.items.filter((it, idx) => it.isFeatured || idx < 3);
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -816,57 +890,146 @@ function buildFoodDeliveryHtml(opts: {
     <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent"></div>
   </div>
 
-  <div class="max-w-xl mx-auto px-4 -mt-16 relative z-10">
-    <!-- Card Principal do Estabelecimento -->
-    <div class="bg-zinc-900/95 backdrop-blur-md rounded-2xl p-5 border border-white/10 shadow-2xl">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">🟢 Aberto Agora</span>
-        <span class="text-xs text-zinc-400">⏱️ 30-45 min</span>
-        <span class="text-xs text-zinc-400">🛵 Entrega R$ 5,00</span>
+  <div class="max-w-xl mx-auto px-4 -mt-14 relative z-10 space-y-4">
+    <!-- Card Principal do Estabelecimento (Estilo iFood) -->
+    <div class="bg-zinc-900/95 backdrop-blur-md rounded-3xl p-5 border border-white/10 shadow-2xl relative">
+      <div class="flex items-center gap-3">
+        <div class="w-16 h-16 rounded-2xl bg-zinc-800 border-2 border-zinc-950 overflow-hidden shadow-xl shrink-0 -mt-10 relative z-20">
+          <img src="${subNiche.photos[1] || subNiche.photos[0]}" class="w-full h-full object-cover" alt="Logo">
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-2 mb-0.5">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">🟢 Aberto Agora</span>
+            <span class="text-[11px] text-zinc-400">⏱️ 30-45 min</span>
+          </div>
+          <h1 class="text-xl sm:text-2xl font-black text-white tracking-tight truncate">${businessName}</h1>
+        </div>
       </div>
-      <h1 class="text-2xl font-bold text-white tracking-tight">${businessName}</h1>
-      <p class="text-xs text-zinc-400 mt-1">${subNiche.title} · ${destinationAddress}</p>
+
+      <p class="text-xs text-zinc-400 mt-2.5">${subNiche.title} · ${destinationAddress}</p>
+
       <div class="mt-3 flex items-center justify-between text-xs pt-3 border-t border-white/5">
-        <span class="text-amber-400 font-semibold">★ ${rating} (${reviewsCount} avaliações no Google)</span>
+        <span class="text-amber-400 font-bold flex items-center gap-1">
+          <span>★</span> ${rating} <span class="text-zinc-500 font-normal">(${reviewsCount} avaliações)</span>
+        </span>
         <div class="flex items-center gap-3">
-          <span class="text-emerald-400 font-semibold flex items-center gap-1">🛵 Pedidos Online</span>
-          <a href="https://wa.me/${cleanWhatsapp}" target="_blank" class="text-emerald-400 hover:underline flex items-center gap-1 font-medium">WhatsApp →</a>
+          <span class="text-emerald-400 font-semibold flex items-center gap-1">🛵 Entrega R$ 5,00</span>
+          <a href="https://wa.me/${cleanWhatsapp}" target="_blank" class="text-zinc-300 hover:text-white hover:underline flex items-center gap-1 text-[11px]">WhatsApp →</a>
         </div>
       </div>
     </div>
 
-    <!-- Navegação de Categorias Funcional -->
-    <div class="mt-6 flex gap-2 overflow-x-auto pb-2 no-scrollbar" id="category-pills">
-      ${subNiche.categories
-        .map(
-          (cat, idx) =>
-            `<button type="button" onclick="filterCategory('${cat}', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer ${
-              idx === 0
-                ? "bg-amber-500 text-black font-bold shadow-md"
-                : "bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white"
-            }">${cat}</button>`,
-        )
-        .join("")}
+    <!-- Faixa de Cupom de Boas-Vindas -->
+    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-zinc-900 border border-amber-500/30 flex items-center justify-between gap-3 shadow-lg">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center text-lg shrink-0 border border-amber-500/30">
+          🎟️
+        </div>
+        <div class="min-w-0">
+          <div class="text-xs font-black text-white flex items-center gap-1.5">
+            <span>10% OFF no seu Pedido</span>
+            <span class="text-[9px] bg-amber-500 text-black px-1.5 py-0.2 rounded font-extrabold uppercase">Novo</span>
+          </div>
+          <div class="text-[10px] text-zinc-400 mt-0.5">Cupom: <span class="font-mono font-bold text-amber-300">BEMVINDO10</span></div>
+        </div>
+      </div>
+      <button type="button" id="btn-coupon" onclick="toggleWelcomeCoupon()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-black text-xs font-black transition-all shrink-0 cursor-pointer shadow-md">
+        Aplicar
+      </button>
     </div>
 
-    <!-- Itens do Cardápio Interativos com data-category -->
-    <div class="mt-4 space-y-3" id="products-container">
+    <!-- Banner do Programa de Fidelidade Integrado -->
+    <div class="p-3.5 rounded-2xl bg-zinc-900/90 border border-white/10 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center text-base shrink-0 border border-purple-500/30">
+          🎁
+        </div>
+        <div class="min-w-0">
+          <div class="text-xs font-bold text-white truncate">Clube de Fidelidade & Pontos</div>
+          <div class="text-[10px] text-zinc-400">Ganhe 1 ponto a cada R$ 1 gasto aqui</div>
+        </div>
+      </div>
+      <button type="button" onclick="openLoyaltyModal()" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-white/10 text-xs font-bold transition-all shrink-0 cursor-pointer">
+        Ver Saldo
+      </button>
+    </div>
+
+    <!-- Carrossel de Destaques (Mais Vendidos da Casa) -->
+    <div class="pt-2">
+      <div class="flex items-center justify-between mb-2.5 px-0.5">
+        <div class="flex items-center gap-1.5">
+          <span class="text-base">⭐</span>
+          <h2 class="text-sm font-black text-white tracking-tight">Mais Pedidos da Casa</h2>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 font-bold">Destaques</span>
+        </div>
+        <span class="text-[10px] text-zinc-500 font-medium">Toque para ver</span>
+      </div>
+      <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x">
+        ${featuredItems
+          .map(
+            (item) => {
+              const originalIdx = subNiche.items.findIndex(it => it.title === item.title);
+              return `
+          <div onclick="openProductDetailModal(${originalIdx >= 0 ? originalIdx : 0})" class="snap-start w-56 shrink-0 rounded-2xl bg-zinc-900/90 border border-white/10 p-3 flex flex-col justify-between hover:border-amber-500/40 transition-all cursor-pointer group shadow-lg">
+            <div class="space-y-2">
+              <div class="relative h-28 rounded-xl overflow-hidden bg-zinc-950">
+                <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${item.title}">
+                <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black bg-amber-500 text-black uppercase tracking-wider shadow-md">Mais Vendido 🏆</span>
+              </div>
+              <div>
+                <h3 class="font-bold text-xs text-zinc-100 line-clamp-1">${item.title}</h3>
+                <p class="text-[10px] text-zinc-400 line-clamp-2 mt-0.5">${item.desc}</p>
+              </div>
+            </div>
+            <div class="mt-3 flex items-center justify-between pt-2 border-t border-white/5">
+              <span class="font-black text-emerald-400 text-xs">R$ ${item.price.toFixed(2).replace(".", ",")}</span>
+              <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-300 text-[10px] font-bold group-hover:bg-amber-500 group-hover:text-black transition-colors">+ Opções</span>
+            </div>
+          </div>
+        `;
+            }
+          )
+          .join("")}
+      </div>
+    </div>
+
+    <!-- Navegação de Categorias Funcional -->
+    <div class="pt-2">
+      <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar" id="category-pills">
+        <button type="button" onclick="filterCategory('Todos', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-amber-500 text-black font-bold shadow-md">Todos</button>
+        <button type="button" onclick="filterCategory('Mais Pedidos', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white">🔥 Mais Pedidos</button>
+        ${subNiche.categories
+          .filter(c => c !== "Todos")
+          .map(
+            (cat) =>
+              `<button type="button" onclick="filterCategory('${cat}', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white">${cat}</button>`,
+          )
+          .join("")}
+      </div>
+    </div>
+
+    <!-- Itens do Cardápio Interativos com Layout iFood -->
+    <div class="space-y-3" id="products-container">
       ${subNiche.items
         .map(
           (item, idx) => `
-        <div class="product-card flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900 border border-white/10 gap-3 hover:border-amber-500/30 transition-all" data-category="${item.category || ''}">
+        <div onclick="openProductDetailModal(${idx})" class="product-card flex items-center justify-between p-3.5 rounded-2xl bg-zinc-900 border border-white/10 gap-3 hover:border-amber-500/30 transition-all cursor-pointer group shadow-sm" data-category="${item.category || ''}" data-featured="${item.isFeatured ? 'true' : 'false'}">
           <div class="flex-1 min-w-0">
-            ${item.badge ? `<span class="text-[10px] font-bold text-amber-400 uppercase tracking-wider">${item.badge}</span>` : ""}
-            <h3 class="font-bold text-sm text-zinc-100 mt-0.5">${item.title}</h3>
+            ${item.badge ? `<span class="text-[9px] font-black text-amber-400 uppercase tracking-wider">${item.badge}</span>` : ""}
+            <h3 class="font-bold text-sm text-zinc-100 mt-0.5 group-hover:text-amber-300 transition-colors">${item.title}</h3>
             <p class="text-xs text-zinc-400 mt-1 line-clamp-2 leading-relaxed">${item.desc}</p>
             <div class="mt-2.5 flex items-center gap-3">
-              <span class="font-bold text-emerald-400 text-sm">R$ ${item.price.toFixed(2).replace(".", ",")}</span>
-              <button type="button" onclick="addToCart(${idx})" class="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-black text-xs font-bold transition-all shadow-sm cursor-pointer flex items-center gap-1">
-                <span>+ Adicionar</span>
-              </button>
+              <span class="font-black text-emerald-400 text-sm">R$ ${item.price.toFixed(2).replace(".", ",")}</span>
+              <span class="text-[11px] font-bold text-amber-400 group-hover:underline flex items-center gap-0.5">
+                <span>Personalizar & Adicionar</span>
+                <span>→</span>
+              </span>
             </div>
           </div>
-          <img src="${item.img}" class="w-24 h-24 rounded-xl object-cover shrink-0 border border-white/10" alt="${item.title}">
+          <div class="relative w-24 h-24 rounded-xl overflow-hidden shrink-0 border border-white/10 bg-zinc-950">
+            <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${item.title}">
+            <div class="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-lg bg-amber-500 text-black font-black text-xs flex items-center justify-center shadow-md">+</div>
+          </div>
         </div>
       `,
         )
@@ -898,7 +1061,63 @@ function buildFoodDeliveryHtml(opts: {
     </button>
   </div>
 
-  <!-- Modal / Drawer da Sacola & Checkout WhatsApp -->
+  <!-- MODAL 1: DETALHES DO PRODUTO ESTILO IFOOD (Foto Grande, Adicionais e Observação) -->
+  <div id="product-detail-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-lg bg-zinc-900 rounded-t-3xl sm:rounded-3xl border border-white/10 overflow-hidden flex flex-col max-h-[92vh]">
+      <!-- Capa do Produto com Botão Fechar -->
+      <div class="relative h-48 sm:h-56 bg-zinc-950 shrink-0">
+        <img id="detail-modal-img" src="" class="w-full h-full object-cover" alt="">
+        <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-black/40"></div>
+        <button type="button" onclick="closeProductDetailModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black/90 text-white font-bold flex items-center justify-center text-sm cursor-pointer z-10">✕</button>
+        <div class="absolute bottom-3 left-4 right-4">
+          <span id="detail-modal-badge" class="px-2 py-0.5 rounded text-[9px] font-black bg-amber-500 text-black uppercase tracking-wider inline-block mb-1">Destaque</span>
+          <h2 id="detail-modal-title" class="text-lg sm:text-xl font-black text-white leading-tight"></h2>
+        </div>
+      </div>
+
+      <!-- Conteúdo com Scroll: Descrição + Opcionais + Obs -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+        <div>
+          <p id="detail-modal-desc" class="text-xs sm:text-sm text-zinc-300 leading-relaxed"></p>
+          <div class="mt-2 text-sm font-black text-emerald-400">
+            A partir de: <span id="detail-modal-base-price">R$ 0,00</span>
+          </div>
+        </div>
+
+        <!-- Seção de Adicionais & Complementos -->
+        <div id="detail-addons-section" class="pt-3 border-t border-white/10 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
+              <span>✨ Adicionais & Acompanhamentos</span>
+            </h3>
+            <span class="text-[10px] text-zinc-400">Opcional</span>
+          </div>
+          <div id="detail-addons-list" class="space-y-2"></div>
+        </div>
+
+        <!-- Observações do Item -->
+        <div class="pt-3 border-t border-white/10 space-y-1.5">
+          <label class="block text-xs font-bold text-white">Alguma observação?</label>
+          <textarea id="detail-item-notes" rows="2" placeholder="Ex: Sem talher plástico, caprichar na calda, bem gelado..." class="w-full p-2.5 rounded-xl bg-zinc-800 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-amber-500 resize-none"></textarea>
+        </div>
+      </div>
+
+      <!-- Rodapé Fixo do Modal de Produto (Quantidade + Botão Adicionar) -->
+      <div class="p-4 bg-zinc-950 border-t border-white/10 flex items-center gap-3 shrink-0">
+        <div class="flex items-center gap-2 bg-zinc-800 rounded-xl p-1 border border-white/10">
+          <button type="button" onclick="changeDetailQty(-1)" class="w-8 h-8 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white font-bold text-sm flex items-center justify-center cursor-pointer active:scale-95">-</button>
+          <span id="detail-qty-display" class="w-6 text-center text-xs font-black text-white">1</span>
+          <button type="button" onclick="changeDetailQty(1)" class="w-8 h-8 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white font-bold text-sm flex items-center justify-center cursor-pointer active:scale-95">+</button>
+        </div>
+        <button type="button" onclick="confirmAddProductToCart()" class="flex-1 py-3 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-xs sm:text-sm shadow-xl transition-all flex items-center justify-between cursor-pointer active:scale-95">
+          <span>Adicionar ao Pedido</span>
+          <span id="detail-total-btn-price" class="font-black">R$ 0,00</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL 2: SACOLA & CHECKOUT WHATSAPP -->
   <div id="cart-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="w-full max-w-lg bg-zinc-900 rounded-t-3xl sm:rounded-3xl border border-white/10 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
@@ -922,6 +1141,15 @@ function buildFoodDeliveryHtml(opts: {
 
       <!-- Lista de Itens Adicionados -->
       <div id="cart-items-list" class="space-y-2"></div>
+
+      <!-- Cupom Aplicado na Sacola -->
+      <div id="cart-coupon-row" style="display: none;" class="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-between text-xs text-amber-300">
+        <span class="flex items-center gap-1.5 font-bold">
+          <span>🎟️</span>
+          <span>Cupom BEMVINDO10 (10% OFF)</span>
+        </span>
+        <span id="modal-coupon-discount" class="font-black">- R$ 0,00</span>
+      </div>
 
       <!-- Subtotal e Total -->
       <div class="p-3.5 rounded-2xl bg-zinc-950/80 border border-white/5 space-y-1.5 text-xs">
@@ -959,8 +1187,8 @@ function buildFoodDeliveryHtml(opts: {
           </select>
         </div>
         <div>
-          <label class="block text-zinc-400 mb-1 font-semibold">Observações do Pedido (opcional):</label>
-          <input id="client-notes" type="text" placeholder="Ex: Sem cebola, troco para 50..." class="w-full px-3 py-2 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500">
+          <label class="block text-zinc-400 mb-1 font-semibold">Observações Gerais do Pedido:</label>
+          <input id="client-notes" type="text" placeholder="Ex: Troco para 50, tocar campainha..." class="w-full px-3 py-2 rounded-xl bg-zinc-800 border border-white/10 text-white placeholder-zinc-500 focus:outline-none focus:border-emerald-500">
         </div>
       </div>
 
@@ -972,10 +1200,43 @@ function buildFoodDeliveryHtml(opts: {
     </div>
   </div>
 
+  <!-- MODAL 3: CONSULTA DO CLUBE DE FIDELIDADE -->
+  <div id="loyalty-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-zinc-900 rounded-3xl border border-white/10 p-5 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <h3 class="font-bold text-white text-sm flex items-center gap-2">
+          <span>🎁 Clube de Fidelidade</span>
+        </h3>
+        <button type="button" onclick="closeLoyaltyModal()" class="w-7 h-7 rounded-full bg-zinc-800 text-zinc-300 font-bold flex items-center justify-center text-xs">✕</button>
+      </div>
+      <div class="space-y-2 text-xs text-zinc-300">
+        <p>A cada <strong>R$ 1,00</strong> em compras você ganha <strong>1 ponto</strong>.</p>
+        <div class="p-3 rounded-xl bg-zinc-800 border border-white/5 space-y-1">
+          <div class="font-bold text-amber-300">Prêmios para Resgate:</div>
+          <div class="text-[11px] text-zinc-400">• 50 pts: Bebida ou Sobremesa Grátis</div>
+          <div class="text-[11px] text-zinc-400">• 100 pts: R$ 15,00 de Desconto no Pedido</div>
+        </div>
+        <div class="pt-2">
+          <label class="block text-[11px] text-zinc-400 mb-1">Consulte seus pontos pelo WhatsApp:</label>
+          <input id="loyalty-phone-input" type="tel" placeholder="(DDD) 99999-9999" class="w-full px-3 py-2 rounded-xl bg-zinc-800 border border-white/10 text-white text-xs focus:outline-none focus:border-purple-500">
+        </div>
+      </div>
+      <button type="button" onclick="checkLoyaltyPoints()" class="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-all shadow-md">
+        Verificar Saldo
+      </button>
+      <div id="loyalty-result" class="text-center text-xs text-purple-300 font-bold pt-1" style="display: none;"></div>
+    </div>
+  </div>
+
   <script>
     const availableItems = ${itemsJson};
     let cart = [];
     let isDeliveryMode = true;
+    let isCouponApplied = false;
+
+    // Estado do produto aberto no modal
+    let activeProductIdx = null;
+    let activeProductQty = 1;
 
     function filterCategory(cat, btn) {
       document.querySelectorAll('.category-pill').forEach(b => {
@@ -987,7 +1248,13 @@ function buildFoodDeliveryHtml(opts: {
 
       document.querySelectorAll('.product-card').forEach(card => {
         const itemCat = card.getAttribute('data-category') || '';
-        if (cat === 'Todos' || !cat || itemCat.toLowerCase() === cat.toLowerCase() || itemCat === '') {
+        const isFeatured = card.getAttribute('data-featured') === 'true';
+
+        if (cat === 'Todos' || !cat) {
+          card.style.display = 'flex';
+        } else if (cat === 'Mais Pedidos') {
+          card.style.display = isFeatured ? 'flex' : 'none';
+        } else if (itemCat.toLowerCase() === cat.toLowerCase()) {
           card.style.display = 'flex';
         } else {
           card.style.display = 'none';
@@ -995,16 +1262,113 @@ function buildFoodDeliveryHtml(opts: {
       });
     }
 
-    function addToCart(idx) {
+    // Modal de Detalhes do Produto estilo iFood
+    function openProductDetailModal(idx) {
       const item = availableItems[idx];
       if (!item) return;
-      const found = cart.find(i => i.title === item.title);
-      if (found) {
-        found.qty += 1;
+
+      activeProductIdx = idx;
+      activeProductQty = 1;
+
+      document.getElementById('detail-modal-img').src = item.img;
+      document.getElementById('detail-modal-title').innerText = item.title;
+      document.getElementById('detail-modal-desc').innerText = item.desc;
+      document.getElementById('detail-modal-base-price').innerText = 'R$ ' + item.price.toFixed(2).replace('.', ',');
+      document.getElementById('detail-qty-display').innerText = '1';
+      document.getElementById('detail-item-notes').value = '';
+
+      const badgeEl = document.getElementById('detail-modal-badge');
+      if (item.badge) {
+        badgeEl.innerText = item.badge;
+        badgeEl.style.display = 'inline-block';
       } else {
-        cart.push({ title: item.title, price: Number(item.price), img: item.img, qty: 1 });
+        badgeEl.style.display = 'none';
       }
+
+      // Renderiza os adicionais/opcionais
+      const addonsList = document.getElementById('detail-addons-list');
+      const addons = item.options || [];
+      if (addons.length === 0) {
+        document.getElementById('detail-addons-section').style.display = 'none';
+      } else {
+        document.getElementById('detail-addons-section').style.display = 'block';
+        addonsList.innerHTML = addons.map((opt, oIdx) => \`
+          <label class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-800/80 border border-white/5 hover:border-amber-500/30 transition-all cursor-pointer">
+            <div class="flex items-center gap-2.5">
+              <input type="checkbox" data-name="\${opt.name}" data-price="\${opt.price}" onchange="recalculateProductModalPrice()" class="addon-checkbox w-4 h-4 rounded text-amber-500 accent-amber-500 focus:ring-0">
+              <span class="text-xs text-zinc-200 font-medium">\${opt.name}</span>
+            </div>
+            <span class="text-xs font-bold text-amber-400">+ R$ \${opt.price.toFixed(2).replace('.', ',')}</span>
+          </label>
+        \`).join('');
+      }
+
+      recalculateProductModalPrice();
+
+      const modal = document.getElementById('product-detail-modal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeProductDetailModal() {
+      const modal = document.getElementById('product-detail-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function changeDetailQty(delta) {
+      activeProductQty = Math.max(1, activeProductQty + delta);
+      document.getElementById('detail-qty-display').innerText = activeProductQty;
+      recalculateProductModalPrice();
+    }
+
+    function recalculateProductModalPrice() {
+      if (activeProductIdx === null) return;
+      const item = availableItems[activeProductIdx];
+      let unitPrice = item.price;
+
+      document.querySelectorAll('.addon-checkbox:checked').forEach(cb => {
+        unitPrice += Number(cb.getAttribute('data-price') || 0);
+      });
+
+      const total = unitPrice * activeProductQty;
+      document.getElementById('detail-total-btn-price').innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
+    }
+
+    function confirmAddProductToCart() {
+      if (activeProductIdx === null) return;
+      const item = availableItems[activeProductIdx];
+
+      const selectedAddons = [];
+      let unitPrice = item.price;
+
+      document.querySelectorAll('.addon-checkbox:checked').forEach(cb => {
+        const name = cb.getAttribute('data-name');
+        const price = Number(cb.getAttribute('data-price') || 0);
+        selectedAddons.push({ name, price });
+        unitPrice += price;
+      });
+
+      const itemNotes = (document.getElementById('detail-item-notes')?.value || '').trim();
+
+      cart.push({
+        title: item.title,
+        basePrice: item.price,
+        unitPrice,
+        price: unitPrice,
+        qty: activeProductQty,
+        img: item.img,
+        addons: selectedAddons,
+        notes: itemNotes
+      });
+
+      closeProductDetailModal();
       renderCart();
+
+      // Feedback visual rápido
+      const floatingBar = document.getElementById('cart-floating-bar');
+      if (floatingBar) {
+        floatingBar.classList.add('scale-105');
+        setTimeout(() => floatingBar.classList.remove('scale-105'), 200);
+      }
     }
 
     function updateQty(idx, delta) {
@@ -1034,6 +1398,21 @@ function buildFoodDeliveryHtml(opts: {
       renderCart();
     }
 
+    function toggleWelcomeCoupon() {
+      isCouponApplied = !isCouponApplied;
+      const btn = document.getElementById('btn-coupon');
+      if (btn) {
+        if (isCouponApplied) {
+          btn.innerText = '✓ Aplicado';
+          btn.className = 'px-3 py-1.5 rounded-xl bg-emerald-500 text-black text-xs font-black transition-all shrink-0 cursor-pointer shadow-md';
+        } else {
+          btn.innerText = 'Aplicar';
+          btn.className = 'px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 active:scale-95 text-black text-xs font-black transition-all shrink-0 cursor-pointer shadow-md';
+        }
+      }
+      renderCart();
+    }
+
     function renderCart() {
       const floatingBar = document.getElementById('cart-floating-bar');
       const countEl = document.getElementById('cart-count');
@@ -1042,36 +1421,57 @@ function buildFoodDeliveryHtml(opts: {
       const subtotalEl = document.getElementById('modal-subtotal');
       const feeEl = document.getElementById('modal-delivery-fee');
       const modalTotalEl = document.getElementById('modal-total');
+      const couponRow = document.getElementById('cart-coupon-row');
+      const couponDiscountEl = document.getElementById('modal-coupon-discount');
 
       const totalItems = cart.reduce((acc, i) => acc + i.qty, 0);
-      const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+      const subtotal = cart.reduce((acc, i) => acc + (i.unitPrice * i.qty), 0);
+
+      const discount = isCouponApplied ? (subtotal * 0.10) : 0;
       const deliveryFee = isDeliveryMode && subtotal > 0 ? 5.0 : 0.0;
-      const total = subtotal > 0 ? subtotal + deliveryFee : 0;
+      const total = subtotal > 0 ? Math.max(0, subtotal - discount + deliveryFee) : 0;
 
       if (floatingBar) {
         floatingBar.style.display = totalItems > 0 ? 'block' : 'none';
       }
       if (countEl) countEl.innerText = totalItems + (totalItems === 1 ? ' item' : ' itens');
-      if (totalEl) totalEl.innerText = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
+      if (totalEl) totalEl.innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
       if (subtotalEl) subtotalEl.innerText = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
       if (feeEl) feeEl.innerText = isDeliveryMode ? 'R$ 5,00' : 'Grátis (Retirada)';
       if (modalTotalEl) modalTotalEl.innerText = 'R$ ' + total.toFixed(2).replace('.', ',');
+
+      if (couponRow) {
+        couponRow.style.display = isCouponApplied && subtotal > 0 ? 'flex' : 'none';
+        if (couponDiscountEl) couponDiscountEl.innerText = '- R$ ' + discount.toFixed(2).replace('.', ',');
+      }
 
       if (itemsList) {
         if (cart.length === 0) {
           itemsList.innerHTML = '<p class="text-zinc-500 text-center py-6 text-xs">Sua sacola está vazia.</p>';
         } else {
           itemsList.innerHTML = cart.map((item, idx) => \`
-            <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-white/5 gap-3">
-              <div class="flex-1 min-w-0">
-                <h4 class="text-xs font-bold text-white truncate">\${item.title}</h4>
-                <p class="text-xs text-emerald-400 font-semibold mt-0.5">R$ \${(item.price * item.qty).toFixed(2).replace('.', ',')}</p>
+            <div class="p-3 rounded-2xl bg-zinc-800/80 border border-white/5 space-y-2">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-xs font-bold text-white truncate">\${item.title}</h4>
+                  <p class="text-xs text-emerald-400 font-black mt-0.5">R$ \${(item.unitPrice * item.qty).toFixed(2).replace('.', ',')}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="updateQty(\${idx}, -1)" class="w-7 h-7 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95">-</button>
+                  <span class="text-xs font-bold text-white w-5 text-center">\${item.qty}</span>
+                  <button type="button" onclick="updateQty(\${idx}, 1)" class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95">+</button>
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                <button type="button" onclick="updateQty(\${idx}, -1)" class="w-7 h-7 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95">-</button>
-                <span class="text-xs font-bold text-white w-5 text-center">\${item.qty}</span>
-                <button type="button" onclick="updateQty(\${idx}, 1)" class="w-7 h-7 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95">+</button>
-              </div>
+              \${item.addons && item.addons.length > 0 ? \`
+                <div class="text-[10px] text-zinc-400 pl-2 border-l border-amber-500/30 space-y-0.5">
+                  \${item.addons.map(a => \`<div>+ \${a.name} (+R$ \${a.price.toFixed(2).replace('.', ',')})</div>\`).join('')}
+                </div>
+              \` : ''}
+              \${item.notes ? \`
+                <div class="text-[10px] text-amber-300/80 italic pl-2 border-l border-white/10">
+                  Obs: \${item.notes}
+                </div>
+              \` : ''}
             </div>
           \`).join('');
         }
@@ -1080,25 +1480,36 @@ function buildFoodDeliveryHtml(opts: {
 
     function openCartModal() {
       const modal = document.getElementById('cart-modal');
-      if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.remove('hidden');
-      }
+      if (modal) modal.style.display = 'flex';
     }
 
     function closeCartModal() {
       const modal = document.getElementById('cart-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.add('hidden');
-      }
+      if (modal) modal.style.display = 'none';
     }
 
-    const modalBackdrop = document.getElementById('cart-modal');
-    if (modalBackdrop) {
-      modalBackdrop.addEventListener('click', function(e) {
-        if (e.target === this) closeCartModal();
-      });
+    // Modal de Fidelidade
+    function openLoyaltyModal() {
+      const modal = document.getElementById('loyalty-modal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeLoyaltyModal() {
+      const modal = document.getElementById('loyalty-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function checkLoyaltyPoints() {
+      const phone = (document.getElementById('loyalty-phone-input')?.value || '').trim();
+      const res = document.getElementById('loyalty-result');
+      if (phone.length < 10) {
+        alert('Por favor, digite seu WhatsApp com DDD.');
+        return;
+      }
+      if (res) {
+        res.style.display = 'block';
+        res.innerHTML = '🎉 Você possui <strong>45 pontos</strong> acumulados nesta loja!<br><span class="text-[11px] text-zinc-400 font-normal">Faltam apenas 5 pontos para resgatar sua recompensa!</span>';
+      }
     }
 
     function checkoutWhatsApp(phone, storeName) {
@@ -1122,30 +1533,54 @@ function buildFoodDeliveryHtml(opts: {
         msg += '📍 *Endereço:* ' + clientAddress + '\\n';
       }
       msg += '💳 *Pagamento:* ' + paymentMethod + '\\n';
-      if (notes) msg += '📝 *Obs:* ' + notes + '\\n';
+      if (notes) msg += '📝 *Obs Geral:* ' + notes + '\\n';
       msg += '\\n📋 *ITENS ESCOLHIDOS:*\\n';
 
       let subtotal = 0;
       cart.forEach(item => {
-        const itemTotal = item.price * item.qty;
+        const itemTotal = item.unitPrice * item.qty;
         subtotal += itemTotal;
         msg += '• ' + item.qty + 'x ' + item.title + ' (R$ ' + itemTotal.toFixed(2).replace('.', ',') + ')\\n';
+        if (item.addons && item.addons.length > 0) {
+          item.addons.forEach(a => {
+            msg += '   + ' + a.name + '\\n';
+          });
+        }
+        if (item.notes) {
+          msg += '   Obs: ' + item.notes + '\\n';
+        }
       });
 
+      const discount = isCouponApplied ? (subtotal * 0.10) : 0;
       const deliveryFee = isDeliveryMode ? 5.0 : 0.0;
-      const total = subtotal + deliveryFee;
+      const total = subtotal - discount + deliveryFee;
+
+      msg += '\\n💵 *Subtotal:* R$ ' + subtotal.toFixed(2).replace('.', ',');
+      if (isCouponApplied) {
+        msg += '\\n🎟️ *Cupom BEMVINDO10 (-10%):* -R$ ' + discount.toFixed(2).replace('.', ',');
+      }
       if (deliveryFee > 0) {
         msg += '\\n🛵 *Taxa de Entrega:* R$ 5,00';
       } else {
         msg += '\\n🏪 *Retirada:* Sem taxa de entrega';
       }
-      msg += '\\n💰 *TOTAL:* R$ ' + total.toFixed(2).replace('.', ',') + '\\n\\n';
+      msg += '\\n💰 *TOTAL A PAGAR:* R$ ' + total.toFixed(2).replace('.', ',') + '\\n\\n';
       msg += 'Por favor, confirme meu pedido!';
 
       const cleanPhone = phone.replace(/\\D/g, '');
       const url = 'https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(msg);
       window.open(url, '_blank');
     }
+
+    // Fechar modais ao clicar no fundo escuro
+    ['product-detail-modal', 'cart-modal', 'loyalty-modal'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('click', function(e) {
+          if (e.target === this) this.style.display = 'none';
+        });
+      }
+    });
 
     // Previne que links hash # quebrem o iframe
     document.querySelectorAll('a[href^="#"]').forEach(a => {
@@ -1325,6 +1760,7 @@ function buildShopCatalogHtml(opts: {
 }): string {
   const { businessName, city, niche, cleanWhatsapp, destinationAddress, encodedAddress, subNiche, finalSlug } = opts;
   const itemsJson = JSON.stringify(subNiche.items);
+  const featuredItems = subNiche.items.filter((item, idx) => item.isFeatured || idx < 3);
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -1332,54 +1768,155 @@ function buildShopCatalogHtml(opts: {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <base target="_top">
-  <title>${businessName} — Vitrine & Loja</title>
+  <title>${businessName} — Vitrine & Loja Oficial</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 font-sans pb-28">
-  <header class="p-4 border-b border-white/10 flex items-center justify-between max-w-2xl mx-auto">
-    <div class="font-bold text-lg tracking-tight text-white">${businessName}</div>
-    <a href="https://wa.me/${cleanWhatsapp}" target="_blank" class="text-xs bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-full font-semibold">Atendimento</a>
+<body class="bg-zinc-950 text-zinc-100 font-sans pb-32 selection:bg-pink-500 selection:text-white">
+  <!-- TopBar do Estabelecimento -->
+  <header class="sticky top-0 z-30 bg-zinc-950/95 backdrop-blur-md border-b border-white/10 px-4 py-3">
+    <div class="max-w-2xl mx-auto flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center text-white font-black text-sm shrink-0 shadow-md">
+          🛍️
+        </div>
+        <div class="min-w-0">
+          <h1 class="font-extrabold text-sm sm:text-base text-white tracking-tight truncate">${businessName}</h1>
+          <div class="flex items-center gap-1.5 text-[11px] text-zinc-400">
+            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="text-emerald-400 font-semibold">Loja Aberta Agora</span>
+            <span>· ${city}</span>
+          </div>
+        </div>
+      </div>
+      <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Estou visitando o catálogo da ${businessName} e gostaria de tirar uma dúvida.`)}" target="_blank" class="px-3.5 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-bold hover:bg-emerald-500/30 transition-all shrink-0 flex items-center gap-1.5">
+        <span>💬 Falar no WhatsApp</span>
+      </a>
+    </div>
   </header>
-  <main class="max-w-2xl mx-auto px-4 pt-6 space-y-6">
-    <div class="relative h-48 rounded-2xl overflow-hidden border border-white/10">
+
+  <main class="max-w-2xl mx-auto px-4 pt-4 space-y-5">
+    <!-- Banner Principal da Coleção -->
+    <div class="relative h-44 sm:h-52 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
       <img src="${subNiche.photos[0]}" class="w-full h-full object-cover" alt="${businessName}">
-      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent flex items-end p-4">
+      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent flex items-end p-4 sm:p-6">
         <div>
-          <span class="text-xs bg-pink-500 text-white font-bold px-2 py-0.5 rounded">Coleção Exclusiva</span>
-          <h1 class="text-xl font-bold text-white mt-1">Destaques da Semana em ${city}</h1>
+          <span class="inline-flex items-center gap-1 text-[11px] bg-pink-500 text-white font-black px-2.5 py-0.5 rounded-full shadow-lg">
+            ✨ Coleção Exclusiva & Novidades
+          </span>
+          <h2 class="text-xl sm:text-2xl font-black text-white mt-1 drop-shadow-md">Tendências & Destaques da Semana</h2>
+          <p class="text-xs text-zinc-300 drop-shadow line-clamp-1 mt-0.5">Entregamos com rapidez em ${city} ou retire em nossa loja</p>
         </div>
       </div>
     </div>
 
-    <!-- Categorias -->
-    <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-      ${subNiche.categories
-        .map(
-          (cat, idx) =>
-            `<button type="button" onclick="filterCategory('${cat}', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer ${
-              idx === 0
-                ? "bg-pink-500 text-white font-bold shadow-md"
-                : "bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white"
-            }">${cat}</button>`,
-        )
-        .join("")}
+    <!-- Faixa de Cupom de Boas-Vindas Interativa -->
+    <div id="coupon-banner" class="p-3.5 bg-gradient-to-r from-pink-500/20 via-pink-500/10 to-transparent border border-pink-500/30 rounded-2xl flex items-center justify-between gap-3 shadow-sm">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="text-2xl shrink-0">🎟️</span>
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs font-black text-pink-300 uppercase tracking-wide">CUPOM DE BOAS-VINDAS:</span>
+            <span class="bg-pink-500 text-white font-mono font-black text-xs px-2 py-0.5 rounded shadow">PRIMEIRACOMPRA</span>
+          </div>
+          <p class="text-[11px] text-zinc-400 mt-0.5">Ganhe <strong class="text-white">10% OFF</strong> na sua primeira compra pelo catálogo online.</p>
+        </div>
+      </div>
+      <button type="button" id="btn-apply-coupon" onclick="applyCoupon('PRIMEIRACOMPRA', 0.10)" class="px-3 py-1.5 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-bold text-xs shrink-0 transition-all shadow-md active:scale-95 cursor-pointer">
+        Aplicar
+      </button>
     </div>
 
-    <!-- Grade de Produtos -->
+    <!-- Clube de Fidelidade VIP -->
+    <div class="p-3.5 bg-zinc-900/90 border border-white/10 rounded-2xl flex items-center justify-between gap-3 shadow-md hover:border-pink-500/30 transition-all">
+      <div class="flex items-center gap-2.5 min-w-0">
+        <span class="text-xl p-2 rounded-xl bg-pink-500/20 text-pink-400 shrink-0">💎</span>
+        <div class="min-w-0">
+          <h3 class="text-xs font-bold text-white">Clube de Fidelidade VIP</h3>
+          <p class="text-[11px] text-zinc-400">Suas compras acumulam pontos que valem brindes e descontos.</p>
+        </div>
+      </div>
+      <button type="button" onclick="openLoyaltyModal()" class="px-3 py-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-pink-400 font-bold text-xs border border-pink-500/30 shrink-0 transition-all cursor-pointer">
+        Meus Pontos
+      </button>
+    </div>
+
+    <!-- Seção de Destaques em Carrossel Horizontal -->
+    <div class="space-y-2.5">
+      <div class="flex items-center justify-between px-1">
+        <h3 class="text-sm font-black text-white flex items-center gap-1.5 uppercase tracking-wide">
+          <span>🏆 Mais Vendidos & Destaques</span>
+        </h3>
+        <span class="text-[11px] text-pink-400 font-semibold">Deslize para ver →</span>
+      </div>
+      <div class="flex gap-3 overflow-x-auto pb-3 pt-1 no-scrollbar -mx-4 px-4 scroll-smooth">
+        ${featuredItems
+          .map((item, originalIdx) => {
+            const actualIdx = subNiche.items.findIndex(it => it.title === item.title);
+            const idxToUse = actualIdx >= 0 ? actualIdx : originalIdx;
+            return `
+          <div onclick="openProductDetailModal(${idxToUse})" class="w-48 shrink-0 bg-zinc-900 border border-white/10 rounded-2xl p-2.5 flex flex-col justify-between hover:border-pink-500/50 transition-all cursor-pointer group shadow-lg active:scale-95">
+            <div class="relative h-28 rounded-xl overflow-hidden mb-2 bg-zinc-800">
+              <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${item.title}">
+              <span class="absolute top-1.5 left-1.5 bg-pink-500 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-md">
+                Mais Vendido 🏆
+              </span>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white line-clamp-1 group-hover:text-pink-300 transition-colors">${item.title}</h4>
+              <p class="text-[10px] text-zinc-400 line-clamp-2 mt-0.5">${item.desc}</p>
+            </div>
+            <div class="flex items-center justify-between mt-2 pt-2 border-t border-white/5">
+              <span class="text-xs font-black text-pink-400">R$ ${item.price.toFixed(2).replace(".", ",")}</span>
+              <span class="text-[10px] bg-pink-500/20 text-pink-300 px-2 py-0.5 rounded-md font-bold">Ver +</span>
+            </div>
+          </div>
+        `;
+          })
+          .join("")}
+      </div>
+    </div>
+
+    <!-- Filtro de Categorias em Pills -->
+    <div class="space-y-2">
+      <h3 class="text-xs font-bold text-zinc-400 uppercase tracking-wider px-1">Navegar por Categorias</h3>
+      <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar -mx-4 px-4">
+        ${subNiche.categories
+          .map(
+            (cat, idx) =>
+              `<button type="button" onclick="filterCategory('${cat}', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer ${
+                idx === 0
+                  ? "bg-pink-500 text-white font-bold shadow-md shadow-pink-500/20"
+                  : "bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white"
+              }">${cat}</button>`,
+          )
+          .join("")}
+      </div>
+    </div>
+
+    <!-- Grade de Produtos com Clique para Modal de Detalhes -->
     <div class="space-y-3">
       <div class="grid grid-cols-2 gap-3" id="products-grid">
         ${subNiche.items
           .map(
             (p, idx) => `
-          <div class="product-card p-3 rounded-2xl bg-zinc-900 border border-white/10 space-y-2 flex flex-col justify-between" data-category="${p.category || ''}">
-            <img src="${p.img}" class="w-full h-32 rounded-xl object-cover" alt="${p.title}">
-            <div>
-              <h3 class="text-xs font-bold text-white truncate">${p.title}</h3>
-              <p class="text-[11px] text-zinc-400 line-clamp-2">${p.desc}</p>
+          <div onclick="openProductDetailModal(${idx})" class="product-card p-3 rounded-2xl bg-zinc-900 border border-white/10 space-y-2 flex flex-col justify-between hover:border-pink-500/40 transition-all cursor-pointer group active:scale-95" data-category="${p.category || ''}">
+            <div class="relative h-36 rounded-xl overflow-hidden bg-zinc-800">
+              <img src="${p.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${p.title}">
+              ${p.badge ? `<span class="absolute top-2 left-2 text-[10px] font-black bg-pink-500 text-white px-2 py-0.5 rounded-md shadow">${p.badge}</span>` : ""}
             </div>
-            <div class="flex items-center justify-between pt-1">
-              <span class="text-xs font-bold text-emerald-400">R$ ${p.price.toFixed(2).replace(".", ",")}</span>
-              <button type="button" onclick="addToCart(${idx})" class="text-[11px] bg-pink-500 hover:bg-pink-400 text-white font-bold px-2.5 py-1 rounded-lg cursor-pointer active:scale-95">Comprar</button>
+            <div class="flex-1">
+              <h4 class="text-xs font-bold text-white line-clamp-1 group-hover:text-pink-300 transition-colors">${p.title}</h4>
+              <p class="text-[11px] text-zinc-400 line-clamp-2 mt-0.5">${p.desc}</p>
+            </div>
+            <div class="flex items-center justify-between pt-2 border-t border-white/5">
+              <span class="text-xs font-black text-pink-400">R$ ${p.price.toFixed(2).replace(".", ",")}</span>
+              <span class="text-[11px] bg-pink-500 hover:bg-pink-400 text-white font-bold px-2.5 py-1 rounded-lg transition-all shadow">
+                Comprar
+              </span>
             </div>
           </div>
         `,
@@ -1388,15 +1925,74 @@ function buildShopCatalogHtml(opts: {
       </div>
     </div>
 
+    <!-- Informações da Loja Física -->
     <div class="p-4 rounded-2xl bg-zinc-900 border border-white/10 space-y-2">
-      <h3 class="font-bold text-sm text-white">📍 Visite Nossa Loja Física</h3>
+      <h3 class="font-bold text-sm text-white flex items-center gap-1.5">
+        <span>📍 Visite Nossa Loja Física</span>
+      </h3>
       <p class="text-xs text-zinc-400">${destinationAddress}</p>
       <div class="grid grid-cols-2 gap-2 pt-2">
-        <a href="https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}" target="_blank" class="py-2 rounded-xl bg-zinc-800 text-center text-xs font-semibold text-zinc-200">Google Maps</a>
-        <a href="https://waze.com/ul?q=${encodedAddress}" target="_blank" class="py-2 rounded-xl bg-zinc-800 text-center text-xs font-semibold text-cyan-400">Waze</a>
+        <a href="https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}" target="_blank" class="py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-center text-xs font-semibold text-zinc-200 transition-all border border-white/5">Google Maps</a>
+        <a href="https://waze.com/ul?q=${encodedAddress}" target="_blank" class="py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-center text-xs font-semibold text-cyan-400 transition-all border border-white/5">Waze</a>
       </div>
     </div>
   </main>
+
+  <!-- Modal de Detalhes do Produto & Variações -->
+  <div id="product-detail-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="w-full max-w-lg bg-zinc-900 rounded-t-3xl sm:rounded-3xl border border-white/10 overflow-hidden max-h-[92vh] flex flex-col shadow-2xl">
+      <!-- Imagem Header do Modal -->
+      <div class="relative h-56 sm:h-64 bg-zinc-950 shrink-0">
+        <img id="detail-modal-img" src="" class="w-full h-full object-cover" alt="Produto">
+        <div class="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-black/30"></div>
+        <button type="button" onclick="closeProductDetailModal()" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/60 hover:bg-black text-white font-bold flex items-center justify-center text-sm backdrop-blur-sm cursor-pointer z-10">✕</button>
+        <div class="absolute bottom-3 left-4 right-4">
+          <span id="detail-modal-badge" class="inline-block text-[10px] font-black bg-pink-500 text-white px-2 py-0.5 rounded-md mb-1 shadow"></span>
+          <h3 id="detail-modal-title" class="text-lg font-black text-white leading-tight drop-shadow"></h3>
+        </div>
+      </div>
+
+      <!-- Corpo com Detalhes, Variações e Observações -->
+      <div class="p-4 sm:p-5 overflow-y-auto space-y-4 flex-1">
+        <p id="detail-modal-desc" class="text-xs text-zinc-300 leading-relaxed"></p>
+
+        <!-- Preço Base -->
+        <div class="p-3 rounded-xl bg-zinc-950/60 border border-white/5 flex items-center justify-between">
+          <span class="text-xs text-zinc-400">Preço do Produto:</span>
+          <span id="detail-modal-base-price" class="text-sm font-black text-pink-400"></span>
+        </div>
+
+        <!-- Opcionais / Variações -->
+        <div id="detail-modal-options-wrapper" class="space-y-2">
+          <div class="flex items-center justify-between">
+            <h4 class="text-xs font-bold text-white uppercase tracking-wider">Adicionais & Embalagem</h4>
+            <span class="text-[10px] text-zinc-400">Opcional</span>
+          </div>
+          <div id="detail-modal-options-list" class="space-y-1.5"></div>
+        </div>
+
+        <!-- Observações do Pedido (Ex: Tamanho / Cor) -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-bold text-zinc-300">Tamanho, Cor ou Observações Especiais:</label>
+          <textarea id="detail-modal-obs" rows="2" placeholder="Ex: Tamanho M, cor preta ou mensagem para presente..." class="w-full p-2.5 rounded-xl bg-zinc-950 border border-white/10 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-pink-500 transition-colors"></textarea>
+        </div>
+      </div>
+
+      <!-- Rodapé do Modal com Quantidade e Adicionar -->
+      <div class="p-4 bg-zinc-950 border-t border-white/10 flex items-center justify-between gap-3 shrink-0">
+        <div class="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-xl p-1 shrink-0">
+          <button type="button" onclick="updateDetailQty(-1)" class="w-8 h-8 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white font-bold flex items-center justify-center cursor-pointer text-sm">-</button>
+          <span id="detail-modal-qty" class="text-xs font-black text-white w-6 text-center">1</span>
+          <button type="button" onclick="updateDetailQty(1)" class="w-8 h-8 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold flex items-center justify-center cursor-pointer text-sm">+</button>
+        </div>
+
+        <button type="button" id="btn-add-detail-to-cart" onclick="confirmAddToCart()" class="flex-1 py-3 px-4 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-black text-xs sm:text-sm shadow-xl transition-all flex items-center justify-between cursor-pointer active:scale-95">
+          <span>Adicionar à Sacola</span>
+          <span id="detail-modal-total-btn">R$ 0,00</span>
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Barra Flutuante Reativa da Sacola -->
   <div id="cart-floating-bar" style="display: none;" class="fixed bottom-4 inset-x-4 max-w-xl mx-auto z-40 transition-all duration-300">
@@ -1412,8 +2008,8 @@ function buildShopCatalogHtml(opts: {
     </button>
   </div>
 
-  <!-- Modal Sacola -->
-  <div id="cart-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-end sm:items-center justify-center p-0 sm:p-4">
+  <!-- Modal da Sacola de Compras -->
+  <div id="cart-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm items-end sm:items-center justify-center p-0 sm:p-4">
     <div class="w-full max-w-lg bg-zinc-900 rounded-t-3xl sm:rounded-3xl border border-white/10 p-5 space-y-4 max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between pb-3 border-b border-white/10">
         <h2 class="text-base font-bold text-white flex items-center gap-2">
@@ -1422,13 +2018,43 @@ function buildShopCatalogHtml(opts: {
         <button type="button" onclick="closeCartModal()" class="w-8 h-8 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-bold flex items-center justify-center text-sm cursor-pointer">✕</button>
       </div>
       <div id="cart-items-list" class="space-y-2"></div>
-      <div class="p-3 rounded-2xl bg-zinc-950/80 border border-white/5 flex justify-between text-sm font-bold text-white">
-        <span>Total a Pagar:</span>
-        <span id="modal-total" class="text-pink-400 font-black">R$ 0,00</span>
+      
+      <!-- Resumo de Valores & Cupom -->
+      <div class="p-3.5 rounded-2xl bg-zinc-950/80 border border-white/5 space-y-1.5 text-xs">
+        <div class="flex justify-between text-zinc-400">
+          <span>Subtotal:</span>
+          <span id="modal-subtotal" class="text-white font-semibold">R$ 0,00</span>
+        </div>
+        <div id="modal-discount-row" style="display: none;" class="flex justify-between text-emerald-400 font-semibold">
+          <span id="modal-discount-label">Desconto de Cupom (10%):</span>
+          <span id="modal-discount-val">- R$ 0,00</span>
+        </div>
+        <div class="pt-2 border-t border-white/10 flex justify-between text-sm font-bold text-white">
+          <span>Total a Pagar:</span>
+          <span id="modal-total" class="text-pink-400 font-black">R$ 0,00</span>
+        </div>
       </div>
-      <button type="button" onclick="checkoutWhatsApp('${cleanWhatsapp}', '${businessName}')" class="w-full py-3.5 px-4 rounded-2xl bg-pink-500 hover:bg-pink-400 text-white font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
+
+      <button type="button" onclick="checkoutWhatsApp('${cleanWhatsapp}', '${businessName}')" class="w-full py-3.5 px-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-black font-black text-sm shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95">
         <span>Concluir Pedido no WhatsApp</span>
         <span>→</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Modal do Clube de Fidelidade -->
+  <div id="loyalty-modal" style="display: none;" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-zinc-900 rounded-3xl border border-white/10 p-5 space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-white/10">
+        <h3 class="text-sm font-bold text-white flex items-center gap-2">
+          <span>💎 Clube de Fidelidade</span>
+        </h3>
+        <button type="button" onclick="closeLoyaltyModal()" class="w-7 h-7 rounded-full bg-zinc-800 text-zinc-400 hover:text-white flex items-center justify-center text-xs">✕</button>
+      </div>
+      <p class="text-xs text-zinc-300">Digite seu WhatsApp para conferir seu saldo de pontos e benefícios disponíveis:</p>
+      <input type="tel" id="loyalty-phone" placeholder="(DDD) 99999-9999" class="w-full p-2.5 rounded-xl bg-zinc-950 border border-white/10 text-xs text-white focus:outline-none focus:border-pink-500">
+      <button type="button" onclick="queryLoyaltyPoints('${cleanWhatsapp}', '${businessName}')" class="w-full py-2.5 rounded-xl bg-pink-500 hover:bg-pink-400 text-white font-bold text-xs transition-all">
+        Consultar Meu Saldo
       </button>
     </div>
   </div>
@@ -1436,13 +2062,17 @@ function buildShopCatalogHtml(opts: {
   <script>
     const availableItems = ${itemsJson};
     let cart = [];
+    let currentDetailItem = null;
+    let currentDetailQty = 1;
+    let selectedOptions = [];
+    let appliedCoupon = null;
 
     function filterCategory(cat, btn) {
       document.querySelectorAll('.category-pill').forEach(b => {
         b.className = 'category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white';
       });
       if (btn) {
-        btn.className = 'category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-pink-500 text-white font-bold shadow-md';
+        btn.className = 'category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-pink-500 text-white font-bold shadow-md shadow-pink-500/20';
       }
 
       document.querySelectorAll('.product-card').forEach(card => {
@@ -1455,14 +2085,112 @@ function buildShopCatalogHtml(opts: {
       });
     }
 
-    function addToCart(idx) {
+    // Modal de Detalhes do Produto
+    function openProductDetailModal(idx) {
       const item = availableItems[idx];
       if (!item) return;
-      const found = cart.find(i => i.title === item.title);
-      if (found) {
-        found.qty += 1;
+
+      currentDetailItem = item;
+      currentDetailQty = 1;
+      selectedOptions = [];
+
+      document.getElementById('detail-modal-img').src = item.img;
+      document.getElementById('detail-modal-title').innerText = item.title;
+      document.getElementById('detail-modal-desc').innerText = item.desc;
+      document.getElementById('detail-modal-base-price').innerText = 'R$ ' + Number(item.price).toFixed(2).replace('.', ',');
+      document.getElementById('detail-modal-obs').value = '';
+      document.getElementById('detail-modal-qty').innerText = '1';
+
+      const badgeEl = document.getElementById('detail-modal-badge');
+      if (item.badge) {
+        badgeEl.innerText = item.badge;
+        badgeEl.style.display = 'inline-block';
       } else {
-        cart.push({ title: item.title, price: Number(item.price), qty: 1 });
+        badgeEl.style.display = 'none';
+      }
+
+      const optionsWrapper = document.getElementById('detail-modal-options-wrapper');
+      const optionsList = document.getElementById('detail-modal-options-list');
+
+      if (item.options && item.options.length > 0) {
+        optionsWrapper.style.display = 'block';
+        optionsList.innerHTML = item.options.map((opt, optIdx) => \`
+          <label class="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/70 border border-white/5 hover:border-pink-500/30 cursor-pointer transition-all">
+            <div class="flex items-center gap-2.5">
+              <input type="checkbox" onchange="toggleOption(\${optIdx})" class="w-4 h-4 rounded text-pink-500 focus:ring-0 focus:outline-none accent-pink-500">
+              <span class="text-xs text-white font-medium">\${opt.name}</span>
+            </div>
+            <span class="text-xs font-bold text-pink-400">+ R$ \${Number(opt.price).toFixed(2).replace('.', ',')}</span>
+          </label>
+        \`).join('');
+      } else {
+        optionsWrapper.style.display = 'none';
+        optionsList.innerHTML = '';
+      }
+
+      recalculateDetailModal();
+      const modal = document.getElementById('product-detail-modal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeProductDetailModal() {
+      const modal = document.getElementById('product-detail-modal');
+      if (modal) modal.style.display = 'none';
+      currentDetailItem = null;
+    }
+
+    function toggleOption(optIdx) {
+      if (!currentDetailItem || !currentDetailItem.options) return;
+      const opt = currentDetailItem.options[optIdx];
+      const existsIndex = selectedOptions.findIndex(o => o.name === opt.name);
+      if (existsIndex >= 0) {
+        selectedOptions.splice(existsIndex, 1);
+      } else {
+        selectedOptions.push(opt);
+      }
+      recalculateDetailModal();
+    }
+
+    function updateDetailQty(delta) {
+      currentDetailQty = Math.max(1, currentDetailQty + delta);
+      document.getElementById('detail-modal-qty').innerText = String(currentDetailQty);
+      recalculateDetailModal();
+    }
+
+    function recalculateDetailModal() {
+      if (!currentDetailItem) return;
+      const basePrice = Number(currentDetailItem.price);
+      const optionsTotal = selectedOptions.reduce((acc, o) => acc + Number(o.price), 0);
+      const singleUnitPrice = basePrice + optionsTotal;
+      const totalPrice = singleUnitPrice * currentDetailQty;
+      document.getElementById('detail-modal-total-btn').innerText = 'R$ ' + totalPrice.toFixed(2).replace('.', ',');
+    }
+
+    function confirmAddToCart() {
+      if (!currentDetailItem) return;
+      const obs = (document.getElementById('detail-modal-obs').value || '').trim();
+      const optionsTotal = selectedOptions.reduce((acc, o) => acc + Number(o.price), 0);
+      const unitPrice = Number(currentDetailItem.price) + optionsTotal;
+
+      cart.push({
+        title: currentDetailItem.title,
+        basePrice: Number(currentDetailItem.price),
+        price: unitPrice,
+        qty: currentDetailQty,
+        options: [...selectedOptions],
+        obs,
+      });
+
+      closeProductDetailModal();
+      renderCart();
+    }
+
+    function applyCoupon(code, discountRate) {
+      appliedCoupon = { code, rate: discountRate };
+      const btn = document.getElementById('btn-apply-coupon');
+      if (btn) {
+        btn.innerText = '✓ Aplicado!';
+        btn.className = 'px-3 py-1.5 rounded-xl bg-emerald-500 text-black font-black text-xs shrink-0 shadow-md';
       }
       renderCart();
     }
@@ -1481,31 +2209,63 @@ function buildShopCatalogHtml(opts: {
       const countEl = document.getElementById('cart-count');
       const totalEl = document.getElementById('cart-total');
       const itemsList = document.getElementById('cart-items-list');
+      const subtotalEl = document.getElementById('modal-subtotal');
+      const discountRow = document.getElementById('modal-discount-row');
+      const discountValEl = document.getElementById('modal-discount-val');
       const modalTotalEl = document.getElementById('modal-total');
 
       const totalItems = cart.reduce((acc, i) => acc + i.qty, 0);
-      const subtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+      const rawSubtotal = cart.reduce((acc, i) => acc + (i.price * i.qty), 0);
+      let discountAmount = 0;
+
+      if (appliedCoupon && rawSubtotal > 0) {
+        discountAmount = rawSubtotal * appliedCoupon.rate;
+      }
+      const finalTotal = Math.max(0, rawSubtotal - discountAmount);
 
       if (floatingBar) floatingBar.style.display = totalItems > 0 ? 'block' : 'none';
       if (countEl) countEl.innerText = totalItems + (totalItems === 1 ? ' item' : ' itens');
-      if (totalEl) totalEl.innerText = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
-      if (modalTotalEl) modalTotalEl.innerText = 'R$ ' + subtotal.toFixed(2).replace('.', ',');
+      if (totalEl) totalEl.innerText = 'R$ ' + finalTotal.toFixed(2).replace('.', ',');
+      if (subtotalEl) subtotalEl.innerText = 'R$ ' + rawSubtotal.toFixed(2).replace('.', ',');
+
+      if (discountRow) {
+        if (discountAmount > 0) {
+          discountRow.style.display = 'flex';
+          discountValEl.innerText = '- R$ ' + discountAmount.toFixed(2).replace('.', ',');
+        } else {
+          discountRow.style.display = 'none';
+        }
+      }
+
+      if (modalTotalEl) modalTotalEl.innerText = 'R$ ' + finalTotal.toFixed(2).replace('.', ',');
 
       if (itemsList) {
         if (cart.length === 0) {
           itemsList.innerHTML = '<p class="text-zinc-500 text-center py-6 text-xs">Sua sacola está vazia.</p>';
         } else {
           itemsList.innerHTML = cart.map((item, idx) => \`
-            <div class="flex items-center justify-between p-3 rounded-xl bg-zinc-800/80 border border-white/5 gap-3">
-              <div class="flex-1 min-w-0">
-                <h4 class="text-xs font-bold text-white truncate">\${item.title}</h4>
-                <p class="text-xs text-pink-400 font-semibold mt-0.5">R$ \${(item.price * item.qty).toFixed(2).replace('.', ',')}</p>
+            <div class="p-3 rounded-xl bg-zinc-800/80 border border-white/5 space-y-1.5">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <h4 class="text-xs font-bold text-white truncate">\${item.title}</h4>
+                  <p class="text-xs text-pink-400 font-semibold mt-0.5">R$ \${(item.price * item.qty).toFixed(2).replace('.', ',')}</p>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button type="button" onclick="updateQty(\${idx}, -1)" class="w-7 h-7 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white font-bold text-xs flex items-center justify-center cursor-pointer">-</button>
+                  <span class="text-xs font-bold text-white w-5 text-center">\${item.qty}</span>
+                  <button type="button" onclick="updateQty(\${idx}, 1)" class="w-7 h-7 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs flex items-center justify-center cursor-pointer">+</button>
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                <button type="button" onclick="updateQty(\${idx}, -1)" class="w-7 h-7 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-white font-bold text-xs flex items-center justify-center cursor-pointer">-</button>
-                <span class="text-xs font-bold text-white w-5 text-center">\${item.qty}</span>
-                <button type="button" onclick="updateQty(\${idx}, 1)" class="w-7 h-7 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs flex items-center justify-center cursor-pointer">+</button>
-              </div>
+              \${item.options && item.options.length > 0 ? \`
+                <div class="text-[10px] text-zinc-400 pl-1 border-l-2 border-pink-500/50">
+                  \${item.options.map(o => '+ ' + o.name + ' (R$ ' + Number(o.price).toFixed(2).replace('.', ',') + ')').join('<br>')}
+                </div>
+              \` : ''}
+              \${item.obs ? \`
+                <div class="text-[10px] text-amber-300 italic pl-1">
+                  Obs: \${item.obs}
+                </div>
+              \` : ''}
             </div>
           \`).join('');
         }
@@ -1514,25 +2274,30 @@ function buildShopCatalogHtml(opts: {
 
     function openCartModal() {
       const modal = document.getElementById('cart-modal');
-      if (modal) {
-        modal.style.display = 'flex';
-        modal.classList.remove('hidden');
-      }
+      if (modal) modal.style.display = 'flex';
     }
 
     function closeCartModal() {
       const modal = document.getElementById('cart-modal');
-      if (modal) {
-        modal.style.display = 'none';
-        modal.classList.add('hidden');
-      }
+      if (modal) modal.style.display = 'none';
     }
 
-    const modalBackdrop = document.getElementById('cart-modal');
-    if (modalBackdrop) {
-      modalBackdrop.addEventListener('click', function(e) {
-        if (e.target === this) closeCartModal();
-      });
+    function openLoyaltyModal() {
+      const modal = document.getElementById('loyalty-modal');
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeLoyaltyModal() {
+      const modal = document.getElementById('loyalty-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    function queryLoyaltyPoints(phone, storeName) {
+      const inputPhone = (document.getElementById('loyalty-phone').value || '').trim();
+      const msg = '💎 *CONSULTA DE FIDELIDADE - ' + storeName.toUpperCase() + '*\\n\\nOlá! Gostaria de consultar meu saldo de pontos no programa de fidelidade da loja.' + (inputPhone ? (' Meu número: ' + inputPhone) : '');
+      const cleanPhone = phone.replace(/\\D/g, '');
+      window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(msg), '_blank');
+      closeLoyaltyModal();
     }
 
     function checkoutWhatsApp(phone, storeName) {
@@ -1540,14 +2305,36 @@ function buildShopCatalogHtml(opts: {
         alert('Adicione itens à sua sacola antes de continuar.');
         return;
       }
-      let msg = '🛍️ *NOVO PEDIDO - ' + storeName.toUpperCase() + '*\\n\\n📋 *PRODUTOS:*\n';
-      let total = 0;
-      cart.forEach(item => {
+      let msg = '🛍️ *NOVO PEDIDO - ' + storeName.toUpperCase() + '*\\n\\n📋 *PRODUTOS DA SACOLA:*\n';
+      let rawSubtotal = 0;
+      cart.forEach((item, i) => {
         const itemTotal = item.price * item.qty;
-        total += itemTotal;
-        msg += '• ' + item.qty + 'x ' + item.title + ' (R$ ' + itemTotal.toFixed(2).replace('.', ',') + ')\\n';
+        rawSubtotal += itemTotal;
+        msg += (i + 1) + '. *' + item.qty + 'x ' + item.title + '* — R$ ' + itemTotal.toFixed(2).replace('.', ',') + '\\n';
+        if (item.options && item.options.length > 0) {
+          item.options.forEach(opt => {
+            msg += '   + ' + opt.name + ' (R$ ' + Number(opt.price).toFixed(2).replace('.', ',') + ')\\n';
+          });
+        }
+        if (item.obs) {
+          msg += '   _Obs: ' + item.obs + '_\\n';
+        }
+        msg += '\\n';
       });
-      msg += '\\n💰 *TOTAL:* R$ ' + total.toFixed(2).replace('.', ',') + '\\n\\nOlá! Gostaria de finalizar a compra destes itens.';
+
+      msg += '---------------------------------\\n';
+      msg += '💵 *Subtotal:* R$ ' + rawSubtotal.toFixed(2).replace('.', ',') + '\\n';
+
+      let discountAmount = 0;
+      if (appliedCoupon && rawSubtotal > 0) {
+        discountAmount = rawSubtotal * appliedCoupon.rate;
+        msg += '🎟️ *Cupom (' + appliedCoupon.code + '):* - R$ ' + discountAmount.toFixed(2).replace('.', ',') + '\\n';
+      }
+
+      const finalTotal = Math.max(0, rawSubtotal - discountAmount);
+      msg += '💰 *TOTAL A PAGAR:* R$ ' + finalTotal.toFixed(2).replace('.', ',') + '\\n\\n';
+      msg += '📍 *Olá! Gostaria de confirmar e finalizar a compra destes itens.*';
+
       const cleanPhone = phone.replace(/\\D/g, '');
       window.open('https://wa.me/' + cleanPhone + '?text=' + encodeURIComponent(msg), '_blank');
     }

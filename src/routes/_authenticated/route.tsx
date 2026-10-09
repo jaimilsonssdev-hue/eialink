@@ -24,6 +24,7 @@ import {
   Utensils,
   Clapperboard,
   BookOpen,
+  Gift,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
@@ -69,13 +70,6 @@ function AuthedLayout() {
         title: "Criação & Destaque",
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
-          {
-            to: "/studio-pro",
-            label: "Estúdio Criativo",
-            icon: Sparkles,
-            badge: "Gemini",
-            badgeClassName: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
-          },
           { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
         ],
       },
@@ -83,6 +77,13 @@ function AuthedLayout() {
         title: "Operação",
         items: [
           { to: "/agenda", label: "Agenda", icon: CalendarDays },
+          {
+            to: "/fidelidade",
+            label: "Fidelidade & Cupons",
+            icon: Gift,
+            badge: "Novo",
+            badgeClassName: "bg-pink-500/20 text-pink-300 border border-pink-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
+          },
           ...(canAccessComanda
             ? [{ to: "/comanda", label: "Comanda & NFC", icon: Utensils }]
             : []),
@@ -101,16 +102,21 @@ function AuthedLayout() {
 
   const mobileNavItems = useMemo(() => {
     const homeItem = { to: "/dashboard", label: "Início", icon: LayoutDashboard };
-    const studioItem = { to: "/studio-pro", label: "Estúdio", icon: Sparkles };
     const pagesItem = { to: "/pages", label: "Páginas", icon: PanelsTopLeft };
+    const loyaltyItem = { to: "/fidelidade", label: "Fidelidade", icon: Gift };
 
     let salesItem = { to: "/agenda", label: "Agenda", icon: CalendarDays };
     if (canAccessComanda) {
       salesItem = { to: "/comanda", label: "Comanda", icon: Utensils };
     }
 
-    return [homeItem, studioItem, pagesItem, salesItem];
-  }, [canAccessComanda]);
+    if (isAdmin) {
+      const studioItem = { to: "/studio-pro", label: "Estúdio", icon: Sparkles };
+      return [homeItem, studioItem, pagesItem, salesItem];
+    }
+
+    return [homeItem, pagesItem, loyaltyItem, salesItem];
+  }, [canAccessComanda, isAdmin]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -192,6 +198,19 @@ function AuthedLayout() {
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
                 Super Admin
               </p>
+              <Link
+                to="/studio-pro"
+                onClick={() => setOpen(false)}
+                className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${pathname.startsWith("/studio") ? "is-active" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <Sparkles className="h-4 w-4 shrink-0 text-emerald-400" />
+                  <span>Estúdio Criativo (IA)</span>
+                </div>
+                <span className="rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-1.5 py-0.2 border border-emerald-500/30">
+                  Pro
+                </span>
+              </Link>
               <Link
                 to="/admin"
                 onClick={() => setOpen(false)}

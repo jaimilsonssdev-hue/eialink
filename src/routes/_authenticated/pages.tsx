@@ -1083,16 +1083,28 @@ function PagesWorkspace() {
                         )}
                       </button>
 
-                      {/* 3. Editar no Studio */}
-                      <Link
-                        to="/studio"
-                        search={{ page: activePage.id }}
-                        className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
-                        title="Abrir página no Studio & Editor"
-                      >
-                        <Sparkles className="h-4 w-4" />
-                        <span>Editar no Studio</span>
-                      </Link>
+                      {/* 3. Editar no Studio (Admin) ou Editor Seguro (Lojista) */}
+                      {isAdmin ? (
+                        <Link
+                          to="/studio-pro"
+                          search={{ page: activePage.id }}
+                          className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-md transition-all cursor-pointer"
+                          title="Abrir página no Estúdio Criativo (Super Admin)"
+                        >
+                          <Sparkles className="h-4 w-4" />
+                          <span>Editar no Studio</span>
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/builder"
+                          search={{ page: activePage.id }}
+                          className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-bold shadow-md transition-all cursor-pointer"
+                          title="Editar textos, fotos e produtos da sua página"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span>Editar Conteúdo</span>
+                        </Link>
+                      )}
 
                       <button
                         type="button"
@@ -1220,14 +1232,25 @@ function PagesWorkspace() {
 
                     {/* Ações do Card */}
                     <div className="flex items-center gap-1.5 pt-2 border-t border-border/50">
-                      <Link
-                        to="/studio"
-                        search={{ page: page.id }}
-                        className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white py-2 text-xs font-bold transition-all shadow-xs"
-                        title="Abrir no Studio & Editor"
-                      >
-                        <Sparkles className="h-3.5 w-3.5" /> Editar no Studio
-                      </Link>
+                      {isAdmin ? (
+                        <Link
+                          to="/studio-pro"
+                          search={{ page: page.id }}
+                          className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white py-2 text-xs font-bold transition-all shadow-xs"
+                          title="Abrir no Estúdio Criativo (Super Admin)"
+                        >
+                          <Sparkles className="h-3.5 w-3.5" /> Editar no Studio
+                        </Link>
+                      ) : (
+                        <Link
+                          to="/builder"
+                          search={{ page: page.id }}
+                          className="flex-1 inline-flex items-center justify-center gap-1 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground py-2 text-xs font-bold transition-all shadow-xs"
+                          title="Editar textos, fotos e produtos da sua página"
+                        >
+                          <Pencil className="h-3.5 w-3.5" /> Editar Conteúdo
+                        </Link>
+                      )}
 
 
                       <a

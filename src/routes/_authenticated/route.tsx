@@ -25,6 +25,7 @@ import {
   Clapperboard,
   BookOpen,
   Gift,
+  ShoppingBag,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
@@ -71,20 +72,6 @@ function AuthedLayout() {
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
           { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
-          {
-            to: "/cardapio-studio",
-            label: "Gerador de Cardápios",
-            icon: Utensils,
-            badge: "Novo",
-            badgeClassName: "bg-orange-500/20 text-orange-300 border border-orange-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
-          },
-          {
-            to: "/agenda-studio",
-            label: "Gerador de Agendas",
-            icon: CalendarDays,
-            badge: "Novo",
-            badgeClassName: "bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
-          },
         ],
       },
       {
@@ -141,7 +128,8 @@ function AuthedLayout() {
     pathname.startsWith("/studio") ||
     pathname.startsWith("/studio-pro") ||
     pathname.startsWith("/cardapio-studio") ||
-    pathname.startsWith("/agenda-studio");
+    pathname.startsWith("/agenda-studio") ||
+    pathname.startsWith("/loja-studio");
 
   // Layout isolado para o Estúdio Criativo e Cinematic Studio (Sem conflito de sidebar fixa)
   if (isStudio) {
@@ -214,7 +202,7 @@ function AuthedLayout() {
           {isAdmin && (
             <div className="border-t border-border pt-3 space-y-1">
               <p className="px-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
-                Super Admin
+                Super Admin (Agência & IA)
               </p>
               <Link
                 to="/studio-pro"
@@ -230,12 +218,43 @@ function AuthedLayout() {
                 </span>
               </Link>
               <Link
-                to="/admin"
+                to="/cardapio-studio"
                 onClick={() => setOpen(false)}
-                className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin" ? "is-active" : ""}`}
+                className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${pathname.startsWith("/cardapio-studio") ? "is-active" : ""}`}
               >
-                <Shield className="h-4 w-4 shrink-0 text-zinc-400" />
-                <span>Painel Admin</span>
+                <div className="flex items-center gap-3">
+                  <Utensils className="h-4 w-4 shrink-0 text-orange-400" />
+                  <span>Gerador de Cardápios</span>
+                </div>
+                <span className="rounded-full bg-orange-500/20 text-orange-300 text-[9px] font-bold px-1.5 py-0.5 border border-orange-500/30">
+                  Novo
+                </span>
+              </Link>
+              <Link
+                to="/agenda-studio"
+                onClick={() => setOpen(false)}
+                className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${pathname.startsWith("/agenda-studio") ? "is-active" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="h-4 w-4 shrink-0 text-amber-400" />
+                  <span>Gerador de Agendas</span>
+                </div>
+                <span className="rounded-full bg-amber-500/20 text-amber-300 text-[9px] font-bold px-1.5 py-0.5 border border-amber-500/30">
+                  Novo
+                </span>
+              </Link>
+              <Link
+                to="/loja-studio"
+                onClick={() => setOpen(false)}
+                className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${pathname.startsWith("/loja-studio") ? "is-active" : ""}`}
+              >
+                <div className="flex items-center gap-3">
+                  <ShoppingBag className="h-4 w-4 shrink-0 text-blue-400" />
+                  <span>Gerador de Lojas</span>
+                </div>
+                <span className="rounded-full bg-blue-500/20 text-blue-300 text-[9px] font-bold px-1.5 py-0.5 border border-blue-500/30">
+                  Novo
+                </span>
               </Link>
               <Link
                 to="/admin/prospeccao"
@@ -243,7 +262,15 @@ function AuthedLayout() {
                 className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin/prospeccao" ? "is-active" : ""}`}
               >
                 <Target className="h-4 w-4 shrink-0 text-zinc-400" />
-                <span>Prospecção</span>
+                <span>Radar de Prospecção</span>
+              </Link>
+              <Link
+                to="/admin"
+                onClick={() => setOpen(false)}
+                className={`app-nav-link flex items-center gap-3 rounded-xl px-3 py-2 text-sm ${pathname === "/admin" ? "is-active" : ""}`}
+              >
+                <Shield className="h-4 w-4 shrink-0 text-zinc-400" />
+                <span>Painel Admin</span>
               </Link>
               <Link
                 to="/admin/vendas"

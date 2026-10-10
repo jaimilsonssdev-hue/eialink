@@ -36,6 +36,7 @@ import { Route as AuthenticatedFidelidadeRouteImport } from './routes/_authentic
 import { Route as AuthenticatedGoogleCallbackRouteImport } from './routes/_authenticated/google-callback'
 import { Route as AuthenticatedGrowthRouteImport } from './routes/_authenticated/growth'
 import { Route as AuthenticatedLinksRouteImport } from './routes/_authenticated/links'
+import { Route as AuthenticatedLojaStudioRouteImport } from './routes/_authenticated/loja-studio'
 import { Route as AuthenticatedPagesRouteImport } from './routes/_authenticated/pages'
 import { Route as AuthenticatedRequestsRouteImport } from './routes/_authenticated/requests'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -191,6 +192,11 @@ const AuthenticatedLinksRoute = AuthenticatedLinksRouteImport.update({
   path: '/links',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedLojaStudioRoute = AuthenticatedLojaStudioRouteImport.update({
+  id: '/loja-studio',
+  path: '/loja-studio',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedPagesRoute = AuthenticatedPagesRouteImport.update({
   id: '/pages',
   path: '/pages',
@@ -308,6 +314,7 @@ export interface FileRoutesByFullPath {
   '/google-callback': typeof AuthenticatedGoogleCallbackRoute
   '/growth': typeof AuthenticatedGrowthRoute
   '/links': typeof AuthenticatedLinksRoute
+  '/loja-studio': typeof AuthenticatedLojaStudioRoute
   '/pages': typeof AuthenticatedPagesRoute
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -353,6 +360,7 @@ export interface FileRoutesByTo {
   '/google-callback': typeof AuthenticatedGoogleCallbackRoute
   '/growth': typeof AuthenticatedGrowthRoute
   '/links': typeof AuthenticatedLinksRoute
+  '/loja-studio': typeof AuthenticatedLojaStudioRoute
   '/pages': typeof AuthenticatedPagesRoute
   '/requests': typeof AuthenticatedRequestsRoute
   '/settings': typeof AuthenticatedSettingsRoute
@@ -400,6 +408,7 @@ export interface FileRoutesById {
   '/_authenticated/google-callback': typeof AuthenticatedGoogleCallbackRoute
   '/_authenticated/growth': typeof AuthenticatedGrowthRoute
   '/_authenticated/links': typeof AuthenticatedLinksRoute
+  '/_authenticated/loja-studio': typeof AuthenticatedLojaStudioRoute
   '/_authenticated/pages': typeof AuthenticatedPagesRoute
   '/_authenticated/requests': typeof AuthenticatedRequestsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
@@ -447,6 +456,7 @@ export interface FileRouteTypes {
     | '/google-callback'
     | '/growth'
     | '/links'
+    | '/loja-studio'
     | '/pages'
     | '/requests'
     | '/settings'
@@ -492,6 +502,7 @@ export interface FileRouteTypes {
     | '/google-callback'
     | '/growth'
     | '/links'
+    | '/loja-studio'
     | '/pages'
     | '/requests'
     | '/settings'
@@ -538,6 +549,7 @@ export interface FileRouteTypes {
     | '/_authenticated/google-callback'
     | '/_authenticated/growth'
     | '/_authenticated/links'
+    | '/_authenticated/loja-studio'
     | '/_authenticated/pages'
     | '/_authenticated/requests'
     | '/_authenticated/settings'
@@ -770,6 +782,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLinksRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/loja-studio': {
+      id: '/_authenticated/loja-studio'
+      path: '/loja-studio'
+      fullPath: '/loja-studio'
+      preLoaderRoute: typeof AuthenticatedLojaStudioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/pages': {
       id: '/_authenticated/pages'
       path: '/pages'
@@ -909,6 +928,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGoogleCallbackRoute: typeof AuthenticatedGoogleCallbackRoute
   AuthenticatedGrowthRoute: typeof AuthenticatedGrowthRoute
   AuthenticatedLinksRoute: typeof AuthenticatedLinksRoute
+  AuthenticatedLojaStudioRoute: typeof AuthenticatedLojaStudioRoute
   AuthenticatedPagesRoute: typeof AuthenticatedPagesRoute
   AuthenticatedRequestsRoute: typeof AuthenticatedRequestsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
@@ -936,6 +956,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGoogleCallbackRoute: AuthenticatedGoogleCallbackRoute,
   AuthenticatedGrowthRoute: AuthenticatedGrowthRoute,
   AuthenticatedLinksRoute: AuthenticatedLinksRoute,
+  AuthenticatedLojaStudioRoute: AuthenticatedLojaStudioRoute,
   AuthenticatedPagesRoute: AuthenticatedPagesRoute,
   AuthenticatedRequestsRoute: AuthenticatedRequestsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,

@@ -21,6 +21,8 @@ import {
   Globe2,
   ChevronDown,
   ChevronUp,
+  Send,
+  Share2,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -50,12 +52,13 @@ export interface DemoInfoResult {
 export interface ProspectingKanbanProps {
   companies: ProspectedCompany[];
   onStatusChange: (id: string, status: ProspectStatus) => void;
-  onGenerateDemo: (company: ProspectedCompany) => void;
+  onGenerateDemo: (company: ProspectedCompany, forceCat?: any) => void;
   creatingPageId: string | null;
   onRegenerateDemo: (company: ProspectedCompany) => void;
   regeneratingPageId: string | null;
   onMakeOfficial: (company: ProspectedCompany, pageId: string) => void;
   onRevokeOfficial?: (company: ProspectedCompany, pageId: string) => void;
+  onOpenTransfer?: (company: ProspectedCompany, pageId: string, pageUrl: string) => void;
   actionLoadingId: string | null;
   onAuditCompany: (company: ProspectedCompany) => void;
   onRegisterApproach: (company: ProspectedCompany) => void;
@@ -142,6 +145,7 @@ export function ProspectingKanban({
   regeneratingPageId,
   onMakeOfficial,
   onRevokeOfficial,
+  onOpenTransfer,
   actionLoadingId,
   onAuditCompany,
   onRegisterApproach,
@@ -413,7 +417,7 @@ export function ProspectingKanban({
                                   <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                                   <span>Ver Site Pronto</span>
                                 </a>
-                               ) : (
+                                ) : (
                                 (() => {
                                   const meta = getProspectNicheCategory(company.niche, company.name);
                                   const isGenerating = creatingPageId === company.id;
@@ -422,7 +426,7 @@ export function ProspectingKanban({
                                       type="button"
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        onGenerateDemo(company);
+                                        onGenerateDemo(company, meta.category);
                                       }}
                                       disabled={isGenerating}
                                       className={`inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg border text-xs font-bold transition-all whitespace-nowrap disabled:opacity-60 cursor-pointer shadow-xs ${meta.buttonClass}`}
@@ -439,6 +443,28 @@ export function ProspectingKanban({
                                 })()
                               )}
                             </div>
+
+                            {/* Opção secundária: Se o lead tiver nicho específico e não tiver demo, permitir gerar Site Institucional */}
+                            {!demo.url && (() => {
+                              const meta = getProspectNicheCategory(company.niche, company.name);
+                              if (meta.category === "geral") return null;
+                              const isGenerating = creatingPageId === company.id;
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onGenerateDemo(company, "geral");
+                                  }}
+                                  disabled={isGenerating}
+                                  className="w-full inline-flex items-center justify-center gap-1.5 py-1 px-2 rounded-lg bg-muted/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground text-[11px] font-medium border border-border/50 transition-all cursor-pointer"
+                                  title="Gerar Site Institucional tradicional para este negócio"
+                                >
+                                  <Globe2 className="h-3 w-3 shrink-0 text-sky-400" />
+                                  <span>Ou Gerar Site Institucional</span>
+                                </button>
+                              );
+                            })()}
 
                             {/* Linha 2: Auditoria IA + Menu Mais Opções */}
                             <div className="flex items-center gap-1.5">
@@ -511,12 +537,28 @@ export function ProspectingKanban({
                                       nicheKey === "estetica_corporal" ||
                                       nicheKey === "clinica" ||
                                       nicheKey === "odontologia";
+                                    const isLoja =
+                                      nicheKey === "loja" ||
+                                      nicheKey === "varejo" ||
+                                      nicheKey === "calcados" ||
+                                      nicheKey === "roupas" ||
+                                      /loja|moda|calçad|varejo|boutique|bijuteria/i.test(company.niche || "");
 
                                     const targetPath = isGastro
                                       ? "/cardapio-studio"
                                       : isBeauty
                                       ? "/agenda-studio"
+                                      : isLoja
+                                      ? "/loja-studio"
                                       : "/studio-pro";
+
+                                    const targetLabel = isGastro
+                                      ? "Editar Cardápio (IA)"
+                                      : isBeauty
+                                      ? "Editar Agenda (IA)"
+                                      : isLoja
+                                      ? "Editar Loja / Catálogo (IA)"
+                                      : "Editar no Estúdio (IA)";
 
                                     return (
                                       <DropdownMenuItem asChild className="cursor-pointer text-xs">
@@ -531,39 +573,88 @@ export function ProspectingKanban({
                                           }}
                                         >
                                           <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                          <span>
-                                            {isGastro
-                                              ? "Editar Cardápio (IA)"
-                                              : isBeauty
-                                              ? "Editar Agenda (IA)"
-                                              : "Editar no Estúdio (IA)"}
-                                          </span>
+                                          <span>{targetLabel}</span>
                                         </Link>
                                       </DropdownMenuItem>
                                     );
                                   })()}
 
                                   {demo.url && demo.pageId && (
-                                    isOfficial ? (
-                                      <DropdownMenuItem
-                                        onClick={() => onRevokeOfficial?.(company, demo.pageId!)}
-                                        disabled={actionLoadingId === demo.pageId}
-                                        className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
-                                      >
-                                        <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
-                                        <span>Revogar Oficialização (Voltar Demo)</span>
-                                      </DropdownMenuItem>
-                                    ) : (
-                                      <DropdownMenuItem
-                                        onClick={() => onMakeOfficial(company, demo.pageId!)}
-                                        disabled={actionLoadingId === demo.pageId}
-                                        className="cursor-pointer text-xs"
-                                      >
-                                        <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                        <span>Tornar Oficial</span>
-                                      </DropdownMenuItem>
-                                    )
+                                    <>
+                                      {onOpenTransfer && (
+                                        <DropdownMenuItem
+                                          onClick={() => onOpenTransfer(company, demo.pageId!, demo.url!)}
+                                          className="cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300 focus:text-emerald-300 focus:bg-emerald-500/10"
+                                        >
+                                          <Share2 className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                          <span>Enviar Acesso ao Cliente (Cadastro & Pagamento)</span>
+                                        </DropdownMenuItem>
+                                      )}
+
+                                      {isOfficial ? (
+                                        <DropdownMenuItem
+                                          onClick={() => onRevokeOfficial?.(company, demo.pageId!)}
+                                          disabled={actionLoadingId === demo.pageId}
+                                          className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
+                                        >
+                                          <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                                          <span>Revogar Oficialização (Voltar Demo)</span>
+                                        </DropdownMenuItem>
+                                      ) : (
+                                        <DropdownMenuItem
+                                          onClick={() => onMakeOfficial(company, demo.pageId!)}
+                                          disabled={actionLoadingId === demo.pageId}
+                                          className="cursor-pointer text-xs"
+                                        >
+                                          <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                          <span>Tornar Oficial Direto (Minha Conta)</span>
+                                        </DropdownMenuItem>
+                                      )}
+                                    </>
                                   )}
+
+                                  <DropdownMenuSeparator />
+
+                                  {/* Gerar em Formato Específico / Trocar Formato */}
+                                  <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                                    {demo.url ? "Trocar / Regenerar Formato" : "Gerar com IA"}
+                                  </div>
+
+                                  <DropdownMenuItem
+                                    onClick={() => onGenerateDemo(company, "geral")}
+                                    disabled={creatingPageId === company.id}
+                                    className="cursor-pointer text-xs text-sky-400 font-medium"
+                                  >
+                                    <Globe2 className="h-3.5 w-3.5 mr-2 text-sky-400" />
+                                    <span>Site Institucional Pro</span>
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => onGenerateDemo(company, "gastronomia")}
+                                    disabled={creatingPageId === company.id}
+                                    className="cursor-pointer text-xs text-orange-400 font-medium"
+                                  >
+                                    <span className="mr-2">🍽️</span>
+                                    <span>Cardápio Digital (Estilo iFood)</span>
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => onGenerateDemo(company, "beleza")}
+                                    disabled={creatingPageId === company.id}
+                                    className="cursor-pointer text-xs text-violet-400 font-medium"
+                                  >
+                                    <span className="mr-2">✂️</span>
+                                    <span>Barbearia / Estética / Agenda</span>
+                                  </DropdownMenuItem>
+
+                                  <DropdownMenuItem
+                                    onClick={() => onGenerateDemo(company, "loja")}
+                                    disabled={creatingPageId === company.id}
+                                    className="cursor-pointer text-xs text-pink-400 font-medium"
+                                  >
+                                    <span className="mr-2">🛍️</span>
+                                    <span>Loja Virtual / Catálogo WhatsApp</span>
+                                  </DropdownMenuItem>
 
                                   <DropdownMenuSeparator />
 

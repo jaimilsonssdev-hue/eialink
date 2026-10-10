@@ -1472,27 +1472,29 @@ function ProspectingPage() {
                       {demo.url && (
                         <>
                           {demo.pageId && (
-                            <DropdownMenuItem
-                              onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                              disabled={actionLoadingId === demo.pageId || isOfficialCompany(company)}
-                              className="cursor-pointer text-xs"
-                            >
-                              {actionLoadingId === demo.pageId ? (
-                                <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
-                              ) : (
-                                <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficialCompany(company) ? "text-emerald-400" : "text-muted-foreground"}`} />
-                              )}
-                              <span>{isOfficialCompany(company) ? "Página Oficializada" : "Tornar Oficial"}</span>
-                            </DropdownMenuItem>
-                          )}
+                            <>
+                              <DropdownMenuItem
+                                onClick={() => handleOpenTransfer(company, demo.pageId || "", demo.url!)}
+                                className="cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300 focus:text-emerald-300 focus:bg-emerald-500/10"
+                              >
+                                <Share2 className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                <span>Enviar Acesso ao Cliente (Cadastro & Pagamento)</span>
+                              </DropdownMenuItem>
 
-                          <DropdownMenuItem
-                            onClick={() => handleOpenTransfer(company, demo.pageId || "", demo.url!)}
-                            className="cursor-pointer text-xs"
-                          >
-                            <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                            <span>Entregar / Transferir</span>
-                          </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                                disabled={actionLoadingId === demo.pageId || isOfficialCompany(company)}
+                                className="cursor-pointer text-xs"
+                              >
+                                {actionLoadingId === demo.pageId ? (
+                                  <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
+                                ) : (
+                                  <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficialCompany(company) ? "text-emerald-400" : "text-muted-foreground"}`} />
+                                )}
+                                <span>{isOfficialCompany(company) ? "Página Oficializada" : "Tornar Oficial Direto (Minha Conta)"}</span>
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </>
                       )}
                       <DropdownMenuSeparator />
@@ -2623,12 +2625,13 @@ function ProspectingPage() {
               <ProspectingKanban
                 companies={filtered}
                 onStatusChange={(id, status) => statusMutation.mutate({ id, status })}
-                onGenerateDemo={(company) => handleSpecializedGenerate(company)}
+                onGenerateDemo={(company, forceCat) => handleSpecializedGenerate(company, forceCat)}
                 creatingPageId={creatingPageId}
                 onRegenerateDemo={handleRegenerateDemo}
                 regeneratingPageId={regeneratingPageId}
                 onMakeOfficial={handleMakeOfficial}
                 onRevokeOfficial={handleRevokeOfficial}
+                onOpenTransfer={handleOpenTransfer}
                 actionLoadingId={actionLoadingId}
                 onAuditCompany={setActiveAuditCompany}
                 onRegisterApproach={setActiveCompany}
@@ -2911,19 +2914,26 @@ function ProspectingPage() {
                         {demo.pageId &&
                           (() => {
                             const meta = getProspectNicheCategory(company.niche, company.name);
-                            const isFood = meta.category === "food";
+                            const isFood = meta.category === "food" || /restaurante|pizzaria|hamburguer|lanche|cafeteria|a[cç]a[ií]|gastronom/i.test(company.niche || "");
                             const isBarber =
                               meta.category === "barber" ||
-                              /est[eé]tica|sal[aã]o|cl[ií]nica|beleza/i.test(company.niche || "");
+                              /est[eé]tica|sal[aã]o|cl[ií]nica|beleza|barbearia/i.test(company.niche || "");
+                            const isLoja =
+                              meta.category === "loja" ||
+                              /loja|moda|calçad|varejo|boutique|bijuteria/i.test(company.niche || "");
                             const editTo = isFood
                               ? "/cardapio-studio"
                               : isBarber
                               ? "/agenda-studio"
+                              : isLoja
+                              ? "/loja-studio"
                               : "/studio-pro";
                             const editLabel = isFood
                               ? "Editar no Cardápio Studio"
                               : isBarber
                               ? "Editar na Agenda Studio"
+                              : isLoja
+                              ? "Editar na Loja Virtual Studio"
                               : "Editar no Studio Pro";
 
                             return (
@@ -2945,25 +2955,35 @@ function ProspectingPage() {
                             );
                           })()}
                         {demo.url && demo.pageId && (
-                          isOfficial ? (
+                          <>
                             <DropdownMenuItem
-                              onClick={() => void handleRevokeOfficial(company, demo.pageId!)}
-                              disabled={actionLoadingId === demo.pageId}
-                              className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
+                              onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                              className="cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300 focus:text-emerald-300 focus:bg-emerald-500/10"
                             >
-                              <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
-                              <span>Revogar Oficialização (Voltar Demo)</span>
+                              <Share2 className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                              <span>Enviar Acesso ao Cliente (Cadastro & Pagamento)</span>
                             </DropdownMenuItem>
-                          ) : (
-                            <DropdownMenuItem
-                              onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                              disabled={actionLoadingId === demo.pageId}
-                              className="cursor-pointer text-xs"
-                            >
-                              <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                              <span>Tornar Oficial</span>
-                            </DropdownMenuItem>
-                          )
+
+                            {isOfficial ? (
+                              <DropdownMenuItem
+                                onClick={() => void handleRevokeOfficial(company, demo.pageId!)}
+                                disabled={actionLoadingId === demo.pageId}
+                                className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
+                              >
+                                <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                                <span>Revogar Oficialização (Voltar Demo)</span>
+                              </DropdownMenuItem>
+                            ) : (
+                              <DropdownMenuItem
+                                onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                                disabled={actionLoadingId === demo.pageId}
+                                className="cursor-pointer text-xs"
+                              >
+                                <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                <span>Tornar Oficial Direto (Minha Conta)</span>
+                              </DropdownMenuItem>
+                            )}
+                          </>
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem

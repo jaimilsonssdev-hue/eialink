@@ -14,7 +14,16 @@ export interface LeadSiteData {
   photos?: string[];
   coverUrl?: string;
   avatarUrl?: string;
+  variantIndex?: number;
 }
+
+export const STUDIO_PRO_VARIANTS = [
+  { id: 0, name: "Dark Luxury & Gold", description: "Design sofisticado escuro com detalhes em ouro e autoridade máxima" },
+  { id: 1, name: "Clean High-Tech Minimal", description: "Layout split luminoso, azul cobalto e estética moderna tech" },
+  { id: 2, name: "Neobrutalismo Pop", description: "Bordas marcantes, contraste vibrante e pegada de alta conversão" },
+  { id: 3, name: "Glassmorphism Futurista", description: "Efeito translúcido de vidro, glow ciano neon e estética futurista" },
+  { id: 4, name: "Editorial Sofisticado", description: "Tipografia refinada, paleta marfim/terracota e foco em narrativa" },
+];
 
 export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
   const name = lead.companyName.trim();
@@ -25,16 +34,133 @@ export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
   const whatsappClean = lead.whatsapp ? lead.whatsapp.replace(/\D/g, "") : "";
   const whatsappUrl = whatsappClean ? `https://wa.me/55${whatsappClean}` : "#contato";
 
-  // Escolha do tema de acordo com o nicho
-  let themeChoice: Partial<ThemeConfig> = themePresets[0].theme; // dark default
-  if (niche.includes("restaurante") || niche.includes("pizzaria") || niche.includes("hamburgueria") || niche.includes("gourmet")) {
-    themeChoice = themePresets.find((t) => t.id === "amber")?.theme || themePresets[0].theme;
-  } else if (niche.includes("saude") || niche.includes("clinica") || niche.includes("odonto") || niche.includes("medica")) {
-    themeChoice = themePresets.find((t) => t.id === "cyan")?.theme || themePresets[0].theme;
-  } else if (niche.includes("advocacia") || niche.includes("contab") || niche.includes("barbearia")) {
-    themeChoice = themePresets.find((t) => t.id === "emerald")?.theme || themePresets[0].theme;
-  } else if (niche.includes("estetica") || niche.includes("beleza") || niche.includes("salao")) {
-    themeChoice = themePresets.find((t) => t.id === "purple")?.theme || themePresets[0].theme;
+  // Identifica a variante de design (0 a 4)
+  const variantIndex = typeof lead.variantIndex === "number" && !isNaN(lead.variantIndex)
+    ? Math.abs(lead.variantIndex) % 5
+    : 0;
+
+  // 1. Matriz de Temas e Cores por Variante
+  let themeChoice: Partial<ThemeConfig>;
+  if (variantIndex === 0) {
+    // Dark Luxury & Gold
+    themeChoice = {
+      bg0: '#09090b',
+      bg1: '#121215',
+      bg2: '#18181c',
+      bg3: '#222228',
+      bg4: '#2c2c33',
+      bg5: '#383842',
+      text0: '#fef3c7',
+      text1: '#fde68a',
+      text2: '#d4af37',
+      text3: '#92400e',
+      accent: '#f59e0b',
+      accentDim: '#d97706',
+      borderDefault: '#27272a',
+      borderSubtle: '#18181b',
+      borderHover: '#d97706',
+      fontSans: 'Plus Jakarta Sans',
+      fontDisplay: 'Space Grotesk',
+      fontMono: 'JetBrains Mono',
+      radius: 8,
+      radiusLg: 14,
+    };
+  } else if (variantIndex === 1) {
+    // Clean High-Tech Minimal (White & Cobalto)
+    themeChoice = {
+      bg0: '#ffffff',
+      bg1: '#f8fafc',
+      bg2: '#f1f5f9',
+      bg3: '#e2e8f0',
+      bg4: '#cbd5e1',
+      bg5: '#94a3b8',
+      text0: '#0f172a',
+      text1: '#1e293b',
+      text2: '#475569',
+      text3: '#64748b',
+      accent: '#2563eb',
+      accentDim: '#1d4ed8',
+      borderDefault: '#e2e8f0',
+      borderSubtle: '#f1f5f9',
+      borderHover: '#cbd5e1',
+      fontSans: 'Inter',
+      fontDisplay: 'Sora',
+      fontMono: 'JetBrains Mono',
+      radius: 12,
+      radiusLg: 18,
+    };
+  } else if (variantIndex === 2) {
+    // Neobrutalismo Pop
+    themeChoice = {
+      bg0: '#fffdf5',
+      bg1: '#fef08a',
+      bg2: '#ffffff',
+      bg3: '#fde047',
+      bg4: '#facc15',
+      bg5: '#eab308',
+      text0: '#000000',
+      text1: '#18181b',
+      text2: '#27272a',
+      text3: '#3f3f46',
+      accent: '#000000',
+      accentDim: '#27272a',
+      borderDefault: '#000000',
+      borderSubtle: '#000000',
+      borderHover: '#000000',
+      fontSans: 'Space Grotesk',
+      fontDisplay: 'Space Grotesk',
+      fontMono: 'Space Grotesk',
+      radius: 4,
+      radiusLg: 6,
+    };
+  } else if (variantIndex === 3) {
+    // Glassmorphism Futurista (Cyan & Violet)
+    themeChoice = {
+      bg0: '#070b14',
+      bg1: '#0d1527',
+      bg2: '#131e38',
+      bg3: '#1b2a4e',
+      bg4: '#253a6b',
+      bg5: '#324e8c',
+      text0: '#f0f9ff',
+      text1: '#bae6fd',
+      text2: '#7dd3fc',
+      text3: '#38bdf8',
+      accent: '#06b6d4',
+      accentDim: '#0891b2',
+      borderDefault: 'rgba(6, 182, 212, 0.25)',
+      borderSubtle: 'rgba(6, 182, 212, 0.12)',
+      borderHover: 'rgba(6, 182, 212, 0.5)',
+      fontSans: 'Outfit',
+      fontDisplay: 'Outfit',
+      fontMono: 'JetBrains Mono',
+      radius: 16,
+      radiusLg: 24,
+    };
+  } else {
+    // Editorial Sofisticado (Marfim & Terracota)
+    themeChoice = {
+      bg0: '#faf8f5',
+      bg1: '#f2efe8',
+      bg2: '#e8e4db',
+      bg3: '#ddd8cd',
+      bg4: '#c8c2b5',
+      bg5: '#b3ab9c',
+      text0: '#2c2418',
+      text1: '#5c5347',
+      text2: '#8a8074',
+      text3: '#b0a798',
+      accent: '#b45309',
+      accentDim: '#92400e',
+      borderDefault: '#e2ddd4',
+      borderSubtle: '#ebe8e1',
+      borderHover: '#d5cfc4',
+      fontSans: 'DM Sans',
+      fontDisplay: 'Raleway',
+      fontMono: 'JetBrains Mono',
+      radius: 6,
+      radiusLg: 10,
+    };
   }
 
   // Avaliações reais ou curadas com base no Google Maps
@@ -80,6 +206,43 @@ export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
         { src: lead.avatarUrl || undefined, caption: `${name} — Atendimento` },
       ];
 
+  // Configuração dinâmica dos blocos por Arquétipo Visual
+  const heroVariant =
+    variantIndex === 1 ? "split" :
+    variantIndex === 2 ? "minimal" :
+    variantIndex === 3 ? "gradient" :
+    variantIndex === 4 ? "centered" :
+    "gradient";
+
+  const heroHeadline =
+    variantIndex === 0 ? `A Experiência Premium em ${lead.niche || "Serviços"} na ${name}` :
+    variantIndex === 1 ? `Soluções Inteligentes e Alto Desempenho na ${name}` :
+    variantIndex === 2 ? `${name}: QUALIDADE DIRETA AO PONTO.` :
+    variantIndex === 3 ? `O Futuro de ${lead.niche || "Serviços"} Chegou à ${name}` :
+    `Mais de uma década de excelência e compromisso na ${name}`;
+
+  const heroBadge =
+    variantIndex === 0 ? `★ ${rating.toFixed(1)} NO GOOGLE (${reviewsCount} avaliações) — ALTO PADRÃO` :
+    variantIndex === 1 ? `INOVAÇÃO & AGILIDADE • ${rating.toFixed(1)} ★ NO GOOGLE` :
+    variantIndex === 2 ? `⚡ REFERÊNCIA EM ${lead.niche ? lead.niche.toUpperCase() : "QUALIDADE"}` :
+    variantIndex === 3 ? `✨ DESIGN FUTURISTA & TECNOLOGIA ✨` :
+    `TRADIÇÃO, AUTORIDADE & CONFIANÇA (${rating.toFixed(1)} ★)`;
+
+  const heroSubheadline =
+    variantIndex === 0 ? `Atendimento impecável com padrão de luxo e sofisticação${city ? ` em ${city}` : ""}. Descubra um novo nível de qualidade e exclusividade.` :
+    variantIndex === 1 ? `Metodologia de ponta e agilidade comprovada${city ? ` em ${city}` : ""}. Fale com nossos especialistas em instantes pelo WhatsApp.` :
+    variantIndex === 2 ? `Sem complicação. Atendimento rápido, pontual e garantia de total satisfação para você${city ? ` em ${city}` : ""}.` :
+    variantIndex === 3 ? `Experiência visual fluida, precisão e excelência técnica para clientes que exigem o melhor${city ? ` em ${city}` : ""}.` :
+    `Construindo histórias de satisfação com dedicação integral e padrão impecável${city ? ` em ${city}` : ""}.`;
+
+  const featuresVariant =
+    variantIndex === 1 ? "alternating" :
+    variantIndex === 4 ? "list" :
+    "grid";
+
+  const testimonialsVariant =
+    variantIndex === 1 || variantIndex === 4 ? "carousel" : "cards";
+
   const blocks: BlockConfig[] = [
     // 1. Navbar
     {
@@ -97,11 +260,11 @@ export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
     {
       id: "hero-block",
       type: "hero",
-      variant: "centered",
+      variant: heroVariant,
       props: {
-        badge: `★ ${rating.toFixed(1)} NO GOOGLE (${reviewsCount} avaliações)`,
-        headline: `A melhor experiência em ${lead.niche || "serviços"} na ${name}`,
-        subheadline: `Referência em qualidade e atendimento de excelência${city ? ` em ${city}` : ""}. Agende seu atendimento ou faça seu pedido direto pelo WhatsApp.`,
+        badge: heroBadge,
+        headline: heroHeadline,
+        subheadline: heroSubheadline,
         primaryCta: "Falar no WhatsApp",
         secondaryCta: "Ver Avaliações",
       },
@@ -126,7 +289,7 @@ export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
     {
       id: "features-block",
       type: "features",
-      variant: "grid",
+      variant: featuresVariant,
       props: {
         title: "Por que nos escolher?",
         subtitle: `Conheça os diferenciais que fazem da ${name} a preferida dos clientes`,
@@ -154,7 +317,7 @@ export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
     {
       id: "testimonials-block",
       type: "testimonials",
-      variant: "cards",
+      variant: testimonialsVariant,
       props: {
         title: "O que nossos clientes dizem",
         subtitle: `Avaliações 100% autênticas registradas no Google Maps sobre a ${name}`,

@@ -8,6 +8,7 @@ import {
   renderMarquee,
   renderSocialProof,
 } from "./skills";
+import { STUDIO_PRO_VARIANTS } from "@/modules/studiopro/lib/buildStudioProConfigFromLead";
 
 export type ProspectNicheCategory = "food" | "shop" | "barber" | "service" | "industry";
 
@@ -535,6 +536,7 @@ export interface GenerateSpecializedInput {
   photos?: string[];
   forceCategory?: ProspectNicheCategory;
   clientGeminiKey?: string;
+  variantIndex?: number;
 }
 
 /**
@@ -549,6 +551,12 @@ export const generateSpecializedProspectSiteFn = createServerFn({ method: "POST"
     const supabase = context.supabase;
     const category = data.forceCategory || getProspectNicheCategory(data.niche, data.businessName).category;
     const subNiche = getSubNicheData(category, data.niche, data.businessName, data.photos);
+
+    // Calcula variantIndex: se não fornecido, gera uma semente determinística pelo nome da empresa
+    const nameSeed = Math.abs((data.businessName || "").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0));
+    const effectiveVariantIndex = typeof data.variantIndex === "number" && !isNaN(data.variantIndex)
+      ? Math.abs(data.variantIndex) % STUDIO_PRO_VARIANTS.length
+      : nameSeed % STUDIO_PRO_VARIANTS.length;
 
     const slugBase = (data.businessName || "pagina")
       .toLowerCase()
@@ -711,6 +719,7 @@ Regras:
         rating: data.rating ?? 4.9,
         subNiche,
         finalSlug,
+        variantIndex: effectiveVariantIndex,
       });
     }
 
@@ -735,6 +744,8 @@ Regras:
       : `Você é a atendente virtual oficial da empresa "${data.businessName}", localizada em ${destinationAddress}.
 Seu papel é recepcionar os clientes com cordialidade, tirar dúvidas sobre os serviços e direcionar para o WhatsApp (${cleanWhatsapp}) ou agendamento online (/agendar/${finalSlug}).`;
 
+    const modelVariantName = STUDIO_PRO_VARIANTS[effectiveVariantIndex]?.name || "Landing Page Studio Pro";
+
     const { data: page, error: pageErr } = await supabase
       .from("bio_pages")
       .insert({
@@ -757,6 +768,8 @@ Seu papel é recepcionar os clientes com cordialidade, tirar dúvidas sobre os s
           reviews_count: data.reviewsCount || 120,
           photos: subNiche.photos,
           custom_html: generatedHtml,
+          model_variant: modelVariantName,
+          model_variant_index: effectiveVariantIndex,
           agenda_enabled: isBookingNiche,
           booking_active: isBookingNiche,
           ai_chat_enabled: true,
@@ -2389,9 +2402,93 @@ function buildServiceProHtml(opts: {
   rating: number;
   subNiche: SubNicheInfo;
   finalSlug: string;
+  variantIndex?: number;
 }): string {
   const { businessName, city, niche, cleanWhatsapp, destinationAddress, encodedAddress, rating, subNiche, finalSlug } = opts;
+  const variantIndex = typeof opts.variantIndex === "number" ? Math.abs(opts.variantIndex) % 5 : 0;
   const archetype = getVisualArchetype("service");
+
+  // Matriz de Estilo para os 5 Arquétipos
+  let bodyClass = "bg-zinc-950 text-zinc-100 font-sans pb-24 selection:bg-amber-500 selection:text-black";
+  let headerClass = "p-4 border-b border-white/10 flex items-center justify-between max-w-4xl mx-auto";
+  let logoClass = "font-bold text-lg tracking-tight text-white";
+  let primaryBtnClass = "px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-extrabold text-xs hover:brightness-110 transition-all shadow-[0_0_20px_rgba(245,158,11,0.35)]";
+  let heroCtaClass = "px-6 py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black font-black text-sm shadow-[0_0_30px_rgba(245,158,11,0.4)] hover:brightness-110 transition-all flex items-center gap-2";
+  let secondaryCtaClass = "px-6 py-3.5 rounded-2xl bg-zinc-900 border border-amber-500/30 text-amber-200 font-semibold text-sm hover:bg-zinc-800 transition-all flex items-center gap-2";
+  let badgeClass = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold";
+  let accentSpan = "text-amber-400";
+  let cardClass = "p-5 rounded-2xl bg-zinc-900 border border-amber-500/20 space-y-2 hover:border-amber-500/40 transition-all shadow-lg";
+  let cardBadgeClass = "text-xs font-bold text-amber-400 uppercase tracking-wider";
+  let cardBtnClass = "text-xs px-3 py-1.5 rounded-lg bg-amber-500 text-black font-bold hover:bg-amber-400 transition-all";
+  let marqueeBg = "bg-zinc-900 border-y border-amber-500/20 my-4";
+  let marqueeText = "text-amber-300";
+  let bottomBarClass = "bg-amber-500 text-black shadow-lg";
+
+  if (variantIndex === 1) {
+    // 1. Clean High-Tech Minimal (White & Cobalto)
+    bodyClass = "bg-slate-50 text-slate-900 font-sans pb-24 selection:bg-blue-600 selection:text-white";
+    headerClass = "p-4 border-b border-slate-200 bg-white/80 backdrop-blur-md flex items-center justify-between max-w-4xl mx-auto";
+    logoClass = "font-extrabold text-lg tracking-tight text-slate-900";
+    primaryBtnClass = "px-4 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 transition-all shadow-md";
+    heroCtaClass = "px-6 py-3.5 rounded-2xl bg-blue-600 text-white font-black text-sm shadow-xl hover:bg-blue-700 transition-all flex items-center gap-2";
+    secondaryCtaClass = "px-6 py-3.5 rounded-2xl bg-white border border-slate-300 text-slate-700 font-semibold text-sm hover:bg-slate-100 transition-all flex items-center gap-2";
+    badgeClass = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200 text-blue-700 text-xs font-semibold";
+    accentSpan = "text-blue-600";
+    cardClass = "p-5 rounded-2xl bg-white border border-slate-200 space-y-2 hover:border-blue-400 hover:shadow-lg transition-all shadow-xs";
+    cardBadgeClass = "text-xs font-bold text-blue-600 uppercase tracking-wider";
+    cardBtnClass = "text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 transition-all";
+    marqueeBg = "bg-white border-y border-slate-200 my-4";
+    marqueeText = "text-blue-700";
+    bottomBarClass = "bg-blue-600 text-white shadow-lg";
+  } else if (variantIndex === 2) {
+    // 2. Neobrutalismo Pop
+    bodyClass = "bg-amber-50 text-black font-sans pb-24 selection:bg-yellow-400 selection:text-black";
+    headerClass = "p-4 border-b-2 border-black bg-white flex items-center justify-between max-w-4xl mx-auto";
+    logoClass = "font-black text-xl tracking-tight text-black uppercase";
+    primaryBtnClass = "px-4 py-2 rounded-lg bg-yellow-400 text-black font-black text-xs border-2 border-black shadow-[3px_3px_0px_0px_#000] hover:translate-x-0.5 hover:translate-y-0.5 transition-all";
+    heroCtaClass = "px-6 py-3.5 rounded-xl bg-yellow-400 text-black font-black text-sm border-2 border-black shadow-[4px_4px_0px_0px_#000] hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center gap-2";
+    secondaryCtaClass = "px-6 py-3.5 rounded-xl bg-white border-2 border-black text-black font-bold text-sm shadow-[4px_4px_0px_0px_#000] hover:translate-x-0.5 hover:translate-y-0.5 transition-all flex items-center gap-2";
+    badgeClass = "inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-white border-2 border-black text-black text-xs font-black shadow-[2px_2px_0px_0px_#000]";
+    accentSpan = "text-black underline decoration-yellow-400 decoration-4";
+    cardClass = "p-5 rounded-xl bg-white border-2 border-black shadow-[4px_4px_0px_0px_#000] space-y-2 hover:translate-x-0.5 hover:translate-y-0.5 transition-all";
+    cardBadgeClass = "text-xs font-black text-black bg-yellow-300 px-2 py-0.5 rounded border border-black uppercase tracking-wider inline-block";
+    cardBtnClass = "text-xs px-3 py-1.5 rounded-md bg-yellow-400 text-black font-black border-2 border-black shadow-[2px_2px_0px_0px_#000] hover:shadow-none hover:translate-x-0.5 hover:translate-y-0.5 transition-all";
+    marqueeBg = "bg-yellow-300 border-y-2 border-black my-4";
+    marqueeText = "text-black font-black";
+    bottomBarClass = "bg-yellow-400 text-black border-2 border-black shadow-[3px_3px_0px_0px_#000]";
+  } else if (variantIndex === 3) {
+    // 3. Glassmorphism Futurista (Cyan & Violet)
+    bodyClass = "bg-[#070b14] text-slate-100 font-sans pb-24 selection:bg-cyan-500 selection:text-black";
+    headerClass = "p-4 border-b border-cyan-500/20 bg-slate-950/60 backdrop-blur-xl flex items-center justify-between max-w-4xl mx-auto";
+    logoClass = "font-bold text-lg tracking-tight text-white flex items-center gap-2";
+    primaryBtnClass = "px-4 py-2 rounded-xl bg-cyan-500 text-black font-black text-xs hover:bg-cyan-400 transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)]";
+    heroCtaClass = "px-6 py-3.5 rounded-2xl bg-cyan-500 text-black font-black text-sm shadow-[0_0_30px_rgba(6,182,212,0.5)] hover:bg-cyan-400 transition-all flex items-center gap-2";
+    secondaryCtaClass = "px-6 py-3.5 rounded-2xl bg-white/5 backdrop-blur-md border border-cyan-500/30 text-cyan-200 font-semibold text-sm hover:bg-white/10 transition-all flex items-center gap-2";
+    badgeClass = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-semibold backdrop-blur-md";
+    accentSpan = "text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-sky-300";
+    cardClass = "p-5 rounded-2xl bg-slate-900/60 backdrop-blur-xl border border-cyan-500/20 space-y-2 hover:border-cyan-500/50 hover:shadow-[0_0_30px_rgba(6,182,212,0.2)] transition-all shadow-2xl";
+    cardBadgeClass = "text-xs font-bold text-cyan-400 uppercase tracking-wider";
+    cardBtnClass = "text-xs px-3 py-1.5 rounded-lg bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-all shadow-md";
+    marqueeBg = "bg-slate-900/80 backdrop-blur-md border-y border-cyan-500/20 my-4";
+    marqueeText = "text-cyan-300";
+    bottomBarClass = "bg-cyan-500 text-black shadow-[0_0_20px_rgba(6,182,212,0.5)]";
+  } else if (variantIndex === 4) {
+    // 4. Editorial Sofisticado (Marfim & Terracota)
+    bodyClass = "bg-[#faf8f5] text-[#2c2418] font-sans pb-24 selection:bg-amber-900 selection:text-white";
+    headerClass = "p-4 border-b border-stone-200 bg-[#faf8f5]/90 backdrop-blur-sm flex items-center justify-between max-w-4xl mx-auto";
+    logoClass = "font-serif font-bold text-xl tracking-wide text-stone-900";
+    primaryBtnClass = "px-4 py-2 rounded-lg bg-stone-900 text-stone-100 font-medium text-xs hover:bg-stone-800 transition-all shadow-sm";
+    heroCtaClass = "px-6 py-3.5 rounded-xl bg-stone-900 text-stone-100 font-semibold text-sm shadow-lg hover:bg-stone-800 transition-all flex items-center gap-2";
+    secondaryCtaClass = "px-6 py-3.5 rounded-xl bg-[#edebe5] border border-stone-300 text-stone-800 font-medium text-sm hover:bg-[#e0ddd6] transition-all flex items-center gap-2";
+    badgeClass = "inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-900/5 border border-amber-900/20 text-amber-900 text-xs font-serif";
+    accentSpan = "text-amber-800 font-serif italic";
+    cardClass = "p-5 rounded-xl bg-white border border-stone-200/90 space-y-2 hover:border-amber-800/40 hover:shadow-md transition-all shadow-xs";
+    cardBadgeClass = "text-xs font-serif text-amber-800 uppercase tracking-widest";
+    cardBtnClass = "text-xs px-3 py-1.5 rounded-md bg-stone-900 text-stone-100 font-medium hover:bg-stone-800 transition-all";
+    marqueeBg = "bg-[#f2efe8] border-y border-stone-300 my-4";
+    marqueeText = "text-stone-800 font-serif";
+    bottomBarClass = "bg-stone-900 text-stone-100 shadow-md";
+  }
 
   return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -2405,59 +2502,59 @@ function buildServiceProHtml(opts: {
     ${getMotionStyles()}
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 font-sans pb-24 selection:bg-emerald-500 selection:text-black">
-  <header class="p-4 border-b border-white/10 flex items-center justify-between max-w-4xl mx-auto">
-    <div class="font-bold text-lg tracking-tight text-white">${businessName}</div>
-    <a href="/agendar/${finalSlug}" target="_top" class="px-4 py-2 rounded-xl bg-emerald-500 text-black font-bold text-xs hover:bg-emerald-400 transition-all shadow-md">
+<body class="${bodyClass}">
+  <header class="${headerClass}">
+    <div class="${logoClass}">${businessName}</div>
+    <a href="/agendar/${finalSlug}" target="_top" class="${primaryBtnClass}">
       Agendar Consulta
     </a>
   </header>
 
   <section class="max-w-4xl mx-auto px-4 pt-10 pb-8 text-center space-y-4">
-    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+    <div class="${badgeClass}">
       <span>★ ${rating} no Google</span>
       <span>·</span>
       <span>Atendimento Exclusivo</span>
     </div>
-    <h1 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-      Excelência e Cuidado Especializado em <span class="text-emerald-400">${city}</span>
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
+      Excelência e Cuidado Especializado em <span class="${accentSpan}">${city}</span>
     </h1>
-    <p class="text-sm sm:text-base text-zinc-400 max-w-xl mx-auto leading-relaxed">
+    <p class="text-sm sm:text-base opacity-80 max-w-xl mx-auto leading-relaxed">
       Atendimento exclusivo em ${niche}. Agende seu horário online ou fale diretamente conosco.
     </p>
     <div class="pt-4 flex flex-wrap items-center justify-center gap-3">
-      <a href="/agendar/${finalSlug}" target="_top" class="px-6 py-3.5 rounded-2xl bg-emerald-500 text-black font-black text-sm shadow-xl hover:bg-emerald-400 transition-all flex items-center gap-2">
+      <a href="/agendar/${finalSlug}" target="_top" class="${heroCtaClass}">
         <span>🗓️ Agendar Horário Online</span>
       </a>
-      <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Vim pelo site da ${businessName} e gostaria de informações.`)}" target="_blank" class="px-6 py-3.5 rounded-2xl bg-zinc-900 border border-white/10 text-white font-semibold text-sm hover:bg-zinc-800 transition-all flex items-center gap-2">
+      <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Vim pelo site da ${businessName} e gostaria de informações.`)}" target="_blank" class="${secondaryCtaClass}">
         <span>Falar no WhatsApp</span>
       </a>
     </div>
   </section>
 
   <!-- Faixa Animada (Motion Kit Skill) -->
-  ${renderMarquee(archetype.marqueePhrases, { bgClass: "bg-zinc-900 border-y border-emerald-500/20 my-4", textClass: "text-emerald-300" })}
+  ${renderMarquee(archetype.marqueePhrases, { bgClass: marqueeBg, textClass: marqueeText })}
 
   <div class="max-w-4xl mx-auto px-4 mb-10">
     <div class="relative h-64 sm:h-96 rounded-3xl overflow-hidden border border-white/10 shadow-2xl">
       <img src="${subNiche.photos[0]}" class="w-full h-full object-cover" alt="${businessName}">
-      <div class="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
     </div>
   </div>
 
   <section class="max-w-4xl mx-auto px-4 py-6">
-    <h2 class="text-xl sm:text-2xl font-bold text-white mb-6 text-center">Nossos Principais Serviços</h2>
+    <h2 class="text-xl sm:text-2xl font-bold mb-6 text-center">Nossos Principais Serviços</h2>
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       ${subNiche.items
         .map(
           (service) => `
-        <div class="p-5 rounded-2xl bg-zinc-900 border border-white/10 space-y-2">
-          ${service.badge ? `<span class="text-xs font-bold text-emerald-400 uppercase tracking-wider">${service.badge}</span>` : ""}
-          <h3 class="text-lg font-bold text-white">${service.title}</h3>
-          <p class="text-xs text-zinc-400 leading-relaxed">${service.desc}</p>
+        <div class="${cardClass}">
+          ${service.badge ? `<span class="${cardBadgeClass}">${service.badge}</span>` : ""}
+          <h3 class="text-lg font-bold">${service.title}</h3>
+          <p class="text-xs opacity-75 leading-relaxed">${service.desc}</p>
           <div class="pt-2 flex items-center justify-between">
-            <span class="text-sm font-bold text-emerald-400">R$ ${service.price.toFixed(2).replace(".", ",")}</span>
-            <a href="/agendar/${finalSlug}" target="_top" class="text-xs px-3 py-1.5 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-all">Agendar →</a>
+            <span class="text-sm font-bold ${accentSpan}">R$ ${service.price.toFixed(2).replace(".", ",")}</span>
+            <a href="/agendar/${finalSlug}" target="_top" class="${cardBtnClass}">Agendar →</a>
           </div>
         </div>
       `,
@@ -2467,11 +2564,11 @@ function buildServiceProHtml(opts: {
   </section>
 
   <section class="max-w-4xl mx-auto px-4 py-6">
-    <div class="p-6 rounded-3xl bg-zinc-900 border border-white/10 space-y-4">
+    <div class="p-6 rounded-3xl border border-white/10 space-y-4 ${variantIndex === 1 || variantIndex === 2 || variantIndex === 4 ? 'bg-white/60' : 'bg-zinc-900'}">
       <div class="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 class="text-lg font-bold text-white">📍 Onde Estamos</h2>
-          <p class="text-xs text-zinc-400">${destinationAddress}</p>
+          <h2 class="text-lg font-bold">📍 Onde Estamos</h2>
+          <p class="text-xs opacity-75">${destinationAddress}</p>
         </div>
         <div class="flex items-center gap-2">
           <a href="https://www.google.com/maps/dir/?api=1&destination=${encodedAddress}" target="_blank" class="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-xs font-semibold text-white transition-all">Google Maps</a>
@@ -2483,7 +2580,7 @@ function buildServiceProHtml(opts: {
   </section>
 
   <div class="fixed bottom-5 right-5 z-50">
-    <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Vim pelo site da ${businessName} e gostaria de agendar um atendimento.`)}" target="_blank" class="flex items-center gap-2 px-4 py-3 rounded-full bg-emerald-500 text-black font-bold text-xs shadow-2xl hover:scale-105 transition-all">
+    <a href="https://wa.me/${cleanWhatsapp}?text=${encodeURIComponent(`Olá! Vim pelo site da ${businessName} e gostaria de agendar um atendimento.`)}" target="_blank" class="flex items-center gap-2 px-4 py-3 rounded-full ${bottomBarClass} font-bold text-xs shadow-2xl hover:scale-105 transition-all">
       <span>Atendimento no WhatsApp</span>
     </a>
   </div>

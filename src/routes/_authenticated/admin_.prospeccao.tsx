@@ -87,6 +87,7 @@ import {
   type ProspectNicheCategory,
 } from "@/modules/prospecting/specializedGenerators.functions";
 import { getGeminiApiKey } from "@/modules/studiopro/lib/creativeEngineService";
+import { STUDIO_PRO_VARIANTS } from "@/modules/studiopro/lib/buildStudioProConfigFromLead";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -714,6 +715,9 @@ function ProspectingPage() {
     try {
       const isAi = mode === "ai" || mode === false;
       const cidMatch = company.notes?.match(/CID:\s*([0-9a-fx:]+)/i);
+      const nameSeed = Math.abs((company.name || "").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0));
+      const initialVariantIndex = nameSeed % STUDIO_PRO_VARIANTS.length;
+
       const page = await PageService.createProspectDemoPage({
         companyName: company.name,
         whatsapp: company.whatsapp ?? company.phone,
@@ -722,10 +726,11 @@ function ProspectingPage() {
         instagram: company.instagram,
         rating: company.rating,
         reviewsCount: company.reviews_count,
+        variantIndex: initialVariantIndex,
         cid: cidMatch ? cidMatch[1] : null,
         preferredTemplateId: isAi ? "cinematic-glass" : "site-maquina",
       });
-      const modelVariant = (page.social_links as any)?.model_variant || "Landing Page Studio Pro (Lovable)";
+      const modelVariant = (page.social_links as any)?.model_variant || STUDIO_PRO_VARIANTS[initialVariantIndex].name;
       const url = `https://${page.slug}.eialink.com.br`;
       const newNotes = company.notes
         ? `${company.notes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
@@ -755,6 +760,8 @@ function ProspectingPage() {
     setFeedback(null);
     const meta = getProspectNicheCategory(company.niche, company.name);
     const targetCategory = forceCat || meta.category;
+    const nameSeed = Math.abs((company.name || "").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0));
+    const initialVariantIndex = nameSeed % STUDIO_PRO_VARIANTS.length;
 
     try {
       setFeedback(`🚀 ${meta.loadingLabel} com Gemini 3.8 Flash...`);
@@ -771,6 +778,7 @@ function ProspectingPage() {
           instagram: company.instagram ?? undefined,
           photos: (company as any).photos || [],
           forceCategory: targetCategory,
+          variantIndex: initialVariantIndex,
           clientGeminiKey: getGeminiApiKey() || undefined,
         },
       });
@@ -801,15 +809,26 @@ function ProspectingPage() {
       const nicheKey = detectNicheKey(company.niche, company.name);
       const variants = getVariantsForNiche(nicheKey);
 
-      // Identifica o modelo atual anotado ou da página encontrada
-      const currentModelName = demoInfo.modelName;
-      const currentIndex = currentModelName
-        ? variants.findIndex((v) => v.modelName.toLowerCase() === currentModelName.toLowerCase())
-        : -1;
+      // Identifica o modelo atual (anotado nas notas ou na página)
+      const currentModelName = demoInfo.modelName || (company.notes?.match(/\[Modelo:\s*([^\]]+)\]/i)?.[1] ?? "");
+      let currentIndex = -1;
+      if (currentModelName) {
+        const spIdx = STUDIO_PRO_VARIANTS.findIndex(
+          (v) => v.name.toLowerCase() === currentModelName.toLowerCase()
+        );
+        if (spIdx !== -1) {
+          currentIndex = spIdx;
+        } else {
+          const vIdx = variants.findIndex(
+            (v) => v.modelName.toLowerCase() === currentModelName.toLowerCase()
+          );
+          if (vIdx !== -1) currentIndex = vIdx;
+        }
+      }
 
-      // Avança sequencialmente para o próximo modelo (0 -> 1 -> 2 -> 0)
-      const nextIndex = (currentIndex + 1) % variants.length;
-      const nextVariant = variants[nextIndex];
+      // Cicla entre os 5 arquétipos visuais de alto padrão (0 -> 1 -> 2 -> 3 -> 4 -> 0)
+      const nextIndex = (currentIndex + 1) % STUDIO_PRO_VARIANTS.length;
+      const nextVariant = STUDIO_PRO_VARIANTS[nextIndex];
 
       // Remove a página demo anterior para manter tudo limpo
       const oldPageId = demoInfo.pageId || (demoInfo.slug ? demoPagesBySlug.get(demoInfo.slug)?.id : null);
@@ -835,7 +854,7 @@ function ProspectingPage() {
         cid: cidMatch ? cidMatch[1] : null,
       });
 
-      const modelVariant = (page.social_links as any)?.model_variant || nextVariant.modelName;
+      const modelVariant = (page.social_links as any)?.model_variant || nextVariant.name;
       const url = `https://eialink.com.br/p/${page.slug}`;
 
       // Limpa qualquer linha anterior de Demo das notas
@@ -855,7 +874,7 @@ function ProspectingPage() {
         companyUpdates.phone = page.whatsapp;
       }
       await ProspectingService.updateCompany(company.id, companyUpdates);
-      setFeedback(`🎨 Modelo alterado para "${modelVariant}" para ${company.name}! O novo link já está pronto.`);
+      setFeedback(`🎨 Modelo alterado para "${modelVariant}" (${nextVariant.description}) para ${company.name}!`);
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao trocar modelo da página.";
@@ -882,9 +901,23 @@ function ProspectingPage() {
       const nicheKey = detectNicheKey((page.social_links as any)?.niche, page.display_name);
       const variants = getVariantsForNiche(nicheKey);
       const currentModel = (page.social_links as any)?.model_variant || "";
-      const currentIndex = variants.findIndex((v) => v.modelName.toLowerCase() === currentModel.toLowerCase());
-      const nextIndex = (currentIndex + 1) % variants.length;
-      const nextVariant = variants[nextIndex];
+      let currentIndex = -1;
+      if (currentModel) {
+        const spIdx = STUDIO_PRO_VARIANTS.findIndex(
+          (v) => v.name.toLowerCase() === currentModel.toLowerCase()
+        );
+        if (spIdx !== -1) {
+          currentIndex = spIdx;
+        } else {
+          const vIdx = variants.findIndex(
+            (v) => v.modelName.toLowerCase() === currentModel.toLowerCase()
+          );
+          if (vIdx !== -1) currentIndex = vIdx;
+        }
+      }
+
+      const nextIndex = (currentIndex + 1) % STUDIO_PRO_VARIANTS.length;
+      const nextVariant = STUDIO_PRO_VARIANTS[nextIndex];
 
       try {
         await PageService.deletePage(page.id);
@@ -904,7 +937,7 @@ function ProspectingPage() {
         cid: (page.social_links as any)?.cid || null,
       });
 
-      const modelVariant = (newPage.social_links as any)?.model_variant || nextVariant.modelName;
+      const modelVariant = (newPage.social_links as any)?.model_variant || nextVariant.name;
       setFeedback(`🎨 Modelo de "${page.display_name}" alterado para "${modelVariant}" com sucesso!`);
       invalidate();
     } catch (err: unknown) {

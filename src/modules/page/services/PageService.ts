@@ -23,7 +23,7 @@ import {
 } from "@/modules/page/page.functions";
 import { resolveBioMediaUrl } from "@/lib/bio-media";
 import { CommercialSettingsService } from "@/modules/settings/services/CommercialSettingsService";
-import { buildStudioProConfigFromLead } from "@/modules/studiopro/lib/buildStudioProConfigFromLead";
+import { buildStudioProConfigFromLead, STUDIO_PRO_VARIANTS } from "@/modules/studiopro/lib/buildStudioProConfigFromLead";
 
 export type OwnedPage = Tables<"bio_pages">;
 
@@ -313,6 +313,10 @@ export const PageService = {
       faq: faqItems,
     };
 
+    const currentVariantIndex = typeof variantIndex === "number" && !isNaN(variantIndex)
+      ? Math.abs(variantIndex) % STUDIO_PRO_VARIANTS.length
+      : 0;
+
     const studioproConfig = buildStudioProConfigFromLead({
       companyName: sanitizedCompanyName,
       niche: effectiveNicheKey,
@@ -326,6 +330,7 @@ export const PageService = {
       photos: realPhotos,
       coverUrl: realCover,
       avatarUrl: realAvatar,
+      variantIndex: currentVariantIndex,
     });
 
     const isGastroNiche =
@@ -363,7 +368,7 @@ export const PageService = {
       ? "Cardápio Delivery iFood"
       : shouldUseAgenda
       ? "Agenda & Serviços"
-      : "Landing Page Studio Pro";
+      : STUDIO_PRO_VARIANTS[currentVariantIndex].name;
 
     const cardapioData = shouldUseCardapio
       ? {
@@ -451,6 +456,7 @@ export const PageService = {
           google_rating: realRating,
           reviews_count: realReviewsCount,
           model_variant: finalModelVariant,
+          model_variant_index: currentVariantIndex,
           is_cardapio_page: Boolean(cardapioData),
           cardapio_data: cardapioData || undefined,
           is_agenda_page: Boolean(agendaData),

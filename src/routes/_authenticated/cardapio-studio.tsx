@@ -35,6 +35,7 @@ import {
   type CardapioAiMessage,
   type CardapioItem,
 } from "@/modules/cardapio/cardapioAiService";
+import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/cardapio-studio")({
@@ -108,9 +109,7 @@ function CardapioStudioPage() {
   const searchParams = useSearch({ strict: false }) as Record<string, string>;
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
-  const [activeTab, setActiveTab] = useState<"todos" | string>("todos");
   const [cardapio, setCardapio] = useState<CardapioData>(DEFAULT_CARDAPIO);
-  const [searchQuery, setSearchQuery] = useState("");
   const [messages, setMessages] = useState<CardapioAiMessage[]>([
     {
       id: "msg-1",
@@ -125,7 +124,6 @@ function CardapioStudioPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedPageUrl, setSavedPageUrl] = useState<string | null>(null);
-  const [cart, setCart] = useState<{ [itemId: string]: number }>({});
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // Se veio parâmetro da prospecção ou ID de página salva
@@ -257,45 +255,6 @@ function CardapioStudioPage() {
       setIsSaving(false);
     }
   }
-
-  // Funções do carrinho de simulação
-  function addToCart(itemId: string) {
-    setCart((prev) => ({
-      ...prev,
-      [itemId]: (prev[itemId] || 0) + 1,
-    }));
-  }
-
-  function removeFromCart(itemId: string) {
-    setCart((prev) => {
-      const next = { ...prev };
-      if (next[itemId] > 1) {
-        next[itemId] -= 1;
-      } else {
-        delete next[itemId];
-      }
-      return next;
-    });
-  }
-
-  const totalCartPrice = Object.entries(cart).reduce((acc, [id, qty]) => {
-    const item = cardapio.items.find((it) => it.id === id);
-    return acc + (item?.price || 0) * qty;
-  }, 0);
-
-  const totalCartCount = Object.values(cart).reduce((a, b) => a + b, 0);
-
-  const filteredItems = cardapio.items.filter((item) => {
-    const matchesSearch =
-      searchQuery.trim() === "" ||
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description.toLowerCase().includes(searchQuery.toLowerCase());
-    if (!matchesSearch) return false;
-
-    if (activeTab === "todos") return true;
-    if (activeTab === "destaques") return item.isPopular || item.badge;
-    return item.category === activeTab;
-  });
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 text-zinc-100 overflow-hidden font-sans">
@@ -557,197 +516,24 @@ function CardapioStudioPage() {
           </div>
         </div>
 
-        {/* Painel Direito: O Cardápio Interativo ao Vivo */}
+        {/* Painel Direito: O Cardápio Interativo ao Vivo Estilo iFood */}
         <div
-          className={`flex-1 min-w-0 bg-zinc-950 overflow-y-auto flex flex-col items-center justify-start p-3 sm:p-5 lg:p-8 h-full ${
+          className={`flex-1 min-w-0 bg-zinc-950 overflow-y-auto h-full p-2 sm:p-4 lg:p-6 flex justify-center items-start ${
             mobileTab === "preview" ? "flex" : "hidden lg:flex"
           }`}
         >
           <div
             className={`transition-all duration-300 w-full ${
               viewMode === "mobile"
-                ? "max-w-[400px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-900 overflow-hidden my-auto"
-                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-900 overflow-hidden my-auto"
+                ? "max-w-[420px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-950 overflow-hidden"
+                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-950 overflow-hidden"
             }`}
           >
-            {/* Topo do Restaurante */}
-            <div className="relative bg-gradient-to-b from-orange-950/60 to-zinc-900 p-6 border-b border-white/10">
-              <div className="flex items-start justify-between">
-                <div>
-                  <Badge className="bg-orange-500 text-white mb-2 text-[10px] font-bold tracking-wider uppercase">
-                    Aberto para Pedidos 🟢
-                  </Badge>
-                  <h2 className="text-2xl font-black tracking-tight text-white">
-                    {cardapio.restaurantName}
-                  </h2>
-                  <p className="text-xs text-orange-200/90 mt-1 font-medium">
-                    {cardapio.tagline}
-                  </p>
-                </div>
-              </div>
-
-              {/* Informações de Entrega */}
-              <div className="mt-4 flex flex-wrap items-center gap-3 text-[11px] text-zinc-300">
-                <span className="flex items-center gap-1 bg-zinc-950/60 px-2.5 py-1 rounded-lg border border-white/5">
-                  <Clock className="h-3 w-3 text-orange-400" />
-                  {cardapio.openingHours}
-                </span>
-                <span className="flex items-center gap-1 bg-zinc-950/60 px-2.5 py-1 rounded-lg border border-white/5">
-                  <ShoppingBag className="h-3 w-3 text-orange-400" />
-                  Taxa: {cardapio.deliveryFee}
-                </span>
-                {cardapio.address && (
-                  <span className="flex items-center gap-1 bg-zinc-950/60 px-2.5 py-1 rounded-lg border border-white/5">
-                    <MapPin className="h-3 w-3 text-orange-400" />
-                    {cardapio.address}
-                  </span>
-                )}
-              </div>
-
-              {/* 🔍 Barra de Busca em Tempo Real no Preview */}
-              <div className="mt-3.5 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar pratos, lanches ou bebidas..."
-                  className="w-full pl-9 pr-4 h-9 bg-zinc-950/80 border border-white/10 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500 transition-colors"
-                />
-              </div>
-            </div>
-
-            {/* Categorias em Abas Roláveis */}
-            <div className="px-4 py-3 bg-zinc-900/90 border-b border-white/5 flex items-center gap-2 overflow-x-auto no-scrollbar sticky top-0 z-10 backdrop-blur-md">
-              {cardapio.categories.map((cat) => {
-                const isActive = activeTab === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveTab(cat.id)}
-                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? "bg-orange-500 text-white shadow-md shadow-orange-500/20"
-                        : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                    }`}
-                  >
-                    <span>{cat.icon || "🍽️"}</span>
-                    <span>{cat.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Lista de Itens do Cardápio */}
-            <div className="p-4 sm:p-5 space-y-3.5">
-              {filteredItems.map((item) => {
-                const quantity = cart[item.id] || 0;
-                return (
-                  <div
-                    key={item.id}
-                    className="group bg-zinc-950/80 border border-white/5 hover:border-orange-500/30 rounded-2xl p-3.5 transition-all flex gap-3.5 items-center justify-between"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-sm font-bold text-white truncate">
-                          {item.name}
-                        </h4>
-                        {item.badge && (
-                          <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-orange-500/20 text-orange-300 border border-orange-500/30">
-                            {item.badge}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
-                        {item.description}
-                      </p>
-                      <div className="mt-2 text-sm font-black text-orange-400">
-                        R$ {item.price.toFixed(2).replace(".", ",")}
-                      </div>
-                    </div>
-
-                    {/* Foto do Prato e Botão de Adicionar */}
-                    <div className="relative shrink-0 flex flex-col items-end gap-2">
-                      {item.image ? (
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="h-20 w-20 rounded-xl object-cover border border-white/10"
-                        />
-                      ) : (
-                        <div className="h-20 w-20 rounded-xl bg-zinc-800 grid place-items-center text-zinc-600">
-                          <ImageIcon className="h-6 w-6" />
-                        </div>
-                      )}
-
-                      {quantity === 0 ? (
-                        <button
-                          onClick={() => addToCart(item.id)}
-                          className="px-3 py-1 rounded-lg bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-sm"
-                        >
-                          Adicionar +
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-1.5 bg-zinc-800 border border-orange-500/40 rounded-lg p-0.5">
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="h-6 w-6 rounded-md bg-zinc-700 hover:bg-zinc-600 grid place-items-center text-xs font-bold text-white"
-                          >
-                            -
-                          </button>
-                          <span className="text-xs font-bold text-orange-400 px-1">
-                            {quantity}
-                          </span>
-                          <button
-                            onClick={() => addToCart(item.id)}
-                            className="h-6 w-6 rounded-md bg-orange-600 hover:bg-orange-500 grid place-items-center text-xs font-bold text-white"
-                          >
-                            +
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Barra Flutuante da Sacola / Enviar para WhatsApp */}
-            {totalCartCount > 0 && (
-              <div className="sticky bottom-0 bg-zinc-950/95 backdrop-blur-md p-4 border-t border-white/10 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] text-zinc-400 block">Total do Pedido</span>
-                  <span className="text-base font-black text-white">
-                    R$ {totalCartPrice.toFixed(2).replace(".", ",")}
-                  </span>
-                  <span className="text-[10px] text-orange-400 ml-1.5">
-                    ({totalCartCount} {totalCartCount === 1 ? "item" : "itens"})
-                  </span>
-                </div>
-
-                <Button
-                  size="sm"
-                  asChild
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20"
-                >
-                  <a
-                    href={`https://wa.me/${cardapio.whatsapp}?text=${encodeURIComponent(
-                      `Olá! Gostaria de fazer um pedido pelo cardápio:\n${Object.entries(cart)
-                        .map(([id, qty]) => {
-                          const it = cardapio.items.find((x) => x.id === id);
-                          return `• ${qty}x ${it?.name} - R$ ${((it?.price || 0) * qty).toFixed(2)}`;
-                        })
-                        .join("\n")}\n\nTotal: R$ ${totalCartPrice.toFixed(2)}`,
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-1.5" />
-                    Enviar pelo WhatsApp
-                  </a>
-                </Button>
-              </div>
-            )}
+            <CardapioPublicViewer
+              cardapio={cardapio}
+              companyName={cardapio.restaurantName}
+              isDemo={false}
+            />
           </div>
         </div>
       </div>

@@ -538,15 +538,15 @@ function LojaStudioPage() {
 
         {/* Painel Direito: A Loja ao Vivo */}
         <div
-          className={`flex-1 min-w-0 bg-zinc-950 overflow-y-auto flex flex-col items-center justify-start p-3 sm:p-5 lg:p-8 h-full ${
+          className={`flex-1 min-w-0 bg-zinc-950 overflow-y-auto h-full p-2 sm:p-4 lg:p-6 flex justify-center items-start ${
             mobileTab === "preview" ? "flex" : "hidden lg:flex"
           }`}
         >
           <div
             className={`transition-all duration-300 w-full ${
               viewMode === "mobile"
-                ? "max-w-[400px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-900 overflow-hidden my-auto"
-                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-900 overflow-hidden my-auto"
+                ? "max-w-[420px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-900 overflow-hidden"
+                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-900 overflow-hidden"
             }`}
           >
             {/* Header da Loja */}

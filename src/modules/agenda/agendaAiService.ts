@@ -35,6 +35,8 @@ export interface AgendaStudioData {
   services: AgendaServiceItem[];
 }
 
+export type AgendaData = AgendaStudioData;
+
 export interface AgendaAiMessage {
   id: string;
   role: "user" | "assistant";

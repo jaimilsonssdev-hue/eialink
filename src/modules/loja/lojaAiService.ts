@@ -31,7 +31,17 @@ export interface LojaData {
   shippingInfo?: string; // Ex: "Frete grátis acima de R$ 199 / Entrega local rápida"
   openingHours?: string;
   themeColor?: string;
-  styleVariant?: "store-modern" | "boutique-minimal" | "showcase-bold";
+  styleVariant?: "store-modern" | "boutique-minimal" | "showcase-bold" | string;
+  visualEffect?: "glassmorphism" | "neobrutalism" | "elegante" | "parallax" | "clean";
+  customFont?: string;
+  buttonColor?: string;
+  bannerImage?: string;
+  features?: {
+    search?: boolean;
+    cart?: boolean;
+    shippingInfo?: boolean;
+    stockBadge?: boolean;
+  };
   categories: LojaCategory[];
   items: LojaProductItem[];
 }
@@ -276,3 +286,4 @@ export async function saveLojaToBioPage(
     publicUrl: `/p/${slug}`,
   };
 }
+

@@ -23,6 +23,7 @@ import {
   Flame,
   FileText,
   Search,
+  Sliders,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ import {
   type CardapioItem,
 } from "@/modules/cardapio/cardapioAiService";
 import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
+import { CardapioVisualEditor } from "@/modules/cardapio/CardapioVisualEditor";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/cardapio-studio")({
@@ -54,6 +56,8 @@ const DEFAULT_CARDAPIO: CardapioData = {
   openingHours: "Terça a Domingo das 18h às 23h30",
   themeColor: "orange",
   styleVariant: "ifood-modern",
+  visualEffect: "glassmorphism",
+  buttonColor: "#f97316",
   categories: [
     { id: "todos", name: "Todos", icon: "🍽️" },
     { id: "destaques", name: "Mais Pedidos", icon: "⭐" },
@@ -109,6 +113,7 @@ function CardapioStudioPage() {
   const searchParams = useSearch({ strict: false }) as Record<string, string>;
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
+  const [sidebarMode, setSidebarMode] = useState<"ai" | "visual">("visual");
   const [cardapio, setCardapio] = useState<CardapioData>(DEFAULT_CARDAPIO);
   const [messages, setMessages] = useState<CardapioAiMessage[]>([
     {
@@ -378,142 +383,174 @@ function CardapioStudioPage() {
 
       {/* Conteúdo Principal Dividido: Chat + Visualizador */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Painel Esquerdo: Chat IA Especializada */}
+        {/* Painel Esquerdo: Editor Visual ou Copiloto IA */}
         <div
-          className={`w-full lg:w-[400px] xl:w-[440px] shrink-0 border-r border-white/10 flex flex-col bg-zinc-950/80 backdrop-blur-xl h-full z-10 ${
+          className={`w-full lg:w-[420px] xl:w-[460px] shrink-0 border-r border-white/10 flex flex-col bg-zinc-950/80 backdrop-blur-xl h-full z-10 ${
             mobileTab === "chat" ? "flex" : "hidden lg:flex"
           }`}
         >
-          <div className="p-3 border-b border-white/5 bg-zinc-900/40 flex items-center justify-between text-xs text-zinc-400">
-            <span className="flex items-center gap-1.5 font-semibold text-orange-400">
-              <Sparkles className="h-3.5 w-3.5" /> Editor com IA
-            </span>
+          {/* Seletor de Modo do Painel Lateral */}
+          <div className="p-2 border-b border-white/10 bg-zinc-900/60 flex items-center justify-between gap-1 shrink-0">
+            <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-white/10 flex-1">
+              <button
+                type="button"
+                onClick={() => setSidebarMode("visual")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  sidebarMode === "visual"
+                    ? "bg-orange-500 text-white font-bold shadow-xs"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                <Sliders className="h-3.5 w-3.5" />
+                <span>Editor Visual</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSidebarMode("ai")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  sidebarMode === "ai"
+                    ? "bg-orange-500 text-white font-bold shadow-xs"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Copiloto IA</span>
+              </button>
+            </div>
+
             {/* Atalho mobile para ver prévia */}
             <button
               onClick={() => setMobileTab("preview")}
-              className="lg:hidden text-orange-400 hover:text-orange-300 font-semibold flex items-center gap-1"
+              className="lg:hidden text-orange-400 hover:text-orange-300 font-semibold text-xs px-2 py-1 flex items-center gap-0.5"
             >
-              Ver Prévia →
+              Prévia →
             </button>
           </div>
 
-          {/* Lista de Mensagens */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`flex flex-col ${
-                  m.role === "user" ? "items-end" : "items-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[90%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
-                    m.role === "user"
-                      ? "bg-orange-600 text-white rounded-br-xs"
-                      : "bg-zinc-900/90 text-zinc-200 border border-white/10 rounded-bl-xs shadow-md"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{m.content}</p>
+          {/* Renderização Condicional: Editor Visual vs Chat IA */}
+          {sidebarMode === "visual" ? (
+            <CardapioVisualEditor cardapio={cardapio} onChange={setCardapio} />
+          ) : (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              {/* Lista de Mensagens */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex flex-col ${
+                      m.role === "user" ? "items-end" : "items-start"
+                    }`}
+                  >
+                    <div
+                      className={`max-w-[90%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                        m.role === "user"
+                          ? "bg-orange-600 text-white rounded-br-xs"
+                          : "bg-zinc-900/90 text-zinc-200 border border-white/10 rounded-bl-xs shadow-md"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap">{m.content}</p>
 
-                  {m.attachments && m.attachments.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-white/10 flex flex-wrap gap-1.5">
-                      {m.attachments.map((att, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/40 text-[10px] text-zinc-300"
-                        >
-                          <Paperclip className="h-2.5 w-2.5" /> {att.name}
-                        </span>
-                      ))}
+                      {m.attachments && m.attachments.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-white/10 flex flex-wrap gap-1.5">
+                          {m.attachments.map((att, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/40 text-[10px] text-zinc-300"
+                            >
+                              <Paperclip className="h-2.5 w-2.5" /> {att.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                ))}
+
+                {isProcessing && (
+                  <div className="flex items-center gap-2 text-xs text-orange-400 p-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Atualizando cardápio...</span>
+                  </div>
+                )}
+                <div ref={chatScrollRef} />
+              </div>
+
+              {/* Atalhos Rápidos */}
+              <div className="px-3 py-2 border-t border-white/5 flex items-center gap-1.5 overflow-x-auto text-[11px] no-scrollbar">
+                <button
+                  onClick={() => handleSendMessage("Crie uma sobremesa especial irresistível para aumentar o ticket médio.")}
+                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
+                >
+                  🍮 Adicionar Sobremesa
+                </button>
+                <button
+                  onClick={() => handleSendMessage("Monte um combo promocional com burger, fritas e refrigerante.")}
+                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
+                >
+                  🔥 Criar Combo Casal
+                </button>
+                <button
+                  onClick={() => handleSendMessage("Mude o tema visual para um estilo bistro dark elegante.")}
+                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
+                >
+                  🎨 Tema Bistro Dark
+                </button>
+              </div>
+
+              {/* Barra de Entrada com Suporte Multimodal */}
+              <div className="p-3 border-t border-white/10 bg-zinc-900/60">
+                {attachments.length > 0 && (
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {attachments.map((att, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 border border-orange-500/30 text-[11px]"
+                      >
+                        <FileText className="h-3 w-3" />
+                        <span className="truncate max-w-[120px]">{att.name}</span>
+                        <button
+                          onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="hover:text-white"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2">
+                  <label className="p-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 cursor-pointer transition-colors border border-white/5">
+                    <Paperclip className="h-4 w-4" />
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,application/pdf"
+                      className="hidden"
+                      onChange={handleFileUpload}
+                    />
+                  </label>
+
+                  <Input
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                    placeholder="Peça alterações ou envie fotos do cardápio..."
+                    className="bg-zinc-950 border-white/10 text-xs h-10 rounded-xl"
+                  />
+
+                  <Button
+                    size="sm"
+                    onClick={() => handleSendMessage()}
+                    disabled={isProcessing || (!inputMessage.trim() && attachments.length === 0)}
+                    className="bg-orange-600 hover:bg-orange-500 text-white h-10 px-3.5 rounded-xl"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
-            ))}
-
-            {isProcessing && (
-              <div className="flex items-center gap-2 text-xs text-orange-400 p-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Atualizando cardápio...</span>
-              </div>
-            )}
-            <div ref={chatScrollRef} />
-          </div>
-
-          {/* Atalhos Rápidos */}
-          <div className="px-3 py-2 border-t border-white/5 flex items-center gap-1.5 overflow-x-auto text-[11px] no-scrollbar">
-            <button
-              onClick={() => handleSendMessage("Crie uma sobremesa especial irresistível para aumentar o ticket médio.")}
-              className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
-            >
-              🍮 Adicionar Sobremesa
-            </button>
-            <button
-              onClick={() => handleSendMessage("Monte um combo promocional com burger, fritas e refrigerante.")}
-              className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
-            >
-              🔥 Criar Combo Casal
-            </button>
-            <button
-              onClick={() => handleSendMessage("Mude o tema visual para um estilo bistro dark elegante.")}
-              className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
-            >
-              🎨 Tema Bistro Dark
-            </button>
-          </div>
-
-          {/* Barra de Entrada com Suporte Multimodal */}
-          <div className="p-3 border-t border-white/10 bg-zinc-900/60">
-            {attachments.length > 0 && (
-              <div className="mb-2 flex flex-wrap gap-1.5">
-                {attachments.map((att, i) => (
-                  <span
-                    key={i}
-                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-orange-500/20 text-orange-300 border border-orange-500/30 text-[11px]"
-                  >
-                    <FileText className="h-3 w-3" />
-                    <span className="truncate max-w-[120px]">{att.name}</span>
-                    <button
-                      onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
-                      className="hover:text-white"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <label className="p-2 rounded-xl bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 cursor-pointer transition-colors border border-white/5">
-                <Paperclip className="h-4 w-4" />
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*,application/pdf"
-                  className="hidden"
-                  onChange={handleFileUpload}
-                />
-              </label>
-
-              <Input
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-                placeholder="Peça alterações ou envie fotos do cardápio..."
-                className="bg-zinc-950 border-white/10 text-xs h-10 rounded-xl"
-              />
-
-              <Button
-                size="sm"
-                onClick={() => handleSendMessage()}
-                disabled={isProcessing || (!inputMessage.trim() && attachments.length === 0)}
-                className="bg-orange-600 hover:bg-orange-500 text-white h-10 px-3.5 rounded-xl"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Painel Direito: O Cardápio Interativo ao Vivo Estilo iFood */}

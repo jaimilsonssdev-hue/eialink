@@ -167,12 +167,52 @@ export function CardapioPublicViewer({
   const cleanPhone = (cardapio.whatsapp || "").replace(/\D/g, "");
   const waUrl = `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(generateWhatsappMessage())}`;
 
+  // Configurações visuais dinâmicas
+  const effect = cardapio.visualEffect || "glassmorphism";
+  const btnColor = cardapio.buttonColor || "#f97316";
+  const customFont = cardapio.customFont;
+  const features = {
+    search: cardapio.features?.search ?? true,
+    deliveryCep: cardapio.features?.deliveryCep ?? true,
+    cart: cardapio.features?.cart ?? true,
+    popularSection: cardapio.features?.popularSection ?? true,
+    pix: cardapio.features?.pix ?? true,
+    card: cardapio.features?.card ?? true,
+    money: cardapio.features?.money ?? true,
+  };
+
+  // Classes condicionais de estilo conforme o efeito visual selecionado
+  const cardEffectClass =
+    effect === "neobrutalism"
+      ? "bg-white text-zinc-950 border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none"
+      : effect === "glassmorphism"
+      ? "backdrop-blur-xl bg-white/[0.06] border border-white/15 shadow-xl shadow-black/30 rounded-2xl"
+      : effect === "elegante"
+      ? "bg-zinc-950/90 border border-amber-500/30 text-amber-50 shadow-xl shadow-amber-950/20 rounded-2xl"
+      : effect === "parallax"
+      ? "bg-zinc-900/90 border border-white/10 shadow-2xl rounded-2xl hover:scale-[1.01] transition-transform duration-300"
+      : "bg-zinc-900/80 border border-white/10 rounded-2xl shadow-sm";
+
   return (
-    <div className="min-h-screen w-full bg-zinc-950 text-zinc-100 font-sans pb-28 selection:bg-orange-500 selection:text-white">
+    <div
+      className="min-h-screen w-full bg-zinc-950 text-zinc-100 font-sans pb-28 selection:bg-orange-500 selection:text-white"
+      style={{ fontFamily: customFont ? `"${customFont}", sans-serif` : undefined }}
+    >
       {isDemo && <DemoConversionBanner companyName={companyName} />}
 
       {/* Topo / Capa do Estabelecimento */}
-      <header className="relative bg-gradient-to-b from-orange-950/70 via-zinc-900 to-zinc-950 border-b border-white/10 pt-8 pb-6 px-4 sm:px-6">
+      <header
+        className="relative bg-gradient-to-b from-orange-950/70 via-zinc-900 to-zinc-950 border-b border-white/10 pt-8 pb-6 px-4 sm:px-6 overflow-hidden"
+        style={
+          cardapio.bannerImage
+            ? {
+                backgroundImage: `linear-gradient(to bottom, rgba(9,9,11,0.85), rgba(9,9,11,0.95)), url(${cardapio.bannerImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : undefined
+        }
+      >
         <div className="max-w-3xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
@@ -214,25 +254,27 @@ export function CardapioPublicViewer({
             )}
           </div>
 
-          {/* 🔍 Barra de Busca em Tempo Real */}
-          <div className="mt-5 relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-            <Input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Buscar por prato, lanche, ingrediente ou bebida..."
-              className="pl-10 pr-10 h-11 bg-zinc-900/90 border-white/15 focus-visible:border-orange-500 rounded-2xl text-sm placeholder:text-zinc-500 text-white"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
-          </div>
+          {/* 🔍 Barra de Busca em Tempo Real (Respeita feature toggle) */}
+          {features.search && (
+            <div className="mt-5 relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Buscar por prato, lanche, ingrediente ou bebida..."
+                className="pl-10 pr-10 h-11 bg-zinc-900/90 border-white/15 focus-visible:border-orange-500 rounded-2xl text-sm placeholder:text-zinc-500 text-white"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </header>
 
@@ -247,9 +289,10 @@ export function CardapioPublicViewer({
                 onClick={() => setActiveCategory(cat.id)}
                 className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   isActive
-                    ? "bg-orange-500 text-white shadow-md shadow-orange-500/25 scale-[1.02]"
+                    ? "text-white shadow-md scale-[1.02]"
                     : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-white/5"
                 }`}
+                style={isActive ? { backgroundColor: btnColor } : undefined}
               >
                 <span>{cat.icon || "🍽️"}</span>
                 <span>{cat.name}</span>
@@ -275,7 +318,7 @@ export function CardapioPublicViewer({
             return (
               <div
                 key={item.id}
-                className="group bg-zinc-900/80 hover:bg-zinc-900 border border-white/10 hover:border-orange-500/30 rounded-2xl p-4 transition-all duration-200 flex gap-4 items-center justify-between shadow-sm"
+                className={`group p-4 transition-all duration-200 flex gap-4 items-center justify-between ${cardEffectClass}`}
               >
                 <div className="flex-1 min-w-0 pr-1">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
@@ -311,31 +354,35 @@ export function CardapioPublicViewer({
                     />
                   )}
 
-                  {quantity === 0 ? (
-                    <button
-                      onClick={() => addToCart(item.id)}
-                      className="px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white text-xs font-bold transition-all shadow-md shadow-orange-600/20 active:scale-95"
-                    >
-                      Pedir +
-                    </button>
-                  ) : (
-                    <div className="flex items-center gap-1.5 bg-zinc-950 border border-orange-500/50 rounded-xl p-1 shadow-md">
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="h-6 w-6 rounded-lg bg-zinc-800 hover:bg-zinc-700 grid place-items-center text-xs font-bold text-white transition-colors"
-                      >
-                        -
-                      </button>
-                      <span className="text-xs font-black text-orange-400 px-1.5">
-                        {quantity}
-                      </span>
+                  {features.cart && (
+                    quantity === 0 ? (
                       <button
                         onClick={() => addToCart(item.id)}
-                        className="h-6 w-6 rounded-lg bg-orange-600 hover:bg-orange-500 grid place-items-center text-xs font-bold text-white transition-colors"
+                        className="px-3.5 py-1.5 rounded-xl text-white text-xs font-bold transition-all shadow-md active:scale-95"
+                        style={{ backgroundColor: btnColor }}
                       >
-                        +
+                        Pedir +
                       </button>
-                    </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 bg-zinc-950 border border-orange-500/50 rounded-xl p-1 shadow-md">
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="h-6 w-6 rounded-lg bg-zinc-800 hover:bg-zinc-700 grid place-items-center text-xs font-bold text-white transition-colors"
+                        >
+                          -
+                        </button>
+                        <span className="text-xs font-black text-orange-400 px-1.5">
+                          {quantity}
+                        </span>
+                        <button
+                          onClick={() => addToCart(item.id)}
+                          className="h-6 w-6 rounded-lg text-white grid place-items-center text-xs font-bold transition-colors"
+                          style={{ backgroundColor: btnColor }}
+                        >
+                          +
+                        </button>
+                      </div>
+                    )
                   )}
                 </div>
               </div>
@@ -345,7 +392,7 @@ export function CardapioPublicViewer({
       </main>
 
       {/* Barra Inferior Fixa da Sacola / Finalizar Pedido */}
-      {totalCartCount > 0 && (
+      {features.cart && totalCartCount > 0 && (
         <div className="fixed bottom-0 inset-x-0 z-40 bg-zinc-950/95 backdrop-blur-xl border-t border-white/10 p-3.5 sm:p-4 shadow-2xl">
           <div className="max-w-3xl mx-auto flex items-center justify-between gap-4">
             <div>

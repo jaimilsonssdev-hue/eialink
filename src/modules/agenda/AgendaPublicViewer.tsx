@@ -58,12 +58,48 @@ export function AgendaPublicViewer({
     return `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`;
   }
 
+  // Configurações visuais dinâmicas
+  const effect = agenda.visualEffect || "glassmorphism";
+  const btnColor = agenda.buttonColor || "#8b5cf6";
+  const customFont = agenda.customFont;
+  const features = {
+    selectPro: agenda.features?.selectPro ?? true,
+    selectDate: agenda.features?.selectDate ?? true,
+    whatsappBooking: agenda.features?.whatsappBooking ?? true,
+    mapLocation: agenda.features?.mapLocation ?? true,
+  };
+
+  const cardEffectClass =
+    effect === "neobrutalism"
+      ? "bg-white text-zinc-950 border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none"
+      : effect === "glassmorphism"
+      ? "backdrop-blur-xl bg-white/[0.06] border border-white/15 shadow-xl shadow-black/30 rounded-2xl"
+      : effect === "elegante"
+      ? "bg-zinc-950/90 border border-amber-500/30 text-amber-50 shadow-xl shadow-amber-950/20 rounded-2xl"
+      : effect === "parallax"
+      ? "bg-zinc-900/90 border border-white/10 shadow-2xl rounded-2xl hover:scale-[1.01] transition-transform duration-300"
+      : "bg-zinc-900/80 border border-white/10 rounded-2xl shadow-sm";
+
   return (
-    <div className="min-h-screen w-full bg-zinc-950 text-zinc-100 font-sans pb-24 selection:bg-purple-500 selection:text-white">
+    <div
+      className="min-h-screen w-full bg-zinc-950 text-zinc-100 font-sans pb-24 selection:bg-purple-500 selection:text-white"
+      style={{ fontFamily: customFont ? `"${customFont}", sans-serif` : undefined }}
+    >
       {isDemo && <DemoConversionBanner companyName={companyName} />}
 
       {/* Header do Estabelecimento */}
-      <header className="relative bg-gradient-to-b from-purple-950/60 via-zinc-900 to-zinc-950 border-b border-white/10 pt-8 pb-6 px-4 sm:px-6">
+      <header
+        className="relative bg-gradient-to-b from-purple-950/60 via-zinc-900 to-zinc-950 border-b border-white/10 pt-8 pb-6 px-4 sm:px-6 overflow-hidden"
+        style={
+          agenda.bannerImage
+            ? {
+                backgroundImage: `linear-gradient(to bottom, rgba(9,9,11,0.85), rgba(9,9,11,0.95)), url(${agenda.bannerImage})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+              }
+            : undefined
+        }
+      >
         <div className="max-w-3xl mx-auto">
           <div className="flex items-center gap-2 mb-2">
             <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30 text-[11px] font-bold tracking-wide uppercase">
@@ -89,7 +125,7 @@ export function AgendaPublicViewer({
                 {agenda.openingHours}
               </span>
             )}
-            {agenda.address && (
+            {features.mapLocation && agenda.address && (
               <span className="inline-flex items-center gap-1.5 bg-zinc-900/90 border border-white/10 px-3 py-1.5 rounded-xl">
                 <MapPin className="h-3.5 w-3.5 text-purple-400" />
                 {agenda.address}
@@ -101,8 +137,8 @@ export function AgendaPublicViewer({
 
       {/* Seção Principal */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-        {/* 1. Escolha de Profissional */}
-        {agenda.professionals && agenda.professionals.length > 0 && (
+        {/* 1. Escolha de Profissional (Respeita feature toggle) */}
+        {features.selectPro && agenda.professionals && agenda.professionals.length > 0 && (
           <section className="space-y-3">
             <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
               <User className="h-3.5 w-3.5 text-purple-400" /> Escolha o Profissional
@@ -120,9 +156,9 @@ export function AgendaPublicViewer({
                         : "bg-zinc-900/80 border-white/5 hover:border-white/20 text-zinc-300"
                     }`}
                   >
-                    {pro.avatar ? (
+                    {pro.avatarUrl ? (
                       <img
-                        src={pro.avatar}
+                        src={pro.avatarUrl}
                         alt={pro.name}
                         className="h-10 w-10 rounded-full object-cover border border-white/10 shrink-0"
                       />
@@ -154,10 +190,8 @@ export function AgendaPublicViewer({
                 <div
                   key={service.id}
                   onClick={() => setSelectedService(service)}
-                  className={`cursor-pointer p-4 rounded-2xl border transition-all flex items-center justify-between gap-4 ${
-                    isSelected
-                      ? "bg-purple-600/15 border-purple-500 shadow-md shadow-purple-600/10"
-                      : "bg-zinc-900/80 hover:bg-zinc-900 border-white/5 hover:border-white/20"
+                  className={`cursor-pointer p-4 transition-all flex items-center justify-between gap-4 ${cardEffectClass} ${
+                    isSelected ? "ring-2 ring-purple-500/80 shadow-md scale-[1.005]" : ""
                   }`}
                 >
                   <div className="min-w-0 flex-1">
@@ -186,9 +220,10 @@ export function AgendaPublicViewer({
                     <div
                       className={`h-6 w-6 rounded-full border grid place-items-center transition-colors ${
                         isSelected
-                          ? "bg-purple-600 border-purple-600 text-white"
+                          ? "text-white"
                           : "border-white/20 text-transparent"
                       }`}
+                      style={isSelected ? { backgroundColor: btnColor, borderColor: btnColor } : undefined}
                     >
                       <Check className="h-3.5 w-3.5" />
                     </div>
@@ -199,52 +234,56 @@ export function AgendaPublicViewer({
           </div>
         </section>
 
-        {/* 3. Seleção de Dia & Horário */}
-        <section className="space-y-3 bg-zinc-900/60 p-4 sm:p-5 rounded-2xl border border-white/10">
-          <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Calendar className="h-3.5 w-3.5 text-purple-400" /> Escolha o Dia & Horário
-          </h3>
+        {/* 3. Seleção de Dia & Horário (Respeita feature toggle) */}
+        {features.selectDate && (
+          <section className={`space-y-3 p-4 sm:p-5 ${cardEffectClass}`}>
+            <h3 className="text-xs font-bold text-zinc-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5 text-purple-400" /> Escolha o Dia & Horário
+            </h3>
 
-          {/* Dias */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
-            {dates.map((d) => {
-              const active = selectedDate === d;
-              return (
-                <button
-                  key={d}
-                  onClick={() => setSelectedDate(d)}
-                  className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-                    active
-                      ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
-                      : "bg-zinc-800 text-zinc-400 hover:text-white"
-                  }`}
-                >
-                  {d}
-                </button>
-              );
-            })}
-          </div>
+            {/* Dias */}
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+              {dates.map((d) => {
+                const active = selectedDate === d;
+                return (
+                  <button
+                    key={d}
+                    onClick={() => setSelectedDate(d)}
+                    className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      active
+                        ? "text-white shadow-md shadow-purple-600/25"
+                        : "bg-zinc-800 text-zinc-400 hover:text-white"
+                    }`}
+                    style={active ? { backgroundColor: btnColor } : undefined}
+                  >
+                    {d}
+                  </button>
+                );
+              })}
+            </div>
 
-          {/* Horários */}
-          <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 pt-2">
-            {times.map((t) => {
-              const active = selectedTime === t;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setSelectedTime(t)}
-                  className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all ${
-                    active
-                      ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
-                      : "bg-zinc-800/80 text-zinc-300 hover:bg-zinc-800"
-                  }`}
-                >
-                  {t}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+            {/* Horários */}
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 pt-2">
+              {times.map((t) => {
+                const active = selectedTime === t;
+                return (
+                  <button
+                    key={t}
+                    onClick={() => setSelectedTime(t)}
+                    className={`py-2 px-1 text-center rounded-xl text-xs font-bold transition-all ${
+                      active
+                        ? "text-white shadow-md shadow-purple-600/25"
+                        : "bg-zinc-800/80 text-zinc-300 hover:bg-zinc-800"
+                    }`}
+                    style={active ? { backgroundColor: btnColor } : undefined}
+                  >
+                    {t}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* 4. Nome do Cliente */}
         <section className="space-y-2">
@@ -274,15 +313,18 @@ export function AgendaPublicViewer({
             </div>
           </div>
 
-          <Button
-            asChild
-            className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-5 h-11 rounded-2xl shadow-lg shadow-purple-600/30 text-xs sm:text-sm flex items-center gap-2"
-          >
-            <a href={generateWhatsappBookingUrl()} target="_blank" rel="noreferrer">
-              <MessageCircle className="h-4 w-4" />
-              <span>Confirmar no WhatsApp</span>
-            </a>
-          </Button>
+          {features.whatsappBooking && (
+            <Button
+              asChild
+              className="text-white font-bold px-5 h-11 rounded-2xl shadow-lg text-xs sm:text-sm flex items-center gap-2"
+              style={{ backgroundColor: btnColor }}
+            >
+              <a href={generateWhatsappBookingUrl()} target="_blank" rel="noreferrer">
+                <MessageCircle className="h-4 w-4" />
+                <span>Confirmar no WhatsApp</span>
+              </a>
+            </Button>
+          )}
         </div>
       </div>
     </div>

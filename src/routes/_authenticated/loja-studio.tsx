@@ -22,6 +22,7 @@ import {
   Truck,
   Tag,
   Search,
+  Sliders,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +34,7 @@ import {
   type LojaAiMessage,
   type LojaProductItem,
 } from "@/modules/loja/lojaAiService";
+import { LojaVisualEditor } from "@/modules/loja/LojaVisualEditor";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/loja-studio")({
@@ -50,6 +52,8 @@ const DEFAULT_LOJA: LojaData = {
   openingHours: "Segunda a Sábado das 10h às 20h",
   themeColor: "blue",
   styleVariant: "store-modern",
+  visualEffect: "glassmorphism",
+  buttonColor: "#3b82f6",
   categories: [
     { id: "todos", name: "Todos", icon: "🛍️" },
     { id: "novidades", name: "Novidades", icon: "✨" },
@@ -109,6 +113,7 @@ function LojaStudioPage() {
   const searchParams = useSearch({ strict: false }) as Record<string, string>;
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
+  const [sidebarMode, setSidebarMode] = useState<"ai" | "visual">("visual");
   const [activeTab, setActiveTab] = useState<string>("todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [loja, setLoja] = useState<LojaData>(DEFAULT_LOJA);
@@ -416,124 +421,156 @@ function LojaStudioPage() {
 
       {/* Conteúdo Principal Dividido: Chat + Prévia da Loja */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Painel Esquerdo: Chat IA Multimodal */}
+        {/* Painel Esquerdo: Editor Visual ou Copiloto IA */}
         <div
-          className={`w-full lg:w-[400px] xl:w-[440px] shrink-0 border-r border-white/10 flex flex-col bg-zinc-950/80 backdrop-blur-xl h-full z-10 ${
+          className={`w-full lg:w-[420px] xl:w-[460px] shrink-0 border-r border-white/10 flex flex-col bg-zinc-950/80 backdrop-blur-xl h-full z-10 ${
             mobileTab === "chat" ? "flex" : "hidden lg:flex"
           }`}
         >
-          <div className="p-3 border-b border-white/5 bg-zinc-900/40 flex items-center justify-between text-xs text-zinc-400">
-            <span className="flex items-center gap-1.5 font-semibold text-blue-400">
-              <Sparkles className="h-3.5 w-3.5" /> Editor com IA
-            </span>
+          {/* Seletor de Modo do Painel Lateral */}
+          <div className="p-2 border-b border-white/10 bg-zinc-900/60 flex items-center justify-between gap-1 shrink-0">
+            <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-white/10 flex-1">
+              <button
+                type="button"
+                onClick={() => setSidebarMode("visual")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  sidebarMode === "visual"
+                    ? "bg-blue-600 text-white font-bold shadow-xs"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                <Sliders className="h-3.5 w-3.5" />
+                <span>Editor Visual</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSidebarMode("ai")}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  sidebarMode === "ai"
+                    ? "bg-blue-600 text-white font-bold shadow-xs"
+                    : "text-zinc-400 hover:text-zinc-200"
+                }`}
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                <span>Copiloto IA</span>
+              </button>
+            </div>
+
             {/* Atalho mobile para ver prévia */}
             <button
               onClick={() => setMobileTab("preview")}
-              className="lg:hidden text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
+              className="lg:hidden text-blue-400 hover:text-blue-300 font-semibold text-xs px-2 py-1 flex items-center gap-0.5"
             >
-              Ver Prévia →
+              Prévia →
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
-            {messages.map((m) => (
-              <div
-                key={m.id}
-                className={`flex flex-col ${
-                  m.role === "user" ? "items-end" : "items-start"
-                }`}
-              >
-                <div
-                  className={`max-w-[90%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
-                    m.role === "user"
-                      ? "bg-blue-600 text-white rounded-br-xs"
-                      : "bg-zinc-900/90 text-zinc-200 border border-white/10 rounded-bl-xs shadow-md"
-                  }`}
-                >
-                  <p className="whitespace-pre-wrap">{m.content}</p>
-
-                  {m.attachments && m.attachments.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-white/10 flex flex-wrap gap-1.5">
-                      {m.attachments.map((att, idx) => (
-                        <span
-                          key={idx}
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/40 text-[10px] text-zinc-300"
-                        >
-                          <Paperclip className="h-2.5 w-2.5" /> {att.name}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-            {isProcessing && (
-              <div className="flex items-center gap-2 text-xs text-blue-400 p-2">
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Atualizando catálogo...</span>
-              </div>
-            )}
-            <div ref={chatScrollRef} />
-          </div>
-
-          {/* Anexos */}
-          {attachments.length > 0 && (
-            <div className="p-2 border-t border-white/10 bg-zinc-900/40 flex flex-wrap gap-2">
-              {attachments.map((att, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-1.5 bg-zinc-800 text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10"
-                >
-                  <Paperclip className="h-3 w-3 text-blue-400" />
-                  <span className="truncate max-w-[120px]">{att.name}</span>
-                  <button
-                    onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
-                    className="text-zinc-500 hover:text-white"
+          {/* Renderização Condicional: Editor Visual vs Chat IA */}
+          {sidebarMode === "visual" ? (
+            <LojaVisualEditor loja={loja} onChange={setLoja} />
+          ) : (
+            <div className="flex-1 flex flex-col overflow-hidden">
+              <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
+                {messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`flex flex-col ${
+                      m.role === "user" ? "items-end" : "items-start"
+                    }`}
                   >
-                    ×
-                  </button>
+                    <div
+                      className={`max-w-[90%] rounded-2xl px-4 py-3 text-xs leading-relaxed ${
+                        m.role === "user"
+                          ? "bg-blue-600 text-white rounded-br-xs"
+                          : "bg-zinc-900/90 text-zinc-200 border border-white/10 rounded-bl-xs shadow-md"
+                      }`}
+                    >
+                      <p className="whitespace-pre-wrap">{m.content}</p>
+
+                      {m.attachments && m.attachments.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-white/10 flex flex-wrap gap-1.5">
+                          {m.attachments.map((att, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-black/40 text-[10px] text-zinc-300"
+                            >
+                              <Paperclip className="h-2.5 w-2.5" /> {att.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {isProcessing && (
+                  <div className="flex items-center gap-2 text-xs text-blue-400 p-2">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Atualizando catálogo...</span>
+                  </div>
+                )}
+                <div ref={chatScrollRef} />
+              </div>
+
+              {/* Anexos */}
+              {attachments.length > 0 && (
+                <div className="p-2 border-t border-white/10 bg-zinc-900/40 flex flex-wrap gap-2">
+                  {attachments.map((att, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-1.5 bg-zinc-800 text-zinc-300 text-xs px-2.5 py-1 rounded-lg border border-white/10"
+                    >
+                      <Paperclip className="h-3 w-3 text-blue-400" />
+                      <span className="truncate max-w-[120px]">{att.name}</span>
+                      <button
+                        onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                        className="text-zinc-500 hover:text-white"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+
+              {/* Input do Chat */}
+              <div className="p-3 border-t border-white/10 bg-zinc-900/80">
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="loja-file-upload"
+                    className="cursor-pointer h-10 w-10 rounded-xl bg-zinc-800 hover:bg-zinc-700 grid place-items-center text-zinc-400 hover:text-white transition-colors"
+                    title="Subir foto de produto ou catálogo em PDF"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    <input
+                      id="loja-file-upload"
+                      type="file"
+                      multiple
+                      accept="image/*,application/pdf"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <Input
+                    value={inputMessage}
+                    onChange={(e) => setInputMessage(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
+                    placeholder="Ex: Adicione uma bolsa preta por R$ 180..."
+                    className="bg-zinc-950 border-white/10 h-10 text-xs rounded-xl focus-visible:ring-blue-500"
+                  />
+
+                  <Button
+                    size="sm"
+                    onClick={handleSendMessage}
+                    disabled={isProcessing || (!inputMessage.trim() && attachments.length === 0)}
+                    className="bg-blue-600 hover:bg-blue-500 text-white h-10 px-3.5 rounded-xl"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
-
-          {/* Input do Chat */}
-          <div className="p-3 border-t border-white/10 bg-zinc-900/80">
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="loja-file-upload"
-                className="cursor-pointer h-10 w-10 rounded-xl bg-zinc-800 hover:bg-zinc-700 grid place-items-center text-zinc-400 hover:text-white transition-colors"
-                title="Subir foto de produto ou catálogo em PDF"
-              >
-                <Paperclip className="h-4 w-4" />
-                <input
-                  id="loja-file-upload"
-                  type="file"
-                  multiple
-                  accept="image/*,application/pdf"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-              </label>
-
-              <Input
-                value={inputMessage}
-                onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSendMessage()}
-                placeholder="Ex: Adicione uma bolsa preta por R$ 180..."
-                className="bg-zinc-950 border-white/10 h-10 text-xs rounded-xl focus-visible:ring-blue-500"
-              />
-
-              <Button
-                size="sm"
-                onClick={handleSendMessage}
-                disabled={isProcessing || (!inputMessage.trim() && attachments.length === 0)}
-                className="bg-blue-600 hover:bg-blue-500 text-white h-10 px-3.5 rounded-xl"
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
         </div>
 
         {/* Painel Direito: A Loja ao Vivo */}
@@ -542,198 +579,243 @@ function LojaStudioPage() {
             mobileTab === "preview" ? "flex" : "hidden lg:flex"
           }`}
         >
-          <div
-            className={`transition-all duration-300 w-full ${
-              viewMode === "mobile"
-                ? "max-w-[420px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-900 overflow-hidden"
-                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-900 overflow-hidden"
-            }`}
-          >
-            {/* Header da Loja */}
-            <div className="relative bg-gradient-to-b from-blue-950/60 to-zinc-900 p-6 border-b border-white/10">
-              <Badge className="bg-blue-600 text-white mb-2 text-[10px] font-bold tracking-wider uppercase">
-                Vitrine Online Aberta 🟢
-              </Badge>
-              <h2 className="text-2xl font-black tracking-tight text-white">
-                {loja.storeName}
-              </h2>
-              <p className="text-xs text-blue-200/90 mt-1 font-medium">
-                {loja.tagline}
-              </p>
+          {(() => {
+            const effect = loja.visualEffect || "glassmorphism";
+            const btnColor = loja.buttonColor || "#3b82f6";
+            const customFont = loja.customFont;
+            const features = {
+              search: loja.features?.search ?? true,
+              cart: loja.features?.cart ?? true,
+              shippingInfo: loja.features?.shippingInfo ?? true,
+              stockBadge: loja.features?.stockBadge ?? true,
+            };
 
-              <div className="mt-4 flex flex-wrap items-center gap-2.5 text-[11px] text-zinc-300">
-                {loja.shippingInfo && (
-                  <span className="flex items-center gap-1 bg-zinc-950/60 px-2.5 py-1 rounded-lg border border-white/5">
-                    <Truck className="h-3 w-3 text-blue-400" />
-                    {loja.shippingInfo}
-                  </span>
-                )}
-                {loja.address && (
-                  <span className="flex items-center gap-1 bg-zinc-950/60 px-2.5 py-1 rounded-lg border border-white/5">
-                    <MapPin className="h-3 w-3 text-blue-400" />
-                    {loja.address}
-                  </span>
-                )}
-              </div>
+            const cardEffectClass =
+              effect === "neobrutalism"
+                ? "bg-white text-zinc-950 border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none"
+                : effect === "glassmorphism"
+                ? "backdrop-blur-xl bg-white/[0.06] border border-white/15 shadow-xl shadow-black/30 rounded-2xl"
+                : effect === "elegante"
+                ? "bg-zinc-950/90 border border-amber-500/30 text-amber-50 shadow-xl shadow-amber-950/20 rounded-2xl"
+                : effect === "parallax"
+                ? "bg-zinc-900/90 border border-white/10 shadow-2xl rounded-2xl hover:scale-[1.01] transition-transform duration-300"
+                : "bg-zinc-900/80 border border-white/10 rounded-2xl shadow-sm";
 
-              {/* Busca em Tempo Real */}
-              <div className="mt-3.5 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Buscar produtos, modelos ou cores..."
-                  className="w-full pl-9 pr-4 h-9 bg-zinc-950/80 border border-white/10 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
-                />
-              </div>
-            </div>
+            return (
+              <div
+                className={`transition-all duration-300 w-full ${
+                  viewMode === "mobile"
+                    ? "max-w-[420px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-950 overflow-hidden"
+                    : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-950 overflow-hidden"
+                }`}
+                style={{ fontFamily: customFont ? `"${customFont}", sans-serif` : undefined }}
+              >
+                {/* Header da Loja */}
+                <div
+                  className="relative bg-gradient-to-b from-blue-950/60 to-zinc-900 p-6 border-b border-white/10 overflow-hidden"
+                  style={
+                    loja.bannerImage
+                      ? {
+                          backgroundImage: `linear-gradient(to bottom, rgba(9,9,11,0.85), rgba(9,9,11,0.95)), url(${loja.bannerImage})`,
+                          backgroundSize: "cover",
+                          backgroundPosition: "center",
+                        }
+                      : undefined
+                  }
+                >
+                  <Badge className="bg-blue-600 text-white mb-2 text-[10px] font-bold tracking-wider uppercase">
+                    Vitrine Online Aberta 🟢
+                  </Badge>
+                  <h2 className="text-2xl font-black tracking-tight text-white">
+                    {loja.storeName}
+                  </h2>
+                  <p className="text-xs text-blue-200/90 mt-1 font-medium">
+                    {loja.tagline}
+                  </p>
 
-            {/* Categorias */}
-            <div className="px-4 py-3 bg-zinc-900/90 border-b border-white/5 flex items-center gap-2 overflow-x-auto no-scrollbar sticky top-0 z-10 backdrop-blur-md">
-              {loja.categories.map((cat) => {
-                const isActive = activeTab === cat.id;
-                return (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveTab(cat.id)}
-                    className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                      isActive
-                        ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                        : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-                    }`}
-                  >
-                    <span>{cat.icon || "🛍️"}</span>
-                    <span>{cat.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Grade de Produtos */}
-            <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {filteredItems.map((item) => {
-                const quantity = cart[item.id] || 0;
-                return (
-                  <div
-                    key={item.id}
-                    className="group bg-zinc-950/80 border border-white/5 hover:border-blue-500/30 rounded-2xl p-3.5 transition-all flex flex-col justify-between"
-                  >
-                    <div>
-                      {item.image ? (
-                        <div className="relative mb-3 h-40 w-full rounded-xl overflow-hidden border border-white/10">
-                          <img
-                            src={item.image}
-                            alt={item.name}
-                            className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                          />
-                          {item.badge && (
-                            <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-600 text-white shadow-md">
-                              {item.badge}
-                            </span>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="mb-3 h-32 w-full rounded-xl bg-zinc-800 grid place-items-center text-zinc-600">
-                          <ImageIcon className="h-8 w-8" />
-                        </div>
-                      )}
-
-                      <h4 className="text-sm font-bold text-white mb-1 line-clamp-1">
-                        {item.name}
-                      </h4>
-                      <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
-                        {item.description}
-                      </p>
-
-                      {item.variations && item.variations.length > 0 && (
-                        <div className="mt-2 flex items-center gap-1 flex-wrap">
-                          {item.variations.map((v, i) => (
-                            <span
-                              key={i}
-                              className="text-[10px] px-1.5 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-white/5"
-                            >
-                              {v}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
-                      <div className="text-base font-black text-blue-400">
-                        R$ {item.price.toFixed(2).replace(".", ",")}
-                      </div>
-
-                      {quantity === 0 ? (
-                        <button
-                          onClick={() => addToCart(item.id)}
-                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold transition-all shadow-sm"
-                        >
-                          Comprar +
-                        </button>
-                      ) : (
-                        <div className="flex items-center gap-1.5 bg-zinc-800 border border-blue-500/40 rounded-lg p-0.5">
-                          <button
-                            onClick={() => removeFromCart(item.id)}
-                            className="h-6 w-6 rounded-md bg-zinc-700 hover:bg-zinc-600 grid place-items-center text-xs font-bold text-white"
-                          >
-                            -
-                          </button>
-                          <span className="text-xs font-bold text-blue-400 px-1">
-                            {quantity}
-                          </span>
-                          <button
-                            onClick={() => addToCart(item.id)}
-                            className="h-6 w-6 rounded-md bg-blue-600 hover:bg-blue-500 grid place-items-center text-xs font-bold text-white"
-                          >
-                            +
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                  <div className="mt-4 flex flex-wrap items-center gap-2.5 text-[11px] text-zinc-300">
+                    {features.shippingInfo && loja.shippingInfo && (
+                      <span className="flex items-center gap-1 bg-zinc-950/60 px-2.5 py-1 rounded-lg border border-white/5">
+                        <Truck className="h-3 w-3 text-blue-400" />
+                        {loja.shippingInfo}
+                      </span>
+                    )}
+                    {loja.address && (
+                      <span className="flex items-center gap-1 bg-zinc-950/60 px-2.5 py-1 rounded-lg border border-white/5">
+                        <MapPin className="h-3 w-3 text-blue-400" />
+                        {loja.address}
+                      </span>
+                    )}
                   </div>
-                );
-              })}
-            </div>
 
-            {/* Barra Flutuante do Carrinho / WhatsApp */}
-            {totalCartCount > 0 && (
-              <div className="sticky bottom-0 bg-zinc-950/95 backdrop-blur-md p-4 border-t border-white/10 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] text-zinc-400 block">Total da Sacola</span>
-                  <span className="text-base font-black text-white">
-                    R$ {totalCartPrice.toFixed(2).replace(".", ",")}
-                  </span>
-                  <span className="text-[10px] text-blue-400 ml-1.5">
-                    ({totalCartCount} {totalCartCount === 1 ? "peça" : "peças"})
-                  </span>
+                  {/* Busca em Tempo Real (Respeita feature toggle) */}
+                  {features.search && (
+                    <div className="mt-3.5 relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Buscar produtos, modelos ou cores..."
+                        className="w-full pl-9 pr-4 h-9 bg-zinc-950/80 border border-white/10 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  )}
                 </div>
 
-                <Button
-                  size="sm"
-                  asChild
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-emerald-600/20"
-                >
-                  <a
-                    href={`https://wa.me/${loja.whatsapp}?text=${encodeURIComponent(
-                      `Olá! Gostaria de comprar pelo catálogo virtual da loja:\n${Object.entries(cart)
-                        .map(([id, qty]) => {
-                          const it = loja.items.find((x) => x.id === id);
-                          return `• ${qty}x ${it?.name} - R$ ${((it?.price || 0) * qty).toFixed(2)}`;
-                        })
-                        .join("\n")}\n\nTotal: R$ ${totalCartPrice.toFixed(2)}`,
-                    )}`}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <MessageCircle className="h-4 w-4 mr-1.5" />
-                    Enviar Pedido pelo WhatsApp
-                  </a>
-                </Button>
+                {/* Categorias */}
+                <div className="px-4 py-3 bg-zinc-900/90 border-b border-white/5 flex items-center gap-2 overflow-x-auto no-scrollbar sticky top-0 z-10 backdrop-blur-md">
+                  {loja.categories.map((cat) => {
+                    const isActive = activeTab === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => setActiveTab(cat.id)}
+                        className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                          isActive
+                            ? "text-white shadow-md shadow-blue-600/20"
+                            : "bg-zinc-800/60 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                        }`}
+                        style={isActive ? { backgroundColor: btnColor } : undefined}
+                      >
+                        <span>{cat.icon || "🛍️"}</span>
+                        <span>{cat.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Grade de Produtos */}
+                <div className="p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  {filteredItems.map((item) => {
+                    const quantity = cart[item.id] || 0;
+                    return (
+                      <div
+                        key={item.id}
+                        className={`group p-3.5 transition-all flex flex-col justify-between ${cardEffectClass}`}
+                      >
+                        <div>
+                          {item.image ? (
+                            <div className="relative mb-3 h-40 w-full rounded-xl overflow-hidden border border-white/10">
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                              />
+                              {features.stockBadge && item.badge && (
+                                <span className="absolute top-2 left-2 text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-600 text-white shadow-md">
+                                  {item.badge}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="mb-3 h-32 w-full rounded-xl bg-zinc-800 grid place-items-center text-zinc-600">
+                              <ImageIcon className="h-8 w-8" />
+                            </div>
+                          )}
+
+                          <h4 className="text-sm font-bold text-white mb-1 line-clamp-1">
+                            {item.name}
+                          </h4>
+                          <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+                            {item.description}
+                          </p>
+
+                          {item.variations && item.variations.length > 0 && (
+                            <div className="mt-2 flex items-center gap-1 flex-wrap">
+                              {item.variations.map((v, i) => (
+                                <span
+                                  key={i}
+                                  className="text-[10px] px-1.5 py-0.5 rounded-md bg-zinc-800 text-zinc-300 border border-white/5"
+                                >
+                                  {v}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {features.cart && (
+                          <div className="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
+                            <div className="text-base font-black text-blue-400">
+                              R$ {item.price.toFixed(2).replace(".", ",")}
+                            </div>
+
+                            {quantity === 0 ? (
+                              <button
+                                onClick={() => addToCart(item.id)}
+                                className="px-3 py-1.5 rounded-lg text-white text-xs font-bold transition-all shadow-sm"
+                                style={{ backgroundColor: btnColor }}
+                              >
+                                Comprar +
+                              </button>
+                            ) : (
+                              <div className="flex items-center gap-1.5 bg-zinc-800 border border-blue-500/40 rounded-lg p-0.5">
+                                <button
+                                  onClick={() => removeFromCart(item.id)}
+                                  className="h-6 w-6 rounded-md bg-zinc-700 hover:bg-zinc-600 grid place-items-center text-xs font-bold text-white"
+                                >
+                                  -
+                                </button>
+                                <span className="text-xs font-bold text-blue-400 px-1">
+                                  {quantity}
+                                </span>
+                                <button
+                                  onClick={() => addToCart(item.id)}
+                                  className="h-6 w-6 rounded-md text-white grid place-items-center text-xs font-bold"
+                                  style={{ backgroundColor: btnColor }}
+                                >
+                                  +
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Barra Flutuante do Carrinho / WhatsApp */}
+                {features.cart && totalCartCount > 0 && (
+                  <div className="sticky bottom-0 bg-zinc-950/95 backdrop-blur-md p-4 border-t border-white/10 flex items-center justify-between">
+                    <div>
+                      <span className="text-[11px] text-zinc-400 block">Total da Sacola</span>
+                      <span className="text-base font-black text-white">
+                        R$ {totalCartPrice.toFixed(2).replace(".", ",")}
+                      </span>
+                      <span className="text-[10px] text-blue-400 ml-1.5">
+                        ({totalCartCount} {totalCartCount === 1 ? "peça" : "peças"})
+                      </span>
+                    </div>
+
+                    <Button
+                      size="sm"
+                      asChild
+                      className="text-white text-xs font-bold rounded-xl shadow-lg"
+                      style={{ backgroundColor: btnColor }}
+                    >
+                      <a
+                        href={`https://wa.me/${loja.whatsapp}?text=${encodeURIComponent(
+                          `Olá! Gostaria de comprar pelo catálogo virtual da loja:\n${Object.entries(cart)
+                            .map(([id, qty]) => {
+                              const it = loja.items.find((x) => x.id === id);
+                              return `• ${qty}x ${it?.name} - R$ ${((it?.price || 0) * qty).toFixed(2)}`;
+                            })
+                            .join("\n")}\n\nTotal: R$ ${totalCartPrice.toFixed(2)}`,
+                        )}`}
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        <MessageCircle className="h-4 w-4 mr-1.5" />
+                        Enviar Pedido pelo WhatsApp
+                      </a>
+                    </Button>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
+            );
+          })()}
         </div>
       </div>
 

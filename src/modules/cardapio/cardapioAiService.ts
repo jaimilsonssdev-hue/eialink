@@ -31,8 +31,21 @@ export interface CardapioData {
   openingHours?: string;
   categories: CardapioCategory[];
   items: CardapioItem[];
-  themeColor: "amber" | "orange" | "rose" | "emerald" | "violet" | "red";
-  styleVariant: "ifood-modern" | "bistro-dark" | "fresh-clean";
+  themeColor: "amber" | "orange" | "rose" | "emerald" | "violet" | "red" | string;
+  styleVariant: "ifood-modern" | "bistro-dark" | "fresh-clean" | string;
+  visualEffect?: "glassmorphism" | "neobrutalism" | "elegante" | "parallax" | "clean";
+  customFont?: string;
+  buttonColor?: string;
+  bannerImage?: string;
+  features?: {
+    search?: boolean;
+    deliveryCep?: boolean;
+    cart?: boolean;
+    popularSection?: boolean;
+    pix?: boolean;
+    card?: boolean;
+    money?: boolean;
+  };
 }
 
 export interface CardapioAiMessage {

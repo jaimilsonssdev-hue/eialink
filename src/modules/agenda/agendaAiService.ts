@@ -29,8 +29,18 @@ export interface AgendaStudioData {
   address?: string;
   openingHours?: string;
   instagram?: string;
-  themeStyle: "dark-barber" | "clean-aesthetic" | "luxury-gold" | "modern-slate";
-  accentColor: "amber" | "emerald" | "rose" | "sky" | "violet" | "gold";
+  themeStyle: "dark-barber" | "clean-aesthetic" | "luxury-gold" | "modern-slate" | string;
+  accentColor: "amber" | "emerald" | "rose" | "sky" | "violet" | "gold" | string;
+  visualEffect?: "glassmorphism" | "neobrutalism" | "elegante" | "parallax" | "clean";
+  customFont?: string;
+  buttonColor?: string;
+  bannerImage?: string;
+  features?: {
+    selectPro?: boolean;
+    selectDate?: boolean;
+    whatsappBooking?: boolean;
+    mapLocation?: boolean;
+  };
   professionals: AgendaProfessional[];
   services: AgendaServiceItem[];
 }

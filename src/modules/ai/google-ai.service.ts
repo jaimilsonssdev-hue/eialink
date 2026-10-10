@@ -1,5 +1,6 @@
 export const ACTIVE_GEMINI_MODELS = [
-  "gemini-2.5-flash",
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
   "gemini-2.0-flash",
   "gemini-1.5-flash",
 ] as const;
@@ -101,21 +102,43 @@ export async function testGoogleGeminiKey(apiKey: string): Promise<{ ok: boolean
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cleanKey}`;
-    const res = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: "ping" }] }],
-        generationConfig: { maxOutputTokens: 2 },
-      }),
-      signal: AbortSignal.timeout(10000),
-    });
+    const testModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash"];
+    let lastErrData: any = null;
+    let res: Response | null = null;
 
-    if (res.ok) {
+    for (const model of testModels) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
+      res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: "ping" }] }],
+          generationConfig: { maxOutputTokens: 2 },
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+
+      if (res.ok) {
+        return {
+          ok: true,
+          message: `Google AI Studio conectado com sucesso! Modelo ${model} 100% operacional.`,
+        };
+      }
+
+      lastErrData = await res.json().catch(() => ({}));
+      // Se for chave comprovadamente inválida, interrompe de imediato
+      if (res.status === 400 || res.status === 403) {
+        const msg = lastErrData?.error?.message || "";
+        if (msg.includes("API_KEY_INVALID") || msg.includes("API key not valid")) {
+          return { ok: false, message: "Chave de API inválida ou revogada no Google AI Studio." };
+        }
+      }
+    }
+
+    if (res && res.ok) {
       return {
         ok: true,
-        message: "Google AI Studio conectado com sucesso! Modelo Gemini 3.8 Flash 100% operacional.",
+        message: "Google AI Studio conectado com sucesso!",
       };
     }
 

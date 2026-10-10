@@ -602,22 +602,32 @@ Regras:
 3. Se for Barbearia, gere cortes, barba terapia, combos e tratamentos.
 4. A primeira categoria de "categories" DEVE ser "Todos".`;
 
-        const geminiPromise = ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [{ role: "user", parts: [{ text: systemInstruction }] }],
-          config: {
-            responseMimeType: "application/json",
-            temperature: 0.3,
-          },
-        });
+        const tryGenerateSpecialized = async () => {
+          const models = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash"];
+          for (const m of models) {
+            try {
+              const res = await ai.models.generateContent({
+                model: m,
+                contents: [{ role: "user", parts: [{ text: systemInstruction }] }],
+                config: {
+                  responseMimeType: "application/json",
+                  temperature: 0.3,
+                },
+              });
+              if (res.text) return res.text.trim();
+            } catch (e) {
+              console.warn(`[SpecializedGenerators] Falha com ${m}:`, e);
+            }
+          }
+          return "";
+        };
 
-        const timeoutPromise = new Promise<never>((_, reject) =>
+        const timeoutPromise = new Promise<string>((_, reject) =>
           setTimeout(() => reject(new Error("Timeout Gemini 12s")), 12000),
         );
 
-        const response = await Promise.race([geminiPromise, timeoutPromise]);
-        const text = response.text?.trim() || "";
-        const parsed = JSON.parse(text);
+        const text = await Promise.race([tryGenerateSpecialized(), timeoutPromise]);
+        const parsed = text ? JSON.parse(text) : {};
 
         if (parsed.items && Array.isArray(parsed.items) && parsed.items.length > 0) {
           subNiche.items = parsed.items.map((it: any, idx: number) => ({

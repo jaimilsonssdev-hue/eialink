@@ -220,19 +220,25 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
   "superPrompt": "Instruções cirúrgicas de design, tom de voz e ordem de blocos para gerar o site final"
 }`;
 
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        config: {
-          temperature: 0.4,
-          responseMimeType: "application/json",
-          thinkingConfig: {
-            thinkingLevel: "low" as any,
-          },
-        },
-      });
+      const models = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash"];
+      let text = "";
 
-      const text = response.text?.trim();
+      for (const m of models) {
+        try {
+          const response = await ai.models.generateContent({
+            model: m,
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            config: {
+              temperature: 0.4,
+              responseMimeType: "application/json",
+            },
+          });
+          text = response.text?.trim() || "";
+          if (text) break;
+        } catch (err) {
+          console.warn(`[Ideation] Falha com modelo ${m}:`, err);
+        }
+      }
       if (text) {
         const cleanJson = text.replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```\s*$/, "").trim();
         const parsed = JSON.parse(cleanJson);

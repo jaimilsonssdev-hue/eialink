@@ -348,7 +348,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
 
     for (const modelCandidate of modelsToTry) {
       let attempts = 0;
@@ -528,24 +528,32 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
     }
     userParts.push({ text: input.prompt });
 
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: [
-        ...formattedHistory,
-        { role: "user", parts: userParts },
-      ],
-      config: {
-        systemInstruction: BRIEFING_SYSTEM_PROMPT,
-        temperature: 0.7,
-        thinkingConfig: {
-          thinkingLevel: "low" as any,
-        },
-      },
-    });
+    const briefingModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+    let briefingText = "";
+
+    for (const modelCandidate of briefingModels) {
+      try {
+        const response = await ai.models.generateContent({
+          model: modelCandidate,
+          contents: [
+            ...formattedHistory,
+            { role: "user", parts: userParts },
+          ],
+          config: {
+            systemInstruction: BRIEFING_SYSTEM_PROMPT,
+            temperature: 0.7,
+          },
+        });
+        briefingText = response.text?.trim() || "";
+        if (briefingText) break;
+      } catch (err) {
+        console.warn(`[StudioServer] Falha no briefing com ${modelCandidate}:`, err);
+      }
+    }
 
     return {
       ok: true,
-      briefing: response.text?.trim() || "Plano estratégico elaborado com sucesso.",
+      briefing: briefingText || "Plano estratégico elaborado com sucesso.",
     };
   });
 

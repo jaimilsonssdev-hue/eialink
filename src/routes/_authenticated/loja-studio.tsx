@@ -108,6 +108,7 @@ function LojaStudioPage() {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false }) as Record<string, string>;
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
+  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
   const [activeTab, setActiveTab] = useState<string>("todos");
   const [searchQuery, setSearchQuery] = useState("");
   const [loja, setLoja] = useState<LojaData>(DEFAULT_LOJA);
@@ -116,7 +117,7 @@ function LojaStudioPage() {
       id: "msg-1",
       role: "assistant",
       content:
-        "Olá, mestre! 🛍️ Sou o seu Diretor de E-commerce e Varejo no EIA Link. Já desenhei uma vitrine de altíssima conversão aqui ao lado. Você pode me pedir para cadastrar novos produtos, mudar preços, alterar cores, ou **subir fotos dos seus produtos ou tabela de preços** que eu leio e organizo tudo para você!",
+        "Catálogo gerado! Diga quais produtos, preços ou categorias deseja alterar ou incluir.",
       timestamp: Date.now(),
     },
   ]);
@@ -327,28 +328,57 @@ function LojaStudioPage() {
         </div>
 
         {/* Alternador Mobile / Web */}
-        <div className="hidden md:flex items-center bg-zinc-900 border border-white/10 rounded-xl p-1 gap-1">
+        {/* Mobile Toggle: Chat vs Prévia */}
+        <div className="flex lg:hidden items-center bg-zinc-900 border border-white/10 rounded-xl p-1 gap-1">
+          <button
+            type="button"
+            onClick={() => setMobileTab("chat")}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+              mobileTab === "chat"
+                ? "bg-blue-600 text-white font-bold shadow-xs"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            <span>Chat</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("preview")}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+              mobileTab === "preview"
+                ? "bg-blue-600 text-white font-bold shadow-xs"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <Smartphone className="h-3.5 w-3.5" />
+            <span>Ver Prévia</span>
+          </button>
+        </div>
+
+        {/* Desktop ViewMode: Mobile frame vs Desktop full */}
+        <div className="hidden lg:flex items-center bg-zinc-900 border border-white/10 rounded-xl p-1 gap-1">
           <button
             onClick={() => setViewMode("mobile")}
             className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-all ${
               viewMode === "mobile"
-                ? "bg-blue-600 text-white shadow-sm"
+                ? "bg-blue-600 text-white shadow-xs font-semibold"
                 : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
             <Smartphone className="h-3.5 w-3.5" />
-            Mobile (App)
+            Mobile
           </button>
           <button
             onClick={() => setViewMode("desktop")}
             className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-all ${
               viewMode === "desktop"
-                ? "bg-blue-600 text-white shadow-sm"
+                ? "bg-blue-600 text-white shadow-xs font-semibold"
                 : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
             <Monitor className="h-3.5 w-3.5" />
-            Web Completa
+            Desktop
           </button>
         </div>
 
@@ -359,7 +389,7 @@ function LojaStudioPage() {
               variant="outline"
               size="sm"
               asChild
-              className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-xs"
+              className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-xs hidden sm:inline-flex"
             >
               <a href={savedPageUrl} target="_blank" rel="noreferrer">
                 <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
@@ -379,20 +409,30 @@ function LojaStudioPage() {
             ) : (
               <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
             )}
-            Publicar Loja
+            Publicar
           </Button>
         </div>
       </header>
 
       {/* Conteúdo Principal Dividido: Chat + Prévia da Loja */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         {/* Painel Esquerdo: Chat IA Multimodal */}
-        <div className="w-full lg:w-[460px] xl:w-[500px] border-r border-white/10 flex flex-col bg-zinc-950/70 backdrop-blur-xl h-full z-10">
+        <div
+          className={`w-full lg:w-[400px] xl:w-[440px] shrink-0 border-r border-white/10 flex flex-col bg-zinc-950/80 backdrop-blur-xl h-full z-10 ${
+            mobileTab === "chat" ? "flex" : "hidden lg:flex"
+          }`}
+        >
           <div className="p-3 border-b border-white/5 bg-zinc-900/40 flex items-center justify-between text-xs text-zinc-400">
-            <span className="flex items-center gap-1.5 font-medium text-blue-400">
-              <Sparkles className="h-3.5 w-3.5" /> Consultor IA de E-commerce
+            <span className="flex items-center gap-1.5 font-semibold text-blue-400">
+              <Sparkles className="h-3.5 w-3.5" /> Editor com IA
             </span>
-            <span>Gemini 3.8 Multimodal</span>
+            {/* Atalho mobile para ver prévia */}
+            <button
+              onClick={() => setMobileTab("preview")}
+              className="lg:hidden text-blue-400 hover:text-blue-300 font-semibold flex items-center gap-1"
+            >
+              Ver Prévia →
+            </button>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-3.5">
@@ -428,9 +468,9 @@ function LojaStudioPage() {
               </div>
             ))}
             {isProcessing && (
-              <div className="flex items-center gap-2 text-xs text-blue-400 p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 w-fit">
+              <div className="flex items-center gap-2 text-xs text-blue-400 p-2">
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                <span>Atualizando catálogo e produtos com IA...</span>
+                <span>Atualizando catálogo...</span>
               </div>
             )}
             <div ref={chatScrollRef} />
@@ -497,12 +537,16 @@ function LojaStudioPage() {
         </div>
 
         {/* Painel Direito: A Loja ao Vivo */}
-        <div className="flex-1 bg-zinc-950/90 overflow-y-auto flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div
+          className={`flex-1 min-w-0 bg-zinc-950 overflow-y-auto flex flex-col items-center justify-start p-3 sm:p-5 lg:p-8 h-full ${
+            mobileTab === "preview" ? "flex" : "hidden lg:flex"
+          }`}
+        >
           <div
             className={`transition-all duration-300 w-full ${
               viewMode === "mobile"
-                ? "max-w-[420px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-900 overflow-hidden min-h-[780px]"
-                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-900 overflow-hidden"
+                ? "max-w-[400px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-900 overflow-hidden my-auto"
+                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-900 overflow-hidden my-auto"
             }`}
           >
             {/* Header da Loja */}
@@ -692,6 +736,19 @@ function LojaStudioPage() {
           </div>
         </div>
       </div>
+
+      {/* Botão Flutuante Mobile: Voltar ao Chat quando estiver na Prévia */}
+      {mobileTab === "preview" && (
+        <button
+          type="button"
+          onClick={() => setMobileTab("chat")}
+          className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-2xl border border-blue-400/40 active:scale-95 transition-all"
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span>Voltar ao Chat IA</span>
+        </button>
+      )}
     </div>
   );
 }
+

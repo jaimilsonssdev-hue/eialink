@@ -98,13 +98,14 @@ function AgendaStudioPage() {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false }) as Record<string, string>;
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
+  const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
   const [agenda, setAgenda] = useState<AgendaStudioData>(DEFAULT_AGENDA);
   const [messages, setMessages] = useState<AgendaAiMessage[]>([
     {
       id: "msg-1",
       role: "assistant",
       content:
-        "Fala, mestre! 💈 Sou o seu Diretor Criativo e Especialista em Agendamentos. Já estruturei uma página de agendamento de altíssimo nível para o seu espaço aqui ao lado. Você pode digitar os ajustes que quiser ou **subir fotos da tabela de preços ou flyer** que eu organizo tudo na hora!",
+        "Agenda gerada! Diga quais serviços, valores ou horários ajustar, ou envie fotos da tabela de preços.",
       timestamp: Date.now(),
     },
   ]);
@@ -277,28 +278,57 @@ function AgendaStudioPage() {
         </div>
 
         {/* Controles de Visualização */}
-        <div className="hidden md:flex items-center bg-zinc-900 border border-white/10 rounded-xl p-1 gap-1">
+        {/* Mobile Toggle: Chat vs Prévia */}
+        <div className="flex lg:hidden items-center bg-zinc-900 border border-white/10 rounded-xl p-1 gap-1">
+          <button
+            type="button"
+            onClick={() => setMobileTab("chat")}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+              mobileTab === "chat"
+                ? "bg-amber-500 text-black font-bold shadow-xs"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <MessageCircle className="h-3.5 w-3.5" />
+            <span>Chat</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab("preview")}
+            className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-all ${
+              mobileTab === "preview"
+                ? "bg-amber-500 text-black font-bold shadow-xs"
+                : "text-zinc-400 hover:text-white"
+            }`}
+          >
+            <Smartphone className="h-3.5 w-3.5" />
+            <span>Ver Prévia</span>
+          </button>
+        </div>
+
+        {/* Desktop ViewMode: Mobile frame vs Desktop full */}
+        <div className="hidden lg:flex items-center bg-zinc-900 border border-white/10 rounded-xl p-1 gap-1">
           <button
             onClick={() => setViewMode("mobile")}
             className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-all ${
               viewMode === "mobile"
-                ? "bg-amber-500 text-black shadow-sm font-bold"
+                ? "bg-amber-500 text-black shadow-xs font-bold"
                 : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
             <Smartphone className="h-3.5 w-3.5" />
-            Mobile (App)
+            Mobile
           </button>
           <button
             onClick={() => setViewMode("desktop")}
             className={`flex items-center gap-1.5 px-3 py-1 text-xs rounded-lg font-medium transition-all ${
               viewMode === "desktop"
-                ? "bg-amber-500 text-black shadow-sm font-bold"
+                ? "bg-amber-500 text-black shadow-xs font-bold"
                 : "text-zinc-400 hover:text-zinc-200"
             }`}
           >
             <Monitor className="h-3.5 w-3.5" />
-            Web Completa
+            Desktop
           </button>
         </div>
 
@@ -309,11 +339,11 @@ function AgendaStudioPage() {
               variant="outline"
               size="sm"
               asChild
-              className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-xs"
+              className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-xs hidden sm:inline-flex"
             >
               <a href={savedPageUrl} target="_blank" rel="noreferrer">
                 <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
-                Ver Agenda Online
+                Ver Online
               </a>
             </Button>
           )}
@@ -329,20 +359,30 @@ function AgendaStudioPage() {
             ) : (
               <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
             )}
-            Publicar Agenda
+            Publicar
           </Button>
         </div>
       </header>
 
       {/* Conteúdo Dividido */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
         {/* Painel Esquerdo: Chat IA */}
-        <div className="w-full lg:w-[460px] xl:w-[500px] border-r border-white/10 flex flex-col bg-zinc-950/70 backdrop-blur-xl h-full z-10">
+        <div
+          className={`w-full lg:w-[400px] xl:w-[440px] shrink-0 border-r border-white/10 flex flex-col bg-zinc-950/80 backdrop-blur-xl h-full z-10 ${
+            mobileTab === "chat" ? "flex" : "hidden lg:flex"
+          }`}
+        >
           <div className="p-3 border-b border-white/5 bg-zinc-900/40 flex items-center justify-between text-xs text-zinc-400">
-            <span className="flex items-center gap-1.5 font-medium text-amber-400">
-              <Sparkles className="h-3.5 w-3.5" /> Consultoria IA de Serviços & Agenda
+            <span className="flex items-center gap-1.5 font-semibold text-amber-400">
+              <Sparkles className="h-3.5 w-3.5" /> Editor com IA
             </span>
-            <span>Gemini 3.8 Multimodal</span>
+            {/* Atalho mobile para ver prévia */}
+            <button
+              onClick={() => setMobileTab("preview")}
+              className="lg:hidden text-amber-400 hover:text-amber-300 font-semibold flex items-center gap-1"
+            >
+              Ver Prévia →
+            </button>
           </div>
 
           {/* Histórico */}
@@ -382,7 +422,7 @@ function AgendaStudioPage() {
             {isProcessing && (
               <div className="flex items-center gap-2 text-xs text-amber-400 p-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                <span>Formatando serviços, combos e horários ideais...</span>
+                <span>Atualizando agenda...</span>
               </div>
             )}
             <div ref={chatScrollRef} />
@@ -465,12 +505,16 @@ function AgendaStudioPage() {
         </div>
 
         {/* Painel Direito: A Agenda Interativa ao Vivo */}
-        <div className="flex-1 bg-zinc-950/90 overflow-y-auto flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div
+          className={`flex-1 min-w-0 bg-zinc-950 overflow-y-auto flex flex-col items-center justify-start p-3 sm:p-5 lg:p-8 h-full ${
+            mobileTab === "preview" ? "flex" : "hidden lg:flex"
+          }`}
+        >
           <div
             className={`transition-all duration-300 w-full ${
               viewMode === "mobile"
-                ? "max-w-[420px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-900 overflow-hidden min-h-[780px]"
-                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-900 overflow-hidden"
+                ? "max-w-[400px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-900 overflow-hidden my-auto"
+                : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-900 overflow-hidden my-auto"
             }`}
           >
             {/* Header do Espaço */}
@@ -624,6 +668,18 @@ function AgendaStudioPage() {
           </div>
         </div>
       </div>
+
+      {/* Botão Flutuante Mobile: Voltar ao Chat quando estiver na Prévia */}
+      {mobileTab === "preview" && (
+        <button
+          type="button"
+          onClick={() => setMobileTab("chat")}
+          className="lg:hidden fixed bottom-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 px-5 py-2.5 rounded-full bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs shadow-2xl border border-amber-300/40 active:scale-95 transition-all"
+        >
+          <MessageCircle className="h-4 w-4" />
+          <span>Voltar ao Chat IA</span>
+        </button>
+      )}
     </div>
   );
 }

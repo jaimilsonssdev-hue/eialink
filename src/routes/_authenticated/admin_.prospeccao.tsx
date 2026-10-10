@@ -88,6 +88,7 @@ import {
 } from "@/modules/prospecting/specializedGenerators.functions";
 import { getGeminiApiKey } from "@/modules/studiopro/lib/creativeEngineService";
 import { STUDIO_PRO_VARIANTS } from "@/modules/studiopro/lib/buildStudioProConfigFromLead";
+import { generateCreativeSiteFn } from "@/modules/studio/studio.functions";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -760,10 +761,59 @@ function ProspectingPage() {
     setFeedback(null);
     const meta = getProspectNicheCategory(company.niche, company.name);
     const targetCategory = forceCat || meta.category;
-    const nameSeed = Math.abs((company.name || "").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0));
-    const initialVariantIndex = nameSeed % STUDIO_PRO_VARIANTS.length;
+    const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
 
     try {
+      // Se for nicho de serviços/institucional, aciona diretamente o Agente IA do Estúdio Criativo
+      if (targetCategory === "service") {
+        setFeedback(`🚀 Agente IA do Estúdio Criativo gerando proposta visual para ${company.name}...`);
+        const briefingPrompt = `Crie um site web completo, moderno e de altíssimo padrão visual para a empresa "${company.name}", atuando no nicho "${company.niche || "Serviços"}" em "${company.city || "sua região"}".
+DIRETRIZES DE DESIGN E CONVERSÃO:
+- Crie uma proposta visual autêntica, moderna e arrojada (padrão Lovable e Awwwards) com Tailwind CSS e Lucide Icons.
+- Destaque a autoridade da marca, diferenciais competitivos e prova social autêntica (${company.rating || 4.9} estrelas no Google).
+- Integre o botão pulsante de WhatsApp (${cleanPhone}), rotas GPS (Google Maps e Waze para ${company.address || company.city}) e botão de Agendamento Online.
+- Retorne apenas o código HTML completo autocontido.`;
+
+        const studioRes = await generateCreativeSiteFn({
+          data: {
+            briefingOrPrompt: briefingPrompt,
+            projectName: company.name,
+            niche: company.niche || "Serviços",
+            city: company.city || "Brasil",
+            businessAddress: company.address || undefined,
+            businessWhatsapp: cleanPhone || undefined,
+            rating: company.rating ? Number(company.rating) : 4.9,
+            reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
+            photos: (company as any).photos || [],
+            clientGeminiKey: getGeminiApiKey() || undefined,
+          },
+        });
+
+        if (studioRes.ok && studioRes.pageId) {
+          const url = `https://eialink.com.br/p/${studioRes.slug}`;
+          const cleanNotes = (company.notes || "")
+            .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+            .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
+            .replace(/\n\s*\n/g, "\n")
+            .trim();
+
+          const newNotes = cleanNotes
+            ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`
+            : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`;
+
+          const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
+          if (cleanPhone && !company.whatsapp) {
+            companyUpdates.whatsapp = cleanPhone;
+            companyUpdates.phone = cleanPhone;
+          }
+          await ProspectingService.updateCompany(company.id, companyUpdates);
+          setFeedback(`🎉 Site gerado com sucesso pelo Agente IA do Estúdio Criativo! Link: ${url}`);
+          invalidate();
+          return;
+        }
+      }
+
+      // Nichos especializados (food, barber, shop, industry) ou fallback
       setFeedback(`🚀 ${meta.loadingLabel} com Gemini 3.8 Flash...`);
       const res = await generateSpecializedProspectSiteFn({
         data: {
@@ -778,7 +828,6 @@ function ProspectingPage() {
           instagram: company.instagram ?? undefined,
           photos: (company as any).photos || [],
           forceCategory: targetCategory,
-          variantIndex: initialVariantIndex,
           clientGeminiKey: getGeminiApiKey() || undefined,
         },
       });
@@ -807,57 +856,84 @@ function ProspectingPage() {
     try {
       const demoInfo = parseDemoInfo(company);
       const nicheKey = detectNicheKey(company.niche, company.name);
-      const variants = getVariantsForNiche(nicheKey);
+      const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
 
-      // Identifica o modelo atual (anotado nas notas ou na página)
-      const currentModelName = demoInfo.modelName || (company.notes?.match(/\[Modelo:\s*([^\]]+)\]/i)?.[1] ?? "");
-      let currentIndex = -1;
-      if (currentModelName) {
-        const spIdx = STUDIO_PRO_VARIANTS.findIndex(
-          (v) => v.name.toLowerCase() === currentModelName.toLowerCase()
-        );
-        if (spIdx !== -1) {
-          currentIndex = spIdx;
-        } else {
-          const vIdx = variants.findIndex(
-            (v) => v.modelName.toLowerCase() === currentModelName.toLowerCase()
+      setFeedback(`🎨 Agente IA do Estúdio Criativo criando proposta 100% nova para ${company.name}...`);
+
+      const promptReinvento = `REINVENTAR PROPOSTA DE DESIGN COMPLETA:
+Crie uma proposta de design 100% NOVA, DIFERENTE e SURPREENDENTE para a empresa "${company.name}", atuando no nicho "${company.niche || "Serviços"}" em "${company.city || "sua região"}".
+DIRETRIZES CRÍTICAS DE INOVAÇÃO:
+- NÃO repita o layout ou organização anterior.
+- Alterne o formato e a composição: experimente hero em Split assimétrico, Bento Grid com cards de vidro, Neobrutalismo pop com sombras duras de 4px, Glassmorphism translúcido com luzes neon ou Dark Luxury minimalista de alto padrão.
+- Varie a tipografia, a paleta cromática, as ordens e diagramação dos blocos para criar uma experiência completamente nova e impactante.
+- Mantenha todos os dados de contato reais e funcionais: WhatsApp (${cleanPhone}), endereço (${company.address || company.city}) e avaliação Google (${company.rating || 4.9} estrelas).
+- Retorne apenas o código HTML autocontido com Tailwind CSS e Lucide Icons.`;
+
+      let generatedSlug = demoInfo.slug;
+      let generatedPageId = demoInfo.pageId;
+
+      try {
+        const studioRes = await generateCreativeSiteFn({
+          data: {
+            briefingOrPrompt: promptReinvento,
+            projectName: company.name,
+            niche: company.niche || "Serviços",
+            city: company.city || "Brasil",
+            businessAddress: company.address || undefined,
+            businessWhatsapp: cleanPhone || undefined,
+            businessSlug: demoInfo.slug || undefined,
+            projectId: demoInfo.pageId || undefined,
+            rating: company.rating ? Number(company.rating) : 4.9,
+            reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
+            photos: (company as any).photos || [],
+            isRegeneration: true,
+            clientGeminiKey: getGeminiApiKey() || undefined,
+          },
+        });
+
+        if (studioRes.ok && studioRes.pageId) {
+          generatedPageId = studioRes.pageId;
+          generatedSlug = studioRes.slug;
+        }
+      } catch (aiErr) {
+        console.warn("[Prospecção] Falha no Estúdio Criativo IA ao regenerar, tentando contingência matricial:", aiErr);
+      }
+
+      // Se contingência necessária:
+      if (!generatedPageId) {
+        const variants = getVariantsForNiche(nicheKey);
+        const currentModelName = demoInfo.modelName || (company.notes?.match(/\[Modelo:\s*([^\]]+)\]/i)?.[1] ?? "");
+        let currentIndex = -1;
+        if (currentModelName) {
+          const spIdx = STUDIO_PRO_VARIANTS.findIndex(
+            (v) => v.name.toLowerCase() === currentModelName.toLowerCase()
           );
-          if (vIdx !== -1) currentIndex = vIdx;
+          if (spIdx !== -1) currentIndex = spIdx;
         }
+        const nextIndex = (currentIndex + 1) % STUDIO_PRO_VARIANTS.length;
+
+        const oldPageId = demoInfo.pageId || (demoInfo.slug ? demoPagesBySlug.get(demoInfo.slug)?.id : null);
+        if (oldPageId) {
+          try { await PageService.deletePage(oldPageId); } catch (_) {}
+        }
+
+        const cidMatch = company.notes?.match(/CID:\s*([0-9a-fx:]+)/i);
+        const fallbackPage = await PageService.createProspectDemoPage({
+          companyName: company.name,
+          whatsapp: company.whatsapp ?? company.phone,
+          niche: company.niche,
+          city: company.city,
+          instagram: company.instagram,
+          variantIndex: nextIndex,
+          rating: company.rating,
+          reviewsCount: company.reviews_count,
+          cid: cidMatch ? cidMatch[1] : null,
+        });
+        generatedPageId = fallbackPage.id;
+        generatedSlug = fallbackPage.slug;
       }
 
-      // Cicla entre os 5 arquétipos visuais de alto padrão (0 -> 1 -> 2 -> 3 -> 4 -> 0)
-      const nextIndex = (currentIndex + 1) % STUDIO_PRO_VARIANTS.length;
-      const nextVariant = STUDIO_PRO_VARIANTS[nextIndex];
-
-      // Remove a página demo anterior para manter tudo limpo
-      const oldPageId = demoInfo.pageId || (demoInfo.slug ? demoPagesBySlug.get(demoInfo.slug)?.id : null);
-      if (oldPageId) {
-        try {
-          await PageService.deletePage(oldPageId);
-        } catch (e) {
-          console.warn("Aviso ao remover demo anterior:", e);
-        }
-      }
-
-      // Gera a nova demonstração com o novo design
-      const cidMatch = company.notes?.match(/CID:\s*([0-9a-fx:]+)/i);
-      const page = await PageService.createProspectDemoPage({
-        companyName: company.name,
-        whatsapp: company.whatsapp ?? company.phone,
-        niche: company.niche,
-        city: company.city,
-        instagram: company.instagram,
-        variantIndex: nextIndex,
-        rating: company.rating,
-        reviewsCount: company.reviews_count,
-        cid: cidMatch ? cidMatch[1] : null,
-      });
-
-      const modelVariant = (page.social_links as any)?.model_variant || nextVariant.name;
-      const url = `https://eialink.com.br/p/${page.slug}`;
-
-      // Limpa qualquer linha anterior de Demo das notas
+      const url = `https://eialink.com.br/p/${generatedSlug}`;
       const cleanNotes = (company.notes || "")
         .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
         .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
@@ -865,16 +941,16 @@ function ProspectingPage() {
         .trim();
 
       const newNotes = cleanNotes
-        ? `${cleanNotes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
-        : `Demo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`;
+        ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`
+        : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`;
 
       const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
-      if (page.whatsapp && !company.whatsapp) {
-        companyUpdates.whatsapp = page.whatsapp;
-        companyUpdates.phone = page.whatsapp;
+      if (cleanPhone && !company.whatsapp) {
+        companyUpdates.whatsapp = cleanPhone;
+        companyUpdates.phone = cleanPhone;
       }
       await ProspectingService.updateCompany(company.id, companyUpdates);
-      setFeedback(`🎨 Modelo alterado para "${modelVariant}" (${nextVariant.description}) para ${company.name}!`);
+      setFeedback(`🎨 Nova proposta exclusiva criada pelo Agente IA do Estúdio Criativo para ${company.name}! Link: ${url}`);
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao trocar modelo da página.";
@@ -899,46 +975,49 @@ function ProspectingPage() {
     setFeedback(null);
     try {
       const nicheKey = detectNicheKey((page.social_links as any)?.niche, page.display_name);
-      const variants = getVariantsForNiche(nicheKey);
-      const currentModel = (page.social_links as any)?.model_variant || "";
-      let currentIndex = -1;
-      if (currentModel) {
-        const spIdx = STUDIO_PRO_VARIANTS.findIndex(
-          (v) => v.name.toLowerCase() === currentModel.toLowerCase()
-        );
-        if (spIdx !== -1) {
-          currentIndex = spIdx;
-        } else {
-          const vIdx = variants.findIndex(
-            (v) => v.modelName.toLowerCase() === currentModel.toLowerCase()
-          );
-          if (vIdx !== -1) currentIndex = vIdx;
-        }
-      }
+      const cleanPhone = (page.whatsapp ?? "").replace(/\D/g, "");
 
-      const nextIndex = (currentIndex + 1) % STUDIO_PRO_VARIANTS.length;
-      const nextVariant = STUDIO_PRO_VARIANTS[nextIndex];
+      setFeedback(`🎨 Agente IA do Estúdio Criativo reinventando ${page.display_name}...`);
+
+      const promptReinvento = `REINVENTAR PROPOSTA DE DESIGN COMPLETA:
+Crie uma proposta de design 100% NOVA, DIFERENTE e SURPREENDENTE para a página "${page.display_name}" (${(page.social_links as any)?.niche || "Serviços"}).
+DIRETRIZES CRÍTICAS DE INOVAÇÃO:
+- NÃO repita o layout ou organização anterior.
+- Alterne o formato e a composição: experimente hero em Split, Bento Grid com cards de vidro, Neobrutalismo pop com sombras duras de 4px, Glassmorphism translúcido com luzes neon ou Dark Luxury minimalista de alto padrão.
+- Varie a tipografia, a paleta cromática, as ordens e diagramação dos blocos para criar uma experiência completamente nova e impactante.
+- Mantenha todos os dados de contato reais e funcionais: WhatsApp (${cleanPhone}), endereço (${(page.social_links as any)?.address || "Local"}) e avaliação Google (${(page.social_links as any)?.google_rating || 4.9} estrelas).
+- Retorne apenas o código HTML autocontido com Tailwind CSS e Lucide Icons.`;
+
+      let generatedSlug = page.slug;
+      let generatedPageId = page.id;
 
       try {
-        await PageService.deletePage(page.id);
-      } catch (e) {
-        console.warn("Aviso ao remover demo:", e);
+        const studioRes = await generateCreativeSiteFn({
+          data: {
+            briefingOrPrompt: promptReinvento,
+            projectName: page.display_name,
+            niche: (page.social_links as any)?.niche || "Serviços",
+            city: (page.social_links as any)?.city || "Brasil",
+            businessAddress: (page.social_links as any)?.address || undefined,
+            businessWhatsapp: cleanPhone || undefined,
+            businessSlug: page.slug,
+            projectId: page.id,
+            rating: (page.social_links as any)?.google_rating ? Number((page.social_links as any).google_rating) : 4.9,
+            reviewsCount: (page.social_links as any)?.reviews_count ? Number((page.social_links as any).reviews_count) : 85,
+            isRegeneration: true,
+            clientGeminiKey: getGeminiApiKey() || undefined,
+          },
+        });
+
+        if (studioRes.ok && studioRes.pageId) {
+          generatedPageId = studioRes.pageId;
+          generatedSlug = studioRes.slug;
+        }
+      } catch (aiErr) {
+        console.warn("[Prospecção] Contingência para página:", aiErr);
       }
 
-      const newPage = await PageService.createProspectDemoPage({
-        companyName: page.display_name,
-        whatsapp: page.whatsapp,
-        niche: (page.social_links as any)?.niche || nicheKey,
-        city: (page.social_links as any)?.address || "sua região",
-        instagram: page.instagram,
-        variantIndex: nextIndex,
-        rating: (page.social_links as any)?.google_rating,
-        reviewsCount: (page.social_links as any)?.reviews_count,
-        cid: (page.social_links as any)?.cid || null,
-      });
-
-      const modelVariant = (newPage.social_links as any)?.model_variant || nextVariant.name;
-      setFeedback(`🎨 Modelo de "${page.display_name}" alterado para "${modelVariant}" com sucesso!`);
+      setFeedback(`🎨 Nova proposta criada pelo Agente IA para "${page.display_name}" com sucesso!`);
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao trocar modelo da demonstração.";

@@ -283,6 +283,12 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       businessAddress?: string;
       businessWhatsapp?: string;
       businessSlug?: string;
+      niche?: string;
+      city?: string;
+      rating?: number;
+      reviewsCount?: number;
+      photos?: string[];
+      isRegeneration?: boolean;
       attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
     }) => d,
   )
@@ -314,15 +320,29 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
     // Injeta metadados de ferramentas do ecossistema EiaLink
     const businessContextParts: string[] = [];
     if (input.projectName) businessContextParts.push(`Nome Oficial: "${input.projectName}"`);
+    if (input.niche) businessContextParts.push(`Nicho de Atuação: "${input.niche}"`);
+    if (input.city) businessContextParts.push(`Cidade / Região: "${input.city}"`);
     if (input.businessAddress) businessContextParts.push(`Endereço Verificado (usar no Mapa/GPS/Waze): "${input.businessAddress}"`);
     if (input.businessWhatsapp) businessContextParts.push(`WhatsApp Oficial (usar no botão pulsante e CTAs): "${input.businessWhatsapp}"`);
     if (input.businessSlug) businessContextParts.push(`Link de Agendamento Online da plataforma: "/agendar/${input.businessSlug}"`);
+    if (input.rating) businessContextParts.push(`Avaliação no Google Maps: ${input.rating} estrelas (${input.reviewsCount || 80} avaliações reais)`);
+    if (input.photos && input.photos.length > 0) {
+      businessContextParts.push(`Fotos reais da empresa para usar no site: ${input.photos.slice(0, 6).join(", ")}`);
+    }
 
     if (businessContextParts.length > 0) {
       userPrompt += `\n\n[DADOS DE INTEGRAÇÃO DO ECOSSISTEMA EIALINK]:\n${businessContextParts.join("\n")}\nPor favor, certifique-se de preencher a seção de Localização (com iframe e botões de GPS Waze/Maps), o botão de Agendamento Online e o WhatsApp flutuante utilizando estes dados reais!`;
     }
 
-    if (input.existingHtml && input.existingHtml.length > 50) {
+    if (input.isRegeneration) {
+      userPrompt += `\n\n[DIRETRIZ DE REINVENÇÃO TOTAL & TROCA DE MODELO]:
+O usuário solicitou explicitamente TROCAR O MODELO e criar uma PROPOSTA DE DESIGN COMPLETAMENTE NOVA, DIFERENTE E SURPREENDENTE.
+NÃO repita a mesma estrutura, ordem de blocos, hero ou paleta de cores.
+Experimente um formato e layout inovador (ex: se era clássico/cards, use um Split moderno, Bento Grid, Neobrutalismo pop com sombras duras, ou Glassmorphism translúcido com luzes neon).
+Surpreenda com uma organização criativa e única que valorize a marca do cliente ao máximo!`;
+    }
+
+    if (input.existingHtml && input.existingHtml.length > 50 && !input.isRegeneration) {
       userPrompt = `MODIFICAÇÃO NO SITE EXISTENTE:
 O usuário solicitou o seguinte ajuste:
 "${input.briefingOrPrompt}"
@@ -360,7 +380,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
             contents: [{ role: "user", parts: serverParts }],
             config: {
               systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-              temperature: 0.7,
+              temperature: 0.85,
               thinkingConfig: {
                 thinkingLevel: "low" as any,
               },
@@ -417,17 +437,42 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
       const pageName = input.projectName || "Site Criativo";
       const slugCandidate = slugify(pageName);
 
-      const { data: existing } = await supabase
-        .from("bio_pages")
-        .select("id, slug, social_links")
-        .eq("user_id", userId)
-        .eq("title", pageName)
-        .maybeSingle();
+      let existing: { id: string; slug: string; social_links: any } | null = null;
+      if (input.projectId) {
+        const { data: byId } = await supabase
+          .from("bio_pages")
+          .select("id, slug, social_links")
+          .eq("id", input.projectId)
+          .maybeSingle();
+        existing = byId as any;
+      }
+      if (!existing && input.businessSlug) {
+        const { data: bySlug } = await supabase
+          .from("bio_pages")
+          .select("id, slug, social_links")
+          .eq("slug", input.businessSlug)
+          .maybeSingle();
+        existing = bySlug as any;
+      }
+      if (!existing && pageName) {
+        const { data: byName } = await supabase
+          .from("bio_pages")
+          .select("id, slug, social_links")
+          .eq("user_id", userId)
+          .eq("display_name", pageName)
+          .maybeSingle();
+        existing = byName as any;
+      }
 
       const existingSocial = (existing?.social_links as any) || {};
       const updatedSocial = {
         ...existingSocial,
         custom_html: cleanHtml,
+        niche: input.niche || existingSocial.niche,
+        city: input.city || existingSocial.city,
+        google_rating: input.rating || existingSocial.google_rating || 4.9,
+        reviews_count: input.reviewsCount || existingSocial.reviews_count || 85,
+        is_demo: true,
         creative_studio_project: {
           id: input.projectId || existing?.id || `proj-${Date.now()}`,
           name: pageName,
@@ -441,6 +486,8 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
         await supabase
           .from("bio_pages")
           .update({
+            display_name: pageName,
+            whatsapp: input.businessWhatsapp || undefined,
             social_links: updatedSocial,
             updated_at: new Date().toISOString(),
           })
@@ -448,16 +495,16 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
         savedPageId = existing.id;
         savedSlug = existing.slug;
       } else {
-        const uniqueSlug = `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
+        const uniqueSlug = input.businessSlug || `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
         const { data: created } = await supabase
           .from("bio_pages")
           .insert({
             user_id: userId,
-            title: pageName,
             display_name: pageName,
             slug: uniqueSlug,
-            template: "cinematic-glass",
-            is_published: true,
+            template_id: "site-maquina",
+            published: true,
+            whatsapp: input.businessWhatsapp || null,
             social_links: updatedSocial,
           })
           .select("id, slug")

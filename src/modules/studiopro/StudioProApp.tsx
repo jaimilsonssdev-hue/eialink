@@ -120,9 +120,15 @@ function StudioContent({ pageId }: { pageId?: string }) {
 interface CreativeStudioAppProps {
   pageId?: string;
   projectId?: string;
+  leadData?: {
+    name?: string;
+    address?: string;
+    whatsapp?: string;
+    niche?: string;
+  };
 }
 
-export function StudioProApp({ pageId }: CreativeStudioAppProps) {
+export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
   const {
     projects,
     createProject,
@@ -132,6 +138,31 @@ export function StudioProApp({ pageId }: CreativeStudioAppProps) {
     addChatMessage,
     setProjects,
   } = useCreativeStudioStore();
+
+  // Se veio direto do radar sem ter sido salvo ainda, cria ou seleciona o projeto com os dados do lead
+  useEffect(() => {
+    if (pageId || !leadData?.name) return;
+
+    const existing = projects.find(
+      (p) => p.name.toLowerCase() === leadData.name!.toLowerCase(),
+    );
+
+    if (existing) {
+      selectProject(existing.id);
+    } else {
+      const projId = createProject(leadData.name);
+      selectProject(projId);
+      const briefing = `[CONTEXTO DO LEAD PROSPECTADO]:\n- Empresa: ${leadData.name}\n- WhatsApp: ${leadData.whatsapp || "Não informado"}\n- Endereço: ${leadData.address || "Não informado"}\n- Nicho: ${leadData.niche || "Serviços/Comércio"}`;
+      updateActiveProjectBriefing(briefing);
+
+      addChatMessage({
+        id: `lead-init-${Date.now()}`,
+        role: "assistant",
+        content: `Fala, mestre! 🚀 Já preparei o projeto da **${leadData.name}**.\n\n📌 **Dados coletados do Radar:**\n- **Nicho:** ${leadData.niche || "Geral"}\n- **WhatsApp:** ${leadData.whatsapp || "Não informado"}\n- **Local:** ${leadData.address || "Não informado"}\n\nComo você quer que eu monte essa página institucional? Quer focar em alta conversão no WhatsApp ou tem alguma preferência de estilo visual (Dark Sofisticado, Clean Moderno ou Minimalista)?`,
+        timestamp: Date.now(),
+      });
+    }
+  }, [pageId, leadData, projects, createProject, selectProject, updateActiveProjectBriefing, addChatMessage]);
 
   // Sincroniza projetos da nuvem para que o que foi feito no Mobile apareça no Desktop e vice-versa
   useEffect(() => {

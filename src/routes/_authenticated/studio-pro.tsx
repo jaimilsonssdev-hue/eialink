@@ -22,6 +22,10 @@ export const Route = createFileRoute("/_authenticated/studio-pro")({
     tab: z.string().optional(),
     project: z.string().optional(),
     page: z.string().optional(),
+    name: z.string().optional(),
+    address: z.string().optional(),
+    whatsapp: z.string().optional(),
+    niche: z.string().optional(),
   }),
   head: () => ({
     meta: [
@@ -33,8 +37,23 @@ export const Route = createFileRoute("/_authenticated/studio-pro")({
 });
 
 function StudioProRoutePage() {
-  const { page, project } = Route.useSearch();
-  return <StudioProApp pageId={page} projectId={project} />;
+  const search = Route.useSearch();
+  return (
+    <StudioProApp
+      pageId={search.page}
+      projectId={search.project}
+      leadData={
+        search.name
+          ? {
+              name: search.name,
+              address: search.address,
+              whatsapp: search.whatsapp,
+              niche: search.niche,
+            }
+          : undefined
+      }
+    />
+  );
 }
 
 export default StudioProRoutePage;

@@ -71,6 +71,20 @@ function AuthedLayout() {
         items: [
           { to: "/dashboard", label: "Início", icon: LayoutDashboard },
           { to: "/pages", label: "Páginas & Links", icon: PanelsTopLeft },
+          {
+            to: "/cardapio-studio",
+            label: "Gerador de Cardápios",
+            icon: Utensils,
+            badge: "Novo",
+            badgeClassName: "bg-orange-500/20 text-orange-300 border border-orange-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
+          },
+          {
+            to: "/agenda-studio",
+            label: "Gerador de Agendas",
+            icon: CalendarDays,
+            badge: "Novo",
+            badgeClassName: "bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded-md",
+          },
         ],
       },
       {
@@ -123,7 +137,11 @@ function AuthedLayout() {
     navigate({ to: "/auth", replace: true });
   }
 
-  const isStudio = pathname.startsWith("/studio") || pathname.startsWith("/studio-pro");
+  const isStudio =
+    pathname.startsWith("/studio") ||
+    pathname.startsWith("/studio-pro") ||
+    pathname.startsWith("/cardapio-studio") ||
+    pathname.startsWith("/agenda-studio");
 
   // Layout isolado para o Estúdio Criativo e Cinematic Studio (Sem conflito de sidebar fixa)
   if (isStudio) {

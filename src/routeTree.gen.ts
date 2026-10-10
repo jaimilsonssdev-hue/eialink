@@ -22,10 +22,12 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAgendaRouteImport } from './routes/_authenticated/agenda'
+import { Route as AuthenticatedAgendaStudioRouteImport } from './routes/_authenticated/agenda-studio'
 import { Route as AuthenticatedAnalyticsRouteImport } from './routes/_authenticated/analytics'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as AuthenticatedBioRouteImport } from './routes/_authenticated/bio'
 import { Route as AuthenticatedBuilderRouteImport } from './routes/_authenticated/builder'
+import { Route as AuthenticatedCardapioStudioRouteImport } from './routes/_authenticated/cardapio-studio'
 import { Route as AuthenticatedCatalogRouteImport } from './routes/_authenticated/catalog'
 import { Route as AuthenticatedComandaRouteImport } from './routes/_authenticated/comanda'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -116,6 +118,12 @@ const AuthenticatedAgendaRoute = AuthenticatedAgendaRouteImport.update({
   path: '/agenda',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAgendaStudioRoute =
+  AuthenticatedAgendaStudioRouteImport.update({
+    id: '/agenda-studio',
+    path: '/agenda-studio',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAnalyticsRoute = AuthenticatedAnalyticsRouteImport.update({
   id: '/analytics',
   path: '/analytics',
@@ -136,6 +144,12 @@ const AuthenticatedBuilderRoute = AuthenticatedBuilderRouteImport.update({
   path: '/builder',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedCardapioStudioRoute =
+  AuthenticatedCardapioStudioRouteImport.update({
+    id: '/cardapio-studio',
+    path: '/cardapio-studio',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedCatalogRoute = AuthenticatedCatalogRouteImport.update({
   id: '/catalog',
   path: '/catalog',
@@ -280,10 +294,12 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/agenda-studio': typeof AuthenticatedAgendaStudioRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/bio': typeof AuthenticatedBioRoute
   '/builder': typeof AuthenticatedBuilderRoute
+  '/cardapio-studio': typeof AuthenticatedCardapioStudioRoute
   '/catalog': typeof AuthenticatedCatalogRoute
   '/comanda': typeof AuthenticatedComandaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -323,10 +339,12 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/admin': typeof AuthenticatedAdminRoute
   '/agenda': typeof AuthenticatedAgendaRoute
+  '/agenda-studio': typeof AuthenticatedAgendaStudioRoute
   '/analytics': typeof AuthenticatedAnalyticsRoute
   '/billing': typeof AuthenticatedBillingRoute
   '/bio': typeof AuthenticatedBioRoute
   '/builder': typeof AuthenticatedBuilderRoute
+  '/cardapio-studio': typeof AuthenticatedCardapioStudioRoute
   '/catalog': typeof AuthenticatedCatalogRoute
   '/comanda': typeof AuthenticatedComandaRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -368,10 +386,12 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/agenda': typeof AuthenticatedAgendaRoute
+  '/_authenticated/agenda-studio': typeof AuthenticatedAgendaStudioRoute
   '/_authenticated/analytics': typeof AuthenticatedAnalyticsRoute
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/bio': typeof AuthenticatedBioRoute
   '/_authenticated/builder': typeof AuthenticatedBuilderRoute
+  '/_authenticated/cardapio-studio': typeof AuthenticatedCardapioStudioRoute
   '/_authenticated/catalog': typeof AuthenticatedCatalogRoute
   '/_authenticated/comanda': typeof AuthenticatedComandaRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -413,10 +433,12 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin'
     | '/agenda'
+    | '/agenda-studio'
     | '/analytics'
     | '/billing'
     | '/bio'
     | '/builder'
+    | '/cardapio-studio'
     | '/catalog'
     | '/comanda'
     | '/dashboard'
@@ -456,10 +478,12 @@ export interface FileRouteTypes {
     | '/terms'
     | '/admin'
     | '/agenda'
+    | '/agenda-studio'
     | '/analytics'
     | '/billing'
     | '/bio'
     | '/builder'
+    | '/cardapio-studio'
     | '/catalog'
     | '/comanda'
     | '/dashboard'
@@ -500,10 +524,12 @@ export interface FileRouteTypes {
     | '/terms'
     | '/_authenticated/admin'
     | '/_authenticated/agenda'
+    | '/_authenticated/agenda-studio'
     | '/_authenticated/analytics'
     | '/_authenticated/billing'
     | '/_authenticated/bio'
     | '/_authenticated/builder'
+    | '/_authenticated/cardapio-studio'
     | '/_authenticated/catalog'
     | '/_authenticated/comanda'
     | '/_authenticated/dashboard'
@@ -646,6 +672,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAgendaRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/agenda-studio': {
+      id: '/_authenticated/agenda-studio'
+      path: '/agenda-studio'
+      fullPath: '/agenda-studio'
+      preLoaderRoute: typeof AuthenticatedAgendaStudioRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/analytics': {
       id: '/_authenticated/analytics'
       path: '/analytics'
@@ -672,6 +705,13 @@ declare module '@tanstack/react-router' {
       path: '/builder'
       fullPath: '/builder'
       preLoaderRoute: typeof AuthenticatedBuilderRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/cardapio-studio': {
+      id: '/_authenticated/cardapio-studio'
+      path: '/cardapio-studio'
+      fullPath: '/cardapio-studio'
+      preLoaderRoute: typeof AuthenticatedCardapioStudioRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/catalog': {
@@ -855,10 +895,12 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedAgendaRoute: typeof AuthenticatedAgendaRoute
+  AuthenticatedAgendaStudioRoute: typeof AuthenticatedAgendaStudioRoute
   AuthenticatedAnalyticsRoute: typeof AuthenticatedAnalyticsRoute
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedBioRoute: typeof AuthenticatedBioRoute
   AuthenticatedBuilderRoute: typeof AuthenticatedBuilderRoute
+  AuthenticatedCardapioStudioRoute: typeof AuthenticatedCardapioStudioRoute
   AuthenticatedCatalogRoute: typeof AuthenticatedCatalogRoute
   AuthenticatedComandaRoute: typeof AuthenticatedComandaRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -880,10 +922,12 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedAgendaRoute: AuthenticatedAgendaRoute,
+  AuthenticatedAgendaStudioRoute: AuthenticatedAgendaStudioRoute,
   AuthenticatedAnalyticsRoute: AuthenticatedAnalyticsRoute,
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedBioRoute: AuthenticatedBioRoute,
   AuthenticatedBuilderRoute: AuthenticatedBuilderRoute,
+  AuthenticatedCardapioStudioRoute: AuthenticatedCardapioStudioRoute,
   AuthenticatedCatalogRoute: AuthenticatedCatalogRoute,
   AuthenticatedComandaRoute: AuthenticatedComandaRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,

@@ -2737,20 +2737,84 @@ function ProspectingPage() {
                       (() => {
                         const meta = getProspectNicheCategory(company.niche, company.name);
                         const isGeneratingThis = creatingPageId === company.id;
+                        const isFood = meta.category === "food";
+                        const isBarberOrBeauty =
+                          meta.category === "barber" ||
+                          /est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure/i.test(
+                            company.niche || "",
+                          );
+
                         return (
-                          <button
-                            className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
-                            onClick={() => handleSpecializedGenerate(company)}
-                            disabled={isGeneratingThis}
-                            title={meta.buttonLabel}
-                          >
-                            {isGeneratingThis ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                            ) : (
-                              <span>{meta.icon}</span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {/* Botão Especializado Principal */}
+                            <button
+                              className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
+                              onClick={() => {
+                                if (isFood) {
+                                  navigate({
+                                    to: "/cardapio-studio",
+                                    search: {
+                                      name: company.name,
+                                      address: company.address || "",
+                                      whatsapp: company.whatsapp || "",
+                                      niche: company.niche || "",
+                                    },
+                                  });
+                                } else if (isBarberOrBeauty) {
+                                  navigate({
+                                    to: "/agenda-studio",
+                                    search: {
+                                      name: company.name,
+                                      address: company.address || "",
+                                      whatsapp: company.whatsapp || "",
+                                      niche: company.niche || "",
+                                    },
+                                  });
+                                } else {
+                                  handleSpecializedGenerate(company);
+                                }
+                              }}
+                              disabled={isGeneratingThis}
+                              title={meta.buttonLabel}
+                            >
+                              {isGeneratingThis ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <span>{isFood ? "🍔" : isBarberOrBeauty ? "💈" : meta.icon}</span>
+                              )}
+                              <span>
+                                {isGeneratingThis
+                                  ? "Gerando..."
+                                  : isFood
+                                  ? "Gerar Cardápio"
+                                  : isBarberOrBeauty
+                                  ? "Gerar Agenda"
+                                  : meta.buttonLabel}
+                              </span>
+                            </button>
+
+                            {/* Botão Secundário: Gerar Site Institucional */}
+                            {(isFood || isBarberOrBeauty) && (
+                              <button
+                                className="inline-flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white px-2.5 py-2 text-xs font-medium transition-all"
+                                onClick={() => {
+                                  navigate({
+                                    to: "/studio-pro",
+                                    search: {
+                                      name: company.name,
+                                      address: company.address || "",
+                                      whatsapp: company.whatsapp || "",
+                                      niche: company.niche || "",
+                                    },
+                                  });
+                                }}
+                                title="Gerar Landing Page / Site no Estúdio Criativo"
+                              >
+                                <Globe2 className="h-3 w-3 text-sky-400" />
+                                <span>Gerar Site</span>
+                              </button>
                             )}
-                            <span>{isGeneratingThis ? "Gerando..." : meta.buttonLabel}</span>
-                          </button>
+                          </div>
                         );
                       })()
                     )}
@@ -2844,14 +2908,42 @@ function ProspectingPage() {
                           <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                           <span>{demo.url ? "Trocar Modelo" : "Gerar / Escolher Modelo"}</span>
                         </DropdownMenuItem>
-                        {demo.pageId && (
-                          <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                            <Link to="/studio-pro" search={{ page: demo.pageId }}>
-                              <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                              <span>Editar no Studio Pro</span>
-                            </Link>
-                          </DropdownMenuItem>
-                        )}
+                        {demo.pageId &&
+                          (() => {
+                            const meta = getProspectNicheCategory(company.niche, company.name);
+                            const isFood = meta.category === "food";
+                            const isBarber =
+                              meta.category === "barber" ||
+                              /est[eé]tica|sal[aã]o|cl[ií]nica|beleza/i.test(company.niche || "");
+                            const editTo = isFood
+                              ? "/cardapio-studio"
+                              : isBarber
+                              ? "/agenda-studio"
+                              : "/studio-pro";
+                            const editLabel = isFood
+                              ? "Editar no Cardápio Studio"
+                              : isBarber
+                              ? "Editar na Agenda Studio"
+                              : "Editar no Studio Pro";
+
+                            return (
+                              <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                <Link
+                                  to={editTo as any}
+                                  search={{
+                                    page: demo.pageId,
+                                    name: company.name,
+                                    address: company.address || "",
+                                    whatsapp: company.whatsapp || "",
+                                    niche: company.niche || "",
+                                  }}
+                                >
+                                  <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                  <span>{editLabel}</span>
+                                </Link>
+                              </DropdownMenuItem>
+                            );
+                          })()}
                         {demo.url && demo.pageId && (
                           isOfficial ? (
                             <DropdownMenuItem
@@ -3055,36 +3147,116 @@ function ProspectingPage() {
                                   </div>
                                 </HoverCardContent>
                               </HoverCard>
-                              {demo.pageId && (
-                                <Link
-                                  to="/studio-pro"
-                                  search={{ page: demo.pageId }}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
-                                  title="Editar no Construtor"
-                                >
-                                  <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
-                                  <span>Editar</span>
-                                </Link>
-                              )}
+                              {demo.pageId &&
+                                (() => {
+                                  const meta = getProspectNicheCategory(company.niche, company.name);
+                                  const isFood = meta.category === "food";
+                                  const isBarber =
+                                    meta.category === "barber" ||
+                                    /est[eé]tica|sal[aã]o|cl[ií]nica|beleza/i.test(company.niche || "");
+                                  const editTo = isFood
+                                    ? "/cardapio-studio"
+                                    : isBarber
+                                    ? "/agenda-studio"
+                                    : "/studio-pro";
+
+                                  return (
+                                    <Link
+                                      to={editTo as any}
+                                      search={{
+                                        page: demo.pageId,
+                                        name: company.name,
+                                        address: company.address || "",
+                                        whatsapp: company.whatsapp || "",
+                                        niche: company.niche || "",
+                                      }}
+                                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
+                                      title={isFood ? "Editar no Cardápio Studio" : isBarber ? "Editar na Agenda Studio" : "Editar no Studio Pro"}
+                                    >
+                                      <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
+                                      <span>Editar</span>
+                                    </Link>
+                                  );
+                                })()}
                             </>
                           ) : (
                             (() => {
                               const meta = getProspectNicheCategory(company.niche, company.name);
                               const isGeneratingThis = creatingPageId === company.id;
+                              const isFood = meta.category === "food";
+                              const isBarberOrBeauty =
+                                meta.category === "barber" ||
+                                /est[eé]tica|sal[aã]o|cl[ií]nica|beleza/i.test(company.niche || "");
+
                               return (
-                                <button
-                                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
-                                  onClick={() => handleSpecializedGenerate(company)}
-                                  disabled={isGeneratingThis}
-                                  title={meta.buttonLabel}
-                                >
-                                  {isGeneratingThis ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <span>{meta.icon}</span>
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
+                                    onClick={() => {
+                                      if (isFood) {
+                                        navigate({
+                                          to: "/cardapio-studio",
+                                          search: {
+                                            name: company.name,
+                                            address: company.address || "",
+                                            whatsapp: company.whatsapp || "",
+                                            niche: company.niche || "",
+                                          },
+                                        });
+                                      } else if (isBarberOrBeauty) {
+                                        navigate({
+                                          to: "/agenda-studio",
+                                          search: {
+                                            name: company.name,
+                                            address: company.address || "",
+                                            whatsapp: company.whatsapp || "",
+                                            niche: company.niche || "",
+                                          },
+                                        });
+                                      } else {
+                                        handleSpecializedGenerate(company);
+                                      }
+                                    }}
+                                    disabled={isGeneratingThis}
+                                    title={meta.buttonLabel}
+                                  >
+                                    {isGeneratingThis ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                    ) : (
+                                      <span>{isFood ? "🍔" : isBarberOrBeauty ? "💈" : meta.icon}</span>
+                                    )}
+                                    <span>
+                                      {isGeneratingThis
+                                        ? "Gerando..."
+                                        : isFood
+                                        ? "Gerar Cardápio"
+                                        : isBarberOrBeauty
+                                        ? "Gerar Agenda"
+                                        : meta.buttonLabel}
+                                    </span>
+                                  </button>
+
+                                  {(isFood || isBarberOrBeauty) && (
+                                    <button
+                                      className="inline-flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white px-2 py-1.5 text-xs font-medium transition-all"
+                                      onClick={() => {
+                                        navigate({
+                                          to: "/studio-pro",
+                                          search: {
+                                            name: company.name,
+                                            address: company.address || "",
+                                            whatsapp: company.whatsapp || "",
+                                            niche: company.niche || "",
+                                          },
+                                        });
+                                      }}
+                                      title="Gerar Landing Page / Site no Estúdio Criativo"
+                                    >
+                                      <Globe2 className="h-3 w-3 text-sky-400" />
+                                      <span>Site</span>
+                                    </button>
                                   )}
-                                  <span>{isGeneratingThis ? "Gerando..." : meta.buttonLabel}</span>
-                                </button>
+                                </div>
                               );
                             })()
                           )}

@@ -218,7 +218,7 @@ export async function planSiteBriefing(
   currentUserParts.push({ text: prompt });
 
   const response = await client.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: "gemini-2.5-flash",
     contents: [
       ...formattedHistory,
       { role: "user", parts: currentUserParts },
@@ -237,7 +237,7 @@ export async function planSiteBriefing(
 
 /**
  * Etapa 2: Gerar ou Refinar o Site Completo em HTML/Tailwind nativo
- * Implementa backoff exponencial e contingência automática com modelos Gemini 3
+ * Implementa backoff exponencial e contingência automática com modelos Gemini oficiais
  */
 export async function generateSiteHtml(
   briefingOrPrompt: string,
@@ -274,8 +274,8 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
 
   let raw = "";
   let lastCapturedError: any = null;
-  // Modelos suportados pela Google: 3.8 Flash como primário e 3.5 Flash como contingência imediata
-  const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash"];
+  // Modelos oficiais do Google Gemini: 2.5 Flash (primário) e 2.0 Flash / 1.5 Flash (contingência)
+  const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
   for (const modelCandidate of modelsToTry) {
     let attempts = 0;

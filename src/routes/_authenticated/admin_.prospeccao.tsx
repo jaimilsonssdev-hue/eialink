@@ -218,6 +218,7 @@ function ProspectingPage() {
   const [searchNiche, setSearchNiche] = useState("Clínica");
   const [searchCity, setSearchCity] = useState("Teixeira de Freitas, BA");
   const [isSearching, setIsSearching] = useState(false);
+  const [scanVariationCount, setScanVariationCount] = useState(0);
   const [liveResults, setLiveResults] = useState<ProspectDraft[]>([]);
   const [liveSiteFilter, setLiveSiteFilter] = useState<"no_website" | "has_website" | "all">("no_website");
   const [selectedLiveIndices, setSelectedLiveIndices] = useState<Set<number>>(new Set());
@@ -612,11 +613,15 @@ function ProspectingPage() {
     const { niche, city } = validation.data;
     setIsSearching(true);
     setFeedback(null);
+
+    const SUBREGIONS = ["", "centro", "bairros", "comercial", "avenida", "zona sul", "zona norte"];
+    const currentSubregion = SUBREGIONS[scanVariationCount % SUBREGIONS.length];
+
     try {
       let results: ProspectDraft[] = [];
       try {
-        // Tentativa 1: Execução direta no cliente (super rápida, sem intermediação de servidor)
-        results = await searchGoogleMapsAndInstagram(niche, city, 15);
+        // Tentativa 1: Execução direta no cliente com rotação de variação para encontrar novas empresas
+        results = await searchGoogleMapsAndInstagram(niche, city, 15, currentSubregion || undefined);
       } catch (clientErr) {
         console.warn("[Prospecção] Execução direta no cliente falhou, tentando via servidor:", clientErr);
         // Tentativa 2: Fallback para RPC do servidor caso o navegador bloqueie por adblocker
@@ -625,14 +630,62 @@ function ProspectingPage() {
         });
       }
 
-      setLiveResults(results);
-      setSelectedLiveIndices(new Set(results.map((_, i) => i)));
+      setScanVariationCount((prev) => prev + 1);
+
+      // Deduplicação Inteligente em tempo real contra empresas já salvas no Radar
+      const existingNames = new Set(
+        companies.map((c) =>
+          c.name
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "")
+        )
+      );
+      const existingPhones = new Set(
+        companies
+          .map((c) => (c.whatsapp || c.phone || "").replace(/\D/g, ""))
+          .filter((p) => p.length >= 8)
+      );
+
+      const enrichedResults = results.map((r) => {
+        const normName = r.name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+        const normPhone = (r.whatsapp || r.phone || "").replace(/\D/g, "");
+        const isDuplicate =
+          (normName && existingNames.has(normName)) ||
+          (normPhone.length >= 8 && existingPhones.has(normPhone));
+
+        return {
+          ...r,
+          alreadyInRadar: isDuplicate,
+        };
+      });
+
+      setLiveResults(enrichedResults);
+
+      // Marca apenas as empresas que AINDA NÃO estão no radar por padrão
+      const newIndices = new Set<number>();
+      enrichedResults.forEach((r, idx) => {
+        if (!r.alreadyInRadar) {
+          newIndices.add(idx);
+        }
+      });
+      setSelectedLiveIndices(newIndices);
+
       if (results.length === 0) {
         setFeedback(
-          "Nenhuma empresa encontrada com esses termos. Verifique se digitou o nicho comum (ex: Dentista, Clínica, Barbearia) e o nome da cidade.",
+          "Nenhuma empresa encontrada com esses termos. Tente outro nicho comum (ex: Dentista, Clínica, Barbearia) ou o nome da cidade.",
         );
       } else {
-        setFeedback(`Varredura concluída! ${results.length} empresa(s) localizada(s) em tempo real.`);
+        const totalNew = enrichedResults.filter((r) => !r.alreadyInRadar).length;
+        const totalExisting = enrichedResults.filter((r) => r.alreadyInRadar).length;
+        setFeedback(
+          `Varredura concluída! ${results.length} empresa(s) localizada(s) em tempo real: ${totalNew} novas e ${totalExisting} já salvas no radar.`
+        );
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao realizar a varredura.";
@@ -950,6 +1003,11 @@ function ProspectingPage() {
   }
 
   async function handleMakeOfficial(company: ProspectedCompany, pageId: string) {
+    const confirmed = window.confirm(
+      `Você tem certeza de que deseja tornar a página de "${company.name}" oficial da sua conta?\n\nIsso removerá a tarja de demonstração e marcará a empresa como cliente. Você poderá revogar essa ação a qualquer momento se desejar.`
+    );
+    if (!confirmed) return;
+
     setActionLoadingId(pageId);
     setFeedback(null);
     try {
@@ -963,6 +1021,32 @@ function ProspectingPage() {
       invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao oficializar página.";
+      setFeedback(message);
+    } finally {
+      setActionLoadingId(null);
+    }
+  }
+
+  async function handleRevokeOfficial(company: ProspectedCompany, pageId: string) {
+    const confirmed = window.confirm(
+      `Deseja revogar a oficialização da página de "${company.name}"?\n\nA página voltará ao modo de demonstração (com tarja) e o status do lead voltará para prospecção ativa.`
+    );
+    if (!confirmed) return;
+
+    setActionLoadingId(pageId);
+    setFeedback(null);
+    try {
+      await PageService.revokePageOfficial(pageId);
+      const cleanNotes = (company.notes || "")
+        .replace(/\[Página Oficializada\]/g, "")
+        .replace(/\n\s*\n/g, "\n")
+        .trim();
+      await ProspectingService.updateNotes(company.id, cleanNotes);
+      await ProspectingService.updateStatus(company.id, "contatado");
+      setFeedback(`↩️ Oficialização de "${company.name}" revogada! A página retornou ao modo demonstração.`);
+      invalidate();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Erro ao revogar oficialização.";
       setFeedback(message);
     } finally {
       setActionLoadingId(null);
@@ -1745,6 +1829,11 @@ function ProspectingPage() {
                               <TableCell className="px-3.5 py-2.5">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <p className="font-semibold text-foreground tracking-tight text-xs sm:text-sm">{lead.name}</p>
+                                  {(lead as any).alreadyInRadar && (
+                                    <span className="inline-flex items-center text-[10px] px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/25 font-semibold">
+                                      Já no Radar
+                                    </span>
+                                  )}
                                   {(() => {
                                     const nicheKey = detectNicheKey(lead.niche, lead.name);
                                     const nicheMeta = getCanonicalNicheMeta(nicheKey);
@@ -2539,6 +2628,7 @@ function ProspectingPage() {
                 onRegenerateDemo={handleRegenerateDemo}
                 regeneratingPageId={regeneratingPageId}
                 onMakeOfficial={handleMakeOfficial}
+                onRevokeOfficial={handleRevokeOfficial}
                 actionLoadingId={actionLoadingId}
                 onAuditCompany={setActiveAuditCompany}
                 onRegisterApproach={setActiveCompany}
@@ -2763,14 +2853,25 @@ function ProspectingPage() {
                           </DropdownMenuItem>
                         )}
                         {demo.url && demo.pageId && (
-                          <DropdownMenuItem
-                            onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                            disabled={actionLoadingId === demo.pageId || isOfficial}
-                            className="cursor-pointer text-xs"
-                          >
-                            <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`} />
-                            <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
-                          </DropdownMenuItem>
+                          isOfficial ? (
+                            <DropdownMenuItem
+                              onClick={() => void handleRevokeOfficial(company, demo.pageId!)}
+                              disabled={actionLoadingId === demo.pageId}
+                              className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
+                            >
+                              <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                              <span>Revogar Oficialização (Voltar Demo)</span>
+                            </DropdownMenuItem>
+                          ) : (
+                            <DropdownMenuItem
+                              onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                              disabled={actionLoadingId === demo.pageId}
+                              className="cursor-pointer text-xs"
+                            >
+                              <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                              <span>Tornar Oficial</span>
+                            </DropdownMenuItem>
+                          )
                         )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
@@ -3134,18 +3235,29 @@ function ProspectingPage() {
                                     )}
 
                                     {demo.pageId && (
-                                      <DropdownMenuItem
-                                        onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                                        disabled={actionLoadingId === demo.pageId || isOfficial}
-                                        className="cursor-pointer text-xs"
-                                      >
-                                        {actionLoadingId === demo.pageId ? (
-                                          <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
-                                        ) : (
-                                          <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`} />
-                                        )}
-                                        <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
-                                      </DropdownMenuItem>
+                                      isOfficial ? (
+                                        <DropdownMenuItem
+                                          onClick={() => void handleRevokeOfficial(company, demo.pageId!)}
+                                          disabled={actionLoadingId === demo.pageId}
+                                          className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
+                                        >
+                                          <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                                          <span>Revogar Oficialização (Voltar Demo)</span>
+                                        </DropdownMenuItem>
+                                      ) : (
+                                        <DropdownMenuItem
+                                          onClick={() => void handleMakeOfficial(company, demo.pageId!)}
+                                          disabled={actionLoadingId === demo.pageId}
+                                          className="cursor-pointer text-xs"
+                                        >
+                                          {actionLoadingId === demo.pageId ? (
+                                            <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
+                                          ) : (
+                                            <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                          )}
+                                          <span>Tornar Oficial</span>
+                                        </DropdownMenuItem>
+                                      )
                                     )}
 
                                     <DropdownMenuItem

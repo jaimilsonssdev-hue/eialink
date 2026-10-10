@@ -80,7 +80,7 @@ export async function testGeminiKey(
       action: "test",
       apiKey: cleanKey,
     });
-    const activeModel = "gemini-3.8-flash";
+    const activeModel = "gemini-2.5-flash";
     if (result.ok && typeof window !== "undefined") {
       localStorage.setItem(GEMINI_ACTIVE_MODEL_STORAGE, activeModel);
     }

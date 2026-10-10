@@ -864,7 +864,7 @@ RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS A
 
       const response = await requestGemini(context.supabase, {
         action: "generateContent",
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         payload: {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {

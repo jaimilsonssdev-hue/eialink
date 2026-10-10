@@ -55,6 +55,7 @@ export interface ProspectingKanbanProps {
   onRegenerateDemo: (company: ProspectedCompany) => void;
   regeneratingPageId: string | null;
   onMakeOfficial: (company: ProspectedCompany, pageId: string) => void;
+  onRevokeOfficial?: (company: ProspectedCompany, pageId: string) => void;
   actionLoadingId: string | null;
   onAuditCompany: (company: ProspectedCompany) => void;
   onRegisterApproach: (company: ProspectedCompany) => void;
@@ -140,6 +141,7 @@ export function ProspectingKanban({
   onRegenerateDemo,
   regeneratingPageId,
   onMakeOfficial,
+  onRevokeOfficial,
   actionLoadingId,
   onAuditCompany,
   onRegisterApproach,
@@ -495,24 +497,33 @@ export function ProspectingKanban({
 
                                   {demo.pageId && (
                                     <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                      <Link to="/studio" search={{ page: demo.pageId }}>
+                                      <Link to="/studio-pro" search={{ page: demo.pageId }}>
                                         <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                        <span>Editar no Studio</span>
+                                        <span>Editar no Estúdio (IA)</span>
                                       </Link>
                                     </DropdownMenuItem>
                                   )}
 
                                   {demo.url && demo.pageId && (
-                                    <DropdownMenuItem
-                                      onClick={() => onMakeOfficial(company, demo.pageId!)}
-                                      disabled={actionLoadingId === demo.pageId || isOfficial}
-                                      className="cursor-pointer text-xs"
-                                    >
-                                      <CheckCircle
-                                        className={`h-3.5 w-3.5 mr-2 ${isOfficial ? "text-emerald-400" : "text-muted-foreground"}`}
-                                      />
-                                      <span>{isOfficial ? "Página Oficializada" : "Tornar Oficial"}</span>
-                                    </DropdownMenuItem>
+                                    isOfficial ? (
+                                      <DropdownMenuItem
+                                        onClick={() => onRevokeOfficial?.(company, demo.pageId!)}
+                                        disabled={actionLoadingId === demo.pageId}
+                                        className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
+                                      >
+                                        <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
+                                        <span>Revogar Oficialização (Voltar Demo)</span>
+                                      </DropdownMenuItem>
+                                    ) : (
+                                      <DropdownMenuItem
+                                        onClick={() => onMakeOfficial(company, demo.pageId!)}
+                                        disabled={actionLoadingId === demo.pageId}
+                                        className="cursor-pointer text-xs"
+                                      >
+                                        <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                        <span>Tornar Oficial</span>
+                                      </DropdownMenuItem>
+                                    )
                                   )}
 
                                   <DropdownMenuSeparator />

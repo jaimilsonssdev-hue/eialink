@@ -54,24 +54,42 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
   const [currentImgSrc, setCurrentImgSrc] = useState<string>("");
   const [newImgUrl, setNewImgUrl] = useState<string>("");
 
-  // Renderiza o HTML no iframe quando ele muda
+  // Renderiza o HTML no iframe quando ele muda ou carrega página do slug se for existente
   useEffect(() => {
     if (!iframeRef.current) return;
-    const doc = iframeRef.current.contentDocument;
-    if (doc) {
-      doc.open();
-      doc.write(
-        html ||
-          `<!DOCTYPE html><html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#09090b;color:#71717a;font-family:sans-serif;font-size:14px;">Aguardando geração do site...</body></html>`,
-      );
-      doc.close();
 
-      // Se o modo de edição estiver ligado, reativa
-      if (isVisualEditing) {
-        enableVisualEditingInDoc(doc);
+    if (html && html.trim().length > 30) {
+      if (iframeRef.current.getAttribute("src")) {
+        iframeRef.current.removeAttribute("src");
+      }
+      const doc = iframeRef.current.contentDocument;
+      if (doc) {
+        doc.open();
+        doc.write(html);
+        doc.close();
+
+        // Se o modo de edição estiver ligado, reativa
+        if (isVisualEditing) {
+          enableVisualEditingInDoc(doc);
+        }
+      }
+    } else if (activeProject?.slug) {
+      // Carrega diretamente a página existente do lead na plataforma
+      const targetUrl = `/p/${activeProject.slug}`;
+      if (iframeRef.current.getAttribute("src") !== targetUrl) {
+        iframeRef.current.src = targetUrl;
+      }
+    } else {
+      const doc = iframeRef.current.contentDocument;
+      if (doc) {
+        doc.open();
+        doc.write(
+          `<!DOCTYPE html><html><body style="margin:0;display:flex;align-items:center;justify-content:center;height:100vh;background:#09090b;color:#71717a;font-family:sans-serif;font-size:14px;">Aguardando geração do site...</body></html>`,
+        );
+        doc.close();
       }
     }
-  }, [html]);
+  }, [html, activeProject?.slug]);
 
   // Ativa/desativa edição visual no documento do iframe
   useEffect(() => {

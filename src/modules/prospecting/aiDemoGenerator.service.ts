@@ -66,7 +66,7 @@ export interface AiPageBlueprint {
 /**
  * Modelos preferenciais do Gemini para geração ultra-rápida e precisa em JSON
  */
-const PREFERRED_GEMINI_MODELS = ["gemini-3.8-flash"];
+const PREFERRED_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
 /**
  * Gera o blueprint completo de uma página de demonstração a partir dos dados raspados do Google.

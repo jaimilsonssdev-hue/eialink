@@ -128,6 +128,8 @@ export function StudioProApp({ pageId }: CreativeStudioAppProps) {
     createProject,
     selectProject,
     updateActiveProjectHtml,
+    updateActiveProjectBriefing,
+    addChatMessage,
     setProjects,
   } = useCreativeStudioStore();
 
@@ -163,6 +165,8 @@ export function StudioProApp({ pageId }: CreativeStudioAppProps) {
         const rawSocial = (data.social_links as Record<string, any>) || {};
         const existingHtml = (data as any).custom_html || rawSocial.custom_html || "";
 
+        const leadBriefing = `[CONTEXTO DO LEAD / SITE EXISTENTE]:\n- Empresa: ${data.display_name}\n- Slug: ${data.slug}\n- WhatsApp: ${data.whatsapp || rawSocial.whatsapp || "Não informado"}\n- Instagram: ${data.instagram || rawSocial.instagram || "Não informado"}\n- Cidade: ${rawSocial.address || "Local"}\n- Nicho: ${rawSocial.niche || "Comércio/Serviço"}\n- Descrição: ${data.description || "Página demonstrativa"}`;
+
         // Deduplica: procura se já existe projeto registrado para esta página
         const existingProj = projects.find(
           (p) => p.eialinkPageId === data.id || (data.slug && p.slug === data.slug),
@@ -174,13 +178,24 @@ export function StudioProApp({ pageId }: CreativeStudioAppProps) {
           if (existingHtml && (!existingProj.html || existingProj.html.length < 50)) {
             updateActiveProjectHtml(existingHtml);
           }
+          if (!existingProj.briefing) {
+            updateActiveProjectBriefing(leadBriefing);
+          }
         } else {
           // Cria apenas se realmente não existir projeto para este lead
           const projId = createProject(data.display_name, data.id, data.slug);
           selectProject(projId);
+          updateActiveProjectBriefing(leadBriefing);
           if (existingHtml) {
             updateActiveProjectHtml(existingHtml);
           }
+
+          addChatMessage({
+            id: `welcome-${data.id}-${Date.now()}`,
+            role: "assistant",
+            content: `👋 Olá! Carreguei o projeto de **${data.display_name}** (${data.slug}).\n\n📌 **Dados do Lead:**\n- **WhatsApp:** ${data.whatsapp || rawSocial.whatsapp || "Não informado"}\n- **Instagram:** ${data.instagram || rawSocial.instagram || "Não informado"}\n- **Nicho:** ${rawSocial.niche || "Geral"}\n\nA prévia já está visível na tela ao lado. Como gostaria de aprimorá-la? Você pode pedir alterações de layout, novos blocos, ajustar fotos e cores ou gerar um site 100% customizado!`,
+            timestamp: Date.now(),
+          });
         }
       } catch (e) {
         console.warn("Aviso ao carregar página da prospecção:", e);
@@ -188,7 +203,7 @@ export function StudioProApp({ pageId }: CreativeStudioAppProps) {
     }
 
     loadPageFromProspecting();
-  }, [pageId, createProject, selectProject, updateActiveProjectHtml, projects]);
+  }, [pageId, createProject, selectProject, updateActiveProjectHtml, updateActiveProjectBriefing, addChatMessage, projects]);
 
   return (
     <StudioProRouterProvider>

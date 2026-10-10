@@ -18,6 +18,7 @@ import {
   Flame,
   Calendar,
   Radio,
+  Gift,
   Smartphone,
   CheckCircle2,
   Circle,
@@ -200,10 +201,12 @@ function Dashboard() {
     },
     {
       id: "nfc",
-      title: "Gerar QR Code de Balcão / NFC",
-      desc: "Imprima ou grave placas para atrair clientes da loja física.",
+      title: isAdmin ? "Central de Placas & Gravação NFC" : "Fidelidade, Cupons & Balcão",
+      desc: isAdmin
+        ? "Imprima ou grave placas para atrair clientes da loja física."
+        : "Ative seu programa de fidelidade, gere cupons de desconto e acumule pontos por WhatsApp.",
       done: false,
-      link: "/admin/nfc",
+      link: isAdmin ? "/admin/nfc" : "/fidelidade",
     },
     {
       id: "share",
@@ -483,20 +486,37 @@ function Dashboard() {
             </p>
           </Link>
 
-          <Link
-            to="/admin/nfc"
-            className="group rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 hover:-translate-y-0.5 shadow-sm"
-          >
-            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 grid place-items-center mb-3">
-              <Radio className="h-5 w-5" />
-            </div>
-            <h3 className="font-bold text-white text-sm flex items-center justify-between">
-              Plaquinhas NFC & QR <ArrowRight className="h-3.5 w-3.5 text-zinc-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
-            </h3>
-            <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
-              Aproxime o celular do cliente no balcão e capture avaliações no Google Meu Negócio ou novos pedidos.
-            </p>
-          </Link>
+          {isAdmin ? (
+            <Link
+              to="/admin/nfc"
+              className="group rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 hover:-translate-y-0.5 shadow-sm"
+            >
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 grid place-items-center mb-3">
+                <Radio className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm flex items-center justify-between">
+                Plaquinhas NFC & QR <ArrowRight className="h-3.5 w-3.5 text-zinc-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+                Aproxime o celular do cliente no balcão e capture avaliações no Google Meu Negócio ou novos pedidos.
+              </p>
+            </Link>
+          ) : (
+            <Link
+              to="/fidelidade"
+              className="group rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 hover:-translate-y-0.5 shadow-sm"
+            >
+              <div className="h-10 w-10 rounded-xl bg-pink-500/10 border border-pink-500/20 text-pink-400 grid place-items-center mb-3">
+                <Gift className="h-5 w-5" />
+              </div>
+              <h3 className="font-bold text-white text-sm flex items-center justify-between">
+                Fidelidade & Cupons <ArrowRight className="h-3.5 w-3.5 text-zinc-500 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1.5 leading-relaxed">
+                Recompense clientes frequentes, configure prêmios, gere cupons de desconto e aumente o retorno na sua loja.
+              </p>
+            </Link>
+          )}
 
           <div className="group rounded-2xl border border-white/[0.08] bg-zinc-900/50 p-5 backdrop-blur-md transition-all hover:border-white/[0.16] hover:bg-zinc-900/80 shadow-sm">
             <div className="h-10 w-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 grid place-items-center mb-3">

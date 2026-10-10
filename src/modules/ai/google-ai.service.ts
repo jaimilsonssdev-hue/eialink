@@ -1,5 +1,7 @@
 export const ACTIVE_GEMINI_MODELS = [
-  "gemini-3.8-flash",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
 ] as const;
 
 export type ActiveGeminiModel = (typeof ACTIVE_GEMINI_MODELS)[number];
@@ -99,7 +101,7 @@ export async function testGoogleGeminiKey(apiKey: string): Promise<{ ok: boolean
   }
 
   try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${cleanKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${cleanKey}`;
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

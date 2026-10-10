@@ -33,8 +33,9 @@ interface RawScrapedLead {
 /**
  * Busca empresas reais no Google Maps via Jina Reader em pt-BR.
  */
-async function scrapeGoogleMaps(niche: string, city: string): Promise<RawScrapedLead[]> {
-  const cleanQuery = `${niche} em ${city}`.replace(/[^\w\sÀ-ÿ]/g, " ").trim().replace(/\s+/g, "+");
+async function scrapeGoogleMaps(niche: string, city: string, subregion?: string): Promise<RawScrapedLead[]> {
+  const queryParts = [niche, subregion, "em", city].filter(Boolean).join(" ");
+  const cleanQuery = queryParts.replace(/[^\w\sÀ-ÿ]/g, " ").trim().replace(/\s+/g, "+");
   // Garante localização e idioma brasileiro para o Google Maps não traduzir nomes próprios
   // em proxies internacionais (evitando que "Clínica Inove" vire "Clinical Innovate")
   const targetUrl = `https://www.google.com/maps/search/${cleanQuery}?hl=pt-BR&gl=BR`;
@@ -275,9 +276,10 @@ export async function searchGoogleMapsAndInstagram(
   niche: string,
   city: string,
   limit = 15,
+  subregion?: string,
 ): Promise<ProspectDraft[]> {
   const [mapsLeads, instaLeads] = await Promise.all([
-    scrapeGoogleMaps(niche, city),
+    scrapeGoogleMaps(niche, city, subregion),
     scrapeInstagram(niche, city),
   ]);
 

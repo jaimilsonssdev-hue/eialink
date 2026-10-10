@@ -84,6 +84,78 @@ export const makePageOfficialFn = createServerFn({ method: "POST" })
       console.warn("Aviso ao atualizar radar na oficialização:", radarErr);
     }
 
+      return { success: true, slug: page.slug, displayName: page.display_name };
+  });
+
+/**
+ * 1.1 Revoga a oficialização da página:
+ * Retorna a página ao status de demonstração (is_demo = true),
+ * remove a marca de [Página Oficializada] no radar de prospecção
+ * e retorna o status da empresa para 'contatado'.
+ */
+export const revokePageOfficialFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: { pageId: string }) => {
+    if (!data.pageId) throw new Error("ID da página é obrigatório.");
+    return data;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    // 1. Busca a página e confirma titularidade
+    const { data: page, error: fetchErr } = await supabase
+      .from("bio_pages")
+      .select("*")
+      .eq("id", data.pageId)
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    if (fetchErr || !page) {
+      throw new Error("Página não encontrada ou sem permissão de edição.");
+    }
+
+    const currentSocial = (page.social_links as Record<string, any>) || {};
+    const updatedSocial: Record<string, any> = {
+      ...currentSocial,
+      is_demo: true,
+    };
+
+    // 2. Atualiza bio_pages com is_demo = true
+    const { error: updateErr } = await supabase
+      .from("bio_pages")
+      .update({
+        social_links: updatedSocial,
+      })
+      .eq("id", data.pageId)
+      .eq("user_id", userId);
+
+    if (updateErr) {
+      throw new Error(updateErr.message);
+    }
+
+    // 3. Atualiza radar de prospecção se houver registro vinculado
+    try {
+      const { data: companies } = await supabase
+        .from("prospected_companies")
+        .select("id, notes")
+        .ilike("notes", `%${data.pageId}%`);
+
+      if (companies && companies.length > 0) {
+        for (const comp of companies) {
+          const cleanNotes = (comp.notes || "")
+            .replace(/\[Página Oficializada\]/g, "")
+            .replace(/\n\s*\n/g, "\n")
+            .trim();
+          await supabase
+            .from("prospected_companies")
+            .update({ status: "contatado", notes: cleanNotes })
+            .eq("id", comp.id);
+        }
+      }
+    } catch (radarErr) {
+      console.warn("Aviso ao atualizar radar na revogação da oficialização:", radarErr);
+    }
+
     return { success: true, slug: page.slug, displayName: page.display_name };
   });
 

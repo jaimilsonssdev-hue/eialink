@@ -14,6 +14,7 @@ import {
   MapPin,
   Pencil,
   Plus,
+  RotateCcw,
   Scale,
   Scissors,
   Search,
@@ -359,12 +360,36 @@ function PagesWorkspace() {
 
   async function handleMakeOfficial(pageOrId: OwnedPage | string) {
     const pageId = typeof pageOrId === "string" ? pageOrId : pageOrId.id;
+    const confirmed = window.confirm(
+      "Você tem certeza de que deseja tornar esta página oficial da sua conta?\n\nIsso remove a tarja de demonstração e a torna pública definitiva."
+    );
+    if (!confirmed) return;
+
     setOfficialLoadingId(pageId);
     try {
       await PageService.makePageOfficial(pageId);
       void pages.refetch();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Erro ao tornar oficial.";
+      alert(msg);
+    } finally {
+      setOfficialLoadingId(null);
+    }
+  }
+
+  async function handleRevokeOfficial(pageOrId: OwnedPage | string) {
+    const pageId = typeof pageOrId === "string" ? pageOrId : pageOrId.id;
+    const confirmed = window.confirm(
+      "Deseja revogar a oficialização desta página e retornar ao status de demonstração?\n\nA página voltará a exibir a tarja de demo."
+    );
+    if (!confirmed) return;
+
+    setOfficialLoadingId(pageId);
+    try {
+      await PageService.revokePageOfficial(pageId);
+      void pages.refetch();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Erro ao revogar oficialização.";
       alert(msg);
     } finally {
       setOfficialLoadingId(null);
@@ -1263,6 +1288,23 @@ function PagesWorkspace() {
                       >
                         <ExternalLink className="h-4 w-4" />
                       </a>
+
+                      {isAdmin && !(page.social_links as any)?.is_demo && (
+                        <button
+                          type="button"
+                          onClick={() => handleRevokeOfficial(page.id)}
+                          disabled={officialLoadingId === page.id}
+                          className="inline-flex items-center justify-center rounded-xl border border-border bg-card hover:border-amber-500/40 hover:bg-amber-500/10 text-muted-foreground hover:text-amber-400 p-2 text-xs transition-colors"
+                          title="Revogar Oficialização (Voltar para Demonstração)"
+                          aria-label="Revogar Oficialização"
+                        >
+                          {officialLoadingId === page.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
+                          ) : (
+                            <RotateCcw className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
 
                       <button
                         type="button"

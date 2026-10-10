@@ -7,8 +7,8 @@ const VALID_BLOCK_TYPES = new Set<string>(blockMetadata.map((b) => b.type))
 const VARIANT_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, new Set(b.variants)]))
 const DEFAULT_PROPS_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, b.defaultProps]))
 
-const PRIMARY_GEMINI_MODEL = 'gemini-3.8-flash'
-const FALLBACK_GEMINI_MODELS = ['gemini-3.8-flash']
+const PRIMARY_GEMINI_MODEL = 'gemini-2.5-flash'
+const FALLBACK_GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash']
 const STORAGE_KEYS = ['openpage-gemini-key', 'eialink_gemini_api_key', 'gemini_api_key']
 
 export function getSavedGeminiKey(): string | null {

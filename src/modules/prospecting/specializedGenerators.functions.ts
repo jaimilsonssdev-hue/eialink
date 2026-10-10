@@ -603,7 +603,7 @@ Regras:
 4. A primeira categoria de "categories" DEVE ser "Todos".`;
 
         const geminiPromise = ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: "gemini-2.5-flash",
           contents: [{ role: "user", parts: [{ text: systemInstruction }] }],
           config: {
             responseMimeType: "application/json",

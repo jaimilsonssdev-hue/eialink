@@ -5,7 +5,9 @@ const gatewayUrl = "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gemini
 const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
 export const SITE_BUILDER_MODELS = [
-  "gemini-3.8-flash",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
 ] as const;
 const retryableGeminiStatuses = new Set([408, 429, 500, 502, 503, 504]);
 const maxGeminiAttempts = 2;
@@ -16,7 +18,10 @@ async function callGoogleGeminiDirect(
   payload: Record<string, unknown>,
 ): Promise<Response | null> {
   try {
-    const cleanModel = model.replace(/^models\//, "");
+    let cleanModel = model.replace(/^models\//, "");
+    if (cleanModel.includes("3.8") || cleanModel.includes("3.5")) {
+      cleanModel = "gemini-2.5-flash";
+    }
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent`;
     const res = await fetch(url, {
       method: "POST",

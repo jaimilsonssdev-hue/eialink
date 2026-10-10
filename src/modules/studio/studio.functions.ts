@@ -348,7 +348,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash"];
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
     for (const modelCandidate of modelsToTry) {
       let attempts = 0;
@@ -529,7 +529,7 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
     userParts.push({ text: input.prompt });
 
     const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-2.5-flash",
       contents: [
         ...formattedHistory,
         { role: "user", parts: userParts },

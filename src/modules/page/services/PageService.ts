@@ -16,6 +16,7 @@ import { type GoogleMapsPlaceDetails } from "@/modules/prospecting/LiveProspecti
 import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
 import {
   makePageOfficialFn,
+  revokePageOfficialFn,
   transferPageOwnershipFn,
   getClaimPageInfoFn,
   claimPageFn,
@@ -616,6 +617,58 @@ export const PageService = {
           .from("prospected_companies")
           .update({ status: "cliente" })
           .ilike("notes", `%${pageId}%`);
+      } catch (radarErr) {
+        console.warn("Aviso ao atualizar radar:", radarErr);
+      }
+
+      return { success: true, slug: page.slug, displayName: page.display_name };
+    }
+  },
+
+  async revokePageOfficial(pageId: string) {
+    try {
+      return await revokePageOfficialFn({ data: { pageId } });
+    } catch {
+      const userId = await this.getCurrentUserId();
+      const { data: page, error: fetchErr } = await supabase
+        .from("bio_pages")
+        .select("*")
+        .eq("id", pageId)
+        .eq("user_id", userId)
+        .single();
+      if (fetchErr || !page) throw new Error("Página não encontrada ou sem permissão.");
+
+      const currentSocial = (page.social_links as Record<string, any>) || {};
+      const updatedSocial: Record<string, any> = { ...currentSocial, is_demo: true };
+
+      const { error: updateErr } = await supabase
+        .from("bio_pages")
+        .update({
+          social_links: updatedSocial,
+        })
+        .eq("id", pageId)
+        .eq("user_id", userId);
+
+      if (updateErr) throw new Error(updateErr.message);
+
+      try {
+        const { data: comps } = await supabase
+          .from("prospected_companies")
+          .select("id, notes")
+          .ilike("notes", `%${pageId}%`);
+
+        if (comps && comps.length > 0) {
+          for (const c of comps) {
+            const clean = (c.notes || "")
+              .replace(/\[Página Oficializada\]/g, "")
+              .replace(/\n\s*\n/g, "\n")
+              .trim();
+            await supabase
+              .from("prospected_companies")
+              .update({ status: "contatado", notes: clean })
+              .eq("id", c.id);
+          }
+        }
       } catch (radarErr) {
         console.warn("Aviso ao atualizar radar:", radarErr);
       }

@@ -221,7 +221,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
 }`;
 
       const response = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         contents: [{ role: "user", parts: [{ text: prompt }] }],
         config: {
           temperature: 0.4,

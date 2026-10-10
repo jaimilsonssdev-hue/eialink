@@ -328,6 +328,104 @@ export const PageService = {
       avatarUrl: realAvatar,
     });
 
+    const isGastroNiche =
+      effectiveNicheKey === "restaurante" ||
+      effectiveNicheKey === "pizzaria" ||
+      effectiveNicheKey === "hamburgueria" ||
+      effectiveNicheKey === "cafeteria" ||
+      effectiveNicheKey === "acai" ||
+      effectiveNicheKey === "doceria";
+
+    const isBeautyNiche =
+      effectiveNicheKey === "barbearia" ||
+      effectiveNicheKey === "beleza" ||
+      effectiveNicheKey === "estetica_facial" ||
+      effectiveNicheKey === "estetica_corporal" ||
+      effectiveNicheKey === "clinica" ||
+      effectiveNicheKey === "odontologia";
+
+    // Se preferir explicitamente cardapio/agenda, ou se a variante inicial for a de produto/serviço especializado
+    const shouldUseCardapio =
+      preferredTemplateId === "cardapio-pro" ||
+      (isGastroNiche && (variantIndex === undefined || variantIndex === 0));
+
+    const shouldUseAgenda =
+      preferredTemplateId === "agenda-pro" ||
+      (isBeautyNiche && (variantIndex === undefined || variantIndex === 0));
+
+    const finalTemplateId = shouldUseCardapio
+      ? "cardapio-pro"
+      : shouldUseAgenda
+      ? "agenda-pro"
+      : preferredTemplateId || "studiopro";
+
+    const finalModelVariant = shouldUseCardapio
+      ? "Cardápio Delivery iFood"
+      : shouldUseAgenda
+      ? "Agenda & Serviços"
+      : "Landing Page Studio Pro";
+
+    const cardapioData = shouldUseCardapio
+      ? {
+          restaurantName: sanitizedCompanyName,
+          niche: effectiveNicheKey,
+          tagline: aiBlueprint.headline || preset.generateDescription(sanitizedCompanyName, city || ""),
+          description: aiBlueprint.manifesto || description,
+          whatsapp: finalWhatsapp || "",
+          address: realAddress || "",
+          deliveryFee: "A partir de R$ 6,90",
+          minOrder: 20.0,
+          openingHours: realHours || "Terça a Domingo das 18h às 23h30",
+          themeColor: "orange",
+          styleVariant: "ifood-modern",
+          categories: [
+            { id: "todos", name: "Todos", icon: "🍽️" },
+            { id: "destaques", name: "Mais Pedidos", icon: "⭐" },
+            { id: "principais", name: "Especialidades", icon: "🔥" },
+            { id: "bebidas", name: "Bebidas", icon: "🥤" },
+          ],
+          items: activeHighlights.map((hl: any, idx: number) => ({
+            id: `item-${idx}`,
+            name: hl.title,
+            description: hl.description,
+            price: parseFloat(String(hl.price || "").replace(/[^0-9,.]/g, "").replace(",", ".")) || 29.9,
+            category: idx < 2 ? "destaques" : "principais",
+            badge: idx === 0 ? "Mais Pedido ⭐" : undefined,
+            isPopular: idx < 3,
+            image: hl.image || (realPhotos.length > 0 ? realPhotos[idx % realPhotos.length] : undefined),
+          })),
+        }
+      : null;
+
+    const agendaData = shouldUseAgenda
+      ? {
+          businessName: sanitizedCompanyName,
+          niche: effectiveNicheKey,
+          tagline: aiBlueprint.headline || preset.generateDescription(sanitizedCompanyName, city || ""),
+          description: aiBlueprint.manifesto || description,
+          whatsapp: finalWhatsapp || "",
+          address: realAddress || "",
+          openingHours: realHours || "Segunda a Sábado das 09h às 19h",
+          themeColor: "purple",
+          services: activeHighlights.map((hl: any, idx: number) => ({
+            id: `srv-${idx}`,
+            name: hl.title,
+            description: hl.description,
+            price: parseFloat(String(hl.price || "").replace(/[^0-9,.]/g, "").replace(",", ".")) || 45.0,
+            durationMinutes: 45,
+            badge: idx === 0 ? "Mais Procurado ⭐" : undefined,
+          })),
+          professionals: [
+            {
+              id: "pro-1",
+              name: "Especialista Principal",
+              role: "Atendimento Personalizado",
+              avatar: realAvatar,
+            },
+          ],
+        }
+      : null;
+
     const { data, error } = await supabase
       .from("bio_pages")
       .insert({
@@ -338,7 +436,7 @@ export const PageService = {
         whatsapp_button_label: preset.whatsapp_button_label,
         whatsapp_message: aiBlueprint.whatsappMessage || preset.whatsapp_message(sanitizedCompanyName),
         instagram: instagram ?? null,
-        template_id: preferredTemplateId || "studiopro",
+        template_id: finalTemplateId,
         theme: aiBlueprint.theme || preset.theme,
         cover_url: realCover,
         avatar_url: realAvatar,
@@ -352,7 +450,11 @@ export const PageService = {
           city: city || null,
           google_rating: realRating,
           reviews_count: realReviewsCount,
-          model_variant: "Landing Page Studio Pro (Lovable)",
+          model_variant: finalModelVariant,
+          is_cardapio_page: Boolean(cardapioData),
+          cardapio_data: cardapioData || undefined,
+          is_agenda_page: Boolean(agendaData),
+          agenda_data: agendaData || undefined,
           studiopro_config: studioproConfig,
           cinematic_data: cinematicData,
           custom_theme: {

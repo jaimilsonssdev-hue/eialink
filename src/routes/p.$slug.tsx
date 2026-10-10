@@ -29,6 +29,10 @@ import { CinematicViewer } from "@/modules/cinematic/CinematicViewer";
 import type { CinematicPageData } from "@/modules/cinematic/types";
 import { StudioProPublicViewer } from "@/modules/studiopro/StudioProPublicViewer";
 import type { SiteConfig } from "@/modules/studiopro/blocks/types";
+import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
+import type { CardapioData } from "@/modules/cardapio/cardapioAiService";
+import { AgendaPublicViewer } from "@/modules/agenda/AgendaPublicViewer";
+import type { AgendaData } from "@/modules/agenda/agendaAiService";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -702,6 +706,32 @@ function PublicBio() {
           claimTokenId={claimTokenId}
         />
       </div>
+    );
+  }
+
+  // PRIORIDADE 1.5: Se for uma página de Cardápio Studio Pro (estilo iFood com carrinho)
+  const cardapioData = (rawSocial.cardapio_data || rawSocial.cardapioData) as CardapioData | undefined;
+  const isCardapioPage = effectiveTemplateId === "cardapio-pro" || rawSocial.is_cardapio_page || Boolean(cardapioData);
+  if (isCardapioPage && cardapioData) {
+    return (
+      <CardapioPublicViewer
+        cardapio={cardapioData}
+        companyName={bio.display_name}
+        isDemo={isDemo}
+      />
+    );
+  }
+
+  // PRIORIDADE 1.6: Se for uma página de Agenda & Serviços Studio Pro (com agendamento integrado)
+  const agendaData = (rawSocial.agenda_data || rawSocial.agendaData) as AgendaData | undefined;
+  const isAgendaPage = effectiveTemplateId === "agenda-pro" || rawSocial.is_agenda_page || Boolean(agendaData);
+  if (isAgendaPage && agendaData) {
+    return (
+      <AgendaPublicViewer
+        agenda={agendaData}
+        companyName={bio.display_name}
+        isDemo={isDemo}
+      />
     );
   }
 

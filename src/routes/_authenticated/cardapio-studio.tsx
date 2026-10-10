@@ -22,6 +22,7 @@ import {
   Image as ImageIcon,
   Flame,
   FileText,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -108,6 +109,7 @@ function CardapioStudioPage() {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [activeTab, setActiveTab] = useState<"todos" | string>("todos");
   const [cardapio, setCardapio] = useState<CardapioData>(DEFAULT_CARDAPIO);
+  const [searchQuery, setSearchQuery] = useState("");
   const [messages, setMessages] = useState<CardapioAiMessage[]>([
     {
       id: "msg-1",
@@ -125,9 +127,33 @@ function CardapioStudioPage() {
   const [cart, setCart] = useState<{ [itemId: string]: number }>({});
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  // Se veio parâmetro da prospecção
+  // Se veio parâmetro da prospecção ou ID de página salva
   useEffect(() => {
-    if (searchParams?.name) {
+    if (searchParams?.page) {
+      supabase
+        .from("bio_pages")
+        .select("id, slug, display_name, description, whatsapp, social_links")
+        .eq("id", searchParams.page)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            const rawSocial = (data.social_links as Record<string, any>) || {};
+            if (rawSocial.cardapio_data) {
+              setCardapio(rawSocial.cardapio_data);
+              setSavedPageUrl(`/p/${data.slug}`);
+            } else {
+              setCardapio((prev) => ({
+                ...prev,
+                restaurantName: data.display_name || prev.restaurantName,
+                whatsapp: data.whatsapp || prev.whatsapp,
+                tagline: data.description || prev.tagline,
+                address: rawSocial.address || prev.address,
+              }));
+              setSavedPageUrl(`/p/${data.slug}`);
+            }
+          }
+        });
+    } else if (searchParams?.name) {
       setCardapio((prev) => ({
         ...prev,
         restaurantName: searchParams.name,
@@ -222,7 +248,7 @@ function CardapioStudioPage() {
   async function handleSavePage() {
     setIsSaving(true);
     try {
-      const res = await saveCardapioToBioPage(cardapio);
+      const res = await saveCardapioToBioPage(cardapio, searchParams?.page || undefined);
       setSavedPageUrl(res.publicUrl);
     } catch (err: any) {
       alert(`Erro ao publicar cardápio: ${err.message}`);
@@ -259,6 +285,12 @@ function CardapioStudioPage() {
   const totalCartCount = Object.values(cart).reduce((a, b) => a + b, 0);
 
   const filteredItems = cardapio.items.filter((item) => {
+    const matchesSearch =
+      searchQuery.trim() === "" ||
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description.toLowerCase().includes(searchQuery.toLowerCase());
+    if (!matchesSearch) return false;
+
     if (activeTab === "todos") return true;
     if (activeTab === "destaques") return item.isPopular || item.badge;
     return item.category === activeTab;
@@ -526,6 +558,18 @@ function CardapioStudioPage() {
                     {cardapio.address}
                   </span>
                 )}
+              </div>
+
+              {/* 🔍 Barra de Busca em Tempo Real no Preview */}
+              <div className="mt-3.5 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Buscar pratos, lanches ou bebidas..."
+                  className="w-full pl-9 pr-4 h-9 bg-zinc-950/80 border border-white/10 rounded-xl text-xs text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500 transition-colors"
+                />
               </div>
             </div>
 

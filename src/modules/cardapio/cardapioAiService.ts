@@ -259,12 +259,11 @@ export async function saveCardapioToBioPage(
   const payload = {
     user_id: userId,
     slug,
-    title: cardapio.restaurantName,
     display_name: cardapio.restaurantName,
-    bio: cardapio.tagline || cardapio.description,
+    description: cardapio.tagline || cardapio.description,
     whatsapp: cardapio.whatsapp || null,
-    template: "cardapio-pro",
-    is_published: true,
+    template_id: "cardapio-pro",
+    published: true,
     social_links: {
       is_cardapio_page: true,
       cardapio_data: cardapio,
@@ -298,7 +297,7 @@ export async function saveCardapioToBioPage(
     success: true,
     pageId: pageId!,
     slug,
-    publicUrl: `/${slug}`,
+    publicUrl: `/p/${slug}`,
   };
 }
 

@@ -116,8 +116,33 @@ function AgendaStudioPage() {
   const [selectedService, setSelectedService] = useState<AgendaServiceItem | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
+  // Se veio parâmetro da prospecção ou ID de página salva
   useEffect(() => {
-    if (searchParams?.name) {
+    if (searchParams?.page) {
+      supabase
+        .from("bio_pages")
+        .select("id, slug, display_name, description, whatsapp, social_links")
+        .eq("id", searchParams.page)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            const rawSocial = (data.social_links as Record<string, any>) || {};
+            if (rawSocial.agenda_data) {
+              setAgenda(rawSocial.agenda_data);
+              setSavedPageUrl(`/p/${data.slug}`);
+            } else {
+              setAgenda((prev) => ({
+                ...prev,
+                businessName: data.display_name || prev.businessName,
+                whatsapp: data.whatsapp || prev.whatsapp,
+                tagline: data.description || prev.tagline,
+                address: rawSocial.address || prev.address,
+              }));
+              setSavedPageUrl(`/p/${data.slug}`);
+            }
+          }
+        });
+    } else if (searchParams?.name) {
       setAgenda((prev) => ({
         ...prev,
         businessName: searchParams.name,
@@ -209,7 +234,7 @@ function AgendaStudioPage() {
   async function handleSavePage() {
     setIsSaving(true);
     try {
-      const res = await saveAgendaToBioPage(agenda);
+      const res = await saveAgendaToBioPage(agenda, searchParams?.page || undefined);
       setSavedPageUrl(res.publicUrl);
     } catch (err: any) {
       alert(`Erro ao publicar agenda: ${err.message}`);

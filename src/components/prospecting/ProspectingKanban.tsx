@@ -495,14 +495,53 @@ export function ProspectingKanban({
                                     <span>{demo.url ? "Trocar Modelo da Página" : "Gerar Modelo"}</span>
                                   </DropdownMenuItem>
 
-                                  {demo.pageId && (
-                                    <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                      <Link to="/studio-pro" search={{ page: demo.pageId }}>
-                                        <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                        <span>Editar no Estúdio (IA)</span>
-                                      </Link>
-                                    </DropdownMenuItem>
-                                  )}
+                                  {demo.pageId && (() => {
+                                    const nicheKey = detectNicheKey(company.niche, company.name);
+                                    const isGastro =
+                                      nicheKey === "restaurante" ||
+                                      nicheKey === "pizzaria" ||
+                                      nicheKey === "hamburgueria" ||
+                                      nicheKey === "cafeteria" ||
+                                      nicheKey === "acai" ||
+                                      nicheKey === "doceria";
+                                    const isBeauty =
+                                      nicheKey === "barbearia" ||
+                                      nicheKey === "beleza" ||
+                                      nicheKey === "estetica_facial" ||
+                                      nicheKey === "estetica_corporal" ||
+                                      nicheKey === "clinica" ||
+                                      nicheKey === "odontologia";
+
+                                    const targetPath = isGastro
+                                      ? "/cardapio-studio"
+                                      : isBeauty
+                                      ? "/agenda-studio"
+                                      : "/studio-pro";
+
+                                    return (
+                                      <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                        <Link
+                                          to={targetPath as any}
+                                          search={{
+                                            page: demo.pageId,
+                                            name: company.name,
+                                            whatsapp: company.whatsapp || company.phone,
+                                            address: company.address,
+                                            niche: company.niche,
+                                          }}
+                                        >
+                                          <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                          <span>
+                                            {isGastro
+                                              ? "Editar Cardápio (IA)"
+                                              : isBeauty
+                                              ? "Editar Agenda (IA)"
+                                              : "Editar no Estúdio (IA)"}
+                                          </span>
+                                        </Link>
+                                      </DropdownMenuItem>
+                                    );
+                                  })()}
 
                                   {demo.url && demo.pageId && (
                                     isOfficial ? (

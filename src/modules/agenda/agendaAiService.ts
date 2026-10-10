@@ -258,12 +258,11 @@ export async function saveAgendaToBioPage(
   const payload = {
     user_id: userId,
     slug,
-    title: agenda.businessName,
     display_name: agenda.businessName,
-    bio: agenda.tagline || agenda.description,
+    description: agenda.tagline || agenda.description,
     whatsapp: agenda.whatsapp || null,
-    template: "agenda-pro",
-    is_published: true,
+    template_id: "agenda-pro",
+    published: true,
     social_links: {
       is_agenda_page: true,
       agenda_data: agenda,
@@ -303,7 +302,7 @@ export async function saveAgendaToBioPage(
     success: true,
     pageId: pageId!,
     slug,
-    publicUrl: `/agendar/${slug}`,
+    publicUrl: `/p/${slug}`,
   };
 }
 

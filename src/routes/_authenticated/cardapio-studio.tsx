@@ -43,6 +43,7 @@ import {
 import { toast } from "sonner";
 import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
 import { CardapioVisualEditor } from "@/modules/cardapio/CardapioVisualEditor";
+import { generateIfoodCardapioHtml } from "@/modules/cardapio/cardapioGenerator";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/cardapio-studio")({
@@ -666,10 +667,12 @@ function CardapioStudioPage() {
                 : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-950 overflow-hidden"
             }`}
           >
-            <CardapioPublicViewer
-              cardapio={cardapio}
-              companyName={cardapio.restaurantName}
-              isDemo={false}
+            <iframe
+              key={`preview-${cardapio.backgroundColor || "default"}-${cardapio.items.length}`}
+              srcDoc={generateIfoodCardapioHtml(cardapio, { isDemo: false })}
+              title="Prévia Oficial do Cardápio estilo iFood"
+              className="w-full h-[780px] max-h-[85vh] border-none block bg-transparent"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
             />
           </div>
         </div>

@@ -16,6 +16,7 @@ import {
   resolveGeminiApiKeyAsync,
 } from "@/modules/ai/google-ai.service";
 import type { CardapioData } from "@/modules/cardapio/cardapioAiService";
+import { generateIfoodCardapioHtml } from "@/modules/cardapio/cardapioGenerator";
 import type { LojaData } from "@/modules/loja/lojaAiService";
 
 function getServiceSupabaseClient() {
@@ -886,6 +887,8 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     };
 
+    const generatedCustomHtml = generateIfoodCardapioHtml(cardapio, { slug });
+
     if (targetPage) {
       const { error } = await supabase
         .from("bio_pages")
@@ -895,7 +898,7 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
           whatsapp: cardapio.whatsapp || null,
           template_id: "cardapio-pro",
           published: true,
-          custom_html: null,
+          custom_html: generatedCustomHtml,
           social_links: updatedSocial,
           updated_at: new Date().toISOString(),
         })
@@ -922,6 +925,7 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
           whatsapp: cardapio.whatsapp || null,
           template_id: "cardapio-pro",
           published: true,
+          custom_html: generatedCustomHtml,
           social_links: updatedSocial,
         })
         .select("id, slug")

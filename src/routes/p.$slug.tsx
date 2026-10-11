@@ -31,6 +31,7 @@ import { StudioProPublicViewer } from "@/modules/studiopro/StudioProPublicViewer
 import type { SiteConfig } from "@/modules/studiopro/blocks/types";
 import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
 import type { CardapioData } from "@/modules/cardapio/cardapioAiService";
+import { generateIfoodCardapioHtml } from "@/modules/cardapio/cardapioGenerator";
 import { LojaPublicViewer } from "@/modules/loja/LojaPublicViewer";
 import type { LojaData } from "@/modules/loja/lojaAiService";
 import { AgendaPublicViewer } from "@/modules/agenda/AgendaPublicViewer";
@@ -661,47 +662,16 @@ function PublicBio() {
     );
   };
 
-  // PRIORIDADE 1: Se for uma página de Cardápio Studio Pro (estilo iFood com carrinho e auto-save)
+  // PRIORIDADE 1: Se a página possui HTML puro oficial (ex: modelo do Zequinha, delivery rico com cupons e fidelidade)
   const cardapioData = (rawSocial.cardapio_data || rawSocial.cardapioData) as CardapioData | undefined;
   const isCardapioPage = effectiveTemplateId === "cardapio-pro" || rawSocial.is_cardapio_page || Boolean(cardapioData);
-  if (isCardapioPage && cardapioData) {
-    return (
-      <CardapioPublicViewer
-        cardapio={cardapioData}
-        companyName={bio.display_name}
-        isDemo={isDemo}
-      />
-    );
+
+  let effectiveHtml = customHtml;
+  if (!effectiveHtml && isCardapioPage && cardapioData) {
+    effectiveHtml = generateIfoodCardapioHtml(cardapioData, { slug: bio.slug, isDemo });
   }
 
-  // PRIORIDADE 1.1: Se for uma página de Loja Virtual / Catálogo Studio Pro (com carrinho e WhatsApp)
-  const lojaData = (rawSocial.loja_data || rawSocial.lojaData) as LojaData | undefined;
-  const isLojaPage = effectiveTemplateId === "loja-pro" || rawSocial.is_loja_page || Boolean(lojaData);
-  if (isLojaPage && lojaData) {
-    return (
-      <LojaPublicViewer
-        loja={lojaData}
-        companyName={bio.display_name}
-        isDemo={isDemo}
-      />
-    );
-  }
-
-  // PRIORIDADE 1.2: Se for uma página de Agenda & Serviços Studio Pro (com agendamento integrado)
-  const agendaData = (rawSocial.agenda_data || rawSocial.agendaData) as AgendaData | undefined;
-  const isAgendaPage = effectiveTemplateId === "agenda-pro" || rawSocial.is_agenda_page || Boolean(agendaData);
-  if (isAgendaPage && agendaData) {
-    return (
-      <AgendaPublicViewer
-        agenda={agendaData}
-        companyName={bio.display_name}
-        isDemo={isDemo}
-      />
-    );
-  }
-
-  // PRIORIDADE 1.3: Se a página possui HTML puro gerado pelo Estúdio Criativo, renderiza instantaneamente
-  if (customHtml && customHtml.trim().length > 50) {
+  if (effectiveHtml && effectiveHtml.trim().length > 50) {
     const isAgendaDisabled = rawSocial.agenda_enabled === false;
     const isAiDisabled = rawSocial.ai_concierge_enabled === false;
     const isGpsDisabled = rawSocial.gps_enabled === false;
@@ -715,9 +685,9 @@ function PublicBio() {
     dynamicStyles += "</style>";
 
     // Injeta <base target="_top"> para permitir navegação nativa de links (Agenda, GPS/Waze, WhatsApp) e estilos dinâmicos
-    const preparedHtml = customHtml.includes("<head>")
-      ? customHtml.replace("<head>", `<head><base target="_top">${dynamicStyles}`)
-      : `<base target="_top">${dynamicStyles}${customHtml}`;
+    const preparedHtml = effectiveHtml.includes("<head>")
+      ? effectiveHtml.replace("<head>", `<head><base target="_top">${dynamicStyles}`)
+      : `<base target="_top">${dynamicStyles}${effectiveHtml}`;
 
     return (
       <div className="min-h-screen w-full overflow-x-hidden flex flex-col relative">
@@ -747,6 +717,32 @@ function PublicBio() {
           claimTokenId={claimTokenId}
         />
       </div>
+    );
+  }
+
+  // PRIORIDADE 1.1: Se for uma página de Loja Virtual / Catálogo Studio Pro (com carrinho e WhatsApp)
+  const lojaData = (rawSocial.loja_data || rawSocial.lojaData) as LojaData | undefined;
+  const isLojaPage = effectiveTemplateId === "loja-pro" || rawSocial.is_loja_page || Boolean(lojaData);
+  if (isLojaPage && lojaData) {
+    return (
+      <LojaPublicViewer
+        loja={lojaData}
+        companyName={bio.display_name}
+        isDemo={isDemo}
+      />
+    );
+  }
+
+  // PRIORIDADE 1.2: Se for uma página de Agenda & Serviços Studio Pro (com agendamento integrado)
+  const agendaData = (rawSocial.agenda_data || rawSocial.agendaData) as AgendaData | undefined;
+  const isAgendaPage = effectiveTemplateId === "agenda-pro" || rawSocial.is_agenda_page || Boolean(agendaData);
+  if (isAgendaPage && agendaData) {
+    return (
+      <AgendaPublicViewer
+        agenda={agendaData}
+        companyName={bio.display_name}
+        isDemo={isDemo}
+      />
     );
   }
 

@@ -123,6 +123,7 @@ function CardapioStudioPage() {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
   const [sidebarMode, setSidebarMode] = useState<"ai" | "visual">("visual");
+  const [isAssistantEnabled, setIsAssistantEnabled] = useState(true);
   const [cardapio, setCardapio] = useState<CardapioData>(DEFAULT_CARDAPIO);
   const [messages, setMessages] = useState<CardapioAiMessage[]>([
     {
@@ -447,6 +448,27 @@ function CardapioStudioPage() {
 
         {/* Ações Direitas */}
         <div className="flex items-center gap-2">
+          {/* Botão Ligar/Desligar Copiloto IA */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextState = !isAssistantEnabled;
+              setIsAssistantEnabled(nextState);
+              if (!nextState) {
+                setSidebarMode("visual");
+              }
+            }}
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold border transition-all ${
+              isAssistantEnabled
+                ? "bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20"
+                : "bg-zinc-800 border-white/10 text-zinc-400 hover:text-white"
+            }`}
+            title="Ligar ou desligar o Assistente / Copiloto de Inteligência Artificial"
+          >
+            <Sparkles className={`h-3.5 w-3.5 ${isAssistantEnabled ? "text-purple-400" : "text-zinc-500"}`} />
+            <span>IA: {isAssistantEnabled ? "Ligada" : "Desligada"}</span>
+          </button>
+
           {savedPageUrl && (
             <Button
               variant="outline"
@@ -500,18 +522,30 @@ function CardapioStudioPage() {
                 <Sliders className="h-3.5 w-3.5" />
                 <span>Editor Visual</span>
               </button>
-              <button
-                type="button"
-                onClick={() => setSidebarMode("ai")}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  sidebarMode === "ai"
-                    ? "bg-orange-500 text-white font-bold shadow-xs"
-                    : "text-zinc-400 hover:text-zinc-200"
-                }`}
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span>Copiloto IA</span>
-              </button>
+              {isAssistantEnabled ? (
+                <button
+                  type="button"
+                  onClick={() => setSidebarMode("ai")}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    sidebarMode === "ai"
+                      ? "bg-orange-500 text-white font-bold shadow-xs"
+                      : "text-zinc-400 hover:text-zinc-200"
+                  }`}
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Copiloto IA</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsAssistantEnabled(true)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-medium text-zinc-500 hover:text-zinc-300"
+                  title="Clique para ativar o Copiloto IA"
+                >
+                  <Sparkles className="h-3.5 w-3.5 opacity-50" />
+                  <span className="text-[11px]">Ativar IA</span>
+                </button>
+              )}
             </div>
 
             {/* Atalho mobile para ver prévia */}

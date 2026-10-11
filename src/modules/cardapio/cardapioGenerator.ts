@@ -78,6 +78,37 @@ export function generateIfoodCardapioHtml(
     ? cardapio.categories.map((c) => c.name)
     : ["Todos", "Mais Pedidos", "Burgers Artesanais", "Porções & Fritas", "Bebidas"];
 
+  const customFont = cardapio.customFont || "Inter";
+  const fontGoogleUrl = {
+    "Inter": "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+    "Plus Jakarta Sans": "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
+    "Outfit": "https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap",
+    "Playfair Display": "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&family=Inter:wght@400;600&display=swap",
+    "Space Grotesk": "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap",
+  }[customFont] || "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap";
+
+  // Classes dinâmicas de acordo com o efeito visual selecionado
+  const visualEffect = cardapio.visualEffect || "glassmorphism";
+  let cardClass = "";
+  let cardStyle = "";
+  if (visualEffect === "neobrutalism") {
+    cardClass = "border-2 border-black rounded-2xl shadow-[4px_4px_0px_0px_#000] hover:shadow-[6px_6px_0px_0px_#000] hover:-translate-y-0.5 transition-all";
+    cardStyle = isLight ? "background-color: #ffffff; border-color: #000000;" : "background-color: #18181b; border-color: #ffffff; box-shadow: 4px 4px 0px 0px #ffffff;";
+  } else if (visualEffect === "glassmorphism") {
+    cardClass = "backdrop-blur-xl border rounded-3xl shadow-xl hover:border-amber-500/40 hover:shadow-2xl transition-all";
+    cardStyle = isLight ? "background-color: rgba(255,255,255,0.85); border-color: rgba(0,0,0,0.08);" : "background-color: rgba(24,24,27,0.75); border-color: rgba(255,255,255,0.12);";
+  } else if (visualEffect === "elegante") {
+    cardClass = "border rounded-2xl shadow-xl hover:border-amber-400/60 transition-all";
+    cardStyle = isLight ? "background-color: #fafaf9; border-color: rgba(217,119,6,0.3); box-shadow: 0 10px 25px -5px rgba(217,119,6,0.1);" : "background-color: #121214; border-color: rgba(245,158,11,0.25); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.8);";
+  } else if (visualEffect === "clean") {
+    cardClass = "border rounded-xl shadow-none hover:border-zinc-500 transition-all";
+    cardStyle = isLight ? "background-color: #ffffff; border-color: #e4e4e7;" : "background-color: #18181b; border-color: #27272a;";
+  } else {
+    // Parallax 3D / Dinâmico
+    cardClass = "border rounded-3xl shadow-2xl hover:-translate-y-1 hover:shadow-amber-500/10 transition-all duration-300";
+    cardStyle = isLight ? "background-color: #ffffff; border-color: rgba(0,0,0,0.08);" : "background-color: #18181b; border-color: rgba(255,255,255,0.1);";
+  }
+
   const marqueePhrases = [
     "🔥 INGREDIENTES FRESCOS SELECIONADOS",
     "🛵 ENTREGA RÁPIDA E EMBALAGEM TÉRMICA",
@@ -93,14 +124,24 @@ export function generateIfoodCardapioHtml(
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <base target="_top">
   <title>Cardápio Digital — ${businessName}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="${fontGoogleUrl}" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     ${getMotionStyles()}
+    :root {
+      --font-family: '${customFont}', sans-serif;
+      --btn-primary: ${btnColor};
+    }
+    body, h1, h2, h3, h4, button, input, select {
+      font-family: var(--font-family);
+    }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="text-zinc-100 font-sans pb-28 selection:bg-amber-500 selection:text-black" style="background-color: ${bgColor}; color: ${isLight ? "#18181b" : "#f4f4f5"};">
+<body class="text-zinc-100 pb-28 selection:bg-amber-500 selection:text-black" style="background-color: ${bgColor}; color: ${isLight ? "#18181b" : "#f4f4f5"};">
   <!-- Banner de Capa -->
   <div class="relative h-44 sm:h-56 overflow-hidden" style="background-color: #18181b;">
     <img src="${coverImage}" class="w-full h-full object-cover opacity-60" alt="${businessName}">
@@ -194,11 +235,11 @@ export function generateIfoodCardapioHtml(
       <div class="flex gap-3 overflow-x-auto pb-2 no-scrollbar snap-x">
         ${featuredItems
           .map((item, idx) => `
-          <div onclick="openProductDetailModal(${idx})" class="snap-start w-56 shrink-0 rounded-2xl border p-3 flex flex-col justify-between hover:border-amber-500/40 transition-all cursor-pointer group shadow-lg" style="background-color: ${isLight ? "rgba(255,255,255,0.95)" : "rgba(24,24,27,0.9)"}; border-color: ${isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"};">
+          <div onclick="openProductDetailModal(${idx})" class="snap-start w-56 shrink-0 p-3 flex flex-col justify-between cursor-pointer group ${cardClass}" style="${cardStyle}">
             <div class="space-y-2">
               <div class="relative h-28 rounded-xl overflow-hidden bg-zinc-950">
                 <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${item.title}">
-                <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black bg-amber-500 text-black uppercase tracking-wider shadow-md">Mais Vendido 🏆</span>
+                <span class="absolute top-2 left-2 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider shadow-md" style="background-color: var(--btn-primary); color: #000;">Mais Vendido 🏆</span>
               </div>
               <div>
                 <h3 class="font-bold text-xs line-clamp-1" style="color: ${isLight ? "#18181b" : "#f4f4f5"};">${item.title}</h3>
@@ -207,7 +248,7 @@ export function generateIfoodCardapioHtml(
             </div>
             <div class="mt-3 flex items-center justify-between pt-2 border-t" style="border-color: ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"};">
               <span class="font-black text-emerald-400 text-xs">R$ ${item.price.toFixed(2).replace(".", ",")}</span>
-              <span class="px-2.5 py-1 rounded-lg bg-amber-500/10 text-amber-400 text-[10px] font-bold group-hover:bg-amber-500 group-hover:text-black transition-colors">+ Opções</span>
+              <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all" style="background-color: var(--btn-primary); color: #000;">+ Opções</span>
             </div>
           </div>
         `).join("")}
@@ -217,7 +258,7 @@ export function generateIfoodCardapioHtml(
     <!-- Navegação de Categorias Funcional -->
     <div class="pt-2">
       <div class="flex gap-2 overflow-x-auto pb-2 no-scrollbar" id="category-pills">
-        <button type="button" onclick="filterCategory('Todos', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-amber-500 text-black font-bold shadow-md">Todos</button>
+        <button type="button" onclick="filterCategory('Todos', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer font-bold shadow-md" style="background-color: var(--btn-primary); color: #000;">Todos</button>
         <button type="button" onclick="filterCategory('Mais Pedidos', this)" class="category-pill px-3.5 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-all cursor-pointer bg-zinc-900 border border-white/10 text-zinc-300 hover:text-white">🔥 Mais Pedidos</button>
         ${categories
           .filter((c) => c !== "Todos" && c !== "Mais Pedidos")
@@ -234,10 +275,10 @@ export function generateIfoodCardapioHtml(
       ${items
         .map(
           (item, idx) => `
-        <div onclick="openProductDetailModal(${idx})" data-category="${item.category}" data-featured="${item.isFeatured}" class="product-card rounded-2xl border p-3.5 flex items-center justify-between gap-3.5 hover:border-amber-500/30 transition-all cursor-pointer group shadow-md" style="background-color: ${isLight ? "rgba(255,255,255,0.95)" : "rgba(24,24,27,0.9)"}; border-color: ${isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.1)"};">
+        <div onclick="openProductDetailModal(${idx})" data-category="${item.category}" data-featured="${item.isFeatured}" class="product-card p-3.5 flex items-center justify-between gap-3.5 cursor-pointer group ${cardClass}" style="${cardStyle}">
           <div class="min-w-0 flex-1">
-            ${item.badge ? `<span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500/10 text-amber-400 border border-amber-500/20 mb-1">${item.badge}</span>` : ""}
-            <h3 class="font-bold text-sm line-clamp-1 group-hover:text-amber-400 transition-colors" style="color: ${isLight ? "#18181b" : "#f4f4f5"};">${item.title}</h3>
+            ${item.badge ? `<span class="inline-block px-1.5 py-0.5 rounded text-[9px] font-black border mb-1" style="background-color: rgba(245,158,11,0.15); color: var(--btn-primary); border-color: rgba(245,158,11,0.3);">${item.badge}</span>` : ""}
+            <h3 class="font-bold text-sm line-clamp-1 group-hover:opacity-80 transition-opacity" style="color: ${isLight ? "#18181b" : "#f4f4f5"};">${item.title}</h3>
             <p class="text-xs opacity-70 line-clamp-2 mt-1 leading-relaxed">${item.desc}</p>
             <div class="mt-2.5 font-black text-emerald-400 text-sm">
               R$ ${item.price.toFixed(2).replace(".", ",")}
@@ -245,7 +286,7 @@ export function generateIfoodCardapioHtml(
           </div>
           <div class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden bg-zinc-950 shrink-0 border border-white/10">
             <img src="${item.img}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt="${item.title}">
-            <div class="absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded-lg text-[10px] font-black text-black bg-amber-500 shadow-md flex items-center gap-0.5">
+            <div class="absolute bottom-1.5 right-1.5 px-2 py-0.5 rounded-lg text-[10px] font-black shadow-md flex items-center gap-0.5" style="background-color: var(--btn-primary); color: #000;">
               <span>+</span>
             </div>
           </div>
@@ -638,6 +679,16 @@ export function generateIfoodCardapioHtml(
     }
 
     function openCartModal() {
+      // Carrega dados salvos do cliente para conveniência
+      try {
+        const savedName = localStorage.getItem('eialink_client_name');
+        const savedAddress = localStorage.getItem('eialink_client_address');
+        const nameInput = document.getElementById('client-name');
+        const addrInput = document.getElementById('client-address');
+        if (savedName && nameInput && !nameInput.value) nameInput.value = savedName;
+        if (savedAddress && addrInput && !addrInput.value) addrInput.value = savedAddress;
+      } catch (e) {}
+
       updateCartUI();
       document.getElementById('cart-modal').style.display = 'flex';
     }
@@ -679,6 +730,12 @@ export function generateIfoodCardapioHtml(
         alert('Por favor, informe seu endereço para entrega.');
         return;
       }
+
+      // Salva no localStorage para as próximas compras
+      try {
+        if (clientName) localStorage.setItem('eialink_client_name', clientName);
+        if (clientAddress) localStorage.setItem('eialink_client_address', clientAddress);
+      } catch (e) {}
 
       const subtotal = cart.reduce((acc, it) => acc + (it.unitPrice * it.qty), 0);
       const discount = isCouponApplied ? subtotal * 0.1 : 0;

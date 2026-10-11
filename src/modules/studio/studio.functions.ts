@@ -844,7 +844,8 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { cardapio: CardapioData; pageId?: string }) => d)
   .handler(async ({ data: input, context }) => {
-    const supabase = context.supabase;
+    // Usamos client com service role para garantir persistência mesmo em páginas clonadas/transferidas
+    const supabase = getServiceSupabaseClient();
     const userId = context.userId;
     const { cardapio, pageId } = input;
 
@@ -884,6 +885,9 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
       min_order: cardapio.minOrder,
       logo_url: cardapio.logoUrl,
       background_color: cardapio.backgroundColor,
+      button_color: cardapio.buttonColor,
+      custom_font: cardapio.customFont,
+      visual_effect: cardapio.visualEffect,
       updated_at: new Date().toISOString(),
     };
 

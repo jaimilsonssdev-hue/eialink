@@ -199,7 +199,7 @@ function CardapioStudioPage() {
   }, [messages]);
 
   // Salvar cardápio no Supabase via Server Function segura
-  async function handleSavePage(silent = false) {
+  async function handleSavePage() {
     if (isSaving) return;
     setIsSaving(true);
     try {
@@ -217,34 +217,14 @@ function CardapioStudioPage() {
         setSavedPageUrl(res.publicUrl);
       }
       setLastSavedAt(new Date());
-
-      if (!silent) {
-        toast.success("Cardápio salvo com sucesso no banco de dados!");
-      }
+      toast.success("Cardápio salvo com sucesso e atualizado no ar!");
     } catch (err: any) {
       console.error("[CardapioStudio] Erro ao salvar:", err);
-      if (!silent) {
-        toast.error(`Erro ao salvar cardápio: ${err?.message || "Tente novamente"}`);
-      }
+      toast.error(`Erro ao salvar cardápio: ${err?.message || "Tente novamente"}`);
     } finally {
       setIsSaving(false);
     }
   }
-
-  // Auto-save com debounce de 1500ms
-  useEffect(() => {
-    if (initialMountRef.current) {
-      initialMountRef.current = false;
-      return;
-    }
-    if (!isLoadedRef.current) return;
-
-    const timer = setTimeout(() => {
-      handleSavePage(true);
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [cardapio]);
 
   // Upload multimodal
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -485,7 +465,7 @@ function CardapioStudioPage() {
 
           <Button
             size="sm"
-            onClick={() => handleSavePage(false)}
+            onClick={() => handleSavePage()}
             disabled={isSaving}
             className="bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold shadow-lg shadow-orange-600/20"
           >
@@ -562,8 +542,9 @@ function CardapioStudioPage() {
             <CardapioVisualEditor
               cardapio={cardapio}
               onChange={setCardapio}
-              onSave={() => handleSavePage(false)}
+              onSave={() => handleSavePage()}
               isSaving={isSaving}
+              lastSavedAt={lastSavedAt}
             />
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
@@ -702,7 +683,7 @@ function CardapioStudioPage() {
             }`}
           >
             <iframe
-              key={`preview-${cardapio.backgroundColor || "default"}-${cardapio.items.length}`}
+              key={`preview-${cardapio.backgroundColor || "default"}-${cardapio.buttonColor || "default"}-${cardapio.customFont || "default"}-${cardapio.visualEffect || "default"}-${cardapio.items.length}`}
               srcDoc={generateIfoodCardapioHtml(cardapio, { isDemo: false })}
               title="Prévia Oficial do Cardápio estilo iFood"
               className="w-full h-[780px] max-h-[85vh] border-none block bg-transparent"

@@ -32,6 +32,7 @@ interface CardapioVisualEditorProps {
   onChange: (updated: CardapioData) => void;
   onSave?: () => void;
   isSaving?: boolean;
+  lastSavedAt?: Date | null;
 }
 
 const PALETTE_COLORS = [
@@ -102,6 +103,7 @@ export function CardapioVisualEditor({
   onChange,
   onSave,
   isSaving,
+  lastSavedAt,
 }: CardapioVisualEditorProps) {
   const [activeTab, setActiveTab] = useState<"info" | "items" | "design" | "tools">("info");
   const [expandedItemId, setExpandedItemId] = useState<string | null>(cardapio.items[0]?.id || null);
@@ -192,9 +194,13 @@ export function CardapioVisualEditor({
       {onSave && (
         <div className="px-3 py-2 bg-zinc-900/90 border-b border-white/10 flex items-center justify-between gap-2 shrink-0">
           <div className="flex items-center gap-1.5 min-w-0">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className={`w-2 h-2 rounded-full shrink-0 ${isSaving ? "bg-amber-400 animate-pulse" : "bg-emerald-500"}`} />
             <span className="text-[11px] text-zinc-400 truncate">
-              {isSaving ? "Salvando no banco..." : "Auto-save ativo"}
+              {isSaving
+                ? "Salvando alterações..."
+                : lastSavedAt
+                ? `Salvo às ${lastSavedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                : "Clique em Salvar para aplicar"}
             </span>
           </div>
           <Button
@@ -209,7 +215,7 @@ export function CardapioVisualEditor({
             ) : (
               <Save className="h-3 w-3 mr-1" />
             )}
-            {isSaving ? "Salvando..." : "Salvar"}
+            {isSaving ? "Salvando..." : "Salvar Alterações"}
           </Button>
         </div>
       )}

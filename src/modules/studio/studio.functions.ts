@@ -290,6 +290,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       photos?: string[];
       isRegeneration?: boolean;
       attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
+      conversationHistory?: Array<{ role: string; content: string }>;
     }) => d,
   )
   .handler(async ({ data: input, context }) => {
@@ -342,6 +343,14 @@ Experimente um formato e layout inovador (ex: se era clássico/cards, use um Spl
 Surpreenda com uma organização criativa e única que valorize a marca do cliente ao máximo!`;
     }
 
+    if (input.conversationHistory && input.conversationHistory.length > 0) {
+      const recentHistory = input.conversationHistory
+        .slice(-4)
+        .map((m) => `${m.role === "user" ? "Usuário" : "Copiloto"}: ${m.content}`)
+        .join("\n");
+      userPrompt = `[HISTÓRICO DA CONVERSA]:\n${recentHistory}\n\n[SOLICITAÇÃO ATUAL]:\n${userPrompt}`;
+    }
+
     if (input.existingHtml && input.existingHtml.length > 50 && !input.isRegeneration) {
       userPrompt = `MODIFICAÇÃO NO SITE EXISTENTE:
 O usuário solicitou o seguinte ajuste:
@@ -350,7 +359,11 @@ O usuário solicitou o seguinte ajuste:
 Aqui está o código HTML atual da página que deve ser modificado preservando todo o restante da estrutura e melhorando com o novo ajuste:
 ${input.existingHtml}
 
-Retorne o HTML completo atualizado com a alteração solicitada.`;
+Retorne sua resposta estritamente no formato:
+<<<EXPLANATION>>>
+Sua mensagem conversacional explicando as alterações para o usuário
+<<<HTML>>>
+Código HTML completo atualizado`;
     }
 
     const serverParts: any[] = [];
@@ -368,11 +381,11 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
     for (const modelCandidate of modelsToTry) {
       let attempts = 0;
-      const maxAttempts = 3;
+      const maxAttempts = 2;
       while (attempts < maxAttempts) {
         try {
           const response = await ai.models.generateContent({
@@ -380,10 +393,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
             contents: [{ role: "user", parts: serverParts }],
             config: {
               systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-              temperature: 0.85,
-              thinkingConfig: {
-                thinkingLevel: "low" as any,
-              },
+              temperature: 0.7,
             },
           });
           responseText = response.text?.trim() || "";
@@ -397,14 +407,11 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
             status === 429 ||
             errStr.includes("503") ||
             errStr.includes("UNAVAILABLE") ||
-            errStr.includes("RESOURCE_EXHAUSTED") ||
-            errStr.includes("high demand");
+            errStr.includes("RESOURCE_EXHAUSTED");
 
           if (isTransient && attempts < maxAttempts - 1) {
             attempts++;
-            const delayMs = Math.round(1200 * Math.pow(2, attempts - 1) + Math.random() * 400);
-            console.warn(`[StudioServer] Tentativa ${attempts} de ${maxAttempts} para ${modelCandidate}. Aguardando ${delayMs}ms...`);
-            await new Promise((r) => setTimeout(r, delayMs));
+            await new Promise((r) => setTimeout(r, 1000));
             continue;
           }
           console.warn(`[StudioServer] Modelo ${modelCandidate} falhou, tentando contingência:`, apiErr?.message || apiErr);
@@ -416,19 +423,40 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
 
     if (!responseText) {
       const errDetails = lastCapturedError?.message || (typeof lastCapturedError === "object" ? JSON.stringify(lastCapturedError) : "Erro de resposta");
-      throw new Error(`Falha na API Google AI Studio: ${errDetails}. Clique em "Aprovar & Gerar Site" para tentar novamente.`);
+      throw new Error(`Falha na API Google AI Studio: ${errDetails}. Tente clicar novamente.`);
     }
 
-    let raw = responseText;
-    if (raw.startsWith("```html")) {
-      raw = raw.replace(/^```html\s*/i, "");
-    } else if (raw.startsWith("```")) {
-      raw = raw.replace(/^```\s*/, "");
+    let raw = responseText.trim();
+    let explanation = "";
+    let cleanHtml = "";
+
+    if (raw.includes("<<<HTML>>>")) {
+      const parts = raw.split("<<<HTML>>>");
+      explanation = parts[0].replace("<<<EXPLANATION>>>", "").trim();
+      cleanHtml = parts[1].trim();
+    } else if (raw.includes("<<<EXPLANATION>>>")) {
+      const parts = raw.split("<<<EXPLANATION>>>");
+      explanation = parts[1].trim();
+      cleanHtml = parts[0].trim();
+    } else {
+      cleanHtml = raw;
     }
-    if (raw.endsWith("```")) {
-      raw = raw.replace(/```\s*$/, "");
+
+    if (cleanHtml.startsWith("```html")) {
+      cleanHtml = cleanHtml.replace(/^```html\s*/i, "");
+    } else if (cleanHtml.startsWith("```")) {
+      cleanHtml = cleanHtml.replace(/^```\s*/, "");
     }
-    const cleanHtml = raw.trim();
+    if (cleanHtml.endsWith("```")) {
+      cleanHtml = cleanHtml.replace(/```\s*$/, "");
+    }
+    cleanHtml = cleanHtml.trim();
+
+    if (!explanation) {
+      explanation = input.existingHtml
+        ? "✨ Ajuste aplicado com sucesso! Atualizei o site com as modificações que você pediu. Veja a prévia na tela ao lado."
+        : "🚀 Site gerado com sucesso! Já estruturei com design moderno, alta conversão e ferramentas integradas.";
+    }
 
     let savedPageId = input.projectId;
     let savedSlug = "";
@@ -519,6 +547,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
     return {
       ok: true,
       html: cleanHtml,
+      explanation,
       pageId: savedPageId,
       slug: savedSlug,
     };
@@ -575,7 +604,7 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
     }
     userParts.push({ text: input.prompt });
 
-    const briefingModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+    const briefingModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
     let briefingText = "";
 
     for (const modelCandidate of briefingModels) {

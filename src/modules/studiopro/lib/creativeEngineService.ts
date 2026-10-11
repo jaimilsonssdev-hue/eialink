@@ -171,10 +171,16 @@ DIRETRIZES TÉCNICAS E DE DESIGN:
        lucide.createIcons();
      </script>
 
-6. **FORMATO DA RESPOSTA**:
-   - Retorne EXCLUSIVAMENTE o código HTML bruto da página.
-   - NÃO adicione blocos de markdown como \`\`\`html ou comentários fora do código.
-   - O código deve iniciar diretamente com <!DOCTYPE html> e terminar com </html>.`;
+6. **FORMATO DA RESPOSTA (COPILOTO + CÓDIGO HTML)**:
+Sua resposta deve conter OBRIGATORIAMENTE duas partes separadas por marcadores claros:
+<<<EXPLANATION>>>
+Escreva uma mensagem conversacional, simpática, prestativa e humana como Copiloto AI para o usuário no chat (em português do Brasil).
+Diga exatamente o que você fez ou alterou no site (por exemplo: cores ajustadas, títulos melhorados, novas seções, layout aprimorado ou botões configurados). Deixe um convite aberto para ele conferir na tela ao lado ou pedir novos ajustes.
+<<<HTML>>>
+<!DOCTYPE html>
+<html lang="pt-BR">
+... Código HTML5 completo, moderno e autocontido da página ...
+</html>`;
 
 /**
  * Etapa 1: Planejar e montar o Briefing Estruturado
@@ -219,7 +225,7 @@ export async function planSiteBriefing(
   }
   currentUserParts.push({ text: prompt });
 
-  const briefingModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+  const briefingModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
   let briefingText = "";
 
   for (const modelCandidate of briefingModels) {
@@ -284,12 +290,12 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
 
   let raw = "";
   let lastCapturedError: any = null;
-  // Modelos oficiais do Google AI Studio: 3.8 Flash (primário) e 3.5 Flash Lite / 2.0 Flash (contingência)
-  const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"];
+  // Modelos estáveis e rápidos do Google AI Studio
+  const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
   for (const modelCandidate of modelsToTry) {
     let attempts = 0;
-    const maxAttempts = 3;
+    const maxAttempts = 2;
 
     while (attempts < maxAttempts) {
       try {
@@ -299,9 +305,6 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
           config: {
             systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
             temperature: 0.7,
-            thinkingConfig: {
-              thinkingLevel: "low" as any,
-            },
           },
         });
 
@@ -316,20 +319,15 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
           status === 429 ||
           errStr.includes("503") ||
           errStr.includes("UNAVAILABLE") ||
-          errStr.includes("RESOURCE_EXHAUSTED") ||
-          errStr.includes("high demand");
+          errStr.includes("RESOURCE_EXHAUSTED");
 
         if (isTransient && attempts < maxAttempts - 1) {
           attempts++;
-          // Backoff exponencial com jitter: 1.2s -> 2.5s -> 4s
-          const delayMs = Math.round(1200 * Math.pow(2, attempts - 1) + Math.random() * 400);
-          console.warn(`[CreativeEngine] Tentativa ${attempts} de ${maxAttempts} para ${modelCandidate}. Aguardando ${delayMs}ms...`);
-          await new Promise((r) => setTimeout(r, delayMs));
+          await new Promise((r) => setTimeout(r, 1000));
           continue;
         }
 
-        // Erro não transitório ou esgotadas as tentativas para este modelo, passa para o próximo modelo
-        console.warn(`[CreativeEngine] Modelo ${modelCandidate} falhou, chaveando contingência:`, err?.message || err);
+        console.warn(`[CreativeEngine] Modelo ${modelCandidate} falhou, tentando contingência:`, err?.message || err);
         break;
       }
     }
@@ -346,16 +344,36 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
     );
   }
   
-  // Limpeza de possíveis envoltórios markdown
-  if (raw.startsWith("```html")) {
-    raw = raw.replace(/^```html\s*/i, "");
-  } else if (raw.startsWith("```")) {
-    raw = raw.replace(/^```\s*/, "");
-  }
-  if (raw.endsWith("```")) {
-    raw = raw.replace(/```\s*$/, "");
+  let cleanHtml = raw;
+  if (cleanHtml.includes("<<<HTML>>>")) {
+    const parts = cleanHtml.split("<<<HTML>>>");
+    cleanHtml = parts[1].trim();
   }
 
-  return raw.trim();
+  // Limpeza de possíveis envoltórios markdown
+  if (cleanHtml.startsWith("```html")) {
+    cleanHtml = cleanHtml.replace(/^```html\s*/i, "");
+  } else if (cleanHtml.startsWith("```")) {
+    cleanHtml = cleanHtml.replace(/^```\s*/, "");
+  }
+  if (cleanHtml.endsWith("```")) {
+    cleanHtml = cleanHtml.replace(/```\s*$/, "");
+  }
+
+  return cleanHtml.trim();
 }
 
+export async function generateSiteWithCopilot(
+  briefingOrPrompt: string,
+  existingHtml?: string,
+  apiKey?: string,
+  attachments?: MultimodalAttachment[],
+): Promise<{ html: string; explanation: string }> {
+  const html = await generateSiteHtml(briefingOrPrompt, existingHtml, apiKey, attachments);
+  return {
+    html,
+    explanation: existingHtml
+      ? "✨ Ajuste aplicado no site com sucesso! Veja a prévia atualizada na tela ao lado."
+      : "🎉 Site construído com sucesso! Veja a prévia e solicite novos ajustes se desejar.",
+  };
+}

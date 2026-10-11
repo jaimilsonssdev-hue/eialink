@@ -174,15 +174,16 @@ export function CreativeChatPanel() {
         setIsGenerating(
           true,
           isIteration
-            ? "Aplicando ajustes no site com Gemini 2.5 Flash..."
+            ? "Copiloto IA aplicando ajustes no site com Gemini 2.5 Flash..."
             : "Gerando site completo com Gemini 2.5 Flash...",
         );
 
         let newHtml = "";
+        let aiExplanation = "";
         const clientApiKey = getGeminiApiKey() || undefined;
         try {
           const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 50000),
+            setTimeout(() => reject(new Error("Tempo limite de resposta na nuvem")), 60000),
           );
           const res = await Promise.race([
             generateCreativeSiteFn({
@@ -193,14 +194,26 @@ export function CreativeChatPanel() {
                 projectName: activeProject?.name,
                 apiKey: clientApiKey,
                 attachments: currentAttachments,
+                conversationHistory: messages.map((m) => ({ role: m.role, content: m.content })),
               },
             }),
             timeoutPromise,
           ]);
           newHtml = res.html;
-        } catch (serverErr) {
-          console.warn("[CreativeChat] Fallback para geração direta do cliente:", serverErr);
-          newHtml = await generateSiteHtml(fullPrompt, isIteration ? currentHtml : undefined, clientApiKey, currentAttachments);
+          aiExplanation = res.explanation;
+        } catch (serverErr: any) {
+          console.warn("[CreativeChat] Tentando contingência direta:", serverErr);
+          try {
+            newHtml = await generateSiteHtml(
+              fullPrompt,
+              isIteration ? currentHtml : undefined,
+              clientApiKey,
+              currentAttachments,
+            );
+          } catch (clientErr) {
+            console.error("[CreativeChat] Erro no fallback:", clientErr);
+            throw serverErr;
+          }
         }
         setIsGenerating(false);
 
@@ -212,12 +225,12 @@ export function CreativeChatPanel() {
         addChatMessage({
           id: `ai-${Date.now()}`,
           role: "assistant",
-          content: isIteration
-            ? "✨ Ajuste concluído! Veja o resultado atualizado na tela ao lado."
-            : "🎉 Seu site foi gerado com sucesso! Você pode ver a prévia ao lado ou pedir ajustes finos por aqui.",
+          content: aiExplanation || (isIteration
+            ? "✨ Ajuste concluído! Apliquei as alterações que você solicitou. Veja o resultado atualizado na tela ao lado."
+            : "🎉 Seu site foi gerado com sucesso! Você pode ver a prévia ao lado ou pedir ajustes finos por aqui."),
           timestamp: Date.now(),
         });
-        toast.success("Site gerado e sincronizado com sucesso!");
+        toast.success(isIteration ? "Ajuste aplicado com sucesso!" : "Site gerado e sincronizado com sucesso!");
       }
     } catch (err: any) {
       setIsGenerating(false);
@@ -227,7 +240,7 @@ export function CreativeChatPanel() {
       addChatMessage({
         id: `err-${Date.now()}`,
         role: "system",
-        content: `⚠️ Não foi possível processar: ${msg}. Por favor, clique novamente ou verifique se sua chave do Google AI Studio está configurada.`,
+        content: `⚠️ Não foi possível processar: ${msg}. Por favor, tente novamente ou verifique as configurações da chave de API.`,
         timestamp: Date.now(),
       });
     }
@@ -242,11 +255,12 @@ export function CreativeChatPanel() {
         "Construindo o site completo com Gemini 2.5 Flash a partir do plano aprovado...",
       );
       let html = "";
+      let explanation = "";
       const clientApiKey = getGeminiApiKey() || undefined;
 
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 50000),
+          setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 60000),
         );
         const res = await Promise.race([
           generateCreativeSiteFn({
@@ -260,6 +274,7 @@ export function CreativeChatPanel() {
           timeoutPromise,
         ]);
         html = res.html;
+        explanation = res.explanation;
       } catch (serverErr: any) {
         console.warn("[CreativeChat] Fallback para geração direta:", serverErr);
         html = await generateSiteHtml(activeProject.briefing, undefined, clientApiKey);
@@ -275,6 +290,7 @@ export function CreativeChatPanel() {
         id: `ai-build-${Date.now()}`,
         role: "assistant",
         content:
+          explanation ||
           "🚀 O site foi totalmente construído e salvo na nuvem! Você pode pedir refinamentos aqui, usar o editor visual ou clicar em 'Publicar' para subir no Cloudflare.",
         timestamp: Date.now(),
       });

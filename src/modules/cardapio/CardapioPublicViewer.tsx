@@ -181,12 +181,31 @@ export function CardapioPublicViewer({
     money: cardapio.features?.money ?? true,
   };
 
-  // Classes condicionais de estilo conforme o efeito visual selecionado
+  function isLightColor(hexColor?: string) {
+    if (!hexColor) return false;
+    const hex = hexColor.replace("#", "");
+    if (hex.length < 6) return false;
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 140;
+  }
+
+  const isLightBg = isLightColor(cardapio.backgroundColor);
+  const bgColor = cardapio.backgroundColor || "#09090b";
+
   const cardEffectClass =
-    effect === "neobrutalism"
-      ? "bg-white text-zinc-950 border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none"
+    isLightBg
+      ? effect === "neobrutalism"
+        ? "bg-white border-2 border-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl text-zinc-900"
+        : effect === "glassmorphism"
+        ? "bg-white/80 backdrop-blur-md border border-zinc-200/90 shadow-md text-zinc-900 rounded-2xl"
+        : "bg-white border border-zinc-200 text-zinc-900 rounded-2xl shadow-sm hover:shadow-md"
+      : effect === "neobrutalism"
+      ? "bg-zinc-900 border-2 border-orange-500 shadow-[4px_4px_0px_0px_rgba(249,115,22,1)] rounded-xl"
       : effect === "glassmorphism"
-      ? "backdrop-blur-xl bg-white/[0.06] border border-white/15 shadow-xl shadow-black/30 rounded-2xl"
+      ? "bg-zinc-900/40 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl"
       : effect === "elegante"
       ? "bg-zinc-950/90 border border-amber-500/30 text-amber-50 shadow-xl shadow-amber-950/20 rounded-2xl"
       : effect === "parallax"
@@ -195,18 +214,29 @@ export function CardapioPublicViewer({
 
   return (
     <div
-      className="min-h-screen w-full bg-zinc-950 text-zinc-100 font-sans pb-28 selection:bg-orange-500 selection:text-white"
-      style={{ fontFamily: customFont ? `"${customFont}", sans-serif` : undefined }}
+      className={`min-h-screen w-full font-sans pb-28 selection:bg-orange-500 selection:text-white ${
+        isLightBg ? "text-zinc-900" : "text-zinc-100"
+      }`}
+      style={{
+        backgroundColor: bgColor,
+        fontFamily: customFont ? `"${customFont}", sans-serif` : undefined,
+      }}
     >
       {isDemo && <DemoConversionBanner companyName={companyName} />}
 
       {/* Topo / Capa do Estabelecimento */}
       <header
-        className="relative bg-gradient-to-b from-orange-950/70 via-zinc-900 to-zinc-950 border-b border-white/10 pt-8 pb-6 px-4 sm:px-6 overflow-hidden"
+        className={`relative border-b pt-8 pb-6 px-4 sm:px-6 overflow-hidden ${
+          isLightBg
+            ? "bg-gradient-to-b from-orange-100/70 via-zinc-50 to-white border-zinc-200"
+            : "bg-gradient-to-b from-orange-950/70 via-zinc-900 to-zinc-950 border-white/10"
+        }`}
         style={
           cardapio.bannerImage
             ? {
-                backgroundImage: `linear-gradient(to bottom, rgba(9,9,11,0.85), rgba(9,9,11,0.95)), url(${cardapio.bannerImage})`,
+                backgroundImage: isLightBg
+                  ? `linear-gradient(to bottom, rgba(255,255,255,0.85), rgba(255,255,255,0.95)), url(${cardapio.bannerImage})`
+                  : `linear-gradient(to bottom, rgba(9,9,11,0.85), rgba(9,9,11,0.95)), url(${cardapio.bannerImage})`,
                 backgroundSize: "cover",
                 backgroundPosition: "center",
               }
@@ -215,40 +245,61 @@ export function CardapioPublicViewer({
       >
         <div className="max-w-3xl mx-auto">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[11px] font-bold tracking-wide uppercase">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  Aberto para Pedidos
-                </span>
-                <span className="text-xs text-orange-400 font-semibold flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" /> Delivery Oficial
-                </span>
+            <div className="flex items-center gap-4">
+              {cardapio.logoUrl && (
+                <img
+                  src={cardapio.logoUrl}
+                  alt={cardapio.restaurantName}
+                  className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shadow-lg shrink-0 ${
+                    isLightBg
+                      ? "border-2 border-zinc-200 bg-white"
+                      : "border-2 border-white/20 bg-zinc-900"
+                  }`}
+                />
+              )}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 border border-emerald-500/30 text-[11px] font-bold tracking-wide uppercase">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    Aberto para Pedidos
+                  </span>
+                  <span className="text-xs text-orange-500 font-semibold flex items-center gap-1">
+                    <Sparkles className="h-3 w-3" /> Delivery Oficial
+                  </span>
+                </div>
+                <h1 className={`text-2xl sm:text-3xl font-black tracking-tight ${isLightBg ? "text-zinc-900" : "text-white"}`}>
+                  {cardapio.restaurantName}
+                </h1>
+                <p className={`text-xs sm:text-sm mt-1 max-w-xl ${isLightBg ? "text-zinc-600" : "text-zinc-300"}`}>
+                  {cardapio.tagline || cardapio.description}
+                </p>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                {cardapio.restaurantName}
-              </h1>
-              <p className="text-xs sm:text-sm text-zinc-300 mt-1 max-w-xl">
-                {cardapio.tagline || cardapio.description}
-              </p>
             </div>
           </div>
 
           {/* Badges de Informações e Horários */}
-          <div className="mt-4 pt-4 border-t border-white/10 flex flex-wrap items-center gap-2.5 text-xs text-zinc-300">
+          <div className={`mt-4 pt-4 border-t flex flex-wrap items-center gap-2.5 text-xs ${
+            isLightBg ? "border-zinc-200 text-zinc-700" : "border-white/10 text-zinc-300"
+          }`}>
             {cardapio.openingHours && (
-              <span className="inline-flex items-center gap-1.5 bg-zinc-900/90 border border-white/10 px-3 py-1.5 rounded-xl">
-                <Clock className="h-3.5 w-3.5 text-orange-400" />
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+                isLightBg ? "bg-white/90 border-zinc-200 shadow-xs" : "bg-zinc-900/90 border-white/10"
+              }`}>
+                <Clock className="h-3.5 w-3.5 text-orange-500" />
                 {cardapio.openingHours}
               </span>
             )}
-            <span className="inline-flex items-center gap-1.5 bg-zinc-900/90 border border-white/10 px-3 py-1.5 rounded-xl">
-              <Bike className="h-3.5 w-3.5 text-orange-400" />
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+              isLightBg ? "bg-white/90 border-zinc-200 shadow-xs" : "bg-zinc-900/90 border-white/10"
+            }`}>
+              <Bike className="h-3.5 w-3.5 text-orange-500" />
               Taxa: R$ {calculatedFee.toFixed(2).replace(".", ",")}
             </span>
             {cardapio.address && (
-              <span className="inline-flex items-center gap-1.5 bg-zinc-900/90 border border-white/10 px-3 py-1.5 rounded-xl">
-                <MapPin className="h-3.5 w-3.5 text-orange-400" />
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border ${
+                isLightBg ? "bg-white/90 border-zinc-200 shadow-xs" : "bg-zinc-900/90 border-white/10"
+              }`}>
+                <MapPin className="h-3.5 w-3.5 text-orange-500" />
                 {cardapio.address}
               </span>
             )}
@@ -279,7 +330,11 @@ export function CardapioPublicViewer({
       </header>
 
       {/* Categorias Roláveis (Tabs estilo iFood) */}
-      <div className="sticky top-0 z-30 bg-zinc-950/95 backdrop-blur-md border-b border-white/10 py-3 px-4 shadow-lg shadow-black/40">
+      <div className={`sticky top-0 z-30 backdrop-blur-md border-b py-3 px-4 shadow-lg ${
+        isLightBg
+          ? "bg-white/95 border-zinc-200 shadow-zinc-300/40"
+          : "bg-zinc-950/95 border-white/10 shadow-black/40"
+      }`}>
         <div className="max-w-3xl mx-auto flex items-center gap-2 overflow-x-auto no-scrollbar scroll-smooth">
           {cardapio.categories.map((cat) => {
             const isActive = activeCategory === cat.id;
@@ -290,6 +345,8 @@ export function CardapioPublicViewer({
                 className={`shrink-0 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
                   isActive
                     ? "text-white shadow-md scale-[1.02]"
+                    : isLightBg
+                    ? "bg-zinc-100 text-zinc-700 hover:text-zinc-900 hover:bg-zinc-200 border border-zinc-200"
                     : "bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 border border-white/5"
                 }`}
                 style={isActive ? { backgroundColor: btnColor } : undefined}
@@ -305,10 +362,14 @@ export function CardapioPublicViewer({
       {/* Listagem de Pratos */}
       <main className="max-w-3xl mx-auto px-4 sm:px-6 py-6 space-y-3.5">
         {filteredItems.length === 0 ? (
-          <div className="text-center py-12 bg-zinc-900/50 rounded-2xl border border-white/5 p-6">
-            <Search className="h-8 w-8 text-zinc-600 mx-auto mb-2" />
-            <h3 className="text-base font-bold text-white">Nenhum prato encontrado</h3>
-            <p className="text-xs text-zinc-400 mt-1">
+          <div className={`text-center py-12 rounded-2xl border p-6 ${
+            isLightBg
+              ? "bg-zinc-50 border-zinc-200 text-zinc-800"
+              : "bg-zinc-900/50 border-white/5 text-zinc-100"
+          }`}>
+            <Search className={`h-8 w-8 mx-auto mb-2 ${isLightBg ? "text-zinc-400" : "text-zinc-600"}`} />
+            <h3 className={`text-base font-bold ${isLightBg ? "text-zinc-900" : "text-white"}`}>Nenhum prato encontrado</h3>
+            <p className={`text-xs mt-1 ${isLightBg ? "text-zinc-500" : "text-zinc-400"}`}>
               Tente buscar por outro termo ou escolha outra categoria acima.
             </p>
           </div>
@@ -322,24 +383,28 @@ export function CardapioPublicViewer({
               >
                 <div className="flex-1 min-w-0 pr-1">
                   <div className="flex items-center gap-2 mb-1.5 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-bold text-white group-hover:text-orange-300 transition-colors">
+                    <h3 className={`text-sm sm:text-base font-bold transition-colors ${
+                      isLightBg ? "text-zinc-900 group-hover:text-orange-600" : "text-white group-hover:text-orange-300"
+                    }`}>
                       {item.name}
                     </h3>
                     {item.badge && (
-                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-400 border border-orange-500/30">
+                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-orange-500/20 text-orange-500 border border-orange-500/30">
                         {item.badge}
                       </span>
                     )}
                     {item.isPopular && !item.badge && (
-                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/20 text-amber-500 border border-amber-500/30">
                         ⭐ Mais Vendido
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
+                  <p className={`text-xs line-clamp-2 leading-relaxed ${
+                    isLightBg ? "text-zinc-600" : "text-zinc-400"
+                  }`}>
                     {item.description}
                   </p>
-                  <div className="mt-2.5 text-sm sm:text-base font-black text-orange-400">
+                  <div className="mt-2.5 text-sm sm:text-base font-black text-orange-500">
                     R$ {item.price.toFixed(2).replace(".", ",")}
                   </div>
                 </div>

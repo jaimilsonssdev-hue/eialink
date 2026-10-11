@@ -35,7 +35,8 @@ export interface LojaData {
   visualEffect?: "glassmorphism" | "neobrutalism" | "elegante" | "parallax" | "clean";
   customFont?: string;
   buttonColor?: string;
-  bannerImage?: string;
+  backgroundColor?: string;
+  logoUrl?: string;
   features?: {
     search?: boolean;
     cart?: boolean;
@@ -189,13 +190,34 @@ export async function processLojaAiChat(
   }
 
   let updatedLoja: LojaData | null = null;
-  const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+  const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  let candidateJson = jsonMatch ? jsonMatch[1].trim() : "";
 
-  if (jsonMatch && jsonMatch[1]) {
+  if (!candidateJson) {
+    const braceMatch = rawText.match(/(\{[\s\S]*"(?:storeName|items|backgroundColor|themeColor)"[\s\S]*\})/i);
+    if (braceMatch) {
+      candidateJson = braceMatch[1].trim();
+    }
+  }
+
+  if (candidateJson) {
     try {
-      const parsed = JSON.parse(jsonMatch[1]);
-      if (parsed.storeName && Array.isArray(parsed.items)) {
-        updatedLoja = parsed;
+      const parsed = JSON.parse(candidateJson);
+      if (parsed && (parsed.storeName || Array.isArray(parsed.items) || parsed.backgroundColor || parsed.logoUrl)) {
+        if (currentLoja) {
+          updatedLoja = {
+            ...currentLoja,
+            ...parsed,
+            categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : currentLoja.categories,
+            items: Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed.items : currentLoja.items,
+            features: {
+              ...(currentLoja.features || {}),
+              ...(parsed.features || {}),
+            },
+          };
+        } else {
+          updatedLoja = parsed as LojaData;
+        }
       }
     } catch (parseErr) {
       console.warn("Falha ao parsear JSON da Loja:", parseErr);
@@ -203,7 +225,8 @@ export async function processLojaAiChat(
   }
 
   const cleanReply = rawText
-    .replace(/```(?:json)?\s*[\s\S]*?\s*```/g, "")
+    .replace(/```(?:json)?\s*[\s\S]*?\s*```/gi, "")
+    .replace(/\{[\s\S]*"(?:storeName|items)"[\s\S]*\}/gi, "")
     .trim();
 
   return {

@@ -316,6 +316,35 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
     const { GoogleGenAI } = await import("@google/genai");
     const ai = new GoogleGenAI({ apiKey: resolvedKey });
 
+    let effectiveHtml = (input.existingHtml || "").trim();
+    if (!effectiveHtml && (input.projectId || input.businessSlug)) {
+      try {
+        let dbPage: any = null;
+        if (input.projectId) {
+          const { data } = await supabase
+            .from("bio_pages")
+            .select("custom_html, social_links")
+            .eq("id", input.projectId)
+            .maybeSingle();
+          dbPage = data;
+        }
+        if (!dbPage && input.businessSlug) {
+          const { data } = await supabase
+            .from("bio_pages")
+            .select("custom_html, social_links")
+            .eq("slug", input.businessSlug)
+            .maybeSingle();
+          dbPage = data;
+        }
+        if (dbPage) {
+          const rawSocial = (dbPage.social_links as Record<string, any>) || {};
+          effectiveHtml = dbPage.custom_html || rawSocial.custom_html || "";
+        }
+      } catch (loadErr) {
+        console.warn("[Studio] Falha ao recuperar HTML base da página:", loadErr);
+      }
+    }
+
     let userPrompt = input.briefingOrPrompt;
 
     // Injeta metadados de ferramentas do ecossistema EiaLink
@@ -343,27 +372,36 @@ Experimente um formato e layout inovador (ex: se era clássico/cards, use um Spl
 Surpreenda com uma organização criativa e única que valorize a marca do cliente ao máximo!`;
     }
 
-    if (input.conversationHistory && input.conversationHistory.length > 0) {
+    const isModification = Boolean(effectiveHtml && effectiveHtml.length > 50 && !input.isRegeneration);
+
+    if (isModification) {
+      userPrompt = `[SOLICITAÇÃO DE ALTERAÇÃO NO SITE EXISTENTE]:
+O usuário solicitou o seguinte ajuste no site:
+"${input.briefingOrPrompt}"
+
+[INSTRUÇÃO OBRIGATÓRIA E INEGOCIÁVEL PARA O COPILOTO]:
+Você DEVE APLICAR ESSA ALTERAÇÃO DIRETAMENTE NO CÓDIGO HTML FORNECIDO ABAIXO.
+Preserve toda a estrutura, ferramentas integradas, textos e seções que não foram solicitadas para mudar, e aplique o ajuste com precisão no código (ex: novas cores, novos textos, novo bloco, estilo de botões, imagens, etc.).
+
+É ABSOLUTAMENTE PROIBIDO responder apenas texto conversacional sem o código HTML!
+Você DEVE OBRIGATORIAMENTE estruturar sua resposta exatamente no seguinte formato:
+<<<EXPLANATION>>>
+Sua mensagem conversacional explicando amigavelmente o que foi alterado para o usuário
+<<<HTML>>>
+<!DOCTYPE html>
+<html lang="pt-BR">
+... código HTML5 completo atualizado de ponta a ponta com a alteração solicitada ...
+</html>
+<<<END_HTML>>>
+
+HTML ATUAL DA PÁGINA PARA MODIFICAÇÃO:
+${effectiveHtml}`;
+    } else if (input.conversationHistory && input.conversationHistory.length > 0) {
       const recentHistory = input.conversationHistory
         .slice(-4)
         .map((m) => `${m.role === "user" ? "Usuário" : "Copiloto"}: ${m.content}`)
         .join("\n");
       userPrompt = `[HISTÓRICO DA CONVERSA]:\n${recentHistory}\n\n[SOLICITAÇÃO ATUAL]:\n${userPrompt}`;
-    }
-
-    if (input.existingHtml && input.existingHtml.length > 50 && !input.isRegeneration) {
-      userPrompt = `MODIFICAÇÃO NO SITE EXISTENTE:
-O usuário solicitou o seguinte ajuste:
-"${input.briefingOrPrompt}"
-
-Aqui está o código HTML atual da página que deve ser modificado preservando todo o restante da estrutura e melhorando com o novo ajuste:
-${input.existingHtml}
-
-Retorne sua resposta estritamente no formato:
-<<<EXPLANATION>>>
-Sua mensagem conversacional explicando as alterações para o usuário
-<<<HTML>>>
-Código HTML completo atualizado`;
     }
 
     const serverParts: any[] = [];
@@ -381,7 +419,7 @@ Código HTML completo atualizado`;
 
     // Estrutura turnos multi-turn oficiais de acordo com o Google AI Studio
     const contents: any[] = [];
-    if (input.conversationHistory && input.conversationHistory.length > 0) {
+    if (!isModification && input.conversationHistory && input.conversationHistory.length > 0) {
       for (const msg of input.conversationHistory.slice(-6)) {
         contents.push({
           role: msg.role === "assistant" || msg.role === "model" ? "model" : "user",
@@ -449,13 +487,26 @@ Código HTML completo atualizado`;
     if (raw.includes("<<<HTML>>>")) {
       const parts = raw.split("<<<HTML>>>");
       explanation = parts[0].replace("<<<EXPLANATION>>>", "").trim();
-      cleanHtml = parts[1].trim();
+      cleanHtml = parts[1].replace("<<<END_HTML>>>", "").trim();
     } else if (raw.includes("<<<EXPLANATION>>>")) {
       const parts = raw.split("<<<EXPLANATION>>>");
       explanation = parts[1].trim();
       cleanHtml = parts[0].trim();
     } else {
-      cleanHtml = raw;
+      // Extração de blocos de código se não veio a tag <<<HTML>>>
+      const htmlBlockMatch = raw.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+      if (htmlBlockMatch && htmlBlockMatch[1] && /<(?:!doctype|html|body|div)/i.test(htmlBlockMatch[1])) {
+        cleanHtml = htmlBlockMatch[1].trim();
+        explanation = raw.replace(/```(?:html)?\s*[\s\S]*?\s*```/gi, "").trim();
+      } else {
+        const docMatch = raw.match(/(<!DOCTYPE html[\s\S]*<\/html>)/i) || raw.match(/(<html[\s\S]*<\/html>)/i);
+        if (docMatch && docMatch[1]) {
+          cleanHtml = docMatch[1].trim();
+          explanation = raw.replace(docMatch[1], "").trim();
+        } else {
+          cleanHtml = raw;
+        }
+      }
     }
 
     if (cleanHtml.startsWith("```html")) {
@@ -468,8 +519,50 @@ Código HTML completo atualizado`;
     }
     cleanHtml = cleanHtml.trim();
 
+    // Verificação se o retorno contém código HTML real ou se a IA retornou apenas texto explicativo
+    const hasValidHtmlTags = /<(?:!doctype|html|body|div|section|main|head)/i.test(cleanHtml);
+    if (!hasValidHtmlTags && isModification && effectiveHtml) {
+      console.warn("[StudioServer] IA retornou apenas texto sem código HTML. Executando síntese de código...");
+      try {
+        const retryRes = await ai.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: [
+            {
+              role: "user",
+              parts: [
+                {
+                  text: `O usuário solicitou o ajuste: "${input.briefingOrPrompt}".
+Sua explicação para o usuário: "${cleanHtml}".
+Agora retorne OBRIGATORIAMENTE apenas o código HTML5 completo atualizado (de <!DOCTYPE html> até </html>) aplicando o ajuste acima no seguinte código:
+${effectiveHtml}`,
+                },
+              ],
+            },
+          ],
+          config: {
+            systemInstruction: "Você é um gerador de código HTML. Retorne estritamente o código HTML5 completo, sem markdown, sem explicações adicionais.",
+            temperature: 0.5,
+          },
+        });
+        const retryText = retryRes.text?.trim() || "";
+        const retryBlockMatch = retryText.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+        const candidateRetry = retryBlockMatch ? retryBlockMatch[1].trim() : retryText;
+        if (/<(?:!doctype|html|body|div)/i.test(candidateRetry)) {
+          explanation = cleanHtml;
+          cleanHtml = candidateRetry;
+        } else {
+          explanation = cleanHtml;
+          cleanHtml = effectiveHtml;
+        }
+      } catch (retryErr) {
+        console.warn("[StudioServer] Falha no retry forçado, preservando HTML existente:", retryErr);
+        explanation = cleanHtml;
+        cleanHtml = effectiveHtml;
+      }
+    }
+
     if (!explanation) {
-      explanation = input.existingHtml
+      explanation = isModification
         ? "✨ Ajuste aplicado com sucesso! Atualizei o site com as modificações que você pediu. Veja a prévia na tela ao lado."
         : "🚀 Site gerado com sucesso! Já estruturei com design moderno, alta conversão e ferramentas integradas.";
     }
@@ -532,9 +625,10 @@ Código HTML completo atualizado`;
           .update({
             display_name: pageName,
             whatsapp: input.businessWhatsapp || undefined,
+            custom_html: cleanHtml,
             social_links: updatedSocial,
             updated_at: new Date().toISOString(),
-          })
+          } as any)
           .eq("id", existing.id);
         savedPageId = existing.id;
         savedSlug = existing.slug;

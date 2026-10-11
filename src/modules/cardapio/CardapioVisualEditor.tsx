@@ -41,6 +41,17 @@ const PALETTE_COLORS = [
   { name: "Dark Absoluto", hex: "#18181b" },
 ];
 
+const BACKGROUND_COLORS = [
+  { name: "Dark Absoluto", hex: "#09090b", isDark: true },
+  { name: "Grafite Profundo", hex: "#18181b", isDark: true },
+  { name: "Ardósia Chumbo", hex: "#0f172a", isDark: true },
+  { name: "Preto Noturno", hex: "#000000", isDark: true },
+  { name: "Branco Clean", hex: "#ffffff", isDark: false },
+  { name: "Creme Suave", hex: "#fafaf9", isDark: false },
+  { name: "Cinza Arejado", hex: "#f4f4f5", isDark: false },
+  { name: "Pêssego Quente", hex: "#fff7ed", isDark: false },
+];
+
 const VISUAL_EFFECTS = [
   {
     id: "glassmorphism",
@@ -221,6 +232,66 @@ export function CardapioVisualEditor({ cardapio, onChange }: CardapioVisualEdito
         {/* ABA 1: DADOS GERAIS & TEXTOS */}
         {activeTab === "info" && (
           <div className="space-y-3.5">
+            {/* Logotipo do Estabelecimento */}
+            <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/10 space-y-2">
+              <label className="text-[11px] font-semibold text-zinc-300 flex items-center justify-between">
+                <span>Logotipo do Estabelecimento</span>
+                {cardapio.logoUrl && (
+                  <button
+                    type="button"
+                    onClick={() => updateField("logoUrl", undefined)}
+                    className="text-[10px] text-red-400 hover:underline"
+                  >
+                    Remover Logo
+                  </button>
+                )}
+              </label>
+
+              <div className="flex items-center gap-3">
+                {cardapio.logoUrl ? (
+                  <img
+                    src={cardapio.logoUrl}
+                    alt="Logo"
+                    className="w-12 h-12 rounded-xl object-cover border border-white/20 bg-zinc-800 shrink-0"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-xl border border-dashed border-white/20 bg-zinc-800/50 flex items-center justify-center shrink-0 text-zinc-500">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                )}
+
+                <div className="flex-1 space-y-1.5">
+                  <Input
+                    value={cardapio.logoUrl || ""}
+                    onChange={(e) => updateField("logoUrl", e.target.value)}
+                    placeholder="URL do logotipo (https://...)"
+                    className="bg-zinc-900 border-white/10 text-xs h-8"
+                  />
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer text-[11px] font-medium text-orange-400 hover:text-orange-300 transition-colors inline-flex items-center gap-1">
+                      <span>📁 Carregar arquivo</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (uploadEvt) => {
+                              const result = uploadEvt.target?.result as string;
+                              if (result) updateField("logoUrl", result);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label className="text-[11px] font-semibold text-zinc-300">Nome do Estabelecimento</label>
               <Input
@@ -556,6 +627,68 @@ export function CardapioVisualEditor({ cardapio, onChange }: CardapioVisualEdito
                     </div>
                   );
                 })}
+              </div>
+            </div>
+
+            {/* Cor de Fundo da Página (Background) */}
+            <div className="pt-2 border-t border-white/10">
+              <label className="text-xs font-bold text-zinc-200 flex items-center justify-between mb-2">
+                <span className="flex items-center gap-1.5">
+                  <Palette className="h-3.5 w-3.5 text-orange-400" />
+                  Cor de Fundo da Página
+                </span>
+                <span className="text-[10px] text-zinc-400 font-normal">
+                  {cardapio.backgroundColor || "#09090b"}
+                </span>
+              </label>
+
+              <div className="grid grid-cols-4 gap-2 mb-3">
+                {BACKGROUND_COLORS.map((bg) => {
+                  const isBgSelected = (cardapio.backgroundColor || "#09090b").toLowerCase() === bg.hex.toLowerCase();
+                  return (
+                    <button
+                      key={bg.hex}
+                      type="button"
+                      onClick={() => updateField("backgroundColor", bg.hex)}
+                      className={`flex flex-col items-center gap-1 p-1.5 rounded-xl border transition-all text-center ${
+                        isBgSelected
+                          ? "bg-orange-500/15 border-orange-500 ring-1 ring-orange-500"
+                          : "bg-zinc-900 border-white/10 hover:border-white/30"
+                      }`}
+                    >
+                      <span
+                        className="w-5 h-5 rounded-full border border-white/30 shadow-xs flex items-center justify-center text-[10px]"
+                        style={{ backgroundColor: bg.hex }}
+                      >
+                        {isBgSelected && (
+                          <Check className={`w-3 h-3 ${bg.isDark ? "text-white" : "text-black"}`} />
+                        )}
+                      </span>
+                      <span className="text-[9px] text-zinc-300 truncate w-full">
+                        {bg.name.split(" ")[0]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Seletor Customizado Hexadecimal de Fundo */}
+              <div className="flex items-center gap-2 p-2 rounded-xl bg-zinc-900 border border-white/10 mb-2">
+                <input
+                  type="color"
+                  value={cardapio.backgroundColor || "#09090b"}
+                  onChange={(e) => updateField("backgroundColor", e.target.value)}
+                  className="w-8 h-8 rounded-lg cursor-pointer bg-transparent border-0 p-0"
+                />
+                <div className="flex-1">
+                  <span className="text-[10px] text-zinc-400 block font-medium">Cor de Fundo Personalizada</span>
+                  <Input
+                    value={cardapio.backgroundColor || "#09090b"}
+                    onChange={(e) => updateField("backgroundColor", e.target.value)}
+                    placeholder="#09090b"
+                    className="h-6 text-xs bg-transparent border-0 p-0 font-mono text-zinc-200 focus-visible:ring-0"
+                  />
+                </div>
               </div>
             </div>
 

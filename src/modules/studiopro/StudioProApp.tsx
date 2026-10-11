@@ -205,8 +205,8 @@ export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
 
         if (existingProj) {
           selectProject(existingProj.id);
-          // Se o banco tiver HTML mais recente, atualiza o projeto ativo
-          if (existingHtml && (!existingProj.html || existingProj.html.length < 50)) {
+          // Atualiza com o HTML mais recente salvo no banco de dados se disponível
+          if (existingHtml && existingHtml.length > 50) {
             updateActiveProjectHtml(existingHtml);
           }
           if (!existingProj.briefing) {

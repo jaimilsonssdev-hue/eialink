@@ -590,8 +590,28 @@ function LojaStudioPage() {
               stockBadge: loja.features?.stockBadge ?? true,
             };
 
+            function isLightColor(hexColor?: string) {
+              if (!hexColor) return false;
+              const hex = hexColor.replace("#", "");
+              if (hex.length < 6) return false;
+              const r = parseInt(hex.substring(0, 2), 16);
+              const g = parseInt(hex.substring(2, 4), 16);
+              const b = parseInt(hex.substring(4, 6), 16);
+              const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+              return yiq >= 140;
+            }
+
+            const isLightBg = isLightColor(loja.backgroundColor);
+            const bgColor = loja.backgroundColor || "#09090b";
+
             const cardEffectClass =
-              effect === "neobrutalism"
+              isLightBg
+                ? effect === "neobrutalism"
+                  ? "bg-white text-zinc-900 border-2 border-zinc-900 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] rounded-xl"
+                  : effect === "glassmorphism"
+                  ? "backdrop-blur-xl bg-white/80 border border-zinc-200 shadow-md text-zinc-900 rounded-2xl"
+                  : "bg-white border border-zinc-200 text-zinc-900 rounded-2xl shadow-sm"
+                : effect === "neobrutalism"
                 ? "bg-white text-zinc-950 border-2 border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] rounded-none"
                 : effect === "glassmorphism"
                 ? "backdrop-blur-xl bg-white/[0.06] border border-white/15 shadow-xl shadow-black/30 rounded-2xl"
@@ -604,34 +624,60 @@ function LojaStudioPage() {
             return (
               <div
                 className={`transition-all duration-300 w-full ${
+                  isLightBg ? "text-zinc-900" : "text-zinc-100"
+                } ${
                   viewMode === "mobile"
-                    ? "max-w-[420px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl bg-zinc-950 overflow-hidden"
-                    : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl bg-zinc-950 overflow-hidden"
+                    ? "max-w-[420px] rounded-[36px] border-[6px] border-zinc-800 shadow-2xl overflow-hidden"
+                    : "max-w-4xl rounded-2xl border border-white/10 shadow-2xl overflow-hidden"
                 }`}
-                style={{ fontFamily: customFont ? `"${customFont}", sans-serif` : undefined }}
+                style={{
+                  backgroundColor: bgColor,
+                  fontFamily: customFont ? `"${customFont}", sans-serif` : undefined,
+                }}
               >
                 {/* Header da Loja */}
                 <div
-                  className="relative bg-gradient-to-b from-blue-950/60 to-zinc-900 p-6 border-b border-white/10 overflow-hidden"
+                  className={`relative p-6 border-b overflow-hidden ${
+                    isLightBg
+                      ? "bg-gradient-to-b from-blue-100/70 via-zinc-50 to-white border-zinc-200"
+                      : "bg-gradient-to-b from-blue-950/60 to-zinc-900 border-white/10"
+                  }`}
                   style={
                     loja.bannerImage
                       ? {
-                          backgroundImage: `linear-gradient(to bottom, rgba(9,9,11,0.85), rgba(9,9,11,0.95)), url(${loja.bannerImage})`,
+                          backgroundImage: isLightBg
+                            ? `linear-gradient(to bottom, rgba(255,255,255,0.85), rgba(255,255,255,0.95)), url(${loja.bannerImage})`
+                            : `linear-gradient(to bottom, rgba(9,9,11,0.85), rgba(9,9,11,0.95)), url(${loja.bannerImage})`,
                           backgroundSize: "cover",
                           backgroundPosition: "center",
                         }
                       : undefined
                   }
                 >
-                  <Badge className="bg-blue-600 text-white mb-2 text-[10px] font-bold tracking-wider uppercase">
-                    Vitrine Online Aberta 🟢
-                  </Badge>
-                  <h2 className="text-2xl font-black tracking-tight text-white">
-                    {loja.storeName}
-                  </h2>
-                  <p className="text-xs text-blue-200/90 mt-1 font-medium">
-                    {loja.tagline}
-                  </p>
+                  <div className="flex items-center gap-3.5 mb-2">
+                    {loja.logoUrl && (
+                      <img
+                        src={loja.logoUrl}
+                        alt={loja.storeName}
+                        className={`w-14 h-14 rounded-2xl object-cover shadow-lg shrink-0 ${
+                          isLightBg
+                            ? "border-2 border-zinc-200 bg-white"
+                            : "border-2 border-white/20 bg-zinc-900"
+                        }`}
+                      />
+                    )}
+                    <div>
+                      <Badge className="bg-blue-600 text-white mb-1 text-[10px] font-bold tracking-wider uppercase">
+                        Vitrine Online Aberta 🟢
+                      </Badge>
+                      <h2 className={`text-2xl font-black tracking-tight ${isLightBg ? "text-zinc-900" : "text-white"}`}>
+                        {loja.storeName}
+                      </h2>
+                      <p className={`text-xs mt-0.5 font-medium ${isLightBg ? "text-zinc-600" : "text-blue-200/90"}`}>
+                        {loja.tagline}
+                      </p>
+                    </div>
+                  </div>
 
                   <div className="mt-4 flex flex-wrap items-center gap-2.5 text-[11px] text-zinc-300">
                     {features.shippingInfo && loja.shippingInfo && (

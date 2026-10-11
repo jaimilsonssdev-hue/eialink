@@ -37,6 +37,8 @@ export interface CardapioData {
   customFont?: string;
   buttonColor?: string;
   bannerImage?: string;
+  backgroundColor?: string;
+  logoUrl?: string;
   features?: {
     search?: boolean;
     deliveryCep?: boolean;
@@ -72,8 +74,9 @@ SEUS SUPERPODERES:
 1. **Multimodalidade Absoluta**: Se o usuário mandar fotos de cardápio impresso, foto de cardápio de parede, fotos de pratos ou PDF, você analisa visualmente cada item, detecta o nome do prato, a descrição sensorial, o preço em reais e a categoria.
 2. **Copywriting Gastronômico**: Se os pratos não tiverem descrição, invente descrições de dar água na boca ("Blend artesanal 180g selado no ponto perfeito com queijo derretido...").
 3. **Estruturação JSON Estrita**:
-Sempre que for sugerir ou atualizar o cardápio, retorne no final da sua mensagem amigável um bloco JSON cercado por \`\`\`json { ... } \`\`\` com a seguinte estrutura completa:
+SEMPRE que o usuário solicitar qualquer alteração (novos pratos, mudar preços, mudar cores, alterar cor de fundo com backgroundColor, adicionar logo com logoUrl, categorias, etc.), você DEVE OBRIGATORIAMENTE retornar no final da sua resposta o bloco JSON completo com as alterações aplicadas entre \`\`\`json e \`\`\`. NUNCA responda apenas dizendo que alterou sem incluir o bloco JSON, caso contrário as alterações não aparecerão na tela!
 
+Exemplo de bloco JSON com suporte a fundo e logo:
 \`\`\`json
 {
   "restaurantName": "Nome do Estabelecimento",
@@ -86,6 +89,9 @@ Sempre que for sugerir ou atualizar o cardápio, retorne no final da sua mensage
   "minOrder": 20.0,
   "openingHours": "Terça a Domingo das 18h às 23h30",
   "themeColor": "orange",
+  "buttonColor": "#f97316",
+  "backgroundColor": "#09090b",
+  "logoUrl": "https://images.unsplash.com/...",
   "styleVariant": "ifood-modern",
   "categories": [
     { "id": "todos", "name": "Todos", "icon": "🍽️" },
@@ -110,9 +116,8 @@ Sempre que for sugerir ou atualizar o cardápio, retorne no final da sua mensage
 Regras de ouro:
 - A primeira categoria de "categories" deve ser sempre "Todos".
 - Os preços devem ser numéricos (ex: 38.9).
-- Cores válidas: "amber", "orange", "rose", "emerald", "violet", "red".
-- Formato de styleVariant: "ifood-modern", "bistro-dark", "fresh-clean".
-- Mantenha sempre o diálogo envolvente na primeira parte da resposta e o JSON atualizado na segunda parte.`;
+- Cores de fundo válidas: "#09090b" (escuro), "#18181b", "#ffffff" (claro), "#fafaf9" (creme), ou qualquer tom hex válido.
+- Mantenha sempre o diálogo envolvente na primeira parte da resposta e o bloco JSON completo atualizado na segunda parte.`;
 
 /**
  * Executa o chat multimodal do Cardápio Studio com Gemini 3.8 Flash
@@ -211,14 +216,36 @@ export async function processCardapioAiChat(
     throw new Error("A IA do Cardápio não conseguiu processar sua solicitação no momento. Tente novamente.");
   }
 
-  // Extrai o JSON se existir
+  // Extrai o JSON de forma inteligente e resiliente
   let updatedCardapio: CardapioData | null = null;
-  const jsonMatch = rawText.match(/```json([\s\S]*?)```/i);
-  if (jsonMatch && jsonMatch[1]) {
+  const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  let jsonStringCandidate = jsonMatch ? jsonMatch[1].trim() : "";
+
+  if (!jsonStringCandidate) {
+    const braceMatch = rawText.match(/(\{[\s\S]*"(?:restaurantName|items|backgroundColor|themeColor)"[\s\S]*\})/i);
+    if (braceMatch) {
+      jsonStringCandidate = braceMatch[1].trim();
+    }
+  }
+
+  if (jsonStringCandidate) {
     try {
-      const parsed = JSON.parse(jsonMatch[1].trim());
-      if (parsed.restaurantName && Array.isArray(parsed.items)) {
-        updatedCardapio = parsed as CardapioData;
+      const parsed = JSON.parse(jsonStringCandidate);
+      if (parsed && (parsed.restaurantName || Array.isArray(parsed.items) || parsed.backgroundColor || parsed.logoUrl)) {
+        if (currentCardapio) {
+          updatedCardapio = {
+            ...currentCardapio,
+            ...parsed,
+            categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : currentCardapio.categories,
+            items: Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed.items : currentCardapio.items,
+            features: {
+              ...(currentCardapio.features || {}),
+              ...(parsed.features || {}),
+            },
+          };
+        } else {
+          updatedCardapio = parsed as CardapioData;
+        }
       }
     } catch (parseErr) {
       console.warn("[CardapioAiService] Erro ao fazer parse do JSON retornado:", parseErr);
@@ -226,7 +253,10 @@ export async function processCardapioAiChat(
   }
 
   // Limpa o bloco JSON do texto de resposta do chat para ficar agradável e limpo na conversa
-  const conversationalText = rawText.replace(/```json[\s\S]*?```/i, "").trim();
+  const conversationalText = rawText
+    .replace(/```(?:json)?\s*[\s\S]*?\s*```/gi, "")
+    .replace(/\{[\s\S]*"(?:restaurantName|items)"[\s\S]*\}/gi, "")
+    .trim();
 
   return {
     replyText: conversationalText || "Prontinho! Atualizei o cardápio com os dados que você pediu. Dê uma olhada na prévia ao lado!",

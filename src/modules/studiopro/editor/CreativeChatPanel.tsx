@@ -170,7 +170,7 @@ export function CreativeChatPanel() {
           timestamp: Date.now(),
         });
       } else {
-        const isIteration = Boolean(currentHtml);
+        const isIteration = Boolean(currentHtml && currentHtml.length > 50);
         setIsGenerating(
           true,
           isIteration
@@ -190,7 +190,8 @@ export function CreativeChatPanel() {
               data: {
                 briefingOrPrompt: fullPrompt,
                 existingHtml: isIteration ? currentHtml : undefined,
-                projectId: activeProject?.id,
+                projectId: activeProject?.eialinkPageId || activeProject?.id,
+                businessSlug: activeProject?.slug,
                 projectName: activeProject?.name,
                 apiKey: clientApiKey,
                 attachments: currentAttachments,
@@ -217,8 +218,25 @@ export function CreativeChatPanel() {
         }
         setIsGenerating(false);
 
-        if (!newHtml || newHtml.length < 50) {
-          throw new Error("A IA retornou uma resposta vazia. Tente clicar em gerar novamente.");
+        const hasValidHtmlTags = Boolean(
+          newHtml &&
+          newHtml.length > 50 &&
+          /<(?:!doctype|html|body|div|section|main|head)/i.test(newHtml),
+        );
+
+        if (!hasValidHtmlTags) {
+          if (isIteration && currentHtml) {
+            // IA respondeu conversacionalmente mas não devolveu HTML - preserva o site e exibe mensagem
+            addChatMessage({
+              id: `ai-${Date.now()}`,
+              role: "assistant",
+              content: aiExplanation || newHtml || "Entendi o ajuste! Por favor, especifique qual seção ou texto deseja modificar para eu atualizar o código.",
+              timestamp: Date.now(),
+            });
+            toast.info("A IA respondeu no chat. Solicite a alteração visual detalhada se necessário.");
+            return;
+          }
+          throw new Error("A IA retornou uma resposta sem código HTML válido. Tente clicar em gerar novamente.");
         }
 
         updateActiveProjectHtml(newHtml);
@@ -266,7 +284,8 @@ export function CreativeChatPanel() {
           generateCreativeSiteFn({
             data: {
               briefingOrPrompt: activeProject.briefing,
-              projectId: activeProject.id,
+              projectId: activeProject.eialinkPageId || activeProject.id,
+              businessSlug: activeProject.slug,
               projectName: activeProject.name,
               apiKey: clientApiKey,
             },

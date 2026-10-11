@@ -379,9 +379,22 @@ Código HTML completo atualizado`;
     }
     serverParts.push({ text: userPrompt });
 
+    // Estrutura turnos multi-turn oficiais de acordo com o Google AI Studio
+    const contents: any[] = [];
+    if (input.conversationHistory && input.conversationHistory.length > 0) {
+      for (const msg of input.conversationHistory.slice(-6)) {
+        contents.push({
+          role: msg.role === "assistant" || msg.role === "model" ? "model" : "user",
+          parts: [{ text: msg.content }],
+        });
+      }
+    }
+    contents.push({ role: "user", parts: serverParts });
+
     let responseText = "";
     let lastCapturedError: any = null;
-    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    // Modelos oficiais do Google AI Studio para geração de código e raciocínio
+    const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"];
 
     for (const modelCandidate of modelsToTry) {
       let attempts = 0;
@@ -390,10 +403,13 @@ Código HTML completo atualizado`;
         try {
           const response = await ai.models.generateContent({
             model: modelCandidate,
-            contents: [{ role: "user", parts: serverParts }],
+            contents,
             config: {
               systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
               temperature: 0.7,
+              thinkingConfig: {
+                thinkingLevel: "low" as any,
+              },
             },
           });
           responseText = response.text?.trim() || "";
@@ -604,7 +620,7 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
     }
     userParts.push({ text: input.prompt });
 
-    const briefingModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    const briefingModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"];
     let briefingText = "";
 
     for (const modelCandidate of briefingModels) {
@@ -618,6 +634,9 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
           config: {
             systemInstruction: BRIEFING_SYSTEM_PROMPT,
             temperature: 0.7,
+            thinkingConfig: {
+              thinkingLevel: "low" as any,
+            },
           },
         });
         briefingText = response.text?.trim() || "";

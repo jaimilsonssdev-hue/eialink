@@ -225,7 +225,7 @@ export async function planSiteBriefing(
   }
   currentUserParts.push({ text: prompt });
 
-  const briefingModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+  const briefingModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"];
   let briefingText = "";
 
   for (const modelCandidate of briefingModels) {
@@ -239,6 +239,9 @@ export async function planSiteBriefing(
         config: {
           systemInstruction: BRIEFING_SYSTEM_PROMPT,
           temperature: 0.7,
+          thinkingConfig: {
+            thinkingLevel: "low" as any,
+          },
         },
       });
       briefingText = response.text?.trim() || "";
@@ -290,8 +293,8 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
 
   let raw = "";
   let lastCapturedError: any = null;
-  // Modelos estáveis e rápidos do Google AI Studio
-  const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+  // Modelos oficiais do Google AI Studio para geração de código
+  const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"];
 
   for (const modelCandidate of modelsToTry) {
     let attempts = 0;
@@ -305,6 +308,9 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
           config: {
             systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
             temperature: 0.7,
+            thinkingConfig: {
+              thinkingLevel: "low" as any,
+            },
           },
         });
 

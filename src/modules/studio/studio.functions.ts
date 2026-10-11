@@ -433,8 +433,8 @@ ${effectiveHtml}`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    // Modelos oficiais do Google AI Studio para geração de código e raciocínio
-    const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"];
+    // Modelos oficiais do Google AI Studio para geração de código e raciocínio de alta performance
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
 
     for (const modelCandidate of modelsToTry) {
       let attempts = 0;
@@ -527,7 +527,7 @@ ${effectiveHtml}`;
       console.warn("[StudioServer] IA retornou apenas texto sem código HTML. Executando síntese de código...");
       try {
         const retryRes = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: "gemini-2.5-flash",
           contents: [
             {
               role: "user",
@@ -716,7 +716,7 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
     }
     userParts.push({ text: input.prompt });
 
-    const briefingModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-pro-preview"];
+    const briefingModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
     let briefingText = "";
 
     for (const modelCandidate of briefingModels) {
@@ -895,6 +895,7 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
           whatsapp: cardapio.whatsapp || null,
           template_id: "cardapio-pro",
           published: true,
+          custom_html: null,
           social_links: updatedSocial,
           updated_at: new Date().toISOString(),
         })
@@ -997,6 +998,7 @@ export const saveLojaStudioFn = createServerFn({ method: "POST" })
           whatsapp: loja.whatsapp || null,
           template_id: "storefront",
           published: true,
+          custom_html: null,
           social_links: updatedSocial,
           updated_at: new Date().toISOString(),
         })
@@ -1082,4 +1084,390 @@ export const listCreativeStudioProjectsFn = createServerFn({ method: "GET" })
 
     return { projects };
   });
+
+/**
+ * 10. Copiloto IA Server-Side para o Cardápio Studio com Google Gemini
+ */
+export const processCardapioAiStudioFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    (d: {
+      userMessage: string;
+      currentCardapio: CardapioData;
+      history?: Array<{ role: "user" | "assistant"; content: string }>;
+      attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
+      apiKey?: string;
+    }) => d,
+  )
+  .handler(async ({ data: input, context }) => {
+    let resolvedKey = input.apiKey?.trim();
+    if (!resolvedKey) {
+      try {
+        const { data: userData } = await context.supabase.auth.getUser();
+        resolvedKey = userData?.user?.user_metadata?.gemini_api_key;
+      } catch (authErr) {
+        console.warn("[CardapioServer] Falha ao extrair user_metadata:", authErr);
+      }
+    }
+    if (!resolvedKey) {
+      resolvedKey = (await resolveGeminiApiKeyAsync()) || undefined;
+    }
+    if (!resolvedKey) {
+      throw new Error("Chave do Google AI Studio não encontrada. Configure sua chave no painel de Configurações.");
+    }
+
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey: resolvedKey });
+
+    const systemPrompt = `Você é o Diretor de Criação & Growth de Gastronomia do EIA Link.
+Você atua como um Especialista Sênior em Cardápios Inteligentes estilo iFood, focado em alta conversão e experiência de usuário impecável.
+
+SEU TOM DE VOZ:
+- Seja prestativo, ágil, simpático e empolgado ("Fala, mestre!", "Perfeito! Já fiz esse ajuste", "Ficou sensacional").
+- Fale com entusiasmo sobre os pratos e gastronomia.
+
+REGRAS CRÍTICAS DE RESPOSTA:
+1. SEMPRE responda o que você fez de forma clara e amigável.
+2. SEMPRE QUE HOUVER QUALQUER MODIFICAÇÃO SOLICITADA (novos itens, mudança de preços, cor de destaque "buttonColor", cor de fundo "backgroundColor", logotipo "logoUrl", slogan, categorias, etc.), você DEVE OBRIGATORIAMENTE incluir no final da resposta o bloco JSON completo com os dados atualizados envolto em \`\`\`json e \`\`\`.
+3. O JSON deve seguir a estrutura exata do cardápio existente:
+{
+  "restaurantName": "...",
+  "niche": "...",
+  "tagline": "...",
+  "description": "...",
+  "whatsapp": "...",
+  "address": "...",
+  "deliveryFee": "...",
+  "minOrder": 25,
+  "openingHours": "...",
+  "themeColor": "orange",
+  "buttonColor": "#f97316",
+  "backgroundColor": "#09090b",
+  "logoUrl": "...",
+  "styleVariant": "ifood-modern",
+  "visualEffect": "glassmorphism",
+  "categories": [
+    { "id": "todos", "name": "Todos", "icon": "🍽️" },
+    ...
+  ],
+  "items": [
+    {
+      "id": "item-1",
+      "name": "...",
+      "description": "...",
+      "price": 35.9,
+      "category": "...",
+      "isPopular": true,
+      "badge": "Mais Pedido ⭐",
+      "image": "..."
+    }
+  ]
+}
+4. Nunca devolva JSON quebrado. Preços devem ser números. Mantenha os itens existentes a menos que o usuário peça para remover.`;
+
+    const formattedContents: any[] = [];
+
+    // Contexto com cardápio atual
+    if (input.currentCardapio) {
+      formattedContents.push({
+        role: "user",
+        parts: [
+          {
+            text: `[ESTADO ATUAL DO CARDÁPIO]:\n${JSON.stringify(input.currentCardapio, null, 2)}\nUse esse estado como base para editar, adicionar ou refinar o que o usuário pedir.`,
+          },
+        ],
+      });
+      formattedContents.push({
+        role: "model",
+        parts: [
+          {
+            text: `Entendido perfeitamente! Tenho o cardápio do "${input.currentCardapio.restaurantName}" pronto para ser atualizado.`,
+          },
+        ],
+      });
+    }
+
+    // Histórico
+    if (input.history && input.history.length > 0) {
+      for (const msg of input.history.slice(-6)) {
+        formattedContents.push({
+          role: msg.role === "assistant" ? "model" : "user",
+          parts: [{ text: msg.content }],
+        });
+      }
+    }
+
+    // Mensagem atual do usuário com anexos
+    const currentParts: any[] = [];
+    if (input.attachments && input.attachments.length > 0) {
+      for (const att of input.attachments) {
+        currentParts.push({
+          inlineData: {
+            mimeType: att.mimeType,
+            data: att.dataBase64,
+          },
+        });
+      }
+    }
+    currentParts.push({ text: input.userMessage });
+    formattedContents.push({
+      role: "user",
+      parts: currentParts,
+    });
+
+    const candidateModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    let rawText = "";
+
+    for (const model of candidateModels) {
+      try {
+        const res = await ai.models.generateContent({
+          model,
+          contents: formattedContents,
+          config: {
+            systemInstruction: systemPrompt,
+            temperature: 0.6,
+          },
+        });
+        rawText = res.text?.trim() || "";
+        if (rawText) break;
+      } catch (err: any) {
+        console.warn(`[CardapioServer] Erro com modelo ${model}:`, err?.message || err);
+      }
+    }
+
+    if (!rawText) {
+      throw new Error("Não foi possível obter resposta da IA no momento. Tente novamente.");
+    }
+
+    // Extrai o JSON
+    let updatedCardapio: CardapioData | null = null;
+    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    let jsonStringCandidate = jsonMatch ? jsonMatch[1].trim() : "";
+
+    if (!jsonStringCandidate) {
+      const braceMatch = rawText.match(/(\{[\s\S]*"(?:restaurantName|items|backgroundColor|themeColor)"[\s\S]*\})/i);
+      if (braceMatch) {
+        jsonStringCandidate = braceMatch[1].trim();
+      }
+    }
+
+    if (jsonStringCandidate) {
+      try {
+        const parsed = JSON.parse(jsonStringCandidate);
+        if (parsed && (parsed.restaurantName || Array.isArray(parsed.items) || parsed.backgroundColor || parsed.logoUrl)) {
+          updatedCardapio = {
+            ...input.currentCardapio,
+            ...parsed,
+            categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : input.currentCardapio.categories,
+            items: Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed.items : input.currentCardapio.items,
+            features: {
+              ...(input.currentCardapio.features || {}),
+              ...(parsed.features || {}),
+            },
+          };
+        }
+      } catch (parseErr) {
+        console.warn("[CardapioServer] Falha no parse do JSON retornado:", parseErr);
+      }
+    }
+
+    const conversationalText = rawText
+      .replace(/```(?:json)?\s*[\s\S]*?\s*```/gi, "")
+      .replace(/\{[\s\S]*"(?:restaurantName|items)"[\s\S]*\}/gi, "")
+      .trim();
+
+    return {
+      replyText: conversationalText || "Alteração realizada com sucesso! O cardápio foi atualizado na tela.",
+      updatedCardapio,
+    };
+  });
+
+/**
+ * 11. Copiloto IA Server-Side para a Loja Virtual & Catálogo com Google Gemini
+ */
+export const processLojaAiStudioFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator(
+    (d: {
+      userMessage: string;
+      currentLoja: LojaData;
+      history?: Array<{ role: "user" | "assistant"; content: string }>;
+      attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
+      apiKey?: string;
+    }) => d,
+  )
+  .handler(async ({ data: input, context }) => {
+    let resolvedKey = input.apiKey?.trim();
+    if (!resolvedKey) {
+      try {
+        const { data: userData } = await context.supabase.auth.getUser();
+        resolvedKey = userData?.user?.user_metadata?.gemini_api_key;
+      } catch (authErr) {
+        console.warn("[LojaServer] Falha ao extrair user_metadata:", authErr);
+      }
+    }
+    if (!resolvedKey) {
+      resolvedKey = (await resolveGeminiApiKeyAsync()) || undefined;
+    }
+    if (!resolvedKey) {
+      throw new Error("Chave do Google AI Studio não encontrada. Configure sua chave no painel de Configurações.");
+    }
+
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey: resolvedKey });
+
+    const systemPrompt = `Você é o Diretor de E-commerce & Varejo Digital do EIA Link.
+Você é especialista em Catálogos Online e Lojas Virtuais de alta conversão integradas com WhatsApp.
+
+REGRAS DE RESPOSTA:
+1. Responda de forma ágil, profissional e animada.
+2. SEMPRE QUE HOUVER QUALQUER MODIFICAÇÃO SOLICITADA (produtos, preços, cores de fundo "backgroundColor", cor de botão "buttonColor", logotipo "logoUrl", slogan, categorias, variações de tamanho/cor, etc.), retorne no final o bloco JSON completo atualizado entre \`\`\`json e \`\`\`.
+3. Estrutura JSON esperada:
+{
+  "storeName": "...",
+  "niche": "...",
+  "tagline": "...",
+  "description": "...",
+  "whatsapp": "...",
+  "address": "...",
+  "shippingInfo": "...",
+  "openingHours": "...",
+  "themeColor": "blue",
+  "buttonColor": "#3b82f6",
+  "backgroundColor": "#09090b",
+  "logoUrl": "...",
+  "styleVariant": "store-modern",
+  "visualEffect": "glassmorphism",
+  "categories": [
+    { "id": "todos", "name": "Todos", "icon": "🛍️" },
+    ...
+  ],
+  "items": [
+    {
+      "id": "prod-1",
+      "name": "...",
+      "description": "...",
+      "price": 149.9,
+      "category": "...",
+      "isPopular": true,
+      "badge": "Lançamento",
+      "variations": ["P", "M", "G"],
+      "image": "..."
+    }
+  ]
+}`;
+
+    const formattedContents: any[] = [];
+
+    if (input.currentLoja) {
+      formattedContents.push({
+        role: "user",
+        parts: [
+          {
+            text: `[ESTADO ATUAL DA LOJA]:\n${JSON.stringify(input.currentLoja, null, 2)}\nUse esse estado como base para editar, adicionar ou refinar o que o usuário pedir.`,
+          },
+        ],
+      });
+      formattedContents.push({
+        role: "model",
+        parts: [
+          {
+            text: `Entendido perfeitamente! Tenho o catálogo da "${input.currentLoja.storeName}" pronto para ser atualizado.`,
+          },
+        ],
+      });
+    }
+
+    if (input.history && input.history.length > 0) {
+      for (const msg of input.history.slice(-6)) {
+        formattedContents.push({
+          role: msg.role === "assistant" ? "model" : "user",
+          parts: [{ text: msg.content }],
+        });
+      }
+    }
+
+    const currentParts: any[] = [];
+    if (input.attachments && input.attachments.length > 0) {
+      for (const att of input.attachments) {
+        currentParts.push({
+          inlineData: {
+            mimeType: att.mimeType,
+            data: att.dataBase64,
+          },
+        });
+      }
+    }
+    currentParts.push({ text: input.userMessage });
+    formattedContents.push({
+      role: "user",
+      parts: currentParts,
+    });
+
+    const candidateModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    let rawText = "";
+
+    for (const model of candidateModels) {
+      try {
+        const res = await ai.models.generateContent({
+          model,
+          contents: formattedContents,
+          config: {
+            systemInstruction: systemPrompt,
+            temperature: 0.6,
+          },
+        });
+        rawText = res.text?.trim() || "";
+        if (rawText) break;
+      } catch (err: any) {
+        console.warn(`[LojaServer] Erro com modelo ${model}:`, err?.message || err);
+      }
+    }
+
+    if (!rawText) {
+      throw new Error("Não foi possível obter resposta da IA no momento. Tente novamente.");
+    }
+
+    let updatedLoja: LojaData | null = null;
+    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+    let jsonStringCandidate = jsonMatch ? jsonMatch[1].trim() : "";
+
+    if (!jsonStringCandidate) {
+      const braceMatch = rawText.match(/(\{[\s\S]*"(?:storeName|items|backgroundColor|themeColor)"[\s\S]*\})/i);
+      if (braceMatch) {
+        jsonStringCandidate = braceMatch[1].trim();
+      }
+    }
+
+    if (jsonStringCandidate) {
+      try {
+        const parsed = JSON.parse(jsonStringCandidate);
+        if (parsed && (parsed.storeName || Array.isArray(parsed.items) || parsed.backgroundColor || parsed.logoUrl)) {
+          updatedLoja = {
+            ...input.currentLoja,
+            ...parsed,
+            categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : input.currentLoja.categories,
+            items: Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed.items : input.currentLoja.items,
+            features: {
+              ...(input.currentLoja.features || {}),
+              ...(parsed.features || {}),
+            },
+          };
+        }
+      } catch (parseErr) {
+        console.warn("[LojaServer] Falha no parse do JSON retornado:", parseErr);
+      }
+    }
+
+    const conversationalText = rawText
+      .replace(/```(?:json)?\s*[\s\S]*?\s*```/gi, "")
+      .replace(/\{[\s\S]*"(?:storeName|items)"[\s\S]*\}/gi, "")
+      .trim();
+
+    return {
+      replyText: conversationalText || "Catálogo atualizado com sucesso!",
+      updatedLoja,
+    };
+  });
+
 

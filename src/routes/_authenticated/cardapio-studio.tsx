@@ -36,7 +36,10 @@ import {
   type CardapioAiMessage,
   type CardapioItem,
 } from "@/modules/cardapio/cardapioAiService";
-import { saveCardapioStudioFn } from "@/modules/studio/studio.functions";
+import {
+  saveCardapioStudioFn,
+  processCardapioAiStudioFn,
+} from "@/modules/studio/studio.functions";
 import { toast } from "sonner";
 import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
 import { CardapioVisualEditor } from "@/modules/cardapio/CardapioVisualEditor";
@@ -274,23 +277,59 @@ function CardapioStudioPage() {
     setIsProcessing(true);
 
     try {
-      const result = await processCardapioAiChat(
-        [...messages, userMsg],
-        textToSend,
-        userMsg.attachments,
-        cardapio,
-      );
+      let replyText = "";
+      let updatedCardapio: CardapioData | null = null;
+
+      try {
+        const serverRes = await processCardapioAiStudioFn({
+          data: {
+            userMessage: textToSend,
+            currentCardapio: cardapio,
+            history: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            attachments: userMsg.attachments,
+          },
+        });
+        replyText = serverRes.replyText;
+        updatedCardapio = serverRes.updatedCardapio;
+      } catch (serverErr: any) {
+        console.warn("[CardapioStudio] Fallback para client chat:", serverErr);
+        const clientRes = await processCardapioAiChat(
+          [...messages, userMsg],
+          textToSend,
+          userMsg.attachments,
+          cardapio,
+        );
+        replyText = clientRes.replyText;
+        updatedCardapio = clientRes.updatedCardapio;
+      }
 
       const assistantMsg: CardapioAiMessage = {
         id: `ast-${Date.now()}`,
         role: "assistant",
-        content: result.replyText,
+        content: replyText,
         timestamp: Date.now(),
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
-      if (result.updatedCardapio) {
-        setCardapio(result.updatedCardapio);
+      if (updatedCardapio) {
+        setCardapio(updatedCardapio);
+        // Persiste imediatamente no banco de dados
+        try {
+          const saveRes = await saveCardapioStudioFn({
+            data: {
+              cardapio: updatedCardapio,
+              pageId: currentPageId || searchParams?.page || undefined,
+            },
+          });
+          if (saveRes?.pageId) setCurrentPageId(saveRes.pageId);
+          if (saveRes?.publicUrl) setSavedPageUrl(saveRes.publicUrl);
+          setLastSavedAt(new Date());
+        } catch (saveErr) {
+          console.warn("[CardapioStudio] Erro no auto-save após resposta da IA:", saveErr);
+        }
       }
     } catch (err: any) {
       setMessages((prev) => [

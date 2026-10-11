@@ -34,6 +34,7 @@ import {
 } from "@/modules/agenda/agendaAiService";
 import { AgendaVisualEditor } from "@/modules/agenda/AgendaVisualEditor";
 import { AgendaPublicViewer } from "@/modules/agenda/AgendaPublicViewer";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/agenda-studio")({
   component: AgendaStudioPage,

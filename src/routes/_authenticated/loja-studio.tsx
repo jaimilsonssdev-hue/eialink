@@ -34,7 +34,10 @@ import {
   type LojaAiMessage,
   type LojaProductItem,
 } from "@/modules/loja/lojaAiService";
-import { saveLojaStudioFn } from "@/modules/studio/studio.functions";
+import {
+  saveLojaStudioFn,
+  processLojaAiStudioFn,
+} from "@/modules/studio/studio.functions";
 import { toast } from "sonner";
 import { LojaVisualEditor } from "@/modules/loja/LojaVisualEditor";
 import { supabase } from "@/integrations/supabase/client";
@@ -227,23 +230,59 @@ function LojaStudioPage() {
     setIsProcessing(true);
 
     try {
-      const result = await processLojaAiChat(
-        [...messages, userMsg],
-        userMsg.content,
-        userMsg.attachments,
-        loja,
-      );
+      let replyText = "";
+      let updatedLoja: LojaData | null = null;
+
+      try {
+        const serverRes = await processLojaAiStudioFn({
+          data: {
+            userMessage: userMsg.content,
+            currentLoja: loja,
+            history: messages.map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+            attachments: userMsg.attachments,
+          },
+        });
+        replyText = serverRes.replyText;
+        updatedLoja = serverRes.updatedLoja;
+      } catch (serverErr: any) {
+        console.warn("[LojaStudio] Fallback para client chat:", serverErr);
+        const clientRes = await processLojaAiChat(
+          [...messages, userMsg],
+          userMsg.content,
+          userMsg.attachments,
+          loja,
+        );
+        replyText = clientRes.replyText;
+        updatedLoja = clientRes.updatedLoja;
+      }
 
       const assistantMsg: LojaAiMessage = {
         id: `asst-${Date.now()}`,
         role: "assistant",
-        content: result.replyText,
+        content: replyText,
         timestamp: Date.now(),
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
-      if (result.updatedLoja) {
-        setLoja(result.updatedLoja);
+      if (updatedLoja) {
+        setLoja(updatedLoja);
+        // Persiste imediatamente no banco de dados
+        try {
+          const saveRes = await saveLojaStudioFn({
+            data: {
+              loja: updatedLoja,
+              pageId: currentPageId || searchParams?.page || undefined,
+            },
+          });
+          if (saveRes?.pageId) setCurrentPageId(saveRes.pageId);
+          if (saveRes?.publicUrl) setSavedPageUrl(saveRes.publicUrl);
+          setLastSavedAt(new Date());
+        } catch (saveErr) {
+          console.warn("[LojaStudio] Erro no auto-save após resposta da IA:", saveErr);
+        }
       }
     } catch (err: any) {
       setMessages((prev) => [

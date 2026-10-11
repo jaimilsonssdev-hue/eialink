@@ -63,6 +63,9 @@ const DEFAULT_CARDAPIO: CardapioData = {
   styleVariant: "ifood-modern",
   visualEffect: "glassmorphism",
   buttonColor: "#f97316",
+  backgroundColor: "#09090b",
+  bannerImage: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
+  logoUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80",
   categories: [
     { id: "todos", name: "Todos", icon: "🍽️" },
     { id: "destaques", name: "Mais Pedidos", icon: "⭐" },
@@ -153,7 +156,13 @@ function CardapioStudioPage() {
           if (data) {
             const rawSocial = (data.social_links as Record<string, any>) || {};
             if (rawSocial.cardapio_data) {
-              setCardapio(rawSocial.cardapio_data);
+              setCardapio({
+                ...DEFAULT_CARDAPIO,
+                ...rawSocial.cardapio_data,
+                backgroundColor: rawSocial.cardapio_data.backgroundColor || "#09090b",
+                bannerImage: rawSocial.cardapio_data.bannerImage || DEFAULT_CARDAPIO.bannerImage,
+                logoUrl: rawSocial.cardapio_data.logoUrl || DEFAULT_CARDAPIO.logoUrl,
+              });
               setSavedPageUrl(`/p/${data.slug}`);
             } else {
               setCardapio((prev) => ({
@@ -162,6 +171,7 @@ function CardapioStudioPage() {
                 whatsapp: data.whatsapp || prev.whatsapp,
                 tagline: data.description || prev.tagline,
                 address: rawSocial.address || prev.address,
+                backgroundColor: "#09090b",
               }));
               setSavedPageUrl(`/p/${data.slug}`);
             }

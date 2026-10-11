@@ -327,6 +327,66 @@ export function CardapioVisualEditor({
               </div>
             </div>
 
+            {/* Foto de Capa / Banner Superior */}
+            <div className="p-3 rounded-xl bg-zinc-900/60 border border-white/10 space-y-2">
+              <label className="text-[11px] font-semibold text-zinc-300 flex items-center justify-between">
+                <span>Foto de Capa / Banner do Restaurante</span>
+                {cardapio.bannerImage && (
+                  <button
+                    type="button"
+                    onClick={() => updateField("bannerImage", undefined)}
+                    className="text-[10px] text-red-400 hover:underline"
+                  >
+                    Remover Capa
+                  </button>
+                )}
+              </label>
+
+              <div className="flex items-center gap-3">
+                {cardapio.bannerImage ? (
+                  <img
+                    src={cardapio.bannerImage}
+                    alt="Capa"
+                    className="w-16 h-12 rounded-xl object-cover border border-white/20 bg-zinc-800 shrink-0"
+                  />
+                ) : (
+                  <div className="w-16 h-12 rounded-xl border border-dashed border-white/20 bg-zinc-800/50 flex items-center justify-center shrink-0 text-zinc-500">
+                    <ImageIcon className="w-5 h-5" />
+                  </div>
+                )}
+
+                <div className="flex-1 space-y-1.5">
+                  <Input
+                    value={cardapio.bannerImage || ""}
+                    onChange={(e) => updateField("bannerImage", e.target.value)}
+                    placeholder="URL da foto de capa (https://...)"
+                    className="bg-zinc-900 border-white/10 text-xs h-8"
+                  />
+                  <div className="flex items-center gap-2">
+                    <label className="cursor-pointer text-[11px] font-medium text-orange-400 hover:text-orange-300 transition-colors inline-flex items-center gap-1">
+                      <span>📁 Carregar capa</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (uploadEvt) => {
+                              const result = uploadEvt.target?.result as string;
+                              if (result) updateField("bannerImage", result);
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div>
               <label className="text-[11px] font-semibold text-zinc-300">Nome do Estabelecimento</label>
               <Input

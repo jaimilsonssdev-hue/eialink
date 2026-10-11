@@ -667,7 +667,8 @@ function PublicBio() {
   const isCardapioPage = effectiveTemplateId === "cardapio-pro" || rawSocial.is_cardapio_page || Boolean(cardapioData);
 
   let effectiveHtml = customHtml;
-  if (!effectiveHtml && isCardapioPage && cardapioData) {
+  if (isCardapioPage && cardapioData) {
+    // Sempre prioriza os dados atualizados do cardapioData para refletir qualquer edição de cores, botões, fontes e itens
     effectiveHtml = generateIfoodCardapioHtml(cardapioData, { slug: bio.slug, isDemo });
   }
 

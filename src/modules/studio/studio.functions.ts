@@ -859,7 +859,16 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
       targetPage = data;
     }
 
-    const rawSlug = slugify(cardapio.restaurantName || "cardapio-online");
+    if (!targetPage && cardapio.slug) {
+      const { data } = await supabase
+        .from("bio_pages")
+        .select("id, slug, social_links")
+        .eq("slug", cardapio.slug)
+        .maybeSingle();
+      targetPage = data;
+    }
+
+    const rawSlug = cardapio.slug || slugify(cardapio.restaurantName || "cardapio-online");
     let slug = targetPage?.slug || rawSlug;
 
     if (!targetPage) {
@@ -873,6 +882,8 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
         slug = `${rawSlug}-${Date.now().toString(36).slice(-4)}`;
       }
     }
+
+    const generatedCustomHtml = generateIfoodCardapioHtml(cardapio, { slug });
 
     const existingSocial = (targetPage?.social_links as Record<string, any>) || {};
     const updatedSocial = {
@@ -888,10 +899,9 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
       button_color: cardapio.buttonColor,
       custom_font: cardapio.customFont,
       visual_effect: cardapio.visualEffect,
+      custom_html: generatedCustomHtml,
       updated_at: new Date().toISOString(),
     };
-
-    const generatedCustomHtml = generateIfoodCardapioHtml(cardapio, { slug });
 
     if (targetPage) {
       const { error } = await supabase

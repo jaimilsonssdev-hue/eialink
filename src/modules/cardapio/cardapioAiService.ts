@@ -39,6 +39,7 @@ export interface CardapioData {
   bannerImage?: string;
   backgroundColor?: string;
   logoUrl?: string;
+  slug?: string;
   features?: {
     search?: boolean;
     deliveryCep?: boolean;

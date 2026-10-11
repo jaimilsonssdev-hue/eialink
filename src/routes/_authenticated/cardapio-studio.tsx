@@ -147,20 +147,29 @@ function CardapioStudioPage() {
 
   // Se veio parâmetro da prospecção ou ID de página salva
   useEffect(() => {
-    if (searchParams?.page) {
-      setCurrentPageId(searchParams.page);
-      supabase
+    const targetIdentifier = searchParams?.page || searchParams?.slug;
+    if (targetIdentifier) {
+      let query = supabase
         .from("bio_pages")
-        .select("id, slug, display_name, description, whatsapp, social_links")
-        .eq("id", searchParams.page)
+        .select("id, slug, display_name, description, whatsapp, social_links");
+
+      if (searchParams?.page) {
+        query = query.eq("id", searchParams.page);
+      } else {
+        query = query.eq("slug", searchParams.slug);
+      }
+
+      query
         .maybeSingle()
         .then(({ data }) => {
           if (data) {
+            setCurrentPageId(data.id);
             const rawSocial = (data.social_links as Record<string, any>) || {};
             if (rawSocial.cardapio_data) {
               setCardapio({
                 ...DEFAULT_CARDAPIO,
                 ...rawSocial.cardapio_data,
+                slug: data.slug,
                 backgroundColor: rawSocial.cardapio_data.backgroundColor || "#09090b",
                 bannerImage: rawSocial.cardapio_data.bannerImage || DEFAULT_CARDAPIO.bannerImage,
                 logoUrl: rawSocial.cardapio_data.logoUrl || DEFAULT_CARDAPIO.logoUrl,
@@ -169,6 +178,7 @@ function CardapioStudioPage() {
             } else {
               setCardapio((prev) => ({
                 ...prev,
+                slug: data.slug,
                 restaurantName: data.display_name || prev.restaurantName,
                 whatsapp: data.whatsapp || prev.whatsapp,
                 tagline: data.description || prev.tagline,

@@ -15,6 +15,8 @@ import {
   testGoogleGeminiKey,
   resolveGeminiApiKeyAsync,
 } from "@/modules/ai/google-ai.service";
+import type { CardapioData } from "@/modules/cardapio/cardapioAiService";
+import type { LojaData } from "@/modules/loja/lojaAiService";
 
 function getServiceSupabaseClient() {
   const url =
@@ -758,8 +760,9 @@ export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
         name: string;
         html: string;
         briefing?: string;
-        messages: any[];
+        eialinkPageId?: string;
         slug?: string;
+        messages?: any[];
       };
     }) => d,
   )
@@ -768,46 +771,273 @@ export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
     const userId = context.userId;
     const proj = input.project;
 
-    const { data: existing } = await supabase
-      .from("bio_pages")
-      .select("id, slug, social_links")
-      .eq("user_id", userId)
-      .eq("title", proj.name)
-      .maybeSingle();
+    let existing: any = null;
+    if (proj.eialinkPageId) {
+      const { data } = await supabase
+        .from("bio_pages")
+        .select("id, slug, social_links")
+        .eq("id", proj.eialinkPageId)
+        .maybeSingle();
+      existing = data;
+    }
+    if (!existing && proj.slug) {
+      const { data } = await supabase
+        .from("bio_pages")
+        .select("id, slug, social_links")
+        .eq("slug", proj.slug)
+        .maybeSingle();
+      existing = data;
+    }
+    if (!existing && proj.name) {
+      const { data } = await supabase
+        .from("bio_pages")
+        .select("id, slug, social_links")
+        .eq("user_id", userId)
+        .eq("display_name", proj.name)
+        .maybeSingle();
+      existing = data;
+    }
 
     const existingSocial = (existing?.social_links as any) || {};
     const updatedSocial = {
       ...existingSocial,
       custom_html: proj.html,
       creative_studio_project: proj,
+      updated_at: new Date().toISOString(),
     };
 
     if (existing) {
       await supabase
         .from("bio_pages")
         .update({
+          custom_html: proj.html,
           social_links: updatedSocial,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", existing.id);
       return { success: true, pageId: existing.id, slug: existing.slug };
     } else {
       const slugCandidate = slugify(proj.name || "site-criativo");
-      const uniqueSlug = `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
+      const uniqueSlug = proj.slug || `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
       const { data: created } = await supabase
         .from("bio_pages")
         .insert({
           user_id: userId,
-          title: proj.name || "Site Criativo",
           display_name: proj.name || "Site Criativo",
           slug: uniqueSlug,
-          template: "cinematic-glass",
-          is_published: true,
+          template_id: "site-maquina",
+          published: true,
+          custom_html: proj.html,
+          social_links: updatedSocial,
+        } as any)
+        .select("id, slug")
+        .single();
+      return { success: true, pageId: created?.id, slug: created?.slug || uniqueSlug };
+    }
+  });
+
+/**
+ * 8.1 Salva Cardápio Studio no Supabase com permissão e persistência garantida
+ */
+export const saveCardapioStudioFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { cardapio: CardapioData; pageId?: string }) => d)
+  .handler(async ({ data: input, context }) => {
+    const supabase = context.supabase;
+    const userId = context.userId;
+    const { cardapio, pageId } = input;
+
+    let targetPage: any = null;
+    if (pageId) {
+      const { data } = await supabase
+        .from("bio_pages")
+        .select("id, slug, social_links")
+        .eq("id", pageId)
+        .maybeSingle();
+      targetPage = data;
+    }
+
+    const rawSlug = slugify(cardapio.restaurantName || "cardapio-online");
+    let slug = targetPage?.slug || rawSlug;
+
+    if (!targetPage) {
+      const { data: slugCheck } = await supabase
+        .from("bio_pages")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (slugCheck) {
+        slug = `${rawSlug}-${Date.now().toString(36).slice(-4)}`;
+      }
+    }
+
+    const existingSocial = (targetPage?.social_links as Record<string, any>) || {};
+    const updatedSocial = {
+      ...existingSocial,
+      is_cardapio_page: true,
+      cardapio_data: cardapio,
+      address: cardapio.address,
+      opening_hours: cardapio.openingHours,
+      delivery_fee: cardapio.deliveryFee,
+      min_order: cardapio.minOrder,
+      logo_url: cardapio.logoUrl,
+      background_color: cardapio.backgroundColor,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (targetPage) {
+      const { error } = await supabase
+        .from("bio_pages")
+        .update({
+          display_name: cardapio.restaurantName,
+          description: cardapio.tagline || cardapio.description,
+          whatsapp: cardapio.whatsapp || null,
+          template_id: "cardapio-pro",
+          published: true,
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", targetPage.id);
+
+      if (error) {
+        throw new Error(`Erro ao atualizar cardápio: ${error.message}`);
+      }
+
+      return {
+        success: true,
+        pageId: targetPage.id,
+        slug: targetPage.slug,
+        publicUrl: `/p/${targetPage.slug}`,
+      };
+    } else {
+      const { data: created, error } = await supabase
+        .from("bio_pages")
+        .insert({
+          user_id: userId,
+          slug,
+          display_name: cardapio.restaurantName,
+          description: cardapio.tagline || cardapio.description,
+          whatsapp: cardapio.whatsapp || null,
+          template_id: "cardapio-pro",
+          published: true,
           social_links: updatedSocial,
         })
         .select("id, slug")
         .single();
-      return { success: true, pageId: created?.id, slug: created?.slug || uniqueSlug };
+
+      if (error) {
+        throw new Error(`Erro ao criar cardápio: ${error.message}`);
+      }
+
+      return {
+        success: true,
+        pageId: created.id,
+        slug: created.slug,
+        publicUrl: `/p/${created.slug}`,
+      };
+    }
+  });
+
+/**
+ * 8.2 Salva Loja Studio no Supabase com persistência garantida
+ */
+export const saveLojaStudioFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((d: { loja: LojaData; pageId?: string }) => d)
+  .handler(async ({ data: input, context }) => {
+    const supabase = context.supabase;
+    const userId = context.userId;
+    const { loja, pageId } = input;
+
+    let targetPage: any = null;
+    if (pageId) {
+      const { data } = await supabase
+        .from("bio_pages")
+        .select("id, slug, social_links")
+        .eq("id", pageId)
+        .maybeSingle();
+      targetPage = data;
+    }
+
+    const rawSlug = slugify(loja.storeName || "loja-online");
+    let slug = targetPage?.slug || rawSlug;
+
+    if (!targetPage) {
+      const { data: slugCheck } = await supabase
+        .from("bio_pages")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+
+      if (slugCheck) {
+        slug = `${rawSlug}-${Date.now().toString(36).slice(-4)}`;
+      }
+    }
+
+    const existingSocial = (targetPage?.social_links as Record<string, any>) || {};
+    const updatedSocial = {
+      ...existingSocial,
+      is_store_page: true,
+      store_data: loja,
+      address: loja.address,
+      shipping_info: loja.shippingInfo,
+      opening_hours: loja.openingHours,
+      logo_url: loja.logoUrl,
+      background_color: loja.backgroundColor,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (targetPage) {
+      const { error } = await supabase
+        .from("bio_pages")
+        .update({
+          display_name: loja.storeName,
+          description: loja.tagline || loja.description,
+          whatsapp: loja.whatsapp || null,
+          template_id: "storefront",
+          published: true,
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", targetPage.id);
+
+      if (error) {
+        throw new Error(`Erro ao atualizar loja: ${error.message}`);
+      }
+
+      return {
+        success: true,
+        pageId: targetPage.id,
+        slug: targetPage.slug,
+        publicUrl: `/p/${targetPage.slug}`,
+      };
+    } else {
+      const { data: created, error } = await supabase
+        .from("bio_pages")
+        .insert({
+          user_id: userId,
+          slug,
+          display_name: loja.storeName,
+          description: loja.tagline || loja.description,
+          whatsapp: loja.whatsapp || null,
+          template_id: "storefront",
+          published: true,
+          social_links: updatedSocial,
+        })
+        .select("id, slug")
+        .single();
+
+      if (error) {
+        throw new Error(`Erro ao criar loja: ${error.message}`);
+      }
+
+      return {
+        success: true,
+        pageId: created.id,
+        slug: created.slug,
+        publicUrl: `/p/${created.slug}`,
+      };
     }
   });
 

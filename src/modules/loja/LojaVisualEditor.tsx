@@ -14,6 +14,8 @@ import {
   Tag,
   ChevronDown,
   ChevronUp,
+  Save,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +26,8 @@ import type { LojaData, LojaProductItem, LojaCategory } from "./lojaAiService";
 interface LojaVisualEditorProps {
   loja: LojaData;
   onChange: (updated: LojaData) => void;
+  onSave?: () => void;
+  isSaving?: boolean;
 }
 
 const PALETTE_COLORS = [
@@ -89,7 +93,12 @@ const FONT_OPTIONS = [
   { id: "Space Grotesk", name: "Space Grotesk (Street & Urbana)" },
 ];
 
-export function LojaVisualEditor({ loja, onChange }: LojaVisualEditorProps) {
+export function LojaVisualEditor({
+  loja,
+  onChange,
+  onSave,
+  isSaving,
+}: LojaVisualEditorProps) {
   const [activeTab, setActiveTab] = useState<"info" | "products" | "design" | "tools">("info");
   const [expandedProductId, setExpandedProductId] = useState<string | null>(loja.items[0]?.id || null);
   const [newCatName, setNewCatName] = useState("");
@@ -167,6 +176,32 @@ export function LojaVisualEditor({ loja, onChange }: LojaVisualEditorProps) {
 
   return (
     <div className="flex flex-col h-full bg-zinc-950 text-zinc-100 overflow-hidden">
+      {/* Barra de Ação Superior do Editor */}
+      {onSave && (
+        <div className="px-3 py-2 bg-zinc-900/90 border-b border-white/10 flex items-center justify-between gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse shrink-0" />
+            <span className="text-[11px] text-zinc-400 truncate">
+              {isSaving ? "Salvando no banco..." : "Auto-save ativo"}
+            </span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            onClick={onSave}
+            disabled={isSaving}
+            className="h-7 px-3 text-xs bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg shrink-0 shadow-sm"
+          >
+            {isSaving ? (
+              <Loader2 className="h-3 w-3 animate-spin mr-1" />
+            ) : (
+              <Save className="h-3 w-3 mr-1" />
+            )}
+            {isSaving ? "Salvando..." : "Salvar"}
+          </Button>
+        </div>
+      )}
+
       {/* Sub-menu do Editor Visual */}
       <div className="grid grid-cols-4 p-1.5 bg-zinc-900/80 border-b border-white/10 gap-1 text-[11px] shrink-0 font-medium">
         <button

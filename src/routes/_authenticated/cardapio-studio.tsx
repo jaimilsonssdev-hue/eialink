@@ -36,6 +36,8 @@ import {
   type CardapioAiMessage,
   type CardapioItem,
 } from "@/modules/cardapio/cardapioAiService";
+import { saveCardapioStudioFn } from "@/modules/studio/studio.functions";
+import { toast } from "sonner";
 import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
 import { CardapioVisualEditor } from "@/modules/cardapio/CardapioVisualEditor";
 import { supabase } from "@/integrations/supabase/client";
@@ -128,12 +130,17 @@ function CardapioStudioPage() {
   const [attachments, setAttachments] = useState<Array<{ name: string; mimeType: string; dataBase64: string }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [currentPageId, setCurrentPageId] = useState<string | null>(searchParams?.page || null);
   const [savedPageUrl, setSavedPageUrl] = useState<string | null>(null);
+  const isLoadedRef = useRef(false);
+  const initialMountRef = useRef(true);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // Se veio parâmetro da prospecção ou ID de página salva
   useEffect(() => {
     if (searchParams?.page) {
+      setCurrentPageId(searchParams.page);
       supabase
         .from("bio_pages")
         .select("id, slug, display_name, description, whatsapp, social_links")
@@ -156,6 +163,7 @@ function CardapioStudioPage() {
               setSavedPageUrl(`/p/${data.slug}`);
             }
           }
+          isLoadedRef.current = true;
         });
     } else if (searchParams?.name) {
       setCardapio((prev) => ({
@@ -165,12 +173,63 @@ function CardapioStudioPage() {
         whatsapp: searchParams.whatsapp || prev.whatsapp,
         tagline: searchParams.niche ? `Especialidades em ${searchParams.niche}` : prev.tagline,
       }));
+      isLoadedRef.current = true;
+    } else {
+      isLoadedRef.current = true;
     }
   }, [searchParams]);
 
   useEffect(() => {
     chatScrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  // Salvar cardápio no Supabase via Server Function segura
+  async function handleSavePage(silent = false) {
+    if (isSaving) return;
+    setIsSaving(true);
+    try {
+      const res = await saveCardapioStudioFn({
+        data: {
+          cardapio,
+          pageId: currentPageId || searchParams?.page || undefined,
+        },
+      });
+
+      if (res?.pageId) {
+        setCurrentPageId(res.pageId);
+      }
+      if (res?.publicUrl) {
+        setSavedPageUrl(res.publicUrl);
+      }
+      setLastSavedAt(new Date());
+
+      if (!silent) {
+        toast.success("Cardápio salvo com sucesso no banco de dados!");
+      }
+    } catch (err: any) {
+      console.error("[CardapioStudio] Erro ao salvar:", err);
+      if (!silent) {
+        toast.error(`Erro ao salvar cardápio: ${err?.message || "Tente novamente"}`);
+      }
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  // Auto-save com debounce de 1500ms
+  useEffect(() => {
+    if (initialMountRef.current) {
+      initialMountRef.current = false;
+      return;
+    }
+    if (!isLoadedRef.current) return;
+
+    const timer = setTimeout(() => {
+      handleSavePage(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [cardapio]);
 
   // Upload multimodal
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -245,19 +304,6 @@ function CardapioStudioPage() {
       ]);
     } finally {
       setIsProcessing(false);
-    }
-  }
-
-  // Salvar cardápio como página viva
-  async function handleSavePage() {
-    setIsSaving(true);
-    try {
-      const res = await saveCardapioToBioPage(cardapio, searchParams?.page || undefined);
-      setSavedPageUrl(res.publicUrl);
-    } catch (err: any) {
-      alert(`Erro ao publicar cardápio: ${err.message}`);
-    } finally {
-      setIsSaving(false);
     }
   }
 
@@ -367,7 +413,7 @@ function CardapioStudioPage() {
 
           <Button
             size="sm"
-            onClick={handleSavePage}
+            onClick={() => handleSavePage(false)}
             disabled={isSaving}
             className="bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold shadow-lg shadow-orange-600/20"
           >
@@ -376,7 +422,7 @@ function CardapioStudioPage() {
             ) : (
               <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
             )}
-            Publicar
+            {isSaving ? "Salvando..." : "Salvar & Publicar"}
           </Button>
         </div>
       </header>
@@ -429,7 +475,12 @@ function CardapioStudioPage() {
 
           {/* Renderização Condicional: Editor Visual vs Chat IA */}
           {sidebarMode === "visual" ? (
-            <CardapioVisualEditor cardapio={cardapio} onChange={setCardapio} />
+            <CardapioVisualEditor
+              cardapio={cardapio}
+              onChange={setCardapio}
+              onSave={() => handleSavePage(false)}
+              isSaving={isSaving}
+            />
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
               {/* Lista de Mensagens */}

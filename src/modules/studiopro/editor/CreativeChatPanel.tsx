@@ -240,15 +240,31 @@ export function CreativeChatPanel() {
         }
 
         updateActiveProjectHtml(newHtml);
+
+        // Persiste as alterações no Supabase imediatamente para salvar a edição do site
+        if (activeProject) {
+          syncCreativeStudioProjectFn({
+            data: {
+              project: {
+                ...activeProject,
+                html: newHtml,
+              },
+              eialinkPageId: activeProject.eialinkPageId,
+            },
+          }).catch((syncErr) => {
+            console.warn("[CreativeChat] Aviso ao persistir no Supabase:", syncErr);
+          });
+        }
+
         addChatMessage({
           id: `ai-${Date.now()}`,
           role: "assistant",
           content: aiExplanation || (isIteration
-            ? "✨ Ajuste concluído! Apliquei as alterações que você solicitou. Veja o resultado atualizado na tela ao lado."
-            : "🎉 Seu site foi gerado com sucesso! Você pode ver a prévia ao lado ou pedir ajustes finos por aqui."),
+            ? "✨ Ajuste concluído! Apliquei as alterações que você solicitou e salvei no sistema. Veja o resultado atualizado na tela ao lado."
+            : "🎉 Seu site foi gerado e salvo com sucesso! Você pode ver a prévia ao lado ou pedir ajustes finos por aqui."),
           timestamp: Date.now(),
         });
-        toast.success(isIteration ? "Ajuste aplicado com sucesso!" : "Site gerado e sincronizado com sucesso!");
+        toast.success(isIteration ? "Ajuste aplicado e salvo com sucesso!" : "Site gerado e salvo com sucesso!");
       }
     } catch (err: any) {
       setIsGenerating(false);

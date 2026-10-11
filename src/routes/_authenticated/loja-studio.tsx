@@ -34,6 +34,8 @@ import {
   type LojaAiMessage,
   type LojaProductItem,
 } from "@/modules/loja/lojaAiService";
+import { saveLojaStudioFn } from "@/modules/studio/studio.functions";
+import { toast } from "sonner";
 import { LojaVisualEditor } from "@/modules/loja/LojaVisualEditor";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -130,13 +132,18 @@ function LojaStudioPage() {
   const [attachments, setAttachments] = useState<Array<{ name: string; mimeType: string; dataBase64: string }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [currentPageId, setCurrentPageId] = useState<string | null>(searchParams?.page || null);
   const [savedPageUrl, setSavedPageUrl] = useState<string | null>(null);
+  const isLoadedRef = useRef(false);
+  const initialMountRef = useRef(true);
   const [cart, setCart] = useState<{ [itemId: string]: number }>({});
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
   // Se veio parâmetro da prospecção ou ID de página salva
   useEffect(() => {
     if (searchParams?.page) {
+      setCurrentPageId(searchParams.page);
       supabase
         .from("bio_pages")
         .select("id, slug, display_name, description, whatsapp, social_links")
@@ -159,6 +166,7 @@ function LojaStudioPage() {
               setSavedPageUrl(`/p/${data.slug}`);
             }
           }
+          isLoadedRef.current = true;
         });
     } else if (searchParams?.name) {
       setLoja((prev) => ({
@@ -168,6 +176,9 @@ function LojaStudioPage() {
         whatsapp: searchParams.whatsapp || prev.whatsapp,
         tagline: searchParams.niche ? `Produtos e novidades em ${searchParams.niche}` : prev.tagline,
       }));
+      isLoadedRef.current = true;
+    } else {
+      isLoadedRef.current = true;
     }
   }, [searchParams]);
 
@@ -249,17 +260,52 @@ function LojaStudioPage() {
     }
   }
 
-  async function handleSavePage() {
+  async function handleSavePage(silent = false) {
+    if (isSaving) return;
     setIsSaving(true);
     try {
-      const res = await saveLojaToBioPage(loja, searchParams?.page || undefined);
-      setSavedPageUrl(res.publicUrl);
+      const res = await saveLojaStudioFn({
+        data: {
+          loja,
+          pageId: currentPageId || searchParams?.page || undefined,
+        },
+      });
+
+      if (res?.pageId) {
+        setCurrentPageId(res.pageId);
+      }
+      if (res?.publicUrl) {
+        setSavedPageUrl(res.publicUrl);
+      }
+      setLastSavedAt(new Date());
+
+      if (!silent) {
+        toast.success("Loja virtual salva com sucesso no banco de dados!");
+      }
     } catch (err: any) {
-      alert(`Erro ao publicar loja: ${err.message}`);
+      console.error("[LojaStudio] Erro ao salvar:", err);
+      if (!silent) {
+        toast.error(`Erro ao salvar loja: ${err?.message || "Tente novamente"}`);
+      }
     } finally {
       setIsSaving(false);
     }
   }
+
+  // Auto-save com debounce de 1500ms
+  useEffect(() => {
+    if (initialMountRef.current) {
+      initialMountRef.current = false;
+      return;
+    }
+    if (!isLoadedRef.current) return;
+
+    const timer = setTimeout(() => {
+      handleSavePage(true);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [loja]);
 
   function addToCart(itemId: string) {
     setCart((prev) => ({
@@ -405,7 +451,7 @@ function LojaStudioPage() {
 
           <Button
             size="sm"
-            onClick={handleSavePage}
+            onClick={() => handleSavePage(false)}
             disabled={isSaving}
             className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-lg shadow-blue-600/20"
           >
@@ -414,7 +460,7 @@ function LojaStudioPage() {
             ) : (
               <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
             )}
-            Publicar
+            {isSaving ? "Salvando..." : "Salvar & Publicar"}
           </Button>
         </div>
       </header>
@@ -467,7 +513,12 @@ function LojaStudioPage() {
 
           {/* Renderização Condicional: Editor Visual vs Chat IA */}
           {sidebarMode === "visual" ? (
-            <LojaVisualEditor loja={loja} onChange={setLoja} />
+            <LojaVisualEditor
+              loja={loja}
+              onChange={setLoja}
+              onSave={() => handleSavePage(false)}
+              isSaving={isSaving}
+            />
           ) : (
             <div className="flex-1 flex flex-col overflow-hidden">
               <div className="flex-1 overflow-y-auto p-4 space-y-3.5">

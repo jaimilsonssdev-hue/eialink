@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { DesignStyleModal } from "@/modules/studiopro/editor/DesignStyleModal";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
+import { syncCreativeStudioProjectFn } from "@/modules/studio/studio.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -193,40 +194,27 @@ function applyFeaturesToHtml(
       const pageId = activeProject.eialinkPageId;
       let finalSlug = activeProject.slug || activeProject.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-      if (pageId) {
-        // Recupera dados atuais de social_links para não apagar dados anteriores
-        const { data: curPage } = await supabase
-          .from("bio_pages")
-          .select("social_links")
-          .eq("id", pageId)
-          .single();
+      const res = await syncCreativeStudioProjectFn({
+        data: {
+          project: {
+            ...activeProject,
+            html: activeProject.html,
+          },
+          eialinkPageId: pageId,
+        },
+      });
 
-        const curSocial = (curPage?.social_links as Record<string, any>) || {};
-
-        const { error } = await supabase
-          .from("bio_pages")
-          .update({
-            social_links: {
-              ...curSocial,
-              custom_html: activeProject.html,
-              is_creative_studio: true,
-              ...features,
-              updated_at: new Date().toISOString(),
-            },
-            published: true,
-          })
-          .eq("id", pageId);
-
-        if (error) throw error;
+      if (res?.slug) {
+        finalSlug = res.slug;
       }
 
       const url = `https://${finalSlug}.eialink.com.br`;
       setPublishedUrl(url);
       setShowPublishModal(true);
-      toast.success("Site publicado na Cloudflare!");
+      toast.success("Site salvo e publicado com sucesso no Supabase!");
     } catch (err: any) {
       console.error(err);
-      toast.error(err.message || "Erro ao publicar no Cloudflare.");
+      toast.error(err.message || "Erro ao publicar site.");
     } finally {
       setPublishing(false);
     }

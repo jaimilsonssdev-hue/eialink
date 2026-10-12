@@ -74,18 +74,21 @@ export async function resolveGeminiApiKeyAsync(override?: string): Promise<strin
 
   try {
     const supabase = getServiceSupabaseClient();
-    const { data } = await supabase
+    // Tenta obter a chave global com fallback silencioso caso a coluna ou tabela não existam
+    const { data, error } = await supabase
       .from("payment_gateway_settings")
-      .select("gemini_api_key")
+      .select("*")
       .eq("id", "default")
       .maybeSingle();
 
-    const dbKey = (data as any)?.gemini_api_key;
-    if (dbKey && typeof dbKey === "string" && dbKey.trim().length > 5) {
-      return dbKey.trim();
+    if (!error && data) {
+      const dbKey = (data as any)?.gemini_api_key;
+      if (dbKey && typeof dbKey === "string" && dbKey.trim().length > 5) {
+        return dbKey.trim();
+      }
     }
   } catch (err) {
-    console.warn("[GoogleAiService] Não foi possível consultar chave no banco:", err);
+    // Silencia erro para não quebrar a cadeia de resolução
   }
 
   return null;

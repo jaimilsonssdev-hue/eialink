@@ -86,9 +86,8 @@ import {
   generateSpecializedProspectSiteFn,
   type ProspectNicheCategory,
 } from "@/modules/prospecting/specializedGenerators.functions";
-import { getGeminiApiKey } from "@/modules/studiopro/lib/creativeEngineService";
-import { STUDIO_PRO_VARIANTS } from "@/modules/studiopro/lib/buildStudioProConfigFromLead";
-import { generateCreativeSiteFn } from "@/modules/studio/studio.functions";
+import { getGeminiApiKey, generateSiteHtml } from "@/modules/studiopro/lib/creativeEngineService";
+import { generateCreativeSiteFn, syncCreativeStudioProjectFn } from "@/modules/studio/studio.functions";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -710,70 +709,153 @@ function ProspectingPage() {
     setLiveResults([]);
   }
 
-  async function handleGenerateDemo(company: ProspectedCompany, mode: "ai" | "site-maquina" | boolean = "ai") {
-    setCreatingPageId(company.id);
-    setFeedback(null);
-    try {
-      const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
-      setFeedback(`🚀 Estúdio Criativo IA gerando site de alto impacto para ${company.name}...`);
+  /**
+   * Motor Mestre do Estúdio Criativo para Prospecção:
+   * Conecta diretamente à inteligência do Gemini (Google AI Studio) para criar sites únicos,
+   * modernos e visualmente espetaculares (padrão Lovable / Awwwards) com zero uso de modelos arcaicos estáticos.
+   */
+  async function executeCreativeStudioGeneration(
+    company: ProspectedCompany,
+    isRegeneration = false,
+  ): Promise<{ pageId: string; slug: string; url: string }> {
+    const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
+    const clientKey = getGeminiApiKey() || undefined;
+    const demoInfo = parseDemoInfo(company);
+    const nicheText = company.niche || "Serviços Especializados";
 
-      const briefingPrompt = `Crie um site web completo, moderno, luxuoso e de altíssimo padrão visual para a empresa "${company.name}".
-Nicho de Atuação: "${company.niche || "Serviços Especializados"}"
-Cidade/Região: "${company.city || "Brasil"}"
+    setFeedback(`🚀 Estúdio Criativo IA gerando site de alto impacto para ${company.name}...`);
+
+    const briefingPrompt = isRegeneration
+      ? `REINVENTAR PROPOSTA DE DESIGN COMPLETA (NOVO FORMATO & NOVO ARQUÉTIPO VISUAL):
+Crie um site web 100% INOVADOR, MODERNO e VISUALMENTE ESPETACULAR para "${company.name}".
+Nicho de Atuação: "${nicheText}"
+Cidade/Região: "${company.city || "sua região"}"
+${company.address ? `Endereço Verificado: "${company.address}"` : ""}
+${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
+${company.rating ? `Avaliação Google Maps: ${company.rating} estrelas (${company.reviews_count || 90} avaliações reais)` : ""}
+
+DIRETRIZES DE REINVENÇÃO OBRIGATÓRIAS (PADRÃO AWWWARDS / LOVABLE):
+1. ESTRUTURA E COMPOSIÇÃO:
+   - Diagramação inovadora: Hero marcante, Bento Grid assimétrico com profundidade visual (cards translúcidos com bordas border-white/10 sobre fundo escuro sofisticado #09090b ou ardósia profunda).
+   - Tipografia moderna do Google Fonts (Plus Jakarta Sans, Outfit ou Syne) com tracking ajustado.
+   - Fotos reais e atrativas do nicho ${nicheText}.
+2. RECURSOS ESSENCIAIS DE CONVERSÃO:
+   - Botão flutuante pulsante de WhatsApp no canto inferior direito com link wa.me/${cleanPhone}.
+   - Seção de Localização com mapa Google Maps e botões para traçar rota no Google Maps e no Waze.
+   - Destaque para autoridade com a nota real de ${company.rating || 4.9} estrelas do Google Maps.
+   - Retorne o código HTML5 completo autocontido com Tailwind CSS e Lucide Icons.`
+      : `Crie um site web completo, moderno, de altíssimo padrão visual e alta conversão para a empresa "${company.name}".
+Nicho de Atuação: "${nicheText}"
+Cidade/Região: "${company.city || "sua região"}"
 ${company.address ? `Endereço Verificado (usar no Mapa e rotas GPS): "${company.address}"` : ""}
 ${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
-${company.rating ? `Avaliação no Google Maps: ${company.rating} estrelas (${company.reviews_count || 85} avaliações reais)` : ""}
+${company.rating ? `Avaliação Google Maps: ${company.rating} estrelas (${company.reviews_count || 90} avaliações reais)` : ""}
 
 DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
 1. ESTRUTURA VISUAL:
-   - Hero impactante com headline magnética focada na transformação do cliente, subheadline persuasiva e botão de ação em destaque.
-   - Seção de Destaques / Serviços em formato Bento Grid moderno ou Cards com efeito Glassmorphism suave (bordas finas translúcidas border-white/10).
-   - Seção de Autoridade & Prova Social destacando as avaliações reais de ${company.rating || 4.9} estrelas e selos de qualidade.
-   - Seção de Localização com card interativo do Google Maps e botões para traçar rota no Google Maps e no Waze.
+   - Hero impactante com headline magnética focada na transformação do cliente, subheadline persuasiva e botões de ação em destaque.
+   - Seção de Destaques / Soluções em formato Bento Grid moderno ou Cards com efeito Glassmorphism suave (bordas finas translúcidas border-white/10 sobre fundo escuro refinado #09090b).
+   - Seção de Autoridade & Prova Social destacando as avaliações reais de ${company.rating || 4.9} estrelas e diferenciais exclusivos.
+   - Seção de Localização com card interativo do Google Maps e botões para abrir rota no Google Maps e no Waze.
    - Botão flutuante pulsante de WhatsApp no canto inferior direito.
 2. ESTÉTICA & TIPOGRAFIA:
-   - Fundo escuro sofisticado (#09090b ou ardósia profunda) com iluminação de fundo suave (radial gradients).
+   - Fundo escuro sofisticado (#09090b ou ardósia profunda) com iluminação de fundo suave (radial gradients sutis).
    - Tipografia refinada do Google Fonts (Plus Jakarta Sans ou Outfit) com tracking-tight nos títulos.
-   - Fotos reais e atrativas do nicho.
+   - Fotos reais e atrativas pertinentes ao segmento de ${nicheText}.
    - Retorne o código HTML completo autocontido com Tailwind CSS e Lucide Icons.`;
 
-      const studioRes = await generateCreativeSiteFn({
+    let generatedPageId: string | null = null;
+    let generatedSlug: string | null = null;
+
+    // Tentativa 1: Via Endpoint do Servidor
+    try {
+      const serverRes = await generateCreativeSiteFn({
         data: {
           briefingOrPrompt: briefingPrompt,
           projectName: company.name,
-          niche: company.niche || "Serviços",
+          niche: nicheText,
           city: company.city || "Brasil",
           businessAddress: company.address || undefined,
           businessWhatsapp: cleanPhone || undefined,
+          businessSlug: demoInfo.slug || undefined,
+          projectId: demoInfo.pageId || undefined,
           rating: company.rating ? Number(company.rating) : 4.9,
           reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
           photos: (company as any).photos || [],
-          clientGeminiKey: getGeminiApiKey() || undefined,
+          apiKey: clientKey,
+          clientGeminiKey: clientKey,
+          isRegeneration,
         },
       });
 
-      if (studioRes.ok && studioRes.pageId) {
-        const url = `https://eialink.com.br/p/${studioRes.slug}`;
-        const cleanNotes = (company.notes || "")
-          .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
-          .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
-          .replace(/\n\s*\n/g, "\n")
-          .trim();
-
-        const newNotes = cleanNotes
-          ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`
-          : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`;
-
-        const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
-        if (cleanPhone && !company.whatsapp) {
-          companyUpdates.whatsapp = cleanPhone;
-          companyUpdates.phone = cleanPhone;
-        }
-        await ProspectingService.updateCompany(company.id, companyUpdates);
-        setFeedback(`🎉 Site gerado com sucesso pelo Estúdio Criativo IA! Link: ${url}`);
-        invalidate();
-        return;
+      if (serverRes.ok && serverRes.pageId) {
+        generatedPageId = serverRes.pageId;
+        generatedSlug = serverRes.slug;
       }
+    } catch (serverErr) {
+      console.warn("[Prospecção] Chamada de servidor falhou, acionando motor direto do Estúdio Criativo:", serverErr);
+    }
+
+    // Tentativa 2 (Contingência idêntica ao Estúdio Criativo): Se o servidor falhou, gera via SDK direto no cliente
+    if (!generatedPageId) {
+      try {
+        setFeedback(`⚡ Conectando ao Gemini 3.8 Flash do Estúdio Criativo para ${company.name}...`);
+        const localHtml = await generateSiteHtml(briefingPrompt, undefined, clientKey);
+        if (localHtml && localHtml.length > 50) {
+          const syncRes = await syncCreativeStudioProjectFn({
+            data: {
+              project: {
+                id: demoInfo.pageId || `proj-${Date.now()}`,
+                name: company.name,
+                html: localHtml,
+                briefing: briefingPrompt,
+                eialinkPageId: demoInfo.pageId || undefined,
+                slug: demoInfo.slug || undefined,
+              },
+            },
+          });
+          if (syncRes.success && syncRes.pageId) {
+            generatedPageId = syncRes.pageId;
+            generatedSlug = syncRes.slug;
+          }
+        }
+      } catch (clientErr: any) {
+        console.error("[Prospecção] Falha no motor local do Estúdio Criativo:", clientErr);
+        throw new Error(clientErr.message || "Falha ao gerar o site com o Estúdio Criativo IA.");
+      }
+    }
+
+    if (!generatedPageId || !generatedSlug) {
+      throw new Error("Não foi possível gerar a página demonstrativa. Tente clicar novamente.");
+    }
+
+    const url = `https://eialink.com.br/p/${generatedSlug}`;
+    const cleanNotes = (company.notes || "")
+      .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+      .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
+      .replace(/\n\s*\n/g, "\n")
+      .trim();
+
+    const newNotes = cleanNotes
+      ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`
+      : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`;
+
+    const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
+    if (cleanPhone && !company.whatsapp) {
+      companyUpdates.whatsapp = cleanPhone;
+      companyUpdates.phone = cleanPhone;
+    }
+    await ProspectingService.updateCompany(company.id, companyUpdates);
+    setFeedback(`🎉 Site gerado com sucesso pelo Estúdio Criativo IA! Link: ${url}`);
+    invalidate();
+    return { pageId: generatedPageId, slug: generatedSlug, url };
+  }
+
+  async function handleGenerateDemo(company: ProspectedCompany) {
+    setCreatingPageId(company.id);
+    setFeedback(null);
+    try {
+      await executeCreativeStudioGeneration(company, false);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao gerar página de demonstração.";
       setFeedback(message);
@@ -790,7 +872,6 @@ DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
     setFeedback(null);
     const meta = getProspectNicheCategory(company.niche, company.name);
     const targetCategory = forceCat || meta.category;
-    const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
 
     try {
       // 1. Se for gastronomia / delivery / lanches / sorveteria:
@@ -822,65 +903,8 @@ DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
       }
 
       // 3. Para todos os outros nichos (serviços, indústria, B2B, clínica, geral),
-      // aciona diretamente o motor de elite do Estúdio Criativo com Gemini:
-      setFeedback(`🚀 Estúdio Criativo IA gerando site de alto impacto para ${company.name}...`);
-      const briefingPrompt = `Crie um site web completo, moderno, de altíssimo padrão visual e alta conversão para a empresa "${company.name}".
-Nicho de Atuação: "${company.niche || "Serviços Especializados"}"
-Cidade/Região: "${company.city || "sua região"}"
-${company.address ? `Endereço Verificado (usar no Mapa e rotas GPS): "${company.address}"` : ""}
-${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
-${company.rating ? `Avaliação Google Maps: ${company.rating} estrelas (${company.reviews_count || 90} avaliações reais)` : ""}
-
-DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
-1. ESTRUTURA VISUAL:
-   - Hero marcante com headline poderosa focada no diferencial da empresa, proposta de valor irresistível e botões de ação rápidos.
-   - Seção de Serviços / Soluções em formato Bento Grid moderno ou Cards com efeito Glassmorphism suave (bordas finas translúcidas border-white/10, fundos escuros com profundidade).
-   - Seção de Autoridade & Prova Social destacando a nota real de ${company.rating || 4.9} estrelas e diferenciais exclusivos.
-   - Seção de Localização com mapa interativo do Google Maps e botões para abrir rota no Google Maps e no Waze.
-   - Botão flutuante pulsante de WhatsApp no canto inferior direito.
-2. DESIGN & TIPOGRAFIA:
-   - Fundo escuro sofisticado (#09090b ou ardósia profunda) com iluminação ambiental suave (radial gradients).
-   - Tipografia moderna do Google Fonts (Plus Jakarta Sans ou Outfit) com tracking apertado.
-   - Fotos reais e atrativas do nicho.
-   - Retorne o código HTML completo autocontido com Tailwind CSS e Lucide Icons.`;
-
-      const studioRes = await generateCreativeSiteFn({
-        data: {
-          briefingOrPrompt: briefingPrompt,
-          projectName: company.name,
-          niche: company.niche || "Serviços",
-          city: company.city || "Brasil",
-          businessAddress: company.address || undefined,
-          businessWhatsapp: cleanPhone || undefined,
-          rating: company.rating ? Number(company.rating) : 4.9,
-          reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
-          photos: (company as any).photos || [],
-          clientGeminiKey: getGeminiApiKey() || undefined,
-        },
-      });
-
-      if (studioRes.ok && studioRes.pageId) {
-        const url = `https://eialink.com.br/p/${studioRes.slug}`;
-        const cleanNotes = (company.notes || "")
-          .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
-          .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
-          .replace(/\n\s*\n/g, "\n")
-          .trim();
-
-        const newNotes = cleanNotes
-          ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`
-          : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`;
-
-        const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
-        if (cleanPhone && !company.whatsapp) {
-          companyUpdates.whatsapp = cleanPhone;
-          companyUpdates.phone = cleanPhone;
-        }
-        await ProspectingService.updateCompany(company.id, companyUpdates);
-        setFeedback(`🎉 Site gerado com sucesso pelo Estúdio Criativo IA! Link: ${url}`);
-        invalidate();
-        return;
-      }
+      // aciona diretamente o motor de elite do Estúdio Criativo:
+      await executeCreativeStudioGeneration(company, false);
     } catch (err: any) {
       console.error(err);
       setFeedback(`Erro ao gerar: ${err.message}`);
@@ -901,104 +925,7 @@ DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
     setRegeneratingPageId(company.id);
     setFeedback(null);
     try {
-      const demoInfo = parseDemoInfo(company);
-      const nicheKey = detectNicheKey(company.niche, company.name);
-      const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
-
-      setFeedback(`🎨 Agente IA do Estúdio Criativo criando proposta 100% nova para ${company.name}...`);
-
-      const promptReinvento = `REINVENTAR PROPOSTA DE DESIGN COMPLETA:
-Crie uma proposta de design 100% NOVA, DIFERENTE e SURPREENDENTE para a empresa "${company.name}", atuando no nicho "${company.niche || "Serviços"}" em "${company.city || "sua região"}".
-DIRETRIZES CRÍTICAS DE INOVAÇÃO:
-- NÃO repita o layout ou organização anterior.
-- Alterne o formato e a composição: experimente hero em Split assimétrico, Bento Grid com cards de vidro, Neobrutalismo pop com sombras duras de 4px, Glassmorphism translúcido com luzes neon ou Dark Luxury minimalista de alto padrão.
-- Varie a tipografia, a paleta cromática, as ordens e diagramação dos blocos para criar uma experiência completamente nova e impactante.
-- Mantenha todos os dados de contato reais e funcionais: WhatsApp (${cleanPhone}), endereço (${company.address || company.city}) e avaliação Google (${company.rating || 4.9} estrelas).
-- Retorne apenas o código HTML autocontido com Tailwind CSS e Lucide Icons.`;
-
-      let generatedSlug = demoInfo.slug;
-      let generatedPageId = demoInfo.pageId;
-
-      try {
-        const studioRes = await generateCreativeSiteFn({
-          data: {
-            briefingOrPrompt: promptReinvento,
-            projectName: company.name,
-            niche: company.niche || "Serviços",
-            city: company.city || "Brasil",
-            businessAddress: company.address || undefined,
-            businessWhatsapp: cleanPhone || undefined,
-            businessSlug: demoInfo.slug || undefined,
-            projectId: demoInfo.pageId || undefined,
-            rating: company.rating ? Number(company.rating) : 4.9,
-            reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
-            photos: (company as any).photos || [],
-            isRegeneration: true,
-            clientGeminiKey: getGeminiApiKey() || undefined,
-          },
-        });
-
-        if (studioRes.ok && studioRes.pageId) {
-          generatedPageId = studioRes.pageId;
-          generatedSlug = studioRes.slug;
-        }
-      } catch (aiErr) {
-        console.warn("[Prospecção] Falha no Estúdio Criativo IA ao regenerar, tentando contingência matricial:", aiErr);
-      }
-
-      // Se contingência necessária:
-      if (!generatedPageId) {
-        const variants = getVariantsForNiche(nicheKey);
-        const currentModelName = demoInfo.modelName || (company.notes?.match(/\[Modelo:\s*([^\]]+)\]/i)?.[1] ?? "");
-        let currentIndex = -1;
-        if (currentModelName) {
-          const spIdx = STUDIO_PRO_VARIANTS.findIndex(
-            (v) => v.name.toLowerCase() === currentModelName.toLowerCase()
-          );
-          if (spIdx !== -1) currentIndex = spIdx;
-        }
-        const nextIndex = (currentIndex + 1) % STUDIO_PRO_VARIANTS.length;
-
-        const oldPageId = demoInfo.pageId || (demoInfo.slug ? demoPagesBySlug.get(demoInfo.slug)?.id : null);
-        if (oldPageId) {
-          try { await PageService.deletePage(oldPageId); } catch (_) {}
-        }
-
-        const cidMatch = company.notes?.match(/CID:\s*([0-9a-fx:]+)/i);
-        const fallbackPage = await PageService.createProspectDemoPage({
-          companyName: company.name,
-          whatsapp: company.whatsapp ?? company.phone,
-          niche: company.niche,
-          city: company.city,
-          instagram: company.instagram,
-          variantIndex: nextIndex,
-          rating: company.rating,
-          reviewsCount: company.reviews_count,
-          cid: cidMatch ? cidMatch[1] : null,
-        });
-        generatedPageId = fallbackPage.id;
-        generatedSlug = fallbackPage.slug;
-      }
-
-      const url = `https://eialink.com.br/p/${generatedSlug}`;
-      const cleanNotes = (company.notes || "")
-        .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
-        .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
-        .replace(/\n\s*\n/g, "\n")
-        .trim();
-
-      const newNotes = cleanNotes
-        ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`
-        : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`;
-
-      const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
-      if (cleanPhone && !company.whatsapp) {
-        companyUpdates.whatsapp = cleanPhone;
-        companyUpdates.phone = cleanPhone;
-      }
-      await ProspectingService.updateCompany(company.id, companyUpdates);
-      setFeedback(`🎨 Nova proposta exclusiva criada pelo Agente IA do Estúdio Criativo para ${company.name}! Link: ${url}`);
-      invalidate();
+      await executeCreativeStudioGeneration(company, true);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao trocar modelo da página.";
       setFeedback(message);
@@ -1052,6 +979,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
             rating: (page.social_links as any)?.google_rating ? Number((page.social_links as any).google_rating) : 4.9,
             reviewsCount: (page.social_links as any)?.reviews_count ? Number((page.social_links as any).reviews_count) : 85,
             isRegeneration: true,
+            apiKey: getGeminiApiKey() || undefined,
             clientGeminiKey: getGeminiApiKey() || undefined,
           },
         });
@@ -1061,7 +989,27 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
           generatedSlug = studioRes.slug;
         }
       } catch (aiErr) {
-        console.warn("[Prospecção] Contingência para página:", aiErr);
+        console.warn("[Prospecção] Chamada de servidor falhou, acionando contingência local do Estúdio Criativo:", aiErr);
+        try {
+          const clientKey = getGeminiApiKey() || undefined;
+          const localHtml = await generateSiteHtml(promptReinvento, undefined, clientKey);
+          if (localHtml && localHtml.length > 50) {
+            await syncCreativeStudioProjectFn({
+              data: {
+                project: {
+                  id: page.id,
+                  name: page.display_name,
+                  html: localHtml,
+                  briefing: promptReinvento,
+                  eialinkPageId: page.id,
+                  slug: page.slug,
+                },
+              },
+            });
+          }
+        } catch (localErr) {
+          console.error("[Prospecção] Falha na contingência local da página:", localErr);
+        }
       }
 
       setFeedback(`🎨 Nova proposta criada pelo Agente IA para "${page.display_name}" com sucesso!`);

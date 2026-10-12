@@ -283,6 +283,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       projectId?: string;
       projectName?: string;
       apiKey?: string;
+      clientGeminiKey?: string;
       businessAddress?: string;
       businessWhatsapp?: string;
       businessSlug?: string;
@@ -300,7 +301,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
     const supabase = context.supabase;
     const userId = context.userId;
 
-    let resolvedKey = input.apiKey?.trim();
+    let resolvedKey = input.apiKey?.trim() || input.clientGeminiKey?.trim();
     if (!resolvedKey) {
       try {
         const { data: userData } = await supabase.auth.getUser();
@@ -435,7 +436,13 @@ ${effectiveHtml}`;
     let responseText = "";
     let lastCapturedError: any = null;
     // Modelos oficiais do Google AI Studio para geração de código e raciocínio de alta performance
-    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    const modelsToTry = [
+      "gemini-3.8-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+    ];
 
     for (const modelCandidate of modelsToTry) {
       let attempts = 0;

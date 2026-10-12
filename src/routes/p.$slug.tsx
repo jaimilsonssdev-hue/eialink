@@ -54,12 +54,22 @@ function usesPremiumTemplate(templateId?: string | null) {
 export const Route = createFileRoute("/p/$slug")({
   ssr: true,
   loader: async ({ params }) => {
-    const { data: bio } = await supabase
+    let { data: bio } = await supabase
       .from("bio_pages")
       .select("*")
       .eq("slug", params.slug)
       .eq("published", true)
       .maybeSingle();
+
+    if (!bio) {
+      const { data: anyBio } = await supabase
+        .from("bio_pages")
+        .select("*")
+        .eq("slug", params.slug)
+        .maybeSingle();
+      bio = anyBio;
+    }
+
     if (!bio) throw notFound();
     const { data: links } = await supabase
       .from("bio_links")

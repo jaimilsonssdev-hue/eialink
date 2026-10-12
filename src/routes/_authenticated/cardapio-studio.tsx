@@ -145,7 +145,7 @@ function CardapioStudioPage() {
   const initialMountRef = useRef(true);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  // Se veio parâmetro da prospecção ou ID de página salva
+  // Se veio parâmetro da prospecção, ID de página salva ou busca por nome/último cardápio
   useEffect(() => {
     const targetIdentifier = searchParams?.page || searchParams?.slug;
     if (targetIdentifier) {
@@ -191,16 +191,76 @@ function CardapioStudioPage() {
           isLoadedRef.current = true;
         });
     } else if (searchParams?.name) {
-      setCardapio((prev) => ({
-        ...prev,
-        restaurantName: searchParams.name,
-        address: searchParams.address || prev.address,
-        whatsapp: searchParams.whatsapp || prev.whatsapp,
-        tagline: searchParams.niche ? `Especialidades em ${searchParams.niche}` : prev.tagline,
-      }));
-      isLoadedRef.current = true;
+      // Se veio nome da empresa, busca se já existe uma página criada
+      supabase
+        .from("bio_pages")
+        .select("id, slug, display_name, description, whatsapp, social_links")
+        .eq("display_name", searchParams.name)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setCurrentPageId(data.id);
+            const rawSocial = (data.social_links as Record<string, any>) || {};
+            if (rawSocial.cardapio_data) {
+              setCardapio({
+                ...DEFAULT_CARDAPIO,
+                ...rawSocial.cardapio_data,
+                slug: data.slug,
+                backgroundColor: rawSocial.cardapio_data.backgroundColor || "#09090b",
+                bannerImage: rawSocial.cardapio_data.bannerImage || DEFAULT_CARDAPIO.bannerImage,
+                logoUrl: rawSocial.cardapio_data.logoUrl || DEFAULT_CARDAPIO.logoUrl,
+              });
+              setSavedPageUrl(`/p/${data.slug}`);
+            } else {
+              setCardapio((prev) => ({
+                ...prev,
+                slug: data.slug,
+                restaurantName: data.display_name || prev.restaurantName,
+                whatsapp: data.whatsapp || prev.whatsapp,
+                tagline: data.description || prev.tagline,
+                address: rawSocial.address || searchParams.address || prev.address,
+                backgroundColor: "#09090b",
+              }));
+              setSavedPageUrl(`/p/${data.slug}`);
+            }
+          } else {
+            setCardapio((prev) => ({
+              ...prev,
+              restaurantName: searchParams.name,
+              address: searchParams.address || prev.address,
+              whatsapp: searchParams.whatsapp || prev.whatsapp,
+              tagline: searchParams.niche ? `Especialidades em ${searchParams.niche}` : prev.tagline,
+            }));
+          }
+          isLoadedRef.current = true;
+        });
     } else {
-      isLoadedRef.current = true;
+      // Se entrou sem query params, busca o último cardápio do usuário
+      supabase
+        .from("bio_pages")
+        .select("id, slug, display_name, description, whatsapp, social_links")
+        .eq("template_id", "cardapio-pro")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setCurrentPageId(data.id);
+            const rawSocial = (data.social_links as Record<string, any>) || {};
+            if (rawSocial.cardapio_data) {
+              setCardapio({
+                ...DEFAULT_CARDAPIO,
+                ...rawSocial.cardapio_data,
+                slug: data.slug,
+                backgroundColor: rawSocial.cardapio_data.backgroundColor || "#09090b",
+                bannerImage: rawSocial.cardapio_data.bannerImage || DEFAULT_CARDAPIO.bannerImage,
+                logoUrl: rawSocial.cardapio_data.logoUrl || DEFAULT_CARDAPIO.logoUrl,
+              });
+              setSavedPageUrl(`/p/${data.slug}`);
+            }
+          }
+          isLoadedRef.current = true;
+        });
     }
   }, [searchParams]);
 
@@ -223,8 +283,16 @@ function CardapioStudioPage() {
       if (res?.pageId) {
         setCurrentPageId(res.pageId);
       }
+      if (res?.slug) {
+        setCardapio((prev) => ({ ...prev, slug: res.slug }));
+      }
       if (res?.publicUrl) {
         setSavedPageUrl(res.publicUrl);
+      }
+      if (res?.pageId && typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        url.searchParams.set("page", res.pageId);
+        window.history.replaceState({}, "", url.toString());
       }
       setLastSavedAt(new Date());
       toast.success("Cardápio salvo com sucesso e atualizado no ar!");
@@ -459,14 +527,14 @@ function CardapioStudioPage() {
             <span>IA: {isAssistantEnabled ? "Ligada" : "Desligada"}</span>
           </button>
 
-          {savedPageUrl && (
+          {(savedPageUrl || cardapio.slug) && (
             <Button
               variant="outline"
               size="sm"
               asChild
               className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20 text-xs hidden sm:inline-flex"
             >
-              <a href={savedPageUrl} target="_blank" rel="noreferrer">
+              <a href={savedPageUrl || `/p/${cardapio.slug}`} target="_blank" rel="noreferrer">
                 <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                 Abrir Cardápio
               </a>

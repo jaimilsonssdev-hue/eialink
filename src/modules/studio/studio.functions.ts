@@ -326,7 +326,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
         if (input.projectId) {
           const { data } = await supabase
             .from("bio_pages")
-            .select("custom_html, social_links")
+            .select("social_links")
             .eq("id", input.projectId)
             .maybeSingle();
           dbPage = data;
@@ -334,14 +334,14 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
         if (!dbPage && input.businessSlug) {
           const { data } = await supabase
             .from("bio_pages")
-            .select("custom_html, social_links")
+            .select("social_links")
             .eq("slug", input.businessSlug)
             .maybeSingle();
           dbPage = data;
         }
         if (dbPage) {
           const rawSocial = (dbPage.social_links as Record<string, any>) || {};
-          effectiveHtml = dbPage.custom_html || rawSocial.custom_html || "";
+          effectiveHtml = rawSocial.custom_html || "";
         }
       } catch (loadErr) {
         console.warn("[Studio] Falha ao recuperar HTML base da página:", loadErr);
@@ -628,7 +628,6 @@ ${effectiveHtml}`,
           .update({
             display_name: pageName,
             whatsapp: input.businessWhatsapp || undefined,
-            custom_html: cleanHtml,
             social_links: updatedSocial,
             updated_at: new Date().toISOString(),
           } as any)
@@ -811,7 +810,6 @@ export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
       await supabase
         .from("bio_pages")
         .update({
-          custom_html: proj.html,
           social_links: updatedSocial,
           updated_at: new Date().toISOString(),
         } as any)
@@ -828,7 +826,6 @@ export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
           slug: uniqueSlug,
           template_id: "site-maquina",
           published: true,
-          custom_html: proj.html,
           social_links: updatedSocial,
         } as any)
         .select("id, slug")
@@ -844,8 +841,7 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((d: { cardapio: CardapioData; pageId?: string }) => d)
   .handler(async ({ data: input, context }) => {
-    // Usamos client com service role para garantir persistência mesmo em páginas clonadas/transferidas
-    const supabase = getServiceSupabaseClient();
+    const supabase = context.supabase;
     const userId = context.userId;
     const { cardapio, pageId } = input;
 
@@ -853,7 +849,7 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
     if (pageId) {
       const { data } = await supabase
         .from("bio_pages")
-        .select("id, slug, social_links")
+        .select("id, slug, display_name, social_links")
         .eq("id", pageId)
         .maybeSingle();
       targetPage = data;
@@ -862,8 +858,18 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
     if (!targetPage && cardapio.slug) {
       const { data } = await supabase
         .from("bio_pages")
-        .select("id, slug, social_links")
+        .select("id, slug, display_name, social_links")
         .eq("slug", cardapio.slug)
+        .maybeSingle();
+      targetPage = data;
+    }
+
+    if (!targetPage && cardapio.restaurantName) {
+      const { data } = await supabase
+        .from("bio_pages")
+        .select("id, slug, display_name, social_links")
+        .eq("user_id", userId)
+        .eq("display_name", cardapio.restaurantName)
         .maybeSingle();
       targetPage = data;
     }
@@ -903,57 +909,82 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
       updated_at: new Date().toISOString(),
     };
 
-    if (targetPage) {
-      const { error } = await supabase
-        .from("bio_pages")
-        .update({
-          display_name: cardapio.restaurantName,
-          description: cardapio.tagline || cardapio.description,
-          whatsapp: cardapio.whatsapp || null,
-          template_id: "cardapio-pro",
-          published: true,
-          custom_html: generatedCustomHtml,
-          social_links: updatedSocial,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", targetPage.id);
+    const updatePayload = {
+      display_name: cardapio.restaurantName,
+      description: cardapio.tagline || cardapio.description,
+      whatsapp: cardapio.whatsapp || null,
+      template_id: "cardapio-pro",
+      published: true,
+      social_links: updatedSocial,
+      updated_at: new Date().toISOString(),
+    };
 
-      if (error) {
-        throw new Error(`Erro ao atualizar cardápio: ${error.message}`);
+    if (targetPage) {
+      let updateRes = await supabase
+        .from("bio_pages")
+        .update(updatePayload as any)
+        .eq("id", targetPage.id)
+        .select("id, slug");
+
+      if (
+        (updateRes.error || !updateRes.data || updateRes.data.length === 0) &&
+        Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)
+      ) {
+        const serviceClient = getServiceSupabaseClient();
+        updateRes = await serviceClient
+          .from("bio_pages")
+          .update(updatePayload as any)
+          .eq("id", targetPage.id)
+          .select("id, slug");
       }
 
+      if (updateRes.error) {
+        throw new Error(`Erro ao atualizar cardápio: ${updateRes.error.message}`);
+      }
+
+      const row = updateRes.data?.[0] || targetPage;
       return {
         success: true,
-        pageId: targetPage.id,
-        slug: targetPage.slug,
-        publicUrl: `/p/${targetPage.slug}`,
+        pageId: row.id,
+        slug: row.slug,
+        publicUrl: `/p/${row.slug}`,
       };
     } else {
-      const { data: created, error } = await supabase
+      const insertPayload = {
+        user_id: userId,
+        slug,
+        display_name: cardapio.restaurantName,
+        description: cardapio.tagline || cardapio.description,
+        whatsapp: cardapio.whatsapp || null,
+        template_id: "cardapio-pro",
+        published: true,
+        social_links: updatedSocial,
+      };
+
+      let insertRes = await supabase
         .from("bio_pages")
-        .insert({
-          user_id: userId,
-          slug,
-          display_name: cardapio.restaurantName,
-          description: cardapio.tagline || cardapio.description,
-          whatsapp: cardapio.whatsapp || null,
-          template_id: "cardapio-pro",
-          published: true,
-          custom_html: generatedCustomHtml,
-          social_links: updatedSocial,
-        })
+        .insert(insertPayload as any)
         .select("id, slug")
         .single();
 
-      if (error) {
-        throw new Error(`Erro ao criar cardápio: ${error.message}`);
+      if (insertRes.error && Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+        const serviceClient = getServiceSupabaseClient();
+        insertRes = await serviceClient
+          .from("bio_pages")
+          .insert(insertPayload as any)
+          .select("id, slug")
+          .single();
+      }
+
+      if (insertRes.error || !insertRes.data) {
+        throw new Error(`Erro ao criar cardápio: ${insertRes.error?.message || "Falha na inserção"}`);
       }
 
       return {
         success: true,
-        pageId: created.id,
-        slug: created.slug,
-        publicUrl: `/p/${created.slug}`,
+        pageId: insertRes.data.id,
+        slug: insertRes.data.slug,
+        publicUrl: `/p/${insertRes.data.slug}`,
       };
     }
   });
@@ -1016,7 +1047,6 @@ export const saveLojaStudioFn = createServerFn({ method: "POST" })
           whatsapp: loja.whatsapp || null,
           template_id: "storefront",
           published: true,
-          custom_html: null,
           social_links: updatedSocial,
           updated_at: new Date().toISOString(),
         })

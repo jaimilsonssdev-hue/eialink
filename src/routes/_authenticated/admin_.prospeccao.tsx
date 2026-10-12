@@ -714,37 +714,66 @@ function ProspectingPage() {
     setCreatingPageId(company.id);
     setFeedback(null);
     try {
-      const isAi = mode === "ai" || mode === false;
-      const cidMatch = company.notes?.match(/CID:\s*([0-9a-fx:]+)/i);
-      const nameSeed = Math.abs((company.name || "").split("").reduce((acc, c) => acc + c.charCodeAt(0), 0));
-      const initialVariantIndex = nameSeed % STUDIO_PRO_VARIANTS.length;
+      const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
+      setFeedback(`🚀 Estúdio Criativo IA gerando site de alto impacto para ${company.name}...`);
 
-      const page = await PageService.createProspectDemoPage({
-        companyName: company.name,
-        whatsapp: company.whatsapp ?? company.phone,
-        niche: company.niche,
-        city: company.city,
-        instagram: company.instagram,
-        rating: company.rating,
-        reviewsCount: company.reviews_count,
-        variantIndex: initialVariantIndex,
-        cid: cidMatch ? cidMatch[1] : null,
-        preferredTemplateId: isAi ? "cinematic-glass" : "site-maquina",
+      const briefingPrompt = `Crie um site web completo, moderno, luxuoso e de altíssimo padrão visual para a empresa "${company.name}".
+Nicho de Atuação: "${company.niche || "Serviços Especializados"}"
+Cidade/Região: "${company.city || "Brasil"}"
+${company.address ? `Endereço Verificado (usar no Mapa e rotas GPS): "${company.address}"` : ""}
+${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
+${company.rating ? `Avaliação no Google Maps: ${company.rating} estrelas (${company.reviews_count || 85} avaliações reais)` : ""}
+
+DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
+1. ESTRUTURA VISUAL:
+   - Hero impactante com headline magnética focada na transformação do cliente, subheadline persuasiva e botão de ação em destaque.
+   - Seção de Destaques / Serviços em formato Bento Grid moderno ou Cards com efeito Glassmorphism suave (bordas finas translúcidas border-white/10).
+   - Seção de Autoridade & Prova Social destacando as avaliações reais de ${company.rating || 4.9} estrelas e selos de qualidade.
+   - Seção de Localização com card interativo do Google Maps e botões para traçar rota no Google Maps e no Waze.
+   - Botão flutuante pulsante de WhatsApp no canto inferior direito.
+2. ESTÉTICA & TIPOGRAFIA:
+   - Fundo escuro sofisticado (#09090b ou ardósia profunda) com iluminação de fundo suave (radial gradients).
+   - Tipografia refinada do Google Fonts (Plus Jakarta Sans ou Outfit) com tracking-tight nos títulos.
+   - Fotos reais e atrativas do nicho.
+   - Retorne o código HTML completo autocontido com Tailwind CSS e Lucide Icons.`;
+
+      const studioRes = await generateCreativeSiteFn({
+        data: {
+          briefingOrPrompt: briefingPrompt,
+          projectName: company.name,
+          niche: company.niche || "Serviços",
+          city: company.city || "Brasil",
+          businessAddress: company.address || undefined,
+          businessWhatsapp: cleanPhone || undefined,
+          rating: company.rating ? Number(company.rating) : 4.9,
+          reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
+          photos: (company as any).photos || [],
+          clientGeminiKey: getGeminiApiKey() || undefined,
+        },
       });
-      const modelVariant = (page.social_links as any)?.model_variant || STUDIO_PRO_VARIANTS[initialVariantIndex].name;
-      const url = `https://${page.slug}.eialink.com.br`;
-      const newNotes = company.notes
-        ? `${company.notes}\nDemo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`
-        : `Demo: ${url} [Modelo: ${modelVariant}] (id:${page.id})`;
 
-      const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
-      if (page.whatsapp && !company.whatsapp) {
-        companyUpdates.whatsapp = page.whatsapp;
-        companyUpdates.phone = page.whatsapp;
+      if (studioRes.ok && studioRes.pageId) {
+        const url = `https://eialink.com.br/p/${studioRes.slug}`;
+        const cleanNotes = (company.notes || "")
+          .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+          .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
+          .replace(/\n\s*\n/g, "\n")
+          .trim();
+
+        const newNotes = cleanNotes
+          ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`
+          : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`;
+
+        const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
+        if (cleanPhone && !company.whatsapp) {
+          companyUpdates.whatsapp = cleanPhone;
+          companyUpdates.phone = cleanPhone;
+        }
+        await ProspectingService.updateCompany(company.id, companyUpdates);
+        setFeedback(`🎉 Site gerado com sucesso pelo Estúdio Criativo IA! Link: ${url}`);
+        invalidate();
+        return;
       }
-      await ProspectingService.updateCompany(company.id, companyUpdates);
-      setFeedback(`🎉 Site Studio Pro gerado para ${company.name}! Subdomínio ativo: ${url}. O link já foi anexado para envio.`);
-      invalidate();
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao gerar página de demonstração.";
       setFeedback(message);
@@ -764,76 +793,94 @@ function ProspectingPage() {
     const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
 
     try {
-      // Se for nicho de serviços/institucional, aciona diretamente o Agente IA do Estúdio Criativo
-      if (targetCategory === "service") {
-        setFeedback(`🚀 Agente IA do Estúdio Criativo gerando proposta visual para ${company.name}...`);
-        const briefingPrompt = `Crie um site web completo, moderno e de altíssimo padrão visual para a empresa "${company.name}", atuando no nicho "${company.niche || "Serviços"}" em "${company.city || "sua região"}".
-DIRETRIZES DE DESIGN E CONVERSÃO:
-- Crie uma proposta visual autêntica, moderna e arrojada (padrão Lovable e Awwwards) com Tailwind CSS e Lucide Icons.
-- Destaque a autoridade da marca, diferenciais competitivos e prova social autêntica (${company.rating || 4.9} estrelas no Google).
-- Integre o botão pulsante de WhatsApp (${cleanPhone}), rotas GPS (Google Maps e Waze para ${company.address || company.city}) e botão de Agendamento Online.
-- Retorne apenas o código HTML completo autocontido.`;
-
-        const studioRes = await generateCreativeSiteFn({
-          data: {
-            briefingOrPrompt: briefingPrompt,
-            projectName: company.name,
-            niche: company.niche || "Serviços",
-            city: company.city || "Brasil",
-            businessAddress: company.address || undefined,
-            businessWhatsapp: cleanPhone || undefined,
-            rating: company.rating ? Number(company.rating) : 4.9,
-            reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
-            photos: (company as any).photos || [],
-            clientGeminiKey: getGeminiApiKey() || undefined,
+      // 1. Se for gastronomia / delivery / lanches / sorveteria:
+      if (targetCategory === "food") {
+        navigate({
+          to: "/cardapio-studio",
+          search: {
+            name: company.name,
+            address: company.address || "",
+            whatsapp: company.whatsapp || "",
+            niche: company.niche || "",
           },
         });
-
-        if (studioRes.ok && studioRes.pageId) {
-          const url = `https://eialink.com.br/p/${studioRes.slug}`;
-          const cleanNotes = (company.notes || "")
-            .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
-            .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
-            .replace(/\n\s*\n/g, "\n")
-            .trim();
-
-          const newNotes = cleanNotes
-            ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`
-            : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`;
-
-          const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
-          if (cleanPhone && !company.whatsapp) {
-            companyUpdates.whatsapp = cleanPhone;
-            companyUpdates.phone = cleanPhone;
-          }
-          await ProspectingService.updateCompany(company.id, companyUpdates);
-          setFeedback(`🎉 Site gerado com sucesso pelo Agente IA do Estúdio Criativo! Link: ${url}`);
-          invalidate();
-          return;
-        }
+        return;
       }
 
-      // Nichos especializados (food, barber, shop, industry) ou fallback
-      setFeedback(`🚀 ${meta.loadingLabel} com Gemini 3.8 Flash...`);
-      const res = await generateSpecializedProspectSiteFn({
+      // 2. Se for barbearia / salão / beleza / estética:
+      if (targetCategory === "barber") {
+        navigate({
+          to: "/agenda-studio",
+          search: {
+            name: company.name,
+            address: company.address || "",
+            whatsapp: company.whatsapp || "",
+            niche: company.niche || "",
+          },
+        });
+        return;
+      }
+
+      // 3. Para todos os outros nichos (serviços, indústria, B2B, clínica, geral),
+      // aciona diretamente o motor de elite do Estúdio Criativo com Gemini:
+      setFeedback(`🚀 Estúdio Criativo IA gerando site de alto impacto para ${company.name}...`);
+      const briefingPrompt = `Crie um site web completo, moderno, de altíssimo padrão visual e alta conversão para a empresa "${company.name}".
+Nicho de Atuação: "${company.niche || "Serviços Especializados"}"
+Cidade/Região: "${company.city || "sua região"}"
+${company.address ? `Endereço Verificado (usar no Mapa e rotas GPS): "${company.address}"` : ""}
+${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
+${company.rating ? `Avaliação Google Maps: ${company.rating} estrelas (${company.reviews_count || 90} avaliações reais)` : ""}
+
+DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
+1. ESTRUTURA VISUAL:
+   - Hero marcante com headline poderosa focada no diferencial da empresa, proposta de valor irresistível e botões de ação rápidos.
+   - Seção de Serviços / Soluções em formato Bento Grid moderno ou Cards com efeito Glassmorphism suave (bordas finas translúcidas border-white/10, fundos escuros com profundidade).
+   - Seção de Autoridade & Prova Social destacando a nota real de ${company.rating || 4.9} estrelas e diferenciais exclusivos.
+   - Seção de Localização com mapa interativo do Google Maps e botões para abrir rota no Google Maps e no Waze.
+   - Botão flutuante pulsante de WhatsApp no canto inferior direito.
+2. DESIGN & TIPOGRAFIA:
+   - Fundo escuro sofisticado (#09090b ou ardósia profunda) com iluminação ambiental suave (radial gradients).
+   - Tipografia moderna do Google Fonts (Plus Jakarta Sans ou Outfit) com tracking apertado.
+   - Fotos reais e atrativas do nicho.
+   - Retorne o código HTML completo autocontido com Tailwind CSS e Lucide Icons.`;
+
+      const studioRes = await generateCreativeSiteFn({
         data: {
-          companyId: company.id,
-          businessName: company.name,
-          niche: company.niche || "Geral",
+          briefingOrPrompt: briefingPrompt,
+          projectName: company.name,
+          niche: company.niche || "Serviços",
           city: company.city || "Brasil",
-          whatsapp: company.whatsapp ?? company.phone ?? undefined,
-          address: company.address ?? undefined,
-          rating: company.rating ?? undefined,
-          reviewsCount: company.reviews_count ?? undefined,
-          instagram: company.instagram ?? undefined,
+          businessAddress: company.address || undefined,
+          businessWhatsapp: cleanPhone || undefined,
+          rating: company.rating ? Number(company.rating) : 4.9,
+          reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
           photos: (company as any).photos || [],
-          forceCategory: targetCategory,
           clientGeminiKey: getGeminiApiKey() || undefined,
         },
       });
 
-      setFeedback(`🎉 ${meta.label} gerado com sucesso! Link: ${res.url}`);
-      invalidate();
+      if (studioRes.ok && studioRes.pageId) {
+        const url = `https://eialink.com.br/p/${studioRes.slug}`;
+        const cleanNotes = (company.notes || "")
+          .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+          .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
+          .replace(/\n\s*\n/g, "\n")
+          .trim();
+
+        const newNotes = cleanNotes
+          ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`
+          : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${studioRes.pageId})`;
+
+        const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
+        if (cleanPhone && !company.whatsapp) {
+          companyUpdates.whatsapp = cleanPhone;
+          companyUpdates.phone = cleanPhone;
+        }
+        await ProspectingService.updateCompany(company.id, companyUpdates);
+        setFeedback(`🎉 Site gerado com sucesso pelo Estúdio Criativo IA! Link: ${url}`);
+        invalidate();
+        return;
+      }
     } catch (err: any) {
       console.error(err);
       setFeedback(`Erro ao gerar: ${err.message}`);

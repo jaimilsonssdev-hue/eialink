@@ -80,7 +80,7 @@ import {
   COPY_TEMPLATES_UPDATED_EVENT,
 } from "@/modules/prospecting/copyTemplates";
 import { POPULAR_CNAES } from "@/modules/prospecting/cnaePresets";
-import { NICHE_PRESETS_VARIANTS, detectNicheKey, CANONICAL_NICHES, getCanonicalNicheMeta, getVariantsForNiche } from "@/modules/prospecting/nichePresets";
+import { NICHE_PRESETS_VARIANTS, detectNicheKey, CANONICAL_NICHES, getCanonicalNicheMeta, getVariantsForNiche, NICHE_GALLERIES } from "@/modules/prospecting/nichePresets";
 import {
   getProspectNicheCategory,
   generateSpecializedProspectSiteFn,
@@ -722,6 +722,42 @@ function ProspectingPage() {
     const clientKey = getGeminiApiKey() || undefined;
     const demoInfo = parseDemoInfo(company);
     const nicheText = company.niche || "Serviços Especializados";
+    const detectedKey = detectNicheKey(company.niche, company.name);
+    const curatedGallery = NICHE_GALLERIES[detectedKey]?.covers?.map((c) => c.url) || [];
+    const leadPhotos = (company as any).photos && Array.isArray((company as any).photos) && (company as any).photos.length > 0
+      ? (company as any).photos
+      : curatedGallery;
+    const recommendedPhotos = leadPhotos.slice(0, 5);
+
+    // Determina o arquétipo estético ideal por nicho para evitar preto chapado forçado
+    const isHealthcare = ["clinica", "odontologia", "psicologia", "nutricao", "saude", "medicina", "fisioterapia"].includes(detectedKey);
+    const isRetailOrBoutique = ["loja", "moda", "calcados", "otica", "joias", "perfumaria"].includes(detectedKey);
+    const isAutoOrTech = ["oficina", "mecanica", "auto", "autocenter", "solar", "seguranca"].includes(detectedKey);
+    const isLegalOrCorporate = ["advocacia", "contabilidade", "imobiliaria", "seguros", "b2b"].includes(detectedKey);
+
+    const colorDirective = isHealthcare
+      ? `DIRETRIZ DE CORES (CLEAN & ACOLHEDORA):
+   - Use fundo CLARO sofisticado (branco neve #ffffff, off-white ou ardósia suave #f8fafc) com tipografia escura de alto contraste.
+   - Detalhes refinados em azul saúde (#0284c7) ou verde esmeralda suave (#059669).
+   - NUNCA use fundo preto chapado ou tema dark pesado para saúde/clínicas.`
+      : isRetailOrBoutique
+      ? `DIRETRIZ DE CORES (EDITORIAL & ELEGANTE):
+   - Fundo contemporâneo claro (marfim, linho ou cinza suave #f4f4f5) com acabamentos refinados, tipografia moderna e alto contraste.
+   - NUNCA use fundo preto chapado genérico.`
+      : isAutoOrTech
+      ? `DIRETRIZ DE CORES (TÉCNICA & MODERNA):
+   - Fundo grafite profundo (#09090b ou ardósia chumbo) com iluminação ambiente e detalhes em âmbar/laranja mecânico (#f59e0b) ou azul elétrico (#2563eb).`
+      : isLegalOrCorporate
+      ? `DIRETRIZ DE CORES (CORPORATIVA & AUTORIDADE):
+   - Tons sóbrios executivos (azul marinho profundo, grafite nobre ou fundo clean com contraste executivo), toques em dourado suave ou prata.`
+      : `DIRETRIZ DE CORES (EQUILIBRADA & MODERNA):
+   - Escolha cores modernas e equilibradas que transmitam profissionalismo para o segmento de ${nicheText}, priorizando harmonia visual sem forçar fundo preto chapado.`;
+
+    const photosSection = recommendedPhotos.length > 0
+      ? `\nFOTOS OFICIAIS DO NICHO "${nicheText.toUpperCase()}" (USE EXCLUSIVAMENTE ESTAS URLs NAS SEÇÕES DO SITE):
+${recommendedPhotos.map((url: string, i: number) => `- Imagem ${i + 1}: ${url}`).join("\n")}
+[REGRA CRÍTICA DE FOTOS]: É TERMINANTEMENTE PROIBIDO usar fotos de consultórios odontológicos, dentistas ou nichos diferentes do segmento "${nicheText}"! Use apenas as fotos fornecidas acima ou fotos autênticas e pertinentes ao nicho.`
+      : `\n[REGRA CRÍTICA DE FOTOS]: Use apenas fotos temáticas autênticas de ${nicheText}. NUNCA use fotos de consultórios odontológicos ou nichos não relacionados!`;
 
     setFeedback(`🚀 Estúdio Criativo IA gerando site de alto impacto para ${company.name}...`);
 
@@ -733,13 +769,14 @@ Cidade/Região: "${company.city || "sua região"}"
 ${company.address ? `Endereço Verificado: "${company.address}"` : ""}
 ${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
 ${company.rating ? `Avaliação Google Maps: ${company.rating} estrelas (${company.reviews_count || 90} avaliações reais)` : ""}
+${photosSection}
 
 DIRETRIZES DE REINVENÇÃO OBRIGATÓRIAS (PADRÃO AWWWARDS / LOVABLE):
 1. ESTRUTURA E COMPOSIÇÃO:
-   - Diagramação inovadora: Hero marcante, Bento Grid assimétrico com profundidade visual (cards translúcidos com bordas border-white/10 sobre fundo escuro sofisticado #09090b ou ardósia profunda).
+   - Diagramação inovadora: Hero marcante, Bento Grid com profundidade visual (cards com acabamento fino e sombras suaves).
    - Tipografia moderna do Google Fonts (Plus Jakarta Sans, Outfit ou Syne) com tracking ajustado.
-   - Fotos reais e atrativas do nicho ${nicheText}.
-2. RECURSOS ESSENCIAIS DE CONVERSÃO:
+2. ${colorDirective}
+3. RECURSOS ESSENCIAIS DE CONVERSÃO:
    - Botão flutuante pulsante de WhatsApp no canto inferior direito com link wa.me/${cleanPhone}.
    - Seção de Localização com mapa Google Maps e botões para traçar rota no Google Maps e no Waze.
    - Destaque para autoridade com a nota real de ${company.rating || 4.9} estrelas do Google Maps.
@@ -750,18 +787,18 @@ Cidade/Região: "${company.city || "sua região"}"
 ${company.address ? `Endereço Verificado (usar no Mapa e rotas GPS): "${company.address}"` : ""}
 ${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
 ${company.rating ? `Avaliação Google Maps: ${company.rating} estrelas (${company.reviews_count || 90} avaliações reais)` : ""}
+${photosSection}
 
 DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
 1. ESTRUTURA VISUAL:
    - Hero impactante com headline magnética focada na transformação do cliente, subheadline persuasiva e botões de ação em destaque.
-   - Seção de Destaques / Soluções em formato Bento Grid moderno ou Cards com efeito Glassmorphism suave (bordas finas translúcidas border-white/10 sobre fundo escuro refinado #09090b).
+   - Seção de Destaques / Soluções em formato Bento Grid moderno ou Cards com acabamento premium e bordas finas.
    - Seção de Autoridade & Prova Social destacando as avaliações reais de ${company.rating || 4.9} estrelas e diferenciais exclusivos.
    - Seção de Localização com card interativo do Google Maps e botões para abrir rota no Google Maps e no Waze.
    - Botão flutuante pulsante de WhatsApp no canto inferior direito.
-2. ESTÉTICA & TIPOGRAFIA:
-   - Fundo escuro sofisticado (#09090b ou ardósia profunda) com iluminação de fundo suave (radial gradients sutis).
+2. ${colorDirective}
+3. ESTÉTICA & TIPOGRAFIA:
    - Tipografia refinada do Google Fonts (Plus Jakarta Sans ou Outfit) com tracking-tight nos títulos.
-   - Fotos reais e atrativas pertinentes ao segmento de ${nicheText}.
    - Retorne o código HTML completo autocontido com Tailwind CSS e Lucide Icons.`;
 
     let generatedPageId: string | null = null;
@@ -781,7 +818,7 @@ DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
           projectId: demoInfo.pageId || undefined,
           rating: company.rating ? Number(company.rating) : 4.9,
           reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
-          photos: (company as any).photos || [],
+          photos: recommendedPhotos,
           apiKey: clientKey,
           clientGeminiKey: clientKey,
           isRegeneration,

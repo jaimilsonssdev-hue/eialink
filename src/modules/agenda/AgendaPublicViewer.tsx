@@ -42,11 +42,16 @@ export function AgendaPublicViewer({
   const times = ["09:00", "10:30", "13:00", "14:00", "15:30", "17:00", "18:30"];
 
   function generateWhatsappBookingUrl(): string {
-    const cleanPhone = (agenda.whatsapp || "").replace(/\D/g, "");
+    const rawDigits = (agenda.whatsapp || "").replace(/\D/g, "");
+    let cleanPhone = rawDigits;
+    if (cleanPhone.length >= 10 && cleanPhone.length <= 11 && !cleanPhone.startsWith("55")) {
+      cleanPhone = `55${cleanPhone}`;
+    }
+
     const msg = [
       `📅 *NOVO AGENDAMENTO - ${agenda.businessName.toUpperCase()}*`,
       `---------------------------------`,
-      `*Cliente:* ${clientName || "Cliente do Site"}`,
+      `*Cliente:* ${clientName.trim() || "Cliente do Site"}`,
       `*Serviço:* ${selectedService?.name || "Não especificado"} (R$ ${(selectedService?.price || 0).toFixed(2).replace(".", ",")})`,
       `*Profissional:* ${selectedPro?.name || "Qualquer disponível"}`,
       `*Data:* ${selectedDate}`,
@@ -55,7 +60,11 @@ export function AgendaPublicViewer({
       `_Gostaria de confirmar a disponibilidade para esse horário!_`,
     ].join("\n");
 
-    return `https://wa.me/55${cleanPhone}?text=${encodeURIComponent(msg)}`;
+    if (!cleanPhone) {
+      return "#";
+    }
+
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(msg)}`;
   }
 
   // Configurações visuais dinâmicas
@@ -126,10 +135,17 @@ export function AgendaPublicViewer({
               </span>
             )}
             {features.mapLocation && agenda.address && (
-              <span className="inline-flex items-center gap-1.5 bg-zinc-900/90 border border-white/10 px-3 py-1.5 rounded-xl">
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(agenda.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 bg-zinc-900/90 border border-white/10 px-3 py-1.5 rounded-xl hover:bg-zinc-800 transition-colors text-zinc-300 hover:text-white"
+                title="Abrir no Google Maps"
+              >
                 <MapPin className="h-3.5 w-3.5 text-purple-400" />
-                {agenda.address}
-              </span>
+                <span>{agenda.address}</span>
+                <ExternalLink className="h-3 w-3 text-zinc-400 ml-0.5" />
+              </a>
             )}
           </div>
         </div>
@@ -319,7 +335,18 @@ export function AgendaPublicViewer({
               className="text-white font-bold px-5 h-11 rounded-2xl shadow-lg text-xs sm:text-sm flex items-center gap-2"
               style={{ backgroundColor: btnColor }}
             >
-              <a href={generateWhatsappBookingUrl()} target="_blank" rel="noreferrer">
+              <a
+                href={generateWhatsappBookingUrl()}
+                target="_blank"
+                rel="noreferrer"
+                onClick={(e) => {
+                  const url = generateWhatsappBookingUrl();
+                  if (url === "#") {
+                    e.preventDefault();
+                    alert("O número de WhatsApp deste estabelecimento ainda não foi configurado.");
+                  }
+                }}
+              >
                 <MessageCircle className="h-4 w-4" />
                 <span>Confirmar no WhatsApp</span>
               </a>

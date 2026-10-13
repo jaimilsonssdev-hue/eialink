@@ -80,7 +80,7 @@ export async function testGeminiKey(
       action: "test",
       apiKey: cleanKey,
     });
-    const activeModel = "gemini-3.8-flash";
+    const activeModel = "gemini-2.5-flash";
     if (result.ok && typeof window !== "undefined") {
       localStorage.setItem(GEMINI_ACTIVE_MODEL_STORAGE, activeModel);
     }
@@ -238,7 +238,9 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
     typeof window !== "undefined" ? localStorage.getItem(GEMINI_ACTIVE_MODEL_STORAGE) : null;
   const candidateModels = [
     ...(savedModel ? [savedModel] : []),
-    "gemini-3.8-flash",
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
   ];
 
   const models = [...new Set(candidateModels)];

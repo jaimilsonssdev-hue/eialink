@@ -120,6 +120,7 @@ function AgendaStudioPage() {
   const [attachments, setAttachments] = useState<Array<{ name: string; mimeType: string; dataBase64: string }>>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [currentPageId, setCurrentPageId] = useState<string | null>(searchParams?.page || null);
   const [savedPageUrl, setSavedPageUrl] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<AgendaServiceItem | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
@@ -134,6 +135,7 @@ function AgendaStudioPage() {
         .maybeSingle()
         .then(({ data }) => {
           if (data) {
+            setCurrentPageId(data.id);
             const rawSocial = (data.social_links as Record<string, any>) || {};
             if (rawSocial.agenda_data) {
               setAgenda(rawSocial.agenda_data);
@@ -151,13 +153,38 @@ function AgendaStudioPage() {
           }
         });
     } else if (searchParams?.name) {
-      setAgenda((prev) => ({
-        ...prev,
-        businessName: searchParams.name,
-        address: searchParams.address || prev.address,
-        whatsapp: searchParams.whatsapp || prev.whatsapp,
-        tagline: searchParams.niche ? `Especialistas em ${searchParams.niche}` : prev.tagline,
-      }));
+      supabase
+        .from("bio_pages")
+        .select("id, slug, display_name, description, whatsapp, social_links")
+        .eq("display_name", searchParams.name)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) {
+            setCurrentPageId(data.id);
+            const rawSocial = (data.social_links as Record<string, any>) || {};
+            if (rawSocial.agenda_data) {
+              setAgenda(rawSocial.agenda_data);
+              setSavedPageUrl(`/p/${data.slug}`);
+            } else {
+              setAgenda((prev) => ({
+                ...prev,
+                businessName: data.display_name || prev.businessName,
+                whatsapp: data.whatsapp || searchParams.whatsapp || prev.whatsapp,
+                tagline: data.description || prev.tagline,
+                address: rawSocial.address || searchParams.address || prev.address,
+              }));
+              setSavedPageUrl(`/p/${data.slug}`);
+            }
+          } else {
+            setAgenda((prev) => ({
+              ...prev,
+              businessName: searchParams.name,
+              address: searchParams.address || prev.address,
+              whatsapp: searchParams.whatsapp || prev.whatsapp,
+              tagline: searchParams.niche ? `Especialistas em ${searchParams.niche}` : prev.tagline,
+            }));
+          }
+        });
     }
   }, [searchParams]);
 
@@ -242,7 +269,8 @@ function AgendaStudioPage() {
   async function handleSavePage() {
     setIsSaving(true);
     try {
-      const res = await saveAgendaToBioPage(agenda, searchParams?.page || undefined);
+      const res = await saveAgendaToBioPage(agenda, currentPageId || searchParams?.page || undefined);
+      setCurrentPageId(res.pageId);
       setSavedPageUrl(res.publicUrl);
     } catch (err: any) {
       alert(`Erro ao publicar agenda: ${err.message}`);

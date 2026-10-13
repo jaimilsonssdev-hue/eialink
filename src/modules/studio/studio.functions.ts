@@ -437,8 +437,6 @@ ${effectiveHtml}`;
     let lastCapturedError: any = null;
     // Modelos oficiais do Google AI Studio para geração de código e raciocínio de alta performance
     const modelsToTry = [
-      "gemini-3.8-flash",
-      "gemini-3.5-flash-lite",
       "gemini-2.5-flash",
       "gemini-2.0-flash",
       "gemini-1.5-flash",
@@ -455,9 +453,6 @@ ${effectiveHtml}`;
             config: {
               systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
               temperature: 0.7,
-              thinkingConfig: {
-                thinkingLevel: "low" as any,
-              },
             },
           });
           responseText = response.text?.trim() || "";
@@ -737,9 +732,6 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
           config: {
             systemInstruction: BRIEFING_SYSTEM_PROMPT,
             temperature: 0.7,
-            thinkingConfig: {
-              thinkingLevel: "low" as any,
-            },
           },
         });
         briefingText = response.text?.trim() || "";

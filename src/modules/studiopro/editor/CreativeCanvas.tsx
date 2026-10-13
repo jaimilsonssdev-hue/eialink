@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { DesignStyleModal } from "@/modules/studiopro/editor/DesignStyleModal";
+import { injectEiaLinkFeatureRuntime } from "@/lib/eialinkFeatureRuntime";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -64,8 +65,12 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
       }
       const doc = iframeRef.current.contentDocument;
       if (doc) {
+        const enrichedHtml = injectEiaLinkFeatureRuntime(html, {
+          slug: activeProject?.slug,
+          businessName: activeProject?.name,
+        });
         doc.open();
-        doc.write(html);
+        doc.write(enrichedHtml);
         doc.close();
 
         // Se o modo de edição estiver ligado, reativa

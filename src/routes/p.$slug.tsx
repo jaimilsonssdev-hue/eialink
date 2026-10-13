@@ -36,6 +36,7 @@ import { LojaPublicViewer } from "@/modules/loja/LojaPublicViewer";
 import type { LojaData } from "@/modules/loja/lojaAiService";
 import { AgendaPublicViewer } from "@/modules/agenda/AgendaPublicViewer";
 import type { AgendaData } from "@/modules/agenda/agendaAiService";
+import { injectEiaLinkFeatureRuntime } from "@/lib/eialinkFeatureRuntime";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -722,10 +723,18 @@ function PublicBio() {
     if (isWhatsappDisabled) dynamicStyles += `[data-feature="whatsapp"], a[href*="wa.me"], a[href*="whatsapp.com"], .feature-whatsapp { display: none !important; }`;
     dynamicStyles += "</style>";
 
+    // Injeta orquestrador de recursos (Agendamento, GPS Maps/Waze, WhatsApp) para botões funcionais reais
+    const htmlWithRuntime = injectEiaLinkFeatureRuntime(effectiveHtml, {
+      slug: bio.slug,
+      businessName: bio.display_name,
+      whatsapp: bio.whatsapp,
+      address: rawSocial.address,
+    });
+
     // Injeta <base target="_top"> para permitir navegação nativa de links (Agenda, GPS/Waze, WhatsApp) e estilos dinâmicos
-    const preparedHtml = effectiveHtml.includes("<head>")
-      ? effectiveHtml.replace("<head>", `<head><base target="_top">${dynamicStyles}`)
-      : `<base target="_top">${dynamicStyles}${effectiveHtml}`;
+    const preparedHtml = htmlWithRuntime.includes("<head>")
+      ? htmlWithRuntime.replace("<head>", `<head><base target="_top">${dynamicStyles}`)
+      : `<base target="_top">${dynamicStyles}${htmlWithRuntime}`;
 
     return (
       <div className="min-h-screen w-full overflow-x-hidden flex flex-col relative">

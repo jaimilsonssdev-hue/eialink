@@ -13,8 +13,10 @@ import {
   MapPin,
   MessageCircle,
   Palette,
+  Globe,
 } from "lucide-react";
 import { DesignStyleModal } from "@/modules/studiopro/editor/DesignStyleModal";
+import { SeoPanelModal } from "@/modules/studiopro/editor/SeoPanelModal";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { syncCreativeStudioProjectFn } from "@/modules/studio/studio.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +38,7 @@ export function CreativeTopNav() {
   // Modal de Ferramentas / Features
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
   const [showDesignModal, setShowDesignModal] = useState(false);
+  const [showSeoModal, setShowSeoModal] = useState(false);
   const [features, setFeatures] = useState({
     agenda_enabled: true,
     ai_concierge_enabled: true,
@@ -260,6 +263,17 @@ function applyFeaturesToHtml(
           <span className="hidden sm:inline">Design & Estilo</span>
         </button>
 
+        {/* Botão de SEO & Indexação no Google (Padrão Lovable) */}
+        <button
+          type="button"
+          onClick={() => setShowSeoModal(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 text-xs font-semibold transition-all border border-blue-500/30 shadow-xs cursor-pointer"
+          title="Configurar título do Google, meta description, sitemap e schema.org"
+        >
+          <Globe size={13} />
+          <span className="hidden sm:inline">SEO & Google</span>
+        </button>
+
         {/* Botão de Controle de Ferramentas / Recursos */}
         <button
           type="button"
@@ -463,6 +477,12 @@ function applyFeaturesToHtml(
       <DesignStyleModal
         open={showDesignModal}
         onOpenChange={setShowDesignModal}
+      />
+
+      {/* Modal de SEO & Indexação no Google (Padrão Lovable) */}
+      <SeoPanelModal
+        open={showSeoModal}
+        onOpenChange={setShowSeoModal}
       />
     </header>
   );

@@ -99,17 +99,31 @@ ${stylePrompt ? `Instruções de estilo adicionais: ${stylePrompt}` : ""}
 Retorne o JSON completo estruturado.`;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        systemInstruction: SYSTEM_PROMPT,
-        temperature: 0.5,
-        responseMimeType: "application/json",
-      },
-    });
-
-    const text = response.text?.trim() || "";
+    let text = "";
+    try {
+      const interaction = await ai.interactions.create({
+        model: "gemini-3.8-flash",
+        input: prompt,
+        system_instruction: SYSTEM_PROMPT,
+        generation_config: {
+          temperature: 0.5,
+          response_mime_type: "application/json",
+        },
+      });
+      text = (interaction as any).output_text?.trim() || "";
+    } catch (interErr) {
+      console.warn("[GeneratorService] Interactions API falhou, tentando fallback generateContent:", interErr);
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          systemInstruction: SYSTEM_PROMPT,
+          temperature: 0.5,
+          responseMimeType: "application/json",
+        },
+      });
+      text = response.text?.trim() || "";
+    }
     let cleanJson = text;
     if (cleanJson.startsWith("```json")) {
       cleanJson = cleanJson.replace(/^```json\s*/i, "").replace(/```\s*$/, "");
@@ -195,17 +209,31 @@ Retorne um JSON com:
 }`;
 
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        systemInstruction: "Você é o Copilot de edição de sites JSON do OpenPage. Retorne sempre JSON válido.",
-        temperature: 0.4,
-        responseMimeType: "application/json",
-      },
-    });
-
-    const text = response.text?.trim() || "";
+    let text = "";
+    try {
+      const interaction = await ai.interactions.create({
+        model: "gemini-3.8-flash",
+        input: prompt,
+        system_instruction: "Você é o Copilot de edição de sites JSON do OpenPage. Retorne sempre JSON válido.",
+        generation_config: {
+          temperature: 0.4,
+          response_mime_type: "application/json",
+        },
+      });
+      text = (interaction as any).output_text?.trim() || "";
+    } catch (interErr) {
+      console.warn("[GeneratorService] Interactions API falhou em refinePageWithAi, tentando fallback generateContent:", interErr);
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+        config: {
+          systemInstruction: "Você é o Copilot de edição de sites JSON do OpenPage. Retorne sempre JSON válido.",
+          temperature: 0.4,
+          responseMimeType: "application/json",
+        },
+      });
+      text = response.text?.trim() || "";
+    }
     let clean = text;
     if (clean.startsWith("```json")) clean = clean.replace(/^```json\s*/i, "").replace(/```\s*$/, "");
     else if (clean.startsWith("```")) clean = clean.replace(/^```\s*/, "").replace(/```\s*$/, "");

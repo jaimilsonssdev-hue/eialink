@@ -7,8 +7,8 @@ const VALID_BLOCK_TYPES = new Set<string>(blockMetadata.map((b) => b.type))
 const VARIANT_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, new Set(b.variants)]))
 const DEFAULT_PROPS_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, b.defaultProps]))
 
-const PRIMARY_GEMINI_MODEL = 'gemini-2.5-flash'
-const FALLBACK_GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash']
+const PRIMARY_GEMINI_MODEL = 'gemini-3.8-flash'
+const FALLBACK_GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
 const STORAGE_KEYS = ['openpage-gemini-key', 'eialink_gemini_api_key', 'gemini_api_key']
 
 export function getSavedGeminiKey(): string | null {
@@ -62,6 +62,48 @@ export async function generateSiteConfig(prompt: string, signal?: AbortSignal): 
 }
 
 async function callGeminiDirect(prompt: string, apiKey: string, signal?: AbortSignal): Promise<SiteConfig> {
+  // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
+  try {
+    const interRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": apiKey.trim(),
+        "Content-Type": "application/json",
+        "Api-Revision": "2026-05-20",
+      },
+      signal,
+      body: JSON.stringify({
+        model: "gemini-3.8-flash",
+        input: `Generate a website configuration for: ${prompt}`,
+        system_instruction: GENERATION_PROMPT,
+        generation_config: { response_mime_type: "application/json", temperature: 0.8 },
+      }),
+    });
+
+    if (interRes.ok) {
+      const data = await interRes.json();
+      let text = data.output_text;
+      if (!text && Array.isArray(data.steps)) {
+        for (const step of data.steps) {
+          if (step.type === "model_output" && Array.isArray(step.content)) {
+            const part = step.content.find((c: any) => c.type === "text" && c.text);
+            if (part?.text) {
+              text = part.text;
+              break;
+            }
+          }
+        }
+      }
+      if (text) {
+        const clean = text.trim().replace(/^```json\s*/i, "").replace(/^```\s*/, "").replace(/```\s*$/, "");
+        return validateSiteConfig(JSON.parse(clean), prompt);
+      }
+    }
+  } catch (interErr) {
+    if (interErr instanceof Error && interErr.name === 'AbortError') throw interErr;
+    console.warn("Interactions API call failed in generate-site, trying fallback:", interErr);
+  }
+
   const models = [PRIMARY_GEMINI_MODEL, ...FALLBACK_GEMINI_MODELS]
   let lastError: Error | null = null
 

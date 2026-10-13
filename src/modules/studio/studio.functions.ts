@@ -435,49 +435,125 @@ ${effectiveHtml}`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    // Modelos oficiais do Google AI Studio para geração de código e raciocínio de alta performance
-    const modelsToTry = [
-      "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-    ];
 
-    for (const modelCandidate of modelsToTry) {
-      let attempts = 0;
-      const maxAttempts = 2;
-      while (attempts < maxAttempts) {
-        try {
-          const response = await ai.models.generateContent({
-            model: modelCandidate,
-            contents,
-            config: {
-              systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-              temperature: 0.7,
-            },
-          });
-          responseText = response.text?.trim() || "";
-          if (responseText) break;
-        } catch (apiErr: any) {
-          lastCapturedError = apiErr;
-          const errStr = JSON.stringify(apiErr || {});
-          const status = apiErr?.status || apiErr?.code;
-          const isTransient =
-            status === 503 ||
-            status === 429 ||
-            errStr.includes("503") ||
-            errStr.includes("UNAVAILABLE") ||
-            errStr.includes("RESOURCE_EXHAUSTED");
+    // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
+    try {
+      let interactionInput: any;
+      if (serverParts.length > 1) {
+        interactionInput = { parts: serverParts };
+      } else {
+        interactionInput = userPrompt;
+      }
 
-          if (isTransient && attempts < maxAttempts - 1) {
-            attempts++;
-            await new Promise((r) => setTimeout(r, 1000));
-            continue;
+      const interaction = await ai.interactions.create({
+        model: "gemini-3.8-flash",
+        input: interactionInput,
+        system_instruction: CODE_GENERATION_SYSTEM_PROMPT,
+        generation_config: {
+          temperature: 0.7,
+        },
+      });
+
+      responseText = (interaction as any).output_text?.trim() || "";
+      if (!responseText && Array.isArray((interaction as any).steps)) {
+        for (const step of (interaction as any).steps) {
+          if (step.type === "model_output" && Array.isArray(step.content)) {
+            const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+            if (textPart?.text) {
+              responseText = textPart.text.trim();
+              break;
+            }
           }
-          console.warn(`[StudioServer] Modelo ${modelCandidate} falhou, tentando contingência:`, apiErr?.message || apiErr);
-          break;
         }
       }
-      if (responseText) break;
+    } catch (sdkErr: any) {
+      lastCapturedError = sdkErr;
+      console.warn("[StudioServer] ai.interactions.create com gemini-3.8-flash falhou, tentando fallback:", sdkErr?.message || sdkErr);
+    }
+
+    // 2. Fallback REST para o endpoint oficial /v1beta/interactions com gemini-3.8-flash
+    if (!responseText) {
+      try {
+        const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+          method: "POST",
+          headers: {
+            "x-goog-api-key": resolvedKey,
+            "Content-Type": "application/json",
+            "Api-Revision": "2026-05-20",
+          },
+          body: JSON.stringify({
+            model: "gemini-3.8-flash",
+            input: userPrompt,
+            system_instruction: CODE_GENERATION_SYSTEM_PROMPT,
+            generation_config: { temperature: 0.7 },
+          }),
+        });
+
+        if (restRes.ok) {
+          const data = await restRes.json();
+          responseText = data.output_text?.trim() || "";
+          if (!responseText && Array.isArray(data.steps)) {
+            for (const step of data.steps) {
+              if (step.type === "model_output" && Array.isArray(step.content)) {
+                const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+                if (textPart?.text) {
+                  responseText = textPart.text.trim();
+                  break;
+                }
+              }
+            }
+          }
+        }
+      } catch (restErr) {
+        console.warn("[StudioServer] REST interactions com gemini-3.8-flash falhou:", restErr);
+      }
+    }
+
+    // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
+    if (!responseText) {
+      const modelsToTry = [
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+      ];
+
+      for (const modelCandidate of modelsToTry) {
+        let attempts = 0;
+        const maxAttempts = 2;
+        while (attempts < maxAttempts) {
+          try {
+            const response = await ai.models.generateContent({
+              model: modelCandidate,
+              contents,
+              config: {
+                systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
+                temperature: 0.7,
+              },
+            });
+            responseText = response.text?.trim() || "";
+            if (responseText) break;
+          } catch (apiErr: any) {
+            lastCapturedError = apiErr;
+            const errStr = JSON.stringify(apiErr || {});
+            const status = apiErr?.status || apiErr?.code;
+            const isTransient =
+              status === 503 ||
+              status === 429 ||
+              errStr.includes("503") ||
+              errStr.includes("UNAVAILABLE") ||
+              errStr.includes("RESOURCE_EXHAUSTED");
+
+            if (isTransient && attempts < maxAttempts - 1) {
+              attempts++;
+              await new Promise((r) => setTimeout(r, 1000));
+              continue;
+            }
+            console.warn(`[StudioServer] Modelo contingência ${modelCandidate} falhou:`, apiErr?.message || apiErr);
+            break;
+          }
+        }
+        if (responseText) break;
+      }
     }
 
     if (!responseText) {
@@ -718,26 +794,101 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
     }
     userParts.push({ text: input.prompt });
 
-    const briefingModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
     let briefingText = "";
 
-    for (const modelCandidate of briefingModels) {
+    // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
+    try {
+      let interactionInput: any;
+      if (input.attachments && input.attachments.length > 0) {
+        interactionInput = { parts: userParts };
+      } else {
+        interactionInput = input.prompt;
+      }
+
+      const interaction = await ai.interactions.create({
+        model: "gemini-3.8-flash",
+        input: interactionInput,
+        system_instruction: BRIEFING_SYSTEM_PROMPT,
+        generation_config: {
+          temperature: 0.7,
+        },
+      });
+
+      briefingText = (interaction as any).output_text?.trim() || "";
+      if (!briefingText && Array.isArray((interaction as any).steps)) {
+        for (const step of (interaction as any).steps) {
+          if (step.type === "model_output" && Array.isArray(step.content)) {
+            const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+            if (textPart?.text) {
+              briefingText = textPart.text.trim();
+              break;
+            }
+          }
+        }
+      }
+    } catch (sdkErr) {
+      console.warn("[StudioServer] ai.interactions.create com gemini-3.8-flash falhou no briefing, tentando REST:", sdkErr);
+    }
+
+    // 2. Fallback REST para o endpoint oficial /v1beta/interactions com gemini-3.8-flash
+    if (!briefingText) {
       try {
-        const response = await ai.models.generateContent({
-          model: modelCandidate,
-          contents: [
-            ...formattedHistory,
-            { role: "user", parts: userParts },
-          ],
-          config: {
-            systemInstruction: BRIEFING_SYSTEM_PROMPT,
-            temperature: 0.7,
+        const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+          method: "POST",
+          headers: {
+            "x-goog-api-key": resolvedKey,
+            "Content-Type": "application/json",
+            "Api-Revision": "2026-05-20",
           },
+          body: JSON.stringify({
+            model: "gemini-3.8-flash",
+            input: input.prompt,
+            system_instruction: BRIEFING_SYSTEM_PROMPT,
+            generation_config: { temperature: 0.7 },
+          }),
         });
-        briefingText = response.text?.trim() || "";
-        if (briefingText) break;
-      } catch (err) {
-        console.warn(`[StudioServer] Falha no briefing com ${modelCandidate}:`, err);
+
+        if (restRes.ok) {
+          const data = await restRes.json();
+          briefingText = data.output_text?.trim() || "";
+          if (!briefingText && Array.isArray(data.steps)) {
+            for (const step of data.steps) {
+              if (step.type === "model_output" && Array.isArray(step.content)) {
+                const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+                if (textPart?.text) {
+                  briefingText = textPart.text.trim();
+                  break;
+                }
+              }
+            }
+          }
+        }
+      } catch (restErr) {
+        console.warn("[StudioServer] REST interactions falhou no briefing:", restErr);
+      }
+    }
+
+    // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
+    if (!briefingText) {
+      const briefingModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+      for (const modelCandidate of briefingModels) {
+        try {
+          const response = await ai.models.generateContent({
+            model: modelCandidate,
+            contents: [
+              ...formattedHistory,
+              { role: "user", parts: userParts },
+            ],
+            config: {
+              systemInstruction: BRIEFING_SYSTEM_PROMPT,
+              temperature: 0.7,
+            },
+          });
+          briefingText = response.text?.trim() || "";
+          if (briefingText) break;
+        } catch (err) {
+          console.warn(`[StudioServer] Falha no briefing de contingência com ${modelCandidate}:`, err);
+        }
       }
     }
 

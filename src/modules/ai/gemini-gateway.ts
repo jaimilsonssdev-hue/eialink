@@ -5,12 +5,40 @@ const gatewayUrl = "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gemini
 const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
 export const SITE_BUILDER_MODELS = [
+  "gemini-3.8-flash",
   "gemini-2.5-flash",
   "gemini-2.0-flash",
   "gemini-1.5-flash",
 ] as const;
 const retryableGeminiStatuses = new Set([408, 429, 500, 502, 503, 504]);
 const maxGeminiAttempts = 2;
+
+async function callGoogleGeminiInteractionsDirect(
+  apiKey: string,
+  model: string,
+  payload: Record<string, unknown>,
+): Promise<Response | null> {
+  try {
+    const url = "https://generativelanguage.googleapis.com/v1beta/interactions";
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": apiKey.trim(),
+        "Api-Revision": "2026-05-20",
+      },
+      body: JSON.stringify({
+        model: model || "gemini-3.8-flash",
+        ...payload,
+      }),
+      signal: AbortSignal.timeout(20000),
+    });
+    return res;
+  } catch (err) {
+    console.warn("[GoogleGeminiInteractionsDirect] Falha na chamada direta da Interactions API:", err);
+    return null;
+  }
+}
 
 async function callGoogleGeminiDirect(
   apiKey: string,
@@ -136,10 +164,17 @@ export async function requestGemini(
         localStorage.getItem("openpage-gemini-key")?.trim())) ||
     null;
 
-  if (directKey && body.action === "generateContent") {
-    const directRes = await callGoogleGeminiDirect(directKey, body.model, body.payload);
-    if (directRes && (directRes.ok || directRes.status === 400 || directRes.status === 403)) {
-      return directRes;
+  if (directKey) {
+    if (body.action === "interactions") {
+      const directInterRes = await callGoogleGeminiInteractionsDirect(directKey, body.model, body.payload);
+      if (directInterRes && (directInterRes.ok || directInterRes.status === 400 || directInterRes.status === 403)) {
+        return directInterRes;
+      }
+    } else if (body.action === "generateContent") {
+      const directRes = await callGoogleGeminiDirect(directKey, body.model, body.payload);
+      if (directRes && (directRes.ok || directRes.status === 400 || directRes.status === 403)) {
+        return directRes;
+      }
     }
   }
 

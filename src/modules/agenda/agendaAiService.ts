@@ -188,23 +188,98 @@ export async function processAgendaAiChat(
     parts: currentParts,
   });
 
-  const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
   let rawText = "";
 
-  for (const model of modelsToTry) {
+  // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
+  try {
+    let interactionInput: any;
+    if (attachments && attachments.length > 0) {
+      interactionInput = { parts: currentParts };
+    } else {
+      interactionInput = newMessage;
+    }
+
+    const interaction = await ai.interactions.create({
+      model: "gemini-3.8-flash",
+      input: interactionInput,
+      system_instruction: AGENDA_AI_SYSTEM_PROMPT,
+      generation_config: {
+        temperature: 0.6,
+      },
+    });
+
+    rawText = (interaction as any).output_text?.trim() || "";
+    if (!rawText && Array.isArray((interaction as any).steps)) {
+      for (const step of (interaction as any).steps) {
+        if (step.type === "model_output" && Array.isArray(step.content)) {
+          const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+          if (textPart?.text) {
+            rawText = textPart.text.trim();
+            break;
+          }
+        }
+      }
+    }
+  } catch (sdkErr) {
+    console.warn("[AgendaAiService] ai.interactions.create com gemini-3.8-flash falhou, tentando fallback:", sdkErr);
+  }
+
+  // 2. Fallback REST para o endpoint oficial /v1beta/interactions com gemini-3.8-flash
+  if (!rawText) {
     try {
-      const res = await ai.models.generateContent({
-        model,
-        contents: formattedContents,
-        config: {
-          systemInstruction: AGENDA_AI_SYSTEM_PROMPT,
-          temperature: 0.6,
+      const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": apiKey,
+          "Content-Type": "application/json",
+          "Api-Revision": "2026-05-20",
         },
+        body: JSON.stringify({
+          model: "gemini-3.8-flash",
+          input: newMessage,
+          system_instruction: AGENDA_AI_SYSTEM_PROMPT,
+          generation_config: { temperature: 0.6 },
+        }),
       });
-      rawText = res.text?.trim() || "";
-      if (rawText) break;
-    } catch (err) {
-      console.warn(`[AgendaAiService] Falha com modelo ${model}:`, err);
+
+      if (restRes.ok) {
+        const data = await restRes.json();
+        rawText = data.output_text?.trim() || "";
+        if (!rawText && Array.isArray(data.steps)) {
+          for (const step of data.steps) {
+            if (step.type === "model_output" && Array.isArray(step.content)) {
+              const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+              if (textPart?.text) {
+                rawText = textPart.text.trim();
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch (restErr) {
+      console.warn("[AgendaAiService] REST interactions com gemini-3.8-flash falhou:", restErr);
+    }
+  }
+
+  // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
+  if (!rawText) {
+    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    for (const model of modelsToTry) {
+      try {
+        const res = await ai.models.generateContent({
+          model,
+          contents: formattedContents,
+          config: {
+            systemInstruction: AGENDA_AI_SYSTEM_PROMPT,
+            temperature: 0.6,
+          },
+        });
+        rawText = res.text?.trim() || "";
+        if (rawText) break;
+      } catch (err) {
+        console.warn(`[AgendaAiService] Falha na contingência com ${model}:`, err);
+      }
     }
   }
 

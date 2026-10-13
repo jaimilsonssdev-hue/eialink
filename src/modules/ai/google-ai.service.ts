@@ -1,4 +1,5 @@
 export const ACTIVE_GEMINI_MODELS = [
+  "gemini-3.8-flash",
   "gemini-2.5-flash",
   "gemini-2.0-flash",
   "gemini-1.5-flash",
@@ -74,7 +75,6 @@ export async function resolveGeminiApiKeyAsync(override?: string): Promise<strin
 
   try {
     const supabase = getServiceSupabaseClient();
-    // Tenta obter a chave global com fallback silencioso caso a coluna ou tabela não existam
     const { data, error } = await supabase
       .from("payment_gateway_settings")
       .select("*")
@@ -94,9 +94,131 @@ export async function resolveGeminiApiKeyAsync(override?: string): Promise<strin
   return null;
 }
 
+export interface GeminiInteractionsOptions {
+  apiKey?: string;
+  model?: string; // Default: "gemini-3.8-flash"
+  input: string | any;
+  systemInstruction?: string;
+  temperature?: number;
+  attachments?: Array<{
+    name?: string;
+    mimeType: string;
+    dataBase64: string;
+  }>;
+}
+
+/**
+ * Executa requisição na nova Interactions API oficial do Google AI Studio com gemini-3.8-flash
+ */
+export async function callGeminiInteractionsApi(
+  options: GeminiInteractionsOptions,
+): Promise<{ ok: boolean; text: string; error?: string }> {
+  const apiKey = await resolveGeminiApiKeyAsync(options.apiKey);
+  if (!apiKey) {
+    return { ok: false, text: "", error: "Nenhuma chave do Google AI Studio configurada." };
+  }
+
+  const model = options.model || "gemini-3.8-flash";
+
+  // 1. Tenta via SDK oficial @google/genai com ai.interactions.create
+  try {
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey });
+
+    let interactionInput: any = options.input;
+    if (options.attachments && options.attachments.length > 0) {
+      const parts: any[] = [];
+      for (const att of options.attachments) {
+        parts.push({
+          inlineData: {
+            mimeType: att.mimeType,
+            data: att.dataBase64,
+          },
+        });
+      }
+      if (typeof options.input === "string") {
+        parts.push({ text: options.input });
+      }
+      interactionInput = { parts };
+    }
+
+    const interaction = await ai.interactions.create({
+      model,
+      input: interactionInput,
+      ...(options.systemInstruction ? { system_instruction: options.systemInstruction } : {}),
+      ...(options.temperature !== undefined ? { generation_config: { temperature: options.temperature } } : {}),
+    });
+
+    const outputText = (interaction as any).output_text || "";
+    if (outputText) {
+      return { ok: true, text: outputText };
+    }
+
+    const steps = (interaction as any).steps;
+    if (Array.isArray(steps)) {
+      for (const step of steps) {
+        if (step.type === "model_output" && Array.isArray(step.content)) {
+          const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+          if (textPart?.text) {
+            return { ok: true, text: textPart.text };
+          }
+        }
+      }
+    }
+  } catch (sdkErr: any) {
+    console.warn(`[GoogleAiService] ai.interactions.create falhou com ${model}:`, sdkErr?.message || sdkErr);
+  }
+
+  // 2. Fallback REST para o endpoint oficial /v1beta/interactions com Api-Revision: 2026-05-20
+  try {
+    const restPayload: any = {
+      model,
+      input: typeof options.input === "string" ? options.input : JSON.stringify(options.input),
+      ...(options.systemInstruction ? { system_instruction: options.systemInstruction } : {}),
+      ...(options.temperature !== undefined ? { generation_config: { temperature: options.temperature } } : {}),
+    };
+
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": apiKey,
+        "Content-Type": "application/json",
+        "Api-Revision": "2026-05-20",
+      },
+      body: JSON.stringify(restPayload),
+      signal: AbortSignal.timeout(30000),
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.output_text) {
+        return { ok: true, text: data.output_text };
+      }
+      if (Array.isArray(data.steps)) {
+        for (const step of data.steps) {
+          if (step.type === "model_output" && Array.isArray(step.content)) {
+            const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+            if (textPart?.text) {
+              return { ok: true, text: textPart.text };
+            }
+          }
+        }
+      }
+    }
+  } catch (restErr: any) {
+    console.warn("[GoogleAiService] Falha no REST interactions:", restErr?.message || restErr);
+  }
+
+  return {
+    ok: false,
+    text: "",
+    error: `Não foi possível obter resposta com ${model} na Interactions API.`,
+  };
+}
+
 /**
  * Valida a chave diretamente contra a API oficial da Google em tempo real
- * acionando especificamente o modelo gemini-3.8-flash.
+ * acionando especificamente a Interactions API com o modelo gemini-3.8-flash.
  */
 export async function testGoogleGeminiKey(apiKey: string): Promise<{ ok: boolean; message: string }> {
   const cleanKey = apiKey.trim();
@@ -104,70 +226,71 @@ export async function testGoogleGeminiKey(apiKey: string): Promise<{ ok: boolean
     return { ok: false, message: "Nenhuma chave foi informada." };
   }
 
+  // 1. Testa primeiramente via Interactions API oficial com gemini-3.8-flash
   try {
-    const testModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
-    let lastErrData: any = null;
-    let res: Response | null = null;
+    const res = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+      method: "POST",
+      headers: {
+        "x-goog-api-key": cleanKey,
+        "Content-Type": "application/json",
+        "Api-Revision": "2026-05-20",
+      },
+      body: JSON.stringify({
+        model: "gemini-3.8-flash",
+        input: "ping",
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
 
-    for (const model of testModels) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`;
-      res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: "ping" }] }],
-          generationConfig: { maxOutputTokens: 2 },
-        }),
-        signal: AbortSignal.timeout(10000),
-      });
-
-      if (res.ok) {
-        return {
-          ok: true,
-          message: `Google AI Studio conectado com sucesso! Modelo ${model} 100% operacional.`,
-        };
-      }
-
-      lastErrData = await res.json().catch(() => ({}));
-      // Se for chave comprovadamente inválida, interrompe de imediato
-      if (res.status === 400 || res.status === 403) {
-        const msg = lastErrData?.error?.message || "";
-        if (msg.includes("API_KEY_INVALID") || msg.includes("API key not valid")) {
-          return { ok: false, message: "Chave de API inválida ou revogada no Google AI Studio." };
-        }
-      }
-    }
-
-    if (res && res.ok) {
+    if (res.ok) {
       return {
         ok: true,
-        message: "Google AI Studio conectado com sucesso!",
+        message: "Google AI Studio conectado com sucesso via Interactions API! Modelo gemini-3.8-flash 100% operacional.",
       };
     }
 
     const errData = await res.json().catch(() => ({}));
     const rawMsg = errData?.error?.message || `A Google recusou a chave (HTTP ${res.status}).`;
 
-    // Se for erro de autenticação ou chave inválida
     if (res.status === 400 || res.status === 403) {
       if (rawMsg.includes("API_KEY_INVALID") || rawMsg.includes("API key not valid")) {
         return { ok: false, message: "Chave de API inválida ou revogada no Google AI Studio." };
       }
-      return { ok: false, message: `Google recusou o acesso: ${rawMsg}` };
     }
 
-    // Se o modelo responder quota ou outro status
     if (res.status === 429) {
       return { ok: true, message: "Chave válida no Google AI Studio (limite de taxa temporário atingido)." };
     }
-
-    return { ok: false, message: rawMsg };
   } catch (err) {
-    return {
-      ok: false,
-      message: err instanceof Error ? err.message : "Falha de rede ao contatar a Google.",
-    };
+    console.warn("[GoogleAiService] Verificação REST falhou, testando via SDK:", err);
   }
+
+  // 2. Testa via SDK oficial @google/genai com ai.interactions.create
+  try {
+    const { GoogleGenAI } = await import("@google/genai");
+    const ai = new GoogleGenAI({ apiKey: cleanKey });
+    const interaction = await ai.interactions.create({
+      model: "gemini-3.8-flash",
+      input: "ping",
+    });
+
+    if (interaction?.output_text !== undefined || interaction?.id) {
+      return {
+        ok: true,
+        message: "Google AI Studio conectado com sucesso via SDK! Modelo gemini-3.8-flash 100% operacional.",
+      };
+    }
+  } catch (sdkErr: any) {
+    const msg = sdkErr?.message || "";
+    if (msg.includes("API_KEY_INVALID") || msg.includes("API key not valid")) {
+      return { ok: false, message: "Chave de API inválida ou revogada no Google AI Studio." };
+    }
+  }
+
+  return {
+    ok: false,
+    message: "Google recusou o acesso à API. Verifique se sua chave do Google AI Studio está correta.",
+  };
 }
 
 /**
@@ -183,7 +306,58 @@ export async function callGoogleAi(options: GoogleAiRequestOptions): Promise<Goo
     };
   }
 
-  // Modelos prioritários atuais da Google
+  // Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
+  const wantsFlash38 = !options.model || options.model === "gemini-3.8-flash";
+  if (wantsFlash38) {
+    try {
+      const combinedInput = options.contents
+        .map((c) => c.parts.map((p) => p.text).join("\n"))
+        .join("\n\n");
+
+      const interResult = await callGeminiInteractionsApi({
+        apiKey,
+        model: "gemini-3.8-flash",
+        input: combinedInput,
+        systemInstruction: options.systemPrompt,
+        temperature: options.temperature,
+      });
+
+      if (interResult.ok && interResult.text) {
+        let parsedJson: unknown = null;
+        if (options.responseMimeType === "application/json" || interResult.text.trim().startsWith("{")) {
+          try {
+            const cleanText = interResult.text
+              .trim()
+              .replace(/^```json\s*/i, "")
+              .replace(/^```\s*/, "")
+              .replace(/```\s*$/, "");
+            parsedJson = JSON.parse(cleanText);
+          } catch {
+            const match = interResult.text.match(/\{[\s\S]*\}/);
+            if (match) {
+              try {
+                parsedJson = JSON.parse(match[0]);
+              } catch {
+                // parse falhou
+              }
+            }
+          }
+        }
+
+        return {
+          ok: true,
+          status: 200,
+          text: interResult.text,
+          json: parsedJson,
+          modelUsed: "gemini-3.8-flash",
+        };
+      }
+    } catch (interErr) {
+      console.warn("[GoogleAiService] Falha na chamada da Interactions API com gemini-3.8-flash:", interErr);
+    }
+  }
+
+  // Modelos de contingência da Google
   const modelsToTry: string[] = options.model
     ? [options.model, ...ACTIVE_GEMINI_MODELS.filter((m) => m !== options.model)]
     : [...ACTIVE_GEMINI_MODELS];

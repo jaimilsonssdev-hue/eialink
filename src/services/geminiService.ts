@@ -131,23 +131,92 @@ function cleanHtmlOutput(raw: string): string {
 export async function generateLandingPage(
   options: GenerateLandingPageOptions,
 ): Promise<string> {
-  const { companyData, userStylePrompt, apiKey, model = "gemini-2.5-flash" } = options;
+  const { companyData, userStylePrompt, apiKey, model = "gemini-3.8-flash" } = options;
 
   const resolvedKey = resolveApiKey(apiKey);
   const ai = new GoogleGenAI({ apiKey: resolvedKey });
 
   const userContent = buildUserMessage(companyData, userStylePrompt);
+  let outputText = "";
 
-  const response = await ai.models.generateContent({
-    model,
-    contents: userContent,
-    config: {
-      systemInstruction: SYSTEM_INSTRUCTION,
-      temperature: 0.65,
-    },
-  });
+  // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
+  try {
+    const interaction = await ai.interactions.create({
+      model,
+      input: userContent,
+      system_instruction: SYSTEM_INSTRUCTION,
+      generation_config: {
+        temperature: 0.65,
+      },
+    });
 
-  const outputText = response.text;
+    outputText = (interaction as any).output_text?.trim() || "";
+    if (!outputText && Array.isArray((interaction as any).steps)) {
+      for (const step of (interaction as any).steps) {
+        if (step.type === "model_output" && Array.isArray(step.content)) {
+          const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+          if (textPart?.text) {
+            outputText = textPart.text.trim();
+            break;
+          }
+        }
+      }
+    }
+  } catch (sdkErr) {
+    console.warn("[GeminiService] ai.interactions.create falhou, tentando fallback REST:", sdkErr);
+  }
+
+  // 2. Fallback REST para o endpoint oficial /v1beta/interactions
+  if (!outputText) {
+    try {
+      const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
+        method: "POST",
+        headers: {
+          "x-goog-api-key": resolvedKey,
+          "Content-Type": "application/json",
+          "Api-Revision": "2026-05-20",
+        },
+        body: JSON.stringify({
+          model,
+          input: userContent,
+          system_instruction: SYSTEM_INSTRUCTION,
+          generation_config: { temperature: 0.65 },
+        }),
+      });
+
+      if (restRes.ok) {
+        const data = await restRes.json();
+        outputText = data.output_text?.trim() || "";
+        if (!outputText && Array.isArray(data.steps)) {
+          for (const step of data.steps) {
+            if (step.type === "model_output" && Array.isArray(step.content)) {
+              const textPart = step.content.find((c: any) => c.type === "text" && c.text);
+              if (textPart?.text) {
+                outputText = textPart.text.trim();
+                break;
+              }
+            }
+          }
+        }
+      }
+    } catch (restErr) {
+      console.warn("[GeminiService] REST interactions falhou:", restErr);
+    }
+  }
+
+  // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
+  if (!outputText) {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: userContent,
+      config: {
+        systemInstruction: SYSTEM_INSTRUCTION,
+        temperature: 0.65,
+      },
+    });
+    outputText = response.text || "";
+  }
+
   if (!outputText || outputText.trim().length === 0) {
     throw new Error("O Google Gemini retornou uma resposta vazia para a geração da página.");
   }

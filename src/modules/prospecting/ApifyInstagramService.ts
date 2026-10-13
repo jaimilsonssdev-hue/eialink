@@ -268,3 +268,138 @@ export async function testApifyToken(token: string): Promise<{ ok: boolean; mess
   }
 }
 
+export interface ApifyGoogleMapsPlace {
+  name: string;
+  niche: string;
+  city: string;
+  phone?: string | null;
+  whatsapp?: string | null;
+  website?: string | null;
+  has_website: boolean;
+  rating?: number | null;
+  reviews_count?: number | null;
+  address?: string | null;
+  photos?: string[];
+  cid?: string | null;
+}
+
+/**
+ * Realiza varredura de empresas no Google Maps utilizando a API do Apify.
+ * Utiliza os actors oficiais com fallback automático.
+ */
+export async function scrapeGoogleMapsViaApify(
+  niche: string,
+  city: string,
+  limit = 20,
+  overrideToken?: string
+): Promise<ApifyGoogleMapsPlace[]> {
+  const token = (overrideToken || getSavedApifyToken() || "").trim();
+  if (!token) return [];
+
+  const query = `${niche} em ${city}`;
+
+  const actors = [
+    {
+      url: `https://api.apify.com/v2/acts/compass~crawler-google-places/run-sync-get-dataset-items?token=${token}&timeout=50`,
+      body: {
+        searchStringsArray: [query],
+        maxCrawledPlacesPerSearch: limit,
+        language: "pt-BR",
+        countryCode: "br",
+      },
+    },
+    {
+      url: `https://api.apify.com/v2/acts/apify~google-maps-scraper/run-sync-get-dataset-items?token=${token}&timeout=50`,
+      body: {
+        searchStringsArray: [query],
+        maxCrawledPlaces: limit,
+        language: "pt-BR",
+      },
+    },
+  ];
+
+  for (const actor of actors) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 55000);
+
+      const res = await fetch(actor.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify(actor.body),
+      });
+      clearTimeout(timeout);
+
+      if (!res.ok) {
+        console.warn(`[ApifyGoogleMaps] Actor retornou status ${res.status}`);
+        continue;
+      }
+
+      const items = await res.json();
+      if (!Array.isArray(items) || items.length === 0) continue;
+
+      const places: ApifyGoogleMapsPlace[] = [];
+      for (const item of items) {
+        const name = (item.title || item.name || "").trim();
+        if (!name) continue;
+
+        const rawPhone = item.phone || item.phoneUnformatted || null;
+        const phoneDigits = rawPhone ? rawPhone.replace(/\D/g, "") : null;
+        const whatsapp =
+          phoneDigits && phoneDigits.length >= 10
+            ? phoneDigits.startsWith("55")
+              ? phoneDigits
+              : `55${phoneDigits}`
+            : null;
+
+        const website = item.website || item.url || null;
+        const isRealWebsite = Boolean(
+          website &&
+            !/(?:google\.[a-z.]+|facebook\.com|instagram\.com|linktr\.ee|tiktok\.com|globo\.com)/i.test(website) &&
+            !website.includes("maps/place"),
+        );
+
+        const rating =
+          typeof item.totalScore === "number"
+            ? item.totalScore
+            : typeof item.rating === "number"
+            ? item.rating
+            : null;
+        const reviewsCount = typeof item.reviewsCount === "number" ? item.reviewsCount : null;
+
+        const rawPhotos = Array.isArray(item.imageUrls)
+          ? item.imageUrls
+          : item.imageUrl
+          ? [item.imageUrl]
+          : [];
+        const photos = rawPhotos.filter((p: unknown) => typeof p === "string" && p.startsWith("http"));
+
+        places.push({
+          name,
+          niche: item.categoryName || item.category || niche,
+          city: item.city || city,
+          phone: rawPhone,
+          whatsapp,
+          website: isRealWebsite ? website : null,
+          has_website: isRealWebsite,
+          rating,
+          reviews_count: reviewsCount,
+          address: item.address || item.street || null,
+          photos: photos.slice(0, 6),
+          cid: item.cid || null,
+        });
+      }
+
+      if (places.length > 0) {
+        return places;
+      }
+    } catch (actorErr) {
+      console.warn("[ApifyGoogleMaps] Falha ao tentar actor da Apify:", actorErr);
+    }
+  }
+
+  return [];
+}
+
+

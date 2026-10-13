@@ -11,7 +11,11 @@ import {
 import { detectNicheKey } from "./nichePresets";
 import type { ProspectDraft } from "./types";
 import { normalizeBusinessQuery } from "./normalizeBusinessLink";
-import { fetchInstagramProfileViaApify } from "./ApifyInstagramService";
+import {
+  fetchInstagramProfileViaApify,
+  scrapeGoogleMapsViaApify,
+  getSavedApifyToken,
+} from "./ApifyInstagramService";
 
 interface RawScrapedLead {
   name: string;
@@ -30,15 +34,40 @@ interface RawScrapedLead {
   cid?: string | null;
 }
 
+const NICHE_SEARCH_SYNONYMS: Record<string, string[]> = {
+  clinica: ["clínica", "consultório", "policlínica", "centro médico", "especialidades"],
+  odontologia: ["dentista", "clínica odontológica", "consultório odontológico", "ortodontia", "implantes"],
+  barbearia: ["barbearia", "barber shop", "salão masculino", "corte masculino", "barba"],
+  restaurante: ["restaurante", "pizzaria", "hamburgueria", "churrascaria", "bistrô", "lanchonete"],
+  oficina: ["oficina mecânica", "auto center", "auto elétrica", "funilaria", "troca de óleo"],
+  salao: ["salão de beleza", "estética", "cabeleireiro", "studio de beleza", "manicure"],
+  pet: ["pet shop", "clínica veterinária", "banho e tosa", "veterinário"],
+  advocacia: ["advocacia", "escritório de advocacia", "advogado", "advogada", "assessoria jurídica"],
+  contabilidade: ["contabilidade", "escritório de contabilidade", "contador", "assessoria contábil"],
+  academia: ["academia", "crossfit", "studio fitness", "musculação", "treinamento funcional"],
+  imobiliaria: ["imobiliária", "corretor de imóveis", "venda de imóveis", "aluguel"],
+  loja: ["loja de roupas", "boutique", "moda feminina", "calçados", "loja"],
+  solar: ["energia solar", "painel solar", "energia fotovoltaica", "engenharia solar"],
+  otica: ["ótica", "óticas", "óculos e lentes"],
+};
+
 /**
- * Busca empresas reais no Google Maps via Jina Reader em pt-BR.
+ * Busca empresas reais no Google Maps via Jina Reader em pt-BR com rotação inteligente e cache-busting.
  */
-async function scrapeGoogleMaps(niche: string, city: string, subregion?: string): Promise<RawScrapedLead[]> {
-  const queryParts = [niche, subregion, "em", city].filter(Boolean).join(" ");
+async function scrapeGoogleMaps(
+  niche: string,
+  city: string,
+  subregion?: string,
+  page = 0,
+): Promise<RawScrapedLead[]> {
+  const detectedKey = detectNicheKey(niche, null);
+  const synonyms = NICHE_SEARCH_SYNONYMS[detectedKey] || [niche];
+  const queryTerm = synonyms[page % synonyms.length] || niche;
+
+  const queryParts = [queryTerm, subregion, "em", city].filter(Boolean).join(" ");
   const cleanQuery = queryParts.replace(/[^\w\sÀ-ÿ]/g, " ").trim().replace(/\s+/g, "+");
-  // Garante localização e idioma brasileiro para o Google Maps não traduzir nomes próprios
-  // em proxies internacionais (evitando que "Clínica Inove" vire "Clinical Innovate")
-  const targetUrl = `https://www.google.com/maps/search/${cleanQuery}?hl=pt-BR&gl=BR`;
+  const cacheBuster = Date.now();
+  const targetUrl = `https://www.google.com/maps/search/${cleanQuery}?hl=pt-BR&gl=BR&_cb=${cacheBuster}`;
   const jinaUrl = `https://r.jina.ai/${targetUrl}`;
 
   try {
@@ -50,6 +79,7 @@ async function scrapeGoogleMaps(niche: string, city: string, subregion?: string)
       headers: {
         "Accept-Language": "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7",
         "x-locale": "pt-BR",
+        "x-no-cache": "true",
       },
     });
     clearTimeout(timeout);
@@ -271,15 +301,53 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
 
 /**
  * Motor Principal: Busca tanto no Google Maps quanto no Instagram e consolida sem duplicatas.
+ * Suporta Apify Maps nativo quando conectado e varredura rotativa de sinônimos com cache-busting.
  */
 export async function searchGoogleMapsAndInstagram(
   niche: string,
   city: string,
   limit = 15,
   subregion?: string,
+  page = 0,
 ): Promise<ProspectDraft[]> {
+  // 1. Tenta varredura profissional via Apify Google Maps se o token estiver configurado
+  let apifyPlaces: RawScrapedLead[] = [];
+  const apifyToken = getSavedApifyToken();
+  if (apifyToken) {
+    try {
+      const detectedKey = detectNicheKey(niche, null);
+      const synonyms = NICHE_SEARCH_SYNONYMS[detectedKey] || [niche];
+      const currentNicheTerm = synonyms[page % synonyms.length] || niche;
+      const places = await scrapeGoogleMapsViaApify(currentNicheTerm, city, limit, apifyToken);
+      if (places.length > 0) {
+        apifyPlaces = places.map((p) => ({
+          name: p.name,
+          niche: p.niche,
+          city: p.city,
+          phone: p.phone,
+          whatsapp: p.whatsapp,
+          website: p.website,
+          has_website: p.has_website,
+          rating: p.rating,
+          reviews_count: p.reviews_count,
+          source: "google_maps_apify",
+          cid: p.cid,
+          notes: p.address ? `Endereço: ${p.address}` : "Capturado via Apify Google Maps",
+        }));
+      }
+    } catch (apifyErr) {
+      console.warn("[searchGoogleMapsAndInstagram] Aviso ao rodar Apify Maps:", apifyErr);
+    }
+  }
+
+  // 2. Fallback ou busca paralela via Google Maps clássico com sinônimo rotativo
+  const mapsPromise =
+    apifyPlaces.length > 0
+      ? Promise.resolve(apifyPlaces)
+      : scrapeGoogleMaps(niche, city, subregion, page);
+
   const [mapsLeads, instaLeads] = await Promise.all([
-    scrapeGoogleMaps(niche, city, subregion),
+    mapsPromise,
     scrapeInstagram(niche, city),
   ]);
 

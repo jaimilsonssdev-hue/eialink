@@ -23,6 +23,7 @@ export const prospectingSearchSchema = z.object({
   niche: safeText("O nicho", 60),
   city: safeText("A cidade", 80),
   limit: z.number().int().min(1).max(50).optional(),
+  page: z.number().int().min(0).max(50).optional(),
 });
 
 export type ProspectingSearchInput = z.infer<typeof prospectingSearchSchema>;

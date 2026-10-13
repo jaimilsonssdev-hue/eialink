@@ -7,6 +7,37 @@ import type {
   ProspectingActivity,
 } from "./types";
 
+function sanitizeProspectPayload(draft: ProspectDraft, userId: string | null) {
+  let notes = draft.notes ?? null;
+  const extraPhotos = (draft as any).photos;
+  if (Array.isArray(extraPhotos) && extraPhotos.length > 0 && (!notes || !notes.includes("[Fotos:"))) {
+    const photoList = extraPhotos.slice(0, 5).join(" | ");
+    notes = notes ? `${notes} · [Fotos: ${photoList}]` : `[Fotos: ${photoList}]`;
+  }
+
+  return {
+    name: draft.name.trim(),
+    niche: draft.niche ?? null,
+    city: draft.city ?? null,
+    state: draft.state ?? null,
+    phone: draft.phone ?? null,
+    whatsapp: draft.whatsapp ?? null,
+    email: draft.email ?? null,
+    instagram: draft.instagram ?? null,
+    website: draft.website ?? null,
+    has_website: Boolean(draft.has_website),
+    rating: typeof draft.rating === "number" ? draft.rating : null,
+    reviews_count: typeof draft.reviews_count === "number" ? draft.reviews_count : null,
+    score: typeof draft.score === "number" ? draft.score : 0,
+    priority: draft.priority ?? "media",
+    source: draft.source ?? "radar",
+    status: draft.status ?? "novo",
+    notes,
+    dedupe_key: draft.dedupe_key,
+    created_by: userId,
+  };
+}
+
 export const ProspectingService = {
   async list(): Promise<ProspectedCompany[]> {
     const { data, error } = await supabase
@@ -38,24 +69,31 @@ export const ProspectingService = {
   async importMany(drafts: ProspectDraft[]) {
     if (!drafts.length) return { inserted: 0 };
     const { data: user } = await supabase.auth.getUser();
-    const payload = drafts.map((draft) => ({ ...draft, created_by: user.user?.id ?? null }));
+    const userId = user.user?.id ?? null;
+    const payload = drafts.map((draft) => sanitizeProspectPayload(draft, userId));
     const { data, error } = await supabase
       .from("prospected_companies")
       .upsert(payload, { onConflict: "dedupe_key", ignoreDuplicates: true })
       .select("id");
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[ProspectingService] Erro no upsert de importMany:", error);
+      throw new Error(`Falha ao salvar no banco de dados: ${error.message}`);
+    }
     return { inserted: data?.length ?? 0 };
   },
 
   async create(draft: ProspectDraft) {
     const score = scoreCompany(draft);
     const { data: user } = await supabase.auth.getUser();
-    const { error } = await supabase.from("prospected_companies").insert({
-      ...draft,
-      score,
-      priority: priorityFromScore(score),
-      created_by: user.user?.id ?? null,
-    });
+    const cleanPayload = sanitizeProspectPayload(
+      {
+        ...draft,
+        score,
+        priority: priorityFromScore(score),
+      },
+      user.user?.id ?? null,
+    );
+    const { error } = await supabase.from("prospected_companies").insert(cleanPayload);
     if (error) {
       throw new Error(
         error.code === "23505" ? "Esta empresa já existe no radar." : error.message,

@@ -62,10 +62,11 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 
-import { runLiveProspecting } from "@/modules/prospecting/prospecting.functions";
+import { runLiveProspecting, lookupBusinessProfileFn } from "@/modules/prospecting/prospecting.functions";
 import { validateProspectingSearch } from "@/modules/prospecting/validation";
 import { useActionCooldown } from "@/hooks/useActionCooldown";
-import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
+import { searchGoogleMapsAndInstagram, lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
+import { getSavedApifyToken, APIFY_TOKEN_UPDATED_EVENT } from "@/modules/prospecting/ApifyInstagramService";
 import { PageService, type OwnedPage } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
@@ -215,14 +216,29 @@ function ProspectingPage() {
   const [copiedInstagramCompanyId, setCopiedInstagramCompanyId] = useState<string | null>(null);
   const { canRun: canRunAction, remainingSeconds: remainingCooldown } = useActionCooldown(3000);
 
-  // Estados da Varredura Automática (Google Maps + Instagram)
+  // Estados da Varredura Automática (Google Maps + Apify + Instagram)
   const [searchNiche, setSearchNiche] = useState("Clínica");
   const [searchCity, setSearchCity] = useState("Teixeira de Freitas, BA");
   const [isSearching, setIsSearching] = useState(false);
   const [scanVariationCount, setScanVariationCount] = useState(0);
   const [liveResults, setLiveResults] = useState<ProspectDraft[]>([]);
-  const [liveSiteFilter, setLiveSiteFilter] = useState<"no_website" | "has_website" | "all">("no_website");
+  const [liveSiteFilter, setLiveSiteFilter] = useState<"hot" | "no_website" | "has_website" | "high_rating" | "only_new" | "all">("hot");
   const [selectedLiveIndices, setSelectedLiveIndices] = useState<Set<number>>(new Set());
+
+  // Modo de Busca e Integração Apify
+  const [mapsSearchMode, setMapsSearchMode] = useState<"maps" | "apify_insta">("maps");
+  const [instaLookupInput, setInstaLookupInput] = useState("");
+  const [isLookingUpInsta, setIsLookingUpInsta] = useState(false);
+  const [hasApifyToken, setHasApifyToken] = useState(false);
+
+  useEffect(() => {
+    function checkToken() {
+      setHasApifyToken(Boolean(getSavedApifyToken()));
+    }
+    checkToken();
+    window.addEventListener(APIFY_TOKEN_UPDATED_EVENT, checkToken);
+    return () => window.removeEventListener(APIFY_TOKEN_UPDATED_EVENT, checkToken);
+  }, []);
 
   const [creatingPageId, setCreatingPageId] = useState<string | null>(null);
   const [regeneratingPageId, setRegeneratingPageId] = useState<string | null>(null);
@@ -411,11 +427,20 @@ function ProspectingPage() {
     mutationFn: (drafts: Parameters<typeof ProspectingService.importMany>[0]) =>
       ProspectingService.importMany(drafts),
     onSuccess: ({ inserted }) => {
-      setFeedback(`${inserted} empresa(s) importada(s) com sucesso.`);
+      if (inserted > 0) {
+        setFeedback(`✅ ${inserted} empresa(s) importada(s) para o radar com sucesso!`);
+        // Remove dos resultados ao vivo apenas as empresas que estavam selecionadas e foram importadas
+        setLiveResults((prev) => prev.filter((_, idx) => !selectedLiveIndices.has(idx)));
+        setSelectedLiveIndices(new Set());
+      } else {
+        setFeedback("⚠️ Nenhuma oportunidade nova foi inserida (as empresas selecionadas já existiam no Radar com o mesmo contato/nome).");
+      }
       setPreview(null);
       invalidate();
     },
-    onError: (error: Error) => setFeedback(error.message),
+    onError: (error: Error) => {
+      setFeedback(`❌ Falha ao salvar no banco de dados: ${error.message}`);
+    },
   });
 
   const statusMutation = useMutation({
@@ -520,8 +545,11 @@ function ProspectingPage() {
 
   const displayedLiveResults = useMemo(() => {
     return liveResults.filter((lead) => {
+      if (liveSiteFilter === "hot") return !lead.has_website && Boolean(lead.whatsapp || lead.phone);
       if (liveSiteFilter === "no_website") return !lead.has_website;
       if (liveSiteFilter === "has_website") return lead.has_website;
+      if (liveSiteFilter === "high_rating") return (lead.rating ?? 0) >= 4.0;
+      if (liveSiteFilter === "only_new") return !(lead as any).alreadyInRadar;
       return true;
     });
   }, [liveResults, liveSiteFilter]);
@@ -588,8 +616,8 @@ function ProspectingPage() {
 
   const importable = (preview ?? []).filter((row) => row.draft && !row.duplicateOf);
 
-  async function handleLiveSearch(event: React.FormEvent) {
-    event.preventDefault();
+  async function handleLiveSearch(event?: React.FormEvent, isNextPage = false) {
+    if (event) event.preventDefault();
     if (isSearching) return;
 
     // Validação estrita dos campos digitados (bloqueia scripts e caracteres suspeitos)
@@ -597,13 +625,14 @@ function ProspectingPage() {
       niche: searchNiche,
       city: searchCity,
       limit: 15,
+      page: isNextPage ? scanVariationCount + 1 : 0,
     });
     if (!validation.ok) {
       setFeedback(validation.message);
       return;
     }
 
-    // Trava de 3 segundos contra cliques repetidos
+    // Trava de 2 segundos contra cliques repetidos
     if (!canRunAction("live-search")) {
       setFeedback(
         `Aguarde ${remainingCooldown("live-search")}s antes de disparar uma nova varredura.`,
@@ -612,26 +641,27 @@ function ProspectingPage() {
     }
 
     const { niche, city } = validation.data;
+    const pageToFetch = isNextPage ? scanVariationCount + 1 : 0;
     setIsSearching(true);
     setFeedback(null);
 
     const SUBREGIONS = ["", "centro", "bairros", "comercial", "avenida", "zona sul", "zona norte"];
-    const currentSubregion = SUBREGIONS[scanVariationCount % SUBREGIONS.length];
+    const currentSubregion = SUBREGIONS[pageToFetch % SUBREGIONS.length];
 
     try {
       let results: ProspectDraft[] = [];
       try {
-        // Tentativa 1: Execução direta no cliente com rotação de variação para encontrar novas empresas
-        results = await searchGoogleMapsAndInstagram(niche, city, 15, currentSubregion || undefined);
+        // Tentativa 1: Execução com rotação de sinônimos/Apify e cache-busting
+        results = await searchGoogleMapsAndInstagram(niche, city, 15, currentSubregion || undefined, pageToFetch);
       } catch (clientErr) {
         console.warn("[Prospecção] Execução direta no cliente falhou, tentando via servidor:", clientErr);
         // Tentativa 2: Fallback para RPC do servidor caso o navegador bloqueie por adblocker
         results = await runLiveProspecting({
-          data: { niche, city, limit: 15 },
+          data: { niche, city, limit: 15, page: pageToFetch },
         });
       }
 
-      setScanVariationCount((prev) => prev + 1);
+      setScanVariationCount(pageToFetch);
 
       // Deduplicação Inteligente em tempo real contra empresas já salvas no Radar
       const existingNames = new Set(
@@ -666,11 +696,21 @@ function ProspectingPage() {
         };
       });
 
-      setLiveResults(enrichedResults);
+      if (isNextPage) {
+        // Modo Próxima Leva: Concatena novas oportunidades sem repetir
+        setLiveResults((prev) => {
+          const prevKeys = new Set(prev.map((p) => p.dedupe_key));
+          const onlyNewFound = enrichedResults.filter((r) => !prevKeys.has(r.dedupe_key));
+          return [...prev, ...onlyNewFound];
+        });
+      } else {
+        setLiveResults(enrichedResults);
+      }
 
       // Marca apenas as empresas que AINDA NÃO estão no radar por padrão
       const newIndices = new Set<number>();
-      enrichedResults.forEach((r, idx) => {
+      const listToMark = isNextPage ? [...liveResults, ...enrichedResults] : enrichedResults;
+      listToMark.forEach((r, idx) => {
         if (!r.alreadyInRadar) {
           newIndices.add(idx);
         }
@@ -685,7 +725,9 @@ function ProspectingPage() {
         const totalNew = enrichedResults.filter((r) => !r.alreadyInRadar).length;
         const totalExisting = enrichedResults.filter((r) => r.alreadyInRadar).length;
         setFeedback(
-          `Varredura concluída! ${results.length} empresa(s) localizada(s) em tempo real: ${totalNew} novas e ${totalExisting} já salvas no radar.`
+          isNextPage
+            ? `🔥 Próxima leva concluída! +${enrichedResults.length} empresas analisadas (+${totalNew} inéditas para seu radar).`
+            : `Varredura concluída! ${results.length} empresa(s) localizada(s) em tempo real: ${totalNew} novas e ${totalExisting} já salvas no radar.`
         );
       }
     } catch (err: unknown) {
@@ -696,6 +738,76 @@ function ProspectingPage() {
     }
   }
 
+  async function handleLookupInstagram(e: React.FormEvent) {
+    e.preventDefault();
+    const query = instaLookupInput.trim();
+    if (!query) return;
+
+    setIsLookingUpInsta(true);
+    setFeedback(null);
+
+    try {
+      let results: ProspectDraft[] = [];
+      try {
+        results = await lookupBusinessProfile(query);
+      } catch (err) {
+        console.warn("[Lookup] Fallback servidor:", err);
+        results = await lookupBusinessProfileFn({ data: { query } });
+      }
+
+      if (!results.length) {
+        setFeedback(`Nenhum perfil encontrado para "${query}". Verifique se o @ ou link do Instagram está correto.`);
+        return;
+      }
+
+      const existingNames = new Set(
+        companies.map((c) =>
+          c.name
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase()
+            .replace(/[^a-z0-9]/g, "")
+        )
+      );
+      const existingPhones = new Set(
+        companies
+          .map((c) => (c.whatsapp || c.phone || "").replace(/\D/g, ""))
+          .filter((p) => p.length >= 8)
+      );
+
+      const enriched = results.map((r) => {
+        const normName = r.name
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]/g, "");
+        const normPhone = (r.whatsapp || r.phone || "").replace(/\D/g, "");
+        const isDuplicate =
+          (normName && existingNames.has(normName)) ||
+          (normPhone.length >= 8 && existingPhones.has(normPhone));
+        return { ...r, alreadyInRadar: isDuplicate };
+      });
+
+      setLiveResults((prev) => {
+        const seen = new Set(prev.map((p) => p.dedupe_key));
+        const added = enriched.filter((item) => !seen.has(item.dedupe_key));
+        return [...added, ...prev];
+      });
+
+      setSelectedLiveIndices((prev) => {
+        const next = new Set(prev);
+        enriched.forEach((_, idx) => next.add(idx));
+        return next;
+      });
+
+      setInstaLookupInput("");
+      setFeedback(`✨ Perfil de "${enriched[0].name}" carregado via Apify/Instagram com fotos reais e WhatsApp! Pronto para importar.`);
+    } catch (err: unknown) {
+      setFeedback(err instanceof Error ? err.message : "Erro ao consultar perfil.");
+    } finally {
+      setIsLookingUpInsta(false);
+    }
+  }
 
   function handleImportLive() {
     if (!liveResults || !liveResults.length) return;
@@ -706,7 +818,6 @@ function ProspectingPage() {
       niche: detectNicheKey(item.niche, item.name),
     }));
     importMutation.mutate(enriched);
-    setLiveResults([]);
   }
 
   /**
@@ -1753,91 +1864,180 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
           </div>
         </div>
 
-        {/* FERRAMENTA 1: GOOGLE MAPS & INSTAGRAM (FULL WIDTH) */}
+        {/* FERRAMENTA 1: GOOGLE MAPS & APIFY (FULL WIDTH) */}
         {prospectEngine === "maps" && (
           <Card className="w-full border-border bg-card shadow-xs">
-            <CardHeader className="pb-4 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
+            <CardHeader className="pb-3 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
               <div>
                 <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-                  <Globe2 className="h-5 w-5 text-primary" /> Ferramenta 1: Radar Google Maps & Local
+                  <Globe2 className="h-5 w-5 text-primary" /> Radar de Oportunidades: Google Maps & Apify
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                  Varredura em tempo real para encontrar comércios e serviços locais, identificando automaticamente quem já tem site e quem está sem site.
+                  Varredura inteligente de empresas locais no Google Maps com fotos em alta definição, contatos e extração de perfis via Apify.
                 </CardDescription>
               </div>
-              <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-400">
-                ⚡ Tempo Real & Sem Bloqueios
-              </span>
+              <div className="flex items-center gap-2 flex-wrap">
+                {hasApifyToken ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                    <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                    Apify Conectado & Ativo
+                  </span>
+                ) : (
+                  <Link
+                    to="/admin"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition-all"
+                  >
+                    ⚠️ Conectar Apify no Painel
+                  </Link>
+                )}
+                <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                  ⚡ Anti-Repetição Inteligente
+                </span>
+              </div>
             </CardHeader>
 
             <CardContent className="space-y-4">
-              {/* Sugestões Rápidas de CNAE / Nichos */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
-                <span className="text-[11px] text-muted-foreground whitespace-nowrap font-medium flex items-center gap-1">
-                  <Sparkles className="h-3 w-3 text-primary" /> CNAEs Quentes:
-                </span>
-                {POPULAR_CNAES.slice(0, 8).map((item) => (
-                  <button
-                    key={item.code}
-                    type="button"
-                    onClick={() => setSearchNiche(item.niche)}
-                    className={`px-2.5 py-1 rounded-full border text-[11px] whitespace-nowrap transition-all ${
-                      searchNiche.toLowerCase().includes(item.niche.toLowerCase())
-                        ? "border-primary bg-primary/15 text-primary dark:text-white font-semibold shadow-xs"
-                        : "border-border/70 bg-background/50 text-muted-foreground hover:text-foreground hover:border-primary/40"
-                    }`}
-                    title={`${item.title} (CNAE ${item.code})`}
-                  >
-                    {item.niche} <span className="opacity-60 text-[10px]">[{item.code.split("-")[0]}]</span>
-                  </button>
-                ))}
+              {/* Seletor de Modo: Varredura Google Maps vs Busca Rápida Instagram Apify */}
+              <div className="flex items-center gap-2 p-1 rounded-xl bg-muted/40 border border-border/60 max-w-md">
+                <button
+                  type="button"
+                  onClick={() => setMapsSearchMode("maps")}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                    mapsSearchMode === "maps"
+                      ? "bg-background text-foreground shadow-xs border border-border/80"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Globe2 className="h-3.5 w-3.5 text-primary" />
+                  Varredura Google Maps
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMapsSearchMode("apify_insta")}
+                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                    mapsSearchMode === "apify_insta"
+                      ? "bg-background text-foreground shadow-xs border border-border/80"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Instagram className="h-3.5 w-3.5 text-pink-500" />
+                  Busca Apify (Instagram @)
+                  {hasApifyToken && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+                </button>
               </div>
 
-              <form onSubmit={handleLiveSearch} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
-                <div className="sm:col-span-5">
-                  <input
-                    value={searchNiche}
-                    onChange={(e) => setSearchNiche(e.target.value)}
-                    placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
-                    className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                    disabled={isSearching}
-                    required
-                  />
-                </div>
-                <div className="sm:col-span-4">
-                  <input
-                    value={searchCity}
-                    onChange={(e) => setSearchCity(e.target.value)}
-                    placeholder="Cidade (ex: São Paulo, SP)"
-                    className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
-                    disabled={isSearching}
-                    required
-                  />
-                </div>
-                <div className="sm:col-span-3">
-                  <button
-                    type="submit"
-                    disabled={isSearching}
-                    className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium bg-primary hover:bg-primary/90 text-white transition-all shadow-sm"
-                  >
-                    {isSearching ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="h-4 w-4" /> Varrer Oportunidades
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
+              {mapsSearchMode === "maps" ? (
+                <>
+                  {/* Sugestões Rápidas de CNAE / Nichos */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-xs no-scrollbar">
+                    <span className="text-[11px] text-muted-foreground whitespace-nowrap font-medium flex items-center gap-1">
+                      <Sparkles className="h-3 w-3 text-primary" /> CNAEs Quentes:
+                    </span>
+                    {POPULAR_CNAES.slice(0, 8).map((item) => (
+                      <button
+                        key={item.code}
+                        type="button"
+                        onClick={() => setSearchNiche(item.niche)}
+                        className={`px-2.5 py-1 rounded-full border text-[11px] whitespace-nowrap transition-all ${
+                          searchNiche.toLowerCase().includes(item.niche.toLowerCase())
+                            ? "border-primary bg-primary/15 text-primary dark:text-white font-semibold shadow-xs"
+                            : "border-border/70 bg-background/50 text-muted-foreground hover:text-foreground hover:border-primary/40"
+                        }`}
+                        title={`${item.title} (CNAE ${item.code})`}
+                      >
+                        {item.niche} <span className="opacity-60 text-[10px]">[{item.code.split("-")[0]}]</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  <form onSubmit={(e) => handleLiveSearch(e, false)} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
+                    <div className="sm:col-span-5">
+                      <input
+                        value={searchNiche}
+                        onChange={(e) => setSearchNiche(e.target.value)}
+                        placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
+                        className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        disabled={isSearching}
+                        required
+                      />
+                    </div>
+                    <div className="sm:col-span-4">
+                      <input
+                        value={searchCity}
+                        onChange={(e) => setSearchCity(e.target.value)}
+                        placeholder="Cidade (ex: São Paulo, SP)"
+                        className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        disabled={isSearching}
+                        required
+                      />
+                    </div>
+                    <div className="sm:col-span-3">
+                      <button
+                        type="submit"
+                        disabled={isSearching}
+                        className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium bg-primary hover:bg-primary/90 text-white transition-all shadow-sm"
+                      >
+                        {isSearching ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
+                          </>
+                        ) : (
+                          <>
+                            <Search className="h-4 w-4" /> Varrer Oportunidades
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+                </>
+              ) : (
+                /* PAINEL OFICIAL DE BUSCA APIFY (INSTAGRAM SCRAPER) */
+                <form onSubmit={handleLookupInstagram} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 p-3 rounded-xl border border-border/80 bg-background/50">
+                  <div className="sm:col-span-9">
+                    <div className="relative">
+                      <input
+                        value={instaLookupInput}
+                        onChange={(e) => setInstaLookupInput(e.target.value)}
+                        placeholder="Digite o @ do perfil ou link (ex: @clinicainove ou instagram.com/clinicainove)"
+                        className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        disabled={isLookingUpInsta}
+                        required
+                      />
+                    </div>
+                    <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5">
+                      <Sparkles className="h-3 w-3 text-pink-400" />
+                      A Apify extrai fotos em alta definição do feed, telefone, biografia e WhatsApp real para alimentar o radar.
+                    </p>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <button
+                      type="submit"
+                      disabled={isLookingUpInsta || !instaLookupInput.trim()}
+                      className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white transition-all shadow-sm disabled:opacity-50"
+                    >
+                      {isLookingUpInsta ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" /> Extraindo Fotos...
+                        </>
+                      ) : (
+                        <>
+                          <Instagram className="h-4 w-4" /> Buscar com Apify
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
 
               {isSearching && (
                 <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground animate-pulse">
                   <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
                   <div>
-                    <p className="font-medium text-foreground text-xs sm:text-sm">Varrendo Google Maps e perfis públicos do Instagram...</p>
+                    <p className="font-medium text-foreground text-xs sm:text-sm">
+                      {hasApifyToken
+                        ? "Executando varredura profunda no Google Maps via Apify & Redes Locais..."
+                        : "Varrendo Google Maps com rotação inteligente de termos e sem cache preso..."}
+                    </p>
                     <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
                   </div>
                 </div>
@@ -1845,19 +2045,54 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
 
               {liveResults && liveResults.length > 0 && (
                 <div className="space-y-3 pt-2">
-                  {/* Abas de Filtro de Site na Varredura */}
+                  {/* FILTROS INTELIGENTES DA VARREDURA */}
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-2.5">
-                    <div className="flex items-center gap-1 text-xs">
+                    <div className="flex flex-wrap items-center gap-1.5 text-xs">
+                      <button
+                        type="button"
+                        onClick={() => setLiveSiteFilter("hot")}
+                        className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
+                          liveSiteFilter === "hot"
+                            ? "bg-rose-500/20 text-rose-300 border border-rose-500/40 shadow-xs"
+                            : "text-muted-foreground hover:text-foreground bg-muted/30"
+                        }`}
+                        title="Empresas sem site que possuem WhatsApp para contato imediato"
+                      >
+                        🔥 Super Quentes ({liveResults.filter((r) => !r.has_website && Boolean(r.whatsapp || r.phone)).length})
+                      </button>
                       <button
                         type="button"
                         onClick={() => setLiveSiteFilter("no_website")}
                         className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
                           liveSiteFilter === "no_website"
                             ? "bg-amber-500/20 text-amber-300 border border-amber-500/30 shadow-xs"
-                            : "text-muted-foreground hover:text-foreground"
+                            : "text-muted-foreground hover:text-foreground bg-muted/30"
                         }`}
                       >
-                        🔥 Sem Site ({liveResults.filter((r) => !r.has_website).length})
+                        ⚡ Sem Site ({liveResults.filter((r) => !r.has_website).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLiveSiteFilter("only_new")}
+                        className={`px-2.5 py-1 rounded-md font-semibold text-[11px] transition-all flex items-center gap-1 ${
+                          liveSiteFilter === "only_new"
+                            ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shadow-xs"
+                            : "text-muted-foreground hover:text-foreground bg-muted/30"
+                        }`}
+                        title="Oculta empresas que você já salvou no Radar"
+                      >
+                        🆕 Inéditas ({liveResults.filter((r) => !(r as any).alreadyInRadar).length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLiveSiteFilter("high_rating")}
+                        className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
+                          liveSiteFilter === "high_rating"
+                            ? "bg-muted text-foreground border border-border shadow-xs"
+                            : "text-muted-foreground hover:text-foreground bg-muted/30"
+                        }`}
+                      >
+                        ⭐ Nota 4.0+ ({liveResults.filter((r) => (r.rating ?? 0) >= 4.0).length})
                       </button>
                       <button
                         type="button"
@@ -1865,7 +2100,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                         className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
                           liveSiteFilter === "has_website"
                             ? "bg-muted text-foreground border border-border shadow-xs"
-                            : "text-muted-foreground hover:text-foreground"
+                            : "text-muted-foreground hover:text-foreground bg-muted/30"
                         }`}
                       >
                         🌐 Com Site ({liveResults.filter((r) => r.has_website).length})
@@ -1876,14 +2111,26 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                         className={`px-2.5 py-1 rounded-md font-medium text-[11px] transition-all ${
                           liveSiteFilter === "all"
                             ? "bg-muted text-foreground border border-border shadow-xs"
-                            : "text-muted-foreground hover:text-foreground"
+                            : "text-muted-foreground hover:text-foreground bg-muted/30"
                         }`}
                       >
                         Todas ({liveResults.length})
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {/* BOTÃO INTELIGENTE: BUSCAR MAIS / PRÓXIMA LEVA */}
+                      <button
+                        type="button"
+                        disabled={isSearching}
+                        onClick={() => handleLiveSearch(undefined, true)}
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-primary/15 hover:bg-primary/25 text-primary dark:text-white border border-primary/30 transition-all flex items-center gap-1.5 shadow-2xs"
+                        title="Avança para a próxima leva de variações/bairros sem repetir as que já vieram"
+                      >
+                        {isSearching ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
+                        Buscar Mais (Próxima Leva)
+                      </button>
+
                       <button
                         type="button"
                         className="text-xs text-muted-foreground hover:text-foreground underline transition-colors"

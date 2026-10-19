@@ -165,25 +165,19 @@ export async function processLojaAiChat(
     parts: currentParts,
   });
 
-  const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
   let rawText = "";
-
-  for (const model of modelsToTry) {
-    try {
-      const response = await ai.models.generateContent({
-        model,
-        contents: formattedContents,
-        config: {
-          systemInstruction: LOJA_SYSTEM_PROMPT,
-          temperature: 0.7,
-        },
-      });
-
-      rawText = response.text || "";
-      if (rawText.trim().length > 0) break;
-    } catch (e: any) {
-      console.warn(`Tentativa no modelo ${model} falhou:`, e?.message);
-    }
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3.8-flash",
+      contents: formattedContents,
+      config: {
+        systemInstruction: LOJA_SYSTEM_PROMPT,
+        temperature: 0.7,
+      },
+    });
+    rawText = response.text || "";
+  } catch (e: any) {
+    console.warn("Tentativa no modelo gemini-3.8-flash falhou:", e?.message);
   }
 
   if (!rawText) {

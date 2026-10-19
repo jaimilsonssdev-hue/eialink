@@ -509,50 +509,59 @@ ${effectiveHtml}`;
       }
     }
 
-    // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
+    // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
     if (!responseText) {
-      const modelsToTry = [
-        "gemini-2.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
-      ];
-
-      for (const modelCandidate of modelsToTry) {
-        let attempts = 0;
-        const maxAttempts = 2;
-        while (attempts < maxAttempts) {
-          try {
-            const response = await ai.models.generateContent({
-              model: modelCandidate,
-              contents,
-              config: {
-                systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-                temperature: 0.7,
-              },
-            });
-            responseText = response.text?.trim() || "";
-            if (responseText) break;
-          } catch (apiErr: any) {
-            lastCapturedError = apiErr;
-            const errStr = JSON.stringify(apiErr || {});
-            const status = apiErr?.status || apiErr?.code;
-            const isTransient =
-              status === 503 ||
-              status === 429 ||
-              errStr.includes("503") ||
-              errStr.includes("UNAVAILABLE") ||
-              errStr.includes("RESOURCE_EXHAUSTED");
-
-            if (isTransient && attempts < maxAttempts - 1) {
-              attempts++;
-              await new Promise((r) => setTimeout(r, 1000));
-              continue;
-            }
-            console.warn(`[StudioServer] Modelo contingência ${modelCandidate} falhou:`, apiErr?.message || apiErr);
-            break;
+      let attempts = 0;
+      const maxAttempts = 2;
+      while (attempts < maxAttempts) {
+        try {
+          const response = await ai.models.generateContent({
+            model: "gemini-3.8-flash",
+            contents,
+            config: {
+              systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
+              temperature: 0.7,
+            },
+          });
+          responseText = response.text?.trim() || "";
+          if (responseText) break;
+        } catch (apiErr: any) {
+          lastCapturedError = apiErr;
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise((r) => setTimeout(r, 1000));
+            continue;
           }
+          console.warn("[StudioServer] Tentativa direta com gemini-3.8-flash falhou:", apiErr?.message || apiErr);
+          break;
         }
-        if (responseText) break;
+      }
+
+      // 4. Última tentativa REST generateContent com gemini-3.8-flash
+      if (!responseText) {
+        try {
+          const directRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${resolvedKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents,
+                systemInstruction: { parts: [{ text: CODE_GENERATION_SYSTEM_PROMPT }] },
+                generationConfig: { temperature: 0.7 },
+              }),
+            },
+          );
+          if (directRes.ok) {
+            const data = await directRes.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              responseText = text.trim();
+            }
+          }
+        } catch (fetchErr) {
+          console.warn("[StudioServer] REST generateContent com gemini-3.8-flash falhou:", fetchErr);
+        }
       }
     }
 
@@ -868,27 +877,23 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
       }
     }
 
-    // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
+    // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
     if (!briefingText) {
-      const briefingModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
-      for (const modelCandidate of briefingModels) {
-        try {
-          const response = await ai.models.generateContent({
-            model: modelCandidate,
-            contents: [
-              ...formattedHistory,
-              { role: "user", parts: userParts },
-            ],
-            config: {
-              systemInstruction: BRIEFING_SYSTEM_PROMPT,
-              temperature: 0.7,
-            },
-          });
-          briefingText = response.text?.trim() || "";
-          if (briefingText) break;
-        } catch (err) {
-          console.warn(`[StudioServer] Falha no briefing de contingência com ${modelCandidate}:`, err);
-        }
+      try {
+        const response = await ai.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: [
+            ...formattedHistory,
+            { role: "user", parts: userParts },
+          ],
+          config: {
+            systemInstruction: BRIEFING_SYSTEM_PROMPT,
+            temperature: 0.7,
+          },
+        });
+        briefingText = response.text?.trim() || "";
+      } catch (err) {
+        console.warn("[StudioServer] Falha no briefing com gemini-3.8-flash:", err);
       }
     }
 
@@ -1413,24 +1418,19 @@ REGRAS CRÍTICAS DE RESPOSTA:
       parts: currentParts,
     });
 
-    const candidateModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
     let rawText = "";
-
-    for (const model of candidateModels) {
-      try {
-        const res = await ai.models.generateContent({
-          model,
-          contents: formattedContents,
-          config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.6,
-          },
-        });
-        rawText = res.text?.trim() || "";
-        if (rawText) break;
-      } catch (err: any) {
-        console.warn(`[CardapioServer] Erro com modelo ${model}:`, err?.message || err);
-      }
+    try {
+      const res = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: formattedContents,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.6,
+        },
+      });
+      rawText = res.text?.trim() || "";
+    } catch (err: any) {
+      console.warn("[CardapioCopilot] Erro com gemini-3.8-flash:", err?.message || err);
     }
 
     if (!rawText) {
@@ -1602,24 +1602,19 @@ REGRAS DE RESPOSTA:
       parts: currentParts,
     });
 
-    const candidateModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
     let rawText = "";
-
-    for (const model of candidateModels) {
-      try {
-        const res = await ai.models.generateContent({
-          model,
-          contents: formattedContents,
-          config: {
-            systemInstruction: systemPrompt,
-            temperature: 0.6,
-          },
-        });
-        rawText = res.text?.trim() || "";
-        if (rawText) break;
-      } catch (err: any) {
-        console.warn(`[LojaServer] Erro com modelo ${model}:`, err?.message || err);
-      }
+    try {
+      const res = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: formattedContents,
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.6,
+        },
+      });
+      rawText = res.text?.trim() || "";
+    } catch (err: any) {
+      console.warn("[LojaServer] Erro com gemini-3.8-flash:", err?.message || err);
     }
 
     if (!rawText) {

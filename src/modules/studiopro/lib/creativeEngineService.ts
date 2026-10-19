@@ -301,27 +301,23 @@ export async function planSiteBriefing(
     }
   }
 
-  // 3. Fallback de contingência caso os endpoints principais estejam inacessíveis
+  // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
   if (!briefingText) {
-    const contingencyModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
-    for (const modelCandidate of contingencyModels) {
-      try {
-        const response = await client.models.generateContent({
-          model: modelCandidate,
-          contents: [
-            ...formattedHistory,
-            { role: "user", parts: currentUserParts },
-          ],
-          config: {
-            systemInstruction: BRIEFING_SYSTEM_PROMPT,
-            temperature: 0.7,
-          },
-        });
-        briefingText = response.text?.trim() || "";
-        if (briefingText) break;
-      } catch (err) {
-        console.warn(`[CreativeEngine] Falha no briefing de contingência com ${modelCandidate}:`, err);
-      }
+    try {
+      const response = await client.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: [
+          ...formattedHistory,
+          { role: "user", parts: currentUserParts },
+        ],
+        config: {
+          systemInstruction: BRIEFING_SYSTEM_PROMPT,
+          temperature: 0.7,
+        },
+      });
+      briefingText = response.text?.trim() || "";
+    } catch (err) {
+      console.warn("[CreativeEngine] Falha no briefing de contingência com gemini-3.8-flash:", err);
     }
   }
 
@@ -447,50 +443,64 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
     }
   }
 
-  // 3. Fallback de contingência caso a nova API passe por instabilidade temporária
+  // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
   if (!raw) {
-    const contingencyModels = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
+    let attempts = 0;
+    const maxAttempts = 2;
 
-    for (const modelCandidate of contingencyModels) {
-      let attempts = 0;
-      const maxAttempts = 2;
+    while (attempts < maxAttempts) {
+      try {
+        const response = await client.models.generateContent({
+          model: "gemini-3.8-flash",
+          contents: [{ role: "user", parts: currentUserParts }],
+          config: {
+            systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
+            temperature: 0.7,
+          },
+        });
 
-      while (attempts < maxAttempts) {
-        try {
-          const response = await client.models.generateContent({
-            model: modelCandidate,
-            contents: [{ role: "user", parts: currentUserParts }],
-            config: {
-              systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-              temperature: 0.7,
-            },
-          });
-
-          raw = response.text?.trim() || "";
-          if (raw) break;
-        } catch (err: any) {
-          lastCapturedError = err;
-          const errStr = JSON.stringify(err || {});
-          const status = err?.status || err?.code;
-          const isTransient =
-            status === 503 ||
-            status === 429 ||
-            errStr.includes("503") ||
-            errStr.includes("UNAVAILABLE") ||
-            errStr.includes("RESOURCE_EXHAUSTED");
-
-          if (isTransient && attempts < maxAttempts - 1) {
-            attempts++;
-            await new Promise((r) => setTimeout(r, 1000));
-            continue;
-          }
-
-          console.warn(`[CreativeEngine] Modelo contingência ${modelCandidate} falhou:`, err?.message || err);
-          break;
+        raw = response.text?.trim() || "";
+        if (raw) break;
+      } catch (err: any) {
+        lastCapturedError = err;
+        attempts++;
+        if (attempts < maxAttempts) {
+          await new Promise((r) => setTimeout(r, 1000));
+          continue;
         }
+        console.warn("[CreativeEngine] Tentativa generateContent com gemini-3.8-flash falhou:", err?.message || err);
+        break;
       }
+    }
 
-      if (raw) break;
+    // 4. Fallback REST direto com gemini-3.8-flash
+    if (!raw) {
+      try {
+        const activeKey = apiKey || getGeminiApiKey();
+        if (activeKey) {
+          const directRes = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ role: "user", parts: currentUserParts }],
+                systemInstruction: { parts: [{ text: CODE_GENERATION_SYSTEM_PROMPT }] },
+                generationConfig: { temperature: 0.7 },
+              }),
+            },
+          );
+          if (directRes.ok) {
+            const data = await directRes.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) {
+              raw = text.trim();
+            }
+          }
+        }
+      } catch (restErr) {
+        console.warn("[CreativeEngine] REST generateContent com gemini-3.8-flash falhou:", restErr);
+      }
     }
   }
 

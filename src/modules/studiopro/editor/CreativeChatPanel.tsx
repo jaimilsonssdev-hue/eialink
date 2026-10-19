@@ -20,6 +20,7 @@ import {
   planSiteBriefing,
   generateSiteHtml,
   getGeminiApiKey,
+  resolveCreativeStudioApiKeyAsync,
   type MultimodalAttachment,
 } from "@/modules/studiopro/lib/creativeEngineService";
 import {
@@ -107,6 +108,18 @@ export function CreativeChatPanel() {
     if (e.target) e.target.value = "";
   }
 
+  async function getResolvedApiKeyHelper(): Promise<string | undefined> {
+    const direct = getGeminiApiKey();
+    if (direct) return direct;
+    try {
+      const synced = await resolveCreativeStudioApiKeyAsync();
+      if (synced) return synced;
+    } catch {
+      // segue sem chave local
+    }
+    return undefined;
+  }
+
   async function handleSend() {
     const text = input.trim();
     if ((!text && attachedFiles.length === 0) || isGenerating) return;
@@ -139,7 +152,7 @@ export function CreativeChatPanel() {
       if (mode === "plan" && !currentHtml) {
         setIsGenerating(true, "Elaborando plano estratégico com Gemini 3.8 Flash...");
         let briefing = "";
-        const clientApiKey = getGeminiApiKey() || undefined;
+        const clientApiKey = await getResolvedApiKeyHelper();
         try {
           const timeoutPromise = new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite excedido na nuvem")), 35000),
@@ -180,7 +193,7 @@ export function CreativeChatPanel() {
 
         let newHtml = "";
         let aiExplanation = "";
-        const clientApiKey = getGeminiApiKey() || undefined;
+        const clientApiKey = await getResolvedApiKeyHelper();
         try {
           const timeoutPromise = new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error("Tempo limite de resposta na nuvem")), 60000),
@@ -290,7 +303,7 @@ export function CreativeChatPanel() {
       );
       let html = "";
       let explanation = "";
-      const clientApiKey = getGeminiApiKey() || undefined;
+      const clientApiKey = await getResolvedApiKeyHelper();
 
       try {
         const timeoutPromise = new Promise<never>((_, reject) =>

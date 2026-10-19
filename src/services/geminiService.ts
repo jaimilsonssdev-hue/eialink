@@ -207,7 +207,7 @@ export async function generateLandingPage(
   // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
   if (!outputText) {
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
+      model: model || "gemini-3.8-flash",
       contents: userContent,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,

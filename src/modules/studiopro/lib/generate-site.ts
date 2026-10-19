@@ -8,7 +8,6 @@ const VARIANT_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, new Set
 const DEFAULT_PROPS_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, b.defaultProps]))
 
 const PRIMARY_GEMINI_MODEL = 'gemini-3.8-flash'
-const FALLBACK_GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash']
 const STORAGE_KEYS = ['openpage-gemini-key', 'eialink_gemini_api_key', 'gemini_api_key']
 
 export function getSavedGeminiKey(): string | null {
@@ -104,43 +103,38 @@ async function callGeminiDirect(prompt: string, apiKey: string, signal?: AbortSi
     console.warn("Interactions API call failed in generate-site, trying fallback:", interErr);
   }
 
-  const models = [PRIMARY_GEMINI_MODEL, ...FALLBACK_GEMINI_MODELS]
-  let lastError: Error | null = null
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${PRIMARY_GEMINI_MODEL}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal,
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: `Generate a website configuration for: ${prompt}` }] }],
+          systemInstruction: { parts: [{ text: GENERATION_PROMPT }] },
+          generationConfig: { responseMimeType: 'application/json', temperature: 0.8 },
+        }),
+      },
+    )
 
-  for (const model of models) {
-    try {
-      const res = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          signal,
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: `Generate a website configuration for: ${prompt}` }] }],
-            systemInstruction: { parts: [{ text: GENERATION_PROMPT }] },
-            generationConfig: { responseMimeType: 'application/json', temperature: 0.8 },
-          }),
-        },
-      )
-
-      if (res.ok) {
-        const data = await res.json()
-        const text = data.candidates?.[0]?.content?.parts?.[0]?.text
-        if (text) {
-          return validateSiteConfig(JSON.parse(text), prompt)
-        }
-      } else {
-        const errorBody = await res.text().catch(() => '')
-        console.warn(`Model ${model} returned ${res.status}:`, errorBody)
-        lastError = new Error(`Gemini (${model}) error: ${res.status}`)
+    if (res.ok) {
+      const data = await res.json()
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text
+      if (text) {
+        return validateSiteConfig(JSON.parse(text), prompt)
       }
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') throw err
-      lastError = err instanceof Error ? err : new Error(String(err))
+    } else {
+      const errorBody = await res.text().catch(() => '')
+      console.warn(`Model ${PRIMARY_GEMINI_MODEL} returned ${res.status}:`, errorBody)
+      throw new Error(`Gemini (${PRIMARY_GEMINI_MODEL}) error: ${res.status}`)
     }
+  } catch (err) {
+    if (err instanceof Error && err.name === 'AbortError') throw err
+    throw err instanceof Error ? err : new Error(String(err))
   }
 
-  throw lastError || new Error('Failed to generate with Gemini')
+  throw new Error(`Failed to generate with Gemini (${PRIMARY_GEMINI_MODEL})`)
 }
 
 function isValidHex(s: unknown): s is string {

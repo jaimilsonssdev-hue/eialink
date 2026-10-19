@@ -262,24 +262,20 @@ export async function processAgendaAiChat(
     }
   }
 
-  // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
+  // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
   if (!rawText) {
-    const modelsToTry = ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"];
-    for (const model of modelsToTry) {
-      try {
-        const res = await ai.models.generateContent({
-          model,
-          contents: formattedContents,
-          config: {
-            systemInstruction: AGENDA_AI_SYSTEM_PROMPT,
-            temperature: 0.6,
-          },
-        });
-        rawText = res.text?.trim() || "";
-        if (rawText) break;
-      } catch (err) {
-        console.warn(`[AgendaAiService] Falha na contingência com ${model}:`, err);
-      }
+    try {
+      const res = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: formattedContents,
+        config: {
+          systemInstruction: AGENDA_AI_SYSTEM_PROMPT,
+          temperature: 0.6,
+        },
+      });
+      rawText = res.text?.trim() || "";
+    } catch (err) {
+      console.warn("[AgendaAiService] Falha na contingência com gemini-3.8-flash:", err);
     }
   }
 

@@ -364,130 +364,50 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
   let raw = "";
   let lastCapturedError: any = null;
 
-  // 1. Executa prioritariamente via Interactions API oficial com gemini-3.8-flash
-  try {
-    let interactionInput: any;
-    if (attachments && attachments.length > 0) {
-      interactionInput = { parts: currentUserParts };
-    } else {
-      interactionInput = userPrompt;
-    }
+  const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
 
-    const interaction = await client.interactions.create({
-      model: "gemini-3.8-flash",
-      input: interactionInput,
-      system_instruction: CODE_GENERATION_SYSTEM_PROMPT,
-      generation_config: {
-        temperature: 0.7,
-      },
-    });
-
-    raw = (interaction as any).output_text?.trim() || "";
-    if (!raw && Array.isArray((interaction as any).steps)) {
-      for (const step of (interaction as any).steps) {
-        if (step.type === "model_output" && Array.isArray(step.content)) {
-          const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-          if (textPart?.text) {
-            raw = textPart.text.trim();
-            break;
-          }
-        }
-      }
-    }
-  } catch (sdkErr: any) {
-    lastCapturedError = sdkErr;
-    console.warn("[CreativeEngine] ai.interactions.create com gemini-3.8-flash falhou, tentando REST:", sdkErr?.message || sdkErr);
-  }
-
-  // 2. Fallback REST para o endpoint oficial /v1beta/interactions com gemini-3.8-flash
-  if (!raw) {
+  // 1. Executa prioritariamente via SDK @google/genai com gemini-2.5-flash e cascata de contingência
+  for (const modelToTry of candidateModels) {
+    if (raw) break;
     try {
-      const activeKey = apiKey || getGeminiApiKey();
-      if (activeKey) {
-        const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-          method: "POST",
-          headers: {
-            "x-goog-api-key": activeKey,
-            "Content-Type": "application/json",
-            "Api-Revision": "2026-05-20",
-          },
-          body: JSON.stringify({
-            model: "gemini-3.8-flash",
-            input: userPrompt,
-            system_instruction: CODE_GENERATION_SYSTEM_PROMPT,
-            generation_config: { temperature: 0.7 },
-          }),
-        });
+      const response = await client.models.generateContent({
+        model: modelToTry,
+        contents: [{ role: "user", parts: currentUserParts }],
+        config: {
+          systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
+          temperature: 0.65,
+        },
+      });
 
-        if (restRes.ok) {
-          const data = await restRes.json();
-          raw = data.output_text?.trim() || "";
-          if (!raw && Array.isArray(data.steps)) {
-            for (const step of data.steps) {
-              if (step.type === "model_output" && Array.isArray(step.content)) {
-                const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-                if (textPart?.text) {
-                  raw = textPart.text.trim();
-                  break;
-                }
-              }
-            }
-          }
-        } else {
-          const errText = await restRes.text().catch(() => "");
-          console.warn(`[CreativeEngine] REST interactions com gemini-3.8-flash retornou HTTP ${restRes.status}:`, errText);
-        }
-      }
-    } catch (restErr) {
-      console.warn("[CreativeEngine] REST interactions com gemini-3.8-flash falhou:", restErr);
-    }
-  }
-
-  // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
-  if (!raw) {
-    let attempts = 0;
-    const maxAttempts = 2;
-
-    while (attempts < maxAttempts) {
-      try {
-        const response = await client.models.generateContent({
-          model: "gemini-3.8-flash",
-          contents: [{ role: "user", parts: currentUserParts }],
-          config: {
-            systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-            temperature: 0.7,
-          },
-        });
-
-        raw = response.text?.trim() || "";
-        if (raw) break;
-      } catch (err: any) {
-        lastCapturedError = err;
-        attempts++;
-        if (attempts < maxAttempts) {
-          await new Promise((r) => setTimeout(r, 1000));
-          continue;
-        }
-        console.warn("[CreativeEngine] Tentativa generateContent com gemini-3.8-flash falhou:", err?.message || err);
+      const text = response.text?.trim() || "";
+      if (text && text.length > 50) {
+        raw = text;
         break;
       }
+    } catch (sdkErr: any) {
+      lastCapturedError = sdkErr;
+      console.warn(`[CreativeEngine] Falha ao gerar com ${modelToTry}, tentando próximo modelo:`, sdkErr?.message || sdkErr);
     }
+  }
 
-    // 4. Fallback REST direto com gemini-3.8-flash
-    if (!raw) {
-      try {
-        const activeKey = apiKey || getGeminiApiKey();
-        if (activeKey) {
+  // 2. Fallback REST direto para o endpoint oficial caso o SDK oscile
+  if (!raw) {
+    const activeKey = apiKey || getGeminiApiKey();
+    if (activeKey) {
+      for (const modelToTry of candidateModels) {
+        if (raw) break;
+        try {
           const directRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${activeKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${activeKey}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 contents: [{ role: "user", parts: currentUserParts }],
                 systemInstruction: { parts: [{ text: CODE_GENERATION_SYSTEM_PROMPT }] },
-                generationConfig: { temperature: 0.7 },
+                generationConfig: { temperature: 0.65 },
               }),
+              signal: AbortSignal.timeout(45000),
             },
           );
           if (directRes.ok) {
@@ -495,11 +415,12 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
             if (text) {
               raw = text.trim();
+              break;
             }
           }
+        } catch (restErr: any) {
+          console.warn(`[CreativeEngine] REST generateContent com ${modelToTry} falhou:`, restErr?.message || restErr);
         }
-      } catch (restErr) {
-        console.warn("[CreativeEngine] REST generateContent com gemini-3.8-flash falhou:", restErr);
       }
     }
   }

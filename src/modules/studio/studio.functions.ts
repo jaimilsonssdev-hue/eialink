@@ -18,6 +18,11 @@ import {
 import type { CardapioData } from "@/modules/cardapio/cardapioAiService";
 import { generateIfoodCardapioHtml } from "@/modules/cardapio/cardapioGenerator";
 import type { LojaData } from "@/modules/loja/lojaAiService";
+import {
+  provisionPlatformToolsForNiche,
+  detectNicheCategory,
+  NICHE_CONFIGS,
+} from "@/modules/prospecting/nicheProvisioner";
 
 function getServiceSupabaseClient() {
   const url =
@@ -351,21 +356,35 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
 
     let userPrompt = input.briefingOrPrompt;
 
-    // Injeta metadados de ferramentas do ecossistema EiaLink
+    // Injeta metadados de ferramentas do ecossistema EiaLink calibrados por nicho
+    const detectedCategory = detectNicheCategory(input.niche, input.projectName);
+    const nicheConfig = NICHE_CONFIGS[detectedCategory];
+    const candidateSlug = input.businessSlug || slugify(input.projectName || "empresa");
+    const ctaUrl = nicheConfig.ctaUrl(candidateSlug);
+    const ctaLabel = nicheConfig.ctaLabel;
+
     const businessContextParts: string[] = [];
     if (input.projectName) businessContextParts.push(`Nome Oficial: "${input.projectName}"`);
-    if (input.niche) businessContextParts.push(`Nicho de Atuação: "${input.niche}"`);
+    if (input.niche) businessContextParts.push(`Nicho de Atuação: "${input.niche}" (Categoria: ${nicheConfig.label})`);
     if (input.city) businessContextParts.push(`Cidade / Região: "${input.city}"`);
     if (input.businessAddress) businessContextParts.push(`Endereço Verificado (usar no Mapa/GPS/Waze): "${input.businessAddress}"`);
     if (input.businessWhatsapp) businessContextParts.push(`WhatsApp Oficial (usar no botão pulsante e CTAs): "${input.businessWhatsapp}"`);
-    if (input.businessSlug) businessContextParts.push(`Link de Agendamento Online da plataforma: "/agendar/${input.businessSlug}"`);
+    if (nicheConfig.isBooking) {
+      businessContextParts.push(`SISTEMA DE AGENDAMENTO ONLINE EIALINK: 100% ATIVO E INTEGRADO no link "${ctaUrl}".`);
+      businessContextParts.push(`O botão de ação principal (CTA) do Hero e das seções de serviços DEVE SER "${ctaLabel}" apontando diretamente para "${ctaUrl}".`);
+      if (nicheConfig.services.length > 0) {
+        businessContextParts.push(`Serviços oficiais do negócio para a vitrine: ${nicheConfig.services.map((s) => `${s.name} (R$ ${s.price}, ${s.duration_minutes}min)`).join("; ")}.`);
+      }
+    } else {
+      businessContextParts.push(`CTA PRINCIPAL DE CONVERSÃO: Botão "${ctaLabel}" apontando para "${ctaUrl}".`);
+    }
     if (input.rating) businessContextParts.push(`Avaliação no Google Maps: ${input.rating} estrelas (${input.reviewsCount || 80} avaliações reais)`);
     if (input.photos && input.photos.length > 0) {
       businessContextParts.push(`Fotos reais da empresa para usar no site: ${input.photos.slice(0, 6).join(", ")}`);
     }
 
     if (businessContextParts.length > 0) {
-      userPrompt += `\n\n[DADOS DE INTEGRAÇÃO DO ECOSSISTEMA EIALINK]:\n${businessContextParts.join("\n")}\nPor favor, certifique-se de preencher a seção de Localização (com iframe e botões de GPS Waze/Maps), o botão de Agendamento Online e o WhatsApp flutuante utilizando estes dados reais!`;
+      userPrompt += `\n\n[DADOS DE INTEGRAÇÃO DO ECOSSISTEMA EIALINK]:\n${businessContextParts.join("\n")}\nPor favor, certifique-se de preencher a seção de Localização (com iframe e botões de GPS Waze/Maps), o botão de ação principal ("${ctaLabel}") apontando para "${ctaUrl}" e o WhatsApp flutuante utilizando estes dados reais!`;
     }
 
     if (input.isRegeneration) {
@@ -435,121 +454,47 @@ ${effectiveHtml}`;
 
     let responseText = "";
     let lastCapturedError: any = null;
+    const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
 
-    // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
-    try {
-      let interactionInput: any;
-      if (serverParts.length > 1) {
-        interactionInput = { parts: serverParts };
-      } else {
-        interactionInput = userPrompt;
-      }
-
-      const interaction = await ai.interactions.create({
-        model: "gemini-3.8-flash",
-        input: interactionInput,
-        system_instruction: CODE_GENERATION_SYSTEM_PROMPT,
-        generation_config: {
-          temperature: 0.7,
-        },
-      });
-
-      responseText = (interaction as any).output_text?.trim() || "";
-      if (!responseText && Array.isArray((interaction as any).steps)) {
-        for (const step of (interaction as any).steps) {
-          if (step.type === "model_output" && Array.isArray(step.content)) {
-            const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-            if (textPart?.text) {
-              responseText = textPart.text.trim();
-              break;
-            }
-          }
-        }
-      }
-    } catch (sdkErr: any) {
-      lastCapturedError = sdkErr;
-      console.warn("[StudioServer] ai.interactions.create com gemini-3.8-flash falhou, tentando fallback:", sdkErr?.message || sdkErr);
-    }
-
-    // 2. Fallback REST para o endpoint oficial /v1beta/interactions com gemini-3.8-flash
-    if (!responseText) {
+    // 1. Tenta prioritariamente via SDK @google/genai com gemini-2.5-flash e cascata de fallback
+    for (const modelToTry of candidateModels) {
+      if (responseText) break;
       try {
-        const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-          method: "POST",
-          headers: {
-            "x-goog-api-key": resolvedKey,
-            "Content-Type": "application/json",
-            "Api-Revision": "2026-05-20",
+        const response = await ai.models.generateContent({
+          model: modelToTry,
+          contents,
+          config: {
+            systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
+            temperature: 0.65,
           },
-          body: JSON.stringify({
-            model: "gemini-3.8-flash",
-            input: userPrompt,
-            system_instruction: CODE_GENERATION_SYSTEM_PROMPT,
-            generation_config: { temperature: 0.7 },
-          }),
         });
-
-        if (restRes.ok) {
-          const data = await restRes.json();
-          responseText = data.output_text?.trim() || "";
-          if (!responseText && Array.isArray(data.steps)) {
-            for (const step of data.steps) {
-              if (step.type === "model_output" && Array.isArray(step.content)) {
-                const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-                if (textPart?.text) {
-                  responseText = textPart.text.trim();
-                  break;
-                }
-              }
-            }
-          }
-        }
-      } catch (restErr) {
-        console.warn("[StudioServer] REST interactions com gemini-3.8-flash falhou:", restErr);
-      }
-    }
-
-    // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
-    if (!responseText) {
-      let attempts = 0;
-      const maxAttempts = 2;
-      while (attempts < maxAttempts) {
-        try {
-          const response = await ai.models.generateContent({
-            model: "gemini-3.8-flash",
-            contents,
-            config: {
-              systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-              temperature: 0.7,
-            },
-          });
-          responseText = response.text?.trim() || "";
-          if (responseText) break;
-        } catch (apiErr: any) {
-          lastCapturedError = apiErr;
-          attempts++;
-          if (attempts < maxAttempts) {
-            await new Promise((r) => setTimeout(r, 1000));
-            continue;
-          }
-          console.warn("[StudioServer] Tentativa direta com gemini-3.8-flash falhou:", apiErr?.message || apiErr);
+        const text = response.text?.trim() || "";
+        if (text && text.length > 50) {
+          responseText = text;
           break;
         }
+      } catch (sdkErr: any) {
+        lastCapturedError = sdkErr;
+        console.warn(`[StudioServer] generateContent com ${modelToTry} falhou, tentando próximo modelo:`, sdkErr?.message || sdkErr);
       }
+    }
 
-      // 4. Última tentativa REST generateContent com gemini-3.8-flash
-      if (!responseText) {
+    // 2. Fallback REST para o endpoint oficial caso o SDK oscile
+    if (!responseText) {
+      for (const modelToTry of candidateModels) {
+        if (responseText) break;
         try {
           const directRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${resolvedKey}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${resolvedKey}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 contents,
                 systemInstruction: { parts: [{ text: CODE_GENERATION_SYSTEM_PROMPT }] },
-                generationConfig: { temperature: 0.7 },
+                generationConfig: { temperature: 0.65 },
               }),
+              signal: AbortSignal.timeout(45000),
             },
           );
           if (directRes.ok) {
@@ -557,10 +502,11 @@ ${effectiveHtml}`;
             const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
             if (text) {
               responseText = text.trim();
+              break;
             }
           }
-        } catch (fetchErr) {
-          console.warn("[StudioServer] REST generateContent com gemini-3.8-flash falhou:", fetchErr);
+        } catch (restErr: any) {
+          console.warn(`[StudioServer] REST generateContent com ${modelToTry} falhou:`, restErr?.message || restErr);
         }
       }
     }
@@ -739,6 +685,26 @@ ${effectiveHtml}`,
         savedPageId = created?.id;
         savedSlug = created?.slug || uniqueSlug;
       }
+
+      // Provisiona automaticamente as ferramentas da plataforma para este nicho
+      if (savedPageId && savedSlug) {
+        try {
+          await provisionPlatformToolsForNiche({
+            supabase,
+            pageId: savedPageId,
+            slug: savedSlug,
+            businessName: pageName,
+            niche: input.niche,
+            city: input.city,
+            whatsapp: input.businessWhatsapp,
+            address: input.businessAddress,
+            rating: input.rating,
+            reviewsCount: input.reviewsCount,
+          });
+        } catch (provErr) {
+          console.warn("[Studio] Erro ao auto-provisionar ferramentas do nicho:", provErr);
+        }
+      }
     } catch (dbErr) {
       console.warn("[Studio] Erro ao sincronizar bio_page no banco:", dbErr);
     }
@@ -804,96 +770,29 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
     userParts.push({ text: input.prompt });
 
     let briefingText = "";
+    const briefingModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
 
-    // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
-    try {
-      let interactionInput: any;
-      if (input.attachments && input.attachments.length > 0) {
-        interactionInput = { parts: userParts };
-      } else {
-        interactionInput = input.prompt;
-      }
-
-      const interaction = await ai.interactions.create({
-        model: "gemini-3.8-flash",
-        input: interactionInput,
-        system_instruction: BRIEFING_SYSTEM_PROMPT,
-        generation_config: {
-          temperature: 0.7,
-        },
-      });
-
-      briefingText = (interaction as any).output_text?.trim() || "";
-      if (!briefingText && Array.isArray((interaction as any).steps)) {
-        for (const step of (interaction as any).steps) {
-          if (step.type === "model_output" && Array.isArray(step.content)) {
-            const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-            if (textPart?.text) {
-              briefingText = textPart.text.trim();
-              break;
-            }
-          }
-        }
-      }
-    } catch (sdkErr) {
-      console.warn("[StudioServer] ai.interactions.create com gemini-3.8-flash falhou no briefing, tentando REST:", sdkErr);
-    }
-
-    // 2. Fallback REST para o endpoint oficial /v1beta/interactions com gemini-3.8-flash
-    if (!briefingText) {
-      try {
-        const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-          method: "POST",
-          headers: {
-            "x-goog-api-key": resolvedKey,
-            "Content-Type": "application/json",
-            "Api-Revision": "2026-05-20",
-          },
-          body: JSON.stringify({
-            model: "gemini-3.8-flash",
-            input: input.prompt,
-            system_instruction: BRIEFING_SYSTEM_PROMPT,
-            generation_config: { temperature: 0.7 },
-          }),
-        });
-
-        if (restRes.ok) {
-          const data = await restRes.json();
-          briefingText = data.output_text?.trim() || "";
-          if (!briefingText && Array.isArray(data.steps)) {
-            for (const step of data.steps) {
-              if (step.type === "model_output" && Array.isArray(step.content)) {
-                const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-                if (textPart?.text) {
-                  briefingText = textPart.text.trim();
-                  break;
-                }
-              }
-            }
-          }
-        }
-      } catch (restErr) {
-        console.warn("[StudioServer] REST interactions falhou no briefing:", restErr);
-      }
-    }
-
-    // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
-    if (!briefingText) {
+    for (const m of briefingModels) {
+      if (briefingText) break;
       try {
         const response = await ai.models.generateContent({
-          model: "gemini-3.8-flash",
+          model: m,
           contents: [
             ...formattedHistory,
             { role: "user", parts: userParts },
           ],
           config: {
             systemInstruction: BRIEFING_SYSTEM_PROMPT,
-            temperature: 0.7,
+            temperature: 0.65,
           },
         });
-        briefingText = response.text?.trim() || "";
-      } catch (err) {
-        console.warn("[StudioServer] Falha no briefing com gemini-3.8-flash:", err);
+        const text = response.text?.trim() || "";
+        if (text && text.length > 20) {
+          briefingText = text;
+          break;
+        }
+      } catch (err: any) {
+        console.warn(`[StudioServer] Falha no briefing com ${m}:`, err?.message || err);
       }
     }
 

@@ -1,5 +1,6 @@
 import type { SiteConfig, BlockConfig, ThemeConfig } from "@/modules/studiopro/blocks/types";
 import { themePresets } from "@/modules/studiopro/lib/theme-presets";
+import { detectNicheCategory, NICHE_CONFIGS } from "@/modules/prospecting/nicheProvisioner";
 
 export interface LeadSiteData {
   companyName: string;
@@ -27,7 +28,9 @@ export const STUDIO_PRO_VARIANTS = [
 
 export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
   const name = lead.companyName.trim();
-  const niche = (lead.niche || "Serviços").toLowerCase();
+  const detectedCategory = detectNicheCategory(lead.niche, lead.companyName);
+  const nicheConfig = NICHE_CONFIGS[detectedCategory];
+  const niche = (lead.niche || nicheConfig.label).toLowerCase();
   const city = lead.city ? lead.city.trim() : "";
   const rating = lead.rating ? Number(lead.rating) : 4.9;
   const reviewsCount = lead.reviewsCount ? Number(lead.reviewsCount) : 85;
@@ -265,8 +268,8 @@ export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
         badge: heroBadge,
         headline: heroHeadline,
         subheadline: heroSubheadline,
-        primaryCta: "Falar no WhatsApp",
-        secondaryCta: "Ver Avaliações",
+        primaryCta: nicheConfig.ctaLabel,
+        secondaryCta: "Falar no WhatsApp",
       },
     },
 
@@ -349,8 +352,10 @@ export function buildStudioProConfigFromLead(lead: LeadSiteData): SiteConfig {
         title: "Dúvidas Frequentes",
         items: [
           {
-            question: "Como posso agendar ou falar com a equipe?",
-            answer: "Basta clicar em qualquer botão do WhatsApp nesta página. Nossa equipe responde rapidamente com todas as orientações.",
+            question: nicheConfig.isBooking ? "Como funciona o agendamento de horários?" : "Como posso falar com a equipe ou pedir atendimento?",
+            answer: nicheConfig.isBooking
+              ? `Você pode agendar diretamente pelo nosso sistema online em poucos cliques ou nos chamar pelo WhatsApp no número (${whatsappClean || "conosco"}).`
+              : "Basta clicar em qualquer botão do WhatsApp ou catálogo nesta página. Nossa equipe responde rapidamente com todas as orientações.",
           },
           {
             question: "Quais são os horários de funcionamento?",

@@ -3,12 +3,14 @@
  * Este arquivo NÃO pode importar nada que seja exclusivo de servidor.
  */
 
-export type ProviderId = "gemini" | "anthropic" | "openai";
+export type ProviderId = "gemini" | "gemini-lite" | "gemini-3.8" | "anthropic" | "openai";
 
 export const PROVIDER_LABELS: Record<ProviderId, string> = {
-  gemini: "Gemini 3.8 Flash",
-  anthropic: "Claude",
-  openai: "GPT",
+  gemini: "Gemini 2.5 Flash (Recomendado)",
+  "gemini-lite": "Gemini 2.5 Flash-Lite",
+  "gemini-3.8": "Gemini 3.8 Flash (Preview - 20 req/dia)",
+  anthropic: "Claude Sonnet 4.5",
+  openai: "GPT-4.1",
 };
 
 export interface ToolCall {

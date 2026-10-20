@@ -64,7 +64,24 @@ function newCallId() {
 /* GEMINI (generateContent + functionDeclarations)                     */
 /* ------------------------------------------------------------------ */
 
-export const GEMINI_AGENT_MODEL = "gemini-3.8-flash";
+export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash";
+
+const GEMINI_FALLBACKS: Record<string, string[]> = {
+  "gemini-2.5-flash": ["gemini-2.5-flash-lite", "gemini-3.8-flash"],
+  "gemini-2.5-flash-lite": ["gemini-2.5-flash", "gemini-3.8-flash"],
+  "gemini-3.8-flash": ["gemini-2.5-flash", "gemini-2.5-flash-lite"],
+};
+
+function isQuotaOrRateLimitError(err: unknown): boolean {
+  const str = String(err || "").toLowerCase();
+  return (
+    str.includes("429") ||
+    str.includes("quota") ||
+    str.includes("rate limit") ||
+    str.includes("resource_exhausted") ||
+    str.includes("exceeded your current quota")
+  );
+}
 
 function toGeminiContents(messages: AgentMessage[]) {
   const contents: Array<{ role: "user" | "model"; parts: any[] }> = [];
@@ -86,7 +103,6 @@ function toGeminiContents(messages: AgentMessage[]) {
         for (const tc of m.toolCalls || []) {
           parts.push({
             functionCall: { name: tc.name, args: tc.args },
-            thoughtSignature: "skip_thought_signature_validator",
           });
         }
         if (parts.length) push("model", parts);
@@ -105,53 +121,100 @@ function toGeminiContents(messages: AgentMessage[]) {
   return contents;
 }
 
+async function executeGeminiWithFallback(
+  initialModel: string,
+  req: LlmRequest,
+): Promise<LlmResponse> {
+  const { apiKey, system, messages, tools, temperature } = req;
+  const body: Record<string, unknown> = {
+    systemInstruction: { parts: [{ text: system }] },
+    contents: toGeminiContents(messages),
+    generationConfig: { temperature: temperature ?? 0.4 },
+  };
+  if (tools.length) {
+    body.tools = [
+      {
+        functionDeclarations: tools.map((t) => ({
+          name: t.name,
+          description: t.description,
+          parameters: t.parameters,
+        })),
+      },
+    ];
+  }
+
+  const modelChain = [initialModel, ...(GEMINI_FALLBACKS[initialModel] || [])];
+  let lastErr: any = null;
+
+  for (const targetModel of modelChain) {
+    try {
+      const data = await postJson(
+        `https://generativelanguage.googleapis.com/v1beta/models/${targetModel}:generateContent`,
+        { "x-goog-api-key": apiKey },
+        body,
+      );
+
+      const parts: any[] = data?.candidates?.[0]?.content?.parts || [];
+      if (!parts.length) {
+        const reason = data?.candidates?.[0]?.finishReason || data?.promptFeedback?.blockReason;
+        throw new Error(`Gemini não retornou conteúdo${reason ? ` (${reason})` : ""}.`);
+      }
+
+      const text = parts
+        .filter((p) => typeof p.text === "string" && !p.thought)
+        .map((p) => p.text)
+        .join("")
+        .trim();
+      const toolCalls: ToolCall[] = parts
+        .filter((p) => p.functionCall)
+        .map((p) => ({
+          id: p.functionCall.id || newCallId(),
+          name: p.functionCall.name,
+          args: (p.functionCall.args || {}) as Record<string, unknown>,
+        }));
+
+      return { text, toolCalls, providerRaw: parts };
+    } catch (err: any) {
+      lastErr = err;
+      if (isQuotaOrRateLimitError(err)) {
+        console.warn(
+          `[Agent Providers] Cota excedida no modelo ${targetModel}. Tentando próximo modelo da cadeia...`,
+        );
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  if (isQuotaOrRateLimitError(lastErr)) {
+    throw new Error(
+      "⚠️ Cota gratuita da API do Gemini atingida em todos os modelos no momento. Você pode selecionar outro provedor (Claude ou GPT) no topo do chat, ou adicionar sua própria chave do Gemini no ícone ⚙️.",
+    );
+  }
+  throw lastErr || new Error("Falha na chamada ao Google Gemini.");
+}
+
 const geminiProvider: LlmProvider = {
   id: "gemini",
-  model: GEMINI_AGENT_MODEL,
-  async chat({ apiKey, system, messages, tools, temperature }) {
-    const body: Record<string, unknown> = {
-      systemInstruction: { parts: [{ text: system }] },
-      contents: toGeminiContents(messages),
-      generationConfig: { temperature: temperature ?? 0.4 },
-    };
-    if (tools.length) {
-      body.tools = [
-        {
-          functionDeclarations: tools.map((t) => ({
-            name: t.name,
-            description: t.description,
-            parameters: t.parameters,
-          })),
-        },
-      ];
-    }
+  model: "gemini-2.5-flash",
+  chat(req) {
+    return executeGeminiWithFallback("gemini-2.5-flash", req);
+  },
+};
 
-    const data = await postJson(
-      `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_AGENT_MODEL}:generateContent`,
-      { "x-goog-api-key": apiKey },
-      body,
-    );
+const geminiLiteProvider: LlmProvider = {
+  id: "gemini-lite",
+  model: "gemini-2.5-flash-lite",
+  chat(req) {
+    return executeGeminiWithFallback("gemini-2.5-flash-lite", req);
+  },
+};
 
-    const parts: any[] = data?.candidates?.[0]?.content?.parts || [];
-    if (!parts.length) {
-      const reason = data?.candidates?.[0]?.finishReason || data?.promptFeedback?.blockReason;
-      throw new Error(`Gemini não retornou conteúdo${reason ? ` (${reason})` : ""}.`);
-    }
-
-    const text = parts
-      .filter((p) => typeof p.text === "string" && !p.thought)
-      .map((p) => p.text)
-      .join("")
-      .trim();
-    const toolCalls: ToolCall[] = parts
-      .filter((p) => p.functionCall)
-      .map((p) => ({
-        id: p.functionCall.id || newCallId(),
-        name: p.functionCall.name,
-        args: (p.functionCall.args || {}) as Record<string, unknown>,
-      }));
-
-    return { text, toolCalls, providerRaw: parts };
+const gemini38Provider: LlmProvider = {
+  id: "gemini-3.8",
+  model: "gemini-3.8-flash",
+  chat(req) {
+    return executeGeminiWithFallback("gemini-3.8-flash", req);
   },
 };
 
@@ -296,6 +359,8 @@ const openaiProvider: LlmProvider = {
 
 export const PROVIDERS: Record<ProviderId, LlmProvider> = {
   gemini: geminiProvider,
+  "gemini-lite": geminiLiteProvider,
+  "gemini-3.8": gemini38Provider,
   anthropic: anthropicProvider,
   openai: openaiProvider,
 };

@@ -18,7 +18,7 @@ import type {
 } from "./types";
 
 const MAX_STEPS = 8;
-const VALID_PROVIDERS: ProviderId[] = ["gemini", "anthropic", "openai"];
+const VALID_PROVIDERS: ProviderId[] = ["gemini", "gemini-lite", "gemini-3.8", "anthropic", "openai"];
 
 const AGENT_SYSTEM_PROMPT = `Você é o Agente EiaLink: um assistente autônomo que opera as ferramentas da plataforma EiaLink em nome do dono do negócio (agenda online, agente de atendimento, dados e publicação das páginas).
 
@@ -46,7 +46,7 @@ async function getUserMeta(context: { supabase: any; accessToken: string; claims
 
 async function resolveKey(provider: ProviderId, meta: Record<string, any>): Promise<string | null> {
   const clean = (v: unknown) => (typeof v === "string" && v.trim().length > 8 ? v.trim() : null);
-  if (provider === "gemini") {
+  if (provider === "gemini" || provider === "gemini-lite" || provider === "gemini-3.8") {
     return clean(meta.gemini_api_key) || clean(await resolveGeminiApiKeyAsync());
   }
   if (provider === "anthropic") {
@@ -56,8 +56,11 @@ async function resolveKey(provider: ProviderId, meta: Record<string, any>): Prom
 }
 
 async function keyStatus(meta: Record<string, any>): Promise<Record<ProviderId, boolean>> {
+  const hasGemini = Boolean(await resolveKey("gemini", meta));
   return {
-    gemini: Boolean(await resolveKey("gemini", meta)),
+    gemini: hasGemini,
+    "gemini-lite": hasGemini,
+    "gemini-3.8": hasGemini,
     anthropic: Boolean(await resolveKey("anthropic", meta)),
     openai: Boolean(await resolveKey("openai", meta)),
   };

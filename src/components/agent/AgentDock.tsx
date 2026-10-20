@@ -38,6 +38,7 @@ export function AgentDock() {
   const [alwaysAllow, setAlwaysAllow] = useState<string[]>([]);
   const [diag, setDiag] = useState<AgentDiagnosticResult | null>(null);
   const [diagLoading, setDiagLoading] = useState(false);
+  const [geminiKey, setGeminiKey] = useState("");
   const [anthropicKey, setAnthropicKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -127,7 +128,7 @@ export function AgentDock() {
         model: "-",
         latencyMs: 0,
         error: err instanceof Error ? err.message : "Falha ao executar o diagnóstico.",
-        keys: { gemini: false, anthropic: false, openai: false },
+        keys: { gemini: false, "gemini-lite": false, "gemini-3.8": false, anthropic: false, openai: false },
       });
     } finally {
       setDiagLoading(false);
@@ -136,10 +137,12 @@ export function AgentDock() {
 
   async function saveKeys() {
     const data: Record<string, string | null> = {};
+    if (geminiKey.trim()) data.gemini_api_key = geminiKey.trim();
     if (anthropicKey.trim()) data.anthropic_api_key = anthropicKey.trim();
     if (openaiKey.trim()) data.openai_api_key = openaiKey.trim();
     if (!Object.keys(data).length) return;
     await supabase.auth.updateUser({ data });
+    setGeminiKey("");
     setAnthropicKey("");
     setOpenaiKey("");
     await runDiagnostic();
@@ -226,7 +229,14 @@ export function AgentDock() {
               )}
 
               <div className="space-y-1.5">
-                <p className="font-semibold text-zinc-300">Chaves de outras IAs (opcional)</p>
+                <p className="font-semibold text-zinc-300">Chaves de API (opcional)</p>
+                <Input
+                  type="password"
+                  value={geminiKey}
+                  onChange={(e) => setGeminiKey(e.target.value)}
+                  placeholder="Chave própria Gemini (AIzaSy...)"
+                  className="h-8 border-white/10 bg-zinc-950 text-xs"
+                />
                 <Input
                   type="password"
                   value={anthropicKey}
@@ -244,7 +254,7 @@ export function AgentDock() {
                 <Button size="sm" onClick={saveKeys} className="h-8 text-xs">
                   Salvar chaves e testar
                 </Button>
-                <p className="text-[10px] text-zinc-500">A chave do Gemini é a mesma já cadastrada no sistema.</p>
+                <p className="text-[10px] text-zinc-500">Se deixar em branco, o sistema usa a chave global do Gemini.</p>
               </div>
 
               <div className="space-y-1">

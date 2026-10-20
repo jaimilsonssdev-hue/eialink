@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { usePlanAccess } from "@/modules/billing/hooks/usePlanAccess";
+import { AgentDock } from "@/components/agent/AgentDock";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -320,6 +321,7 @@ function AuthedLayout() {
         >
           <Outlet />
         </main>
+        <AgentDock />
       </div>
     </div>
   );

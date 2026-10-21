@@ -225,87 +225,16 @@ export async function planSiteBriefing(
   }
   currentUserParts.push({ text: prompt });
 
-  // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
+  // Tenta com gemini-2.5-flash como modelo principal e um único fallback (gemini-2.5-flash-lite)
   let briefingText = "";
-  try {
-    let interactionInput: any;
-    if (attachments && attachments.length > 0) {
-      interactionInput = { parts: currentUserParts };
-    } else {
-      interactionInput = prompt;
-    }
+  let lastError: any = null;
+  const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
-    const interaction = await client.interactions.create({
-      model: "gemini-3.8-flash",
-      input: interactionInput,
-      system_instruction: BRIEFING_SYSTEM_PROMPT,
-      generation_config: {
-        temperature: 0.7,
-      },
-    });
-
-    briefingText = (interaction as any).output_text?.trim() || "";
-    if (!briefingText && Array.isArray((interaction as any).steps)) {
-      for (const step of (interaction as any).steps) {
-        if (step.type === "model_output" && Array.isArray(step.content)) {
-          const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-          if (textPart?.text) {
-            briefingText = textPart.text.trim();
-            break;
-          }
-        }
-      }
-    }
-  } catch (sdkErr) {
-    console.warn("[CreativeEngine] ai.interactions.create com gemini-3.8-flash falhou no briefing, tentando REST:", sdkErr);
-  }
-
-  // 2. Fallback REST para o endpoint oficial /v1beta/interactions com gemini-3.8-flash
-  if (!briefingText) {
-    try {
-      const activeKey = apiKey || getGeminiApiKey();
-      if (activeKey) {
-        const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-          method: "POST",
-          headers: {
-            "x-goog-api-key": activeKey,
-            "Content-Type": "application/json",
-            "Api-Revision": "2026-05-20",
-          },
-          body: JSON.stringify({
-            model: "gemini-3.8-flash",
-            input: prompt,
-            system_instruction: BRIEFING_SYSTEM_PROMPT,
-            generation_config: { temperature: 0.7 },
-          }),
-        });
-
-        if (restRes.ok) {
-          const data = await restRes.json();
-          briefingText = data.output_text?.trim() || "";
-          if (!briefingText && Array.isArray(data.steps)) {
-            for (const step of data.steps) {
-              if (step.type === "model_output" && Array.isArray(step.content)) {
-                const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-                if (textPart?.text) {
-                  briefingText = textPart.text.trim();
-                  break;
-                }
-              }
-            }
-          }
-        }
-      }
-    } catch (restErr) {
-      console.warn("[CreativeEngine] REST interactions falhou no briefing:", restErr);
-    }
-  }
-
-  // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
-  if (!briefingText) {
+  for (const modelToTry of candidateModels) {
+    if (briefingText) break;
     try {
       const response = await client.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: modelToTry,
         contents: [
           ...formattedHistory,
           { role: "user", parts: currentUserParts },
@@ -315,18 +244,39 @@ export async function planSiteBriefing(
           temperature: 0.7,
         },
       });
-      briefingText = response.text?.trim() || "";
-    } catch (err) {
-      console.warn("[CreativeEngine] Falha no briefing de contingência com gemini-3.8-flash:", err);
+      const text = response.text?.trim() || "";
+      if (text) {
+        briefingText = text;
+        break;
+      }
+    } catch (err: any) {
+      lastError = err;
+      console.warn(`[CreativeEngine] Falha no briefing com ${modelToTry}:`, err?.message || err);
     }
   }
 
-  return briefingText || "Plano estratégico elaborado com sucesso.";
+  if (!briefingText) {
+    const rawMsg = lastError?.message || String(lastError || "Erro desconhecido");
+    const lower = rawMsg.toLowerCase();
+    if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
+      throw new Error(
+        `Modelo do Google AI Studio inexistente ou indisponível para a sua chave (${rawMsg}).`,
+      );
+    }
+    if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+      throw new Error(
+        `Limite de cota atingido no Google AI Studio (${rawMsg}). Aguarde alguns instantes ou verifique o faturamento da sua chave.`,
+      );
+    }
+    throw new Error(`Falha ao gerar briefing no Google AI Studio: ${rawMsg}`);
+  }
+
+  return briefingText;
 }
 
 /**
  * Etapa 2: Gerar ou Refinar o Site Completo em HTML/Tailwind nativo
- * Conecta prioritariamente na Interactions API oficial com o modelo gemini-3.8-flash
+ * Conecta com o modelo gemini-2.5-flash como principal e um único fallback (gemini-2.5-flash-lite)
  */
 export async function generateSiteHtml(
   briefingOrPrompt: string,
@@ -364,9 +314,8 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
   let raw = "";
   let lastCapturedError: any = null;
 
-  const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
+  const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
-  // 1. Executa prioritariamente via SDK @google/genai com gemini-2.5-flash e cascata de contingência
   for (const modelToTry of candidateModels) {
     if (raw) break;
     try {
@@ -386,42 +335,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
       }
     } catch (sdkErr: any) {
       lastCapturedError = sdkErr;
-      console.warn(`[CreativeEngine] Falha ao gerar com ${modelToTry}, tentando próximo modelo:`, sdkErr?.message || sdkErr);
-    }
-  }
-
-  // 2. Fallback REST direto para o endpoint oficial caso o SDK oscile
-  if (!raw) {
-    const activeKey = apiKey || getGeminiApiKey();
-    if (activeKey) {
-      for (const modelToTry of candidateModels) {
-        if (raw) break;
-        try {
-          const directRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${activeKey}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents: [{ role: "user", parts: currentUserParts }],
-                systemInstruction: { parts: [{ text: CODE_GENERATION_SYSTEM_PROMPT }] },
-                generationConfig: { temperature: 0.65 },
-              }),
-              signal: AbortSignal.timeout(45000),
-            },
-          );
-          if (directRes.ok) {
-            const data = await directRes.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              raw = text.trim();
-              break;
-            }
-          }
-        } catch (restErr: any) {
-          console.warn(`[CreativeEngine] REST generateContent com ${modelToTry} falhou:`, restErr?.message || restErr);
-        }
-      }
+      console.warn(`[CreativeEngine] Falha ao gerar com ${modelToTry}:`, sdkErr?.message || sdkErr);
     }
   }
 
@@ -429,6 +343,17 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
     const errorDetails =
       lastCapturedError?.message ||
       (typeof lastCapturedError === "object" ? JSON.stringify(lastCapturedError) : "Falha na geração");
+    const lower = String(errorDetails).toLowerCase();
+    if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
+      throw new Error(
+        `Modelo do Google AI Studio inexistente ou indisponível para a sua chave: ${errorDetails}`,
+      );
+    }
+    if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+      throw new Error(
+        `Limite de cota atingido no Google AI Studio: ${errorDetails}. Aguarde alguns instantes ou verifique o faturamento da sua chave.`,
+      );
+    }
     throw new Error(
       `Não foi possível gerar o site no Google AI Studio: ${errorDetails}. Por favor, clique novamente para tentar a geração.`,
     );

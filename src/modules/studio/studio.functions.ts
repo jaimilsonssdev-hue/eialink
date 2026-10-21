@@ -454,9 +454,9 @@ ${effectiveHtml}`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
+    const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
-    // 1. Tenta prioritariamente via SDK @google/genai com gemini-2.5-flash e cascata de fallback
+    // 1. Executa com gemini-2.5-flash como primeiro modelo e um único fallback (gemini-2.5-flash-lite)
     for (const modelToTry of candidateModels) {
       if (responseText) break;
       try {
@@ -477,44 +477,25 @@ ${effectiveHtml}`;
         }
       } catch (sdkErr: any) {
         lastCapturedError = sdkErr;
-        console.warn(`[StudioServer] generateContent com ${modelToTry} falhou, tentando próximo modelo:`, sdkErr?.message || sdkErr);
-      }
-    }
-
-    // 2. Fallback REST para o endpoint oficial caso o SDK oscile
-    if (!responseText) {
-      for (const modelToTry of candidateModels) {
-        if (responseText) break;
-        try {
-          const directRes = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/${modelToTry}:generateContent?key=${resolvedKey}`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                contents,
-                systemInstruction: { parts: [{ text: CODE_GENERATION_SYSTEM_PROMPT }] },
-                generationConfig: { temperature: 0.65, maxOutputTokens: 32768 },
-              }),
-              signal: AbortSignal.timeout(45000),
-            },
-          );
-          if (directRes.ok) {
-            const data = await directRes.json();
-            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (text) {
-              responseText = text.trim();
-              break;
-            }
-          }
-        } catch (restErr: any) {
-          console.warn(`[StudioServer] REST generateContent com ${modelToTry} falhou:`, restErr?.message || restErr);
-        }
+        console.warn(`[StudioServer] generateContent com ${modelToTry} falhou:`, sdkErr?.message || sdkErr);
       }
     }
 
     if (!responseText) {
-      const errDetails = lastCapturedError?.message || (typeof lastCapturedError === "object" ? JSON.stringify(lastCapturedError) : "Erro de resposta");
+      const errDetails =
+        lastCapturedError?.message ||
+        (typeof lastCapturedError === "object" ? JSON.stringify(lastCapturedError) : "Erro de resposta");
+      const lower = String(errDetails).toLowerCase();
+      if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
+        throw new Error(
+          `Modelo do Google AI Studio inexistente ou indisponível para a sua chave: ${errDetails}`,
+        );
+      }
+      if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+        throw new Error(
+          `Limite de cota atingido no Google AI Studio: ${errDetails}. Aguarde alguns instantes ou verifique o faturamento da sua chave.`,
+        );
+      }
       throw new Error(`Falha na API Google AI Studio: ${errDetails}. Tente clicar novamente.`);
     }
 
@@ -805,7 +786,8 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
     userParts.push({ text: input.prompt });
 
     let briefingText = "";
-    const briefingModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
+    let lastBriefingError: any = null;
+    const briefingModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
     for (const m of briefingModels) {
       if (briefingText) break;
@@ -828,13 +810,26 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
           break;
         }
       } catch (err: any) {
+        lastBriefingError = err;
         console.warn(`[StudioServer] Falha no briefing com ${m}:`, err?.message || err);
       }
     }
 
+    if (!briefingText) {
+      const errMsg = lastBriefingError?.message || String(lastBriefingError || "Erro desconhecido");
+      const lower = errMsg.toLowerCase();
+      if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
+        throw new Error(`Modelo do Google AI Studio inexistente ou indisponível: ${errMsg}`);
+      }
+      if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+        throw new Error(`Limite de cota atingido no Google AI Studio: ${errMsg}`);
+      }
+      throw new Error(`Falha ao gerar o plano no Google AI Studio: ${errMsg}`);
+    }
+
     return {
       ok: true,
-      briefing: briefingText || "Plano estratégico elaborado com sucesso.",
+      briefing: briefingText,
     };
   });
 
@@ -1538,23 +1533,37 @@ REGRAS DE RESPOSTA:
     });
 
     let rawText = "";
-    try {
-      const res = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
-        contents: formattedContents,
-        config: {
-          systemInstruction: systemPrompt,
-          temperature: 0.6,
-          maxOutputTokens: 16384,
-        },
-      });
-      rawText = res.text?.trim() || "";
-    } catch (err: any) {
-      console.warn("[LojaServer] Erro com gemini-3.8-flash:", err?.message || err);
+    let lastLojaError: any = null;
+    const lojaModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+    for (const modelToTry of lojaModels) {
+      if (rawText) break;
+      try {
+        const res = await ai.models.generateContent({
+          model: modelToTry,
+          contents: formattedContents,
+          config: {
+            systemInstruction: systemPrompt,
+            temperature: 0.6,
+            maxOutputTokens: 16384,
+          },
+        });
+        rawText = res.text?.trim() || "";
+      } catch (err: any) {
+        lastLojaError = err;
+        console.warn(`[LojaServer] Erro com ${modelToTry}:`, err?.message || err);
+      }
     }
 
     if (!rawText) {
-      throw new Error("Não foi possível obter resposta da IA no momento. Tente novamente.");
+      const errMsg = lastLojaError?.message || String(lastLojaError || "Erro desconhecido");
+      const lower = errMsg.toLowerCase();
+      if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
+        throw new Error(`Modelo do Google AI Studio inexistente ou indisponível: ${errMsg}`);
+      }
+      if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+        throw new Error(`Limite de cota atingido no Google AI Studio: ${errMsg}`);
+      }
+      throw new Error(`Não foi possível obter resposta da IA: ${errMsg}`);
     }
 
     let updatedLoja: LojaData | null = null;

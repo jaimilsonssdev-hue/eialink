@@ -1,13 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { resolveGeminiApiKeyAsync } from "./google-ai.service";
 
 const gatewayUrl = "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gemini-gateway";
 const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
 export const SITE_BUILDER_MODELS = [
-  "gemini-3.8-flash",
+  "gemini-2.5-flash",
+  "gemini-2.5-flash-lite",
 ] as const;
-const retryableGeminiStatuses = new Set([408, 429, 500, 502, 503, 504]);
+const retryableGeminiStatuses = new Set([408, 500, 502, 503, 504]);
 const maxGeminiAttempts = 2;
 
 async function callGoogleGeminiInteractionsDirect(
@@ -16,23 +18,20 @@ async function callGoogleGeminiInteractionsDirect(
   payload: Record<string, unknown>,
 ): Promise<Response | null> {
   try {
-    const url = "https://generativelanguage.googleapis.com/v1beta/interactions";
+    const cleanModel = (model || "gemini-2.5-flash").replace(/^models\//, "");
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent`;
     const res = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-goog-api-key": apiKey.trim(),
-        "Api-Revision": "2026-05-20",
       },
-      body: JSON.stringify({
-        model: model || "gemini-3.8-flash",
-        ...payload,
-      }),
+      body: JSON.stringify(payload),
       signal: AbortSignal.timeout(20000),
     });
     return res;
   } catch (err) {
-    console.warn("[GoogleGeminiInteractionsDirect] Falha na chamada direta da Interactions API:", err);
+    console.warn("[GoogleGeminiInteractionsDirect] Falha na chamada direta:", err);
     return null;
   }
 }
@@ -151,7 +150,7 @@ export async function requestGemini(
   body: Extract<GeminiGatewayRequest, { action: "generateContent" | "interactions" }>,
   accessToken?: string,
 ): Promise<Response> {
-  // 1. Tenta chamada direta e ultra-rápida se houver chave fornecida ou no ambiente
+  // 1. Tenta chamada direta e ultra-rápida se houver chave fornecida, no ambiente ou no banco
   const directKey =
     body.apiKeyOverride?.trim() ||
     (typeof process !== "undefined" && process.env?.GEMINI_API_KEY?.trim()) ||
@@ -159,17 +158,18 @@ export async function requestGemini(
       (localStorage.getItem("eialink_gemini_api_key")?.trim() ||
         localStorage.getItem("gemini_api_key")?.trim() ||
         localStorage.getItem("openpage-gemini-key")?.trim())) ||
+    (await resolveGeminiApiKeyAsync()) ||
     null;
 
   if (directKey) {
     if (body.action === "interactions") {
       const directInterRes = await callGoogleGeminiInteractionsDirect(directKey, body.model, body.payload);
-      if (directInterRes && (directInterRes.ok || directInterRes.status === 400 || directInterRes.status === 403)) {
+      if (directInterRes) {
         return directInterRes;
       }
     } else if (body.action === "generateContent") {
       const directRes = await callGoogleGeminiDirect(directKey, body.model, body.payload);
-      if (directRes && (directRes.ok || directRes.status === 400 || directRes.status === 403)) {
+      if (directRes) {
         return directRes;
       }
     }

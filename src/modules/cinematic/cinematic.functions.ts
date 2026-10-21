@@ -750,7 +750,7 @@ RETORNE RIGOROSAMENTE E APENAS O JSON VÁLIDO.`;
               parsedErrMsg = errBody.slice(0, 300);
             }
 
-            lastProviderError = `Modelo ${model} retornou ${resp.status}: ${parsedErrMsg || errBody.slice(0, 300)}`;
+            lastProviderError = resp.status === 404 ? `Modelo ${model} inexistente ou indisponível para esta chave (HTTP 404): ${parsedErrMsg}` : resp.status === 429 ? `Limite de cota atingido no modelo ${model} (HTTP 429): ${parsedErrMsg}` : `Modelo ${model} retornou ${resp.status}: ${parsedErrMsg || errBody.slice(0, 300)}`;
             console.warn(`[CreativePitch] Erro no modelo ${model}:`, { status: resp.status, error: parsedErrMsg });
 
             const isKeyExplicitlyInvalid =
@@ -864,7 +864,7 @@ RETORNE RIGOROSAMENTE APENAS O SEGUINTE JSON (SEM BLOCOS DE MARKDOWN OU TEXTOS A
 
       const response = await requestGemini(context.supabase, {
         action: "generateContent",
-        model: "gemini-3.8-flash",
+        model: SITE_BUILDER_MODELS[0],
         payload: {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {

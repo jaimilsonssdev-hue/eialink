@@ -1582,17 +1582,6 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                           </div>
                         </HoverCardContent>
                       </HoverCard>
-                      {demo.pageId && (
-                        <Link
-                          to="/studio-pro"
-                          search={{ page: demo.pageId }}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-zinc-200 hover:border-zinc-500/40 hover:bg-zinc-800/40 transition-all w-full sm:w-auto"
-                          title="Editar no Studio Pro (IA)"
-                        >
-                          <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
-                          <span>Editar</span>
-                        </Link>
-                      )}
                     </>
                   ) : (
                     <button
@@ -1609,6 +1598,52 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                       <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo 🪄"}</span>
                     </button>
                   )}
+                  {(() => {
+                    const meta = getProspectNicheCategory(company.niche, company.name);
+                    const isFood =
+                      meta.category === "food" ||
+                      /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
+                        `${company.niche || ""} ${company.name || ""}`,
+                      );
+                    const isBarberOrBeauty =
+                      meta.category === "barber" ||
+                      /barbearia|barber|est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure|odonto|dentista/i.test(
+                        `${company.niche || ""} ${company.name || ""}`,
+                      );
+                    const editTo = isFood ? "/cardapio-studio" : "/studio-pro";
+                    const editSearch = demo.pageId
+                      ? { page: demo.pageId }
+                      : {
+                          name: company.name,
+                          whatsapp: company.whatsapp || company.phone || "",
+                          address: company.address || "",
+                          niche: company.niche || "",
+                        };
+                    return (
+                      <>
+                        <Link
+                          to={editTo as any}
+                          search={editSearch as any}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-zinc-200 hover:border-zinc-500/40 hover:bg-zinc-800/40 transition-all w-full sm:w-auto"
+                          title="Editar com IA"
+                        >
+                          <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
+                          <span>Editar com IA</span>
+                        </Link>
+                        {isBarberOrBeauty && (
+                          <Link
+                            to={"/agenda" as any}
+                            search={editSearch as any}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-2 sm:py-1.5 text-xs font-medium hover:text-violet-300 hover:border-violet-500/40 hover:bg-violet-500/10 transition-all w-full sm:w-auto"
+                            title="Configurar agenda"
+                          >
+                            <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                            <span>Configurar agenda</span>
+                          </Link>
+                        )}
+                      </>
+                    );
+                  })()}
 
                   {whatsappLink(company) ? (
                     <a
@@ -2729,16 +2764,47 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                   <span className="hidden sm:inline">Auditoria IA</span>
                                 </button>
 
-                                {/* Personalizar no Builder */}
-                                <Link
-                                  to="/studio-pro"
-                                  search={{ page: page.id }}
-                                  className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-purple-300 hover:border-purple-500/40 hover:bg-purple-500/10 transition-all"
-                                  title="Ajustar dados e fotos no Builder"
-                                >
-                                  <Sparkles className="h-3.5 w-3.5" />
-                                  <span className="hidden md:inline">Editar</span>
-                                </Link>
+                                {/* Editar com IA por nicho */}
+                                {(() => {
+                                  const rawNiche = (page.social_links as any)?.niche || "";
+                                  const meta = getProspectNicheCategory(rawNiche, page.display_name);
+                                  const isFood =
+                                    meta.category === "food" ||
+                                    (page.social_links as any)?.template === "cardapio-pro" ||
+                                    Boolean((page.social_links as any)?.cardapio_data) ||
+                                    /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
+                                      `${rawNiche} ${page.display_name || ""}`,
+                                    );
+                                  const isBarberOrBeauty =
+                                    meta.category === "barber" ||
+                                    /barbearia|barber|est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure|odonto|dentista/i.test(
+                                      `${rawNiche} ${page.display_name || ""}`,
+                                    );
+                                  return (
+                                    <>
+                                      <Link
+                                        to={(isFood ? "/cardapio-studio" : "/studio-pro") as any}
+                                        search={{ page: page.id } as any}
+                                        className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-purple-300 hover:border-purple-500/40 hover:bg-purple-500/10 transition-all"
+                                        title="Editar com IA"
+                                      >
+                                        <Pencil className="h-3.5 w-3.5" />
+                                        <span className="hidden md:inline">Editar com IA</span>
+                                      </Link>
+                                      {isBarberOrBeauty && (
+                                        <Link
+                                          to={"/agenda" as any}
+                                          search={{ page: page.id } as any}
+                                          className="inline-flex items-center gap-1 rounded-lg border border-border/60 bg-transparent px-2.5 py-1.5 text-xs text-muted-foreground hover:text-violet-300 hover:border-violet-500/40 hover:bg-violet-500/10 transition-all"
+                                          title="Configurar agenda"
+                                        >
+                                          <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                                          <span className="hidden md:inline">Configurar agenda</span>
+                                        </Link>
+                                      )}
+                                    </>
+                                  );
+                                })()}
 
                                 {/* Dropdown Menu de Mais Ações */}
                                 <DropdownMenu>
@@ -3118,101 +3184,48 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
 
                   {/* Grid de Ações Touch-Friendly (2 colunas) */}
                   <div className="grid grid-cols-2 gap-2 pt-1">
-                    {demo.url ? (
-                      <a
-                        href={demo.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 transition-all"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        <span>Ver Demo</span>
-                      </a>
-                    ) : (
-                      (() => {
-                        const meta = getProspectNicheCategory(company.niche, company.name);
-                        const isGeneratingThis = creatingPageId === company.id;
-                        const isFood = meta.category === "food";
-                        const isBarberOrBeauty =
-                          meta.category === "barber" ||
-                          /est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure/i.test(
-                            company.niche || "",
-                          );
-
-                        return (
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            {/* Botão Especializado Principal */}
-                            <button
-                              className={`inline-flex items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold shadow-xs transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
-                              onClick={() => {
-                                if (isFood) {
-                                  navigate({
-                                    to: "/cardapio-studio",
-                                    search: {
-                                      name: company.name,
-                                      address: company.address || "",
-                                      whatsapp: company.whatsapp || "",
-                                      niche: company.niche || "",
-                                    },
-                                  });
-                                } else if (false && isBarberOrBeauty) {
-                                  navigate({
-                                    to: "/agenda",
-                                    search: {
-                                      name: company.name,
-                                      address: company.address || "",
-                                      whatsapp: company.whatsapp || "",
-                                      niche: company.niche || "",
-                                    },
-                                  });
-                                } else {
-                                  handleSpecializedGenerate(company);
-                                }
-                              }}
-                              disabled={isGeneratingThis}
-                              title={meta.buttonLabel}
-                            >
-                              {isGeneratingThis ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <span>{isFood ? "🍔" : isBarberOrBeauty ? "💈" : meta.icon}</span>
-                              )}
-                              <span>
-                                {isGeneratingThis
-                                  ? "Gerando..."
-                                  : isFood
-                                  ? "Gerar Cardápio"
-                                  : isBarberOrBeauty
-                                  ? "Gerar Agenda"
-                                  : meta.buttonLabel}
-                              </span>
-                            </button>
-
-                            {/* Botão Secundário: Gerar Site Institucional */}
-                            {(isFood || isBarberOrBeauty) && (
-                              <button
-                                className="inline-flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white px-2.5 py-2 text-xs font-medium transition-all"
-                                onClick={() => {
-                                  navigate({
-                                    to: "/studio-pro",
-                                    search: {
-                                      name: company.name,
-                                      address: company.address || "",
-                                      whatsapp: company.whatsapp || "",
-                                      niche: company.niche || "",
-                                    },
-                                  });
-                                }}
-                                title="Gerar Landing Page / Site no Estúdio Criativo"
-                              >
-                                <Globe2 className="h-3 w-3 text-sky-400" />
-                                <span>Gerar Site</span>
-                              </button>
-                            )}
-                          </div>
+                    {(() => {
+                      const meta = getProspectNicheCategory(company.niche, company.name);
+                      const isFood =
+                        meta.category === "food" ||
+                        /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
+                          `${company.niche || ""} ${company.name || ""}`,
                         );
-                      })()
-                    )}
+                      const editTo = isFood ? "/cardapio-studio" : "/studio-pro";
+                      const editSearch = demo.pageId
+                        ? { page: demo.pageId }
+                        : {
+                            name: company.name,
+                            whatsapp: company.whatsapp || company.phone || "",
+                            address: company.address || "",
+                            niche: company.niche || "",
+                          };
+
+                      return (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {demo.url && (
+                            <a
+                              href={demo.url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 transition-all"
+                            >
+                              <ExternalLink className="h-3.5 w-3.5" />
+                              <span>Ver Demo</span>
+                            </a>
+                          )}
+                          <Link
+                            to={editTo as any}
+                            search={editSearch as any}
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 px-3 py-2 text-xs font-semibold transition-all"
+                            title="Editar com IA"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            <span>Editar com IA</span>
+                          </Link>
+                        </div>
+                      );
+                    })()}
 
                     {whatsappLink(company) ? (
                       <a
@@ -3303,49 +3316,53 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                           <RotateCcw className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                           <span>{demo.url ? "Trocar Modelo" : "Gerar / Escolher Modelo"}</span>
                         </DropdownMenuItem>
-                        {demo.pageId &&
-                          (() => {
-                            const meta = getProspectNicheCategory(company.niche, company.name);
-                            const isFood = meta.category === "food" || /restaurante|pizzaria|hamburguer|lanche|cafeteria|a[cç]a[ií]|gastronom/i.test(company.niche || "");
-                            const isBarber =
-                              meta.category === "barber" ||
-                              /est[eé]tica|sal[aã]o|cl[ií]nica|beleza|barbearia/i.test(company.niche || "");
-                            const isLoja =
-                              meta.category === "shop" ||
-                              /loja|moda|calçad|varejo|boutique|bijuteria/i.test(company.niche || "");
-                            const editTo = isFood
-                              ? "/cardapio-studio"
-                              : isBarber
-                              ? "/agenda"
-                              : isLoja
-                              ? "/loja-studio"
-                              : "/studio-pro";
-                            const editLabel = isFood
-                              ? "Editar no Cardápio Studio"
-                              : isBarber
-                              ? "Configurar agenda"
-                              : isLoja
-                              ? "Editar na Loja Virtual Studio"
-                              : "Editar no Studio Pro";
+                        {(() => {
+                          const meta = getProspectNicheCategory(company.niche, company.name);
+                          const isFood =
+                            meta.category === "food" ||
+                            /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
+                              `${company.niche || ""} ${company.name || ""}`,
+                            );
+                          const isBarber =
+                            meta.category === "barber" ||
+                            /barbearia|barber|est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure|odonto|dentista/i.test(
+                              `${company.niche || ""} ${company.name || ""}`,
+                            );
+                          const editTo = isFood ? "/cardapio-studio" : "/studio-pro";
+                          const editSearch = demo.pageId
+                            ? { page: demo.pageId }
+                            : {
+                                name: company.name,
+                                address: company.address || "",
+                                whatsapp: company.whatsapp || company.phone || "",
+                                niche: company.niche || "",
+                              };
 
-                            return (
+                          return (
+                            <>
                               <DropdownMenuItem asChild className="cursor-pointer text-xs">
                                 <Link
                                   to={editTo as any}
-                                  search={({
-                                    page: demo.pageId,
-                                    name: company.name,
-                                    address: company.address || "",
-                                    whatsapp: company.whatsapp || "",
-                                    niche: company.niche || "",
-                                  } as any)}
+                                  search={editSearch as any}
                                 >
                                   <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                  <span>{editLabel}</span>
+                                  <span>Editar com IA</span>
                                 </Link>
                               </DropdownMenuItem>
-                            );
-                          })()}
+                              {isBarber && (
+                                <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                  <Link
+                                    to={"/agenda" as any}
+                                    search={editSearch as any}
+                                  >
+                                    <Sparkles className="h-3.5 w-3.5 mr-2 text-violet-400" />
+                                    <span>Configurar agenda</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              )}
+                            </>
+                          );
+                        })()}
                         {demo.url && demo.pageId && (
                           <>
                             <DropdownMenuItem
@@ -3559,119 +3576,95 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                   </div>
                                 </HoverCardContent>
                               </HoverCard>
-                              {demo.pageId &&
-                                (() => {
-                                  const meta = getProspectNicheCategory(company.niche, company.name);
-                                  const isFood = meta.category === "food";
-                                  const isBarber =
-                                    meta.category === "barber" ||
-                                    /est[eé]tica|sal[aã]o|cl[ií]nica|beleza/i.test(company.niche || "");
-                                  const editTo = isFood
-                                    ? "/cardapio-studio"
-                                    : isBarber
-                                    ? "/agenda"
-                                    : "/studio-pro";
-
-                                  return (
-                                    <Link
-                                      to={editTo as any}
-                                      search={({
-                                        page: demo.pageId,
-                                        name: company.name,
-                                        address: company.address || "",
-                                        whatsapp: company.whatsapp || "",
-                                        niche: company.niche || "",
-                                      } as any)}
-                                      className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
-                                      title={isFood ? "Editar no Cardápio Studio" : isBarber ? "Configurar agenda" : "Editar no Studio Pro"}
-                                    >
-                                      <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
-                                      <span>Editar</span>
-                                    </Link>
-                                  );
-                                })()}
                             </>
                           ) : (
                             (() => {
                               const meta = getProspectNicheCategory(company.niche, company.name);
                               const isGeneratingThis = creatingPageId === company.id;
                               const isFood = meta.category === "food";
-                              const isBarberOrBeauty =
-                                meta.category === "barber" ||
-                                /est[eé]tica|sal[aã]o|cl[ií]nica|beleza/i.test(company.niche || "");
 
                               return (
-                                <div className="flex items-center gap-1.5">
-                                  <button
-                                    className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
-                                    onClick={() => {
-                                      if (isFood) {
-                                        navigate({
-                                          to: "/cardapio-studio",
-                                          search: {
-                                            name: company.name,
-                                            address: company.address || "",
-                                            whatsapp: company.whatsapp || "",
-                                            niche: company.niche || "",
-                                          },
-                                        });
-                                      } else if (false && isBarberOrBeauty) {
-                                        navigate({
-                                          to: "/agenda",
-                                          search: {
-                                            name: company.name,
-                                            address: company.address || "",
-                                            whatsapp: company.whatsapp || "",
-                                            niche: company.niche || "",
-                                          },
-                                        });
-                                      } else {
-                                        handleSpecializedGenerate(company);
-                                      }
-                                    }}
-                                    disabled={isGeneratingThis}
-                                    title={meta.buttonLabel}
-                                  >
-                                    {isGeneratingThis ? (
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                    ) : (
-                                      <span>{isFood ? "🍔" : isBarberOrBeauty ? "💈" : meta.icon}</span>
-                                    )}
-                                    <span>
-                                      {isGeneratingThis
-                                        ? "Gerando..."
-                                        : isFood
-                                        ? "Gerar Cardápio"
-                                        : isBarberOrBeauty
-                                        ? "Gerar Agenda"
-                                        : meta.buttonLabel}
-                                    </span>
-                                  </button>
-
-                                  {(isFood || isBarberOrBeauty) && (
-                                    <button
-                                      className="inline-flex items-center justify-center gap-1 rounded-lg border border-white/10 bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white px-2 py-1.5 text-xs font-medium transition-all"
-                                      onClick={() => {
-                                        navigate({
-                                          to: "/studio-pro",
-                                          search: {
-                                            name: company.name,
-                                            address: company.address || "",
-                                            whatsapp: company.whatsapp || "",
-                                            niche: company.niche || "",
-                                          },
-                                        });
-                                      }}
-                                      title="Gerar Landing Page / Site no Estúdio Criativo"
-                                    >
-                                      <Globe2 className="h-3 w-3 text-sky-400" />
-                                      <span>Site</span>
-                                    </button>
+                                <button
+                                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
+                                  onClick={() => {
+                                    if (isFood) {
+                                      navigate({
+                                        to: "/cardapio-studio",
+                                        search: demo.pageId
+                                          ? { page: demo.pageId }
+                                          : {
+                                              name: company.name,
+                                              address: company.address || "",
+                                              whatsapp: company.whatsapp || company.phone || "",
+                                              niche: company.niche || "",
+                                            },
+                                      });
+                                    } else {
+                                      handleSpecializedGenerate(company);
+                                    }
+                                  }}
+                                  disabled={isGeneratingThis}
+                                  title={meta.buttonLabel}
+                                >
+                                  {isGeneratingThis ? (
+                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  ) : (
+                                    <span>{isFood ? "🍔" : meta.icon}</span>
                                   )}
-                                </div>
+                                  <span>
+                                    {isGeneratingThis ? "Gerando..." : meta.buttonLabel}
+                                  </span>
+                                </button>
                               );
                             })()
                           )}
+                          {(() => {
+                            const meta = getProspectNicheCategory(company.niche, company.name);
+                            const isFood =
+                              meta.category === "food" ||
+                              /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
+                                `${company.niche || ""} ${company.name || ""}`,
+                              );
+                            const isBarber =
+                              meta.category === "barber" ||
+                              /barbearia|barber|est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure|odonto|dentista/i.test(
+                                `${company.niche || ""} ${company.name || ""}`,
+                              );
+                            const editTo = isFood ? "/cardapio-studio" : "/studio-pro";
+                            const editSearch = demo.pageId
+                              ? { page: demo.pageId }
+                              : {
+                                  name: company.name,
+                                  address: company.address || "",
+                                  whatsapp: company.whatsapp || company.phone || "",
+                                  niche: company.niche || "",
+                                };
+
+                            return (
+                              <>
+                                <Link
+                                  to={editTo as any}
+                                  search={editSearch as any}
+                                  className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
+                                  title="Editar com IA"
+                                >
+                                  <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
+                                  <span>Editar com IA</span>
+                                </Link>
+                                {isBarber && (
+                                  <Link
+                                    to={"/agenda" as any}
+                                    search={editSearch as any}
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-violet-400 hover:border-violet-500/40 hover:bg-violet-500/10 transition-all"
+                                    title="Configurar agenda"
+                                  >
+                                    <Sparkles className="h-3.5 w-3.5 text-violet-400" />
+                                    <span>Configurar agenda</span>
+                                  </Link>
+                                )}
+                              </>
+                            );
+                          })()}
 
                           {whatsappLink(company) ? (
                             <a
@@ -3807,16 +3800,50 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                   <span>Gerar com Studio Pro (IA)</span>
                                 </DropdownMenuItem>
 
-                                {demo.url && (
-                                  <>
-                                    {demo.pageId && (
+                                {(() => {
+                                  const meta = getProspectNicheCategory(company.niche, company.name);
+                                  const isFood =
+                                    meta.category === "food" ||
+                                    /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
+                                      `${company.niche || ""} ${company.name || ""}`,
+                                    );
+                                  const isBarber =
+                                    meta.category === "barber" ||
+                                    /barbearia|barber|est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure|odonto|dentista/i.test(
+                                      `${company.niche || ""} ${company.name || ""}`,
+                                    );
+                                  const editTo = isFood ? "/cardapio-studio" : "/studio-pro";
+                                  const editSearch = demo.pageId
+                                    ? { page: demo.pageId }
+                                    : {
+                                        name: company.name,
+                                        address: company.address || "",
+                                        whatsapp: company.whatsapp || company.phone || "",
+                                        niche: company.niche || "",
+                                      };
+
+                                  return (
+                                    <>
                                       <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                        <Link to="/studio-pro" search={{ page: demo.pageId }}>
+                                        <Link to={editTo as any} search={editSearch as any}>
                                           <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                          <span>Editar no Studio Pro</span>
+                                          <span>Editar com IA</span>
                                         </Link>
                                       </DropdownMenuItem>
-                                    )}
+                                      {isBarber && (
+                                        <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                          <Link to={"/agenda" as any} search={editSearch as any}>
+                                            <Sparkles className="h-3.5 w-3.5 mr-2 text-violet-400" />
+                                            <span>Configurar agenda</span>
+                                          </Link>
+                                        </DropdownMenuItem>
+                                      )}
+                                    </>
+                                  );
+                                })()}
+
+                                {demo.url && (
+                                  <>
 
                                     {demo.pageId && (
                                       isOfficial ? (

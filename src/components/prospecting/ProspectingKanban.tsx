@@ -469,15 +469,52 @@ export function ProspectingKanban({
                               );
                             })()}
 
-                            {/* Linha 2: Auditoria IA + Menu Mais Opções */}
+                            {/* Linha 2: Editar com IA + Auditoria IA + Menu Mais Opções */}
                             <div className="flex items-center gap-1.5">
+                              {(() => {
+                                const nicheKey = detectNicheKey(company.niche, company.name);
+                                const meta = getProspectNicheCategory(company.niche, company.name);
+                                const isGastro =
+                                  meta.category === "food" ||
+                                  nicheKey === "restaurante" ||
+                                  nicheKey === "pizzaria" ||
+                                  nicheKey === "hamburgueria" ||
+                                  nicheKey === "cafeteria" ||
+                                  nicheKey === "acai" ||
+                                  nicheKey === "doceria" ||
+                                  /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
+                                    `${company.niche || ""} ${company.name || ""}`,
+                                  );
+                                const targetPath = isGastro ? "/cardapio-studio" : "/studio-pro";
+                                const editSearch = demo.pageId
+                                  ? { page: demo.pageId }
+                                  : {
+                                      name: company.name,
+                                      whatsapp: company.whatsapp || company.phone || "",
+                                      address: company.address || "",
+                                      niche: company.niche || "",
+                                    };
+                                return (
+                                  <Link
+                                    to={targetPath as any}
+                                    search={editSearch as any}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xs font-semibold transition-all whitespace-nowrap"
+                                    title="Editar com IA"
+                                  >
+                                    <Pencil className="h-3.5 w-3.5 shrink-0 text-emerald-400" />
+                                    <span>Editar com IA</span>
+                                  </Link>
+                                );
+                              })()}
+
                               <button
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   onAuditCompany(company);
                                 }}
-                                className="flex-1 inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-muted/40 hover:bg-purple-500/15 hover:text-purple-400 text-muted-foreground border border-border/50 text-xs font-medium transition-all whitespace-nowrap"
+                                className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-muted/40 hover:bg-purple-500/15 hover:text-purple-400 text-muted-foreground border border-border/50 text-xs font-medium transition-all whitespace-nowrap"
                                 title="Auditoria de Presença & Pitch com IA"
                               >
                                 <Bot className="h-3.5 w-3.5 shrink-0 text-purple-400" />
@@ -524,60 +561,65 @@ export function ProspectingKanban({
                                     <span>{demo.url ? "Trocar Modelo da Página" : "Gerar Modelo"}</span>
                                   </DropdownMenuItem>
 
-                                  {demo.pageId && (() => {
+                                  {(() => {
                                     const nicheKey = detectNicheKey(company.niche, company.name);
+                                    const meta = getProspectNicheCategory(company.niche, company.name);
                                     const isGastro =
+                                      meta.category === "food" ||
                                       nicheKey === "restaurante" ||
                                       nicheKey === "pizzaria" ||
                                       nicheKey === "hamburgueria" ||
                                       nicheKey === "cafeteria" ||
                                       nicheKey === "acai" ||
-                                      nicheKey === "doceria";
+                                      nicheKey === "doceria" ||
+                                      /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
+                                        `${company.niche || ""} ${company.name || ""}`,
+                                      );
                                     const isBeauty =
+                                      meta.category === "barber" ||
                                       nicheKey === "barbearia" ||
                                       nicheKey === "beleza" ||
                                       nicheKey === "estetica_facial" ||
                                       nicheKey === "estetica_corporal" ||
                                       nicheKey === "clinica" ||
-                                      nicheKey === "odontologia";
-                                    const isLoja =
-                                      nicheKey === "loja" ||
-                                      nicheKey === "varejo" ||
-                                      nicheKey === "calcados" ||
-                                      nicheKey === "roupas" ||
-                                      /loja|moda|calçad|varejo|boutique|bijuteria/i.test(company.niche || "");
+                                      nicheKey === "odontologia" ||
+                                      /barbearia|barber|est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure|odonto|dentista/i.test(
+                                        `${company.niche || ""} ${company.name || ""}`,
+                                      );
 
-                                    const targetPath = isGastro
-                                      ? "/cardapio-studio"
-                                      : isBeauty
-                                      ? "/agenda"
-                                      : isLoja
-                                      ? "/loja-studio"
-                                      : "/studio-pro";
-
-                                    const targetLabel = isGastro
-                                      ? "Editar Cardápio (IA)"
-                                      : isBeauty
-                                      ? "Configurar agenda"
-                                      : isLoja
-                                      ? "Editar Loja / Catálogo (IA)"
-                                      : "Editar no Estúdio (IA)";
+                                    const targetPath = isGastro ? "/cardapio-studio" : "/studio-pro";
+                                    const editSearch = demo.pageId
+                                      ? { page: demo.pageId }
+                                      : {
+                                          name: company.name,
+                                          whatsapp: company.whatsapp || company.phone || "",
+                                          address: company.address || "",
+                                          niche: company.niche || "",
+                                        };
 
                                     return (
-                                      <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                        <Link
-                                          to={targetPath as any}
-                                          search={{
-                                            name: company.name,
-                                            whatsapp: company.whatsapp || company.phone,
-                                            address: company.address,
-                                            niche: company.niche,
-                                          }}
-                                        >
-                                          <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                          <span>{targetLabel}</span>
-                                        </Link>
-                                      </DropdownMenuItem>
+                                      <>
+                                        <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                          <Link
+                                            to={targetPath as any}
+                                            search={editSearch as any}
+                                          >
+                                            <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                            <span>Editar com IA</span>
+                                          </Link>
+                                        </DropdownMenuItem>
+                                        {isBeauty && (
+                                          <DropdownMenuItem asChild className="cursor-pointer text-xs">
+                                            <Link
+                                              to={"/agenda" as any}
+                                              search={editSearch as any}
+                                            >
+                                              <Sparkles className="h-3.5 w-3.5 mr-2 text-violet-400" />
+                                              <span>Configurar agenda</span>
+                                            </Link>
+                                          </DropdownMenuItem>
+                                        )}
+                                      </>
                                     );
                                   })()}
 

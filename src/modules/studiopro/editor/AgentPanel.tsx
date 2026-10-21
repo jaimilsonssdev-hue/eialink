@@ -25,7 +25,7 @@ const initialMessages: ChatMessage[] = [
   {
     id: '1',
     role: 'agent',
-    text: 'Olá! Sou o assistente de IA do Studio Pro. Posso criar novas seções, ajustar textos, trocar temas de cores e formatar seu site instantaneamente. Como posso te ajudar hoje?',
+    text: 'Atalhos rápidos de edição. Comandos simples: mudar título, adicionar/remover seção, tema escuro/azul.',
   },
 ]
 
@@ -220,6 +220,9 @@ export function AgentPanel() {
 
   return (
     <div className="flex flex-col flex-1 overflow-hidden">
+      <div className="mx-3 mt-3 px-3 py-2 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-300 text-[11.5px] font-medium leading-snug">
+        Comandos simples: mudar título, adicionar/remover seção, tema escuro/azul
+      </div>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-2.5 custom-scrollbar">
         {messages.map((msg) => (
@@ -286,7 +289,7 @@ export function AgentPanel() {
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Diga à IA o que alterar na página..."
+            placeholder="Comandos simples: mudar título, adicionar/remover seção, tema escuro/azul..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') handleSend() }}

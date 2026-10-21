@@ -466,6 +466,8 @@ ${effectiveHtml}`;
           config: {
             systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
             temperature: 0.65,
+            maxOutputTokens: 32768,
+            abortSignal: AbortSignal.timeout(85000),
           },
         });
         const text = response.text?.trim() || "";
@@ -492,7 +494,7 @@ ${effectiveHtml}`;
               body: JSON.stringify({
                 contents,
                 systemInstruction: { parts: [{ text: CODE_GENERATION_SYSTEM_PROMPT }] },
-                generationConfig: { temperature: 0.65 },
+                generationConfig: { temperature: 0.65, maxOutputTokens: 32768 },
               }),
               signal: AbortSignal.timeout(45000),
             },
@@ -525,9 +527,23 @@ ${effectiveHtml}`;
       explanation = parts[0].replace("<<<EXPLANATION>>>", "").trim();
       cleanHtml = parts[1].replace("<<<END_HTML>>>", "").trim();
     } else if (raw.includes("<<<EXPLANATION>>>")) {
-      const parts = raw.split("<<<EXPLANATION>>>");
-      explanation = parts[1].trim();
-      cleanHtml = parts[0].trim();
+      const withoutTag = raw.replace("<<<EXPLANATION>>>", "").trim();
+      const htmlBlockMatch = withoutTag.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+      if (htmlBlockMatch && htmlBlockMatch[1]) {
+        cleanHtml = htmlBlockMatch[1].trim();
+        explanation = withoutTag.replace(/```(?:html)?\s*[\s\S]*?\s*```/gi, "").trim();
+      } else {
+        const docMatch =
+          withoutTag.match(/(<!DOCTYPE html[\s\S]*<\/html>)/i) ||
+          withoutTag.match(/(<html[\s\S]*<\/html>)/i);
+        if (docMatch && docMatch[1]) {
+          cleanHtml = docMatch[1].trim();
+          explanation = withoutTag.replace(docMatch[1], "").trim();
+        } else {
+          explanation = withoutTag;
+          cleanHtml = "";
+        }
+      }
     } else {
       // Extração de blocos de código se não veio a tag <<<HTML>>>
       const htmlBlockMatch = raw.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
@@ -555,45 +571,64 @@ ${effectiveHtml}`;
     }
     cleanHtml = cleanHtml.trim();
 
-    // Verificação se o retorno contém código HTML real ou se a IA retornou apenas texto explicativo
-    const hasValidHtmlTags = /<(?:!doctype|html|body|div|section|main|head)/i.test(cleanHtml);
-    if (!hasValidHtmlTags && isModification && effectiveHtml) {
-      console.warn("[StudioServer] IA retornou apenas texto sem código HTML. Executando síntese de código...");
-      try {
-        const retryRes = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `O usuário solicitou o ajuste: "${input.briefingOrPrompt}".
-Sua explicação para o usuário: "${cleanHtml}".
+    // Verificação se o retorno contém código HTML real e completo (com </html>)
+    const hasValidHtmlTags =
+      /<(?:!doctype|html|body|div|section|main|head)/i.test(cleanHtml) &&
+      /<\/html>/i.test(cleanHtml);
+    if (!hasValidHtmlTags) {
+      if (isModification && effectiveHtml) {
+        console.warn("[StudioServer] IA retornou HTML incompleto ou apenas texto. Executando síntese de código...");
+        try {
+          const retryRes = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: [
+              {
+                role: "user",
+                parts: [
+                  {
+                    text: `O usuário solicitou o ajuste: "${input.briefingOrPrompt}".
+Sua explicação para o usuário: "${explanation || cleanHtml}".
 Agora retorne OBRIGATORIAMENTE apenas o código HTML5 completo atualizado (de <!DOCTYPE html> até </html>) aplicando o ajuste acima no seguinte código:
 ${effectiveHtml}`,
-                },
-              ],
+                  },
+                ],
+              },
+            ],
+            config: {
+              systemInstruction:
+                "Você é um gerador de código HTML. Retorne estritamente o código HTML5 completo até </html>, sem markdown, sem explicações adicionais.",
+              temperature: 0.5,
+              maxOutputTokens: 32768,
+              abortSignal: AbortSignal.timeout(85000),
             },
-          ],
-          config: {
-            systemInstruction: "Você é um gerador de código HTML. Retorne estritamente o código HTML5 completo, sem markdown, sem explicações adicionais.",
-            temperature: 0.5,
-          },
-        });
-        const retryText = retryRes.text?.trim() || "";
-        const retryBlockMatch = retryText.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
-        const candidateRetry = retryBlockMatch ? retryBlockMatch[1].trim() : retryText;
-        if (/<(?:!doctype|html|body|div)/i.test(candidateRetry)) {
-          explanation = cleanHtml;
-          cleanHtml = candidateRetry;
-        } else {
-          explanation = cleanHtml;
-          cleanHtml = effectiveHtml;
+          });
+          const retryText = retryRes.text?.trim() || "";
+          const retryBlockMatch = retryText.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
+          const candidateRetry = (retryBlockMatch ? retryBlockMatch[1].trim() : retryText)
+            .replace(/^```(?:html)?\s*/i, "")
+            .replace(/```\s*$/, "")
+            .trim();
+          if (
+            /<(?:!doctype|html|body|div)/i.test(candidateRetry) &&
+            /<\/html>/i.test(candidateRetry)
+          ) {
+            if (!explanation) explanation = cleanHtml;
+            cleanHtml = candidateRetry;
+          } else {
+            throw new Error(
+              "A IA falhou duas vezes em gerar o código HTML completo (com </html>). O site atual foi mantido sem alterações. Tente reformular o pedido.",
+            );
+          }
+        } catch (retryErr: any) {
+          throw new Error(
+            retryErr?.message ||
+              "A IA falhou duas vezes ao atualizar o HTML do site. Nenhuma alteração foi salva.",
+          );
         }
-      } catch (retryErr) {
-        console.warn("[StudioServer] Falha no retry forçado, preservando HTML existente:", retryErr);
-        explanation = cleanHtml;
-        cleanHtml = effectiveHtml;
+      } else {
+        throw new Error(
+          "A resposta da IA veio truncada ou sem a tag de fechamento </html>. Tente gerar novamente.",
+        );
       }
     }
 
@@ -784,6 +819,7 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
           config: {
             systemInstruction: BRIEFING_SYSTEM_PROMPT,
             temperature: 0.65,
+            maxOutputTokens: 8192,
           },
         });
         const text = response.text?.trim() || "";
@@ -1509,6 +1545,7 @@ REGRAS DE RESPOSTA:
         config: {
           systemInstruction: systemPrompt,
           temperature: 0.6,
+          maxOutputTokens: 16384,
         },
       });
       rawText = res.text?.trim() || "";

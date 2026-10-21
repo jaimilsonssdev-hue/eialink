@@ -165,6 +165,12 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
     }),
     {
       name: "eialink_estudio_criativo_storage",
+      partialize: (state) => ({
+        projects: state.projects,
+        activeProjectId: state.activeProjectId,
+        mode: state.mode,
+        previewDevice: state.previewDevice,
+      }),
     },
   ),
 );

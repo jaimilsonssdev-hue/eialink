@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Sparkles,
   Send,
@@ -61,6 +61,10 @@ export function CreativeChatPanel() {
   const activeProject = getActiveProject();
   const messages = activeProject?.messages || [];
   const currentHtml = activeProject?.html || "";
+
+  useEffect(() => {
+    setIsGenerating(false, "");
+  }, [setIsGenerating]);
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -153,25 +157,26 @@ export function CreativeChatPanel() {
         setIsGenerating(true, "Elaborando plano estratégico com Gemini 3.8 Flash...");
         let briefing = "";
         const clientApiKey = await getResolvedApiKeyHelper();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
         try {
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Tempo limite excedido na nuvem")), 35000),
-          );
-          const res = await Promise.race([
-            planCreativeSiteBriefingFn({
-              data: {
-                prompt: fullPrompt,
-                history: messages.map((m) => ({ role: m.role, content: m.content })),
-                apiKey: clientApiKey,
-                attachments: currentAttachments,
-              },
-            }),
-            timeoutPromise,
-          ]);
+          const res = await planCreativeSiteBriefingFn({
+            data: {
+              prompt: fullPrompt,
+              history: messages.map((m) => ({ role: m.role, content: m.content })),
+              apiKey: clientApiKey,
+              attachments: currentAttachments,
+            },
+            signal: controller.signal,
+          });
           briefing = res.briefing;
         } catch (serverErr: any) {
-          console.warn("[CreativeChat] Fallback para briefing local:", serverErr);
-          briefing = await planSiteBriefing(fullPrompt, messages, clientApiKey, currentAttachments);
+          if (controller.signal.aborted || serverErr?.name === "AbortError") {
+            throw new Error("Tempo limite de 90 segundos excedido ao elaborar o plano. Tente novamente.");
+          }
+          throw serverErr;
+        } finally {
+          clearTimeout(timeoutId);
         }
         setIsGenerating(false);
 
@@ -194,62 +199,43 @@ export function CreativeChatPanel() {
         let newHtml = "";
         let aiExplanation = "";
         const clientApiKey = await getResolvedApiKeyHelper();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
         try {
-          const timeoutPromise = new Promise<never>((_, reject) =>
-            setTimeout(() => reject(new Error("Tempo limite de resposta na nuvem")), 60000),
-          );
-          const res = await Promise.race([
-            generateCreativeSiteFn({
-              data: {
-                briefingOrPrompt: fullPrompt,
-                existingHtml: isIteration ? currentHtml : undefined,
-                projectId: activeProject?.eialinkPageId || activeProject?.id,
-                businessSlug: activeProject?.slug,
-                projectName: activeProject?.name,
-                apiKey: clientApiKey,
-                attachments: currentAttachments,
-                conversationHistory: messages.map((m) => ({ role: m.role, content: m.content })),
-              },
-            }),
-            timeoutPromise,
-          ]);
+          const res = await generateCreativeSiteFn({
+            data: {
+              briefingOrPrompt: fullPrompt,
+              existingHtml: isIteration ? currentHtml : undefined,
+              projectId: activeProject?.eialinkPageId || activeProject?.id,
+              businessSlug: activeProject?.slug,
+              projectName: activeProject?.name,
+              apiKey: clientApiKey,
+              attachments: currentAttachments,
+              conversationHistory: messages.map((m) => ({ role: m.role, content: m.content })),
+            },
+            signal: controller.signal,
+          });
           newHtml = res.html;
           aiExplanation = res.explanation;
         } catch (serverErr: any) {
-          console.warn("[CreativeChat] Tentando contingência direta:", serverErr);
-          try {
-            newHtml = await generateSiteHtml(
-              fullPrompt,
-              isIteration ? currentHtml : undefined,
-              clientApiKey,
-              currentAttachments,
-            );
-          } catch (clientErr) {
-            console.error("[CreativeChat] Erro no fallback:", clientErr);
-            throw serverErr;
+          if (controller.signal.aborted || serverErr?.name === "AbortError") {
+            throw new Error("Tempo limite de 90 segundos excedido ao gerar o site. Tente novamente.");
           }
+          throw serverErr;
+        } finally {
+          clearTimeout(timeoutId);
         }
         setIsGenerating(false);
 
         const hasValidHtmlTags = Boolean(
           newHtml &&
           newHtml.length > 50 &&
-          /<(?:!doctype|html|body|div|section|main|head)/i.test(newHtml),
+          /<(?:!doctype|html|body|div|section|main|head)/i.test(newHtml) &&
+          /<\/html>/i.test(newHtml),
         );
 
         if (!hasValidHtmlTags) {
-          if (isIteration && currentHtml) {
-            // IA respondeu conversacionalmente mas não devolveu HTML - preserva o site e exibe mensagem
-            addChatMessage({
-              id: `ai-${Date.now()}`,
-              role: "assistant",
-              content: aiExplanation || newHtml || "Entendi o ajuste! Por favor, especifique qual seção ou texto deseja modificar para eu atualizar o código.",
-              timestamp: Date.now(),
-            });
-            toast.info("A IA respondeu no chat. Solicite a alteração visual detalhada se necessário.");
-            return;
-          }
-          throw new Error("A IA retornou uma resposta sem código HTML válido. Tente clicar em gerar novamente.");
+          throw new Error("A IA retornou uma resposta incompleta ou sem a tag </html>. Tente clicar em gerar novamente.");
         }
 
         updateActiveProjectHtml(newHtml);
@@ -305,32 +291,33 @@ export function CreativeChatPanel() {
       let explanation = "";
       const clientApiKey = await getResolvedApiKeyHelper();
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 90000);
       try {
-        const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("Tempo limite excedido no servidor")), 60000),
-        );
-        const res = await Promise.race([
-          generateCreativeSiteFn({
-            data: {
-              briefingOrPrompt: activeProject.briefing,
-              projectId: activeProject.eialinkPageId || activeProject.id,
-              businessSlug: activeProject.slug,
-              projectName: activeProject.name,
-              apiKey: clientApiKey,
-            },
-          }),
-          timeoutPromise,
-        ]);
+        const res = await generateCreativeSiteFn({
+          data: {
+            briefingOrPrompt: activeProject.briefing,
+            projectId: activeProject.eialinkPageId || activeProject.id,
+            businessSlug: activeProject.slug,
+            projectName: activeProject.name,
+            apiKey: clientApiKey,
+          },
+          signal: controller.signal,
+        });
         html = res.html;
         explanation = res.explanation;
       } catch (serverErr: any) {
-        console.warn("[CreativeChat] Fallback para geração direta:", serverErr);
-        html = await generateSiteHtml(activeProject.briefing, undefined, clientApiKey);
+        if (controller.signal.aborted || serverErr?.name === "AbortError") {
+          throw new Error("Tempo limite de 90 segundos excedido no servidor. Tente novamente.");
+        }
+        throw serverErr;
+      } finally {
+        clearTimeout(timeoutId);
       }
       setIsGenerating(false);
 
-      if (!html || html.length < 50) {
-        throw new Error("O site não pôde ser gerado. Tente novamente.");
+      if (!html || html.length < 50 || !/<\/html>/i.test(html)) {
+        throw new Error("A resposta da IA veio truncada ou sem </html>. Tente novamente.");
       }
 
       updateActiveProjectHtml(html);

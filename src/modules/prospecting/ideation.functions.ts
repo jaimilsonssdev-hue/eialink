@@ -220,7 +220,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
   "superPrompt": "Instruções cirúrgicas de design, tom de voz e ordem de blocos para gerar o site final"
 }`;
 
-      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
+      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
       let text = "";
 
       for (const m of models) {
@@ -265,7 +265,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
         };
       }
     } catch (err) {
-      console.warn("[IdeationEngine] Erro ao consultar Gemini 3.8 Flash, usando fallback:", err);
+      console.warn("[IdeationEngine] Erro ao consultar Gemini 2.5 Flash, usando fallback:", err);
     }
 
     return fallbackDossier;

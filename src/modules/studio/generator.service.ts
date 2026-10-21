@@ -28,7 +28,7 @@ function resolveApiKey(override?: string): string {
 /**
  * Prompt de sistema estrito para o Gemini gerar o OpenPageSiteConfig em JSON.
  */
-const SYSTEM_PROMPT = `Você é o Arquiteto de IA do OpenPage Studio no EIA Link.
+const SYSTEM_PROMPT = `Você é o Arquiteto de IA do Studio no EIA Link.
 Sua missão é gerar um objeto JSON completo seguindo rigorosamente a interface OpenPageSiteConfig.
 
 REGRAS RÍGIDAS DE ENGENHARIA DE PROMPT E CRO:
@@ -102,7 +102,7 @@ Retorne o JSON completo estruturado.`;
     let text = "";
     try {
       const interaction = await ai.interactions.create({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         input: prompt,
         system_instruction: SYSTEM_PROMPT,
         generation_config: {
@@ -212,9 +212,9 @@ Retorne um JSON com:
     let text = "";
     try {
       const interaction = await ai.interactions.create({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         input: prompt,
-        system_instruction: "Você é o Copilot de edição de sites JSON do OpenPage. Retorne sempre JSON válido.",
+        system_instruction: "Você é o Copilot de edição de sites JSON do EIA Link. Retorne sempre JSON válido.",
         generation_config: {
           temperature: 0.4,
           response_mime_type: "application/json",
@@ -227,7 +227,7 @@ Retorne um JSON com:
         model: "gemini-2.5-flash",
         contents: prompt,
         config: {
-          systemInstruction: "Você é o Copilot de edição de sites JSON do OpenPage. Retorne sempre JSON válido.",
+          systemInstruction: "Você é o Copilot de edição de sites JSON do EIA Link. Retorne sempre JSON válido.",
           temperature: 0.4,
           responseMimeType: "application/json",
         },

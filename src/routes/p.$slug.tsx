@@ -527,7 +527,7 @@ function PublicBio() {
   };
 
   // Garante que páginas de negócios geradas sempre renderizem a experiência rica e completa
-  // evitando rebaixamento acidental para a lista crua e seca de botões do Openpage
+  // evitando rebaixamento acidental para a lista crua e seca de botões
   const shouldUseTemplate = true;
 
   const nicheKey = detectNicheKey((bio.social_links as any)?.niche, bio.display_name);

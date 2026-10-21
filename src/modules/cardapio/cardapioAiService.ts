@@ -121,7 +121,7 @@ Regras de ouro:
 - Mantenha sempre o diálogo envolvente na primeira parte da resposta e o bloco JSON completo atualizado na segunda parte.`;
 
 /**
- * Executa o chat multimodal do Cardápio Studio com Gemini 3.8 Flash
+ * Executa o chat multimodal do Cardápio Studio com Gemini 2.5 Flash
  */
 export async function processCardapioAiChat(
   history: CardapioAiMessage[],

@@ -140,7 +140,7 @@ function SeoPanel({ settings }: { settings: ReturnType<typeof useSettingsState> 
 
 function ApiPanel({ settings }: { settings: ReturnType<typeof useSettingsState> }) {
   const [geminiKey, setGeminiKey] = useState(
-    () => (typeof window !== 'undefined' ? (localStorage.getItem('openpage-gemini-key') || localStorage.getItem('eialink_gemini_api_key') || '') : '')
+    () => (typeof window !== 'undefined' ? (localStorage.getItem('eialink_gemini_api_key') || localStorage.getItem('gemini_api_key') || '') : '')
   )
   const [showKey, setShowKey] = useState(false)
   const [testing, setTesting] = useState(false)
@@ -148,10 +148,10 @@ function ApiPanel({ settings }: { settings: ReturnType<typeof useSettingsState> 
   function handleKeyChange(value: string) {
     setGeminiKey(value)
     if (value) {
-      localStorage.setItem('openpage-gemini-key', value.trim())
+
       localStorage.setItem('eialink_gemini_api_key', value.trim())
     } else {
-      localStorage.removeItem('openpage-gemini-key')
+
       localStorage.removeItem('eialink_gemini_api_key')
     }
   }

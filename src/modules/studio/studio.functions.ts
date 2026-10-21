@@ -1351,7 +1351,7 @@ REGRAS CRÍTICAS DE RESPOSTA:
     let rawText = "";
     try {
       const res = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         contents: formattedContents,
         config: {
           systemInstruction: systemPrompt,
@@ -1360,7 +1360,7 @@ REGRAS CRÍTICAS DE RESPOSTA:
       });
       rawText = res.text?.trim() || "";
     } catch (err: any) {
-      console.warn("[CardapioCopilot] Erro com gemini-3.8-flash:", err?.message || err);
+      console.warn("[CardapioCopilot] Erro com gemini-2.5-flash:", err?.message || err);
     }
 
     if (!rawText) {

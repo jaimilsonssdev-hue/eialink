@@ -59,7 +59,7 @@ export const testGeminiApiKeyFn = createServerFn({ method: "POST" })
     if (!keyToTest) {
       return { ok: false, message: "Nenhuma chave foi informada ou configurada no sistema." };
     }
-    // Testa em tempo real contra o modelo gemini-3.8-flash oficial
+    // Testa em tempo real contra o modelo gemini-2.5-flash oficial
     return await testGoogleGeminiKey(keyToTest);
   });
 
@@ -125,7 +125,7 @@ export const saveGeminiApiKeyFn = createServerFn({ method: "POST" })
         configured: Boolean(cleanKey),
         masked: cleanKey ? maskKey(cleanKey) : "",
         message: cleanKey
-          ? "Chave do Google Gemini (3.8 Flash) validada e sincronizada para todos os dispositivos!"
+          ? "Chave do Google Gemini (2.5 Flash) validada e sincronizada para todos os dispositivos!"
           : "Chave do Google Gemini removida do sistema.",
       };
     }

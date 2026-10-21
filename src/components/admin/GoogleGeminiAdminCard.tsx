@@ -51,7 +51,7 @@ export function GoogleGeminiAdminCard() {
           const cleanAuthKey = authUserKey.trim();
           if (typeof window !== "undefined") {
             localStorage.setItem("eialink_gemini_api_key", cleanAuthKey);
-            localStorage.setItem("openpage-gemini-key", cleanAuthKey);
+
           }
           setConfigured(true);
           setMasked(`${cleanAuthKey.slice(0, 4)}••••••••${cleanAuthKey.slice(-4)}`);
@@ -77,7 +77,7 @@ export function GoogleGeminiAdminCard() {
         const localKey =
           typeof window !== "undefined"
             ? localStorage.getItem("eialink_gemini_api_key") ||
-              localStorage.getItem("openpage-gemini-key")
+              localStorage.getItem("gemini_api_key")
             : null;
         if (localKey && localKey.trim().length > 8) {
           setConfigured(true);
@@ -121,10 +121,10 @@ export function GoogleGeminiAdminCard() {
       if (typeof window !== "undefined") {
         if (clean) {
           localStorage.setItem("eialink_gemini_api_key", clean);
-          localStorage.setItem("openpage-gemini-key", clean);
+
         } else {
           localStorage.removeItem("eialink_gemini_api_key");
-          localStorage.removeItem("openpage-gemini-key");
+
         }
       }
 
@@ -150,7 +150,7 @@ export function GoogleGeminiAdminCard() {
         setMasked(newMask);
         setApiKey("");
         setShowKey(false);
-        toast.success("Chave do Google Gemini (3.8 Flash) validada e sincronizada para todos os dispositivos!");
+        toast.success("Chave do Google Gemini (2.5 Flash) validada e sincronizada para todos os dispositivos!");
       } else {
         setMasked("");
         toast.success("Chave removida do sistema.");
@@ -185,7 +185,7 @@ export function GoogleGeminiAdminCard() {
     try {
       if (typeof window !== "undefined") {
         localStorage.removeItem("eialink_gemini_api_key");
-        localStorage.removeItem("openpage-gemini-key");
+
       }
       await saveGeminiApiKeyFn({ data: { apiKey: "" } });
       setConfigured(false);

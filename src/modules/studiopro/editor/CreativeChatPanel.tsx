@@ -154,7 +154,7 @@ export function CreativeChatPanel() {
 
     try {
       if (mode === "plan" && !currentHtml) {
-        setIsGenerating(true, "Elaborando plano estratégico com Gemini 3.8 Flash...");
+        setIsGenerating(true, "Elaborando plano estratégico com Gemini 2.5 Flash...");
         let briefing = "";
         const clientApiKey = await getResolvedApiKeyHelper();
         const controller = new AbortController();
@@ -192,8 +192,8 @@ export function CreativeChatPanel() {
         setIsGenerating(
           true,
           isIteration
-            ? "Copiloto IA aplicando ajustes no site com Gemini 3.8 Flash..."
-            : "Gerando site completo com Gemini 3.8 Flash...",
+            ? "Copiloto IA aplicando ajustes no site com Gemini 2.5 Flash..."
+            : "Gerando site completo com Gemini 2.5 Flash...",
         );
 
         let newHtml = "";
@@ -285,7 +285,7 @@ export function CreativeChatPanel() {
     try {
       setIsGenerating(
         true,
-        "Construindo o site completo com Gemini 3.8 Flash a partir do plano aprovado...",
+        "Construindo o site completo com Gemini 2.5 Flash a partir do plano aprovado...",
       );
       let html = "";
       let explanation = "";

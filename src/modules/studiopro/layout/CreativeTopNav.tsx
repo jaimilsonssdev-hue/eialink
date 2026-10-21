@@ -246,7 +246,7 @@ function applyFeaturesToHtml(
             {activeProject?.name || "Estúdio Criativo"}
           </span>
           <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full uppercase hidden md:inline">
-            Gemini 3.8
+            Gemini 2.5
           </span>
         </div>
       </div>

@@ -15,6 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BookingService } from "@/modules/booking/BookingService";
 import { GoogleCalendarService } from "@/modules/booking/services/GoogleCalendarService";
+import { provisionPlatformToolsForNiche } from "@/modules/prospecting/nicheProvisioner";
 import type {
   BookingAvailability,
   BookingService as Service,
@@ -30,12 +31,12 @@ export const Route = createFileRoute("/agendar/$slug")({
   loader: async ({ params }) => {
     const { data: bio } = await supabase
       .from("bio_pages")
-      .select("id,slug,display_name,description,avatar_url,theme,published")
+      .select("id,slug,display_name,description,avatar_url,theme,published,whatsapp,social_links")
       .eq("slug", params.slug)
       .eq("published", true)
       .maybeSingle();
     if (!bio) throw notFound();
-    const [{ data: settings }, { data: services }, { data: availability }] = await Promise.all([
+    let [{ data: settings }, { data: services }, { data: availability }] = await Promise.all([
       bookingStore
         .from("booking_settings")
         .select("*")
@@ -55,6 +56,35 @@ export const Route = createFileRoute("/agendar/$slug")({
         .eq("active", true)
         .order("weekday"),
     ]);
+    if (!settings || !services?.length || !availability?.length) {
+      try {
+        const social = ((bio as any).social_links as Record<string, any>) || {};
+        await provisionPlatformToolsForNiche({
+          supabase,
+          pageId: bio.id,
+          slug: bio.slug,
+          businessName: bio.display_name,
+          niche: social.niche || social.niche_category,
+          city: social.city,
+          whatsapp: (bio as any).whatsapp,
+          address: social.address,
+          rating: social.google_rating,
+          reviewsCount: social.reviews_count,
+        });
+
+        const [reSettings, reServices, reAvailability] = await Promise.all([
+          bookingStore.from("booking_settings").select("*").eq("bio_page_id", bio.id).eq("active", true).maybeSingle(),
+          bookingStore.from("booking_services").select("*").eq("bio_page_id", bio.id).eq("active", true).order("position"),
+          bookingStore.from("booking_availability").select("*").eq("bio_page_id", bio.id).eq("active", true).order("weekday"),
+        ]);
+        if (reSettings?.data) settings = reSettings.data;
+        if (reServices?.data?.length) services = reServices.data;
+        if (reAvailability?.data?.length) availability = reAvailability.data;
+      } catch (autoErr) {
+        console.warn("[agendar.$slug] Auto-provisionamento de resiliência falhou:", autoErr);
+      }
+    }
+
     return {
       bio,
       settings: settings as BookingSettings | null,

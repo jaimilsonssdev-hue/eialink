@@ -24,7 +24,7 @@ export function getGeminiApiKey(): string {
   if (typeof window !== "undefined") {
     const localKey =
       localStorage.getItem("eialink_gemini_api_key") ||
-
+      localStorage.getItem("openpage-gemini-key") ||
       localStorage.getItem("gemini_api_key");
     if (localKey && localKey.trim().length > 10) return localKey.trim();
   }
@@ -59,7 +59,7 @@ export async function resolveCreativeStudioApiKeyAsync(customKey?: string): Prom
       const clean = userKey.trim();
       if (typeof window !== "undefined") {
         localStorage.setItem("eialink_gemini_api_key", clean);
-
+        localStorage.setItem("openpage-gemini-key", clean);
       }
       return clean;
     }
@@ -74,7 +74,7 @@ export async function resolveCreativeStudioApiKeyAsync(customKey?: string): Prom
       const clean = remote.apiKey.trim();
       if (typeof window !== "undefined") {
         localStorage.setItem("eialink_gemini_api_key", clean);
-
+        localStorage.setItem("openpage-gemini-key", clean);
       }
       return clean;
     }

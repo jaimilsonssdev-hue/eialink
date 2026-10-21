@@ -110,6 +110,6 @@ export const useProjectsStore = create<ProjectsState>()(
           ),
         })),
     }),
-    { name: 'studiopro-projects' }
+    { name: 'openpage-projects' }
   )
 )

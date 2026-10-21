@@ -55,7 +55,7 @@ export async function publishSite(input: PublishSiteInput): Promise<PublishSiteR
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-studiopro-deploy-key': deployAccessKey,
+      'x-openpage-deploy-key': deployAccessKey,
     },
     body: JSON.stringify({ html, slug }),
   })

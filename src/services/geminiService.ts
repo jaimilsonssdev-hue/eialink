@@ -131,7 +131,7 @@ function cleanHtmlOutput(raw: string): string {
 export async function generateLandingPage(
   options: GenerateLandingPageOptions,
 ): Promise<string> {
-  const { companyData, userStylePrompt, apiKey, model = "gemini-2.5-flash" } = options;
+  const { companyData, userStylePrompt, apiKey, model = "gemini-3.8-flash" } = options;
 
   const resolvedKey = resolveApiKey(apiKey);
   const ai = new GoogleGenAI({ apiKey: resolvedKey });
@@ -139,7 +139,7 @@ export async function generateLandingPage(
   const userContent = buildUserMessage(companyData, userStylePrompt);
   let outputText = "";
 
-  // 1. Tenta prioritariamente via Interactions API oficial com gemini-2.5-flash
+  // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
   try {
     const interaction = await ai.interactions.create({
       model,
@@ -207,7 +207,7 @@ export async function generateLandingPage(
   // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
   if (!outputText) {
     const response = await ai.models.generateContent({
-      model: model || "gemini-2.5-flash",
+      model: model || "gemini-3.8-flash",
       contents: userContent,
       config: {
         systemInstruction: SYSTEM_INSTRUCTION,

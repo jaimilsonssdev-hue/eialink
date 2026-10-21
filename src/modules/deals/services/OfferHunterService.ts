@@ -186,7 +186,7 @@ REGRAS OBRIGATÓRIAS:
   ]
 }`;
 
-    const modelsToTry = ["gemini-2.5-flash"];
+    const modelsToTry = ["gemini-3.8-flash"];
     let rawJsonContent: string | null = null;
     let lastError = "";
 
@@ -516,7 +516,7 @@ REGRAS OBRIGATÓRIAS:
   ]
 }`;
 
-    const modelsToTry = ["gemini-2.5-flash"];
+    const modelsToTry = ["gemini-3.8-flash"];
     let rawJsonContent: string | null = null;
     let lastError = "";
 

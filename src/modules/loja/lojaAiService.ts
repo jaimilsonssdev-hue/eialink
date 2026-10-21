@@ -177,7 +177,7 @@ export async function processLojaAiChat(
     });
     rawText = response.text || "";
   } catch (e: any) {
-    console.warn("Tentativa no modelo gemini-2.5-flash falhou:", e?.message);
+    console.warn("Tentativa no modelo gemini-3.8-flash falhou:", e?.message);
   }
 
   if (!rawText) {

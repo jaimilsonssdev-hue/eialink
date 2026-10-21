@@ -101,8 +101,8 @@ const defaultBlocks: BlockConfig[] = [
     type: 'footer',
     variant: 'simple',
     props: {
-      logo: 'Studio Pro',
-      copyright: '2026 Studio Pro. All rights reserved.',
+      logo: 'OpenPage',
+      copyright: '2026 OpenPage. All rights reserved.',
       links: ['Privacy', 'Terms', 'Contact'],
     },
   },
@@ -323,7 +323,7 @@ export const useConfigStore = create<ConfigState>()(
       canRedo: () => get().redoStack.length > 0,
     }),
     {
-      name: 'studiopro-config',
+      name: 'openpage-config',
       version: 2,
       partialize: (state) => ({ config: state.config, activePageId: state.activePageId }),
       migrate: (persisted, version) => {

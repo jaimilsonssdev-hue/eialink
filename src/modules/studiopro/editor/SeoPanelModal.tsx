@@ -168,7 +168,7 @@ Retorne estritamente um JSON no seguinte formato (sem markdown, sem explicaçõe
       if (parsed.keywords) setKeywords(parsed.keywords);
       if (parsed.businessType) setBusinessType(parsed.businessType);
 
-      toast.success("SEO otimizado com IA (Gemini 2.5) com sucesso!");
+      toast.success("SEO otimizado com IA (Gemini 3.8) com sucesso!");
     } catch (err: any) {
       console.warn("Erro ao gerar SEO com IA:", err);
       toast.error(

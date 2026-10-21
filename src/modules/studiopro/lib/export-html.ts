@@ -787,7 +787,7 @@ const defaultTestimonials: TestimonialItem[] = [
   {
     name: 'Sarah Chen',
     role: 'CEO at TechCorp',
-    quote: 'Studio Pro completely changed how we build landing pages. The JSON config approach is genius.',
+    quote: 'OpenPage completely changed how we build landing pages. The JSON config approach is genius.',
     rating: 5,
   },
   {
@@ -924,9 +924,9 @@ interface FaqItem {
 
 const defaultFaqs: FaqItem[] = [
   {
-    question: 'What is Studio Pro?',
+    question: 'What is OpenPage?',
     answer:
-      'Studio Pro is a visual website builder that uses structured JSON config as the source of truth. Both humans and AI agents can edit the same config to build beautiful websites.',
+      'OpenPage is a visual website builder that uses structured JSON config as the source of truth. Both humans and AI agents can edit the same config to build beautiful websites.',
   },
   {
     question: 'How does the JSON config work?',
@@ -936,12 +936,12 @@ const defaultFaqs: FaqItem[] = [
   {
     question: 'Can I use my own components?',
     answer:
-      'Yes! Studio Pro supports custom components. You can build your own blocks following our component schema and register them in the block registry.',
+      'Yes! OpenPage supports custom components. You can build your own blocks following our component schema and register them in the block registry.',
   },
   {
     question: 'Is it free to use?',
     answer:
-      'Studio Pro offers a free tier for personal projects with up to 5 blocks. Pro and Team plans unlock unlimited blocks, custom domains, and priority support.',
+      'OpenPage offers a free tier for personal projects with up to 5 blocks. Pro and Team plans unlock unlimited blocks, custom domains, and priority support.',
   },
 ]
 

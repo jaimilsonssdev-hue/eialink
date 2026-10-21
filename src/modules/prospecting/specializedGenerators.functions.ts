@@ -611,7 +611,7 @@ Regras:
 4. A primeira categoria de "categories" DEVE ser "Todos".`;
 
         const tryGenerateSpecialized = async () => {
-          const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
+          const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
           for (const m of models) {
             try {
               const res = await ai.models.generateContent({

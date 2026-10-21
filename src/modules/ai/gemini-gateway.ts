@@ -157,7 +157,7 @@ export async function requestGemini(
     (typeof window !== "undefined" &&
       (localStorage.getItem("eialink_gemini_api_key")?.trim() ||
         localStorage.getItem("gemini_api_key")?.trim() ||
-        localStorage.getItem("gemini_api_key")?.trim())) ||
+        localStorage.getItem("openpage-gemini-key")?.trim())) ||
     (await resolveGeminiApiKeyAsync()) ||
     null;
 

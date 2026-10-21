@@ -8,7 +8,7 @@ const VARIANT_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, new Set
 const DEFAULT_PROPS_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, b.defaultProps]))
 
 const PRIMARY_GEMINI_MODEL = 'gemini-2.5-flash'
-const STORAGE_KEYS = ['eialink_gemini_api_key', 'gemini_api_key']
+const STORAGE_KEYS = ['openpage-gemini-key', 'eialink_gemini_api_key', 'gemini_api_key']
 
 export function getSavedGeminiKey(): string | null {
   if (typeof window === 'undefined') return null
@@ -61,7 +61,7 @@ export async function generateSiteConfig(prompt: string, signal?: AbortSignal): 
 }
 
 async function callGeminiDirect(prompt: string, apiKey: string, signal?: AbortSignal): Promise<SiteConfig> {
-  // 1. Tenta prioritariamente via Interactions API oficial com gemini-2.5-flash
+  // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
   try {
     const interRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
       method: "POST",
@@ -72,7 +72,7 @@ async function callGeminiDirect(prompt: string, apiKey: string, signal?: AbortSi
       },
       signal,
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         input: `Generate a website configuration for: ${prompt}`,
         system_instruction: GENERATION_PROMPT,
         generation_config: { response_mime_type: "application/json", temperature: 0.8 },

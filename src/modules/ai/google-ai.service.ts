@@ -129,7 +129,10 @@ export async function callGeminiInteractionsApi(
     return { ok: false, text: "", error: "Nenhuma chave do Google AI Studio configurada." };
   }
 
-  const primaryModel = options.model || ACTIVE_GEMINI_MODELS[0];
+  const primaryModel =
+    options.model && options.model !== "gemini-3.8-flash"
+      ? options.model
+      : ACTIVE_GEMINI_MODELS[0];
   const fallbackModel = ACTIVE_GEMINI_MODELS[1];
   const modelsToTry =
     primaryModel === fallbackModel ? [primaryModel] : [primaryModel, fallbackModel];
@@ -266,7 +269,10 @@ export async function callGoogleAi(options: GoogleAiRequestOptions): Promise<Goo
     };
   }
 
-  const requestedModel = options.model || ACTIVE_GEMINI_MODELS[0];
+  const requestedModel =
+    options.model && options.model !== "gemini-3.8-flash"
+      ? options.model
+      : ACTIVE_GEMINI_MODELS[0];
   const fallbackModel = ACTIVE_GEMINI_MODELS[1];
   const modelsToTry: string[] =
     requestedModel === fallbackModel

@@ -83,7 +83,7 @@ function PromptSection() {
     navigate('/editor')
   }
 
-  const hasGeminiKey = !!(typeof window !== 'undefined' && (localStorage.getItem('eialink_gemini_api_key') || localStorage.getItem('gemini_api_key')))
+  const hasGeminiKey = !!(typeof window !== 'undefined' && (localStorage.getItem('openpage-gemini-key') || localStorage.getItem('eialink_gemini_api_key')))
   const isFocused = prompt.length > 0
 
   return (

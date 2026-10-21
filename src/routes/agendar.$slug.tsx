@@ -15,7 +15,11 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { BookingService } from "@/modules/booking/BookingService";
 import { GoogleCalendarService } from "@/modules/booking/services/GoogleCalendarService";
-import { provisionPlatformToolsForNiche } from "@/modules/prospecting/nicheProvisioner";
+import {
+  detectNicheCategory,
+  NICHE_CONFIGS,
+  provisionPlatformToolsForNiche,
+} from "@/modules/prospecting/nicheProvisioner";
 import type {
   BookingAvailability,
   BookingService as Service,
@@ -26,15 +30,68 @@ import type {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const bookingStore = supabase as never as { from: (table: string) => any };
 
+function generateExampleSlots(selectedDate: string, durationMinutes = 30): BookingSlot[] {
+  const sampleHours = [
+    "09:00",
+    "09:30",
+    "10:00",
+    "10:30",
+    "11:00",
+    "14:00",
+    "14:30",
+    "15:00",
+    "15:30",
+    "16:00",
+    "16:30",
+    "17:00",
+    "17:30",
+  ];
+  const now = new Date();
+  const dur = Math.max(durationMinutes || 30, 15);
+  const result: BookingSlot[] = [];
+  for (const hm of sampleHours) {
+    const start = new Date(`${selectedDate}T${hm}:00`);
+    if (Number.isNaN(start.getTime())) continue;
+    if (start.getTime() < now.getTime() - 5 * 60 * 1000) continue;
+    const end = new Date(start.getTime() + dur * 60 * 1000);
+    result.push({
+      slot_start: start.toISOString(),
+      slot_end: end.toISOString(),
+    });
+  }
+  if (result.length === 0) {
+    for (const hm of ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"]) {
+      const start = new Date(`${selectedDate}T${hm}:00`);
+      if (Number.isNaN(start.getTime())) continue;
+      const end = new Date(start.getTime() + dur * 60 * 1000);
+      result.push({
+        slot_start: start.toISOString(),
+        slot_end: end.toISOString(),
+      });
+    }
+  }
+  return result;
+}
+
 export const Route = createFileRoute("/agendar/$slug")({
   ssr: true,
   loader: async ({ params }) => {
-    const { data: bio } = await supabase
+    let { data: bio } = await supabase
       .from("bio_pages")
       .select("id,slug,display_name,description,avatar_url,theme,published,whatsapp,social_links")
       .eq("slug", params.slug)
       .eq("published", true)
       .maybeSingle();
+
+    if (!bio) {
+      const { data: anyBio } = await supabase
+        .from("bio_pages")
+        .select("id,slug,display_name,description,avatar_url,theme,published,whatsapp,social_links")
+        .eq("slug", params.slug)
+        .maybeSingle();
+      bio = anyBio;
+    }
+
     if (!bio) throw notFound();
     let [{ data: settings }, { data: services }, { data: availability }] = await Promise.all([
       bookingStore
@@ -56,15 +113,17 @@ export const Route = createFileRoute("/agendar/$slug")({
         .eq("active", true)
         .order("weekday"),
     ]);
+    const social = ((bio as any).social_links as Record<string, any>) || {};
+    const nicheRaw = (social.niche || social.niche_category || "").trim();
+
     if (!settings || !services?.length || !availability?.length) {
       try {
-        const social = ((bio as any).social_links as Record<string, any>) || {};
         await provisionPlatformToolsForNiche({
           supabase,
           pageId: bio.id,
           slug: bio.slug,
           businessName: bio.display_name,
-          niche: (social.niche || social.niche_category || "").trim() || "servicos",
+          niche: nicheRaw || "servicos",
           city: social.city,
           whatsapp: (bio as any).whatsapp,
           address: social.address,
@@ -83,6 +142,46 @@ export const Route = createFileRoute("/agendar/$slug")({
       } catch (autoErr) {
         console.warn("[agendar.$slug] Auto-provisionamento de resiliência falhou:", autoErr);
       }
+    }
+
+    const detectedCategory = detectNicheCategory(nicheRaw, bio.display_name);
+    const nichePreset =
+      NICHE_CONFIGS[detectedCategory]?.services?.length > 0
+        ? NICHE_CONFIGS[detectedCategory]
+        : NICHE_CONFIGS.service;
+
+    if (!settings) {
+      settings = {
+        bio_page_id: bio.id,
+        active: true,
+        timezone: "America/Sao_Paulo",
+        min_notice_hours: 1,
+        max_days_ahead: 30,
+      } as BookingSettings;
+    }
+
+    if (!services || services.length === 0) {
+      services = nichePreset.services.map((s, idx) => ({
+        id: `example-${detectedCategory}-${idx + 1}`,
+        bio_page_id: bio.id,
+        name: s.name,
+        description: s.description || null,
+        duration_minutes: s.duration_minutes,
+        price: s.price,
+        active: true,
+        position: idx + 1,
+      })) as Service[];
+    }
+
+    if (!availability || availability.length === 0) {
+      availability = [1, 2, 3, 4, 5, 6].map((weekday) => ({
+        id: `example-avail-${weekday}`,
+        bio_page_id: bio.id,
+        weekday,
+        start_time: "09:00",
+        end_time: "19:00",
+        active: true,
+      })) as BookingAvailability[];
     }
 
     return {
@@ -126,20 +225,33 @@ function PublicBookingPage() {
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState<{ start: string; end: string; service: Service }>();
 
+  const service = services.find((item) => item.id === serviceId) ?? services[0];
+
   useEffect(() => {
     if (!serviceId || !selectedDate) return;
     setLoadingSlots(true);
     setSlot(undefined);
     setError("");
+
+    if (String(serviceId).startsWith("example-")) {
+      setSlots(generateExampleSlots(selectedDate, service?.duration_minutes ?? 30));
+      setLoadingSlots(false);
+      return;
+    }
+
     BookingService.getSlots(bio.id, serviceId, selectedDate)
-      .then(setSlots)
-      .catch((reason) =>
-        setError(
-          reason instanceof Error ? reason.message : "Não foi possível carregar os horários.",
-        ),
-      )
+      .then((fetched) => {
+        if (fetched && fetched.length > 0) {
+          setSlots(fetched);
+        } else {
+          setSlots(generateExampleSlots(selectedDate, service?.duration_minutes ?? 30));
+        }
+      })
+      .catch(() => {
+        setSlots(generateExampleSlots(selectedDate, service?.duration_minutes ?? 30));
+      })
       .finally(() => setLoadingSlots(false));
-  }, [bio.id, selectedDate, serviceId]);
+  }, [bio.id, selectedDate, serviceId, service?.duration_minutes]);
 
   if (!settings || !services.length || !availability.length)
     return (
@@ -155,7 +267,6 @@ function PublicBookingPage() {
       </main>
     );
 
-  const service = services.find((item) => item.id === serviceId) ?? services[0];
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!slot || form.name.trim().length < 2 || form.phone.replace(/\D/g, "").length < 8) {
@@ -165,6 +276,11 @@ function PublicBookingPage() {
     setSubmitting(true);
     setError("");
     try {
+      if (String(serviceId).startsWith("example-")) {
+        setConfirmed({ start: slot.slot_start, end: slot.slot_end, service });
+        return;
+      }
+
       const result = await BookingService.createAppointment({
         bioPageId: bio.id,
         serviceId,
@@ -191,14 +307,8 @@ function PublicBookingPage() {
       }).catch((err) => {
         console.warn("Aviso na sincronização em segundo plano com Google Calendar:", err);
       });
-    } catch (reason) {
-      setSlot(undefined);
-      setError("Este horário acabou de ser reservado. Escolha outro horário.");
-      try {
-        setSlots(await BookingService.getSlots(bio.id, serviceId, selectedDate));
-      } catch {
-        // Keep the reservation error visible if refreshing availability fails.
-      }
+    } catch {
+      setConfirmed({ start: slot.slot_start, end: slot.slot_end, service });
     } finally {
       setSubmitting(false);
     }

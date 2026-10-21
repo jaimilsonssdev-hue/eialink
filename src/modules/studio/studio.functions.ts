@@ -11,10 +11,7 @@ import {
   type StudioCopilotInput,
   type StudioCopilotOutput,
 } from "./studio-copilot.service";
-import {
-  testGoogleGeminiKey,
-  resolveGeminiApiKeyAsync,
-} from "@/modules/ai/google-ai.service";
+import { testGoogleGeminiKey, resolveGeminiApiKeyAsync } from "@/modules/ai/google-ai.service";
 import {
   buildCardapioAiSystemPrompt,
   sanitizeCardapioPhotosForNiche,
@@ -27,6 +24,67 @@ import {
   detectNicheCategory,
   NICHE_CONFIGS,
 } from "@/modules/prospecting/nicheProvisioner";
+import {
+  injectEiaLinkFeatureRuntime,
+  applyFeaturesToHtml,
+  type EiaLinkFeatureFlags,
+} from "@/lib/eialinkFeatureRuntime";
+
+function wireAgendaIntoHtml(html: string, slug: string, ctaLabel: string): string {
+  if (!html || !slug) return html;
+  const targetHref = `/agendar/${slug}`;
+  let out = html
+    .replace(/href=["']\/agendar\/[^"']*["']/gi, `href="${targetHref}" data-action="agendar"`)
+    .replace(
+      /href=["']#(?:agendar|agenda|booking|agendamento|contato|marcar)["']/gi,
+      `href="${targetHref}" data-action="agendar"`,
+    );
+
+  out = out.replace(/<a\b([^>]*?)>([\s\S]*?)<\/a>/gi, (fullMatch, attrs, inner) => {
+    const plainText = String(inner)
+      .replace(/<[^>]+>/g, " ")
+      .toLowerCase();
+    if (
+      /agendar|agendamento|marcar\s+consulta|marcar\s+hor[aá]rio|reservar\s+hor[aá]rio|avalia[cç][aã]o|escolha\s+seu\s+hor[aá]rio/i.test(
+        plainText,
+      )
+    ) {
+      let updatedAttrs = String(attrs);
+      if (/href=["'][^"']*["']/i.test(updatedAttrs)) {
+        updatedAttrs = updatedAttrs.replace(/href=["'][^"']*["']/i, `href="${targetHref}"`);
+      } else {
+        updatedAttrs += ` href="${targetHref}"`;
+      }
+      if (!/data-action=/i.test(updatedAttrs)) {
+        updatedAttrs += ` data-action="agendar"`;
+      }
+      return `<a${updatedAttrs}>${inner}</a>`;
+    }
+    return fullMatch;
+  });
+
+  const hasBookingTrigger =
+    /\/agendar\//i.test(out) ||
+    /data-action=["']agendar["']/i.test(out) ||
+    />[^<]*(?:agendar|agendamento|marcar\s+consulta|marcar\s+hor[aá]rio)[^<]*</i.test(out);
+
+  if (!hasBookingTrigger) {
+    const label = ctaLabel || "🗓️ Agendar Horário";
+    const floatingCta = `
+<div id="eialink-booking-cta-bar" style="position:fixed;bottom:20px;left:20px;z-index:9990;">
+  <a href="${targetHref}" data-action="agendar" style="display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:9999px;background:linear-gradient(135deg,#10b981,#059669);color:#ffffff;font-family:sans-serif;font-weight:700;font-size:14px;text-decoration:none;box-shadow:0 10px 25px rgba(16,185,129,0.4);">
+    <span>${label}</span>
+  </a>
+</div>`;
+    if (/<\/body>/i.test(out)) {
+      out = out.replace(/<\/body>/i, `${floatingCta}\n</body>`);
+    } else {
+      out += floatingCta;
+    }
+  }
+
+  return out;
+}
 
 function getServiceSupabaseClient() {
   const url =
@@ -97,16 +155,14 @@ export const saveStudioGeminiKeyFn = createServerFn({ method: "POST" })
     const cleanKey = (data.apiKey || "").trim();
     const supabase = getServiceSupabaseClient();
 
-    const { error } = await supabase
-      .from("payment_gateway_settings" as any)
-      .upsert(
-        {
-          id: "default",
-          gemini_api_key: cleanKey || null,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "id" },
-      );
+    const { error } = await supabase.from("payment_gateway_settings" as any).upsert(
+      {
+        id: "default",
+        gemini_api_key: cleanKey || null,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "id" },
+    );
 
     if (error) {
       throw new Error(`Erro ao salvar a chave no banco de dados: ${error.message}`);
@@ -277,6 +333,7 @@ export const saveStudioPageFn = createServerFn({ method: "POST" })
 import {
   BRIEFING_SYSTEM_PROMPT,
   CODE_GENERATION_SYSTEM_PROMPT,
+  SURGICAL_EDIT_SYSTEM_PROMPT,
 } from "@/modules/studiopro/lib/creativeEngineService";
 
 /**
@@ -338,61 +395,301 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
     const ai = new GoogleGenAI({ apiKey: resolvedKey });
 
     let effectiveHtml = (input.existingHtml || "").trim();
-    if (!effectiveHtml && (input.projectId || input.businessSlug)) {
-      try {
-        let dbPage: any = null;
-        if (input.projectId) {
-          const { data } = await supabase
-            .from("bio_pages")
-            .select("social_links")
-            .eq("id", input.projectId)
-            .maybeSingle();
-          dbPage = data;
-        }
-        if (!dbPage && input.businessSlug) {
-          const { data } = await supabase
-            .from("bio_pages")
-            .select("social_links")
-            .eq("slug", input.businessSlug)
-            .maybeSingle();
-          dbPage = data;
-        }
-        if (dbPage) {
-          const rawSocial = (dbPage.social_links as Record<string, any>) || {};
-          effectiveHtml = rawSocial.custom_html || "";
-        }
-      } catch (loadErr) {
-        console.warn("[Studio] Falha ao recuperar HTML base da página:", loadErr);
+    let dbPage: {
+      id: string;
+      slug: string;
+      display_name: string;
+      whatsapp: string | null;
+      social_links: Record<string, any> | null;
+    } | null = null;
+
+    try {
+      if (input.projectId) {
+        const { data } = await supabase
+          .from("bio_pages")
+          .select("id, slug, display_name, whatsapp, social_links")
+          .eq("id", input.projectId)
+          .maybeSingle();
+        dbPage = data as any;
       }
+      if (!dbPage && input.businessSlug) {
+        const { data } = await supabase
+          .from("bio_pages")
+          .select("id, slug, display_name, whatsapp, social_links")
+          .eq("slug", input.businessSlug)
+          .maybeSingle();
+        dbPage = data as any;
+      }
+      if (!dbPage && input.projectName) {
+        const { data } = await supabase
+          .from("bio_pages")
+          .select("id, slug, display_name, whatsapp, social_links")
+          .eq("user_id", userId)
+          .eq("display_name", input.projectName)
+          .maybeSingle();
+        dbPage = data as any;
+      }
+      if (dbPage && !effectiveHtml) {
+        const rawSocial = (dbPage.social_links as Record<string, any>) || {};
+        effectiveHtml = rawSocial.custom_html || "";
+      }
+    } catch (loadErr) {
+      console.warn("[Studio] Falha ao recuperar dados base da página:", loadErr);
     }
+
+    const dbSocial = (dbPage?.social_links as Record<string, any>) || {};
+    const effectiveProjectName = input.projectName || dbPage?.display_name || "Site Criativo";
+    const effectiveNiche = input.niche || dbSocial.niche || dbSocial.niche_category || "";
+    const effectiveWhatsapp = input.businessWhatsapp || dbPage?.whatsapp || dbSocial.whatsapp || "";
+    const effectiveAddress = input.businessAddress || dbSocial.address || "";
+    const effectiveCity = input.city || dbSocial.city || "";
 
     let userPrompt = input.briefingOrPrompt;
 
     // Injeta metadados de ferramentas do ecossistema EiaLink calibrados por nicho
-    const detectedCategory = detectNicheCategory(input.niche, input.projectName);
+    const detectedCategory = detectNicheCategory(effectiveNiche, effectiveProjectName);
     const nicheConfig = NICHE_CONFIGS[detectedCategory];
-    const candidateSlug = input.businessSlug || slugify(input.projectName || "empresa");
+    const candidateSlug =
+      dbPage?.slug || input.businessSlug || slugify(effectiveProjectName || "empresa");
     const ctaUrl = nicheConfig.ctaUrl(candidateSlug);
     const ctaLabel = nicheConfig.ctaLabel;
 
+    const isModification = Boolean(
+      effectiveHtml && effectiveHtml.length > 50 && !input.isRegeneration,
+    );
+
+    const promptLower = input.briefingOrPrompt.toLowerCase();
+    const isTurnOffVerb =
+      /\b(desligar|desconectar|desativar|remover|tirar|ocultar|esconder)\b/i.test(promptLower);
+    const isTurnOnVerb =
+      /\b(conectar|ligar|implementar|ativar|vincular|integrar|colocar|adicionar|configurar|habilitar)\b/i.test(
+        promptLower,
+      );
+
+    const mentionsAgenda =
+      /\b(agenda|agendamento|agendar|hor[aá]rios?|marcar\s*consulta|marcar\s*hor[aá]rio|reserva|bot[aã]o\s*de\s*agendar|abrir\s*modal|conectar\s*agenda)\b/i.test(
+        promptLower,
+      );
+    const mentionsDeals =
+      /\b(mural\s*de\s*ofertas|mural|ofertas?|cupom|cupons|promo[cç][aã]o|promo[cç][oõ]es)\b/i.test(
+        promptLower,
+      );
+    const mentionsLoyalty =
+      /\b(fidelidade|clube\s*vip|clube\s*de\s*pontos|programa\s*de\s*pontos|pontos\s*vip)\b/i.test(
+        promptLower,
+      );
+    const mentionsConcierge =
+      /\b(atendente|assistente\s*virtual|chat\s*online|concierge|rob[oô]\s*de\s*atendimento)\b/i.test(
+        promptLower,
+      );
+
+    const isFeatureCommand =
+      isModification &&
+      (isTurnOnVerb ||
+        isTurnOffVerb ||
+        /\b(conectar|ligar|funcionar|corrigir|arrumar|ajustar|abrir|ativar|implementar|vincular)\b/i.test(
+          promptLower,
+        )) &&
+      (mentionsAgenda || mentionsDeals || mentionsLoyalty || mentionsConcierge);
+
+    // Se o usuário pediu explicitamente para conectar/ligar/implementar ou desligar/desconectar
+    // Agenda, Mural de Ofertas, Fidelidade ou Atendente Virtual em um site existente:
+    if (isFeatureCommand && effectiveHtml) {
+      const enableTarget = !isTurnOffVerb;
+      const currentFlags: EiaLinkFeatureFlags = {
+        agenda_enabled: dbSocial.agenda_enabled !== false,
+        ai_concierge_enabled: dbSocial.ai_concierge_enabled !== false,
+        deals_enabled: dbSocial.deals_enabled !== false && dbSocial.mural_ofertas_enabled !== false,
+        loyalty_enabled:
+          dbSocial.loyalty_enabled !== false && dbSocial.fidelidade_enabled !== false,
+        gps_enabled: dbSocial.gps_enabled !== false,
+        whatsapp_enabled: dbSocial.whatsapp_enabled !== false,
+      };
+
+      const statusLines: string[] = [];
+      const bookingCategory = nicheConfig.isBooking ? detectedCategory : "service";
+      const bookingConfig = NICHE_CONFIGS[bookingCategory];
+
+      let wiredHtml = effectiveHtml;
+
+      if (mentionsAgenda) {
+        currentFlags.agenda_enabled = enableTarget;
+        if (enableTarget) {
+          wiredHtml = wireAgendaIntoHtml(wiredHtml, candidateSlug, bookingConfig.ctaLabel);
+          statusLines.push(
+            `- 🗓️ **Agenda Online:** ATIVADA em \`/agendar/${candidateSlug}\` com serviços de exemplo (${bookingConfig.services.map((s) => `${s.name} R$ ${s.price}`).join(", ")})`,
+          );
+        } else {
+          statusLines.push(`- 🗓️ **Agenda Online:** DESCONECTADA / OCULTADA do site`);
+        }
+      }
+
+      if (mentionsDeals) {
+        currentFlags.deals_enabled = enableTarget;
+        statusLines.push(
+          enableTarget
+            ? `- 🔥 **Mural de Ofertas & Cupom Relâmpago:** CONECTADO e ATIVO no site com oferta promocional de exemplo e resgate de cupom instantâneo`
+            : `- 🔥 **Mural de Ofertas & Cupom Relâmpago:** DESLIGADO do site`,
+        );
+      }
+
+      if (mentionsLoyalty) {
+        currentFlags.loyalty_enabled = enableTarget;
+        statusLines.push(
+          enableTarget
+            ? `- 👑 **Clube de Fidelidade & Pontos VIP:** CONECTADO e ATIVO no site com carteira de pontos demonstrativa e resgate de prêmios do nicho`
+            : `- 👑 **Clube de Fidelidade & Pontos VIP:** DESLIGADO do site`,
+        );
+      }
+
+      if (mentionsConcierge) {
+        currentFlags.ai_concierge_enabled = enableTarget;
+        statusLines.push(
+          enableTarget
+            ? `- 💬 **Atendente Virtual Inteligente 24/7:** CONECTADO e ATIVO no site (responde preços, serviços, ofertas, localização e agenda horários)`
+            : `- 💬 **Atendente Virtual Inteligente:** DESLIGADO do site`,
+        );
+      }
+
+      wiredHtml = applyFeaturesToHtml(wiredHtml, currentFlags);
+      wiredHtml = injectEiaLinkFeatureRuntime(wiredHtml, {
+        slug: candidateSlug,
+        businessName: effectiveProjectName,
+        whatsapp: effectiveWhatsapp,
+        address: effectiveAddress,
+        niche: effectiveNiche || bookingConfig.label,
+        features: currentFlags,
+      });
+
+      let savedPageId = dbPage?.id || input.projectId;
+      let savedSlug = candidateSlug;
+
+      try {
+        const curLoyalty = (dbSocial.loyalty_settings as Record<string, any>) || {};
+        const updatedSocial = {
+          ...dbSocial,
+          custom_html: wiredHtml,
+          niche: effectiveNiche || bookingConfig.label,
+          niche_category: bookingCategory,
+          ...currentFlags,
+          mural_ofertas_enabled: currentFlags.deals_enabled,
+          fidelidade_enabled: currentFlags.loyalty_enabled,
+          booking_enabled: currentFlags.agenda_enabled,
+          booking_active: currentFlags.agenda_enabled,
+          booking_url: `/agendar/${savedSlug}`,
+          loyalty_settings: {
+            ...curLoyalty,
+            isActive: currentFlags.loyalty_enabled,
+          },
+          is_demo: true,
+          creative_studio_project: {
+            id: savedPageId || `proj-${Date.now()}`,
+            name: effectiveProjectName,
+            briefing: input.briefingOrPrompt,
+            html: wiredHtml,
+            updatedAt: Date.now(),
+          },
+        };
+
+        if (dbPage) {
+          await supabase
+            .from("bio_pages")
+            .update({
+              display_name: effectiveProjectName,
+              whatsapp: effectiveWhatsapp || undefined,
+              social_links: updatedSocial,
+              updated_at: new Date().toISOString(),
+            } as any)
+            .eq("id", dbPage.id);
+          savedPageId = dbPage.id;
+          savedSlug = dbPage.slug;
+        } else {
+          const uniqueSlug =
+            input.businessSlug || `${candidateSlug}-${Date.now().toString(36).slice(-4)}`;
+          const { data: created } = await supabase
+            .from("bio_pages")
+            .insert({
+              user_id: userId,
+              display_name: effectiveProjectName,
+              slug: uniqueSlug,
+              template_id: "site-maquina",
+              published: true,
+              whatsapp: effectiveWhatsapp || null,
+              social_links: updatedSocial,
+            })
+            .select("id, slug")
+            .single();
+          savedPageId = created?.id;
+          savedSlug = created?.slug || uniqueSlug;
+        }
+
+        if (savedPageId && savedSlug && currentFlags.agenda_enabled) {
+          await provisionPlatformToolsForNiche({
+            supabase,
+            pageId: savedPageId,
+            slug: savedSlug,
+            businessName: effectiveProjectName,
+            niche: effectiveNiche || bookingConfig.label,
+            city: effectiveCity,
+            whatsapp: effectiveWhatsapp,
+            address: effectiveAddress,
+            rating: input.rating || dbSocial.google_rating,
+            reviewsCount: input.reviewsCount || dbSocial.reviews_count,
+          });
+        }
+      } catch (err) {
+        console.warn("[Studio] Aviso ao persistir ferramentas no site:", err);
+      }
+
+      return {
+        ok: true,
+        html: wiredHtml,
+        explanation: `✅ **Recursos e ferramentas atualizados no site com sucesso!**\n\n${statusLines.join("\n")}\n\n💡 Você já pode testar clicando nos botões flutuantes na prévia ao lado ou ligar/desligar qualquer ferramenta a qualquer momento no botão **"Recursos"** no topo do editor!`,
+        pageId: savedPageId,
+        slug: savedSlug,
+      };
+    }
+
     const businessContextParts: string[] = [];
-    if (input.projectName) businessContextParts.push(`Nome Oficial: "${input.projectName}"`);
-    if (input.niche) businessContextParts.push(`Nicho de Atuação: "${input.niche}" (Categoria: ${nicheConfig.label})`);
-    if (input.city) businessContextParts.push(`Cidade / Região: "${input.city}"`);
-    if (input.businessAddress) businessContextParts.push(`Endereço Verificado (usar no Mapa/GPS/Waze): "${input.businessAddress}"`);
-    if (input.businessWhatsapp) businessContextParts.push(`WhatsApp Oficial (usar no botão pulsante e CTAs): "${input.businessWhatsapp}"`);
+    if (effectiveProjectName) businessContextParts.push(`Nome Oficial: "${effectiveProjectName}"`);
+    if (effectiveNiche)
+      businessContextParts.push(
+        `Nicho de Atuação: "${effectiveNiche}" (Categoria: ${nicheConfig.label})`,
+      );
+    if (effectiveCity) businessContextParts.push(`Cidade / Região: "${effectiveCity}"`);
+    if (effectiveAddress)
+      businessContextParts.push(
+        `Endereço Verificado (usar no Mapa/GPS/Waze): "${effectiveAddress}"`,
+      );
+    if (effectiveWhatsapp)
+      businessContextParts.push(
+        `WhatsApp Oficial (usar no botão pulsante e CTAs): "${effectiveWhatsapp}"`,
+      );
     if (nicheConfig.isBooking) {
-      businessContextParts.push(`SISTEMA DE AGENDAMENTO ONLINE EIALINK: 100% ATIVO E INTEGRADO no link "${ctaUrl}".`);
-      businessContextParts.push(`O botão de ação principal (CTA) do Hero e das seções de serviços DEVE SER "${ctaLabel}" apontando diretamente para "${ctaUrl}".`);
+      businessContextParts.push(
+        `SISTEMA DE AGENDAMENTO ONLINE EIALINK: 100% ATIVO E INTEGRADO no link "${ctaUrl}".`,
+      );
+      businessContextParts.push(
+        `O botão de ação principal (CTA) do Hero e das seções de serviços DEVE SER "${ctaLabel}" apontando diretamente para "${ctaUrl}".`,
+      );
       if (nicheConfig.services.length > 0) {
-        businessContextParts.push(`Serviços oficiais do negócio para a vitrine: ${nicheConfig.services.map((s) => `${s.name} (R$ ${s.price}, ${s.duration_minutes}min)`).join("; ")}.`);
+        businessContextParts.push(
+          `Serviços oficiais do negócio para a vitrine: ${nicheConfig.services.map((s) => `${s.name} (R$ ${s.price}, ${s.duration_minutes}min)`).join("; ")}.`,
+        );
       }
     } else {
-      businessContextParts.push(`CTA PRINCIPAL DE CONVERSÃO: Botão "${ctaLabel}" apontando para "${ctaUrl}".`);
+      businessContextParts.push(
+        `CTA PRINCIPAL DE CONVERSÃO: Botão "${ctaLabel}" apontando para "${ctaUrl}".`,
+      );
     }
-    if (input.rating) businessContextParts.push(`Avaliação no Google Maps: ${input.rating} estrelas (${input.reviewsCount || 80} avaliações reais)`);
+    if (input.rating)
+      businessContextParts.push(
+        `Avaliação no Google Maps: ${input.rating} estrelas (${input.reviewsCount || 80} avaliações reais)`,
+      );
     if (input.photos && input.photos.length > 0) {
-      businessContextParts.push(`Fotos reais da empresa para usar no site: ${input.photos.slice(0, 6).join(", ")}`);
+      businessContextParts.push(
+        `Fotos reais da empresa para usar no site: ${input.photos.slice(0, 6).join(", ")}`,
+      );
     }
 
     if (businessContextParts.length > 0) {
@@ -406,8 +703,6 @@ NÃO repita a mesma estrutura, ordem de blocos, hero ou paleta de cores.
 Experimente um formato e layout inovador (ex: se era clássico/cards, use um Split moderno, Bento Grid, Neobrutalismo pop com sombras duras, ou Glassmorphism translúcido com luzes neon).
 Surpreenda com uma organização criativa e única que valorize a marca do cliente ao máximo!`;
     }
-
-    const isModification = Boolean(effectiveHtml && effectiveHtml.length > 50 && !input.isRegeneration);
 
     if (isModification) {
       userPrompt = `[SOLICITAÇÃO DE ALTERAÇÃO NO SITE EXISTENTE]:
@@ -466,7 +761,7 @@ ${effectiveHtml}`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+    const candidateModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite"] as const;
 
     // 1. Executa com gemini-2.5-flash como primeiro modelo e um único fallback (gemini-2.5-flash-lite)
     for (const modelToTry of candidateModels) {
@@ -476,8 +771,10 @@ ${effectiveHtml}`;
           model: modelToTry,
           contents,
           config: {
-            systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-            temperature: 0.65,
+            systemInstruction: isModification
+              ? SURGICAL_EDIT_SYSTEM_PROMPT
+              : CODE_GENERATION_SYSTEM_PROMPT,
+            temperature: isModification ? 0.2 : 0.65,
             maxOutputTokens: 32768,
             abortSignal: AbortSignal.timeout(85000),
           },
@@ -489,21 +786,30 @@ ${effectiveHtml}`;
         }
       } catch (sdkErr: any) {
         lastCapturedError = sdkErr;
-        console.warn(`[StudioServer] generateContent com ${modelToTry} falhou:`, sdkErr?.message || sdkErr);
+        console.warn(
+          `[StudioServer] generateContent com ${modelToTry} falhou:`,
+          sdkErr?.message || sdkErr,
+        );
       }
     }
 
     if (!responseText) {
       const errDetails =
         lastCapturedError?.message ||
-        (typeof lastCapturedError === "object" ? JSON.stringify(lastCapturedError) : "Erro de resposta");
+        (typeof lastCapturedError === "object"
+          ? JSON.stringify(lastCapturedError)
+          : "Erro de resposta");
       const lower = String(errDetails).toLowerCase();
       if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
         throw new Error(
           `Modelo do Google AI Studio inexistente ou indisponível para a sua chave: ${errDetails}`,
         );
       }
-      if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+      if (
+        lower.includes("429") ||
+        lower.includes("quota") ||
+        lower.includes("resource_exhausted")
+      ) {
         throw new Error(
           `Limite de cota atingido no Google AI Studio: ${errDetails}. Aguarde alguns instantes ou verifique o faturamento da sua chave.`,
         );
@@ -540,11 +846,16 @@ ${effectiveHtml}`;
     } else {
       // Extração de blocos de código se não veio a tag <<<HTML>>>
       const htmlBlockMatch = raw.match(/```(?:html)?\s*([\s\S]*?)\s*```/i);
-      if (htmlBlockMatch && htmlBlockMatch[1] && /<(?:!doctype|html|body|div)/i.test(htmlBlockMatch[1])) {
+      if (
+        htmlBlockMatch &&
+        htmlBlockMatch[1] &&
+        /<(?:!doctype|html|body|div)/i.test(htmlBlockMatch[1])
+      ) {
         cleanHtml = htmlBlockMatch[1].trim();
         explanation = raw.replace(/```(?:html)?\s*[\s\S]*?\s*```/gi, "").trim();
       } else {
-        const docMatch = raw.match(/(<!DOCTYPE html[\s\S]*<\/html>)/i) || raw.match(/(<html[\s\S]*<\/html>)/i);
+        const docMatch =
+          raw.match(/(<!DOCTYPE html[\s\S]*<\/html>)/i) || raw.match(/(<html[\s\S]*<\/html>)/i);
         if (docMatch && docMatch[1]) {
           cleanHtml = docMatch[1].trim();
           explanation = raw.replace(docMatch[1], "").trim();
@@ -570,10 +881,12 @@ ${effectiveHtml}`;
       /<\/html>/i.test(cleanHtml);
     if (!hasValidHtmlTags) {
       if (isModification && effectiveHtml) {
-        console.warn("[StudioServer] IA retornou HTML incompleto ou apenas texto. Executando síntese de código...");
+        console.warn(
+          "[StudioServer] IA retornou HTML incompleto ou apenas texto. Executando síntese de código...",
+        );
         try {
           const retryRes = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.8-flash",
             contents: [
               {
                 role: "user",
@@ -631,46 +944,35 @@ ${effectiveHtml}`,
         : "🚀 Site gerado com sucesso! Já estruturei com design moderno, alta conversão e ferramentas integradas.";
     }
 
-    let savedPageId = input.projectId;
-    let savedSlug = "";
+    let savedPageId = dbPage?.id || input.projectId;
+    let savedSlug = dbPage?.slug || candidateSlug;
 
     try {
-      const pageName = input.projectName || "Site Criativo";
+      const pageName = effectiveProjectName;
       const slugCandidate = slugify(pageName);
 
-      let existing: { id: string; slug: string; social_links: any } | null = null;
-      if (input.projectId) {
-        const { data: byId } = await supabase
-          .from("bio_pages")
-          .select("id, slug, social_links")
-          .eq("id", input.projectId)
-          .maybeSingle();
-        existing = byId as any;
+      const existing = dbPage;
+      if (!existing) {
+        savedSlug = input.businessSlug || `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
       }
-      if (!existing && input.businessSlug) {
-        const { data: bySlug } = await supabase
-          .from("bio_pages")
-          .select("id, slug, social_links")
-          .eq("slug", input.businessSlug)
-          .maybeSingle();
-        existing = bySlug as any;
+
+      // Se o nicho usa agendamento, garante que todos os botões de agendar estejam conectados ao /agendar/{savedSlug}
+      if (nicheConfig.isBooking) {
+        cleanHtml = wireAgendaIntoHtml(cleanHtml, savedSlug, nicheConfig.ctaLabel);
       }
-      if (!existing && pageName) {
-        const { data: byName } = await supabase
-          .from("bio_pages")
-          .select("id, slug, social_links")
-          .eq("user_id", userId)
-          .eq("display_name", pageName)
-          .maybeSingle();
-        existing = byName as any;
-      }
+      cleanHtml = injectEiaLinkFeatureRuntime(cleanHtml, {
+        slug: savedSlug,
+        businessName: pageName,
+        whatsapp: effectiveWhatsapp,
+        address: effectiveAddress,
+      });
 
       const existingSocial = (existing?.social_links as any) || {};
       const updatedSocial = {
         ...existingSocial,
         custom_html: cleanHtml,
-        niche: input.niche || existingSocial.niche,
-        city: input.city || existingSocial.city,
+        niche: effectiveNiche || existingSocial.niche,
+        city: effectiveCity || existingSocial.city,
         google_rating: input.rating || existingSocial.google_rating || 4.9,
         reviews_count: input.reviewsCount || existingSocial.reviews_count || 85,
         is_demo: true,
@@ -688,7 +990,7 @@ ${effectiveHtml}`,
           .from("bio_pages")
           .update({
             display_name: pageName,
-            whatsapp: input.businessWhatsapp || undefined,
+            whatsapp: effectiveWhatsapp || undefined,
             social_links: updatedSocial,
             updated_at: new Date().toISOString(),
           } as any)
@@ -696,22 +998,21 @@ ${effectiveHtml}`,
         savedPageId = existing.id;
         savedSlug = existing.slug;
       } else {
-        const uniqueSlug = input.businessSlug || `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
         const { data: created } = await supabase
           .from("bio_pages")
           .insert({
             user_id: userId,
             display_name: pageName,
-            slug: uniqueSlug,
+            slug: savedSlug,
             template_id: "site-maquina",
             published: true,
-            whatsapp: input.businessWhatsapp || null,
+            whatsapp: effectiveWhatsapp || null,
             social_links: updatedSocial,
           })
           .select("id, slug")
           .single();
         savedPageId = created?.id;
-        savedSlug = created?.slug || uniqueSlug;
+        savedSlug = created?.slug || savedSlug;
       }
 
       // Provisiona automaticamente as ferramentas da plataforma para este nicho
@@ -722,10 +1023,10 @@ ${effectiveHtml}`,
             pageId: savedPageId,
             slug: savedSlug,
             businessName: pageName,
-            niche: input.niche,
-            city: input.city,
-            whatsapp: input.businessWhatsapp,
-            address: input.businessAddress,
+            niche: effectiveNiche,
+            city: effectiveCity,
+            whatsapp: effectiveWhatsapp,
+            address: effectiveAddress,
             rating: input.rating,
             reviewsCount: input.reviewsCount,
           });
@@ -807,17 +1108,14 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
 
     let briefingText = "";
     let lastBriefingError: any = null;
-    const briefingModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+    const briefingModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite"] as const;
 
     for (const m of briefingModels) {
       if (briefingText) break;
       try {
         const response = await ai.models.generateContent({
           model: m,
-          contents: [
-            ...formattedHistory,
-            { role: "user", parts: userParts },
-          ],
+          contents: [...formattedHistory, { role: "user", parts: userParts }],
           config: {
             systemInstruction: BRIEFING_SYSTEM_PROMPT,
             temperature: 0.65,
@@ -841,7 +1139,11 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
       if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
         throw new Error(`Modelo do Google AI Studio inexistente ou indisponível: ${errMsg}`);
       }
-      if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+      if (
+        lower.includes("429") ||
+        lower.includes("quota") ||
+        lower.includes("resource_exhausted")
+      ) {
         throw new Error(`Limite de cota atingido no Google AI Studio: ${errMsg}`);
       }
       throw new Error(`Falha ao gerar o plano no Google AI Studio: ${errMsg}`);
@@ -1082,7 +1384,9 @@ export const saveCardapioStudioFn = createServerFn({ method: "POST" })
       }
 
       if (insertRes.error || !insertRes.data) {
-        throw new Error(`Erro ao criar cardápio: ${insertRes.error?.message || "Falha na inserção"}`);
+        throw new Error(
+          `Erro ao criar cardápio: ${insertRes.error?.message || "Falha na inserção"}`,
+        );
       }
 
       return {
@@ -1274,7 +1578,9 @@ export const processCardapioAiStudioFn = createServerFn({ method: "POST" })
       resolvedKey = (await resolveGeminiApiKeyAsync()) || undefined;
     }
     if (!resolvedKey) {
-      throw new Error("Chave do Google AI Studio não encontrada. Configure sua chave no painel de Configurações.");
+      throw new Error(
+        "Chave do Google AI Studio não encontrada. Configure sua chave no painel de Configurações.",
+      );
     }
 
     const { GoogleGenAI } = await import("@google/genai");
@@ -1331,7 +1637,11 @@ REGRAS CRÍTICAS DE RESPOSTA:
     const formattedContents: any[] = [];
 
     // Contexto com cardápio atual
-    if (input.currentCardapio && Array.isArray(input.currentCardapio.items) && input.currentCardapio.items.length > 0) {
+    if (
+      input.currentCardapio &&
+      Array.isArray(input.currentCardapio.items) &&
+      input.currentCardapio.items.length > 0
+    ) {
       formattedContents.push({
         role: "user",
         parts: [
@@ -1381,7 +1691,7 @@ REGRAS CRÍTICAS DE RESPOSTA:
     let rawText = "";
     try {
       const res = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: formattedContents,
         config: {
           systemInstruction: systemPrompt,
@@ -1394,13 +1704,16 @@ REGRAS CRÍTICAS DE RESPOSTA:
       console.warn("[CardapioCopilot] Erro com gemini-2.5-flash:", err?.message || err);
       try {
         const fallbackRes = await ai.models.generateContent({
-          model: "gemini-2.5-flash-lite",
+          model: "gemini-3.5-flash-lite",
           contents: formattedContents,
           config: { systemInstruction: systemPrompt, temperature: 0.6, maxOutputTokens: 16384 },
         });
         rawText = fallbackRes.text?.trim() || "";
       } catch (fbErr: any) {
-        console.warn("[CardapioCopilot] Erro no fallback gemini-2.5-flash-lite:", fbErr?.message || fbErr);
+        console.warn(
+          "[CardapioCopilot] Erro no fallback gemini-2.5-flash-lite:",
+          fbErr?.message || fbErr,
+        );
       }
     }
 
@@ -1414,7 +1727,9 @@ REGRAS CRÍTICAS DE RESPOSTA:
     let jsonStringCandidate = jsonMatch ? jsonMatch[1].trim() : "";
 
     if (!jsonStringCandidate) {
-      const braceMatch = rawText.match(/(\{[\s\S]*"(?:restaurantName|items|backgroundColor|themeColor)"[\s\S]*\})/i);
+      const braceMatch = rawText.match(
+        /(\{[\s\S]*"(?:restaurantName|items|backgroundColor|themeColor)"[\s\S]*\})/i,
+      );
       if (braceMatch) {
         jsonStringCandidate = braceMatch[1].trim();
       }
@@ -1423,15 +1738,28 @@ REGRAS CRÍTICAS DE RESPOSTA:
     if (jsonStringCandidate) {
       try {
         const parsed = JSON.parse(jsonStringCandidate);
-        if (parsed && (parsed.restaurantName || Array.isArray(parsed.items) || parsed.backgroundColor || parsed.logoUrl)) {
+        if (
+          parsed &&
+          (parsed.restaurantName ||
+            Array.isArray(parsed.items) ||
+            parsed.backgroundColor ||
+            parsed.logoUrl)
+        ) {
           updatedCardapio = sanitizeCardapioPhotosForNiche(
             {
               ...input.currentCardapio,
               ...parsed,
               rating: input.leadContext?.rating ?? input.currentCardapio?.rating ?? null,
-              reviewsCount: input.leadContext?.reviewsCount ?? input.currentCardapio?.reviewsCount ?? null,
-              categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : input.currentCardapio.categories,
-              items: Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed.items : input.currentCardapio.items,
+              reviewsCount:
+                input.leadContext?.reviewsCount ?? input.currentCardapio?.reviewsCount ?? null,
+              categories:
+                Array.isArray(parsed.categories) && parsed.categories.length > 0
+                  ? parsed.categories
+                  : input.currentCardapio.categories,
+              items:
+                Array.isArray(parsed.items) && parsed.items.length > 0
+                  ? parsed.items
+                  : input.currentCardapio.items,
               features: {
                 ...(input.currentCardapio.features || {}),
                 ...(parsed.features || {}),
@@ -1439,16 +1767,23 @@ REGRAS CRÍTICAS DE RESPOSTA:
             },
             input.leadContext?.photos,
           );
-          if (false) updatedCardapio = {
-            ...input.currentCardapio,
-            ...parsed,
-            categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : input.currentCardapio.categories,
-            items: Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed.items : input.currentCardapio.items,
-            features: {
-              ...(input.currentCardapio.features || {}),
-              ...(parsed.features || {}),
-            },
-          };
+          if (false)
+            updatedCardapio = {
+              ...input.currentCardapio,
+              ...parsed,
+              categories:
+                Array.isArray(parsed.categories) && parsed.categories.length > 0
+                  ? parsed.categories
+                  : input.currentCardapio.categories,
+              items:
+                Array.isArray(parsed.items) && parsed.items.length > 0
+                  ? parsed.items
+                  : input.currentCardapio.items,
+              features: {
+                ...(input.currentCardapio.features || {}),
+                ...(parsed.features || {}),
+              },
+            };
         }
       } catch (parseErr) {
         console.warn("[CardapioServer] Falha no parse do JSON retornado:", parseErr);
@@ -1461,7 +1796,8 @@ REGRAS CRÍTICAS DE RESPOSTA:
       .trim();
 
     return {
-      replyText: conversationalText || "Alteração realizada com sucesso! O cardápio foi atualizado na tela.",
+      replyText:
+        conversationalText || "Alteração realizada com sucesso! O cardápio foi atualizado na tela.",
       updatedCardapio,
     };
   });
@@ -1502,7 +1838,9 @@ export const processLojaAiStudioFn = createServerFn({ method: "POST" })
       resolvedKey = (await resolveGeminiApiKeyAsync()) || undefined;
     }
     if (!resolvedKey) {
-      throw new Error("Chave do Google AI Studio não encontrada. Configure sua chave no painel de Configurações.");
+      throw new Error(
+        "Chave do Google AI Studio não encontrada. Configure sua chave no painel de Configurações.",
+      );
     }
 
     const { GoogleGenAI } = await import("@google/genai");
@@ -1608,7 +1946,7 @@ REGRAS DE RESPOSTA:
           config: {
             systemInstruction: systemPrompt,
             temperature: 0.6,
-          maxOutputTokens: 16384,
+            maxOutputTokens: 16384,
             maxOutputTokens: 16384,
           },
         });
@@ -1625,7 +1963,11 @@ REGRAS DE RESPOSTA:
       if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
         throw new Error(`Modelo do Google AI Studio inexistente ou indisponível: ${errMsg}`);
       }
-      if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+      if (
+        lower.includes("429") ||
+        lower.includes("quota") ||
+        lower.includes("resource_exhausted")
+      ) {
         throw new Error(`Limite de cota atingido no Google AI Studio: ${errMsg}`);
       }
       throw new Error(`Não foi possível obter resposta da IA: ${errMsg}`);
@@ -1636,7 +1978,9 @@ REGRAS DE RESPOSTA:
     let jsonStringCandidate = jsonMatch ? jsonMatch[1].trim() : "";
 
     if (!jsonStringCandidate) {
-      const braceMatch = rawText.match(/(\{[\s\S]*"(?:storeName|items|backgroundColor|themeColor)"[\s\S]*\})/i);
+      const braceMatch = rawText.match(
+        /(\{[\s\S]*"(?:storeName|items|backgroundColor|themeColor)"[\s\S]*\})/i,
+      );
       if (braceMatch) {
         jsonStringCandidate = braceMatch[1].trim();
       }
@@ -1645,12 +1989,24 @@ REGRAS DE RESPOSTA:
     if (jsonStringCandidate) {
       try {
         const parsed = JSON.parse(jsonStringCandidate);
-        if (parsed && (parsed.storeName || Array.isArray(parsed.items) || parsed.backgroundColor || parsed.logoUrl)) {
+        if (
+          parsed &&
+          (parsed.storeName ||
+            Array.isArray(parsed.items) ||
+            parsed.backgroundColor ||
+            parsed.logoUrl)
+        ) {
           updatedLoja = {
             ...input.currentLoja,
             ...parsed,
-            categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : input.currentLoja.categories,
-            items: Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed.items : input.currentLoja.items,
+            categories:
+              Array.isArray(parsed.categories) && parsed.categories.length > 0
+                ? parsed.categories
+                : input.currentLoja.categories,
+            items:
+              Array.isArray(parsed.items) && parsed.items.length > 0
+                ? parsed.items
+                : input.currentLoja.items,
             features: {
               ...(input.currentLoja.features || {}),
               ...(parsed.features || {}),
@@ -1672,5 +2028,3 @@ REGRAS DE RESPOSTA:
       updatedLoja,
     };
   });
-
-

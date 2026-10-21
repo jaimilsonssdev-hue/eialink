@@ -1,6 +1,6 @@
 export const ACTIVE_GEMINI_MODELS = [
-  "gemini-2.5-flash",
-  "gemini-2.5-flash-lite",
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
 ] as const;
 
 export type ActiveGeminiModel = (typeof ACTIVE_GEMINI_MODELS)[number];
@@ -130,7 +130,7 @@ export async function callGeminiInteractionsApi(
   }
 
   const primaryModel =
-    options.model && options.model !== "gemini-3.8-flash"
+    options.model && !options.model.startsWith("gemini-2.5")
       ? options.model
       : ACTIVE_GEMINI_MODELS[0];
   const fallbackModel = ACTIVE_GEMINI_MODELS[1];
@@ -270,7 +270,7 @@ export async function callGoogleAi(options: GoogleAiRequestOptions): Promise<Goo
   }
 
   const requestedModel =
-    options.model && options.model !== "gemini-3.8-flash"
+    options.model && !options.model.startsWith("gemini-2.5")
       ? options.model
       : ACTIVE_GEMINI_MODELS[0];
   const fallbackModel = ACTIVE_GEMINI_MODELS[1];

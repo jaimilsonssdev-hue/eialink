@@ -56,6 +56,7 @@ export function CreativeChatPanel() {
     addChatMessage,
     updateActiveProjectHtml,
     updateActiveProjectBriefing,
+    updateActiveProjectMeta,
   } = useCreativeStudioStore();
 
   const activeProject = getActiveProject();
@@ -217,6 +218,12 @@ export function CreativeChatPanel() {
           });
           newHtml = res.html;
           aiExplanation = res.explanation;
+          if (res.pageId || res.slug) {
+            updateActiveProjectMeta({
+              eialinkPageId: res.pageId,
+              slug: res.slug,
+            });
+          }
         } catch (serverErr: any) {
           if (controller.signal.aborted || serverErr?.name === "AbortError") {
             throw new Error("Tempo limite de 90 segundos excedido ao gerar o site. Tente novamente.");
@@ -306,6 +313,12 @@ export function CreativeChatPanel() {
         });
         html = res.html;
         explanation = res.explanation;
+        if (res.pageId || res.slug) {
+          updateActiveProjectMeta({
+            eialinkPageId: res.pageId,
+            slug: res.slug,
+          });
+        }
       } catch (serverErr: any) {
         if (controller.signal.aborted || serverErr?.name === "AbortError") {
           throw new Error("Tempo limite de 90 segundos excedido no servidor. Tente novamente.");

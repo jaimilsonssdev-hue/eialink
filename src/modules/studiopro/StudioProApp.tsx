@@ -11,6 +11,7 @@ import { CreativeCanvas } from "@/modules/studiopro/editor/CreativeCanvas";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { supabase } from "@/integrations/supabase/client";
 import { listCreativeStudioProjectsFn } from "@/modules/studio/studio.functions";
+import { provisionPlatformToolsForNiche } from "@/modules/prospecting/nicheProvisioner";
 import { MessageSquare, Eye, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
 function CreativeEditorView() {
@@ -135,6 +136,7 @@ export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
     selectProject,
     updateActiveProjectHtml,
     updateActiveProjectBriefing,
+    updateActiveProjectMeta,
     addChatMessage,
     setProjects,
   } = useCreativeStudioStore();
@@ -200,11 +202,19 @@ export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
 
         // Deduplica: procura se já existe projeto registrado para esta página
         const existingProj = projects.find(
-          (p) => p.eialinkPageId === data.id || (data.slug && p.slug === data.slug),
+          (p) =>
+            p.eialinkPageId === data.id ||
+            (data.slug && p.slug === data.slug) ||
+            (data.display_name && p.name.toLowerCase() === data.display_name.toLowerCase()),
         );
 
         if (existingProj) {
           selectProject(existingProj.id);
+          updateActiveProjectMeta({
+            eialinkPageId: data.id,
+            slug: data.slug,
+            name: data.display_name,
+          });
           // Atualiza com o HTML mais recente salvo no banco de dados se disponível
           if (existingHtml && existingHtml.length > 50) {
             updateActiveProjectHtml(existingHtml);
@@ -228,6 +238,20 @@ export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
             timestamp: Date.now(),
           });
         }
+
+        // Garante que a agenda de exemplo do nicho esteja provisionada no banco
+        provisionPlatformToolsForNiche({
+          supabase,
+          pageId: data.id,
+          slug: data.slug,
+          businessName: data.display_name,
+          niche: rawSocial.niche || rawSocial.niche_category,
+          city: rawSocial.city,
+          whatsapp: data.whatsapp || rawSocial.whatsapp,
+          address: rawSocial.address,
+          rating: rawSocial.google_rating,
+          reviewsCount: rawSocial.reviews_count,
+        }).catch(() => {});
       } catch (e) {
         console.warn("Aviso ao carregar página da prospecção:", e);
       }

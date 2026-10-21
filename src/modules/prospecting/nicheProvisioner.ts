@@ -7,7 +7,8 @@
  * - Links reais amarrados (/agendar/{slug}, /cardapio/{slug}, /loja/{slug})
  */
 
-export type NicheCategoryType = "barber" | "healthcare" | "beauty" | "auto" | "food" | "shop" | "service" | "industry";
+export type NicheCategoryType =
+  "barber" | "healthcare" | "beauty" | "auto" | "food" | "shop" | "service" | "industry";
 
 export interface NicheServicePreset {
   name: string;
@@ -36,12 +37,36 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
     ctaUrl: (slug) => `/agendar/${slug}`,
     ctaLabel: "🗓️ Agendar Horário",
     services: [
-      { name: "Corte Degradê / Social", duration_minutes: 40, price: 45, description: "Corte na tesoura e máquina com finalização impecável e penteado.", badge: "Mais Pedido ⭐" },
-      { name: "Barboterapia Tradicional", duration_minutes: 30, price: 35, description: "Toalha quente, hidratação profunda, esfoliação e lâmina descartável.", badge: "Relaxante" },
-      { name: "Combo Cabelo + Barba VIP", duration_minutes: 60, price: 70, description: "Experiência completa com corte personalizado e barboterapia no vapor.", badge: "Melhor Custo" },
-      { name: "Acabamento & Sobrancelha", duration_minutes: 20, price: 20, description: "Alinhamento de contorno da barba, nuca e sobrancelha navalhada." },
+      {
+        name: "Corte Degradê / Social",
+        duration_minutes: 40,
+        price: 45,
+        description: "Corte na tesoura e máquina com finalização impecável e penteado.",
+        badge: "Mais Pedido ⭐",
+      },
+      {
+        name: "Barboterapia Tradicional",
+        duration_minutes: 30,
+        price: 35,
+        description: "Toalha quente, hidratação profunda, esfoliação e lâmina descartável.",
+        badge: "Relaxante",
+      },
+      {
+        name: "Combo Cabelo + Barba VIP",
+        duration_minutes: 60,
+        price: 70,
+        description: "Experiência completa com corte personalizado e barboterapia no vapor.",
+        badge: "Melhor Custo",
+      },
+      {
+        name: "Acabamento & Sobrancelha",
+        duration_minutes: 20,
+        price: 20,
+        description: "Alinhamento de contorno da barba, nuca e sobrancelha navalhada.",
+      },
     ],
-    chatWelcome: (name) => `Olá! Seja bem-vindo(a) à ${name}. Como podemos transformar seu visual hoje? Agende seu horário online em poucos segundos!`,
+    chatWelcome: (name) =>
+      `Olá! Seja bem-vindo(a) à ${name}. Como podemos transformar seu visual hoje? Agende seu horário online em poucos segundos!`,
     chatOptions: [
       { label: "🗓️ Agendar Horário Online", action: "booking" },
       { label: "📍 Localização & Como Chegar", action: "location" },
@@ -56,12 +81,45 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
     ctaUrl: (slug) => `/agendar/${slug}`,
     ctaLabel: "🗓️ Agendar Consulta",
     services: [
-      { name: "Avaliação & Check-up Inicial", duration_minutes: 30, price: 0, description: "Diagnóstico completo, planejamento personalizado e acolhimento.", badge: "Gratuito" },
-      { name: "Limpeza & Profilaxia Profunda", duration_minutes: 45, price: 150, description: "Remoção de placa, ultrassom, polimento e aplicação de flúor.", badge: "Essencial" },
-      { name: "Clareamento a Laser / Estética", duration_minutes: 60, price: 650, description: "Procedimento seguro para renovar a estética com tecnologia de ponta.", badge: "Destaque" },
-      { name: "Restauração & Procedimentos Clínicos", duration_minutes: 45, price: 180, description: "Tratamento de alta precisão com materiais estéticos premium." },
+      {
+        name: "Avaliação & Planejamento do Sorriso",
+        duration_minutes: 30,
+        price: 0,
+        description:
+          "Diagnóstico completo, avaliação clínica e planejamento estético personalizado.",
+        badge: "Gratuito",
+      },
+      {
+        name: "Lentes em Resina Composta (por elemento)",
+        duration_minutes: 60,
+        price: 450,
+        description:
+          "Transformação estética com resina de alta estratificação e acabamento natural.",
+        badge: "Mais Procurado ⭐",
+      },
+      {
+        name: "Clareamento a Laser / Fotoativado",
+        duration_minutes: 60,
+        price: 650,
+        description: "Procedimento de consultório para iluminar o sorriso com tecnologia de ponta.",
+        badge: "Destaque",
+      },
+      {
+        name: "Limpeza & Profilaxia Profunda",
+        duration_minutes: 45,
+        price: 150,
+        description: "Remoção de tártaro, ultrassom, polimento profilático e aplicação de flúor.",
+        badge: "Essencial",
+      },
+      {
+        name: "Harmonização & Procedimentos Clínicos",
+        duration_minutes: 45,
+        price: 250,
+        description: "Tratamento clínico e estético de alta precisão com materiais premium.",
+      },
     ],
-    chatWelcome: (name) => `Olá! Bem-vindo(a) à ${name}. Estamos prontos para cuidar do seu bem-estar. Agende sua consulta ou tire dúvidas conosco!`,
+    chatWelcome: (name) =>
+      `Olá! Bem-vindo(a) à ${name}. Estamos prontos para cuidar do seu bem-estar. Agende sua consulta ou tire dúvidas conosco!`,
     chatOptions: [
       { label: "🗓️ Agendar Consulta Online", action: "booking" },
       { label: "📍 Endereço da Clínica", action: "location" },
@@ -76,12 +134,36 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
     ctaUrl: (slug) => `/agendar/${slug}`,
     ctaLabel: "🗓️ Agendar Horário",
     services: [
-      { name: "Limpeza de Pele Profunda", duration_minutes: 60, price: 160, description: "Extração de cravos, vapor de ozônio, hidratação profunda e máscara calmante.", badge: "Mais Procurado" },
-      { name: "Drenagem Linfática Corporal", duration_minutes: 50, price: 130, description: "Redução de inchaço, ativação da circulação e relaxamento corporal.", badge: "Bem-Estar" },
-      { name: "Design de Sobrancelhas & Lash", duration_minutes: 45, price: 80, description: "Mapeamento facial personalizado para realçar o olhar.", badge: "Express" },
-      { name: "Massagem Relaxante com Aromaterapia", duration_minutes: 60, price: 150, description: "Alívio de tensões musculares com óleos essenciais terapêuticos." },
+      {
+        name: "Limpeza de Pele Profunda",
+        duration_minutes: 60,
+        price: 160,
+        description: "Extração de cravos, vapor de ozônio, hidratação profunda e máscara calmante.",
+        badge: "Mais Procurado",
+      },
+      {
+        name: "Drenagem Linfática Corporal",
+        duration_minutes: 50,
+        price: 130,
+        description: "Redução de inchaço, ativação da circulação e relaxamento corporal.",
+        badge: "Bem-Estar",
+      },
+      {
+        name: "Design de Sobrancelhas & Lash",
+        duration_minutes: 45,
+        price: 80,
+        description: "Mapeamento facial personalizado para realçar o olhar.",
+        badge: "Express",
+      },
+      {
+        name: "Massagem Relaxante com Aromaterapia",
+        duration_minutes: 60,
+        price: 150,
+        description: "Alívio de tensões musculares com óleos essenciais terapêuticos.",
+      },
     ],
-    chatWelcome: (name) => `Olá, que bom ter você aqui na ${name}! Pronta(o) para seu momento de autocuidado? Reserve seu horário online!`,
+    chatWelcome: (name) =>
+      `Olá, que bom ter você aqui na ${name}! Pronta(o) para seu momento de autocuidado? Reserve seu horário online!`,
     chatOptions: [
       { label: "🗓️ Agendar Procedimento", action: "booking" },
       { label: "📍 Onde Estamos", action: "location" },
@@ -96,12 +178,36 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
     ctaUrl: (slug) => `/agendar/${slug}`,
     ctaLabel: "🗓️ Agendar Revisão",
     services: [
-      { name: "Revisão Preventiva & Check-up de Itens", duration_minutes: 60, price: 120, description: "Inspeção completa de freios, suspensão, pneus, fluidos e iluminação.", badge: "Segurança ⭐" },
-      { name: "Troca de Óleo e Filtros", duration_minutes: 40, price: 90, description: "Troca rápida de óleo especificado pelo fabricante e substituição de filtros.", badge: "Rápido" },
-      { name: "Alinhamento 3D & Balanceamento", duration_minutes: 45, price: 110, description: "Ajuste milimétrico de geometria e balanceamento das rodas.", badge: "Recomendado" },
-      { name: "Diagnóstico Eletrônico Computadorizado", duration_minutes: 30, price: 80, description: "Varredura completa via scanner automotivo para identificar falhas." },
+      {
+        name: "Revisão Preventiva & Check-up de Itens",
+        duration_minutes: 60,
+        price: 120,
+        description: "Inspeção completa de freios, suspensão, pneus, fluidos e iluminação.",
+        badge: "Segurança ⭐",
+      },
+      {
+        name: "Troca de Óleo e Filtros",
+        duration_minutes: 40,
+        price: 90,
+        description: "Troca rápida de óleo especificado pelo fabricante e substituição de filtros.",
+        badge: "Rápido",
+      },
+      {
+        name: "Alinhamento 3D & Balanceamento",
+        duration_minutes: 45,
+        price: 110,
+        description: "Ajuste milimétrico de geometria e balanceamento das rodas.",
+        badge: "Recomendado",
+      },
+      {
+        name: "Diagnóstico Eletrônico Computadorizado",
+        duration_minutes: 30,
+        price: 80,
+        description: "Varredura completa via scanner automotivo para identificar falhas.",
+      },
     ],
-    chatWelcome: (name) => `Olá! Bem-vindo(a) à ${name}. Seu carro em mãos de especialistas. Agende sua revisão ou traga seu veículo para diagnóstico!`,
+    chatWelcome: (name) =>
+      `Olá! Bem-vindo(a) à ${name}. Seu carro em mãos de especialistas. Agende sua revisão ou traga seu veículo para diagnóstico!`,
     chatOptions: [
       { label: "🗓️ Agendar Serviço / Revisão", action: "booking" },
       { label: "📍 Localização da Oficina", action: "location" },
@@ -116,7 +222,8 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
     ctaUrl: (slug) => `/cardapio/${slug}`,
     ctaLabel: "🍕 Ver Cardápio & Pedir",
     services: [],
-    chatWelcome: (name) => `Olá! Seja bem-vindo(a) ao ${name}. Deu fome? Veja nosso cardápio completo ou faça seu pedido com entrega rápida!`,
+    chatWelcome: (name) =>
+      `Olá! Seja bem-vindo(a) ao ${name}. Deu fome? Veja nosso cardápio completo ou faça seu pedido com entrega rápida!`,
     chatOptions: [
       { label: "🍕 Ver Cardápio Online", action: "cardapio" },
       { label: "🛵 Fazer Pedido no WhatsApp", action: "whatsapp" },
@@ -131,7 +238,8 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
     ctaUrl: (slug) => `/loja/${slug}`,
     ctaLabel: "🛍️ Ver Catálogo de Produtos",
     services: [],
-    chatWelcome: (name) => `Olá! Seja muito bem-vindo(a) à ${name}. Conheça nossas novidades e promoções exclusivas da coleção!`,
+    chatWelcome: (name) =>
+      `Olá! Seja muito bem-vindo(a) à ${name}. Conheça nossas novidades e promoções exclusivas da coleção!`,
     chatOptions: [
       { label: "🛍️ Ver Catálogo / Vitrine", action: "shop" },
       { label: "📍 Endereço da Loja", action: "location" },
@@ -146,7 +254,8 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
     ctaUrl: (slug) => `#orcamento`,
     ctaLabel: "🏭 Solicitar Orçamento B2B",
     services: [],
-    chatWelcome: (name) => `Olá! Bem-vindo(a) à ${name}. Atendemos indústrias e empresas com soluções sob medida. Como podemos atender seu projeto?`,
+    chatWelcome: (name) =>
+      `Olá! Bem-vindo(a) à ${name}. Atendemos indústrias e empresas com soluções sob medida. Como podemos atender seu projeto?`,
     chatOptions: [
       { label: "📋 Solicitar Orçamento B2B", action: "whatsapp" },
       { label: "📍 Onde Estamos", action: "location" },
@@ -161,11 +270,29 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
     ctaUrl: (slug) => `/agendar/${slug}`,
     ctaLabel: "🗓️ Agendar Atendimento",
     services: [
-      { name: "Atendimento Inicial & Diagnóstico", duration_minutes: 45, price: 0, description: "Entendimento da sua demanda e apresentação da melhor solução.", badge: "Primeiro Passo" },
-      { name: "Consultoria Especializada", duration_minutes: 60, price: 200, description: "Sessão dedicada com especialista para resolver seu desafio pontual.", badge: "Personalizado" },
-      { name: "Visita Técnica / Orçamento no Local", duration_minutes: 60, price: 80, description: "Avaliação técnica no local com proposta comercial detalhada." },
+      {
+        name: "Atendimento Inicial & Diagnóstico",
+        duration_minutes: 45,
+        price: 0,
+        description: "Entendimento da sua demanda e apresentação da melhor solução.",
+        badge: "Primeiro Passo",
+      },
+      {
+        name: "Consultoria Especializada",
+        duration_minutes: 60,
+        price: 200,
+        description: "Sessão dedicada com especialista para resolver seu desafio pontual.",
+        badge: "Personalizado",
+      },
+      {
+        name: "Visita Técnica / Orçamento no Local",
+        duration_minutes: 60,
+        price: 80,
+        description: "Avaliação técnica no local com proposta comercial detalhada.",
+      },
     ],
-    chatWelcome: (name) => `Olá! Seja bem-vindo(a) à ${name}. Temos a solução ideal para o que você precisa. Agende um horário ou fale conosco!`,
+    chatWelcome: (name) =>
+      `Olá! Seja bem-vindo(a) à ${name}. Temos a solução ideal para o que você precisa. Agende um horário ou fale conosco!`,
     chatOptions: [
       { label: "🗓️ Agendar Horário Online", action: "booking" },
       { label: "📍 Localização da Empresa", action: "location" },
@@ -177,45 +304,74 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
 /**
  * Identifica a categoria exata de nicho cruzando nome da empresa e categoria do lead
  */
-export function detectNicheCategory(niche?: string | null, name?: string | null): NicheCategoryType {
+export function detectNicheCategory(
+  niche?: string | null,
+  name?: string | null,
+): NicheCategoryType {
   const cleanNiche = (niche ?? "").trim().toLowerCase();
-  if (!cleanNiche || cleanNiche === "servicos" || cleanNiche === "serviços" || cleanNiche === "geral") {
+  const text = `${cleanNiche} ${name ?? ""}`.trim().toLowerCase();
+  if (!text) {
     return "service";
   }
-  const text = `${cleanNiche} ${name ?? ""}`.toLowerCase();
 
   // 1. Barbearia
-  if (/barbea|barbeir|barber|navalha|\bbarba\b|degrad[eê]|\bfade\b|cabelo\s*masculino/i.test(text)) {
+  if (
+    /barbea|barbeir|barber|navalha|\bbarba\b|degrad[eê]|\bfade\b|cabelo\s*masculino/i.test(text)
+  ) {
     return "barber";
   }
 
   // 2. Saúde & Odonto
-  if (/odonto|dent|sorriso|cl[ií]nica\s*odonto|m[eé]dic|pediatr|oftalmo|fisioter|psic[oó]l|terapeuta|nutri|sa[uú]de|ortoped|dermatolog/i.test(text)) {
+  if (
+    /odonto|dent|sorriso|cl[ií]nica|consult[oó]rio|\bdr\b|\bdra\b|doutor|doutora|m[eé]dic|pediatr|oftalmo|fisioter|psic[oó]l|terapeuta|nutri|sa[uú]de|ortoped|dermatolog|resina|lentes?\s*(?:de|em)?\s*resina|facetas?|clareamento|implante|harmoniza[cç][aã]o/i.test(
+      text,
+    )
+  ) {
     return "healthcare";
   }
 
   // 3. Estética & Beleza
-  if (/est[eé]tica|beleza|sal[aã]o|manicure|pedicure|lash|c[ií]lios|sobrancelha|depila|massagem|spa|bronze|maquiagem/i.test(text)) {
+  if (
+    /est[eé]tica|beleza|sal[aã]o|manicure|pedicure|lash|c[ií]lios|sobrancelha|depila|massagem|spa|bronze|maquiagem/i.test(
+      text,
+    )
+  ) {
     return "beauty";
   }
 
   // 4. Mecânica & Auto Center
-  if (/oficina|mec[aâ]nica|auto\s*center|autocenter|funilaria|pintura\s*auto|pneus|borracharia|lava\s*jato|lava\s*r[aá]pido|est[eé]tica\s*automotiva/i.test(text)) {
+  if (
+    /oficina|mec[aâ]nica|auto\s*center|autocenter|funilaria|pintura\s*auto|pneus|borracharia|lava\s*jato|lava\s*r[aá]pido|est[eé]tica\s*automotiva/i.test(
+      text,
+    )
+  ) {
     return "auto";
   }
 
   // 5. Gastronomia & Alimentação
-  if (/restauran|lanche|burger|hamburguer|pizza|pizzaria|a[cç]a[ií]|sorvet|delivery|comida|marmita|a[cç]ougue|padaria|confeitaria|sushi|japon[eê]s|churrasco|espetinho|pastel|hot\s*dog|choperia|cervejaria|\bbar\b(?!\s*be)/i.test(text)) {
+  if (
+    /restauran|lanche|burger|hamburguer|pizza|pizzaria|a[cç]a[ií]|sorvet|delivery|comida|marmita|a[cç]ougue|padaria|confeitaria|sushi|japon[eê]s|churrasco|espetinho|pastel|hot\s*dog|choperia|cervejaria|\bbar\b(?!\s*be)/i.test(
+      text,
+    )
+  ) {
     return "food";
   }
 
   // 6. Lojas & Varejo
-  if (/loja|moda|roupa|calcado|calçado|otica|ótica|boutique|bijuteria|reloj|acessorio|eletr[oô]nic|celular|smartphone|farmacia|drogaria|pet\s*shop|floricultura|moveis|móveis|colch[oõ]es|auto\s*pe[cç]as/i.test(text)) {
+  if (
+    /loja|moda|roupa|calcado|calçado|otica|ótica|boutique|bijuteria|reloj|acessorio|eletr[oô]nic|celular|smartphone|farmacia|drogaria|pet\s*shop|floricultura|moveis|móveis|colch[oõ]es|auto\s*pe[cç]as/i.test(
+      text,
+    )
+  ) {
     return "shop";
   }
 
   // 7. Indústria & B2B
-  if (/f[aá]brica|ind[uú]stria|solar|fotovolt|distribuidor|usinagem|caldeiraria|manufatura|metal[uú]rgica|\bdsun\b/i.test(text)) {
+  if (
+    /f[aá]brica|ind[uú]stria|solar|fotovolt|distribuidor|usinagem|caldeiraria|manufatura|metal[uú]rgica|\bdsun\b/i.test(
+      text,
+    )
+  ) {
     return "industry";
   }
 
@@ -250,7 +406,9 @@ export interface ProvisionResult {
  * Se for agendamento: booking_settings, booking_availability, booking_services.
  * Em todos: social_links.chat_flow (robô de atendimento).
  */
-export async function provisionPlatformToolsForNiche(options: ProvisionNicheOptions): Promise<ProvisionResult> {
+export async function provisionPlatformToolsForNiche(
+  options: ProvisionNicheOptions,
+): Promise<ProvisionResult> {
   const {
     supabase,
     pageId,
@@ -276,19 +434,17 @@ export async function provisionPlatformToolsForNiche(options: ProvisionNicheOpti
   if (config.isBooking) {
     try {
       // 1.1 booking_settings
-      await supabase
-        .from("booking_settings")
-        .upsert(
-          {
-            bio_page_id: pageId,
-            active: true,
-            timezone: "America/Sao_Paulo",
-            min_notice_hours: 1,
-            max_days_ahead: 30,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "bio_page_id" },
-        );
+      await supabase.from("booking_settings").upsert(
+        {
+          bio_page_id: pageId,
+          active: true,
+          timezone: "America/Sao_Paulo",
+          min_notice_hours: 1,
+          max_days_ahead: 30,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "bio_page_id" },
+      );
 
       // 1.2 booking_availability (Segunda a Sábado, 09h às 19h)
       const availabilityRows = [1, 2, 3, 4, 5, 6].map((weekday) => ({
@@ -308,7 +464,9 @@ export async function provisionPlatformToolsForNiche(options: ProvisionNicheOpti
         .select("id, name")
         .eq("bio_page_id", pageId);
 
-      const existingNames = new Set((existingServices || []).map((s: any) => String(s.name).trim().toLowerCase()));
+      const existingNames = new Set(
+        (existingServices || []).map((s: any) => String(s.name).trim().toLowerCase()),
+      );
 
       let pos = 1;
       for (const s of config.services) {
@@ -348,7 +506,12 @@ export async function provisionPlatformToolsForNiche(options: ProvisionNicheOpti
       options: config.chatOptions.map((opt) => ({
         label: opt.label,
         action: opt.action,
-        url: opt.action === "booking" ? ctaUrl : opt.action === "whatsapp" && whatsapp ? `https://wa.me/55${whatsapp.replace(/\D/g, "")}` : undefined,
+        url:
+          opt.action === "booking"
+            ? ctaUrl
+            : opt.action === "whatsapp" && whatsapp
+              ? `https://wa.me/55${whatsapp.replace(/\D/g, "")}`
+              : undefined,
       })),
       nicheCategory: category,
       autoTriggerSeconds: 4,
@@ -393,4 +556,3 @@ export async function provisionPlatformToolsForNiche(options: ProvisionNicheOpti
     chatConfigured,
   };
 }
-

@@ -32,6 +32,7 @@ interface CreativeEngineState {
   selectProject: (id: string | null) => void;
   updateActiveProjectHtml: (html: string) => void;
   updateActiveProjectBriefing: (briefing: string) => void;
+  updateActiveProjectMeta: (meta: { eialinkPageId?: string; slug?: string; name?: string }) => void;
   addChatMessage: (message: ChatMessage) => void;
   deleteProject: (id: string) => void;
   getActiveProject: () => CreativeProject | null;
@@ -130,6 +131,23 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
               syncCreativeStudioProjectFn({ data: { project: active } }).catch(() => {});
             });
           }
+          return { projects: updated };
+        });
+      },
+
+      updateActiveProjectMeta: (meta) => {
+        set((state) => {
+          const updated = state.projects.map((p) =>
+            p.id === state.activeProjectId
+              ? {
+                  ...p,
+                  eialinkPageId: meta.eialinkPageId || p.eialinkPageId,
+                  slug: meta.slug || p.slug,
+                  name: meta.name || p.name,
+                  updatedAt: Date.now(),
+                }
+              : p,
+          );
           return { projects: updated };
         });
       },

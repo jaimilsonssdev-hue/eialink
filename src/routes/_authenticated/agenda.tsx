@@ -101,7 +101,9 @@ function AgendaPage() {
     enabled: Boolean(pageId && access.data?.isPro),
     queryFn: async () => {
       const current = await BookingService.getWorkspace(pageId);
-      return current.settings ? current : BookingService.initialize(pageId);
+      return current.settings && current.services.length > 0
+        ? current
+        : BookingService.initialize(pageId);
     },
   });
   const appointments = useQuery({

@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { detectNicheCategory, NICHE_CONFIGS } from "@/modules/prospecting/nicheProvisioner";
 import type {
   Appointment,
   BookingAvailability,
@@ -46,8 +47,8 @@ export const BookingService = {
     const { error: settingsError } = await store
       .from("booking_settings")
       .upsert(
-        { bio_page_id: bioPageId, active: false, timezone: "America/Bahia" },
-        { onConflict: "bio_page_id", ignoreDuplicates: true },
+        { bio_page_id: bioPageId, active: true, timezone: "America/Sao_Paulo", min_notice_hours: 1, max_days_ahead: 30 },
+        { onConflict: "bio_page_id" },
       );
     if (settingsError) throw new Error(settingsError.message);
     const { data: existing } = await store
@@ -61,6 +62,47 @@ export const BookingService = {
         .insert(DEFAULT_AVAILABILITY.map((day) => ({ ...day, bio_page_id: bioPageId })));
       if (error) throw new Error(error.message);
     }
+
+    const { data: existingServices } = await store
+      .from("booking_services")
+      .select("id")
+      .eq("bio_page_id", bioPageId)
+      .limit(1);
+
+    if (!existingServices?.length) {
+      try {
+        const { data: bioPage } = await supabase
+          .from("bio_pages")
+          .select("display_name, social_links")
+          .eq("id", bioPageId)
+          .maybeSingle();
+        const social = ((bioPage as any)?.social_links as Record<string, any>) || {};
+        const category = detectNicheCategory(
+          social.niche || social.niche_category,
+          (bioPage as any)?.display_name,
+        );
+        const preset =
+          NICHE_CONFIGS[category]?.services?.length > 0
+            ? NICHE_CONFIGS[category]
+            : NICHE_CONFIGS.service;
+
+        const rows = preset.services.map((s, idx) => ({
+          bio_page_id: bioPageId,
+          name: s.name,
+          description: s.description || null,
+          duration_minutes: s.duration_minutes,
+          price: s.price,
+          position: idx + 1,
+          active: true,
+        }));
+        if (rows.length > 0) {
+          await store.from("booking_services").insert(rows);
+        }
+      } catch (seedErr) {
+        console.warn("[BookingService] Aviso ao popular serviços de exemplo:", seedErr);
+      }
+    }
+
     return this.getWorkspace(bioPageId);
   },
 

@@ -59,7 +59,12 @@ interface CouponItem {
 
 function LoyaltyPage() {
   const [activeTab, setActiveTab] = useState("cashier");
-  const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
+  const [selectedPageId, setSelectedPageId] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("page");
+    }
+    return null;
+  });
 
   // Busca as páginas da empresa
   const { data: bioPages = [], isLoading: loadingBio } = useQuery({

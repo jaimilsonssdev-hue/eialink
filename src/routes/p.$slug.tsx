@@ -723,13 +723,24 @@ function PublicBio() {
     if (isWhatsappDisabled) dynamicStyles += `[data-feature="whatsapp"], a[href*="wa.me"], a[href*="whatsapp.com"], .feature-whatsapp { display: none !important; }`;
     dynamicStyles += "</style>";
 
-    // Injeta orquestrador de recursos (Agendamento, GPS Maps/Waze, WhatsApp) para botões funcionais reais
-    const htmlWithRuntime = injectEiaLinkFeatureRuntime(effectiveHtml, {
-      slug: bio.slug,
-      businessName: bio.display_name,
-      whatsapp: bio.whatsapp,
-      address: rawSocial.address,
-    });
+    // Injeta orquestrador de recursos (Agendamento, Mural de Ofertas, Fidelidade, Atendente, GPS, WhatsApp)
+    const htmlWithRuntime = isCardapioPage
+      ? effectiveHtml
+      : injectEiaLinkFeatureRuntime(effectiveHtml, {
+          slug: bio.slug,
+          businessName: bio.display_name,
+          whatsapp: bio.whatsapp,
+          address: rawSocial.address,
+          niche: rawSocial.niche || rawSocial.niche_category,
+          features: {
+            agenda_enabled: rawSocial.agenda_enabled !== false,
+            ai_concierge_enabled: rawSocial.ai_concierge_enabled !== false,
+            deals_enabled: rawSocial.deals_enabled !== false && rawSocial.mural_ofertas_enabled !== false,
+            loyalty_enabled: rawSocial.loyalty_enabled !== false && rawSocial.fidelidade_enabled !== false,
+            gps_enabled: rawSocial.gps_enabled !== false,
+            whatsapp_enabled: rawSocial.whatsapp_enabled !== false,
+          },
+        });
 
     // Injeta <base target="_top"> para permitir navegação nativa de links (Agenda, GPS/Waze, WhatsApp) e estilos dinâmicos
     const preparedHtml = htmlWithRuntime.includes("<head>")

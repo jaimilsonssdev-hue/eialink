@@ -138,20 +138,21 @@ DIRETRIZES TÉCNICAS E DE DESIGN:
    - Importe Lucide Icons via unpkg:
      <script src="https://unpkg.com/lucide@latest"></script>
 
-2. **Estética Lovable / Moderna (Grafite Profundo)**:
-   - Fundo base: tons de grafite e ardósia sofisticados (#09090b, #0f172a, #18181b), NÃO preto chapado morto.
-   - Detalhes de luz suave (radial-gradients, glassmorphism com backdrop-blur, bordas translúcidas border-white/10).
-   - Efeitos de hover suaves (transition-all duration-300, group-hover:scale-105).
-   - Sombras atmosféricas (shadow-2xl, shadow-emerald-500/10 ou cor de destaque correspondente).
+2. **Estética Lovable / Moderna Calibrada por Nicho**:
+   - Para Saúde, Odontologia, Clínicas, Médica e Bem-estar: Estética Luminous Clean & Medical Luxury (fundo porcelana limpo #ffffff ou #f8fafc, acentos nobres em verde-menta, teal #0d9488, azul-celeste ou dourado champanhe suave, cards brancos com sombras finas shadow-xl border border-slate-100, transmitindo higiene impecável, biossegurança e acolhimento).
+   - Para Estética, Beleza, Salão e Spa: Estética Glow & Elegance (marfim, tons suaves de rosé, champanhe, iluminação difusa, tipografia refinada).
+   - Para Barbearia, Automotivo, Indústria e Tecnologia: Estética Dark Moderno / Grafite Profundo (#09090b, ardósia, detalhes em âmbar ou azul elétrico).
+   - Para Comércio e Serviços Gerais: Estética Moderna de Alta Autoridade (fundo limpo com alto contraste e cards refinados).
+   - NUNCA use preto chapado genérico para clínicas ou consultórios de saúde.
 
 3. **Imagens de Alta Resolução Reais**:
    - Utilize imagens temáticas de alta qualidade do Unsplash através de URLs diretas e estáveis com palavras-chave pertinentes:
      https://images.unsplash.com/photo-... ou utilize a CDN Unsplash com parâmetros formatados: https://images.unsplash.com/photo-[id]?auto=format&fit=crop&w=1200&q=80
-   - NUNCA use placeholders cinzas como "placeholder.com". Sempre use fotos reais do nicho especificado.
+   - NUNCA use placeholders cinzas como "placeholder.com". Sempre use fotos reais do nicho especificado (ex: para dentistas/odontologia, use fotos reais de sorrisos perfeitos, consultório iluminado e atendimento humanizado).
 
 4. **FERRAMENTAS NATIVAS E INTEGRALIDADE DE NEGÓCIO (OBRIGATÓRIO)**:
    - **Agendamento Online**:
-     Inclua um botão e seção de agendamento em destaque: "🗓️ Agendar Horário Online" com badge "Disponibilidade em Tempo Real". Se houver slug da empresa, use o link nativo "/agendar/{slug}" ou link âncora suave.
+     Inclua um botão e seção de agendamento em destaque: "🗓️ Agendar Consulta" ou "🗓️ Agendar Horário Online" com badge "Disponibilidade em Tempo Real". Use SEMPRE o link nativo 'href="/agendar/{slug}"' e atributo 'data-action="agendar"'. NUNCA aponte o botão de agendamento para WhatsApp nem use links mortos '#'.
    - **Localização Interativa & GPS (Google Maps + Waze)**:
      Crie uma seção elegante de "Onde Estamos / Localização" contendo:
      * Card visual com endereço completo e horários de funcionamento.
@@ -181,6 +182,35 @@ Diga exatamente o que você fez ou alterou no site (por exemplo: cores ajustadas
 <html lang="pt-BR">
 ... Código HTML5 completo, moderno e autocontido da página ...
 </html>`;
+
+export const SURGICAL_EDIT_SYSTEM_PROMPT = `Você é o Arquiteto Copiloto Especialista em Edição Cirúrgica de Código HTML5 do "Estúdio Criativo".
+Sua ÚNICA missão é aplicar com precisão CIRÚRGICA e ESTRITA a alteração solicitada pelo usuário no código HTML5/Tailwind existente, SEM redesenhar o site do zero, SEM alterar o tema ou a paleta de cores e SEM desconfigurar a identidade já aprovada.
+
+REGRAS DE OURO PARA EDIÇÃO CIRÚRGICA:
+1. **PRESERVAÇÃO INTEGRAL DE IDENTIDADE VISUAL**:
+   - Mantenha RIGOROSAMENTE o mesmo tema de cores (se a página era clara/branca, continue 100% clara/branca; se era escura, continue escura).
+   - Mantenha a mesma tipografia, a mesma estrutura de seções, as fotos do Unsplash existentes e todos os blocos que NÃO foram expressamente pedidos para mudar.
+   - NUNCA substitua o site por um modelo genérico escuro de 'sua região' ou mude imagens para outros nichos.
+   - Modifique APENAS o elemento, texto, botão, estilo ou seção que o usuário especificou na solicitação.
+
+2. **CONTROLE E PRESERVAÇÃO DAS FERRAMENTAS DO SISTEMA**:
+   - Se o usuário pediu ajuste na Agenda (ex: 'conectar agenda', 'abrir modal', 'mudar botão de agendar'):
+     Mantenha/atualize os botões de agendamento com href="/agendar/{slug}" e data-action="agendar".
+   - Preserve sempre:
+     * Botão flutuante de WhatsApp (wa.me)
+     * Seção de localização (Google Maps + botões Waze/Maps)
+     * Scripts de runtime (#eialink-runtime) e Lucide Icons
+
+3. **FORMATO OBRIGATÓRIO DA RESPOSTA**:
+Sua resposta DEVE conter impreterivelmente as duas partes separadas por marcadores:
+<<<EXPLANATION>>>
+Escreva uma mensagem conversacional, simpática e objetiva no chat explicando exatamente o que foi modificado cirurgicamente (em português do Brasil).
+<<<HTML>>>
+<!DOCTYPE html>
+<html lang="pt-BR">
+... Código HTML5 completo, limpo e autocontido com a modificação cirúrgica aplicada ...
+</html>
+<<<END_HTML>>>`;
 
 /**
  * Etapa 1: Planejar e montar o Briefing Estruturado
@@ -228,17 +258,14 @@ export async function planSiteBriefing(
   // Tenta com gemini-2.5-flash como modelo principal e um único fallback (gemini-2.5-flash-lite)
   let briefingText = "";
   let lastError: any = null;
-  const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+  const candidateModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite"] as const;
 
   for (const modelToTry of candidateModels) {
     if (briefingText) break;
     try {
       const response = await client.models.generateContent({
         model: modelToTry,
-        contents: [
-          ...formattedHistory,
-          { role: "user", parts: currentUserParts },
-        ],
+        contents: [...formattedHistory, { role: "user", parts: currentUserParts }],
         config: {
           systemInstruction: BRIEFING_SYSTEM_PROMPT,
           temperature: 0.7,
@@ -314,7 +341,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
   let raw = "";
   let lastCapturedError: any = null;
 
-  const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+  const candidateModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite"] as const;
 
   for (const modelToTry of candidateModels) {
     if (raw) break;
@@ -342,7 +369,9 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
   if (!raw) {
     const errorDetails =
       lastCapturedError?.message ||
-      (typeof lastCapturedError === "object" ? JSON.stringify(lastCapturedError) : "Falha na geração");
+      (typeof lastCapturedError === "object"
+        ? JSON.stringify(lastCapturedError)
+        : "Falha na geração");
     const lower = String(errorDetails).toLowerCase();
     if (lower.includes("404") || lower.includes("not found") || lower.includes("not_found")) {
       throw new Error(
@@ -358,7 +387,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
       `Não foi possível gerar o site no Google AI Studio: ${errorDetails}. Por favor, clique novamente para tentar a geração.`,
     );
   }
-  
+
   let cleanHtml = raw;
   if (cleanHtml.includes("<<<HTML>>>")) {
     const parts = cleanHtml.split("<<<HTML>>>");

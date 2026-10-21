@@ -68,6 +68,7 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
         const enrichedHtml = injectEiaLinkFeatureRuntime(html, {
           slug: activeProject?.slug,
           businessName: activeProject?.name,
+          niche: activeProject?.briefing || activeProject?.name,
         });
         doc.open();
         doc.write(enrichedHtml);
@@ -116,9 +117,11 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
   function getCleanHtml(doc: Document): string {
     const clone = doc.cloneNode(true) as Document;
 
-    // Remove estilos injetados de edição
+    // Remove estilos injetados de edição e widgets de runtime
     const styleEl = clone.getElementById("eialink-visual-editor-styles");
     if (styleEl) styleEl.remove();
+    const widgetsRoot = clone.getElementById("eialink-widgets-root");
+    if (widgetsRoot) widgetsRoot.remove();
 
     // Remove contentEditable e data-inline-editable
     clone.querySelectorAll("[data-inline-editable]").forEach((el) => {
@@ -176,8 +179,9 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
     // 2. Torna textos editáveis
     const textSelectors = "h1, h2, h3, h4, h5, h6, p, span, a, button, li, b, strong, em, small, label";
     doc.querySelectorAll(textSelectors).forEach((el) => {
-      // Ignora elementos vazios ou scripts
+      // Ignora elementos vazios, scripts ou widgets de runtime
       if (el.tagName.toLowerCase() === "script" || el.tagName.toLowerCase() === "style") return;
+      if (el.closest("#eialink-widgets-root")) return;
 
       el.setAttribute("data-inline-editable", "true");
       (el as HTMLElement).contentEditable = "true";

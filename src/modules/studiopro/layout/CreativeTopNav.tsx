@@ -14,11 +14,14 @@ import {
   MessageCircle,
   Palette,
   Globe,
+  Flame,
+  Crown,
 } from "lucide-react";
 import { DesignStyleModal } from "@/modules/studiopro/editor/DesignStyleModal";
 import { SeoPanelModal } from "@/modules/studiopro/editor/SeoPanelModal";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { syncCreativeStudioProjectFn } from "@/modules/studio/studio.functions";
+import { applyFeaturesToHtml } from "@/lib/eialinkFeatureRuntime";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -42,6 +45,8 @@ export function CreativeTopNav() {
   const [features, setFeatures] = useState({
     agenda_enabled: true,
     ai_concierge_enabled: true,
+    deals_enabled: true,
+    loyalty_enabled: true,
     gps_enabled: true,
     whatsapp_enabled: true,
   });
@@ -88,7 +93,24 @@ export function CreativeTopNav() {
     }
   };
 
-  // Carrega configurações de ferramentas caso a página já tenha salva
+  // Carrega configurações de ferramentas caso a página já tenha salva ou via HTML atual
+  useEffect(() => {
+    const html = activeProject?.html || "";
+    const styleMatch = html.match(/<style id="eialink-feature-overrides"([^>]*)>/i);
+    if (styleMatch && styleMatch[1]) {
+      const attrs = styleMatch[1];
+      setFeatures((prev) => ({
+        ...prev,
+        agenda_enabled: !attrs.includes('data-agenda="off"'),
+        ai_concierge_enabled: !attrs.includes('data-concierge="off"'),
+        deals_enabled: !attrs.includes('data-deals="off"'),
+        loyalty_enabled: !attrs.includes('data-loyalty="off"'),
+        gps_enabled: !attrs.includes('data-gps="off"'),
+        whatsapp_enabled: !attrs.includes('data-whatsapp="off"'),
+      }));
+    }
+  }, [activeProject?.html]);
+
   useEffect(() => {
     if (!activeProject?.eialinkPageId) return;
 
@@ -103,49 +125,14 @@ export function CreativeTopNav() {
           setFeatures({
             agenda_enabled: s.agenda_enabled !== false,
             ai_concierge_enabled: s.ai_concierge_enabled !== false,
+            deals_enabled: s.deals_enabled !== false && s.mural_ofertas_enabled !== false,
+            loyalty_enabled: s.loyalty_enabled !== false && s.fidelidade_enabled !== false,
             gps_enabled: s.gps_enabled !== false,
             whatsapp_enabled: s.whatsapp_enabled !== false,
           });
         }
       });
   }, [activeProject?.eialinkPageId]);
-
-function applyFeaturesToHtml(
-  sourceHtml: string,
-  featureFlags: {
-    agenda_enabled: boolean;
-    ai_concierge_enabled: boolean;
-    gps_enabled: boolean;
-    whatsapp_enabled: boolean;
-  },
-): string {
-  if (!sourceHtml) return sourceHtml;
-
-  let styleRules = "";
-  if (!featureFlags.agenda_enabled) {
-    styleRules += `[data-feature="agenda"], a[href*="/agendar"], .feature-agenda { display: none !important; } `;
-  }
-  if (!featureFlags.ai_concierge_enabled) {
-    styleRules += `[data-feature="concierge"], [data-feature="ai-chat"], .feature-concierge { display: none !important; } `;
-  }
-  if (!featureFlags.gps_enabled) {
-    styleRules += `[data-feature="gps"], [data-feature="map"], iframe[src*="maps"], a[href*="maps.google"], a[href*="waze.com"], .feature-gps { display: none !important; } `;
-  }
-  if (!featureFlags.whatsapp_enabled) {
-    styleRules += `[data-feature="whatsapp"], a[href*="wa.me"], a[href*="whatsapp.com"], .feature-whatsapp { display: none !important; } `;
-  }
-
-  const styleTag = `<style id="eialink-feature-overrides">${styleRules}</style>`;
-
-  if (sourceHtml.includes('id="eialink-feature-overrides"')) {
-    return sourceHtml.replace(/<style id="eialink-feature-overrides">[\s\S]*?<\/style>/i, styleTag);
-  }
-
-  if (sourceHtml.includes("</head>")) {
-    return sourceHtml.replace("</head>", `${styleTag}</head>`);
-  }
-  return `${styleTag}${sourceHtml}`;
-}
 
   async function handleToggleFeature(key: keyof typeof features) {
     const updated = { ...features, [key]: !features[key] };
@@ -167,6 +154,7 @@ function applyFeaturesToHtml(
           .single();
 
         const curSocial = (curPage?.social_links as Record<string, any>) || {};
+        const curLoyalty = (curSocial.loyalty_settings as Record<string, any>) || {};
         await supabase
           .from("bio_pages")
           .update({
@@ -174,15 +162,31 @@ function applyFeaturesToHtml(
               ...curSocial,
               ...(updatedHtml ? { custom_html: updatedHtml } : {}),
               ...updated,
+              mural_ofertas_enabled: updated.deals_enabled,
+              fidelidade_enabled: updated.loyalty_enabled,
+              loyalty_settings: {
+                ...curLoyalty,
+                isActive: updated.loyalty_enabled,
+              },
               updated_at: new Date().toISOString(),
             },
           })
           .eq("id", activeProject.eialinkPageId);
 
-        toast.success("Recurso atualizado no site!");
+        toast.success(
+          updated[key]
+            ? "Recurso conectado e ativado no site!"
+            : "Recurso desconectado do site!",
+        );
       } catch (e) {
         console.warn("Aviso ao salvar recurso:", e);
       }
+    } else {
+      toast.success(
+        updated[key]
+          ? "Recurso conectado e ativado no site!"
+          : "Recurso desconectado do site!",
+      );
     }
   }
 
@@ -246,7 +250,7 @@ function applyFeaturesToHtml(
             {activeProject?.name || "Estúdio Criativo"}
           </span>
           <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full uppercase hidden md:inline">
-            Gemini 2.5
+            Gemini 3.8 Flash
           </span>
         </div>
       </div>
@@ -308,7 +312,7 @@ function applyFeaturesToHtml(
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 pt-2">
+          <div className="space-y-3 pt-2 max-h-[75vh] overflow-y-auto pr-1">
             {/* 1. Agenda Online */}
             <div className="flex items-start justify-between p-3 rounded-2xl bg-zinc-900/80 border border-white/10 gap-3">
               <div className="space-y-0.5">
@@ -321,7 +325,7 @@ function applyFeaturesToHtml(
                 </p>
                 <div className="pt-1">
                   <a
-                    href="/agenda"
+                    href={activeProject?.eialinkPageId ? `/agenda?page=${activeProject.eialinkPageId}` : "/agenda"}
                     target="_blank"
                     rel="noreferrer"
                     className="text-[11px] text-emerald-400 hover:underline inline-flex items-center gap-1 font-semibold"
@@ -333,7 +337,7 @@ function applyFeaturesToHtml(
               <button
                 type="button"
                 onClick={() => handleToggleFeature("agenda_enabled")}
-                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${
+                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 cursor-pointer ${
                   features.agenda_enabled ? "bg-emerald-500" : "bg-zinc-700"
                 }`}
               >
@@ -345,21 +349,93 @@ function applyFeaturesToHtml(
               </button>
             </div>
 
-            {/* 2. Atendente com IA */}
+            {/* 2. Mural de Ofertas & Cupom Relâmpago */}
+            <div className="flex items-start justify-between p-3 rounded-2xl bg-zinc-900/80 border border-white/10 gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Flame size={14} className="text-amber-400" />
+                  <span className="text-xs font-bold text-zinc-200">Mural de Ofertas & Cupom Relâmpago</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Exibe cupom promocional resgatável com escassez e integra ao Mural da Cidade.
+                </p>
+                <div className="pt-1 flex items-center gap-3">
+                  <a
+                    href="/hoje"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-amber-400 hover:underline inline-flex items-center gap-1 font-semibold"
+                  >
+                    Ver Mural de Ofertas (/hoje) <ExternalLink size={10} />
+                  </a>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleToggleFeature("deals_enabled")}
+                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 cursor-pointer ${
+                  features.deals_enabled ? "bg-emerald-500" : "bg-zinc-700"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+                    features.deals_enabled ? "right-1" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 3. Programa de Fidelidade & Clube VIP */}
+            <div className="flex items-start justify-between p-3 rounded-2xl bg-zinc-900/80 border border-white/10 gap-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Crown size={14} className="text-purple-400" />
+                  <span className="text-xs font-bold text-zinc-200">Clube de Fidelidade & Pontos VIP</span>
+                </div>
+                <p className="text-[11px] text-zinc-400">
+                  Carteira digital de pontos, níveis VIP e resgate de prêmios no site.
+                </p>
+                <div className="pt-1">
+                  <a
+                    href={activeProject?.eialinkPageId ? `/fidelidade?page=${activeProject.eialinkPageId}` : "/fidelidade"}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] text-purple-400 hover:underline inline-flex items-center gap-1 font-semibold"
+                  >
+                    Configurar Prêmios & Pontos no Painel <ExternalLink size={10} />
+                  </a>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleToggleFeature("loyalty_enabled")}
+                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 cursor-pointer ${
+                  features.loyalty_enabled ? "bg-emerald-500" : "bg-zinc-700"
+                }`}
+              >
+                <div
+                  className={`w-4 h-4 rounded-full bg-white transition-transform absolute top-1 ${
+                    features.loyalty_enabled ? "right-1" : "left-1"
+                  }`}
+                />
+              </button>
+            </div>
+
+            {/* 4. Atendente com IA */}
             <div className="flex items-start justify-between p-3 rounded-2xl bg-zinc-900/80 border border-white/10 gap-3">
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <Bot size={14} className="text-teal-400" />
-                  <span className="text-xs font-bold text-zinc-200">Atendente Virtual com IA</span>
+                  <span className="text-xs font-bold text-zinc-200">Atendente Virtual Inteligente</span>
                 </div>
                 <p className="text-[11px] text-zinc-400">
-                  Chat concierge que tira dúvidas e atende clientes 24/7.
+                  Chat interativo 24/7 que informa preços, serviços, ofertas, endereço e agenda horários.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => handleToggleFeature("ai_concierge_enabled")}
-                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 ${
+                className={`w-10 h-6 rounded-full transition-colors relative shrink-0 cursor-pointer ${
                   features.ai_concierge_enabled ? "bg-emerald-500" : "bg-zinc-700"
                 }`}
               >

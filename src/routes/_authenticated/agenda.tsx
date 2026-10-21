@@ -90,7 +90,11 @@ function AgendaPage() {
   const [savingBlock, setSavingBlock] = useState(false);
 
   useEffect(() => {
-    if (!pageId && pages.data?.[0]) setPageId(pages.data[0].id);
+    if (!pageId && pages.data?.[0]) {
+      const reqPage = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("page") : null;
+      const found = reqPage ? pages.data.find((p) => p.id === reqPage) : null;
+      setPageId(found ? found.id : pages.data[0].id);
+    }
   }, [pageId, pages.data]);
   const workspace = useQuery({
     queryKey: ["booking-workspace", pageId],

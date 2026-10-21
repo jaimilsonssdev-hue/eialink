@@ -232,7 +232,7 @@ function AuthedLayout() {
                 </span>
               </Link>
               <Link
-                to="/agenda-studio"
+                to="/agenda"
                 onClick={() => setOpen(false)}
                 className={`app-nav-link flex items-center justify-between rounded-xl px-3 py-2 text-sm ${pathname.startsWith("/agenda-studio") ? "is-active" : ""}`}
               >

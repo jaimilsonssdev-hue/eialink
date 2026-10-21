@@ -550,7 +550,7 @@ export function ProspectingKanban({
                                     const targetPath = isGastro
                                       ? "/cardapio-studio"
                                       : isBeauty
-                                      ? "/agenda-studio"
+                                      ? "/agenda"
                                       : isLoja
                                       ? "/loja-studio"
                                       : "/studio-pro";
@@ -558,7 +558,7 @@ export function ProspectingKanban({
                                     const targetLabel = isGastro
                                       ? "Editar Cardápio (IA)"
                                       : isBeauty
-                                      ? "Editar Agenda (IA)"
+                                      ? "Configurar agenda"
                                       : isLoja
                                       ? "Editar Loja / Catálogo (IA)"
                                       : "Editar no Estúdio (IA)";

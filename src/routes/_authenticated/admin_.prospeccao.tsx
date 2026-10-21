@@ -1038,9 +1038,9 @@ DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
       }
 
       // 2. Se for barbearia / salão / beleza / estética:
-      if (targetCategory === "barber") {
+      if (false && targetCategory === "barber") {
         navigate({
-          to: "/agenda-studio",
+          to: "/agenda",
           search: {
             name: company.name,
             address: company.address || "",
@@ -3155,9 +3155,9 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                       niche: company.niche || "",
                                     },
                                   });
-                                } else if (isBarberOrBeauty) {
+                                } else if (false && isBarberOrBeauty) {
                                   navigate({
-                                    to: "/agenda-studio",
+                                    to: "/agenda",
                                     search: {
                                       name: company.name,
                                       address: company.address || "",
@@ -3316,14 +3316,14 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                             const editTo = isFood
                               ? "/cardapio-studio"
                               : isBarber
-                              ? "/agenda-studio"
+                              ? "/agenda"
                               : isLoja
                               ? "/loja-studio"
                               : "/studio-pro";
                             const editLabel = isFood
                               ? "Editar no Cardápio Studio"
                               : isBarber
-                              ? "Editar na Agenda Studio"
+                              ? "Configurar agenda"
                               : isLoja
                               ? "Editar na Loja Virtual Studio"
                               : "Editar no Studio Pro";
@@ -3569,7 +3569,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                   const editTo = isFood
                                     ? "/cardapio-studio"
                                     : isBarber
-                                    ? "/agenda-studio"
+                                    ? "/agenda"
                                     : "/studio-pro";
 
                                   return (
@@ -3583,7 +3583,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                         niche: company.niche || "",
                                       } as any)}
                                       className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
-                                      title={isFood ? "Editar no Cardápio Studio" : isBarber ? "Editar na Agenda Studio" : "Editar no Studio Pro"}
+                                      title={isFood ? "Editar no Cardápio Studio" : isBarber ? "Configurar agenda" : "Editar no Studio Pro"}
                                     >
                                       <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
                                       <span>Editar</span>
@@ -3615,9 +3615,9 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                             niche: company.niche || "",
                                           },
                                         });
-                                      } else if (isBarberOrBeauty) {
+                                      } else if (false && isBarberOrBeauty) {
                                         navigate({
-                                          to: "/agenda-studio",
+                                          to: "/agenda",
                                           search: {
                                             name: company.name,
                                             address: company.address || "",

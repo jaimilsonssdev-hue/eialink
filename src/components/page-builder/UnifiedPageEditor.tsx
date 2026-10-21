@@ -1036,7 +1036,6 @@ export function UnifiedPageEditor({
   };
 
   const handleApplyPatch = (patch: Record<string, any>) => {
-    setIsDirty(true);
     setBio((prev) => {
       const prevSocial = (prev.social_links as Record<string, any>) || {};
       const nextSocial = { ...prevSocial };

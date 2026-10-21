@@ -188,7 +188,7 @@ export function LoyaltyCustomerWalletModal({
     : 100;
 
   // Se o programa de fidelidade não estiver explicitamente ativo e não houver token/trigger, não renderiza botão flutuante
-  if (!claimTokenId && !triggerButton && !settings?.active) {
+  if (!claimTokenId && !triggerButton && !settings?.isActive) {
     return null;
   }
 

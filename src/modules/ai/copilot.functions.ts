@@ -597,19 +597,22 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
 
     if (!rawContent) {
       console.warn(`[generateCopilotSiteFn] Gemini indisponível (${errorLogs.join(" | ")}). Aplicando gerador determinístico inteligente.`);
-      const nicheKey = detectNicheKey(data.userPrompt || data.context?.niche || "");
-      const displayName = data.context?.displayName || data.userPrompt.split(/[.\n]/)[0].slice(0, 40) || "Seu Negócio";
+      const nicheKey = detectNicheKey(data.currentContext?.niche || data.briefing || "");
+      const displayName =
+        data.currentContext?.displayName ||
+        (data.briefing || "").split(/[.\n]/)[0].slice(0, 40).trim() ||
+        "Seu Negócio";
       const gallery = NICHE_GALLERIES[nicheKey] || NICHE_GALLERIES.geral;
       const primaryColor = nicheKey === "gastronomia" ? "#ea580c" : nicheKey === "saude" ? "#0d9488" : nicheKey === "beleza" ? "#db2777" : nicheKey === "advocacia" ? "#1e3a8a" : "#6366f1";
 
       const fallbackSite: AiCopilotResult = {
         display_name: displayName,
-        niche: data.context?.niche || nicheKey,
-        city: data.context?.city || "Brasil",
+        niche: data.currentContext?.niche || nicheKey,
+        city: data.currentContext?.city || "Brasil",
         description: `Experiência de alta qualidade, atendimento personalizado e excelência em cada detalhe.`,
         template_id: "cinematic-glass",
-        avatar_url: gallery?.avatars?.[0] || null,
-        cover_url: gallery?.covers?.[0] || null,
+        avatar_url: gallery?.avatars?.[0]?.url || null,
+        cover_url: gallery?.covers?.[0]?.url || null,
         custom_theme: {
           primary: primaryColor,
           background: "#09090b",
@@ -628,13 +631,9 @@ Analise todos os dados e arquivos anexados. Como Diretor de Arte, avalie o score
           { title: "Pontualidade & Compromisso", desc: "Processo estruturado com foco na melhor experiência do cliente.", icon: "check" },
         ],
         suggested_services: [
-          { name: "Consultoria & Atendimento Especializado", price: 120, badge: "Mais Procurado", description: "Avaliação completa com direcionamento exclusivo." },
-          { name: "Pacote de Serviços Premium", price: 250, badge: "Destaque", description: "Experiência completa com acompanhamento e garantia de qualidade." },
-          { name: "Sessão Personalizada Individual", price: 80, badge: "Essencial", description: "Atendimento sob medida para suas necessidades." },
-        ],
-        testimonials: [
-          { author: "Mariana Souza", text: "Excelente atendimento! O profissionalismo e a atenção aos detalhes me surpreenderam.", rating: 5 },
-          { author: "Carlos Mendes", text: "Muito prático e rápido para agendar pelo WhatsApp. Recomendo de olhos fechados!", rating: 5 },
+          { name: "Consultoria & Atendimento Especializado", price: 120, description: "Avaliação completa com direcionamento exclusivo." },
+          { name: "Pacote de Serviços Premium", price: 250, description: "Experiência completa com acompanhamento e garantia de qualidade." },
+          { name: "Sessão Personalizada Individual", price: 80, description: "Atendimento sob medida para suas necessidades." },
         ],
         whatsapp_message: `Olá! Vim pelo site da ${displayName} e gostaria de saber mais informações.`,
       };

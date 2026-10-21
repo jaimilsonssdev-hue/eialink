@@ -39,7 +39,10 @@ import type {
   ProspectStatus,
 } from "@/modules/prospecting/types";
 import { detectNicheKey, getCanonicalNicheMeta } from "@/modules/prospecting/nichePresets";
-import { getProspectNicheCategory } from "@/modules/prospecting/specializedGenerators.functions";
+import {
+  getProspectNicheCategory,
+  type ProspectNicheCategory,
+} from "@/modules/prospecting/specializedGenerators.functions";
 
 export interface DemoInfoResult {
   url: string | null;
@@ -52,7 +55,7 @@ export interface DemoInfoResult {
 export interface ProspectingKanbanProps {
   companies: ProspectedCompany[];
   onStatusChange: (id: string, status: ProspectStatus) => void;
-  onGenerateDemo: (company: ProspectedCompany, forceCat?: any) => void;
+  onGenerateDemo: (company: ProspectedCompany, forceCat?: ProspectNicheCategory) => void;
   creatingPageId: string | null;
   onRegenerateDemo: (company: ProspectedCompany) => void;
   regeneratingPageId: string | null;
@@ -447,14 +450,14 @@ export function ProspectingKanban({
                             {/* Opção secundária: Se o lead tiver nicho específico e não tiver demo, permitir gerar Site Institucional */}
                             {!demo.url && (() => {
                               const meta = getProspectNicheCategory(company.niche, company.name);
-                              if (meta.category === "geral") return null;
+                              if (meta.category === "service") return null;
                               const isGenerating = creatingPageId === company.id;
                               return (
                                 <button
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    onGenerateDemo(company, "geral");
+                                    onGenerateDemo(company, "service");
                                   }}
                                   disabled={isGenerating}
                                   className="w-full inline-flex items-center justify-center gap-1.5 py-1 px-2 rounded-lg bg-muted/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground text-[11px] font-medium border border-border/50 transition-all cursor-pointer"
@@ -565,7 +568,6 @@ export function ProspectingKanban({
                                         <Link
                                           to={targetPath as any}
                                           search={{
-                                            page: demo.pageId,
                                             name: company.name,
                                             whatsapp: company.whatsapp || company.phone,
                                             address: company.address,
@@ -621,7 +623,7 @@ export function ProspectingKanban({
                                   </div>
 
                                   <DropdownMenuItem
-                                    onClick={() => onGenerateDemo(company, "geral")}
+                                    onClick={() => onGenerateDemo(company, "service")}
                                     disabled={creatingPageId === company.id}
                                     className="cursor-pointer text-xs text-sky-400 font-medium"
                                   >
@@ -630,7 +632,7 @@ export function ProspectingKanban({
                                   </DropdownMenuItem>
 
                                   <DropdownMenuItem
-                                    onClick={() => onGenerateDemo(company, "gastronomia")}
+                                    onClick={() => onGenerateDemo(company, "food")}
                                     disabled={creatingPageId === company.id}
                                     className="cursor-pointer text-xs text-orange-400 font-medium"
                                   >
@@ -639,7 +641,7 @@ export function ProspectingKanban({
                                   </DropdownMenuItem>
 
                                   <DropdownMenuItem
-                                    onClick={() => onGenerateDemo(company, "beleza")}
+                                    onClick={() => onGenerateDemo(company, "barber")}
                                     disabled={creatingPageId === company.id}
                                     className="cursor-pointer text-xs text-violet-400 font-medium"
                                   >
@@ -648,7 +650,7 @@ export function ProspectingKanban({
                                   </DropdownMenuItem>
 
                                   <DropdownMenuItem
-                                    onClick={() => onGenerateDemo(company, "loja")}
+                                    onClick={() => onGenerateDemo(company, "shop")}
                                     disabled={creatingPageId === company.id}
                                     className="cursor-pointer text-xs text-pink-400 font-medium"
                                   >

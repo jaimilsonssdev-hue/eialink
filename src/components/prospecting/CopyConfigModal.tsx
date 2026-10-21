@@ -213,7 +213,7 @@ export function CopyConfigModal({
 
   const currentSample = simulateWithReviews ? sampleWithReviews : sampleWithoutReviews;
   const currentPreview =
-    activeTab !== "geminiApiKey"
+    activeTab !== "geminiApiKey" && activeTab !== "apifyApiToken"
       ? interpolatePitch(templates[activeTab], currentSample)
       : "";
 

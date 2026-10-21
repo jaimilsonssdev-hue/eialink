@@ -45,6 +45,7 @@ export type ProspectedCompany = {
   status: ProspectStatus;
   notes: string | null;
   photos?: string[] | null;
+  address?: string | null;
   avatar_url?: string | null;
   biography?: string | null;
   dedupe_key: string;

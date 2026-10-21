@@ -1,4 +1,4 @@
-import type { CardapioData, CardapioItem } from "./cardapioAiService";
+import { getCardapioNichePhotos, type CardapioData, type CardapioItem } from "./cardapioAiService";
 import { getMotionStyles, renderMarquee } from "../prospecting/skills";
 
 /**
@@ -45,13 +45,13 @@ export function generateIfoodCardapioHtml(
   const coverImage =
     cardapio.bannerImage ||
     cardapio.items[0]?.image ||
-    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80";
+    getCardapioNichePhotos(cardapio.niche, cardapio.restaurantName).banner;
 
   const logoImage =
     cardapio.logoUrl ||
     cardapio.items[1]?.image ||
     cardapio.items[0]?.image ||
-    "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80";
+    getCardapioNichePhotos(cardapio.niche, cardapio.restaurantName).logo;
 
   // Mapeia os itens para o formato do script cliente
   const items = (cardapio.items || []).map((it, idx) => ({
@@ -62,12 +62,7 @@ export function generateIfoodCardapioHtml(
     category: it.category || "Geral",
     badge: it.badge || (it.isPopular ? "Mais Vendido 🏆" : undefined),
     isFeatured: Boolean(it.isPopular || it.badge || idx < 3),
-    options: [
-      { name: "Bacon Crocante Extra", price: 4.0 },
-      { name: "Queijo Cheddar Cremoso Duplo", price: 4.0 },
-      { name: "Maionese Defumada Especial", price: 3.5 },
-      { name: "Cebola Caramelizada na Chapa", price: 3.0 },
-    ],
+    options: Array.isArray(it.options) ? it.options.filter((o) => o && o.name).map((o) => ({ name: String(o.name), price: Number(o.price) || 0 })) : [],
   }));
 
   const itemsJson = JSON.stringify(items);
@@ -76,7 +71,7 @@ export function generateIfoodCardapioHtml(
 
   const categories = cardapio.categories && cardapio.categories.length > 0
     ? cardapio.categories.map((c) => c.name)
-    : ["Todos", "Mais Pedidos", "Burgers Artesanais", "Porções & Fritas", "Bebidas"];
+    : ["Todos", ...Array.from(new Set(items.map((it) => it.category).filter(Boolean)))];
 
   const customFont = cardapio.customFont || "Inter";
   const fontGoogleUrl = {
@@ -112,7 +107,7 @@ export function generateIfoodCardapioHtml(
   const marqueePhrases = [
     "🔥 INGREDIENTES FRESCOS SELECIONADOS",
     "🛵 ENTREGA RÁPIDA E EMBALAGEM TÉRMICA",
-    "🍔 O SABOR ARTESANAL MAIS ELOGIADO DA CIDADE",
+    "✨ QUALIDADE E SABOR SELECIONADOS TODOS OS DIAS",
     "🎟️ USE O CUPOM BEMVINDO10 PARA 10% OFF",
     "🎁 ACUMULE PONTOS NO CLUBE DE FIDELIDADE",
   ];
@@ -168,7 +163,7 @@ export function generateIfoodCardapioHtml(
 
       <div class="mt-3 flex items-center justify-between text-xs pt-3 border-t" style="border-color: ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)"};">
         <span class="text-amber-400 font-bold flex items-center gap-1">
-          <span>★</span> 4.7 <span class="opacity-60 font-normal">(120 avaliações)</span>
+          ${cardapio.rating && Number(cardapio.rating) > 0 ? `<span>★</span> ${Number(cardapio.rating).toFixed(1)}${cardapio.reviewsCount ? ` <span class="opacity-60 font-normal">(${cardapio.reviewsCount} avaliações)</span>` : ""}` : `<span class="opacity-80 font-semibold">🍽️ Cardápio Digital</span>`}
         </span>
         <div class="flex items-center gap-3">
           <span class="text-emerald-400 font-semibold flex items-center gap-1">🛵 Entrega ${deliveryFee}</span>
@@ -248,7 +243,7 @@ export function generateIfoodCardapioHtml(
             </div>
             <div class="mt-3 flex items-center justify-between pt-2 border-t" style="border-color: ${isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"};">
               <span class="font-black text-emerald-400 text-xs">R$ ${item.price.toFixed(2).replace(".", ",")}</span>
-              <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all" style="background-color: var(--btn-primary); color: #000;">+ Opções</span>
+              <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all" style="background-color: var(--btn-primary); color: #000;">${item.options && item.options.length > 0 ? "+ Opções" : "+ Adicionar"}</span>
             </div>
           </div>
         `).join("")}
@@ -334,7 +329,7 @@ export function generateIfoodCardapioHtml(
           </div>
         </div>
 
-        <div id="detail-addons-section" class="pt-3 border-t border-white/10 space-y-2.5">
+        <div id="detail-addons-section" style="display: none;" class="pt-3 border-t border-white/10 space-y-2.5">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <span>✨ Adicionais & Acompanhamentos</span>
@@ -742,7 +737,7 @@ export function generateIfoodCardapioHtml(
       const deliveryFee = isDeliveryMode ? 5.00 : 0.00;
       const total = Math.max(0, subtotal - discount + deliveryFee);
 
-      let msg = '🍔 *NOVO PEDIDO - ' + business.toUpperCase() + '*\\n';
+      let msg = '🛍️ *NOVO PEDIDO - ' + business.toUpperCase() + '*\\n';
       msg += '---------------------------------\\n';
       if (clientName) msg += '👤 *Cliente:* ' + clientName + '\\n';
       msg += '🛵 *Tipo:* ' + (isDeliveryMode ? 'Entrega (+R$ 5)' : 'Retirada no Balcão') + '\\n';

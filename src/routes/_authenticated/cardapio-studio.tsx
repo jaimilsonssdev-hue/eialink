@@ -6,42 +6,31 @@ import {
   ArrowLeft,
   Send,
   Paperclip,
-  Share2,
   ExternalLink,
   Smartphone,
   Monitor,
   CheckCircle2,
-  ShoppingBag,
-  Plus,
-  Trash2,
-  Edit2,
-  Clock,
-  MapPin,
   MessageCircle,
   Loader2,
-  Image as ImageIcon,
-  Flame,
   FileText,
-  Search,
   Sliders,
+  AlertCircle,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import {
-  processCardapioAiChat,
-  saveCardapioToBioPage,
+  getCardapioNichePhotos,
+  sanitizeCardapioPhotosForNiche,
   type CardapioData,
   type CardapioAiMessage,
-  type CardapioItem,
 } from "@/modules/cardapio/cardapioAiService";
 import {
   saveCardapioStudioFn,
   processCardapioAiStudioFn,
 } from "@/modules/studio/studio.functions";
 import { toast } from "sonner";
-import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
 import { CardapioVisualEditor } from "@/modules/cardapio/CardapioVisualEditor";
 import { generateIfoodCardapioHtml } from "@/modules/cardapio/cardapioGenerator";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,78 +40,67 @@ export const Route = createFileRoute("/_authenticated/cardapio-studio")({
 });
 
 const DEFAULT_CARDAPIO: CardapioData = {
-  restaurantName: "Burger & Co. Artesanal",
-  niche: "hamburgueria",
-  tagline: "O melhor smash e burger artesanal da cidade",
-  description: "Ingredientes frescos, pão brioche amanteigado selado e molhos especiais feitos diariamente.",
-  whatsapp: "5511999999999",
-  address: "Rua das Delícias, 150 - Centro",
-  deliveryFee: "A partir de R$ 6,90",
-  minOrder: 25.0,
-  openingHours: "Terça a Domingo das 18h às 23h30",
+  restaurantName: "",
+  niche: "geral",
+  tagline: "",
+  description: "",
+  whatsapp: "",
+  address: "",
+  deliveryFee: "Consulte taxa de entrega",
+  minOrder: 0,
+  openingHours: "",
   themeColor: "orange",
   styleVariant: "ifood-modern",
   visualEffect: "glassmorphism",
   buttonColor: "#f97316",
   backgroundColor: "#09090b",
-  bannerImage: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80",
-  logoUrl: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=400&q=80",
-  categories: [
-    { id: "todos", name: "Todos", icon: "🍽️" },
-    { id: "destaques", name: "Mais Pedidos", icon: "⭐" },
-    { id: "burgers", name: "Burgers Artesanais", icon: "🍔" },
-    { id: "porcoes", name: "Porções & Fritas", icon: "🍟" },
-    { id: "bebidas", name: "Bebidas Geladas", icon: "🥤" },
-  ],
-  items: [
-    {
-      id: "item-1",
-      name: "Smash Bacon Especial",
-      description: "2x carnes smash 90g crocantes, dobro de queijo cheddar derretido, farofa de bacon crocante e maionese defumada no pão brioche.",
-      price: 36.9,
-      category: "burgers",
-      badge: "Mais Pedido ⭐",
-      isPopular: true,
-      image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-      id: "item-2",
-      name: "Truffled Gorgonzola Burger",
-      description: "Blend 180g de costela angus, creme suave de gorgonzola, cebola caramelizada e toque de azeite trufado.",
-      price: 42.0,
-      category: "burgers",
-      badge: "Chef's Choice",
-      isPopular: true,
-      image: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-      id: "item-3",
-      name: "Batata Crinkle com Cheddar & Bacon",
-      description: "Batatas crocantes onduladas cobertas com creme de queijo cheddar e cubos de bacon dourado.",
-      price: 24.9,
-      category: "porcoes",
-      badge: "Para Compartilhar",
-      isPopular: false,
-      image: "https://images.unsplash.com/photo-1576107232684-1279f3908594?auto=format&fit=crop&w=600&q=80",
-    },
-    {
-      id: "item-4",
-      name: "Refrigerante Lata 350ml",
-      description: "Coca-Cola, Guaraná Antarctica ou Zero Açúcar bem gelados.",
-      price: 7.0,
-      category: "bebidas",
-      isPopular: false,
-      image: "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?auto=format&fit=crop&w=600&q=80",
-    },
-  ],
+  bannerImage: "",
+  logoUrl: "",
+  categories: [{ id: "todos", name: "Todos", icon: "🍽️" }],
+  items: [],
 };
+
+interface LeadSeedInfo {
+  pageId?: string | null;
+  slug?: string;
+  name: string;
+  niche: string;
+  address: string;
+  whatsapp: string;
+  rating: number | null;
+  reviewsCount: number | null;
+  photos: string[];
+}
+
+function extractLeadPhotos(rawSocial?: Record<string, any>, companyRow?: any): string[] {
+  const urls: string[] = [];
+  const addUrl = (u?: unknown) => {
+    if (typeof u === "string" && u.startsWith("http") && !urls.includes(u)) {
+      urls.push(u);
+    }
+  };
+
+  if (Array.isArray(companyRow?.photos)) {
+    companyRow.photos.forEach(addUrl);
+  }
+  if (Array.isArray(rawSocial?.photos)) {
+    rawSocial.photos.forEach(addUrl);
+  }
+  if (Array.isArray(rawSocial?.gallery_photos)) {
+    rawSocial.gallery_photos.forEach(addUrl);
+  }
+  if (Array.isArray(rawSocial?.curated_photos)) {
+    rawSocial.curated_photos.forEach((p: any) => addUrl(typeof p === "string" ? p : p?.url));
+  }
+  return urls;
+}
 
 function CardapioStudioPage() {
   const navigate = useNavigate();
   const searchParams = useSearch({ strict: false }) as Record<string, string>;
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
-  const [sidebarMode, setSidebarMode] = useState<"ai" | "visual">("visual");
+  const [sidebarMode, setSidebarMode] = useState<"ai" | "visual">("ai");
   const [isAssistantEnabled, setIsAssistantEnabled] = useState(true);
   const [cardapio, setCardapio] = useState<CardapioData>(DEFAULT_CARDAPIO);
   const [messages, setMessages] = useState<CardapioAiMessage[]>([
@@ -130,145 +108,413 @@ function CardapioStudioPage() {
       id: "msg-1",
       role: "assistant",
       content:
-        "Cardápio gerado! Digite o que deseja alterar ou envie fotos do cardápio/PDF para atualizar automaticamente.",
+        "Olá! Digite o que deseja alterar no cardápio ou envie fotos/PDF do cardápio físico para atualizar automaticamente.",
       timestamp: Date.now(),
     },
   ]);
   const [inputMessage, setInputMessage] = useState("");
-  const [attachments, setAttachments] = useState<Array<{ name: string; mimeType: string; dataBase64: string }>>([]);
+  const [attachments, setAttachments] = useState<
+    Array<{ name: string; mimeType: string; dataBase64: string }>
+  >([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isGeneratingInitial, setIsGeneratingInitial] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [lastFailedAction, setLastFailedAction] = useState<
+    { type: "initial"; seed: LeadSeedInfo } | { type: "chat"; text: string } | null
+  >(null);
   const [isSaving, setIsSaving] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
   const [currentPageId, setCurrentPageId] = useState<string | null>(searchParams?.page || null);
   const [savedPageUrl, setSavedPageUrl] = useState<string | null>(null);
-  const isLoadedRef = useRef(false);
-  const initialMountRef = useRef(true);
+  const [previewRevision, setPreviewRevision] = useState(0);
+  const hasAutoGeneratedRef = useRef(false);
+  const leadSeedRef = useRef<LeadSeedInfo | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
 
-  // Se veio parâmetro da prospecção, ID de página salva ou busca por nome/último cardápio
-  useEffect(() => {
-    const targetIdentifier = searchParams?.page || searchParams?.slug;
-    if (targetIdentifier) {
-      let query = supabase
-        .from("bio_pages")
-        .select("id, slug, display_name, description, whatsapp, social_links");
+  async function generateInitialCardapioWithAi(seed: LeadSeedInfo) {
+    leadSeedRef.current = seed;
+    setIsGeneratingInitial(true);
+    setIsProcessing(true);
+    setGenerationError(null);
+    setLastFailedAction(null);
+    setSidebarMode("ai");
 
-      if (searchParams?.page) {
-        query = query.eq("id", searchParams.page);
-      } else {
-        query = query.eq("slug", searchParams.slug);
+    const nichePhotos = getCardapioNichePhotos(seed.niche, seed.name);
+    const initialBanner = seed.photos[0] || nichePhotos.banner;
+    const initialLogo = seed.photos[1] || seed.photos[0] || nichePhotos.logo;
+
+    const baseCardapio: CardapioData = {
+      ...DEFAULT_CARDAPIO,
+      slug: seed.slug,
+      restaurantName: seed.name || "Restaurante",
+      niche: seed.niche || "gastronomia",
+      whatsapp: seed.whatsapp || "",
+      address: seed.address || "",
+      rating: seed.rating,
+      reviewsCount: seed.reviewsCount,
+      bannerImage: initialBanner,
+      logoUrl: initialLogo,
+      categories: [{ id: "todos", name: "Todos", icon: "🍽️" }],
+      items: [],
+    };
+
+    setCardapio(baseCardapio);
+
+    const promptLines = [
+      `Gere o cardápio digital completo para o estabelecimento "${seed.name || "Restaurante"}".`,
+      `Nicho gastronômico: "${seed.niche || "restaurante"}".`,
+      seed.address ? `Endereço: "${seed.address}".` : "",
+      seed.rating ? `Avaliação real no Google Maps: ${seed.rating}.` : "",
+      seed.photos.length > 0
+        ? `Fotos reais disponíveis do estabelecimento no Google Maps (${seed.photos.length} fotos): ${seed.photos.slice(0, 6).join(", ")}.`
+        : "",
+      `Crie categorias coerentes com "${seed.niche || "restaurante"}", de 8 a 12 itens típicos desse nicho com nome, descrição apetitosa, preço realista em R$ e um array "options" com adicionais coerentes por categoria.`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    try {
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error("Tempo limite excedido ao gerar o cardápio com a IA.")),
+          90000,
+        );
+      });
+
+      const serverRes = await Promise.race([
+        processCardapioAiStudioFn({
+          data: {
+            userMessage: promptLines,
+            currentCardapio: baseCardapio,
+            history: [],
+            leadContext: {
+              name: seed.name,
+              niche: seed.niche,
+              address: seed.address,
+              rating: seed.rating,
+              reviewsCount: seed.reviewsCount,
+              photos: seed.photos,
+            },
+          },
+        }),
+        timeoutPromise,
+      ]);
+
+      const generated = serverRes?.updatedCardapio;
+      if (!generated || !Array.isArray(generated.items) || generated.items.length === 0) {
+        throw new Error(
+          "A IA não retornou os itens do cardápio para este estabelecimento. Clique em 'Tentar de novo'.",
+        );
       }
 
-      query
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setCurrentPageId(data.id);
-            const rawSocial = (data.social_links as Record<string, any>) || {};
-            if (rawSocial.cardapio_data) {
-              setCardapio({
-                ...DEFAULT_CARDAPIO,
-                ...rawSocial.cardapio_data,
-                slug: data.slug,
-                backgroundColor: rawSocial.cardapio_data.backgroundColor || "#09090b",
-                bannerImage: rawSocial.cardapio_data.bannerImage || DEFAULT_CARDAPIO.bannerImage,
-                logoUrl: rawSocial.cardapio_data.logoUrl || DEFAULT_CARDAPIO.logoUrl,
-              });
-              setSavedPageUrl(`/p/${data.slug}`);
-            } else {
-              setCardapio((prev) => ({
-                ...prev,
-                slug: data.slug,
-                restaurantName: data.display_name || prev.restaurantName,
-                whatsapp: data.whatsapp || prev.whatsapp,
-                tagline: data.description || prev.tagline,
-                address: rawSocial.address || prev.address,
-                backgroundColor: "#09090b",
-              }));
-              setSavedPageUrl(`/p/${data.slug}`);
-            }
-          }
-          isLoadedRef.current = true;
+      const finalCardapio = sanitizeCardapioPhotosForNiche(
+        {
+          ...baseCardapio,
+          ...generated,
+          restaurantName: seed.name || generated.restaurantName || baseCardapio.restaurantName,
+          whatsapp: seed.whatsapp || generated.whatsapp || baseCardapio.whatsapp,
+          address: seed.address || generated.address || baseCardapio.address,
+          rating: seed.rating ?? generated.rating ?? null,
+          reviewsCount: seed.reviewsCount ?? generated.reviewsCount ?? null,
+          slug: seed.slug || generated.slug,
+        },
+        seed.photos,
+      );
+
+      setCardapio(finalCardapio);
+      setPreviewRevision((r) => r + 1);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `ast-${Date.now()}`,
+          role: "assistant",
+          content:
+            serverRes.replyText ||
+            `Cardápio personalizado criado com ${finalCardapio.items.length} itens para ${finalCardapio.restaurantName}!`,
+          timestamp: Date.now(),
+        },
+      ]);
+
+      try {
+        const saveRes = await saveCardapioStudioFn({
+          data: {
+            cardapio: finalCardapio,
+            pageId: seed.pageId || currentPageId || searchParams?.page || undefined,
+          },
         });
-    } else if (searchParams?.name) {
-      // Se veio nome da empresa, busca se já existe uma página criada
-      supabase
-        .from("bio_pages")
-        .select("id, slug, display_name, description, whatsapp, social_links")
-        .eq("display_name", searchParams.name)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setCurrentPageId(data.id);
-            const rawSocial = (data.social_links as Record<string, any>) || {};
-            if (rawSocial.cardapio_data) {
-              setCardapio({
+        if (saveRes?.pageId) setCurrentPageId(saveRes.pageId);
+        if (saveRes?.slug) {
+          setCardapio((prev) => ({ ...prev, slug: saveRes.slug }));
+        }
+        if (saveRes?.publicUrl) setSavedPageUrl(saveRes.publicUrl);
+        setLastSavedAt(new Date());
+      } catch (saveErr: any) {
+        console.warn("[CardapioStudio] Aviso ao salvar geração inicial:", saveErr);
+      }
+    } catch (err: any) {
+      const msg =
+        err?.message || "Não foi possível gerar o cardápio automaticamente com a IA.";
+      setGenerationError(msg);
+      setLastFailedAction({ type: "initial", seed });
+      toast.error(msg);
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+      setIsGeneratingInitial(false);
+      setIsProcessing(false);
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadOrInitialize() {
+      const targetIdentifier = searchParams?.page || searchParams?.slug;
+
+      if (targetIdentifier) {
+        let query = supabase
+          .from("bio_pages")
+          .select("id, slug, display_name, description, whatsapp, avatar_url, cover_url, social_links");
+
+        if (searchParams?.page) {
+          query = query.eq("id", searchParams.page);
+        } else {
+          query = query.eq("slug", searchParams.slug);
+        }
+
+        const { data } = await query.maybeSingle();
+        if (cancelled) return;
+
+        if (data) {
+          setCurrentPageId(data.id);
+          setSavedPageUrl(`/p/${data.slug}`);
+          const rawSocial = (data.social_links as Record<string, any>) || {};
+          const existingData = rawSocial.cardapio_data as CardapioData | undefined;
+
+          if (existingData && Array.isArray(existingData.items) && existingData.items.length > 0) {
+            const leadPhotos = extractLeadPhotos(rawSocial);
+            if (data.cover_url && !leadPhotos.includes(data.cover_url)) leadPhotos.unshift(data.cover_url);
+            if (data.avatar_url && !leadPhotos.includes(data.avatar_url)) leadPhotos.push(data.avatar_url);
+
+            const hydrated = sanitizeCardapioPhotosForNiche(
+              {
                 ...DEFAULT_CARDAPIO,
-                ...rawSocial.cardapio_data,
+                ...existingData,
                 slug: data.slug,
-                backgroundColor: rawSocial.cardapio_data.backgroundColor || "#09090b",
-                bannerImage: rawSocial.cardapio_data.bannerImage || DEFAULT_CARDAPIO.bannerImage,
-                logoUrl: rawSocial.cardapio_data.logoUrl || DEFAULT_CARDAPIO.logoUrl,
-              });
-              setSavedPageUrl(`/p/${data.slug}`);
-            } else {
-              setCardapio((prev) => ({
-                ...prev,
-                slug: data.slug,
-                restaurantName: data.display_name || prev.restaurantName,
-                whatsapp: data.whatsapp || prev.whatsapp,
-                tagline: data.description || prev.tagline,
-                address: rawSocial.address || searchParams.address || prev.address,
-                backgroundColor: "#09090b",
-              }));
-              setSavedPageUrl(`/p/${data.slug}`);
-            }
-          } else {
-            setCardapio((prev) => ({
-              ...prev,
-              restaurantName: searchParams.name,
-              address: searchParams.address || prev.address,
-              whatsapp: searchParams.whatsapp || prev.whatsapp,
-              tagline: searchParams.niche ? `Especialidades em ${searchParams.niche}` : prev.tagline,
-            }));
+                restaurantName: existingData.restaurantName || data.display_name || "",
+                whatsapp: existingData.whatsapp || data.whatsapp || "",
+                backgroundColor: existingData.backgroundColor || "#09090b",
+              },
+              leadPhotos,
+            );
+            leadSeedRef.current = {
+              pageId: data.id,
+              slug: data.slug,
+              name: hydrated.restaurantName,
+              niche: hydrated.niche || rawSocial.niche || searchParams?.niche || "restaurante",
+              address: hydrated.address || rawSocial.address || searchParams?.address || "",
+              whatsapp: hydrated.whatsapp,
+              rating: hydrated.rating ?? (rawSocial.rating ? Number(rawSocial.rating) : null),
+              reviewsCount:
+                hydrated.reviewsCount ??
+                (rawSocial.reviews_count ? Number(rawSocial.reviews_count) : null),
+              photos: leadPhotos,
+            };
+            setCardapio(hydrated);
+            setPreviewRevision((r) => r + 1);
+            return;
           }
-          isLoadedRef.current = true;
-        });
-    } else {
-      // Se entrou sem query params, busca o último cardápio do usuário
-      supabase
+
+          // Página existe mas não possui cardapio_data: enriquece com dados do lead e gera 1 vez por IA
+          const companyName = data.display_name || searchParams?.name || "";
+          let companyRow: any = null;
+          if (companyName) {
+            const { data: comp } = await supabase
+              .from("prospected_companies")
+              .select("name, niche, city, whatsapp, phone, rating, reviews_count, notes")
+              .eq("name", companyName)
+              .limit(1)
+              .maybeSingle();
+            companyRow = comp;
+          }
+          if (cancelled) return;
+
+          const leadPhotos = extractLeadPhotos(rawSocial, companyRow);
+          if (data.cover_url && !leadPhotos.includes(data.cover_url)) leadPhotos.unshift(data.cover_url);
+          if (data.avatar_url && !leadPhotos.includes(data.avatar_url)) leadPhotos.push(data.avatar_url);
+
+          const seed: LeadSeedInfo = {
+            pageId: data.id,
+            slug: data.slug,
+            name: companyName || "Restaurante",
+            niche:
+              searchParams?.niche ||
+              rawSocial.niche ||
+              companyRow?.niche ||
+              "restaurante",
+            address:
+              searchParams?.address ||
+              rawSocial.address ||
+              companyRow?.city ||
+              "",
+            whatsapp:
+              data.whatsapp ||
+              searchParams?.whatsapp ||
+              companyRow?.whatsapp ||
+              companyRow?.phone ||
+              "",
+            rating:
+              rawSocial.rating != null
+                ? Number(rawSocial.rating)
+                : companyRow?.rating != null
+                ? Number(companyRow.rating)
+                : null,
+            reviewsCount:
+              rawSocial.reviews_count != null
+                ? Number(rawSocial.reviews_count)
+                : companyRow?.reviews_count != null
+                ? Number(companyRow.reviews_count)
+                : null,
+            photos: leadPhotos,
+          };
+
+          if (!hasAutoGeneratedRef.current) {
+            hasAutoGeneratedRef.current = true;
+            void generateInitialCardapioWithAi(seed);
+          }
+          return;
+        }
+      }
+
+      if (searchParams?.name) {
+        const [{ data: pageData }, { data: companyRow }] = await Promise.all([
+          supabase
+            .from("bio_pages")
+            .select("id, slug, display_name, description, whatsapp, avatar_url, cover_url, social_links")
+            .eq("display_name", searchParams.name)
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("prospected_companies")
+            .select("name, niche, city, whatsapp, phone, rating, reviews_count, notes")
+            .eq("name", searchParams.name)
+            .limit(1)
+            .maybeSingle(),
+        ]);
+        if (cancelled) return;
+
+        const rawSocial = ((pageData?.social_links as Record<string, any>) || {});
+        const existingData = rawSocial.cardapio_data as CardapioData | undefined;
+        const leadPhotos = extractLeadPhotos(rawSocial, companyRow);
+        if (pageData?.cover_url && !leadPhotos.includes(pageData.cover_url)) {
+          leadPhotos.unshift(pageData.cover_url);
+        }
+        if (pageData?.avatar_url && !leadPhotos.includes(pageData.avatar_url)) {
+          leadPhotos.push(pageData.avatar_url);
+        }
+
+        if (pageData) {
+          setCurrentPageId(pageData.id);
+          setSavedPageUrl(`/p/${pageData.slug}`);
+        }
+
+        if (existingData && Array.isArray(existingData.items) && existingData.items.length > 0) {
+          const hydrated = sanitizeCardapioPhotosForNiche(
+            {
+              ...DEFAULT_CARDAPIO,
+              ...existingData,
+              slug: pageData?.slug,
+              restaurantName: existingData.restaurantName || searchParams.name,
+              whatsapp: existingData.whatsapp || pageData?.whatsapp || searchParams.whatsapp || "",
+              backgroundColor: existingData.backgroundColor || "#09090b",
+            },
+            leadPhotos,
+          );
+          leadSeedRef.current = {
+            pageId: pageData?.id,
+            slug: pageData?.slug,
+            name: hydrated.restaurantName,
+            niche: hydrated.niche || searchParams.niche || companyRow?.niche || "restaurante",
+            address: hydrated.address || searchParams.address || "",
+            whatsapp: hydrated.whatsapp,
+            rating: hydrated.rating ?? (companyRow?.rating != null ? Number(companyRow.rating) : null),
+            reviewsCount:
+              hydrated.reviewsCount ??
+              (companyRow?.reviews_count != null ? Number(companyRow.reviews_count) : null),
+            photos: leadPhotos,
+          };
+          setCardapio(hydrated);
+          setPreviewRevision((r) => r + 1);
+          return;
+        }
+
+        const seed: LeadSeedInfo = {
+          pageId: pageData?.id || null,
+          slug: pageData?.slug,
+          name: searchParams.name,
+          niche: searchParams.niche || rawSocial.niche || companyRow?.niche || "restaurante",
+          address: searchParams.address || rawSocial.address || companyRow?.city || "",
+          whatsapp:
+            searchParams.whatsapp ||
+            pageData?.whatsapp ||
+            companyRow?.whatsapp ||
+            companyRow?.phone ||
+            "",
+          rating:
+            searchParams.rating != null
+              ? Number(searchParams.rating)
+              : companyRow?.rating != null
+              ? Number(companyRow.rating)
+              : null,
+          reviewsCount:
+            companyRow?.reviews_count != null ? Number(companyRow.reviews_count) : null,
+          photos: leadPhotos,
+        };
+
+        if (!hasAutoGeneratedRef.current) {
+          hasAutoGeneratedRef.current = true;
+          void generateInitialCardapioWithAi(seed);
+        }
+        return;
+      }
+
+      // Sem parâmetros de lead: busca o último cardápio salvo do usuário
+      const { data: latestPage } = await supabase
         .from("bio_pages")
-        .select("id, slug, display_name, description, whatsapp, social_links")
+        .select("id, slug, display_name, description, whatsapp, avatar_url, cover_url, social_links")
         .eq("template_id", "cardapio-pro")
         .order("updated_at", { ascending: false })
         .limit(1)
-        .maybeSingle()
-        .then(({ data }) => {
-          if (data) {
-            setCurrentPageId(data.id);
-            const rawSocial = (data.social_links as Record<string, any>) || {};
-            if (rawSocial.cardapio_data) {
-              setCardapio({
-                ...DEFAULT_CARDAPIO,
-                ...rawSocial.cardapio_data,
-                slug: data.slug,
-                backgroundColor: rawSocial.cardapio_data.backgroundColor || "#09090b",
-                bannerImage: rawSocial.cardapio_data.bannerImage || DEFAULT_CARDAPIO.bannerImage,
-                logoUrl: rawSocial.cardapio_data.logoUrl || DEFAULT_CARDAPIO.logoUrl,
-              });
-              setSavedPageUrl(`/p/${data.slug}`);
-            }
-          }
-          isLoadedRef.current = true;
+        .maybeSingle();
+
+      if (cancelled || !latestPage) return;
+
+      setCurrentPageId(latestPage.id);
+      setSavedPageUrl(`/p/${latestPage.slug}`);
+      const rawSocial = (latestPage.social_links as Record<string, any>) || {};
+      if (rawSocial.cardapio_data) {
+        const hydrated = sanitizeCardapioPhotosForNiche({
+          ...DEFAULT_CARDAPIO,
+          ...rawSocial.cardapio_data,
+          slug: latestPage.slug,
+          backgroundColor: rawSocial.cardapio_data.backgroundColor || "#09090b",
         });
+        setCardapio(hydrated);
+        setPreviewRevision((r) => r + 1);
+      }
     }
-  }, [searchParams]);
+
+    void loadOrInitialize();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams?.page, searchParams?.slug, searchParams?.name]);
 
   useEffect(() => {
     chatScrollRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Salvar cardápio no Supabase via Server Function segura
   async function handleSavePage() {
     if (isSaving) return;
     setIsSaving(true);
@@ -304,7 +550,6 @@ function CardapioStudioPage() {
     }
   }
 
-  // Upload multimodal
   async function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
@@ -328,91 +573,133 @@ function CardapioStudioPage() {
     }
   }
 
-  // Enviar mensagem para a IA
   async function handleSendMessage(customText?: string) {
-    const textToSend = customText || inputMessage;
-    if (!textToSend.trim() && attachments.length === 0) return;
+    const textToSend = (customText ?? inputMessage).trim();
+    if (!textToSend && attachments.length === 0) return;
+    if (isProcessing) return;
 
+    const currentAttachments = attachments.length > 0 ? [...attachments] : undefined;
     const userMsg: CardapioAiMessage = {
       id: `usr-${Date.now()}`,
       role: "user",
-      content: textToSend.trim(),
+      content: textToSend || "Analise os arquivos anexados e atualize o cardápio.",
       timestamp: Date.now(),
-      attachments: attachments.length > 0 ? [...attachments] : undefined,
+      attachments: currentAttachments,
     };
 
     setMessages((prev) => [...prev, userMsg]);
-    setInputMessage("");
+    if (!customText) setInputMessage("");
     setAttachments([]);
     setIsProcessing(true);
+    setGenerationError(null);
+    setLastFailedAction(null);
 
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
     try {
-      let replyText = "";
-      let updatedCardapio: CardapioData | null = null;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(
+          () => reject(new Error("A IA demorou mais do que o esperado (90s). Tente novamente.")),
+          90000,
+        );
+      });
 
-      try {
-        const serverRes = await processCardapioAiStudioFn({
+      const serverRes = await Promise.race([
+        processCardapioAiStudioFn({
           data: {
-            userMessage: textToSend,
+            userMessage: userMsg.content,
             currentCardapio: cardapio,
             history: messages.map((m) => ({
               role: m.role,
               content: m.content,
             })),
-            attachments: userMsg.attachments,
+            attachments: currentAttachments,
+            leadContext: leadSeedRef.current
+              ? {
+                  name: leadSeedRef.current.name,
+                  niche: leadSeedRef.current.niche || cardapio.niche,
+                  address: leadSeedRef.current.address || cardapio.address,
+                  rating: leadSeedRef.current.rating ?? cardapio.rating,
+                  reviewsCount: leadSeedRef.current.reviewsCount ?? cardapio.reviewsCount,
+                  photos: leadSeedRef.current.photos,
+                }
+              : {
+                  name: cardapio.restaurantName,
+                  niche: cardapio.niche,
+                  address: cardapio.address,
+                  rating: cardapio.rating,
+                  reviewsCount: cardapio.reviewsCount,
+                },
           },
-        });
-        replyText = serverRes.replyText;
-        updatedCardapio = serverRes.updatedCardapio;
-      } catch (serverErr: any) {
-        console.warn("[CardapioStudio] Fallback para client chat:", serverErr);
-        const clientRes = await processCardapioAiChat(
-          [...messages, userMsg],
-          textToSend,
-          userMsg.attachments,
-          cardapio,
+        }),
+        timeoutPromise,
+      ]);
+
+      if (!serverRes?.updatedCardapio) {
+        throw new Error(
+          "A IA respondeu, mas não enviou a estrutura atualizada do cardápio. Tente reformular o pedido.",
         );
-        replyText = clientRes.replyText;
-        updatedCardapio = clientRes.updatedCardapio;
       }
+
+      const nextCardapio = sanitizeCardapioPhotosForNiche(
+        serverRes.updatedCardapio,
+        leadSeedRef.current?.photos,
+      );
+
+      setCardapio(nextCardapio);
+      setPreviewRevision((r) => r + 1);
 
       const assistantMsg: CardapioAiMessage = {
         id: `ast-${Date.now()}`,
         role: "assistant",
-        content: replyText,
+        content: serverRes.replyText,
         timestamp: Date.now(),
       };
-
       setMessages((prev) => [...prev, assistantMsg]);
-      if (updatedCardapio) {
-        setCardapio(updatedCardapio);
-        // Persiste imediatamente no banco de dados
-        try {
-          const saveRes = await saveCardapioStudioFn({
-            data: {
-              cardapio: updatedCardapio,
-              pageId: currentPageId || searchParams?.page || undefined,
-            },
-          });
-          if (saveRes?.pageId) setCurrentPageId(saveRes.pageId);
-          if (saveRes?.publicUrl) setSavedPageUrl(saveRes.publicUrl);
-          setLastSavedAt(new Date());
-        } catch (saveErr) {
-          console.warn("[CardapioStudio] Erro no auto-save após resposta da IA:", saveErr);
+
+      try {
+        const saveRes = await saveCardapioStudioFn({
+          data: {
+            cardapio: nextCardapio,
+            pageId: currentPageId || searchParams?.page || undefined,
+          },
+        });
+        if (saveRes?.pageId) setCurrentPageId(saveRes.pageId);
+        if (saveRes?.slug) {
+          setCardapio((prev) => ({ ...prev, slug: saveRes.slug }));
         }
+        if (saveRes?.publicUrl) setSavedPageUrl(saveRes.publicUrl);
+        setLastSavedAt(new Date());
+        toast.success("Cardápio atualizado e salvo automaticamente!");
+      } catch (saveErr: any) {
+        const saveMsg = saveErr?.message || "Erro ao salvar alterações no servidor.";
+        toast.error(`Cardápio atualizado na tela, mas houve falha ao salvar: ${saveMsg}`);
       }
     } catch (err: any) {
+      const errMsg = err?.message || "Erro ao processar solicitação com a IA.";
+      setGenerationError(errMsg);
+      setLastFailedAction({ type: "chat", text: userMsg.content });
+      toast.error(errMsg);
       setMessages((prev) => [
         ...prev,
         {
           id: `err-${Date.now()}`,
           role: "assistant",
-          content: `Opa, deu uma oscilação aqui na resposta: ${err?.message || "Tente novamente"}. Pode clicar para reenviar!`,
+          content: `Não foi possível concluir a alteração: ${errMsg}`,
           timestamp: Date.now(),
         },
       ]);
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setIsProcessing(false);
+    }
+  }
+
+  function handleRetryFailedAction() {
+    if (!lastFailedAction || isProcessing) return;
+    if (lastFailedAction.type === "initial") {
+      void generateInitialCardapioWithAi(lastFailedAction.seed);
+    } else {
+      void handleSendMessage(lastFailedAction.text);
     }
   }
 
@@ -439,17 +726,16 @@ function CardapioStudioPage() {
               <h1 className="text-sm font-bold tracking-tight text-white flex items-center gap-1.5">
                 Cardápio Studio <span className="text-orange-400">IA</span>
                 <Badge variant="outline" className="text-[10px] bg-orange-500/10 text-orange-300 border-orange-500/20">
-                  Gastronomia
+                  {cardapio.niche && cardapio.niche !== "geral" ? cardapio.niche : "Gastronomia"}
                 </Badge>
               </h1>
               <p className="text-[11px] text-zinc-400 truncate max-w-[200px] sm:max-w-xs">
-                {cardapio.restaurantName}
+                {cardapio.restaurantName || "Novo Cardápio"}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Controles Centrais / Dispositivo */}
         {/* Mobile Toggle: Chat vs Prévia */}
         <div className="flex lg:hidden items-center bg-zinc-900 border border-white/10 rounded-xl p-1 gap-1">
           <button
@@ -506,7 +792,6 @@ function CardapioStudioPage() {
 
         {/* Ações Direitas */}
         <div className="flex items-center gap-2">
-          {/* Botão Ligar/Desligar Copiloto IA */}
           <button
             type="button"
             onClick={() => {
@@ -544,7 +829,7 @@ function CardapioStudioPage() {
           <Button
             size="sm"
             onClick={() => handleSavePage()}
-            disabled={isSaving}
+            disabled={isSaving || isGeneratingInitial}
             className="bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold shadow-lg shadow-orange-600/20"
           >
             {isSaving ? (
@@ -606,7 +891,6 @@ function CardapioStudioPage() {
               )}
             </div>
 
-            {/* Atalho mobile para ver prévia */}
             <button
               onClick={() => setMobileTab("preview")}
               className="lg:hidden text-orange-400 hover:text-orange-300 font-semibold text-xs px-2 py-1 flex items-center gap-0.5"
@@ -615,11 +899,36 @@ function CardapioStudioPage() {
             </button>
           </div>
 
+          {/* Banner Visível de Erro com Botão "Tentar de novo" */}
+          {generationError && (
+            <div className="mx-3 mt-3 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-200 text-xs flex flex-col gap-2 shrink-0">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{generationError}</span>
+              </div>
+              {lastFailedAction && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleRetryFailedAction}
+                  disabled={isProcessing}
+                  className="self-end h-7 px-3 text-xs bg-rose-600 hover:bg-rose-500 text-white font-semibold"
+                >
+                  <RotateCcw className="h-3 w-3 mr-1.5" />
+                  Tentar de novo
+                </Button>
+              )}
+            </div>
+          )}
+
           {/* Renderização Condicional: Editor Visual vs Chat IA */}
           {sidebarMode === "visual" ? (
             <CardapioVisualEditor
               cardapio={cardapio}
-              onChange={setCardapio}
+              onChange={(next) => {
+                setCardapio(next);
+                setPreviewRevision((r) => r + 1);
+              }}
               onSave={() => handleSavePage()}
               isSaving={isSaving}
               lastSavedAt={lastSavedAt}
@@ -661,9 +970,13 @@ function CardapioStudioPage() {
                 ))}
 
                 {isProcessing && (
-                  <div className="flex items-center gap-2 text-xs text-orange-400 p-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Atualizando cardápio...</span>
+                  <div className="flex items-center gap-2 text-xs text-orange-400 p-2 bg-orange-500/10 border border-orange-500/20 rounded-xl">
+                    <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                    <span>
+                      {isGeneratingInitial
+                        ? `Gerando cardápio completo com IA para ${cardapio.restaurantName || "o estabelecimento"}...`
+                        : "Atualizando cardápio com IA..."}
+                    </span>
                   </div>
                 )}
                 <div ref={chatScrollRef} />
@@ -672,20 +985,33 @@ function CardapioStudioPage() {
               {/* Atalhos Rápidos */}
               <div className="px-3 py-2 border-t border-white/5 flex items-center gap-1.5 overflow-x-auto text-[11px] no-scrollbar">
                 <button
-                  onClick={() => handleSendMessage("Crie uma sobremesa especial irresistível para aumentar o ticket médio.")}
-                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
+                  onClick={() =>
+                    handleSendMessage(
+                      "Crie uma sobremesa especial irresistível para aumentar o ticket médio.",
+                    )
+                  }
+                  disabled={isProcessing}
+                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all disabled:opacity-50"
                 >
                   🍮 Adicionar Sobremesa
                 </button>
                 <button
-                  onClick={() => handleSendMessage("Monte um combo promocional com burger, fritas e refrigerante.")}
-                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
+                  onClick={() =>
+                    handleSendMessage(
+                      "Monte um combo promocional para casal coerente com o nosso nicho.",
+                    )
+                  }
+                  disabled={isProcessing}
+                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all disabled:opacity-50"
                 >
                   🔥 Criar Combo Casal
                 </button>
                 <button
-                  onClick={() => handleSendMessage("Mude o tema visual para um estilo bistro dark elegante.")}
-                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all"
+                  onClick={() =>
+                    handleSendMessage("Mude o tema visual para um estilo bistro dark elegante.")
+                  }
+                  disabled={isProcessing}
+                  className="shrink-0 px-2.5 py-1 rounded-full bg-zinc-900 border border-white/10 text-zinc-300 hover:border-orange-500/40 hover:text-orange-400 transition-all disabled:opacity-50"
                 >
                   🎨 Tema Bistro Dark
                 </button>
@@ -703,7 +1029,9 @@ function CardapioStudioPage() {
                         <FileText className="h-3 w-3" />
                         <span className="truncate max-w-[120px]">{att.name}</span>
                         <button
-                          onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                          onClick={() =>
+                            setAttachments((prev) => prev.filter((_, idx) => idx !== i))
+                          }
                           className="hover:text-white"
                         >
                           ×
@@ -749,10 +1077,44 @@ function CardapioStudioPage() {
 
         {/* Painel Direito: O Cardápio Interativo ao Vivo Estilo iFood */}
         <div
-          className={`flex-1 min-w-0 bg-zinc-950 overflow-y-auto h-full p-2 sm:p-4 lg:p-6 flex justify-center items-start ${
+          className={`flex-1 min-w-0 bg-zinc-950 overflow-y-auto h-full p-2 sm:p-4 lg:p-6 flex justify-center items-start relative ${
             mobileTab === "preview" ? "flex" : "hidden lg:flex"
           }`}
         >
+          {isGeneratingInitial && (
+            <div className="absolute inset-0 z-30 bg-zinc-950/85 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+              <Loader2 className="h-10 w-10 animate-spin text-orange-500 mb-3" />
+              <h3 className="text-sm font-bold text-white">
+                Gerando cardápio por IA para {cardapio.restaurantName || "o estabelecimento"}...
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1 max-w-sm">
+                Criando categorias, 8 a 12 pratos típicos do nicho &ldquo;{cardapio.niche}&rdquo; e adicionais personalizados.
+              </p>
+            </div>
+          )}
+
+          {!isGeneratingInitial && generationError && cardapio.items.length === 0 && (
+            <div className="absolute inset-0 z-30 bg-zinc-950/90 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-center">
+              <AlertCircle className="h-10 w-10 text-rose-400 mb-3" />
+              <h3 className="text-sm font-bold text-white">
+                Falha ao gerar o cardápio com a IA
+              </h3>
+              <p className="text-xs text-zinc-400 mt-1 max-w-md">{generationError}</p>
+              {lastFailedAction && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleRetryFailedAction}
+                  disabled={isProcessing}
+                  className="mt-4 bg-orange-600 hover:bg-orange-500 text-white text-xs font-semibold"
+                >
+                  <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                  Tentar de novo
+                </Button>
+              )}
+            </div>
+          )}
+
           <div
             className={`transition-all duration-300 w-full ${
               viewMode === "mobile"
@@ -761,7 +1123,7 @@ function CardapioStudioPage() {
             }`}
           >
             <iframe
-              key={`preview-${cardapio.backgroundColor || "default"}-${cardapio.buttonColor || "default"}-${cardapio.customFont || "default"}-${cardapio.visualEffect || "default"}-${cardapio.items.length}`}
+              key={`preview-${previewRevision}-${cardapio.backgroundColor || "default"}-${cardapio.buttonColor || "default"}-${cardapio.customFont || "default"}-${cardapio.visualEffect || "default"}-${cardapio.items.length}`}
               srcDoc={generateIfoodCardapioHtml(cardapio, { isDemo: false })}
               title="Prévia Oficial do Cardápio estilo iFood"
               className="w-full h-[780px] max-h-[85vh] border-none block bg-transparent"
@@ -785,4 +1147,3 @@ function CardapioStudioPage() {
     </div>
   );
 }
-

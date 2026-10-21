@@ -15,7 +15,11 @@ import {
   testGoogleGeminiKey,
   resolveGeminiApiKeyAsync,
 } from "@/modules/ai/google-ai.service";
-import type { CardapioData } from "@/modules/cardapio/cardapioAiService";
+import {
+  buildCardapioAiSystemPrompt,
+  sanitizeCardapioPhotosForNiche,
+  type CardapioData,
+} from "@/modules/cardapio/cardapioAiService";
 import { generateIfoodCardapioHtml } from "@/modules/cardapio/cardapioGenerator";
 import type { LojaData } from "@/modules/loja/lojaAiService";
 import {
@@ -288,6 +292,14 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       projectId?: string;
       projectName?: string;
       apiKey?: string;
+      leadContext?: {
+        name?: string;
+        niche?: string;
+        address?: string;
+        rating?: number | null;
+        reviewsCount?: number | null;
+        photos?: string[];
+      };
       clientGeminiKey?: string;
       businessAddress?: string;
       businessWhatsapp?: string;
@@ -744,6 +756,14 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
       prompt: string;
       history?: Array<{ role: "user" | "assistant" | "system"; content: string }>;
       apiKey?: string;
+      leadContext?: {
+        name?: string;
+        niche?: string;
+        address?: string;
+        rating?: number | null;
+        reviewsCount?: number | null;
+        photos?: string[];
+      };
       attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
     }) => d,
   )
@@ -1230,6 +1250,14 @@ export const processCardapioAiStudioFn = createServerFn({ method: "POST" })
       history?: Array<{ role: "user" | "assistant"; content: string }>;
       attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
       apiKey?: string;
+      leadContext?: {
+        name?: string;
+        niche?: string;
+        address?: string;
+        rating?: number | null;
+        reviewsCount?: number | null;
+        photos?: string[];
+      };
     }) => d,
   )
   .handler(async ({ data: input, context }) => {
@@ -1252,7 +1280,9 @@ export const processCardapioAiStudioFn = createServerFn({ method: "POST" })
     const { GoogleGenAI } = await import("@google/genai");
     const ai = new GoogleGenAI({ apiKey: resolvedKey });
 
-    const systemPrompt = `Você é o Diretor de Criação & Growth de Gastronomia do EIA Link.
+    const targetNiche = input.leadContext?.niche || input.currentCardapio?.niche || "gastronomia";
+    const systemPrompt = buildCardapioAiSystemPrompt(targetNiche);
+    const _unusedPrompt = `Você é o Diretor de Criação & Growth de Gastronomia do EIA Link.
 Você atua como um Especialista Sênior em Cardápios Inteligentes estilo iFood, focado em alta conversão e experiência de usuário impecável.
 
 SEU TOM DE VOZ:
@@ -1301,7 +1331,7 @@ REGRAS CRÍTICAS DE RESPOSTA:
     const formattedContents: any[] = [];
 
     // Contexto com cardápio atual
-    if (input.currentCardapio) {
+    if (input.currentCardapio && Array.isArray(input.currentCardapio.items) && input.currentCardapio.items.length > 0) {
       formattedContents.push({
         role: "user",
         parts: [
@@ -1351,16 +1381,27 @@ REGRAS CRÍTICAS DE RESPOSTA:
     let rawText = "";
     try {
       const res = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         contents: formattedContents,
         config: {
           systemInstruction: systemPrompt,
           temperature: 0.6,
+          maxOutputTokens: 16384,
         },
       });
       rawText = res.text?.trim() || "";
     } catch (err: any) {
-      console.warn("[CardapioCopilot] Erro com gemini-3.8-flash:", err?.message || err);
+      console.warn("[CardapioCopilot] Erro com gemini-2.5-flash:", err?.message || err);
+      try {
+        const fallbackRes = await ai.models.generateContent({
+          model: "gemini-2.5-flash-lite",
+          contents: formattedContents,
+          config: { systemInstruction: systemPrompt, temperature: 0.6, maxOutputTokens: 16384 },
+        });
+        rawText = fallbackRes.text?.trim() || "";
+      } catch (fbErr: any) {
+        console.warn("[CardapioCopilot] Erro no fallback gemini-2.5-flash-lite:", fbErr?.message || fbErr);
+      }
     }
 
     if (!rawText) {
@@ -1383,7 +1424,22 @@ REGRAS CRÍTICAS DE RESPOSTA:
       try {
         const parsed = JSON.parse(jsonStringCandidate);
         if (parsed && (parsed.restaurantName || Array.isArray(parsed.items) || parsed.backgroundColor || parsed.logoUrl)) {
-          updatedCardapio = {
+          updatedCardapio = sanitizeCardapioPhotosForNiche(
+            {
+              ...input.currentCardapio,
+              ...parsed,
+              rating: input.leadContext?.rating ?? input.currentCardapio?.rating ?? null,
+              reviewsCount: input.leadContext?.reviewsCount ?? input.currentCardapio?.reviewsCount ?? null,
+              categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : input.currentCardapio.categories,
+              items: Array.isArray(parsed.items) && parsed.items.length > 0 ? parsed.items : input.currentCardapio.items,
+              features: {
+                ...(input.currentCardapio.features || {}),
+                ...(parsed.features || {}),
+              },
+            },
+            input.leadContext?.photos,
+          );
+          if (false) updatedCardapio = {
             ...input.currentCardapio,
             ...parsed,
             categories: Array.isArray(parsed.categories) && parsed.categories.length > 0 ? parsed.categories : input.currentCardapio.categories,
@@ -1422,6 +1478,14 @@ export const processLojaAiStudioFn = createServerFn({ method: "POST" })
       history?: Array<{ role: "user" | "assistant"; content: string }>;
       attachments?: Array<{ name: string; mimeType: string; dataBase64: string }>;
       apiKey?: string;
+      leadContext?: {
+        name?: string;
+        niche?: string;
+        address?: string;
+        rating?: number | null;
+        reviewsCount?: number | null;
+        photos?: string[];
+      };
     }) => d,
   )
   .handler(async ({ data: input, context }) => {
@@ -1544,6 +1608,7 @@ REGRAS DE RESPOSTA:
           config: {
             systemInstruction: systemPrompt,
             temperature: 0.6,
+          maxOutputTokens: 16384,
             maxOutputTokens: 16384,
           },
         });

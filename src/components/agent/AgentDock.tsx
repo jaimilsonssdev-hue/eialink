@@ -8,6 +8,7 @@ import {
   PROVIDER_LABELS,
   type AgentDiagnosticResult,
   type AgentMessage,
+  type AgentTurnResult,
   type ApprovalDecision,
   type PendingApproval,
   type ProviderId,
@@ -81,9 +82,9 @@ export function AgentDock() {
     setPending(null);
     setDecisions({});
     try {
-      const res = await agentTurnFn({
+      const res = (await agentTurnFn({
         data: { provider, messages: history, decisions: decided, alwaysAllow: allow },
-      });
+      })) as unknown as AgentTurnResult;
       setMessages(res.messages);
       if (res.status === "needs_approval") setPending(res.pending || []);
       if (res.status === "error") setError(res.error || "Falha desconhecida.");

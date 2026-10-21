@@ -220,7 +220,7 @@ Retorne EXCLUSIVAMENTE um objeto JSON válido (sem markdown, sem blocos \`\`\`):
   "superPrompt": "Instruções cirúrgicas de design, tom de voz e ordem de blocos para gerar o site final"
 }`;
 
-      const models = ["gemini-3.8-flash"];
+      const models = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
       let text = "";
 
       for (const m of models) {
@@ -422,7 +422,7 @@ Endereço: ${data.address || `${data.city}, Brasil`}.
 Nota no Google: ${data.rating ?? 4.9}.
 Super Prompt: ${dossier.superPrompt}`;
 
-      customHtml = await generateSiteHtml(promptForSite, undefined, apiKey);
+      customHtml = await generateSiteHtml(promptForSite, undefined, undefined);
     } catch (genErr) {
       console.warn("[createSiteFromIdeationDossierFn] Aviso na geração com Gemini:", genErr);
     }
@@ -434,10 +434,8 @@ Super Prompt: ${dossier.superPrompt}`;
         user_id: context.userId,
         slug: finalSlug,
         display_name: data.businessName,
-        bio: dossier.heroSubtitle,
+        description: dossier.heroSubtitle,
         whatsapp: cleanWhatsapp,
-        address: data.address || `${data.city}, Brasil`,
-        niche: data.niche,
         city: data.city,
         state: "BR",
         google_rating: data.rating || 4.9,

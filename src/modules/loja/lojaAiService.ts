@@ -168,7 +168,7 @@ export async function processLojaAiChat(
   let rawText = "";
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3.8-flash",
+      model: "gemini-2.5-flash",
       contents: formattedContents,
       config: {
         systemInstruction: LOJA_SYSTEM_PROMPT,

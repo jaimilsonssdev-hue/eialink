@@ -59,7 +59,9 @@ export type ProspectedCompany = {
 export type ProspectDraft = Omit<
   ProspectedCompany,
   "id" | "created_at" | "updated_at" | "created_by" | "last_contacted_at" | "next_action_at"
->;
+> & {
+  alreadyInRadar?: boolean;
+};
 
 export type ProspectingActivity = {
   id: string;

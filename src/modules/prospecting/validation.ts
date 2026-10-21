@@ -28,7 +28,7 @@ export const prospectingSearchSchema = z.object({
 
 export type ProspectingSearchInput = z.infer<typeof prospectingSearchSchema>;
 
-export function validateProspectingSearch(input: { niche: string; city: string; limit?: number }) {
+export function validateProspectingSearch(input: ProspectingSearchInput) {
   const parsed = prospectingSearchSchema.safeParse(input);
   if (parsed.success) return { ok: true as const, data: parsed.data };
   return { ok: false as const, message: parsed.error.issues[0]?.message ?? "Dados inválidos." };

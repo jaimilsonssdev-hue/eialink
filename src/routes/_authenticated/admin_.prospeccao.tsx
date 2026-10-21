@@ -1,4 +1,4 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -190,6 +190,7 @@ function buildInstagramPitch(company: ProspectedCompany) {
 }
 
 function ProspectingPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<"all" | ProspectStatus>("all");
   const [priorityFilter, setPriorityFilter] = useState<"all" | ProspectPriority>("all");
@@ -3310,7 +3311,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                               meta.category === "barber" ||
                               /est[eé]tica|sal[aã]o|cl[ií]nica|beleza|barbearia/i.test(company.niche || "");
                             const isLoja =
-                              meta.category === "loja" ||
+                              meta.category === "shop" ||
                               /loja|moda|calçad|varejo|boutique|bijuteria/i.test(company.niche || "");
                             const editTo = isFood
                               ? "/cardapio-studio"
@@ -3331,13 +3332,13 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                               <DropdownMenuItem asChild className="cursor-pointer text-xs">
                                 <Link
                                   to={editTo as any}
-                                  search={{
+                                  search={({
                                     page: demo.pageId,
                                     name: company.name,
                                     address: company.address || "",
                                     whatsapp: company.whatsapp || "",
                                     niche: company.niche || "",
-                                  }}
+                                  } as any)}
                                 >
                                   <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
                                   <span>{editLabel}</span>
@@ -3574,13 +3575,13 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                   return (
                                     <Link
                                       to={editTo as any}
-                                      search={{
+                                      search={({
                                         page: demo.pageId,
                                         name: company.name,
                                         address: company.address || "",
                                         whatsapp: company.whatsapp || "",
                                         niche: company.niche || "",
-                                      }}
+                                      } as any)}
                                       className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
                                       title={isFood ? "Editar no Cardápio Studio" : isBarber ? "Editar na Agenda Studio" : "Editar no Studio Pro"}
                                     >

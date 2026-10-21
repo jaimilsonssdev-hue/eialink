@@ -163,9 +163,10 @@ export const ProspectingService = {
   },
 
   async updateCompany(id: string, updates: Partial<ProspectedCompany>) {
+    const { avatar_url, photos, biography, address, ...validPayload } = updates as Record<string, any>;
     const { error } = await supabase
       .from("prospected_companies")
-      .update(updates)
+      .update(validPayload)
       .eq("id", id);
     if (error) throw new Error(error.message);
   },

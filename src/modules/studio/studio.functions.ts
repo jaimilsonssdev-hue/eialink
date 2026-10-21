@@ -1156,7 +1156,7 @@ export const listCreativeStudioProjectsFn = createServerFn({ method: "GET" })
 
     const { data, error } = await supabase
       .from("bio_pages")
-      .select("id, title, display_name, slug, social_links, updated_at, created_at")
+      .select("id, display_name, slug, social_links, updated_at, created_at")
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
 
@@ -1171,7 +1171,7 @@ export const listCreativeStudioProjectsFn = createServerFn({ method: "GET" })
 
         return {
           id: csp?.id || row.id,
-          name: csp?.name || row.display_name || row.title || "Site Criativo",
+          name: csp?.name || row.display_name || "Site Criativo",
           html: csp?.html || html,
           briefing: csp?.briefing || "",
           eialinkPageId: row.id,

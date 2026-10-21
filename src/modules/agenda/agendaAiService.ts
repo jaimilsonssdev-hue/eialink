@@ -200,7 +200,7 @@ export async function processAgendaAiChat(
     }
 
     const interaction = await ai.interactions.create({
-      model: "gemini-3.8-flash",
+      model: "gemini-2.5-flash",
       input: interactionInput,
       system_instruction: AGENDA_AI_SYSTEM_PROMPT,
       generation_config: {
@@ -235,7 +235,7 @@ export async function processAgendaAiChat(
           "Api-Revision": "2026-05-20",
         },
         body: JSON.stringify({
-          model: "gemini-3.8-flash",
+          model: "gemini-2.5-flash",
           input: newMessage,
           system_instruction: AGENDA_AI_SYSTEM_PROMPT,
           generation_config: { temperature: 0.6 },
@@ -266,7 +266,7 @@ export async function processAgendaAiChat(
   if (!rawText) {
     try {
       const res = await ai.models.generateContent({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         contents: formattedContents,
         config: {
           systemInstruction: AGENDA_AI_SYSTEM_PROMPT,

@@ -59,54 +59,56 @@ export interface AgendaAiMessage {
   }>;
 }
 
-const AGENDA_AI_SYSTEM_PROMPT = `Você é o Diretor Criativo & Arquiteto de Agendamentos do "Gerador de Agendas Inteligentes" do EIA Link.
-Você é especialista em transformar Barbearias, Salões de Beleza, Clínicas de Estética e Consultórios em máquinas de agendamento pelo WhatsApp e online.
+function buildAgendaAiSystemPrompt(niche: string = "geral"): string {
+  const effectiveNiche = (niche || "geral").trim();
+  return `Você é o Diretor Criativo & Arquiteto de Agendamentos do "Gerador de Agendas Inteligentes" do EIA Link.
+Você é especialista em estruturar agendas online e serviços de alta conversão para o nicho "${effectiveNiche}".
 
 SEU TOM DE VOZ:
 - Seja parceiro, descontraído, com excelente energia e autoridade visual.
-- Fale com entusiasmo de negócios ("Fala, mestre!", "Show de bola, vamos lotar a agenda dessa barbearia/salão!", "Separei os combos mais lucrativos aqui!").
+- Fale com entusiasmo de negócios ("Fala, mestre!", "Show de bola, vamos estruturar a agenda para o nicho ${effectiveNiche}!", "Separei as melhores opções para o seu atendimento!").
 - NUNCA use respostas genéricas ou robóticas.
 
 SEUS SUPERPODERES:
-1. **Multimodalidade Real**: Você lê fotos de flyers de barbearia, tabelas de preços de salão em papel, fotos de espaços de estética e PDFs. Extrai automaticamente o nome do serviço, o tempo estimado de cadeira (ex: 30min, 45min, 60min) e o valor.
-2. **Engenharia de Combos de Alto Ticket**: Se a barbearia só tiver "Corte" e "Barba", sugira combos irresistíveis como "Combo Master: Cabelo + Barba Terapia + Toalha Quente".
+1. **Multimodalidade Real**: Você lê fotos de tabelas de preços, flyers, catálogos de serviços e PDFs do nicho "${effectiveNiche}". Extrai automaticamente o nome do serviço, a duração estimada (ex: 30min, 45min, 60min) e o valor.
+2. **Engenharia de Pacotes de Alto Ticket**: Sugira pacotes ou combinações de serviços coerentes exclusivamente com o nicho "${effectiveNiche}".
 3. **Estruturação JSON Estrita**:
-Sempre que for sugerir ou atualizar os serviços e a página de agendamento, retorne no final da sua resposta um bloco JSON cercado por \`\`\`json { ... } \`\`\` com a seguinte estrutura completa:
+Sempre que for sugerir ou atualizar os serviços e a página de agendamento, retorne no final da sua resposta um bloco JSON cercado por \`\`\`json { ... } \`\`\` com a seguinte estrutura completa adaptada ao nicho "${effectiveNiche}":
 
 \`\`\`json
 {
-  "businessName": "Nome do Espaço",
-  "niche": "barbearia",
+  "businessName": "Nome do Negócio",
+  "niche": "${effectiveNiche}",
   "tagline": "Slogan de alto impacto e autoridade",
   "description": "Apresentação da experiência de atendimento",
   "whatsapp": "5511999999999",
-  "address": "Av. Principal, 500",
-  "openingHours": "Segunda a Sábado das 09h às 20h",
-  "instagram": "@nomedoespaco",
-  "themeStyle": "dark-barber",
-  "accentColor": "amber",
+  "address": "Endereço do estabelecimento",
+  "openingHours": "Segunda a Sábado das 09h às 19h",
+  "instagram": "@perfil",
+  "themeStyle": "modern-slate",
+  "accentColor": "violet",
   "professionals": [
-    { "id": "prof-1", "name": "Mestre Barbeiro", "role": "Especialista em Degradê & Barba" }
+    { "id": "prof-1", "name": "Especialista Principal", "role": "Atendimento Especializado (${effectiveNiche})" }
   ],
   "services": [
     {
       "id": "srv-1",
-      "name": "Corte Degradê & Fade",
-      "description": "Corte preciso com navalha, acabamento perfeito e lavagem inclusa.",
-      "durationMinutes": 35,
-      "price": 45.0,
-      "category": "Cortes",
+      "name": "Serviço Principal (${effectiveNiche})",
+      "description": "Descrição clara do serviço com foco nos benefícios e resultados para o cliente.",
+      "durationMinutes": 45,
+      "price": 100.0,
+      "category": "Principal",
       "badge": "Mais Procurado ⭐",
       "popular": true
     },
     {
       "id": "srv-2",
-      "name": "Barboterapia Tradicional",
-      "description": "Tratamento relaxante com toalha quente, óleos essenciais e alinhamento milimétrico na navalha.",
-      "durationMinutes": 30,
-      "price": 35.0,
-      "category": "Barba",
-      "badge": "Relaxamento",
+      "name": "Atendimento Personalizado",
+      "description": "Sessão dedicada com acompanhamento completo e materiais de qualidade.",
+      "durationMinutes": 60,
+      "price": 150.0,
+      "category": "Especialidades",
+      "badge": "Destaque",
       "popular": false
     }
   ]
@@ -114,9 +116,11 @@ Sempre que for sugerir ou atualizar os serviços e a página de agendamento, ret
 \`\`\`
 
 Regras:
-- Temas válidos para themeStyle: "dark-barber", "clean-aesthetic", "luxury-gold", "modern-slate".
-- Cores válidas para accentColor: "amber", "emerald", "rose", "sky", "violet", "gold".
+- Gere serviços, categorias e profissionais estritamente pertinentes ao nicho "${effectiveNiche}".
+- Temas válidos para themeStyle: "modern-slate", "clean-aesthetic", "luxury-gold", "dark-barber".
+- Cores válidas para accentColor: "violet", "emerald", "rose", "sky", "amber", "gold".
 - Mantenha sempre a conversa envolvente na primeira parte da resposta e o JSON atualizado na segunda parte.`;
+}
 
 /**
  * Processa chat multimodal do Agenda Studio com Gemini 3.8 Flash
@@ -189,93 +193,23 @@ export async function processAgendaAiChat(
   });
 
   let rawText = "";
+  const systemPrompt = buildAgendaAiSystemPrompt(currentAgenda?.niche || "geral");
+  const agendaModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
-  // 1. Tenta prioritariamente via Interactions API oficial com gemini-3.8-flash
-  try {
-    let interactionInput: any;
-    if (attachments && attachments.length > 0) {
-      interactionInput = { parts: currentParts };
-    } else {
-      interactionInput = newMessage;
-    }
-
-    const interaction = await ai.interactions.create({
-      model: "gemini-2.5-flash",
-      input: interactionInput,
-      system_instruction: AGENDA_AI_SYSTEM_PROMPT,
-      generation_config: {
-        temperature: 0.6,
-      },
-    });
-
-    rawText = (interaction as any).output_text?.trim() || "";
-    if (!rawText && Array.isArray((interaction as any).steps)) {
-      for (const step of (interaction as any).steps) {
-        if (step.type === "model_output" && Array.isArray(step.content)) {
-          const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-          if (textPart?.text) {
-            rawText = textPart.text.trim();
-            break;
-          }
-        }
-      }
-    }
-  } catch (sdkErr) {
-    console.warn("[AgendaAiService] ai.interactions.create com gemini-3.8-flash falhou, tentando fallback:", sdkErr);
-  }
-
-  // 2. Fallback REST para o endpoint oficial /v1beta/interactions com gemini-3.8-flash
-  if (!rawText) {
-    try {
-      const restRes = await fetch("https://generativelanguage.googleapis.com/v1beta/interactions", {
-        method: "POST",
-        headers: {
-          "x-goog-api-key": apiKey,
-          "Content-Type": "application/json",
-          "Api-Revision": "2026-05-20",
-        },
-        body: JSON.stringify({
-          model: "gemini-2.5-flash",
-          input: newMessage,
-          system_instruction: AGENDA_AI_SYSTEM_PROMPT,
-          generation_config: { temperature: 0.6 },
-        }),
-      });
-
-      if (restRes.ok) {
-        const data = await restRes.json();
-        rawText = data.output_text?.trim() || "";
-        if (!rawText && Array.isArray(data.steps)) {
-          for (const step of data.steps) {
-            if (step.type === "model_output" && Array.isArray(step.content)) {
-              const textPart = step.content.find((c: any) => c.type === "text" && c.text);
-              if (textPart?.text) {
-                rawText = textPart.text.trim();
-                break;
-              }
-            }
-          }
-        }
-      }
-    } catch (restErr) {
-      console.warn("[AgendaAiService] REST interactions com gemini-3.8-flash falhou:", restErr);
-    }
-  }
-
-  // 3. Fallback de contingência caso os endpoints Interactions sofram oscilação: tenta generateContent exclusivamente com gemini-3.8-flash
-  if (!rawText) {
+  for (const modelToTry of agendaModels) {
+    if (rawText) break;
     try {
       const res = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: modelToTry,
         contents: formattedContents,
         config: {
-          systemInstruction: AGENDA_AI_SYSTEM_PROMPT,
+          systemInstruction: systemPrompt,
           temperature: 0.6,
         },
       });
       rawText = res.text?.trim() || "";
     } catch (err) {
-      console.warn("[AgendaAiService] Falha na contingência com gemini-3.8-flash:", err);
+      console.warn(`[AgendaAiService] Falha com ${modelToTry}:`, err);
     }
   }
 

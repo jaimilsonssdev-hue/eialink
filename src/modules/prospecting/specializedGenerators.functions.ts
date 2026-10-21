@@ -607,7 +607,7 @@ O JSON deve ter EXATAMENTE este formato:
 Regras:
 1. Gere entre 4 a 6 itens estritamente condizentes com a especialidade "${subNiche.title}".
 2. Se for Sorveteria/Açaí, NUNCA gere hambúrguer ou pizza! Gere taças, açaí, picolés e gelatos.
-3. Se for Barbearia, gere cortes, barba terapia, combos e tratamentos.
+3. Gere serviços, categorias e descrições estritamente adequados ao nicho "${data.niche || subNiche.title}".
 4. A primeira categoria de "categories" DEVE ser "Todos".`;
 
         const tryGenerateSpecialized = async () => {

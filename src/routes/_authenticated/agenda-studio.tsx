@@ -41,63 +41,20 @@ export const Route = createFileRoute("/_authenticated/agenda-studio")({
 });
 
 const DEFAULT_AGENDA: AgendaStudioData = {
-  businessName: "Barbearia Dom navalha",
-  niche: "barbearia",
-  tagline: "Tradição, estilo e o cuidado que você merece",
-  description: "Ambiente climatizado, cerveja gelada, sinuca e profissionais de alta precisão.",
-  whatsapp: "5511999999999",
-  address: "Av. dos Estados, 420 - Jardins",
-  openingHours: "Segunda a Sábado das 09h às 20h",
-  instagram: "@domnavalhabarber",
-  themeStyle: "dark-barber",
-  accentColor: "amber",
+  businessName: "",
+  niche: "geral",
+  tagline: "",
+  description: "",
+  whatsapp: "",
+  address: "",
+  openingHours: "Segunda a Sábado das 09h às 19h",
+  instagram: "",
+  themeStyle: "modern-slate",
+  accentColor: "violet",
   visualEffect: "glassmorphism",
   buttonColor: "#8b5cf6",
-  professionals: [
-    { id: "prof-1", name: "Lucas 'Navalha'", role: "Master Barber & Fade" },
-    { id: "prof-2", name: "Matheus Silva", role: "Especialista em Barboterapia" },
-  ],
-  services: [
-    {
-      id: "srv-1",
-      name: "Corte Degradê / Fade Master",
-      description: "Corte na tesoura e máquina com degradê suave, acabamento no navalhete e lavagem inclusa.",
-      durationMinutes: 40,
-      price: 50.0,
-      category: "Cabelo",
-      badge: "Mais Pedido ⭐",
-      popular: true,
-    },
-    {
-      id: "srv-2",
-      name: "Barboterapia Relaxante",
-      description: "Toalha quente com óleos essenciais, massagem facial, alinhamento milimétrico na navalha e pós-barba refrescante.",
-      durationMinutes: 35,
-      price: 40.0,
-      category: "Barba",
-      badge: "Experiência VIP",
-      popular: true,
-    },
-    {
-      id: "srv-3",
-      name: "Combo Completo (Cabelo + Barboterapia)",
-      description: "O combo mais procurado da casa: renovação total com desconto especial e café/cerveja cortesia.",
-      durationMinutes: 65,
-      price: 80.0,
-      category: "Combos",
-      badge: "Melhor Custo-Benefício 🔥",
-      popular: true,
-    },
-    {
-      id: "srv-4",
-      name: "Sobrancelha na Navalha",
-      description: "Alinhamento e limpeza rápida com desenho natural.",
-      durationMinutes: 15,
-      price: 15.0,
-      category: "Acabamento",
-      popular: false,
-    },
-  ],
+  professionals: [],
+  services: [],
 };
 
 function AgendaStudioPage() {
@@ -106,7 +63,14 @@ function AgendaStudioPage() {
   const [viewMode, setViewMode] = useState<"mobile" | "desktop">("mobile");
   const [mobileTab, setMobileTab] = useState<"chat" | "preview">("chat");
   const [sidebarMode, setSidebarMode] = useState<"ai" | "visual">("visual");
-  const [agenda, setAgenda] = useState<AgendaStudioData>(DEFAULT_AGENDA);
+  const [agenda, setAgenda] = useState<AgendaStudioData>(() => ({
+    ...DEFAULT_AGENDA,
+    businessName: searchParams?.name || DEFAULT_AGENDA.businessName,
+    niche: (searchParams?.niche as AgendaStudioData["niche"]) || DEFAULT_AGENDA.niche,
+    whatsapp: searchParams?.whatsapp || DEFAULT_AGENDA.whatsapp,
+    address: searchParams?.address || DEFAULT_AGENDA.address,
+    tagline: searchParams?.niche ? `Especialistas em ${searchParams.niche}` : DEFAULT_AGENDA.tagline,
+  }));
   const [messages, setMessages] = useState<AgendaAiMessage[]>([
     {
       id: "msg-1",
@@ -144,6 +108,7 @@ function AgendaStudioPage() {
               setAgenda((prev) => ({
                 ...prev,
                 businessName: data.display_name || prev.businessName,
+                niche: (rawSocial.niche || searchParams.niche || prev.niche || "geral") as AgendaStudioData["niche"],
                 whatsapp: data.whatsapp || prev.whatsapp,
                 tagline: data.description || prev.tagline,
                 address: rawSocial.address || prev.address,
@@ -169,6 +134,7 @@ function AgendaStudioPage() {
               setAgenda((prev) => ({
                 ...prev,
                 businessName: data.display_name || prev.businessName,
+                niche: (rawSocial.niche || searchParams.niche || prev.niche || "geral") as AgendaStudioData["niche"],
                 whatsapp: data.whatsapp || searchParams.whatsapp || prev.whatsapp,
                 tagline: data.description || prev.tagline,
                 address: rawSocial.address || searchParams.address || prev.address,
@@ -179,6 +145,7 @@ function AgendaStudioPage() {
             setAgenda((prev) => ({
               ...prev,
               businessName: searchParams.name,
+              niche: (searchParams.niche || prev.niche || "geral") as AgendaStudioData["niche"],
               address: searchParams.address || prev.address,
               whatsapp: searchParams.whatsapp || prev.whatsapp,
               tagline: searchParams.niche ? `Especialistas em ${searchParams.niche}` : prev.tagline,

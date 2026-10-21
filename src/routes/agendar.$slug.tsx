@@ -64,7 +64,7 @@ export const Route = createFileRoute("/agendar/$slug")({
           pageId: bio.id,
           slug: bio.slug,
           businessName: bio.display_name,
-          niche: social.niche || social.niche_category,
+          niche: (social.niche || social.niche_category || "").trim() || "servicos",
           city: social.city,
           whatsapp: (bio as any).whatsapp,
           address: social.address,

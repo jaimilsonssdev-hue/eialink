@@ -178,7 +178,11 @@ export const NICHE_CONFIGS: Record<NicheCategoryType, NicheProvisionConfig> = {
  * Identifica a categoria exata de nicho cruzando nome da empresa e categoria do lead
  */
 export function detectNicheCategory(niche?: string | null, name?: string | null): NicheCategoryType {
-  const text = `${niche ?? ""} ${name ?? ""}`.toLowerCase();
+  const cleanNiche = (niche ?? "").trim().toLowerCase();
+  if (!cleanNiche || cleanNiche === "servicos" || cleanNiche === "serviços" || cleanNiche === "geral") {
+    return "service";
+  }
+  const text = `${cleanNiche} ${name ?? ""}`.toLowerCase();
 
   // 1. Barbearia
   if (/barbea|barbeir|barber|navalha|\bbarba\b|degrad[eê]|\bfade\b|cabelo\s*masculino/i.test(text)) {

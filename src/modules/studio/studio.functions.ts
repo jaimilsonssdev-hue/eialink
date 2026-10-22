@@ -624,8 +624,9 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
         }
 
         if (savedPageId && savedSlug && currentFlags.agenda_enabled) {
+          const provClient = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY) ? getServiceSupabaseClient() : supabase;
           await provisionPlatformToolsForNiche({
-            supabase,
+            supabase: provClient,
             pageId: savedPageId,
             slug: savedSlug,
             businessName: effectiveProjectName,
@@ -1018,8 +1019,9 @@ ${effectiveHtml}`,
       // Provisiona automaticamente as ferramentas da plataforma para este nicho
       if (savedPageId && savedSlug) {
         try {
+          const provClient = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY) ? getServiceSupabaseClient() : supabase;
           await provisionPlatformToolsForNiche({
-            supabase,
+            supabase: provClient,
             pageId: savedPageId,
             slug: savedSlug,
             businessName: pageName,
@@ -1206,26 +1208,55 @@ export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
     }
 
     const existingSocial = (existing?.social_links as any) || {};
+    const existingHtml =
+      existingSocial.custom_html ||
+      existingSocial.creative_studio_project?.html ||
+      "";
+
+    // BLINDAGEM CONTRA SOBREESCRITA VAZIA:
+    // Se o HTML enviado for vazio ou incompleto (< 50 caracteres) e o banco já tiver HTML válido,
+    // PRESERVA o HTML do banco! Nunca zera uma página válida.
+    const incomingHtml = (proj.html || "").trim();
+    const safeHtml = incomingHtml.length > 50 ? incomingHtml : existingHtml;
+
+    const safeProj = {
+      ...proj,
+      html: safeHtml,
+      updatedAt: Date.now(),
+    };
+
     const updatedSocial = {
       ...existingSocial,
-      custom_html: proj.html,
-      creative_studio_project: proj,
+      custom_html: safeHtml,
+      creative_studio_project: safeProj,
       updated_at: new Date().toISOString(),
     };
 
     if (existing) {
-      await supabase
+      let updateRes = await supabase
         .from("bio_pages")
         .update({
           social_links: updatedSocial,
           updated_at: new Date().toISOString(),
         } as any)
         .eq("id", existing.id);
+
+      if (updateRes.error && Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+        const serviceClient = getServiceSupabaseClient();
+        updateRes = await serviceClient
+          .from("bio_pages")
+          .update({
+            social_links: updatedSocial,
+            updated_at: new Date().toISOString(),
+          } as any)
+          .eq("id", existing.id);
+      }
+
       return { success: true, pageId: existing.id, slug: existing.slug };
     } else {
       const slugCandidate = slugify(proj.name || "site-criativo");
       const uniqueSlug = proj.slug || `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
-      const { data: created } = await supabase
+      let insertRes = await supabase
         .from("bio_pages")
         .insert({
           user_id: userId,
@@ -1237,7 +1268,24 @@ export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
         } as any)
         .select("id, slug")
         .single();
-      return { success: true, pageId: created?.id, slug: created?.slug || uniqueSlug };
+
+      if (insertRes.error && Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY)) {
+        const serviceClient = getServiceSupabaseClient();
+        insertRes = await serviceClient
+          .from("bio_pages")
+          .insert({
+            user_id: userId,
+            display_name: proj.name || "Site Criativo",
+            slug: uniqueSlug,
+            template_id: "site-maquina",
+            published: true,
+            social_links: updatedSocial,
+          } as any)
+          .select("id, slug")
+          .single();
+      }
+
+      return { success: true, pageId: insertRes.data?.id, slug: insertRes.data?.slug || uniqueSlug };
     }
   });
 

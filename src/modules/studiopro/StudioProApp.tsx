@@ -196,7 +196,8 @@ export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
         if (error || !data) return;
 
         const rawSocial = (data.social_links as Record<string, any>) || {};
-        const existingHtml = (data as any).custom_html || rawSocial.custom_html || "";
+        const csp = rawSocial.creative_studio_project as Record<string, any> | undefined;
+        const existingHtml = (data as any).custom_html || rawSocial.custom_html || csp?.html || "";
 
         const leadBriefing = `[CONTEXTO DO LEAD / SITE EXISTENTE]:\n- Empresa: ${data.display_name}\n- Slug: ${data.slug}\n- WhatsApp: ${data.whatsapp || rawSocial.whatsapp || "Não informado"}\n- Instagram: ${data.instagram || rawSocial.instagram || "Não informado"}\n- Cidade: ${rawSocial.address || "Local"}\n- Nicho: ${rawSocial.niche || "Comércio/Serviço"}\n- Descrição: ${data.description || "Página demonstrativa"}`;
 
@@ -227,7 +228,7 @@ export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
           const projId = createProject(data.display_name, data.id, data.slug);
           selectProject(projId);
           updateActiveProjectBriefing(leadBriefing);
-          if (existingHtml) {
+          if (existingHtml && existingHtml.trim().length > 50) {
             updateActiveProjectHtml(existingHtml);
           }
 

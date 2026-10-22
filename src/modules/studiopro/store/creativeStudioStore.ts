@@ -109,7 +109,7 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
               : p,
           );
           const active = updated.find((p) => p.id === state.activeProjectId);
-          if (active) {
+          if (active && active.html && active.html.trim().length > 50) {
             import("@/modules/studio/studio.functions").then(({ syncCreativeStudioProjectFn }) => {
               syncCreativeStudioProjectFn({ data: { project: active } }).catch(() => {});
             });
@@ -126,7 +126,7 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
               : p,
           );
           const active = updated.find((p) => p.id === state.activeProjectId);
-          if (active) {
+          if (active && active.html && active.html.trim().length > 50) {
             import("@/modules/studio/studio.functions").then(({ syncCreativeStudioProjectFn }) => {
               syncCreativeStudioProjectFn({ data: { project: active } }).catch(() => {});
             });
@@ -160,7 +160,7 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
               : p,
           );
           const active = updated.find((p) => p.id === state.activeProjectId);
-          if (active) {
+          if (active && active.html && active.html.trim().length > 50) {
             import("@/modules/studio/studio.functions").then(({ syncCreativeStudioProjectFn }) => {
               syncCreativeStudioProjectFn({ data: { project: active } }).catch(() => {});
             });

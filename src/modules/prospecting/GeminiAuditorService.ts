@@ -236,7 +236,7 @@ Retorne a resposta EXCLUSIVAMENTE em formato JSON válido com as seguintes chave
   // Modelo ativo pré-descoberto ou candidatos modernos
   const savedModel =
     typeof window !== "undefined" ? localStorage.getItem(GEMINI_ACTIVE_MODEL_STORAGE) : null;
-  const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-3.8-flash"];
+  const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"];
 
   const models = [...new Set(candidateModels)];
 

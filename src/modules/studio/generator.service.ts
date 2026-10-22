@@ -102,7 +102,7 @@ Retorne o JSON completo estruturado.`;
     let text = "";
     try {
       const interaction = await ai.interactions.create({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         input: prompt,
         system_instruction: SYSTEM_PROMPT,
         generation_config: {
@@ -212,7 +212,7 @@ Retorne um JSON com:
     let text = "";
     try {
       const interaction = await ai.interactions.create({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         input: prompt,
         system_instruction: "Você é o Copilot de edição de sites JSON do OpenPage. Retorne sempre JSON válido.",
         generation_config: {

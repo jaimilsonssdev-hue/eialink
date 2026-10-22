@@ -623,7 +623,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
           savedSlug = created?.slug || uniqueSlug;
         }
 
-        if (savedPageId && savedSlug && currentFlags.agenda_enabled) {
+        if (savedPageId && savedSlug) {
           const provClient = Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY) ? getServiceSupabaseClient() : supabase;
           await provisionPlatformToolsForNiche({
             supabase: provClient,
@@ -762,7 +762,7 @@ ${effectiveHtml}`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    const candidateModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite"] as const;
+    const candidateModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
 
     // 1. Executa com gemini-2.5-flash como primeiro modelo e um único fallback (gemini-2.5-flash-lite)
     for (const modelToTry of candidateModels) {
@@ -777,7 +777,7 @@ ${effectiveHtml}`;
               : CODE_GENERATION_SYSTEM_PROMPT,
             temperature: isModification ? 0.2 : 0.65,
             maxOutputTokens: 32768,
-            abortSignal: AbortSignal.timeout(85000),
+            abortSignal: AbortSignal.timeout(45000),
           },
         });
         const text = response.text?.trim() || "";
@@ -887,7 +887,7 @@ ${effectiveHtml}`;
         );
         try {
           const retryRes = await ai.models.generateContent({
-            model: "gemini-3.8-flash",
+            model: "gemini-2.5-flash",
             contents: [
               {
                 role: "user",
@@ -906,7 +906,7 @@ ${effectiveHtml}`,
                 "Você é um gerador de código HTML. Retorne estritamente o código HTML5 completo até </html>, sem markdown, sem explicações adicionais.",
               temperature: 0.5,
               maxOutputTokens: 32768,
-              abortSignal: AbortSignal.timeout(85000),
+              abortSignal: AbortSignal.timeout(45000),
             },
           });
           const retryText = retryRes.text?.trim() || "";

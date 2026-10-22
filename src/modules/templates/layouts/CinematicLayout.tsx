@@ -357,8 +357,8 @@ export class CinematicLayout implements TemplateLayoutRenderer {
     const city = socialData.city || address.split("-")[0] || "Sua Cidade";
     const openingHours = socialData.opening_hours || "Aberto Hoje";
 
-    const nicheKey = detectNicheKey(socialData.niche || bio.description || "");
-    const gallery = NICHE_GALLERIES[nicheKey] || NICHE_GALLERIES.restaurante || { covers: [], avatars: [] };
+    const nicheKey = detectNicheKey(socialData.niche || bio.description || "", (bio as any).title || bio.display_name || "");
+    const gallery = NICHE_GALLERIES[nicheKey] || NICHE_GALLERIES.geral || { covers: [], avatars: [] };
 
     // Coleta as 4 melhores fotos para a narrativa
     const rawCovers = [
@@ -367,10 +367,10 @@ export class CinematicLayout implements TemplateLayoutRenderer {
       gallery.covers?.[1]?.url,
       gallery.covers?.[2]?.url,
       gallery.covers?.[3]?.url,
-      "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1600&q=85",
-      "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1600&q=85",
-      "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1600&q=85",
-      "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=85",
+      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1600&q=85",
+      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1600&q=85",
+      "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1600&q=85",
+      "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1600&q=85",
     ].filter(Boolean) as string[];
 
     // Remove duplicatas consecutivas

@@ -1859,7 +1859,7 @@ export function detectNicheKey(nicheRaw?: string | null, companyNameRaw?: string
   }
 
   // 12. Dentista & Odontologia
-  if (/(?:odonto|dent|sorris|oral|dente|protese|implant|ortodont|clareament|endodont|periodont)/i.test(combined)) {
+  if (/(?:odonto|dent|sorris|oral|dente|protese|implant|ortodont|clareament|endodont|periodont|resina|lente[s]?\s*(?:em\s*)?resina|faceta|alinhador|invisalign|aparelho\s*dent|est[eé]tica\s*dental|bucomaxilo)/i.test(combined)) {
     return "odontologia";
   }
 

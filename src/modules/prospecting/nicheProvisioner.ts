@@ -378,6 +378,116 @@ export function detectNicheCategory(
   return "service";
 }
 
+export interface NicheDealPreset {
+  title: (businessName: string) => string;
+  description: (businessName: string) => string;
+  original_price: number;
+  deal_price: number;
+  discount_badge: string;
+}
+
+export const NICHE_DEAL_PRESETS: Record<NicheCategoryType, NicheDealPreset> = {
+  healthcare: {
+    title: (name) => `Avaliação & Planejamento Especializado com 35% OFF na ${name}`,
+    description: () => "Atendimento prioritário com diagnóstico completo e planejamento personalizado.",
+    original_price: 200,
+    deal_price: 130,
+    discount_badge: "35% OFF",
+  },
+  barber: {
+    title: (name) => `Combo Barba + Cabelo VIP com 30% OFF na ${name}`,
+    description: () => "Experiência completa com toalha quente, corte moderno e acabamento navalhado.",
+    original_price: 70,
+    deal_price: 49,
+    discount_badge: "30% OFF",
+  },
+  beauty: {
+    title: (name) => `Primeira Sessão de Procedimento VIP com 40% OFF na ${name}`,
+    description: () => "Tratamento estético exclusivo com profissionais especialistas e produtos premium.",
+    original_price: 150,
+    deal_price: 90,
+    discount_badge: "40% OFF",
+  },
+  auto: {
+    title: (name) => `Check-up Preventivo 20 Itens com 50% OFF na ${name}`,
+    description: () => "Revisão detalhada de suspensão, freios, fluidos e segurança para o seu veículo.",
+    original_price: 180,
+    deal_price: 90,
+    discount_badge: "50% OFF",
+  },
+  food: {
+    title: (name) => `Combo Degustação Especial com 25% OFF na ${name}`,
+    description: () => "Prato ou combo artesanal selecionado da casa para você saborear.",
+    original_price: 80,
+    deal_price: 60,
+    discount_badge: "25% OFF",
+  },
+  shop: {
+    title: (name) => `Cupom de R$ 30 OFF na Primeira Compra na ${name}`,
+    description: () => "Válido para compras a partir de R$ 100 na loja física ou online.",
+    original_price: 100,
+    deal_price: 70,
+    discount_badge: "R$ 30 OFF",
+  },
+  service: {
+    title: (name) => `Diagnóstico & Orçamento Prioritário Sem Custo na ${name}`,
+    description: () => "Análise técnica rápida e atendimento prioritário com condições facilitadas.",
+    original_price: 120,
+    deal_price: 60,
+    discount_badge: "50% OFF",
+  },
+  industry: {
+    title: (name) => `Consultoria Técnica e Visita Especializada na ${name}`,
+    description: () => "Visita técnica inicial e plano executivo sem compromisso.",
+    original_price: 250,
+    deal_price: 150,
+    discount_badge: "40% OFF",
+  },
+};
+
+export const NICHE_LOYALTY_REWARDS: Record<NicheCategoryType, Array<{ id: string; title: string; description: string; pointsCost: number; badge?: string }>> = {
+  healthcare: [
+    { id: "rew-1", title: "Kit de Higiene Oral Premium", description: "Kit completo de cuidados dentários de alta qualidade.", pointsCost: 60, badge: "Mais Fácil" },
+    { id: "rew-2", title: "Profilaxia & Polimento Cortesia", description: "Sessão de limpeza profilática preventiva para manutenção.", pointsCost: 150, badge: "Destaque" },
+    { id: "rew-3", title: "Voucher de R$ 150 em Procedimento", description: "Desconto direto em clareamento ou procedimentos estéticos.", pointsCost: 300, badge: "Super Prêmio" },
+  ],
+  barber: [
+    { id: "rew-1", title: "Acabamento & Sobrancelha Navalhada", description: "Alinhamento de contorno da barba e nuca.", pointsCost: 50, badge: "Mais Fácil" },
+    { id: "rew-2", title: "Barboterapia Tradicional Cortesia", description: "Toalha quente, hidratação e esfoliação no vapor.", pointsCost: 120, badge: "Destaque" },
+    { id: "rew-3", title: "Corte VIP à sua Escolha", description: "Um corte completo com lavagem e penteado.", pointsCost: 220, badge: "Super Prêmio" },
+  ],
+  beauty: [
+    { id: "rew-1", title: "Esfoliação ou Hidratação Labial", description: "Revitalização express com produtos profissionais.", pointsCost: 60, badge: "Mais Fácil" },
+    { id: "rew-2", title: "Design de Sobrancelhas VIP", description: "Mapeamento facial e alinhamento personalizado.", pointsCost: 140, badge: "Destaque" },
+    { id: "rew-3", title: "Revitalização Facial Completa", description: "Sessão de cuidados faciais profundos e máscara calmante.", pointsCost: 280, badge: "Super Prêmio" },
+  ],
+  auto: [
+    { id: "rew-1", title: "Cristalização de Para-brisa", description: "Tratamento hidrorrepelente para visibilidade na chuva.", pointsCost: 60, badge: "Mais Fácil" },
+    { id: "rew-2", title: "Alinhamento e Balanceamento", description: "Serviço preventivo para estabilidade e conservação de pneus.", pointsCost: 150, badge: "Destaque" },
+    { id: "rew-3", title: "Oxi-Sanitização do Ar-Condicionado", description: "Eliminação profunda de fungos, odores e bactérias da cabine.", pointsCost: 260, badge: "Super Prêmio" },
+  ],
+  food: [
+    { id: "rew-1", title: "Bebida ou Café Especial", description: "Refrigerante lata, suco natural ou café barista à sua escolha.", pointsCost: 50, badge: "Mais Fácil" },
+    { id: "rew-2", title: "Sobremesa da Casa", description: "Deliciosa sobremesa artesanal ou porção especial do cardápio.", pointsCost: 120, badge: "Destaque" },
+    { id: "rew-3", title: "Prato Principal ou Pizza Tradicional", description: "Um prato principal individual ou pizza clássica do cardápio.", pointsCost: 250, badge: "Super Prêmio" },
+  ],
+  shop: [
+    { id: "rew-1", title: "Brinde ou Acessório da Loja", description: "Um mimo especial da coleção para complementar sua compra.", pointsCost: 60, badge: "Mais Fácil" },
+    { id: "rew-2", title: "Cupom de R$ 30 de Desconto", description: "Desconto direto para sua próxima compra na loja.", pointsCost: 140, badge: "Destaque" },
+    { id: "rew-3", title: "Cupom de R$ 80 de Desconto", description: "Desconto especial em qualquer peça ou produto da loja.", pointsCost: 280, badge: "Super Prêmio" },
+  ],
+  service: [
+    { id: "rew-1", title: "Mimo Exclusivo de Boas-Vindas", description: "Cortesia especial em agradecimento pela parceria.", pointsCost: 50, badge: "Mais Fácil" },
+    { id: "rew-2", title: "Cupom de R$ 50 OFF no Próximo Serviço", description: "Abatimento direto na contratação de nova solução.", pointsCost: 150, badge: "Destaque" },
+    { id: "rew-3", title: "Atendimento Prioritário com Cortesia VIP", description: "Visita e diagnóstico técnico sem qualquer custo.", pointsCost: 280, badge: "Super Prêmio" },
+  ],
+  industry: [
+    { id: "rew-1", title: "Relatório Técnico Cortesia", description: "Documentação preventiva sem custo adicional.", pointsCost: 70, badge: "Mais Fácil" },
+    { id: "rew-2", title: "Desconto de 10% no Próximo Projeto", description: "Bônus especial aplicável ao orçamento aprovado.", pointsCost: 180, badge: "Destaque" },
+    { id: "rew-3", title: "Consultoria Executiva Presencial", description: "Sessão presencial com engenheiro ou especialista técnico.", pointsCost: 320, badge: "Super Prêmio" },
+  ],
+};
+
 export interface ProvisionNicheOptions {
   supabase: any;
   pageId: string;
@@ -399,6 +509,8 @@ export interface ProvisionResult {
   ctaLabel: string;
   servicesCreated: number;
   chatConfigured: boolean;
+  dealCreated?: boolean;
+  loyaltyConfigured?: boolean;
 }
 
 /**
@@ -489,7 +601,59 @@ export async function provisionPlatformToolsForNiche(
     }
   }
 
-  // 2. Provisiona o Agente de Atendimento / Chatbot nos metadados da página
+  // 2. Provisiona Oferta Real no Mural de Ofertas (daily_deals) se ainda não existir
+  let dealCreated = false;
+  try {
+    const { data: pageRow } = await supabase
+      .from("bio_pages")
+      .select("user_id, cover_url")
+      .eq("id", pageId)
+      .maybeSingle();
+
+    const { data: existingDeal } = await supabase
+      .from("daily_deals")
+      .select("id")
+      .eq("bio_page_id", pageId)
+      .eq("is_active", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (!existingDeal && pageRow?.user_id) {
+      const dealPreset = NICHE_DEAL_PRESETS[category] || NICHE_DEAL_PRESETS.service;
+      const now = new Date();
+      const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+      const { error: dealErr } = await supabase.from("daily_deals").insert({
+        bio_page_id: pageId,
+        user_id: pageRow.user_id,
+        title: dealPreset.title(businessName),
+        description: dealPreset.description(businessName),
+        original_price: dealPreset.original_price,
+        deal_price: dealPreset.deal_price,
+        discount_badge: dealPreset.discount_badge,
+        image_url: pageRow.cover_url || null,
+        city: city || "Teixeira de Freitas",
+        niche: niche || config.label,
+        is_active: true,
+        starts_at: now.toISOString(),
+        expires_at: expires.toISOString(),
+        max_claims: 30,
+        claims_count: 0,
+        clicks_count: 0,
+      });
+
+      if (!dealErr) {
+        dealCreated = true;
+      } else {
+        console.warn("[NicheProvisioner] Aviso ao criar oferta do nicho:", dealErr);
+      }
+    }
+  } catch (dealCatch) {
+    console.warn("[NicheProvisioner] Exceção ao provisionar oferta:", dealCatch);
+  }
+
+  // 3. Provisiona Agente de Atendimento e Programa de Fidelidade nos metadados da página
+  let loyaltyConfigured = false;
   try {
     const { data: pageData } = await supabase
       .from("bio_pages")
@@ -517,6 +681,48 @@ export async function provisionPlatformToolsForNiche(
       autoTriggerSeconds: 4,
     };
 
+    const loyaltySettings = currentSocial.loyalty_settings || {
+      businessPageId: pageId,
+      isActive: true,
+      pointsRatio: 1,
+      pointsExpirationDays: 180,
+      allowThermalPrint: true,
+      rewards: NICHE_LOYALTY_REWARDS[category] || NICHE_LOYALTY_REWARDS.service,
+      tiers: [
+        { name: "Bronze", minPoints: 0, perk: "Acesso ao catálogo de recompensas", color: "#cd7f32" },
+        { name: "Prata", minPoints: 150, perk: "5% de bônus em todos os pontos acumulados", color: "#94a3b8" },
+        { name: "Ouro", minPoints: 400, perk: "Atendimento ou mimo de cortesia em toda visita", color: "#f59e0b" },
+        { name: "Diamante", minPoints: 1000, perk: "Atendimento VIP exclusivo e prioritário", color: "#38bdf8" },
+      ],
+      missions: [
+        {
+          id: "mis-1",
+          title: "Avaliação 5 Estrelas no Google",
+          description: `Avalie o atendimento da ${businessName} no Google Maps e ganhe 30 pontos na hora.`,
+          pointsReward: 30,
+          actionType: "google_review",
+          badge: "⭐ Avaliação",
+        },
+        {
+          id: "mis-2",
+          title: "Post nos Stories marcando nosso @",
+          description: `Poste um Story e marque o Instagram oficial da ${businessName} para ganhar 50 pontos.`,
+          pointsReward: 50,
+          actionType: "instagram_story",
+          badge: "📸 Instagram",
+        },
+        {
+          id: "mis-3",
+          title: "Visita em Dias Especiais",
+          description: "Agende ou consuma às terças ou quartas-feiras e ganhe pontos adicionais.",
+          pointsReward: 20,
+          actionType: "weekday_visit",
+          badge: "⚡ Terça & Quarta",
+        },
+      ],
+      updatedAt: new Date().toISOString(),
+    };
+
     const updatedSocial = {
       ...currentSocial,
       niche_category: category,
@@ -527,6 +733,9 @@ export async function provisionPlatformToolsForNiche(
       cta_label: ctaLabel,
       chat_flow: chatFlow,
       ai_assistant_enabled: true,
+      loyalty_enabled: true,
+      fidelidade_enabled: true,
+      loyalty_settings: loyaltySettings,
       city: city || currentSocial.city,
       address: address || currentSocial.address,
       google_rating: rating || currentSocial.google_rating || 4.9,
@@ -542,8 +751,9 @@ export async function provisionPlatformToolsForNiche(
       .eq("id", pageId);
 
     chatConfigured = true;
+    loyaltyConfigured = true;
   } catch (chatErr) {
-    console.warn("[NicheProvisioner] Erro ao provisionar chat_flow:", chatErr);
+    console.warn("[NicheProvisioner] Erro ao provisionar chat_flow e loyalty:", chatErr);
   }
 
   return {
@@ -554,5 +764,7 @@ export async function provisionPlatformToolsForNiche(
     ctaLabel,
     servicesCreated,
     chatConfigured,
+    dealCreated,
+    loyaltyConfigured,
   };
 }

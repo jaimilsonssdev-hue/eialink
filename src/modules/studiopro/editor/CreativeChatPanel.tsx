@@ -14,6 +14,9 @@ import {
   Image as ImageIcon,
   X,
   AlertTriangle,
+  FileText,
+  MapPin,
+  Loader2,
 } from "lucide-react";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import {
@@ -28,8 +31,9 @@ import {
   planCreativeSiteBriefingFn,
   syncCreativeStudioProjectFn,
 } from "@/modules/studio/studio.functions";
+import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
+import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 import { toast } from "sonner";
-import { FileText } from "lucide-react";
 
 export function CreativeChatPanel() {
   const [input, setInput] = useState("");
@@ -45,6 +49,11 @@ export function CreativeChatPanel() {
     }>
   >([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Estados para inclusão rápida de dados do Google Maps no chat
+  const [showMapsInput, setShowMapsInput] = useState(false);
+  const [mapsQuery, setMapsQuery] = useState("");
+  const [isSearchingMaps, setIsSearchingMaps] = useState(false);
 
   const {
     getActiveProject,
@@ -63,9 +72,32 @@ export function CreativeChatPanel() {
   const messages = activeProject?.messages || [];
   const currentHtml = activeProject?.html || "";
 
+  const hasTriggeredInitialRef = useRef<string | null>(null);
+
   useEffect(() => {
     setIsGenerating(false, "");
   }, [setIsGenerating]);
+
+  // Auto-inicia a geração quando um novo projeto chega do dashboard com prompt inicial e sem HTML/Briefing
+  useEffect(() => {
+    if (!activeProject) return;
+    if (
+      messages.length === 2 &&
+      messages[1].role === "user" &&
+      !currentHtml &&
+      !activeProject.briefing &&
+      !isGenerating &&
+      hasTriggeredInitialRef.current !== activeProject.id
+    ) {
+      hasTriggeredInitialRef.current = activeProject.id;
+      const initialUserMsg = messages[1];
+      void executePromptGeneration(
+        initialUserMsg.content,
+        initialUserMsg.attachments || [],
+        false,
+      );
+    }
+  }, [activeProject?.id, messages.length, currentHtml, isGenerating]);
 
   function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -113,6 +145,44 @@ export function CreativeChatPanel() {
     if (e.target) e.target.value = "";
   }
 
+  async function handleSearchMapsFromChat() {
+    const raw = mapsQuery.trim();
+    if (!raw) return;
+
+    setIsSearchingMaps(true);
+    try {
+      const norm = normalizeBusinessQuery(raw);
+      const queryName = norm.name || norm.query || raw;
+      const queryCity = norm.city || null;
+
+      const place = await fetchPlaceDetailsFn({
+        data: {
+          companyName: queryName,
+          city: queryCity,
+        },
+      });
+
+      if (place) {
+        const mapsText = `[Google Maps: ${place.companyName} | Endereço: ${place.address || raw} | Avaliação: ★ ${place.rating || "4.9"} | Tel: ${place.whatsapp || place.phone || "Zap"}${place.photos?.length ? ` | Fotos: ${place.photos.slice(0, 3).join(", ")}` : ""}]`;
+        setInput((prev) => (prev ? `${prev}\n${mapsText}` : mapsText));
+        toast.success(`Dados do Google Maps inseridos para ${place.companyName}!`);
+      } else {
+        const fallbackText = `[Endereço Google Maps: ${raw}]`;
+        setInput((prev) => (prev ? `${prev}\n${fallbackText}` : fallbackText));
+        toast.info("Endereço adicionado ao comando.");
+      }
+      setShowMapsInput(false);
+      setMapsQuery("");
+    } catch {
+      const fallbackText = `[Endereço Google Maps: ${raw}]`;
+      setInput((prev) => (prev ? `${prev}\n${fallbackText}` : fallbackText));
+      setShowMapsInput(false);
+      setMapsQuery("");
+    } finally {
+      setIsSearchingMaps(false);
+    }
+  }
+
   async function getResolvedApiKeyHelper(): Promise<string | undefined> {
     const direct = getGeminiApiKey();
     if (direct) return direct;
@@ -125,37 +195,24 @@ export function CreativeChatPanel() {
     return undefined;
   }
 
-  async function handleSend() {
-    const text = input.trim();
-    if ((!text && attachedFiles.length === 0) || isGenerating) return;
-
-    const currentAttachments: MultimodalAttachment[] = attachedFiles.map((f) => ({
-      name: f.name,
-      mimeType: f.mimeType,
-      dataBase64: f.dataBase64,
-    }));
-
-    let fullPrompt = text;
-    if (attachedFiles.length > 0) {
-      const fileNames = attachedFiles.map((f) => f.name).join(", ");
-      fullPrompt = `${text}\n\n[BASE DE CONHECIMENTO & ARQUIVOS ANEXADOS]:\nForam anexados ${attachedFiles.length} documento(s)/foto(s): ${fileNames}.\nAnalise os documentos/fotos anexados com atenção máxima para extrair produtos, serviços, preços reais e identidade da marca para a geração!`;
+  async function executePromptGeneration(
+    fullPrompt: string,
+    currentAttachments: MultimodalAttachment[],
+    isNewUserMsg = false,
+  ) {
+    if (isNewUserMsg) {
+      addChatMessage({
+        id: `user-${Date.now()}`,
+        role: "user",
+        content: fullPrompt,
+        timestamp: Date.now(),
+        attachments: currentAttachments,
+      });
     }
-
-    setInput("");
-    setAttachedFiles([]);
-
-    const userMsgId = `user-${Date.now()}`;
-    addChatMessage({
-      id: userMsgId,
-      role: "user",
-      content: fullPrompt,
-      timestamp: Date.now(),
-      attachments: currentAttachments,
-    });
 
     try {
       if (mode === "plan" && !currentHtml) {
-        setIsGenerating(true, "Elaborando plano estratégico com Gemini 3.8 Flash...");
+        setIsGenerating(true, "Elaborando plano estratégico com Google Gemini...");
         let briefing = "";
         const clientApiKey = await getResolvedApiKeyHelper();
         const controller = new AbortController();
@@ -193,8 +250,8 @@ export function CreativeChatPanel() {
         setIsGenerating(
           true,
           isIteration
-            ? "Copiloto IA aplicando ajustes no site com Gemini 3.8 Flash..."
-            : "Gerando site completo com Gemini 3.8 Flash...",
+            ? "Copiloto IA aplicando ajustes com Google Gemini..."
+            : "Gerando site completo com Google Gemini...",
         );
 
         let newHtml = "";
@@ -286,13 +343,35 @@ export function CreativeChatPanel() {
     }
   }
 
+  async function handleSend() {
+    const text = input.trim();
+    if ((!text && attachedFiles.length === 0) || isGenerating) return;
+
+    const currentAttachments: MultimodalAttachment[] = attachedFiles.map((f) => ({
+      name: f.name,
+      mimeType: f.mimeType,
+      dataBase64: f.dataBase64,
+    }));
+
+    let fullPrompt = text;
+    if (attachedFiles.length > 0) {
+      const fileNames = attachedFiles.map((f) => f.name).join(", ");
+      fullPrompt = `${text}\n\n[BASE DE CONHECIMENTO & ARQUIVOS ANEXADOS]:\nForam anexados ${attachedFiles.length} documento(s)/foto(s): ${fileNames}.\nAnalise os documentos/fotos anexados com atenção máxima para extrair produtos, serviços, preços reais e identidade da marca para a geração!`;
+    }
+
+    setInput("");
+    setAttachedFiles([]);
+
+    await executePromptGeneration(fullPrompt, currentAttachments, true);
+  }
+
   async function handleApproveAndBuild() {
     if (!activeProject?.briefing || isGenerating) return;
 
     try {
       setIsGenerating(
         true,
-        "Construindo o site completo com Gemini 3.8 Flash a partir do plano aprovado...",
+        "Construindo o site completo com Google Gemini a partir do plano aprovado...",
       );
       let html = "";
       let explanation = "";
@@ -321,7 +400,7 @@ export function CreativeChatPanel() {
         }
       } catch (serverErr: any) {
         if (controller.signal.aborted || serverErr?.name === "AbortError") {
-          throw new Error("Tempo limite de 90 segundos excedido no servidor. Tente novamente.");
+          throw new Error("Tempo limite de 90 segundos excedido ao gerar o site. Tente novamente.");
         }
         throw serverErr;
       } finally {
@@ -329,13 +408,34 @@ export function CreativeChatPanel() {
       }
       setIsGenerating(false);
 
-      if (!html || html.length < 50 || !/<\/html>/i.test(html)) {
-        throw new Error("A resposta da IA veio truncada ou sem </html>. Tente novamente.");
+      const hasValidHtmlTags = Boolean(
+        html &&
+        html.length > 50 &&
+        /<(?:!doctype|html|body|div|section|main|head)/i.test(html) &&
+        /<\/html>/i.test(html),
+      );
+
+      if (!hasValidHtmlTags) {
+        throw new Error("A IA retornou uma resposta incompleta ou sem a tag </html>. Tente clicar em gerar novamente.");
       }
 
       updateActiveProjectHtml(html);
+
+      // Persiste no Supabase
+      syncCreativeStudioProjectFn({
+        data: {
+          project: {
+            ...activeProject,
+            html,
+          },
+          eialinkPageId: activeProject.eialinkPageId,
+        },
+      }).catch((syncErr) => {
+        console.warn("[CreativeChat] Aviso ao persistir no Supabase:", syncErr);
+      });
+
       addChatMessage({
-        id: `ai-build-${Date.now()}`,
+        id: `ai-${Date.now()}`,
         role: "assistant",
         content:
           explanation ||
@@ -420,8 +520,8 @@ export function CreativeChatPanel() {
         </div>
       </div>
 
-      {/* Mensagens */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+      {/* Histórico de Mensagens */}
+      <div className="flex-1 overflow-y-auto p-3.5 space-y-4 custom-scrollbar">
         {messages.map((msg) => (
           <div
             key={msg.id}
@@ -430,21 +530,39 @@ export function CreativeChatPanel() {
             }`}
           >
             {msg.role !== "user" && (
-              <div className="w-6 h-6 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
                 <Bot size={13} />
               </div>
             )}
             <div
-              className={`max-w-[88%] rounded-2xl p-3.5 text-[12.5px] leading-relaxed ${
+              className={`max-w-[85%] rounded-2xl p-3 text-xs leading-relaxed ${
                 msg.role === "user"
-                  ? "bg-zinc-800 text-zinc-100 rounded-br-xs border border-white/[0.08]"
-                  : "bg-zinc-900/80 text-zinc-200 rounded-bl-xs border border-white/[0.06] shadow-sm"
+                  ? "bg-emerald-500 text-black font-medium rounded-tr-sm shadow-sm"
+                  : msg.role === "system"
+                  ? "bg-rose-500/10 border border-rose-500/20 text-rose-300 rounded-tl-sm"
+                  : "bg-zinc-900 border border-white/[0.08] text-zinc-200 rounded-tl-sm shadow-sm"
               }`}
             >
+              {/* Se a mensagem do usuário possuir anexos */}
+              {msg.attachments && msg.attachments.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mb-2 pb-2 border-b border-black/10">
+                  {msg.attachments.map((att, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-black/15 text-[10px] font-semibold"
+                    >
+                      <Paperclip size={10} />
+                      <span className="max-w-[120px] truncate">{att.name}</span>
+                    </span>
+                  ))}
+                </div>
+              )}
+
               <div className="whitespace-pre-wrap">{msg.content}</div>
 
-              {/* Botão de aprovação caso seja um plano */}
-              {msg.role === "assistant" &&
+              {/* Botão de aprovação de briefing do modo 'plan' */}
+              {mode === "plan" &&
+                msg.role === "assistant" &&
                 activeProject?.briefing &&
                 !currentHtml && (
                   <div className="mt-3 pt-3 border-t border-white/[0.08] flex items-center justify-between">
@@ -478,6 +596,41 @@ export function CreativeChatPanel() {
 
       {/* Input de Comando Lovable */}
       <div className="p-3 border-t border-white/[0.08] bg-zinc-950/80 backdrop-blur-md">
+        {/* Painel de busca rápida no Google Maps (se ativado) */}
+        {showMapsInput && (
+          <div className="mb-2 p-2 rounded-xl bg-zinc-900 border border-emerald-500/30 flex items-center gap-2 animate-in fade-in duration-150">
+            <MapPin size={14} className="text-emerald-400 shrink-0" />
+            <input
+              type="text"
+              value={mapsQuery}
+              onChange={(e) => setMapsQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void handleSearchMapsFromChat();
+                }
+              }}
+              placeholder="Cole o link do Maps ou digite o endereço..."
+              className="flex-1 bg-transparent text-xs text-zinc-100 placeholder:text-zinc-500 outline-none"
+            />
+            <button
+              type="button"
+              onClick={() => void handleSearchMapsFromChat()}
+              disabled={isSearchingMaps || !mapsQuery.trim()}
+              className="px-2.5 py-1 rounded-md bg-emerald-500 hover:bg-emerald-400 text-black text-[11px] font-bold disabled:opacity-40"
+            >
+              {isSearchingMaps ? <Loader2 size={11} className="animate-spin" /> : "Inserir"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowMapsInput(false)}
+              className="text-zinc-500 hover:text-zinc-300 p-0.5"
+            >
+              <X size={12} />
+            </button>
+          </div>
+        )}
+
         {/* Pré-visualização de arquivos e fotos anexadas */}
         {attachedFiles.length > 0 && (
           <div className="flex items-center gap-2 mb-2 p-2 rounded-xl bg-zinc-900 border border-white/[0.08] overflow-x-auto custom-scrollbar">
@@ -564,6 +717,17 @@ export function CreativeChatPanel() {
                 <span className="text-[11px]">Foto / PDF</span>
               </button>
 
+              <button
+                type="button"
+                onClick={() => setShowMapsInput((prev) => !prev)}
+                disabled={isGenerating}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-zinc-800/80 hover:bg-zinc-800 text-zinc-400 hover:text-emerald-400 text-xs transition-colors border border-white/[0.06]"
+                title="Puxar dados ou fotos do Google Maps"
+              >
+                <MapPin size={13} />
+                <span className="text-[11px]">Maps</span>
+              </button>
+
               <span className="text-[10px] text-zinc-500 hidden sm:inline">
                 Shift+Enter quebra linha
               </span>
@@ -582,4 +746,3 @@ export function CreativeChatPanel() {
     </div>
   );
 }
-

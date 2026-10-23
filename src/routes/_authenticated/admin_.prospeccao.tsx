@@ -319,6 +319,7 @@ function ProspectingPage() {
   const [copiedPitchDemoId, setCopiedPitchDemoId] = useState<string | null>(null);
   const [deletingDemoId, setDeletingDemoId] = useState<string | null>(null);
   const [makingOfficialDemoId, setMakingOfficialDemoId] = useState<string | null>(null);
+  const [togglingPublishId, setTogglingPublishId] = useState<string | null>(null);
 
   const demoPagesQuery = useQuery({
     queryKey: ["admin-demo-pages"],
@@ -367,7 +368,25 @@ function ProspectingPage() {
     }
   }
 
+  async function handleToggleDemoPublished(page: typeof demoPages[0]) {
+    const nextState = !page.published;
+    setTogglingPublishId(page.id);
+    try {
+      await PageService.toggleDemoPublished(page.id, nextState);
+      setFeedback(nextState ? `Página "${page.display_name}" publicada! O link agora pode ser acessado pelo cliente.` : `Página "${page.display_name}" despublicada.`);
+      invalidate();
+      demoPagesQuery.refetch();
+    } catch (err: unknown) {
+      setFeedback(err instanceof Error ? err.message : "Erro ao alterar status de publicação da demo.");
+    } finally {
+      setTogglingPublishId(null);
+    }
+  }
+
   async function handleMakeDemoOfficialDirect(page: typeof demoPages[0]) {
+    if (!window.confirm(`Atenção: Deseja vincular "${page.display_name}" à sua conta pessoal? Ela deixará de ser demonstração e passará a aparecer na sua Agenda e Fidelidade como sendo a sua empresa pessoal.`)) {
+      return;
+    }
     setMakingOfficialDemoId(page.id);
     try {
       await PageService.makePageOfficial(page.id);
@@ -2607,6 +2626,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                         <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Nicho</TableHead>
                         <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Modelo Visual</TableHead>
                         <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Link Demonstrativo</TableHead>
+                        <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
                         <TableHead className="px-4 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Criação</TableHead>
                         <TableHead className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ações de Venda</TableHead>
                       </TableRow>
@@ -2699,12 +2719,65 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                               </div>
                             </TableCell>
 
+                            <TableCell className="px-4 py-3 whitespace-nowrap">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold border ${
+                                    page.published
+                                      ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-400"
+                                      : "border-amber-500/30 bg-amber-500/10 text-amber-400"
+                                  }`}
+                                >
+                                  <span className={`h-1.5 w-1.5 rounded-full ${page.published ? "bg-emerald-400 animate-pulse" : "bg-amber-400"}`} />
+                                  {page.published ? "Publicada" : "Rascunho"}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => void handleToggleDemoPublished(page)}
+                                  disabled={togglingPublishId === page.id}
+                                  className="text-[10px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors cursor-pointer"
+                                  title={page.published ? "Despublicar site (tornar privado)" : "Publicar site (tornar acessível via link)"}
+                                >
+                                  {togglingPublishId === page.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin inline" />
+                                  ) : page.published ? (
+                                    "Despublicar"
+                                  ) : (
+                                    "Publicar"
+                                  )}
+                                </button>
+                              </div>
+                            </TableCell>
+
                             <TableCell className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">
                               {new Date(page.created_at).toLocaleDateString("pt-BR")}
                             </TableCell>
 
                             <TableCell className="px-4 py-3 text-right whitespace-nowrap">
                               <div className="flex items-center justify-end gap-1.5">
+                                {/* Efetivar Venda (Transferir para o Cliente) */}
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setTransferModalData({
+                                      isOpen: true,
+                                      page: {
+                                        id: page.id,
+                                        displayName: page.display_name,
+                                        slug: page.slug,
+                                        phone: page.whatsapp,
+                                        instagram: (page.social_links as any)?.instagram || null,
+                                        isDemo: true,
+                                      },
+                                    });
+                                  }}
+                                  className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-1.5 text-xs font-bold shadow-xs transition-all cursor-pointer"
+                                  title="Efetivar venda e transferir titularidade para o cliente final"
+                                >
+                                  <UserCheck className="h-3.5 w-3.5" />
+                                  <span>Efetivar</span>
+                                </button>
+
                                 {/* Visualizar Demo */}
                                 <a
                                   href={publicUrl}
@@ -2865,7 +2938,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                       ) : (
                                         <CheckCircle className="h-3.5 w-3.5 mr-2 text-teal-400" />
                                       )}
-                                      <span>Tornar Oficial</span>
+                                      <span>Vincular à Minha Conta Pessoal</span>
                                     </DropdownMenuItem>
 
                                     <DropdownMenuItem
@@ -3866,7 +3939,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                           ) : (
                                             <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                                           )}
-                                          <span>Tornar Oficial</span>
+                                          <span>Vincular à Minha Conta Pessoal</span>
                                         </DropdownMenuItem>
                                       )
                                     )}

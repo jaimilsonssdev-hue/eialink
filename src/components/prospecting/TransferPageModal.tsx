@@ -141,6 +141,9 @@ Você pode assumir o controle da página gratuitamente agora mesmo e colocar o l
   }
 
   async function handleMakeOfficial() {
+    if (!window.confirm("Atenção: Ao vincular esta página à sua conta pessoal, ela deixará de ser demonstração e passará a aparecer na sua Agenda e Fidelidade. Deseja continuar apenas se você for o proprietário?")) {
+      return;
+    }
     setOfficialLoading(true);
     try {
       await PageService.makePageOfficial(page.id);
@@ -201,7 +204,7 @@ Você pode assumir o controle da página gratuitamente agora mesmo e colocar o l
             </div>
             <div>
               <h2 className="text-lg font-bold font-display text-foreground leading-tight">
-                Entregar & Oficializar Página
+                Efetivar Venda & Transferir para o Cliente
               </h2>
               <p className="text-xs text-muted-foreground mt-0.5">
                 <span className="font-semibold text-foreground">{page.displayName}</span> ·{" "}
@@ -341,7 +344,7 @@ Você pode assumir o controle da página gratuitamente agora mesmo e colocar o l
                 ) : (
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
                 )}
-                {officialDone ? "Página Oficializada" : "Tornar Oficial Sem Transferir"}
+                {officialDone ? "Página Oficializada" : "Vincular à Minha Conta Pessoal"}
               </button>
 
               <button
@@ -428,7 +431,7 @@ Você pode assumir o controle da página gratuitamente agora mesmo e colocar o l
                 ) : (
                   <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
                 )}
-                {officialDone ? "Página Oficializada" : "Tornar Oficial Sem Transferir"}
+                {officialDone ? "Página Oficializada" : "Vincular à Minha Conta Pessoal"}
               </button>
 
               <button

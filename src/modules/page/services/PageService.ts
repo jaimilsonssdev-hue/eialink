@@ -27,6 +27,15 @@ import { buildStudioProConfigFromLead, STUDIO_PRO_VARIANTS } from "@/modules/stu
 
 export type OwnedPage = Tables<"bio_pages">;
 
+export function isPageDemo(page: { social_links?: any; description?: string | null } | null | undefined): boolean {
+  if (!page) return false;
+  const social = (page.social_links as Record<string, any>) || {};
+  if (social.is_demo === true) return true;
+  if (typeof social.demo_status === "string" && ["draft", "demo", "published_demo"].includes(social.demo_status)) return true;
+  if (typeof page.description === "string" && page.description.trim().startsWith("[DEMO]")) return true;
+  return false;
+}
+
 
 function slugify(value: string) {
   const normalized = value
@@ -58,7 +67,7 @@ export const PageService = {
       ]);
     if (bioError || profileError) throw new Error(bioError?.message ?? profileError?.message);
     // Prioriza estritamente páginas reais/oficiais (não-demo)
-    const realBio = (bios ?? []).find((b) => !(b.social_links as any)?.is_demo) ?? null;
+    const realBio = (bios ?? []).find((b) => !isPageDemo(b)) ?? null;
     const { data: links, error: linksError } = realBio
       ? await supabase.from("bio_links").select("*").eq("bio_page_id", realBio.id).order("position")
       : { data: [], error: null };
@@ -75,7 +84,7 @@ export const PageService = {
     if (error) throw new Error(error.message);
     const pages = data ?? [];
     if (includeDemos) return pages;
-    return pages.filter((p) => !(p.social_links as any)?.is_demo);
+    return pages.filter((p) => !isPageDemo(p));
   },
   async listDemoPages(): Promise<OwnedPage[]> {
     const userId = await this.getCurrentUserId();
@@ -85,7 +94,33 @@ export const PageService = {
       .eq("user_id", userId)
       .order("updated_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []).filter((p) => Boolean((p.social_links as any)?.is_demo));
+    return (data ?? []).filter((p) => isPageDemo(p));
+  },
+  async toggleDemoPublished(pageId: string, publish: boolean) {
+    const userId = await this.getCurrentUserId();
+    const { data: page, error: fetchErr } = await supabase
+      .from("bio_pages")
+      .select("social_links")
+      .eq("id", pageId)
+      .eq("user_id", userId)
+      .single();
+    if (fetchErr || !page) throw new Error("Página demonstrativa não encontrada.");
+    const currentSocial = (page.social_links as Record<string, any>) || {};
+    const updatedSocial = {
+      ...currentSocial,
+      is_demo: true,
+      demo_status: publish ? "published" : "draft",
+    };
+    const { error: updateErr } = await supabase
+      .from("bio_pages")
+      .update({
+        published: publish,
+        social_links: updatedSocial,
+      })
+      .eq("id", pageId)
+      .eq("user_id", userId);
+    if (updateErr) throw new Error(updateErr.message);
+    return { success: true, published: publish };
   },
   async createPage({ displayName, templateId }: { displayName: string; templateId?: string }) {
     const userId = await this.getCurrentUserId();

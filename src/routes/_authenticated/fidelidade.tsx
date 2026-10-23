@@ -36,6 +36,7 @@ import {
 import { LoyaltyCashierPad } from "@/components/loyalty/LoyaltyCashierPad";
 import { LoyaltySettingsModal } from "@/components/loyalty/LoyaltySettingsModal";
 import { LoyaltyService, type LoyaltyProgramSettings } from "@/modules/loyalty";
+import { PageService, isPageDemo } from "@/modules/page/services/PageService";
 
 export const Route = createFileRoute("/_authenticated/fidelidade")({
   head: () => ({
@@ -66,27 +67,19 @@ function LoyaltyPage() {
     return null;
   });
 
-  // Busca as páginas da empresa
+  // Busca exclusivamente as páginas oficiais/reais da empresa (não-demo)
   const { data: bioPages = [], isLoading: loadingBio } = useQuery({
     queryKey: ["loyalty-bio-pages"],
     queryFn: async () => {
-      const { data: u } = await supabase.auth.getUser();
-      if (!u.user) return [];
-      const { data } = await supabase
-        .from("bio_pages")
-        .select("*")
-        .eq("user_id", u.user.id)
-        .order("updated_at", { ascending: false });
-      return data || [];
+      return await PageService.listOwnedPages();
     },
   });
 
   const bioPage = useMemo(() => {
     if (selectedPageId) {
-      return bioPages.find((p) => p.id === selectedPageId) || bioPages[0] || null;
+      return bioPages.find((p) => p.id === selectedPageId) || null;
     }
-    const realPages = bioPages.filter((p) => !(p.social_links as any)?.is_demo);
-    return realPages[0] || bioPages[0] || null;
+    return bioPages[0] || null;
   }, [bioPages, selectedPageId]);
 
   // Configurações do programa de fidelidade

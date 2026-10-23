@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { CardapioVisualEditor } from "@/modules/cardapio/CardapioVisualEditor";
 import { generateIfoodCardapioHtml } from "@/modules/cardapio/cardapioGenerator";
 import { supabase } from "@/integrations/supabase/client";
+import { isPageDemo } from "@/modules/page/services/PageService";
 
 export const Route = createFileRoute("/_authenticated/cardapio-studio")({
   component: CardapioStudioPage,
@@ -487,7 +488,7 @@ function CardapioStudioPage() {
         .limit(1)
         .maybeSingle();
 
-      if (cancelled || !latestPage) return;
+      if (cancelled || !latestPage || isPageDemo(latestPage)) return;
 
       setCurrentPageId(latestPage.id);
       setSavedPageUrl(`/p/${latestPage.slug}`);

@@ -38,6 +38,7 @@ import { CashbackSettingsCard } from "@/components/dashboard/CashbackSettingsCar
 import { CounterValidationCard } from "@/components/dashboard/CounterValidationCard";
 import { RetentionGuardianCard } from "@/components/dashboard/RetentionGuardianCard";
 import { FlashDealModal } from "@/components/dashboard/FlashDealModal";
+import { PageService, isPageDemo } from "@/modules/page/services/PageService";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -78,7 +79,7 @@ function Dashboard() {
         .eq("user_id", u.user.id)
         .order("updated_at", { ascending: false });
       // Exclui páginas de demonstração de clientes para manter o painel limpo
-      const realPages = (data ?? []).filter((p) => !(p.social_links as any)?.is_demo);
+      const realPages = (data ?? []).filter((p) => !isPageDemo(p));
       return realPages[0] ?? null;
     },
   });

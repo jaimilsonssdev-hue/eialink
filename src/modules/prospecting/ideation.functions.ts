@@ -445,7 +445,8 @@ Super Prompt: ${dossier.superPrompt}`;
         custom_html: customHtml || undefined,
         background_style: "cinematic",
         social_links: {
-          is_demo: false,
+          is_demo: true,
+          demo_status: "published",
           archetype: chosenArchetype,
           theme: {
             ...dossier.palette,

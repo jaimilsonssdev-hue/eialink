@@ -1,6 +1,8 @@
 export const ACTIVE_GEMINI_MODELS = [
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
 ] as const;
 
 export type ActiveGeminiModel = (typeof ACTIVE_GEMINI_MODELS)[number];
@@ -129,13 +131,9 @@ export async function callGeminiInteractionsApi(
     return { ok: false, text: "", error: "Nenhuma chave do Google AI Studio configurada." };
   }
 
-  const primaryModel =
-    options.model && !options.model.startsWith("gemini-2.5")
-      ? options.model
-      : ACTIVE_GEMINI_MODELS[0];
-  const fallbackModel = ACTIVE_GEMINI_MODELS[1];
-  const modelsToTry =
-    primaryModel === fallbackModel ? [primaryModel] : [primaryModel, fallbackModel];
+  const modelsToTry = options.model
+    ? [options.model, ...ACTIVE_GEMINI_MODELS.filter((m) => m !== options.model)]
+    : [...ACTIVE_GEMINI_MODELS];
 
   const parts: any[] = [];
   if (options.attachments && options.attachments.length > 0) {

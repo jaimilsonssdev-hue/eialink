@@ -206,15 +206,28 @@ export async function generateLandingPage(
 
   // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
   if (!outputText) {
-    const response = await ai.models.generateContent({
-      model: model || "gemini-2.5-flash",
-      contents: userContent,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION,
-        temperature: 0.65,
-      },
-    });
-    outputText = response.text || "";
+    const modelsToTry = [
+      model || "gemini-2.5-flash",
+      "gemini-2.5-flash-lite",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+    ];
+    for (const m of modelsToTry) {
+      if (outputText) break;
+      try {
+        const response = await ai.models.generateContent({
+          model: m,
+          contents: userContent,
+          config: {
+            systemInstruction: SYSTEM_INSTRUCTION,
+            temperature: 0.65,
+          },
+        });
+        outputText = response.text || "";
+      } catch (genErr) {
+        console.warn(`[GeminiService] Falha com modelo ${m}:`, genErr);
+      }
+    }
   }
 
   if (!outputText || outputText.trim().length === 0) {

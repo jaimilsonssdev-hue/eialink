@@ -72,7 +72,7 @@ async function callGeminiDirect(prompt: string, apiKey: string, signal?: AbortSi
       },
       signal,
       body: JSON.stringify({
-        model: "gemini-3.8-flash",
+        model: "gemini-2.5-flash",
         input: `Generate a website configuration for: ${prompt}`,
         system_instruction: GENERATION_PROMPT,
         generation_config: { response_mime_type: "application/json", temperature: 0.8 },

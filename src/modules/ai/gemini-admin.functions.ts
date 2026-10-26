@@ -125,7 +125,7 @@ export const saveGeminiApiKeyFn = createServerFn({ method: "POST" })
         configured: Boolean(cleanKey),
         masked: cleanKey ? maskKey(cleanKey) : "",
         message: cleanKey
-          ? "Chave do Google Gemini (3.8 Flash) validada e sincronizada para todos os dispositivos!"
+          ? "Chave do Google Gemini (2.5 Flash) validada e sincronizada para todos os dispositivos!"
           : "Chave do Google Gemini removida do sistema.",
       };
     }

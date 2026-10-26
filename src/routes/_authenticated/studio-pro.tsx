@@ -38,17 +38,25 @@ export const Route = createFileRoute("/_authenticated/studio-pro")({
 
 function StudioProRoutePage() {
   const search = Route.useSearch();
+  const cleanParam = (val?: string) => {
+    if (!val) return undefined;
+    const trimmed = val.replace(/^["']|["']$/g, "").trim();
+    return trimmed.length > 0 ? trimmed : undefined;
+  };
+
+  const cleanName = cleanParam(search.name);
+
   return (
     <StudioProApp
-      pageId={search.page}
-      projectId={search.project}
+      pageId={cleanParam(search.page)}
+      projectId={cleanParam(search.project)}
       leadData={
-        search.name
+        cleanName
           ? {
-              name: search.name,
-              address: search.address,
-              whatsapp: search.whatsapp,
-              niche: search.niche,
+              name: cleanName,
+              address: cleanParam(search.address),
+              whatsapp: cleanParam(search.whatsapp),
+              niche: cleanParam(search.niche),
             }
           : undefined
       }

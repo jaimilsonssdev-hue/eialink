@@ -1,6 +1,56 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage, type StateStorage } from "zustand/middleware";
 import type { ChatMessage } from "@/modules/studiopro/lib/creativeEngineService";
+
+const safeLocalStorage: StateStorage = {
+  getItem: (key: string): string | null => {
+    try {
+      if (typeof window === "undefined") return null;
+      return window.localStorage.getItem(key);
+    } catch (e) {
+      console.warn("[creativeStudioStore] Erro ao ler localStorage:", e);
+      return null;
+    }
+  },
+  setItem: (key: string, value: string): void => {
+    try {
+      if (typeof window === "undefined") return;
+      window.localStorage.setItem(key, value);
+    } catch (e: any) {
+      console.warn("[creativeStudioStore] QuotaExceeded ao salvar no localStorage, aplicando expurgo seguro:", e);
+      try {
+        const parsed = JSON.parse(value);
+        if (parsed?.state?.projects && Array.isArray(parsed.state.projects)) {
+          const activeId = parsed.state.activeProjectId;
+          parsed.state.projects = parsed.state.projects
+            .filter((p: any) => p.id === activeId)
+            .slice(0, 1)
+            .map((p: any) => ({
+              ...p,
+              messages: (p.messages || []).slice(-5).map((m: any) => ({
+                ...m,
+                attachments: undefined,
+              })),
+            }));
+          window.localStorage.setItem(key, JSON.stringify(parsed));
+          return;
+        }
+      } catch (innerErr) {
+        try {
+          window.localStorage.removeItem(key);
+        } catch (_) {}
+      }
+    }
+  },
+  removeItem: (key: string): void => {
+    try {
+      if (typeof window === "undefined") return;
+      window.localStorage.removeItem(key);
+    } catch (e) {
+      console.warn("[creativeStudioStore] Erro ao remover do localStorage:", e);
+    }
+  },
+};
 
 export interface CreativeProject {
   id: string;
@@ -183,8 +233,22 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
     }),
     {
       name: "eialink_estudio_criativo_storage",
+      storage: createJSONStorage(() => safeLocalStorage),
       partialize: (state) => ({
-        projects: state.projects,
+        // Salva apenas os 3 projetos mais recentes para economizar cota no mobile/desktop
+        projects: (state.projects || []).slice(0, 3).map((proj) => ({
+          ...proj,
+          // Mantém apenas as últimas 15 mensagens e NUNCA salva base64 no localStorage
+          messages: (proj.messages || []).slice(-15).map((m) => ({
+            ...m,
+            attachments: m.attachments?.map((att) => ({
+              type: att.type,
+              name: att.name,
+              url: att.url.startsWith("data:") ? "" : att.url,
+              mimeType: att.mimeType,
+            })),
+          })),
+        })),
         activeProjectId: state.activeProjectId,
         mode: state.mode,
         previewDevice: state.previewDevice,

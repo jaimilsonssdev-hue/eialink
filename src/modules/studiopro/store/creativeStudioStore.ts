@@ -242,10 +242,9 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
           messages: (proj.messages || []).slice(-15).map((m) => ({
             ...m,
             attachments: m.attachments?.map((att) => ({
-              type: att.type,
               name: att.name,
-              url: att.url.startsWith("data:") ? "" : att.url,
               mimeType: att.mimeType,
+              dataBase64: "",
             })),
           })),
         })),

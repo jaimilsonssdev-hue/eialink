@@ -967,7 +967,7 @@ DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
     // Tentativa 2 (Contingência idêntica ao Estúdio Criativo): Se o servidor falhou, gera via SDK direto no cliente
     if (!generatedPageId) {
       try {
-        setFeedback(`⚡ Conectando ao Gemini 2.5 Flash do Estúdio Criativo para ${company.name}...`);
+        setFeedback(`⚡ Conectando ao Google Gemini do Estúdio Criativo para ${company.name}...`);
         const localHtml = await generateSiteHtml(briefingPrompt, undefined, clientKey);
         if (localHtml && localHtml.length > 50) {
           const syncRes = await syncCreativeStudioProjectFn({

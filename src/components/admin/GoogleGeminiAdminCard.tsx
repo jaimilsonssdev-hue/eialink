@@ -150,7 +150,7 @@ export function GoogleGeminiAdminCard() {
         setMasked(newMask);
         setApiKey("");
         setShowKey(false);
-        toast.success("Chave do Google Gemini (2.5 Flash) validada e sincronizada para todos os dispositivos!");
+        toast.success("Chave do Google AI Studio validada e sincronizada para todos os dispositivos!");
       } else {
         setMasked("");
         toast.success("Chave removida do sistema.");

@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { getAvailableGeminiModels } from "@/modules/ai/google-ai.service";
 
 export interface CompanyData {
   name: string;
@@ -206,12 +207,7 @@ export async function generateLandingPage(
 
   // 3. Fallback de contingência caso os endpoints da nova API sofram interrupção
   if (!outputText) {
-    const modelsToTry = [
-      model || "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-    ];
+    const modelsToTry = await getAvailableGeminiModels(resolvedKey);
     for (const m of modelsToTry) {
       if (outputText) break;
       try {

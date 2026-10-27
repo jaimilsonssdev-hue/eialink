@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { getResolvedGeminiKeyFn } from "@/modules/ai/gemini-admin.functions";
+import { getAvailableGeminiModels } from "@/modules/ai/google-ai.service";
 
 export interface MultimodalAttachment {
   name: string;
@@ -258,12 +259,7 @@ export async function planSiteBriefing(
   // Tenta com gemini-2.5-flash como modelo principal e um único fallback (gemini-2.5-flash-lite)
   let briefingText = "";
   let lastError: any = null;
-  const candidateModels = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-  ] as const;
+  const candidateModels = await getAvailableGeminiModels(apiKey);
 
   for (const modelToTry of candidateModels) {
     if (briefingText) break;
@@ -346,12 +342,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
   let raw = "";
   let lastCapturedError: any = null;
 
-  const candidateModels = [
-    "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-  ] as const;
+  const candidateModels = await getAvailableGeminiModels(apiKey);
 
   for (const modelToTry of candidateModels) {
     if (raw) break;

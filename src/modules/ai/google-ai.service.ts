@@ -1,9 +1,62 @@
 export const ACTIVE_GEMINI_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.5-flash",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
 ] as const;
+
+/**
+ * Consulta a API do Google AI Studio em tempo real para descobrir quais modelos estão
+ * ativos e autorizados para a chave do usuário que suportam generateContent.
+ * Isso garante que o sistema NUNCA tente um modelo inexistente ou com cota bloqueada (404).
+ */
+export async function getAvailableGeminiModels(apiKey?: string): Promise<string[]> {
+  const cleanKey = apiKey?.trim() || resolveGeminiApiKey() || "";
+  if (cleanKey && cleanKey.length > 5) {
+    try {
+      const res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${cleanKey}`,
+        { signal: AbortSignal.timeout(4000) },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.models)) {
+          const supported = data.models
+            .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
+            .map((m: any) => m.name.replace(/^models\//, ""))
+            // Exclui 1.5 e 1.0 obsoletos descontinuados pela Google
+            .filter((name: string) => !name.startsWith("gemini-1.5") && !name.startsWith("gemini-1.0"));
+
+          if (supported.length > 0) {
+            const priority = [
+              "gemini-3.8-flash",
+              "gemini-3.5-flash-lite",
+              "gemini-3.5-flash",
+              "gemini-2.5-flash",
+              "gemini-2.5-flash-lite",
+              "gemini-2.0-flash",
+            ];
+            supported.sort((a: string, b: string) => {
+              const idxA = priority.indexOf(a);
+              const idxB = priority.indexOf(b);
+              if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+              if (idxA !== -1) return -1;
+              if (idxB !== -1) return 1;
+              return 0;
+            });
+            return supported;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn("[GoogleAiService] Falha ao consultar ListModels em tempo real:", e);
+    }
+  }
+
+  return [...ACTIVE_GEMINI_MODELS];
+}
 
 export type ActiveGeminiModel = (typeof ACTIVE_GEMINI_MODELS)[number];
 
@@ -211,7 +264,8 @@ export async function testGoogleGeminiKey(apiKey: string): Promise<{ ok: boolean
   }
 
   let lastErrorMessage = "";
-  for (const model of ACTIVE_GEMINI_MODELS) {
+  const modelsToTest = await getAvailableGeminiModels(cleanKey);
+  for (const model of modelsToTest) {
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${cleanKey}`,

@@ -64,12 +64,13 @@ function newCallId() {
 /* GEMINI (generateContent + functionDeclarations)                     */
 /* ------------------------------------------------------------------ */
 
-export const GEMINI_DEFAULT_MODEL = "gemini-2.5-flash";
+export const GEMINI_DEFAULT_MODEL = "gemini-3.8-flash";
 
 const GEMINI_FALLBACKS: Record<string, string[]> = {
-  "gemini-2.5-flash": ["gemini-2.5-flash-lite", "gemini-2.0-flash", "gemini-1.5-flash"],
-  "gemini-2.5-flash-lite": ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"],
-  "gemini-3.8-flash": ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"],
+  "gemini-3.8-flash": ["gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.0-flash"],
+  "gemini-3.5-flash-lite": ["gemini-3.8-flash", "gemini-2.5-flash", "gemini-2.0-flash"],
+  "gemini-2.5-flash": ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.0-flash"],
+  "gemini-2.5-flash-lite": ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-2.0-flash"],
 };
 
 function isQuotaOrRateLimitError(err: unknown): boolean {

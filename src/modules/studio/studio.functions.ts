@@ -11,7 +11,11 @@ import {
   type StudioCopilotInput,
   type StudioCopilotOutput,
 } from "./studio-copilot.service";
-import { testGoogleGeminiKey, resolveGeminiApiKeyAsync } from "@/modules/ai/google-ai.service";
+import {
+  testGoogleGeminiKey,
+  resolveGeminiApiKeyAsync,
+  getAvailableGeminiModels,
+} from "@/modules/ai/google-ai.service";
 import {
   buildCardapioAiSystemPrompt,
   sanitizeCardapioPhotosForNiche,
@@ -762,14 +766,8 @@ ${effectiveHtml}`;
 
     let responseText = "";
     let lastCapturedError: any = null;
-    const candidateModels = [
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-    ] as const;
+    const candidateModels = await getAvailableGeminiModels(resolvedKey);
 
-    // 1. Executa com gemini-2.5-flash como primeiro modelo e um único fallback (gemini-2.5-flash-lite)
     for (const modelToTry of candidateModels) {
       if (responseText) break;
       try {
@@ -782,7 +780,6 @@ ${effectiveHtml}`;
               : CODE_GENERATION_SYSTEM_PROMPT,
             temperature: isModification ? 0.2 : 0.65,
             maxOutputTokens: 32768,
-            abortSignal: AbortSignal.timeout(45000),
           },
         });
         const text = response.text?.trim() || "";
@@ -1115,12 +1112,7 @@ export const planCreativeSiteBriefingFn = createServerFn({ method: "POST" })
 
     let briefingText = "";
     let lastBriefingError: any = null;
-    const briefingModels = [
-      "gemini-2.5-flash",
-      "gemini-2.5-flash-lite",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-    ] as const;
+    const briefingModels = await getAvailableGeminiModels(resolvedKey);
 
     for (const m of briefingModels) {
       if (briefingText) break;

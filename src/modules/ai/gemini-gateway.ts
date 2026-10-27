@@ -6,10 +6,12 @@ const gatewayUrl = "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gemini
 const gatewayPublishableKey = "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM";
 
 export const SITE_BUILDER_MODELS = [
+  "gemini-3.8-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-3.5-flash",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
   "gemini-2.0-flash",
-  "gemini-1.5-flash",
 ] as const;
 const retryableGeminiStatuses = new Set([408, 500, 502, 503, 504]);
 const maxGeminiAttempts = 2;

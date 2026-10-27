@@ -410,30 +410,18 @@ export function ProspectingKanban({
                               )}
 
                               {demo.url ? (
-                                <div className="flex items-center gap-1.5 w-full" onClick={(e) => e.stopPropagation()}>
-                                  <a
-                                    href={demo.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-[11px] font-semibold transition-all whitespace-nowrap"
-                                    title="Ver página demonstrativa pronta"
-                                  >
-                                    <ExternalLink className="h-3 w-3 shrink-0" />
-                                    <span>Ver Demo</span>
-                                  </a>
-                                  {demo.pageId && onOpenTransfer && (
-                                    <button
-                                      type="button"
-                                      onClick={() => onOpenTransfer(company, demo.pageId!, demo.url!)}
-                                      className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs transition-all whitespace-nowrap cursor-pointer"
-                                      title="Efetivar venda e transferir posse exclusiva para o cliente"
-                                    >
-                                      <UserCheck className="h-3 w-3 shrink-0" />
-                                      <span>Efetivar</span>
-                                    </button>
-                                  )}
-                                </div>
-                                ) : (
+                                <a
+                                  href={demo.url}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-semibold transition-all whitespace-nowrap"
+                                  title="Ver página demonstrativa pronta"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                                  <span>Ver Demo</span>
+                                </a>
+                              ) : (
                                 (() => {
                                   const meta = getProspectNicheCategory(company.niche, company.name);
                                   const isGenerating = creatingPageId === company.id;
@@ -459,6 +447,22 @@ export function ProspectingKanban({
                                 })()
                               )}
                             </div>
+
+                            {/* Botão de Efetivar Venda (destaque comercial em linha própria sem amontoar) */}
+                            {demo.url && demo.pageId && onOpenTransfer && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenTransfer(company, demo.pageId!, demo.url!);
+                                }}
+                                className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-xs transition-all whitespace-nowrap cursor-pointer"
+                                title="Efetivar venda e transferir posse exclusiva para o cliente"
+                              >
+                                <UserCheck className="h-3.5 w-3.5 shrink-0" />
+                                <span>Efetivar Venda (Transferir Posse)</span>
+                              </button>
+                            )}
 
                             {/* Opção secundária: Se o lead tiver nicho específico e não tiver demo, permitir gerar Site Institucional */}
                             {!demo.url && (() => {

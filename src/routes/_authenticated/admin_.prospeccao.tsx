@@ -1601,6 +1601,17 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                           </div>
                         </HoverCardContent>
                       </HoverCard>
+                      {demo.pageId && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 px-2.5 py-2 sm:py-1.5 text-xs font-semibold shadow-xs transition-all w-full sm:w-auto cursor-pointer"
+                          title="Efetivar venda e transferir posse para a conta do cliente"
+                        >
+                          <UserCheck className="h-3.5 w-3.5" />
+                          <span>Efetivar</span>
+                        </button>
+                      )}
                     </>
                   ) : (
                     <button
@@ -1787,22 +1798,11 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                 onClick={() => handleOpenTransfer(company, demo.pageId || "", demo.url!)}
                                 className="cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300 focus:text-emerald-300 focus:bg-emerald-500/10"
                               >
-                                <Share2 className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                <span>Enviar Acesso ao Cliente (Cadastro & Pagamento)</span>
+                                <UserCheck className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                <span>Efetivar Venda (Transferir Posse ao Cliente)</span>
                               </DropdownMenuItem>
 
-                              <DropdownMenuItem
-                                onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                                disabled={actionLoadingId === demo.pageId || isOfficialCompany(company)}
-                                className="cursor-pointer text-xs"
-                              >
-                                {actionLoadingId === demo.pageId ? (
-                                  <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
-                                ) : (
-                                  <CheckCircle className={`h-3.5 w-3.5 mr-2 ${isOfficialCompany(company) ? "text-emerald-400" : "text-muted-foreground"}`} />
-                                )}
-                                <span>{isOfficialCompany(company) ? "Página Oficializada" : "Tornar Oficial Direto (Minha Conta)"}</span>
-                              </DropdownMenuItem>
+
                             </>
                           )}
                         </>
@@ -3276,16 +3276,44 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
 
                       return (
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {demo.url && (
-                            <a
-                              href={demo.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 transition-all"
+                          {demo.url ? (
+                            <>
+                              <a
+                                href={demo.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 transition-all"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                <span>Ver Demo</span>
+                              </a>
+                              {demo.pageId && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 px-3 py-2 text-xs font-semibold transition-all cursor-pointer"
+                                  title="Efetivar venda e transferir posse para a conta do cliente"
+                                >
+                                  <UserCheck className="h-3.5 w-3.5" />
+                                  <span>Efetivar</span>
+                                </button>
+                              )}
+                            </>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => void handleGenerateDemo(company)}
+                              disabled={creatingPageId === company.id}
+                              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 px-3 py-2 text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                              title="Gerar site moderno com IA Gemini para este lead"
                             >
-                              <ExternalLink className="h-3.5 w-3.5" />
-                              <span>Ver Demo</span>
-                            </a>
+                              {creatingPageId === company.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Sparkles className="h-3.5 w-3.5 text-purple-300" />
+                              )}
+                              <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Site com IA 🪄"}</span>
+                            </button>
                           )}
                           <Link
                             to={editTo as any}
@@ -3442,29 +3470,11 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                               onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
                               className="cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300 focus:text-emerald-300 focus:bg-emerald-500/10"
                             >
-                              <Share2 className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                              <span>Enviar Acesso ao Cliente (Cadastro & Pagamento)</span>
+                              <UserCheck className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                              <span>Efetivar Venda (Transferir Posse ao Cliente)</span>
                             </DropdownMenuItem>
 
-                            {isOfficial ? (
-                              <DropdownMenuItem
-                                onClick={() => void handleRevokeOfficial(company, demo.pageId!)}
-                                disabled={actionLoadingId === demo.pageId}
-                                className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
-                              >
-                                <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
-                                <span>Revogar Oficialização (Voltar Demo)</span>
-                              </DropdownMenuItem>
-                            ) : (
-                              <DropdownMenuItem
-                                onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                                disabled={actionLoadingId === demo.pageId}
-                                className="cursor-pointer text-xs"
-                              >
-                                <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                <span>Tornar Oficial Direto (Minha Conta)</span>
-                              </DropdownMenuItem>
-                            )}
+
                           </>
                         )}
                         <DropdownMenuSeparator />

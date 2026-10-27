@@ -610,6 +610,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
         } else {
           const uniqueSlug =
             input.businessSlug || `${candidateSlug}-${Date.now().toString(36).slice(-4)}`;
+          const claimToken = dbSocial.claim_token || crypto.randomUUID();
           const { data: created } = await supabase
             .from("bio_pages")
             .insert({
@@ -619,7 +620,11 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
               template_id: "site-maquina",
               published: true,
               whatsapp: effectiveWhatsapp || null,
-              social_links: updatedSocial,
+              description: "[DEMO] Página demonstrativa de prospecção",
+              social_links: {
+                ...updatedSocial,
+                claim_token: claimToken,
+              },
             })
             .select("id, slug")
             .single();
@@ -1001,6 +1006,7 @@ ${effectiveHtml}`,
         savedPageId = existing.id;
         savedSlug = existing.slug;
       } else {
+        const claimToken = existingSocial.claim_token || crypto.randomUUID();
         const { data: created } = await supabase
           .from("bio_pages")
           .insert({
@@ -1010,7 +1016,11 @@ ${effectiveHtml}`,
             template_id: "site-maquina",
             published: true,
             whatsapp: effectiveWhatsapp || null,
-            social_links: updatedSocial,
+            description: "[DEMO] Página demonstrativa de prospecção",
+            social_links: {
+              ...updatedSocial,
+              claim_token: claimToken,
+            },
           })
           .select("id, slug")
           .single();

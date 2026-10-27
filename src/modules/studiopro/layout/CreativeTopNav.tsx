@@ -250,7 +250,7 @@ export function CreativeTopNav() {
             {activeProject?.name || "Estúdio Criativo"}
           </span>
           <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full uppercase hidden md:inline">
-            Gemini AI
+            Gemini 3.8 Flash
           </span>
         </div>
       </div>

@@ -15,31 +15,48 @@ const safeLocalStorage: StateStorage = {
   setItem: (key: string, value: string): void => {
     try {
       if (typeof window === "undefined") return;
-      window.localStorage.setItem(key, value);
-    } catch (e: any) {
-      console.warn("[creativeStudioStore] QuotaExceeded ao salvar no localStorage, aplicando expurgo seguro:", e);
       try {
-        const parsed = JSON.parse(value);
-        if (parsed?.state?.projects && Array.isArray(parsed.state.projects)) {
-          const activeId = parsed.state.activeProjectId;
-          parsed.state.projects = parsed.state.projects
-            .filter((p: any) => p.id === activeId)
-            .slice(0, 1)
-            .map((p: any) => ({
-              ...p,
-              messages: (p.messages || []).slice(-5).map((m: any) => ({
-                ...m,
-                attachments: undefined,
-              })),
-            }));
-          window.localStorage.setItem(key, JSON.stringify(parsed));
-          return;
-        }
-      } catch (innerErr) {
+        window.localStorage.setItem(key, value);
+      } catch (quotaErr) {
+        console.warn("[creativeStudioStore] QuotaExceeded ao salvar no localStorage, aplicando expurgo seguro:", quotaErr);
+        // Remove a chave pesada existente primeiro para liberar cota
         try {
           window.localStorage.removeItem(key);
         } catch (_) {}
+
+        // Tenta salvar versão ultra-leve (apenas id do projeto ativo e metadados, sem HTMLs gigantes ou histórico longo)
+        try {
+          const parsed = JSON.parse(value);
+          if (parsed?.state?.projects && Array.isArray(parsed.state.projects)) {
+            const activeId = parsed.state.activeProjectId;
+            parsed.state.projects = parsed.state.projects
+              .filter((p: any) => p.id === activeId)
+              .slice(0, 1)
+              .map((p: any) => ({
+                id: p.id,
+                name: p.name,
+                eialinkPageId: p.eialinkPageId,
+                slug: p.slug,
+                status: p.status,
+                createdAt: p.createdAt,
+                updatedAt: p.updatedAt,
+                html: typeof p.html === "string" && p.html.length > 50000 ? "" : p.html,
+                messages: (p.messages || []).slice(-3).map((m: any) => ({
+                  id: m.id,
+                  role: m.role,
+                  content: m.content,
+                  timestamp: m.timestamp,
+                })),
+              }));
+            window.localStorage.setItem(key, JSON.stringify(parsed));
+          }
+        } catch (_) {
+          // Se mesmo a versão mínima falhar por falta absoluta de cota no navegador,
+          // simplesmente não persiste no localStorage nesta sessão para NUNCA travar a aplicação React!
+        }
       }
+    } catch (_) {
+      // Blindagem absoluta: nenhuma exceção de Storage escapa para a árvore React
     }
   },
   removeItem: (key: string): void => {
@@ -235,17 +252,17 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
       name: "eialink_estudio_criativo_storage",
       storage: createJSONStorage(() => safeLocalStorage),
       partialize: (state) => ({
-        // Salva apenas os 3 projetos mais recentes para economizar cota no mobile/desktop
-        projects: (state.projects || []).slice(0, 3).map((proj) => ({
+        // Salva apenas 1 projeto ativo levemente no localStorage
+        projects: (state.projects || []).slice(0, 1).map((proj) => ({
           ...proj,
-          // Mantém apenas as últimas 15 mensagens e NUNCA salva base64 no localStorage
-          messages: (proj.messages || []).slice(-15).map((m) => ({
-            ...m,
-            attachments: m.attachments?.map((att) => ({
-              name: att.name,
-              mimeType: att.mimeType,
-              dataBase64: "",
-            })),
+          // Se o HTML for muito extenso (>100KB), não duplica no localStorage local pois o projeto já está persistido no Supabase
+          html: proj.html && proj.html.length > 100000 ? proj.html.slice(0, 50000) : proj.html,
+          // Mantém apenas as últimas 8 mensagens e NUNCA salva base64 no localStorage
+          messages: (proj.messages || []).slice(-8).map((m) => ({
+            id: m.id,
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp,
           })),
         })),
         activeProjectId: state.activeProjectId,

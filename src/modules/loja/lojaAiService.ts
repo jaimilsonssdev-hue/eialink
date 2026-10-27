@@ -166,18 +166,22 @@ export async function processLojaAiChat(
   });
 
   let rawText = "";
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: formattedContents,
-      config: {
-        systemInstruction: LOJA_SYSTEM_PROMPT,
-        temperature: 0.7,
-      },
-    });
-    rawText = response.text || "";
-  } catch (e: any) {
-    console.warn("Tentativa no modelo gemini-2.5-flash falhou:", e?.message);
+  const modelsToTry = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash"];
+  for (const modelToTry of modelsToTry) {
+    if (rawText) break;
+    try {
+      const response = await ai.models.generateContent({
+        model: modelToTry,
+        contents: formattedContents,
+        config: {
+          systemInstruction: LOJA_SYSTEM_PROMPT,
+          temperature: 0.7,
+        },
+      });
+      rawText = response.text || "";
+    } catch (e: any) {
+      console.warn(`Tentativa no modelo ${modelToTry} falhou:`, e?.message);
+    }
   }
 
   if (!rawText) {

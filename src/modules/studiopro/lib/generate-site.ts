@@ -7,7 +7,7 @@ const VALID_BLOCK_TYPES = new Set<string>(blockMetadata.map((b) => b.type))
 const VARIANT_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, new Set(b.variants)]))
 const DEFAULT_PROPS_MAP = Object.fromEntries(blockMetadata.map((b) => [b.type, b.defaultProps]))
 
-const PRIMARY_GEMINI_MODEL = 'gemini-2.5-flash'
+const PRIMARY_GEMINI_MODEL = 'gemini-3.8-flash'
 const STORAGE_KEYS = ['openpage-gemini-key', 'eialink_gemini_api_key', 'gemini_api_key']
 
 export function getSavedGeminiKey(): string | null {
@@ -72,7 +72,7 @@ async function callGeminiDirect(prompt: string, apiKey: string, signal?: AbortSi
       },
       signal,
       body: JSON.stringify({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         input: `Generate a website configuration for: ${prompt}`,
         system_instruction: GENERATION_PROMPT,
         generation_config: { response_mime_type: "application/json", temperature: 0.8 },

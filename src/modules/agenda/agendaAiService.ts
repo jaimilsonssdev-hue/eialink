@@ -194,7 +194,7 @@ export async function processAgendaAiChat(
 
   let rawText = "";
   const systemPrompt = buildAgendaAiSystemPrompt(currentAgenda?.niche || "geral");
-  const agendaModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+  const agendaModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash"] as const;
 
   for (const modelToTry of agendaModels) {
     if (rawText) break;

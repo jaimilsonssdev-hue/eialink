@@ -102,7 +102,7 @@ Retorne o JSON completo estruturado.`;
     let text = "";
     try {
       const interaction = await ai.interactions.create({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         input: prompt,
         system_instruction: SYSTEM_PROMPT,
         generation_config: {
@@ -114,7 +114,7 @@ Retorne o JSON completo estruturado.`;
     } catch (interErr) {
       console.warn("[GeneratorService] Interactions API falhou, tentando fallback generateContent:", interErr);
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt,
         config: {
           systemInstruction: SYSTEM_PROMPT,
@@ -212,7 +212,7 @@ Retorne um JSON com:
     let text = "";
     try {
       const interaction = await ai.interactions.create({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         input: prompt,
         system_instruction: "Você é o Copilot de edição de sites JSON do OpenPage. Retorne sempre JSON válido.",
         generation_config: {
@@ -224,7 +224,7 @@ Retorne um JSON com:
     } catch (interErr) {
       console.warn("[GeneratorService] Interactions API falhou em refinePageWithAi, tentando fallback generateContent:", interErr);
       const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: prompt,
         config: {
           systemInstruction: "Você é o Copilot de edição de sites JSON do OpenPage. Retorne sempre JSON válido.",

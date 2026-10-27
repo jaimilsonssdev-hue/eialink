@@ -22,7 +22,7 @@ async function callGoogleGeminiInteractionsDirect(
   payload: Record<string, unknown>,
 ): Promise<Response | null> {
   try {
-    const cleanModel = (model || "gemini-2.5-flash").replace(/^models\//, "");
+    const cleanModel = (model || "gemini-3.8-flash").replace(/^models\//, "");
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${cleanModel}:generateContent`;
     const res = await fetch(url, {
       method: "POST",

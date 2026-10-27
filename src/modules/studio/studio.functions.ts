@@ -889,7 +889,7 @@ ${effectiveHtml}`;
         );
         try {
           const retryRes = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
+            model: "gemini-3.8-flash",
             contents: [
               {
                 role: "user",
@@ -1741,7 +1741,7 @@ REGRAS CRÍTICAS DE RESPOSTA:
     let rawText = "";
     try {
       const res = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.8-flash",
         contents: formattedContents,
         config: {
           systemInstruction: systemPrompt,
@@ -1754,7 +1754,7 @@ REGRAS CRÍTICAS DE RESPOSTA:
       console.warn("[CardapioCopilot] Erro com gemini-2.5-flash:", err?.message || err);
       try {
         const fallbackRes = await ai.models.generateContent({
-          model: "gemini-2.0-flash",
+          model: "gemini-3.5-flash-lite",
           contents: formattedContents,
           config: { systemInstruction: systemPrompt, temperature: 0.6, maxOutputTokens: 16384 },
         });
@@ -1986,7 +1986,7 @@ REGRAS DE RESPOSTA:
 
     let rawText = "";
     let lastLojaError: any = null;
-    const lojaModels = ["gemini-2.5-flash", "gemini-2.5-flash-lite"] as const;
+    const lojaModels = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-2.5-flash"] as const;
     for (const modelToTry of lojaModels) {
       if (rawText) break;
       try {

@@ -51,9 +51,7 @@ export function TransferPageModal({ isOpen, onClose, page, onSuccess }: Transfer
     message: string;
   } | null>(null);
 
-  // Estado do botão "Tornar Oficial"
-  const [officialLoading, setOfficialLoading] = useState(false);
-  const [officialDone, setOfficialDone] = useState(!page.isDemo);
+  // Modo estrito de venda: páginas demonstrativas nunca são vinculadas à conta do admin
 
   // Gera o link de resgate ao abrir ou mudar de página
   useEffect(() => {
@@ -138,23 +136,6 @@ Você pode assumir o controle da página gratuitamente agora mesmo e colocar o l
       ? `https://ig.me/m/${cleanInsta}`
       : "https://www.instagram.com/direct/inbox/";
     window.open(targetUrl, "_blank", "noopener,noreferrer");
-  }
-
-  async function handleMakeOfficial() {
-    if (!window.confirm("Atenção: Ao vincular esta página à sua conta pessoal, ela deixará de ser demonstração e passará a aparecer na sua Agenda e Fidelidade. Deseja continuar apenas se você for o proprietário?")) {
-      return;
-    }
-    setOfficialLoading(true);
-    try {
-      await PageService.makePageOfficial(page.id);
-      setOfficialDone(true);
-      onSuccess?.();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro ao tornar oficial.";
-      alert(msg);
-    } finally {
-      setOfficialLoading(false);
-    }
   }
 
   async function handleTransferByEmail(e: React.FormEvent) {
@@ -326,31 +307,15 @@ Você pode assumir o controle da página gratuitamente agora mesmo e colocar o l
 
             {/* Ações da Aba 1 */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border">
-              <button
-                type="button"
-                onClick={handleMakeOfficial}
-                disabled={officialLoading || officialDone}
-                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
-                  officialDone
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                    : "border-border bg-surface hover:bg-surface-elevated text-foreground"
-                }`}
-                title="Remove a tarja de demonstração da página pública"
-              >
-                {officialLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : officialDone ? (
-                  <Check className="h-3.5 w-3.5 text-emerald-400" />
-                ) : (
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                )}
-                {officialDone ? "Página Oficializada" : "Vincular à Minha Conta Pessoal"}
-              </button>
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <UserCheck className="h-3.5 w-3.5 text-emerald-400" />
+                <span>O cliente cria a conta e assume a posse total</span>
+              </div>
 
               <button
                 type="button"
                 onClick={handleSendWhatsApp}
-                className="btn-primary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold"
+                className="btn-primary inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold shadow-md shadow-emerald-500/20"
               >
                 <MessageCircle className="h-4 w-4" />
                 Enviar no WhatsApp
@@ -413,26 +378,10 @@ Você pode assumir o controle da página gratuitamente agora mesmo e colocar o l
 
             {/* Ações da Aba Instagram */}
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border">
-              <button
-                type="button"
-                onClick={handleMakeOfficial}
-                disabled={officialLoading || officialDone}
-                className={`inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-xs font-semibold transition-all ${
-                  officialDone
-                    ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-                    : "border-border bg-surface hover:bg-surface-elevated text-foreground"
-                }`}
-                title="Remove a tarja de demonstração da página pública"
-              >
-                {officialLoading ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : officialDone ? (
-                  <Check className="h-3.5 w-3.5 text-emerald-400" />
-                ) : (
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                )}
-                {officialDone ? "Página Oficializada" : "Vincular à Minha Conta Pessoal"}
-              </button>
+              <div className="text-[11px] text-muted-foreground flex items-center gap-1.5">
+                <Instagram className="h-3.5 w-3.5 text-pink-400" />
+                <span>Abordagem por direct no Instagram</span>
+              </div>
 
               <button
                 type="button"

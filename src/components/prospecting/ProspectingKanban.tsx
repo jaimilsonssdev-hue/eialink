@@ -4,6 +4,7 @@ import {
   MessageCircle,
   Sparkles,
   ExternalLink,
+  UserCheck,
   Loader2,
   Instagram,
   Bot,
@@ -409,17 +410,29 @@ export function ProspectingKanban({
                               )}
 
                               {demo.url ? (
-                                <a
-                                  href={demo.url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-semibold transition-all whitespace-nowrap"
-                                  title="Ver página demonstrativa pronta"
-                                >
-                                  <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                                  <span>Ver Site Pronto</span>
-                                </a>
+                                <div className="flex items-center gap-1.5 w-full" onClick={(e) => e.stopPropagation()}>
+                                  <a
+                                    href={demo.url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="flex-1 inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-[11px] font-semibold transition-all whitespace-nowrap"
+                                    title="Ver página demonstrativa pronta"
+                                  >
+                                    <ExternalLink className="h-3 w-3 shrink-0" />
+                                    <span>Ver Demo</span>
+                                  </a>
+                                  {demo.pageId && onOpenTransfer && (
+                                    <button
+                                      type="button"
+                                      onClick={() => onOpenTransfer(company, demo.pageId!, demo.url!)}
+                                      className="inline-flex items-center justify-center gap-1 py-1.5 px-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold shadow-xs transition-all whitespace-nowrap cursor-pointer"
+                                      title="Efetivar venda e transferir posse exclusiva para o cliente"
+                                    >
+                                      <UserCheck className="h-3 w-3 shrink-0" />
+                                      <span>Efetivar</span>
+                                    </button>
+                                  )}
+                                </div>
                                 ) : (
                                 (() => {
                                   const meta = getProspectNicheCategory(company.niche, company.name);
@@ -623,38 +636,14 @@ export function ProspectingKanban({
                                     );
                                   })()}
 
-                                  {demo.url && demo.pageId && (
-                                    <>
-                                      {onOpenTransfer && (
-                                        <DropdownMenuItem
-                                          onClick={() => onOpenTransfer(company, demo.pageId!, demo.url!)}
-                                          className="cursor-pointer text-xs font-semibold text-emerald-400 hover:text-emerald-300 focus:text-emerald-300 focus:bg-emerald-500/10"
-                                        >
-                                          <Share2 className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                          <span>Enviar Acesso ao Cliente (Cadastro & Pagamento)</span>
-                                        </DropdownMenuItem>
-                                      )}
-
-                                      {isOfficial ? (
-                                        <DropdownMenuItem
-                                          onClick={() => onRevokeOfficial?.(company, demo.pageId!)}
-                                          disabled={actionLoadingId === demo.pageId}
-                                          className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
-                                        >
-                                          <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
-                                          <span>Revogar Oficialização (Voltar Demo)</span>
-                                        </DropdownMenuItem>
-                                      ) : (
-                                        <DropdownMenuItem
-                                          onClick={() => onMakeOfficial(company, demo.pageId!)}
-                                          disabled={actionLoadingId === demo.pageId}
-                                          className="cursor-pointer text-xs"
-                                        >
-                                          <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                          <span>Tornar Oficial Direto (Minha Conta)</span>
-                                        </DropdownMenuItem>
-                                      )}
-                                    </>
+                                  {demo.url && demo.pageId && onOpenTransfer && (
+                                    <DropdownMenuItem
+                                      onClick={() => onOpenTransfer(company, demo.pageId!, demo.url!)}
+                                      className="cursor-pointer text-xs font-bold text-emerald-400 hover:text-emerald-300 focus:text-emerald-300 focus:bg-emerald-500/10"
+                                    >
+                                      <UserCheck className="h-3.5 w-3.5 mr-2 text-emerald-400" />
+                                      <span>Efetivar Venda (Transferir Posse ao Cliente)</span>
+                                    </DropdownMenuItem>
                                   )}
 
                                   <DropdownMenuSeparator />

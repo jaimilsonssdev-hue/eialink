@@ -63,6 +63,7 @@ import {
 } from "@/components/ui/hover-card";
 
 import { runLiveProspecting, lookupBusinessProfileFn } from "@/modules/prospecting/prospecting.functions";
+import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
 import { validateProspectingSearch } from "@/modules/prospecting/validation";
 import { useActionCooldown } from "@/hooks/useActionCooldown";
 import { searchGoogleMapsAndInstagram, lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
@@ -854,83 +855,83 @@ function ProspectingPage() {
     const demoInfo = parseDemoInfo(company);
     const nicheText = company.niche || "Serviços Especializados";
     const detectedKey = detectNicheKey(company.niche, company.name);
-    const curatedGallery = NICHE_GALLERIES[detectedKey]?.covers?.map((c) => c.url) || [];
-    const leadPhotos = (company as any).photos && Array.isArray((company as any).photos) && (company as any).photos.length > 0
-      ? (company as any).photos
-      : curatedGallery;
-    const recommendedPhotos = leadPhotos.slice(0, 5);
 
-    // Determina o arquétipo estético ideal por nicho para evitar preto chapado forçado
-    const isHealthcare = ["clinica", "odontologia", "psicologia", "nutricao", "saude", "medicina", "fisioterapia"].includes(detectedKey);
-    const isRetailOrBoutique = ["loja", "moda", "calcados", "otica", "joias", "perfumaria"].includes(detectedKey);
-    const isAutoOrTech = ["oficina", "mecanica", "auto", "autocenter", "solar", "seguranca"].includes(detectedKey);
-    const isLegalOrCorporate = ["advocacia", "contabilidade", "imobiliaria", "seguros", "b2b"].includes(detectedKey);
+    setFeedback(`🔍 Consultando perfil Google Meu Negócio e preparando direção de arte para ${company.name}...`);
 
-    const colorDirective = isHealthcare
-      ? `DIRETRIZ DE CORES (CLEAN & ACOLHEDORA):
-   - Use fundo CLARO sofisticado (branco neve #ffffff, off-white ou ardósia suave #f8fafc) com tipografia escura de alto contraste.
-   - Detalhes refinados em azul saúde (#0284c7) ou verde esmeralda suave (#059669).
-   - NUNCA use fundo preto chapado ou tema dark pesado para saúde/clínicas.`
-      : isRetailOrBoutique
-      ? `DIRETRIZ DE CORES (EDITORIAL & ELEGANTE):
-   - Fundo contemporâneo claro (marfim, linho ou cinza suave #f4f4f5) com acabamentos refinados, tipografia moderna e alto contraste.
-   - NUNCA use fundo preto chapado genérico.`
-      : isAutoOrTech
-      ? `DIRETRIZ DE CORES (TÉCNICA & MODERNA):
-   - Fundo grafite profundo (#09090b ou ardósia chumbo) com iluminação ambiente e detalhes em âmbar/laranja mecânico (#f59e0b) ou azul elétrico (#2563eb).`
-      : isLegalOrCorporate
-      ? `DIRETRIZ DE CORES (CORPORATIVA & AUTORIDADE):
-   - Tons sóbrios executivos (azul marinho profundo, grafite nobre ou fundo clean com contraste executivo), toques em dourado suave ou prata.`
-      : `DIRETRIZ DE CORES (EQUILIBRADA & MODERNA):
-   - Escolha cores modernas e equilibradas que transmitam profissionalismo para o segmento de ${nicheText}, priorizando harmonia visual sem forçar fundo preto chapado.`;
+    // Busca detalhes reais do Google Meu Negócio (fotos reais, endereço verificado e nota)
+    let realPhotos: string[] = [];
+    let verifiedAddress = company.address;
+    let verifiedRating = company.rating;
+    let verifiedReviewsCount = company.reviews_count;
 
-    const photosSection = recommendedPhotos.length > 0
-      ? `\nFOTOS OFICIAIS DO NICHO "${nicheText.toUpperCase()}" (USE EXCLUSIVAMENTE ESTAS URLs NAS SEÇÕES DO SITE):
-${recommendedPhotos.map((url: string, i: number) => `- Imagem ${i + 1}: ${url}`).join("\n")}
-[REGRA CRÍTICA DE FOTOS]: É TERMINANTEMENTE PROIBIDO usar fotos de consultórios odontológicos, dentistas ou nichos diferentes do segmento "${nicheText}"! Use apenas as fotos fornecidas acima ou fotos autênticas e pertinentes ao nicho.`
-      : `\n[REGRA CRÍTICA DE FOTOS]: Use apenas fotos temáticas autênticas de ${nicheText}. NUNCA use fotos de consultórios odontológicos ou nichos não relacionados!`;
+    try {
+      const placeDetailsPromise = fetchPlaceDetailsFn({
+        data: {
+          companyName: company.name,
+          city: company.city || undefined,
+        },
+      });
+      // Timeout de 4s para não travar a experiência
+      const details = await Promise.race([
+        placeDetailsPromise,
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+      ]);
 
-    setFeedback(`🚀 Estúdio Criativo IA gerando site de alto impacto para ${company.name}...`);
+      if (details) {
+        if (Array.isArray(details.photos) && details.photos.length > 0) {
+          realPhotos = details.photos;
+        }
+        if (details.address && !verifiedAddress) {
+          verifiedAddress = details.address;
+        }
+        if (details.rating && !verifiedRating) {
+          verifiedRating = details.rating;
+        }
+        if (details.reviewsCount && !verifiedReviewsCount) {
+          verifiedReviewsCount = details.reviewsCount;
+        }
+      }
+    } catch (err) {
+      console.warn("[Prospeccao] Consulta Google Places falhou, prosseguindo com dados do lead:", err);
+    }
 
-    const briefingPrompt = isRegeneration
-      ? `REINVENTAR PROPOSTA DE DESIGN COMPLETA (NOVO FORMATO & NOVO ARQUÉTIPO VISUAL):
-Crie um site web 100% INOVADOR, MODERNO e VISUALMENTE ESPETACULAR para "${company.name}".
+    setFeedback(`🚀 IA Criativa planejando e desenhando site exclusivo para ${company.name}...`);
+
+    // Prompt estruturado em 2 etapas: Planejamento / Direção de Arte + Execução Técnica
+    const briefingPrompt = `DIREÇÃO DE ARTE & CRIAÇÃO EXCLUSIVA DE SITE WEB:
+Empresa: "${company.name}"
 Nicho de Atuação: "${nicheText}"
-Cidade/Região: "${company.city || "sua região"}"
-${company.address ? `Endereço Verificado: "${company.address}"` : ""}
-${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
-${company.rating ? `Avaliação Google Maps: ${company.rating} estrelas (${company.reviews_count || 90} avaliações reais)` : ""}
-${photosSection}
+Cidade / Região: "${company.city || "sua região"}"
+${verifiedAddress ? `Endereço Verificado (usar no Mapa e rotas GPS): "${verifiedAddress}"` : ""}
+${cleanPhone ? `WhatsApp Oficial (usar no botão pulsante e CTAs): "${cleanPhone}"` : ""}
+${verifiedRating ? `Avaliação Google Maps: ${verifiedRating} estrelas (${verifiedReviewsCount || 90} avaliações reais)` : ""}
 
-DIRETRIZES DE REINVENÇÃO OBRIGATÓRIAS (PADRÃO AWWWARDS / LOVABLE):
-1. ESTRUTURA E COMPOSIÇÃO:
-   - Diagramação inovadora: Hero marcante, Bento Grid com profundidade visual (cards com acabamento fino e sombras suaves).
-   - Tipografia moderna do Google Fonts (Plus Jakarta Sans, Outfit ou Syne) com tracking ajustado.
-2. ${colorDirective}
-3. RECURSOS ESSENCIAIS DE CONVERSÃO:
-   - Botão flutuante pulsante de WhatsApp no canto inferior direito com link wa.me/${cleanPhone}.
-   - Seção de Localização com mapa Google Maps e botões para traçar rota no Google Maps e no Waze.
-   - Destaque para autoridade com a nota real de ${company.rating || 4.9} estrelas do Google Maps.
-   - Retorne o código HTML5 completo autocontido com Tailwind CSS e Lucide Icons.`
-      : `Crie um site web completo, moderno, de altíssimo padrão visual e alta conversão para a empresa "${company.name}".
-Nicho de Atuação: "${nicheText}"
-Cidade/Região: "${company.city || "sua região"}"
-${company.address ? `Endereço Verificado (usar no Mapa e rotas GPS): "${company.address}"` : ""}
-${cleanPhone ? `WhatsApp Oficial: "${cleanPhone}"` : ""}
-${company.rating ? `Avaliação Google Maps: ${company.rating} estrelas (${company.reviews_count || 90} avaliações reais)` : ""}
-${photosSection}
+${realPhotos.length > 0 ? `FOTOS REAIS DO GOOGLE MEU NEGÓCIO DA EMPRESA (PRIORIZAR NO HERO E SEÇÕES):
+${realPhotos.slice(0, 6).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}` : ""}
 
-DIRETRIZES DE DESIGN DE ELITE (PADRÃO AWWWARDS / LOVABLE):
-1. ESTRUTURA VISUAL:
-   - Hero impactante com headline magnética focada na transformação do cliente, subheadline persuasiva e botões de ação em destaque.
-   - Seção de Destaques / Soluções em formato Bento Grid moderno ou Cards com acabamento premium e bordas finas.
-   - Seção de Autoridade & Prova Social destacando as avaliações reais de ${company.rating || 4.9} estrelas e diferenciais exclusivos.
-   - Seção de Localização com card interativo do Google Maps e botões para abrir rota no Google Maps e no Waze.
-   - Botão flutuante pulsante de WhatsApp no canto inferior direito.
-2. ${colorDirective}
-3. ESTÉTICA & TIPOGRAFIA:
-   - Tipografia refinada do Google Fonts (Plus Jakarta Sans ou Outfit) com tracking-tight nos títulos.
-   - Retorne o código HTML completo autocontido com Tailwind CSS e Lucide Icons.`;
+DIRETRIZES DE CRIAÇÃO AUTÔNOMA (LIBERDADE CRIATIVA TOTAL - PADRÃO AWWWARDS / LOVABLE):
+1. ETAPA DE PLANEJAMENTO & CONCEITO VISUAL:
+   - Diagnostique o perfil da marca e defina uma identidade visual ÚNICA e marcante para este negócio (NÃO repita a mesma fórmula ou a mesma ordem de blocos de sites anteriores).
+   - Escolha livremente o estilo que melhor valoriza o segmento:
+     * Para saúde/clínicas/odontologia: Clean Luminoso & Acolhedor (fundo claro sofisticado #ffffff ou #f8fafc, acentos em azul-saúde ou verde esmeralda, cards leves, higiene e confiança).
+     * Para barbearia/automotivo/tecnologia: Dark Sofisticado ou Grafite nobre (#09090b com iluminação sutil e toques de contraste).
+     * Para estética/boutique/moda: Editorial Elegante (tons neutros, tipografia refinada e acabamento de luxo).
+     * Para consultoria/direito/corporativo: Autoridade Executiva sóbria e moderna.
+   - Escolha uma tipografia expressiva do Google Fonts (Plus Jakarta Sans, Outfit, Syne, Playfair Display, Cinzel ou Montserrat).
+
+2. FOTOS E IMAGENS PÚBLICAS DINÂMICAS:
+   - Se foram fornecidas fotos reais do negócio acima, use-as nas seções principais.
+   - Você tem total liberdade para selecionar e formular URLs de fotos públicas temáticas de alta resolução do Unsplash (ex: https://images.unsplash.com/photo-[id]?auto=format&fit=crop&w=1200&q=80 ou termos do nicho "${nicheText}").
+   - Não se limite a um número fixo de fotos: use fotos no Hero, nos serviços, na galeria ambiental ou onde enriquecer a experiência do cliente.
+   - NUNCA use fotos de consultórios de dentista para barbearias, oficinas ou restaurantes. Use sempre fotos pertinentes ao nicho "${nicheText}".
+
+3. RECURSOS ESSENCIAIS DE NEGÓCIO E CONVERSÃO:
+   - Botão flutuante de WhatsApp pulsante no canto inferior direito (<div class="fixed bottom-6 right-6 z-50">) com link direto para wa.me/${cleanPhone}.
+   - Seção de Localização interativa com iframe responsivo do Google Maps (${verifiedAddress || company.name}) e dois botões de GPS:
+     * "📍 Traçar Rota no Google Maps"
+     * "🚗 Abrir no Waze"
+   - Bloco de Prova Social e Autoridade destacando a nota real de ${verifiedRating || 4.9} estrelas do Google Meu Negócio.
+   - Retorne o código HTML5 completo, moderno e autocontido com Tailwind CSS e Lucide Icons.`;
 
     let generatedPageId: string | null = null;
     let generatedSlug: string | null = null;
@@ -3928,31 +3929,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                                 {demo.url && (
                                   <>
 
-                                    {demo.pageId && (
-                                      isOfficial ? (
-                                        <DropdownMenuItem
-                                          onClick={() => void handleRevokeOfficial(company, demo.pageId!)}
-                                          disabled={actionLoadingId === demo.pageId}
-                                          className="cursor-pointer text-xs text-amber-400 hover:text-amber-300 focus:text-amber-300"
-                                        >
-                                          <RotateCcw className="h-3.5 w-3.5 mr-2 text-amber-400" />
-                                          <span>Revogar Oficialização (Voltar Demo)</span>
-                                        </DropdownMenuItem>
-                                      ) : (
-                                        <DropdownMenuItem
-                                          onClick={() => void handleMakeOfficial(company, demo.pageId!)}
-                                          disabled={actionLoadingId === demo.pageId}
-                                          className="cursor-pointer text-xs"
-                                        >
-                                          {actionLoadingId === demo.pageId ? (
-                                            <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-teal-400" />
-                                          ) : (
-                                            <CheckCircle className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                          )}
-                                          <span>Vincular à Minha Conta Pessoal</span>
-                                        </DropdownMenuItem>
-                                      )
-                                    )}
+                                    
 
                                     <DropdownMenuItem
                                       onClick={() => handleOpenTransfer(company, demo.pageId || "", demo.url!)}

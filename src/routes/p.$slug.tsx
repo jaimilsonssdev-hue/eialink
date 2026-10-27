@@ -723,6 +723,14 @@ function PublicBio() {
     if (isWhatsappDisabled) dynamicStyles += `[data-feature="whatsapp"], a[href*="wa.me"], a[href*="whatsapp.com"], .feature-whatsapp { display: none !important; }`;
     dynamicStyles += "</style>";
 
+    const isFoodOrRetail = Boolean(
+      isCardapioPage ||
+      ["restaurante", "pizzaria", "hamburgueria", "delivery", "comida", "lanche", "loja", "moda", "calcados", "varejo"].includes(nicheKey)
+    );
+
+    const isDealsActive = rawSocial.deals_enabled === true || (isFoodOrRetail && rawSocial.deals_enabled !== false && rawSocial.mural_ofertas_enabled !== false);
+    const isLoyaltyActive = rawSocial.loyalty_enabled === true || (isFoodOrRetail && rawSocial.loyalty_enabled !== false && rawSocial.fidelidade_enabled !== false);
+
     // Injeta orquestrador de recursos (Agendamento, Mural de Ofertas, Fidelidade, Atendente, GPS, WhatsApp)
     const htmlWithRuntime = isCardapioPage
       ? effectiveHtml
@@ -735,8 +743,8 @@ function PublicBio() {
           features: {
             agenda_enabled: rawSocial.agenda_enabled !== false,
             ai_concierge_enabled: rawSocial.ai_concierge_enabled !== false,
-            deals_enabled: rawSocial.deals_enabled !== false && rawSocial.mural_ofertas_enabled !== false,
-            loyalty_enabled: rawSocial.loyalty_enabled !== false && rawSocial.fidelidade_enabled !== false,
+            deals_enabled: isDealsActive,
+            loyalty_enabled: isLoyaltyActive,
             gps_enabled: rawSocial.gps_enabled !== false,
             whatsapp_enabled: rawSocial.whatsapp_enabled !== false,
           },

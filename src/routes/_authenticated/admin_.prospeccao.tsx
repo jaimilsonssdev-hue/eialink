@@ -897,6 +897,36 @@ function ProspectingPage() {
 
     setFeedback(`🚀 IA Criativa planejando e desenhando site exclusivo para ${company.name}...`);
 
+    // Sorteio dinâmico de Arquétipo de Design para garantir que NENHUM site saia igual
+    const DESIGN_ARCHETYPES = [
+      {
+        style: "Editorial Luxury & Tipografia de Alta Escala",
+        heroConcept: "Hero assimétrico com tipografia expressiva em serifa contemporânea (Google Fonts Playfair Display ou Syne), espaços generosos, recortes fotográficos elegantes e atmosfera de revista de prestígio.",
+        palette: "Tons nobres de Champagne Dourado, Marfim, Areia e Grafite Nobre (#18181b), transmitindo sofisticação e valor percebido altíssimo.",
+        navbar: "Navbar flutuante minimalista tipo pill centralizada ('max-w-4xl mx-auto rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md shadow-lg border border-black/5')",
+      },
+      {
+        style: "Cinematic Full-Bleed & Atmosfera Imersiva",
+        heroConcept: "Hero imersivo cinematográfico com fotografia panorâmica em tela cheia com overlay em gradiente sofisticado e títulos marcantes de alto contraste.",
+        palette: "Azul Índigo Profundo / Meia-Noite (#0f172a) com acentos em Ciano Polar ou Dourado Suave, transmitindo precisão e excelência.",
+        navbar: "Header transparente integrado suavemente ao hero",
+      },
+      {
+        style: "Modern Bento Grid & Mosaico de Mídia",
+        heroConcept: "Hero inovador em formato Bento Grid dinâmico (mosaico de 3 ou 4 blocos visuais combinando fotos do espaço, detalhes de atendimento, selos de reputação e chamada de ação).",
+        palette: "Clean Contemporâneo com base em Ardósia Polar (#f8fafc), bordas finas com sombra suave (shadow-xl border-slate-200/60) e acentos refinados em Esmeralda Profunda ou Terracota Suave.",
+        navbar: "Navbar elegante com cantos arredondados e logo com tipografia destacada",
+      },
+      {
+        style: "Split-Screen Escultural 60/40",
+        heroConcept: "Hero assimétrico com grande bloco de texto persuasivo à esquerda e galeria vertical de fotografias com cartões flutuantes de estatísticas reais integrados à direita.",
+        palette: "Minimalista Preto e Branco Nobre (#09090b e #ffffff) com acento em Ouro Acetinado ou Bronze.",
+        navbar: "Barra de navegação limpa, direta e com botão de agendamento em destaque",
+      },
+    ];
+
+    const chosenArchetype = DESIGN_ARCHETYPES[Math.floor(Math.random() * DESIGN_ARCHETYPES.length)];
+
     // Prompt estruturado em 2 etapas: Planejamento / Direção de Arte + Execução Técnica
     const briefingPrompt = `DIREÇÃO DE ARTE & CRIAÇÃO EXCLUSIVA DE SITE WEB:
 Empresa: "${company.name}"
@@ -909,23 +939,21 @@ ${verifiedRating ? `Avaliação Google Maps: ${verifiedRating} estrelas (${verif
 ${realPhotos.length > 0 ? `FOTOS REAIS DO GOOGLE MEU NEGÓCIO DA EMPRESA (PRIORIZAR NO HERO E SEÇÕES):
 ${realPhotos.slice(0, 6).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}` : ""}
 
-DIRETRIZES DE CRIAÇÃO AUTÔNOMA (LIBERDADE CRIATIVA TOTAL - PADRÃO AWWWARDS / LOVABLE):
-1. ETAPA DE PLANEJAMENTO & CONCEITO VISUAL:
-   - Diagnostique o perfil da marca e defina uma identidade visual ÚNICA e marcante para este negócio (NÃO repita a mesma fórmula ou a mesma ordem de blocos de sites anteriores).
-   - Escolha livremente o estilo que melhor valoriza o segmento:
-     * Para saúde/clínicas/odontologia: Clean Luminoso & Acolhedor (fundo claro sofisticado #ffffff ou #f8fafc, acentos em azul-saúde ou verde esmeralda, cards leves, higiene e confiança).
-     * Para barbearia/automotivo/tecnologia: Dark Sofisticado ou Grafite nobre (#09090b com iluminação sutil e toques de contraste).
-     * Para estética/boutique/moda: Editorial Elegante (tons neutros, tipografia refinada e acabamento de luxo).
-     * Para consultoria/direito/corporativo: Autoridade Executiva sóbria e moderna.
-   - Escolha uma tipografia expressiva do Google Fonts (Plus Jakarta Sans, Outfit, Syne, Playfair Display, Cinzel ou Montserrat).
+CONCEITO DE DESIGN DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR PARA NÃO FICAR IGUAL A OUTROS):
+- Estilo Arquitetônico: ${chosenArchetype.style}
+- Formato do Hero: ${chosenArchetype.heroConcept}
+- Paleta e Atmosfera Cromática: ${chosenArchetype.palette}
+- Estilo da Navbar: ${chosenArchetype.navbar}
 
-2. FOTOS E IMAGENS PÚBLICAS DINÂMICAS:
+REGRAS DE OURO DE EXCLUSIVIDADE & NÃO-REPETIÇÃO (PADRÃO AWWWARDS / LOVABLE):
+1. NUNCA gere o mesmo layout previsível (NÃO crie sempre a mesma topbar verde "Biossegurança Rigorosa" nem a mesma divisão de 2 colunas com cadeira/foto à direita). Este site deve nascer com a identidade única de "${chosenArchetype.style}".
+2. Aplique a navbar indicada: "${chosenArchetype.navbar}". Nada de topbars genéricas poluídas.
+3. FOTOS E IMAGENS PÚBLICAS DINÂMICAS:
    - Se foram fornecidas fotos reais do negócio acima, use-as nas seções principais.
-   - Você tem total liberdade para selecionar e formular URLs de fotos públicas temáticas de alta resolução do Unsplash (ex: https://images.unsplash.com/photo-[id]?auto=format&fit=crop&w=1200&q=80 ou termos do nicho "${nicheText}").
-   - Não se limite a um número fixo de fotos: use fotos no Hero, nos serviços, na galeria ambiental ou onde enriquecer a experiência do cliente.
-   - NUNCA use fotos de consultórios de dentista para barbearias, oficinas ou restaurantes. Use sempre fotos pertinentes ao nicho "${nicheText}".
-
-3. RECURSOS ESSENCIAIS DE NEGÓCIO E CONVERSÃO:
+   - Sinta-se 100% livre para selecionar e formular URLs de fotos públicas temáticas de alta resolução do Unsplash (ex: https://images.unsplash.com/photo-[id]?auto=format&fit=crop&w=1200&q=80 ou palavras-chave pertinentes a "${nicheText}").
+   - Não se limite a um número fixo de fotos: use fotos no Hero, nos tratamentos/serviços, na galeria ambiental ou onde enriquecer o design.
+   - NUNCA use fotos de dentistas para outros nichos. Use sempre fotos autênticas pertinentes a "${nicheText}".
+4. RECURSOS ESSENCIAIS DE NEGÓCIO E CONVERSÃO:
    - Botão flutuante de WhatsApp pulsante no canto inferior direito (<div class="fixed bottom-6 right-6 z-50">) com link direto para wa.me/${cleanPhone}.
    - Seção de Localização interativa com iframe responsivo do Google Maps (${verifiedAddress || company.name}) e dois botões de GPS:
      * "📍 Traçar Rota no Google Maps"

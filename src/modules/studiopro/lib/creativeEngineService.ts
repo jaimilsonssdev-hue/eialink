@@ -139,12 +139,15 @@ DIRETRIZES TÉCNICAS E DE DESIGN:
    - Importe Lucide Icons via unpkg:
      <script src="https://unpkg.com/lucide@latest"></script>
 
-2. **Estética Lovable / Moderna Calibrada por Nicho**:
-   - Para Saúde, Odontologia, Clínicas, Médica e Bem-estar: Estética Luminous Clean & Medical Luxury (fundo porcelana limpo #ffffff ou #f8fafc, acentos nobres em verde-menta, teal #0d9488, azul-celeste ou dourado champanhe suave, cards brancos com sombras finas shadow-xl border border-slate-100, transmitindo higiene impecável, biossegurança e acolhimento).
-   - Para Estética, Beleza, Salão e Spa: Estética Glow & Elegance (marfim, tons suaves de rosé, champanhe, iluminação difusa, tipografia refinada).
-   - Para Barbearia, Automotivo, Indústria e Tecnologia: Estética Dark Moderno / Grafite Profundo (#09090b, ardósia, detalhes em âmbar ou azul elétrico).
-   - Para Comércio e Serviços Gerais: Estética Moderna de Alta Autoridade (fundo limpo com alto contraste e cards refinados).
-   - NUNCA use preto chapado genérico para clínicas ou consultórios de saúde.
+2. **Diretrizes de Exclusividade e Anti-Template (CADA SITE DEVE SER ÚNICO)**:
+   - NUNCA repita sempre a mesma fórmula arquitetônica (ex: topbar verde idêntica + hero de 2 colunas com imagem arredondada à direita + 4 cards).
+   - Varie o estilo arquitetônico do Hero e da página:
+     * Hero Editorial / Magazine: Tipografia de alta escala (Playfair Display, Syne ou Outfit), diagramação de revista de luxo, espaços negativos arejados e recortes elegantes.
+     * Hero Imersivo / Full-bleed: Fotografia cinematográfica ampla com overlay gradiente sofisticado e tipografia marcante.
+     * Hero Bento Grid / Mosaico: Grid assimétrico dinâmico de 3 ou 4 blocos de imagens, detalhes, reputação e chamada.
+     * Hero Split Contemporâneo 60/40: Bloco de texto expressivo com cartões flutuantes interativos e estatísticas integradas.
+   - Varie o cabeçalho: Crie navbars contemporâneas (ex: Navbar flutuante tipo pill centralizada com 'max-w-4xl mx-auto rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-lg border border-black/5', ou header minimalista transparente integrado ao hero, SEM topbars genéricas repetitivas).
+   - Varie a paleta de cores: Explore Champagne Dourado & Grafite Nobre, Azul Índigo Real & Polar, Marfim & Terracota Acolhedor, Charcoal & Ouro Acetinado, Verde Eucalipto Profundo & Creme, etc. Evite fixar sempre na mesma cor verde-hospitalar.
 
 3. **Imagens de Alta Resolução Reais**:
    - Utilize imagens temáticas de alta qualidade do Unsplash através de URLs diretas e estáveis com palavras-chave pertinentes:

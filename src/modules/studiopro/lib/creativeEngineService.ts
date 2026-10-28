@@ -149,10 +149,12 @@ DIRETRIZES TÉCNICAS E DE DESIGN:
    - Varie o cabeçalho: Crie navbars contemporâneas (ex: Navbar flutuante tipo pill centralizada com 'max-w-4xl mx-auto rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-lg border border-black/5', ou header minimalista transparente integrado ao hero, SEM topbars genéricas repetitivas).
    - Varie a paleta de cores: Explore Champagne Dourado & Grafite Nobre, Azul Índigo Real & Polar, Marfim & Terracota Acolhedor, Charcoal & Ouro Acetinado, Verde Eucalipto Profundo & Creme, etc. Evite fixar sempre na mesma cor verde-hospitalar.
 
-3. **Imagens de Alta Resolução Reais**:
-   - Utilize imagens temáticas de alta qualidade do Unsplash através de URLs diretas e estáveis com palavras-chave pertinentes:
-     https://images.unsplash.com/photo-... ou utilize a CDN Unsplash com parâmetros formatados: https://images.unsplash.com/photo-[id]?auto=format&fit=crop&w=1200&q=80
-   - NUNCA use placeholders cinzas como "placeholder.com". Sempre use fotos reais do nicho especificado (ex: para dentistas/odontologia, use fotos reais de sorrisos perfeitos, consultório iluminado e atendimento humanizado).
+3. **Imagens de Alta Resolução Reais e Compatíveis**:
+   - Utilize as imagens compatíveis fornecidas no prompt do briefing (ou fotos reais do Google Meu Negócio se houver).
+   - NUNCA invente URLs do Unsplash com IDs aleatórios fictícios (evita erro 404 de imagem quebrada).
+   - NUNCA use repetidamente a foto antiga da cadeira odontológica (photo-1629909613654-28e377c37b09). Use sempre as fotos compatíveis buscadas ou fotos temáticas exclusivas.
+   - Distribua as fotos nos seus papéis corretos: Hero (foto panorâmica imersiva), Espaço/Ambiente (foto do espaço físico), Serviços/Procedimentos (fotos das soluções/tratamentos), Equipe (foto humanizada de atendimento) e Detalhes (close-up com alta definição).
+   - NUNCA use placeholders cinzas como "placeholder.com".
 
 4. **FERRAMENTAS NATIVAS E INTEGRALIDADE DE NEGÓCIO (OBRIGATÓRIO)**:
    - **Agendamento Online**:

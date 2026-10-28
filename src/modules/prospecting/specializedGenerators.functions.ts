@@ -8,6 +8,7 @@ import {
   renderMarquee,
   renderSocialProof,
 } from "./skills";
+import { getRandomCoverForNiche } from "./nichePresets";
 import { STUDIO_PRO_VARIANTS } from "@/modules/studiopro/lib/buildStudioProConfigFromLead";
 
 export type ProspectNicheCategory = "food" | "shop" | "barber" | "service" | "industry";
@@ -434,8 +435,9 @@ export function getSubNicheData(
   const photos = hasUserPhotos
     ? userPhotos
     : [
-        "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80",
-        "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80",
+        getRandomCoverForNiche(niche || "odontologia", businessName),
+        getRandomCoverForNiche(niche || "odontologia", `${businessName}-2`),
+        getRandomCoverForNiche(niche || "odontologia", `${businessName}-3`),
       ];
   return {
     subType: "service",

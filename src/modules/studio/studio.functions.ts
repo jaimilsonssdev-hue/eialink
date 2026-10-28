@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { searchCompatibleBusinessImages } from "@/modules/media/unsplash.functions";
 import type { Database } from "@/integrations/supabase/types";
 import type { CinematicPageData } from "@/modules/cinematic/types";
 import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
@@ -698,8 +699,24 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       );
     if (input.photos && input.photos.length > 0) {
       businessContextParts.push(
-        `Fotos reais da empresa para usar no site: ${input.photos.slice(0, 6).join(", ")}`,
+        `FOTOS REAIS DA EMPRESA PARA USAR NO SITE (PRIORIDADE TOTAL):\n${input.photos.slice(0, 6).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}`,
       );
+    } else {
+      // Se não houver fotos reais anexadas, busca fotos compatíveis em tempo real via IA/DDG/Unsplash
+      try {
+        const found = await searchCompatibleBusinessImages(
+          effectiveNiche || "geral",
+          effectiveProjectName,
+          8,
+        );
+        if (found && found.length > 0) {
+          businessContextParts.push(
+            `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:\n${found.map((img, i) => `- Foto ${i + 1} [${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}\nDIRETRIZ CRÍTICA DE IMAGENS: Distribua estas fotos pelos blocos (Hero, Espaço, Procedimentos, Equipe, Detalhes). NUNCA invente links fictícios e NUNCA repita a mesma foto.`,
+          );
+        }
+      } catch (e) {
+        console.warn("[StudioServer] Aviso ao buscar fotos compatíveis:", e);
+      }
     }
 
     if (businessContextParts.length > 0) {

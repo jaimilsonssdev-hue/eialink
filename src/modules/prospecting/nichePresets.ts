@@ -239,11 +239,21 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   odontologia: {
     covers: [
-      { id: "odo-1", url: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=80", label: "Consultório Odontológico Moderno" },
-      { id: "odo-2", url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80", label: "Sorriso & Estética Dental" },
-      { id: "odo-3", url: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1200&q=80", label: "Escaneamento & Tecnologia 3D" },
-      { id: "odo-4", url: "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=1200&q=80", label: "Recepção Odontológica Clean" },
-      { id: "odo-5", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80", label: "Equipamentos Odontológicos Avançados" },
+      { id: "odo-1", url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80", label: "Sorriso Radiante & Estética Dental" },
+      { id: "odo-2", url: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1200&q=80", label: "Escaneamento & Tecnologia 3D" },
+      { id: "odo-3", url: "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=1200&q=80", label: "Recepção Odontológica Clean" },
+      { id: "odo-4", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80", label: "Sala Clínica Iluminada com Luz Natural" },
+      { id: "odo-5", url: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=1200&q=80", label: "Consulta Humanizada & Cuidado Dental" },
+      { id: "odo-6", url: "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?auto=format&fit=crop&w=1200&q=80", label: "Procedimento Estético Dental de Precisão" },
+      { id: "odo-7", url: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1200&q=80", label: "Ambiente Clínico Contemporâneo" },
+      { id: "odo-8", url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1200&q=80", label: "Especialista em Lentes e Harmonização" },
+      { id: "odo-9", url: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1200&q=80", label: "Arquitetura Odontológica de Alto Padrão" },
+      { id: "odo-10", url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80", label: "Tecnologia e Diagnóstico Digital" },
+      { id: "odo-11", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80", label: "Corpo Clínico & Atendimento Especializado" },
+      { id: "odo-12", url: "https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&w=1200&q=80", label: "Design de Sorrisos & Odontologia Digital" },
+      { id: "odo-13", url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=1200&q=80", label: "Harmonia Facial & Estética Odontológica" },
+      { id: "odo-14", url: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80", label: "Biossegurança & Conforto Clínico" },
+      { id: "odo-15", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80", label: "Espaço Executivo & Atendimento VIP" },
     ],
     avatars: [
       { id: "odo-av-1", url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80", label: "Dr. Cirurgião-Dentista" },
@@ -1967,6 +1977,28 @@ export const getNichePreset = getPresetForCompany;
 /**
  * Retorna a galeria de fotos curadas para o nicho.
  */
+/**
+ * Retorna uma foto de capa rotativa e variada para o nicho,
+ * utilizando uma semente (como o nome da empresa) para garantir que
+ * duas empresas do mesmo nicho não recebam a mesma foto.
+ */
+export function getRandomCoverForNiche(nicheKey?: string | null, seed?: string): string {
+  const gallery = getGalleryForNiche(nicheKey);
+  const covers = gallery.covers || [];
+  if (covers.length === 0) {
+    return "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80";
+  }
+  if (!seed) {
+    const randomIndex = Math.floor(Math.random() * covers.length);
+    return covers[randomIndex].url;
+  }
+  const hash = Math.abs(
+    seed.split("").reduce((acc, char, i) => acc + char.charCodeAt(0) * (i + 1), 0),
+  );
+  const index = hash % covers.length;
+  return covers[index].url;
+}
+
 export function getGalleryForNiche(nicheKey?: string | null): { covers: CuratedPhoto[]; avatars: CuratedPhoto[] } {
   if (!nicheKey) return NICHE_GALLERIES.geral;
   const key = detectNicheKey(nicheKey, null);

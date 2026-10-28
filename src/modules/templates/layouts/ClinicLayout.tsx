@@ -1,3 +1,4 @@
+import { getRandomCoverForNiche } from "@/modules/prospecting/nichePresets";
 import type { ReactNode } from "react";
 import {
   ArrowUpRight,
@@ -77,9 +78,7 @@ export class ClinicLayout implements TemplateLayoutRenderer {
       ? `https://www.google.com/maps/search/?api=1&query=${encodedAddress}`
       : null;
 
-    const defaultCover =
-      bio.cover_url ||
-      "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=80";
+    const defaultCover = bio.cover_url || getRandomCoverForNiche("odontologia", bio.display_name);
 
     const defaultWaMessage =
       bio.whatsapp_message ||

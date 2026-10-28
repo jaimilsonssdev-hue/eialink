@@ -90,6 +90,7 @@ import {
 } from "@/modules/prospecting/specializedGenerators.functions";
 import { getGeminiApiKey, generateSiteHtml } from "@/modules/studiopro/lib/creativeEngineService";
 import { generateCreativeSiteFn, syncCreativeStudioProjectFn } from "@/modules/studio/studio.functions";
+import { searchCompatibleBusinessImagesFn } from "@/modules/media/unsplash.functions";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
 
@@ -895,6 +896,20 @@ function ProspectingPage() {
       console.warn("[Prospeccao] Consulta Google Places falhou, prosseguindo com dados do lead:", err);
     }
 
+    setFeedback(`🔍 Buscando imagens compatíveis em alta resolução para ${company.name}...`);
+    let compatibleImages: Array<{ url: string; label: string; role: string }> = [];
+    try {
+      compatibleImages = await searchCompatibleBusinessImagesFn({
+        data: {
+          niche: nicheText,
+          businessName: company.name,
+          count: 8,
+        },
+      });
+    } catch (imgSearchErr) {
+      console.warn("[Prospeccao] Falha ao buscar imagens compatíveis:", imgSearchErr);
+    }
+
     setFeedback(`🚀 IA Criativa planejando e desenhando site exclusivo para ${company.name}...`);
 
     // Sorteio dinâmico de Arquétipo de Design para garantir que NENHUM site saia igual
@@ -939,6 +954,14 @@ ${verifiedRating ? `Avaliação Google Maps: ${verifiedRating} estrelas (${verif
 ${realPhotos.length > 0 ? `FOTOS REAIS DO GOOGLE MEU NEGÓCIO DA EMPRESA (PRIORIZAR NO HERO E SEÇÕES):
 ${realPhotos.slice(0, 6).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}` : ""}
 
+${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:
+${compatibleImages.map((img, i) => `- Imagem ${i + 1} [Papel: ${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
+
+DIRETRIZ DE APLICAÇÃO DE IMAGENS:
+- Use as imagens acima nos atributos src="..." de acordo com o papel sugerido (Hero, Espaço, Serviços, Equipe, Detalhes).
+- NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
+- NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09). Use as imagens autênticas listadas acima!` : ""}
+
 CONCEITO DE DESIGN DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR PARA NÃO FICAR IGUAL A OUTROS):
 - Estilo Arquitetônico: ${chosenArchetype.style}
 - Formato do Hero: ${chosenArchetype.heroConcept}
@@ -972,13 +995,13 @@ REGRAS DE OURO DE EXCLUSIVIDADE & NÃO-REPETIÇÃO (PADRÃO AWWWARDS / LOVABLE):
           projectName: company.name,
           niche: nicheText,
           city: company.city || "Brasil",
-          businessAddress: company.address || undefined,
+          businessAddress: verifiedAddress || company.address || undefined,
           businessWhatsapp: cleanPhone || undefined,
           businessSlug: demoInfo.slug || undefined,
           projectId: demoInfo.pageId || undefined,
-          rating: company.rating ? Number(company.rating) : 4.9,
-          reviewsCount: company.reviews_count ? Number(company.reviews_count) : 85,
-          photos: recommendedPhotos,
+          rating: verifiedRating ? Number(verifiedRating) : 4.9,
+          reviewsCount: verifiedReviewsCount ? Number(verifiedReviewsCount) : 85,
+          photos: realPhotos.length > 0 ? realPhotos : compatibleImages.map((img) => img.url),
           apiKey: clientKey,
           clientGeminiKey: clientKey,
           isRegeneration,

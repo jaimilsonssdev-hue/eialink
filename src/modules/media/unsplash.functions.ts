@@ -248,3 +248,207 @@ export const searchUnsplashPhotosFn = createServerFn({ method: "POST" })
 
     return curated;
   });
+
+
+export interface CompatibleBusinessImage {
+  id: string;
+  url: string;
+  thumbUrl: string;
+  label: string;
+  role: "hero" | "ambient" | "service" | "team" | "detail" | "tech";
+  source: "ddg" | "unsplash" | "curated";
+}
+
+/**
+ * Busca de Imagens Compatíveis em Tempo Real para o Gerador de Sites IA:
+ * 1. Constrói buscas altamente direcionadas para o nicho e nome da empresa.
+ * 2. Consulta a web (DuckDuckGo Image Search com preferência para fontes de alta qualidade/Unsplash).
+ * 3. Mescla com o acervo rotativo de nicho com rotação dinâmica (seed).
+ * 4. Atribui papéis de design para orientar a IA na diagramação (Hero, Espaço, Serviços, Equipe, Detalhes).
+ */
+export async function searchCompatibleBusinessImages(
+  niche: string,
+  businessName?: string,
+  count = 8,
+): Promise<CompatibleBusinessImage[]> {
+  const detectedKey = detectNicheKey(niche, businessName);
+  const safeCount = Math.min(Math.max(count || 8, 4), 16);
+
+  // Termos específicos por nicho para busca web precisa
+  const nicheKeywords: Record<string, string[]> = {
+    odontologia: [
+      "consultorio odontologico moderno recepcao",
+      "estetica dental sorriso perfeito clareamento",
+      "escaneamento 3d odontologia digital",
+      "dentista atendimento humanizado paciente",
+    ],
+    clinica: [
+      "clinica medica consultorio moderno recepcao",
+      "atendimento humanizado saude medico",
+      "equipamentos medicos alta tecnologia exame",
+    ],
+    estetica_corporal: [
+      "estetica corporal drenagem linfatica massoterapia",
+      "clinica estetica bem estar corporal",
+      "massagem modeladora relaxante spa",
+    ],
+    estetica_facial: [
+      "harmonizacao facial limpeza de pele skincare",
+      "estetica facial glow rejuvenescimento",
+      "clinica estetica facial profissional",
+    ],
+    spa: [
+      "spa luxo massagem relaxante aromaterapia",
+      "terapia spa pedras quentes bem estar",
+      "ambiente zen silencio massoterapia",
+    ],
+    barbearia: [
+      "barbearia moderna cadeira vintage navalha",
+      "corte degrade fade barba cabelo masculino",
+      "barber shop interior luz neon madeira",
+    ],
+    beleza: [
+      "salao de beleza iluminado bancada espelho",
+      "studio unhas manicure gel nail art",
+      "hair stylist corte escova penteado",
+    ],
+    advocacia: [
+      "escritorio advocacia corporativo sala reuniao",
+      "advogado direito consultoria juridica",
+      "biblioteca juridica direito moderno",
+    ],
+    oficina: [
+      "oficina mecanica auto center elevador carros",
+      "manutencao veicular motor diagnostico pneus",
+    ],
+    petshop: [
+      "banho e tosa pet shop tosa higienica",
+      "veterinaria clinica filhote pet care",
+    ],
+    fitness: [
+      "academia moderna musculacao pesos halteres",
+      "treino funcional personal trainer saude",
+    ],
+    restaurante: [
+      "restaurante gastronomia prato gourmet",
+      "interior restaurante moderno mesas jantar",
+    ],
+  };
+
+  const queries = nicheKeywords[detectedKey] || [
+    `${niche} ambiente moderno recepcao`,
+    `${niche} atendimento profissional alta resolucao`,
+  ];
+
+  const foundWebPhotos: UnsplashPhotoItem[] = [];
+
+  try {
+    const q1 = `${queries[0]} site:unsplash.com`;
+    const q2 = queries[1] ? `${queries[1]} site:unsplash.com` : `${niche} servicos`;
+    const [res1, res2] = await Promise.allSettled([
+      searchDuckDuckGoImages(q1, 8),
+      searchDuckDuckGoImages(q2, 6),
+    ]);
+
+    if (res1.status === "fulfilled" && Array.isArray(res1.value)) {
+      foundWebPhotos.push(...res1.value);
+    }
+    if (res2.status === "fulfilled" && Array.isArray(res2.value)) {
+      foundWebPhotos.push(...res2.value);
+    }
+  } catch (err) {
+    console.warn("[searchCompatibleBusinessImages] Busca na web falhou, usando galeria:", err);
+  }
+
+  // Se a busca com 'site:unsplash.com' não tiver trazido muitas fotos, tenta busca direta dos termos
+  if (foundWebPhotos.length < 4) {
+    try {
+      const qDirect = queries[0];
+      const directRes = await searchDuckDuckGoImages(qDirect, 8);
+      foundWebPhotos.push(...directRes);
+    } catch {
+      // continua
+    }
+  }
+
+  // Galeria curada do nicho com shuffle determinístico pela semente do nome
+  const gallery = NICHE_GALLERIES[detectedKey] || NICHE_GALLERIES.geral;
+  const allCurated = [...(gallery.covers || []), ...(gallery.avatars || [])];
+
+  // Seed hash para variar a seleção entre empresas diferentes
+  const seedString = `${businessName || ""}-${niche}`;
+  const seedNum = Math.abs(
+    seedString.split("").reduce((acc, c, i) => acc + c.charCodeAt(0) * (i + 1), 0),
+  );
+
+  // Rotação determinística do pool curado
+  const rotatedCurated = allCurated.slice().sort((a, b) => {
+    const hashA = (a.id.charCodeAt(a.id.length - 1) + seedNum) % 17;
+    const hashB = (b.id.charCodeAt(b.id.length - 1) + seedNum) % 17;
+    return hashA - hashB;
+  });
+
+  // Limpa e formata URLs para CDN de alta resolução
+  const cleanUrl = (url: string) => {
+    if (url.includes("unsplash.com") && !url.includes("auto=format")) {
+      return `${url.split("?")[0]}?auto=format&fit=crop&w=1200&q=80`;
+    }
+    return url;
+  };
+
+  const pool: Array<{ url: string; label: string; source: "ddg" | "unsplash" | "curated" }> = [];
+  const seenUrls = new Set<string>();
+
+  // 1. Adiciona fotos encontradas na web
+  for (const item of foundWebPhotos) {
+    const formatted = cleanUrl(item.url);
+    if (!seenUrls.has(formatted) && formatted.startsWith("http")) {
+      seenUrls.add(formatted);
+      pool.push({
+        url: formatted,
+        label: item.label || `${niche} de alta resolução`,
+        source: item.source || "ddg",
+      });
+    }
+  }
+
+  // 2. Completa com a galeria curada rotacionada
+  for (const item of rotatedCurated) {
+    const formatted = cleanUrl(item.url);
+    if (!seenUrls.has(formatted)) {
+      seenUrls.add(formatted);
+      pool.push({
+        url: formatted,
+        label: item.label,
+        source: "curated",
+      });
+    }
+  }
+
+  const selected = pool.slice(0, safeCount);
+  const roles: CompatibleBusinessImage["role"][] = [
+    "hero",
+    "ambient",
+    "service",
+    "service",
+    "team",
+    "detail",
+    "tech",
+    "detail",
+  ];
+
+  return selected.map((item, idx) => ({
+    id: `compat-${idx}-${Date.now()}`,
+    url: item.url,
+    thumbUrl: item.url.replace("w=1200", "w=400"),
+    label: item.label,
+    role: roles[idx % roles.length],
+    source: item.source,
+  }));
+}
+
+export const searchCompatibleBusinessImagesFn = createServerFn({ method: "POST" })
+  .validator((d: { niche: string; businessName?: string; count?: number }) => d)
+  .handler(async ({ data }): Promise<CompatibleBusinessImage[]> => {
+    return searchCompatibleBusinessImages(data.niche, data.businessName, data.count);
+  });

@@ -32,6 +32,7 @@ import {
   Kanban,
   LayoutList,
   Tag,
+  Camera,
 } from "lucide-react";
 
 import {

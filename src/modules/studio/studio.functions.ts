@@ -685,7 +685,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       );
       if (nicheConfig.services.length > 0) {
         businessContextParts.push(
-          `Serviços oficiais do negócio para a vitrine: ${nicheConfig.services.map((s) => `${s.name} (R$ ${s.price}, ${s.duration_minutes}min)`).join("; ")}.`,
+          `Serviços oficiais do negócio: ${nicheConfig.services.map((s) => `${s.name} (R$ ${s.price}, ${s.duration_minutes}min)`).join("; ")}. IMPORTANTE: Apresente estes serviços seguindo fielmente a diagramação do arquétipo estrutural (ex: lista editorial, bento cards, timeline ou tabela moderna).`,
         );
       }
     } else {
@@ -704,11 +704,15 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
     } else {
       // Se não houver fotos reais anexadas, busca fotos compatíveis em tempo real via IA/DDG/Unsplash
       try {
-        const found = await searchCompatibleBusinessImages(
+        const foundPromise = searchCompatibleBusinessImages(
           effectiveNiche || "geral",
           effectiveProjectName,
           8,
         );
+        const found = (await Promise.race([
+          foundPromise,
+          new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 2000)),
+        ])) || [];
         if (found && found.length > 0) {
           businessContextParts.push(
             `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:\n${found.map((img, i) => `- Foto ${i + 1} [${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}\nDIRETRIZ CRÍTICA DE IMAGENS: Distribua estas fotos pelos blocos (Hero, Espaço, Procedimentos, Equipe, Detalhes). NUNCA invente links fictícios e NUNCA repita a mesma foto.`,
@@ -800,7 +804,7 @@ ${effectiveHtml}`;
             systemInstruction: isModification
               ? SURGICAL_EDIT_SYSTEM_PROMPT
               : CODE_GENERATION_SYSTEM_PROMPT,
-            temperature: isModification ? 0.2 : 0.65,
+            temperature: isModification ? 0.2 : 0.85,
             maxOutputTokens: 32768,
           },
         });

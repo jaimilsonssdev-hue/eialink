@@ -1,4 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { NICHE_GALLERIES, detectNicheKey } from "@/modules/prospecting/nichePresets";
 
 export interface UnsplashPhotoItem {
@@ -87,6 +88,7 @@ async function searchDuckDuckGoImages(query: string, limit = 24): Promise<Unspla
     const tokenRes = await fetch(
       `https://duckduckgo.com/?q=${encodeURIComponent(query)}&iax=images&ia=images`,
       {
+        signal: AbortSignal.timeout(1800),
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -107,6 +109,7 @@ async function searchDuckDuckGoImages(query: string, limit = 24): Promise<Unspla
         query
       )}&vqd=${vqd}&f=,,,type:photo,&p=1`,
       {
+        signal: AbortSignal.timeout(1800),
         headers: {
           "User-Agent":
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -150,6 +153,7 @@ async function searchOpenverseImages(query: string, limit = 20): Promise<Unsplas
     const res = await fetch(
       `https://api.openverse.org/v1/images/?q=${encodeURIComponent(query)}&page_size=${limit}`,
       {
+        signal: AbortSignal.timeout(1800),
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) MaquinaDeSites/2.0",
           Accept: "application/json",
@@ -206,6 +210,7 @@ function getCuratedNichePhotos(query: string): UnsplashPhotoItem[] {
  * 3. Se houver falha de rede ou timeout, recorre à galeria curada EXATAMENTE do nicho pesquisado (nunca fotos aleatórias).
  */
 export const searchUnsplashPhotosFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((d: { query: string; perPage?: number }) => d)
   .handler(async ({ data }): Promise<UnsplashPhotoItem[]> => {
     const rawQuery = (data.query || "").trim();
@@ -256,7 +261,7 @@ export interface CompatibleBusinessImage {
   thumbUrl: string;
   label: string;
   role: "hero" | "ambient" | "service" | "team" | "detail" | "tech";
-  source: "ddg" | "unsplash" | "curated";
+  source: "ddg" | "unsplash" | "curated" | "openverse";
 }
 
 /**
@@ -340,36 +345,48 @@ export async function searchCompatibleBusinessImages(
     `${niche} atendimento profissional alta resolucao`,
   ];
 
+  const normalizedLower = (niche || "").toLowerCase().trim();
+  const enMappedQuery = PT_TO_EN_TERMS[normalizedLower] || PT_TO_EN_TERMS[detectedKey] || niche;
+
   const foundWebPhotos: UnsplashPhotoItem[] = [];
 
   try {
     const q1 = `${queries[0]} site:unsplash.com`;
     const q2 = queries[1] ? `${queries[1]} site:unsplash.com` : `${niche} servicos`;
-    const [res1, res2] = await Promise.allSettled([
+    
+    // Dispara busca concorrente em DuckDuckGo E na API oficial do Openverse
+    const fetchGroup = Promise.allSettled([
       searchDuckDuckGoImages(q1, 8),
       searchDuckDuckGoImages(q2, 6),
+      searchOpenverseImages(enMappedQuery, 8),
+      searchOpenverseImages(`${enMappedQuery} interior`, 6),
     ]);
+    const settledList = (await Promise.race([
+      fetchGroup,
+      new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 2200)),
+    ])) || [];
+    const ddg1 = settledList[0];
+    const ddg2 = settledList[1];
+    const ov1 = settledList[2];
+    const ov2 = settledList[3];
 
-    if (res1.status === "fulfilled" && Array.isArray(res1.value)) {
-      foundWebPhotos.push(...res1.value);
+    if (ddg1.status === "fulfilled" && Array.isArray(ddg1.value)) {
+      foundWebPhotos.push(...ddg1.value);
     }
-    if (res2.status === "fulfilled" && Array.isArray(res2.value)) {
-      foundWebPhotos.push(...res2.value);
+    if (ddg2.status === "fulfilled" && Array.isArray(ddg2.value)) {
+      foundWebPhotos.push(...ddg2.value);
+    }
+    if (ov1.status === "fulfilled" && Array.isArray(ov1.value)) {
+      foundWebPhotos.push(...ov1.value);
+    }
+    if (ov2.status === "fulfilled" && Array.isArray(ov2.value)) {
+      foundWebPhotos.push(...ov2.value);
     }
   } catch (err) {
-    console.warn("[searchCompatibleBusinessImages] Busca na web falhou, usando galeria:", err);
+    console.warn("[searchCompatibleBusinessImages] Busca na web falhou:", err);
   }
 
-  // Se a busca com 'site:unsplash.com' não tiver trazido muitas fotos, tenta busca direta dos termos
-  if (foundWebPhotos.length < 4) {
-    try {
-      const qDirect = queries[0];
-      const directRes = await searchDuckDuckGoImages(qDirect, 8);
-      foundWebPhotos.push(...directRes);
-    } catch {
-      // continua
-    }
-  }
+  // O pool curado já garante variedade máxima sem atrasar a geração
 
   // Galeria curada do nicho com shuffle determinístico pela semente do nome
   const gallery = NICHE_GALLERIES[detectedKey] || NICHE_GALLERIES.geral;
@@ -396,7 +413,7 @@ export async function searchCompatibleBusinessImages(
     return url;
   };
 
-  const pool: Array<{ url: string; label: string; source: "ddg" | "unsplash" | "curated" }> = [];
+  const pool: Array<{ url: string; label: string; source: "ddg" | "unsplash" | "curated" | "openverse" }> = [];
   const seenUrls = new Set<string>();
 
   // 1. Adiciona fotos encontradas na web
@@ -448,6 +465,7 @@ export async function searchCompatibleBusinessImages(
 }
 
 export const searchCompatibleBusinessImagesFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .validator((d: { niche: string; businessName?: string; count?: number }) => d)
   .handler(async ({ data }): Promise<CompatibleBusinessImage[]> => {
     return searchCompatibleBusinessImages(data.niche, data.businessName, data.count);

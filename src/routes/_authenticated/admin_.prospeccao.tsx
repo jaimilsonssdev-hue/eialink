@@ -70,6 +70,7 @@ import { searchGoogleMapsAndInstagram, lookupBusinessProfile } from "@/modules/p
 import { getSavedApifyToken, APIFY_TOKEN_UPDATED_EVENT } from "@/modules/prospecting/ApifyInstagramService";
 import { PageService, type OwnedPage } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
+import { FieldCaptureModal } from "@/components/prospecting/FieldCaptureModal";
 import { LeadTemperatureBadge } from "@/components/prospecting/LeadTemperatureBadge";
 import { CnpjLookupCard } from "@/components/prospecting/CnpjLookupCard";
 import { CopyConfigModal, type CopyModalTabType } from "@/components/prospecting/CopyConfigModal";
@@ -281,6 +282,7 @@ function ProspectingPage() {
   const [instaModalCompany, setInstaModalCompany] = useState<ProspectedCompany | null>(null);
   const [whatsModalCompany, setWhatsModalCompany] = useState<ProspectedCompany | null>(null);
   const [isCopyModalOpen, setIsCopyModalOpen] = useState(false);
+  const [fieldCaptureOpen, setFieldCaptureOpen] = useState(false);
   const [copyModalInitialTab, setCopyModalInitialTab] = useState<CopyModalTabType>("whatsappWithDemo");
   const [activeAuditCompany, setActiveAuditCompany] = useState<ProspectedCompany | null>(null);
   const [, setCopyTemplatesVersion] = useState(0);
@@ -850,6 +852,7 @@ function ProspectingPage() {
   async function executeCreativeStudioGeneration(
     company: ProspectedCompany,
     isRegeneration = false,
+    customPhotoUrl?: string,
   ): Promise<{ pageId: string; slug: string; url: string }> {
     const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
     const clientKey = getGeminiApiKey() || undefined;
@@ -861,6 +864,9 @@ function ProspectingPage() {
 
     // Busca detalhes reais do Google Meu Negócio (fotos reais, endereço verificado e nota)
     let realPhotos: string[] = [];
+    if (customPhotoUrl) {
+      realPhotos.push(customPhotoUrl);
+    }
     let verifiedAddress = company.address;
     let verifiedRating = company.rating;
     let verifiedReviewsCount = company.reviews_count;
@@ -899,44 +905,61 @@ function ProspectingPage() {
     setFeedback(`🔍 Buscando imagens compatíveis em alta resolução para ${company.name}...`);
     let compatibleImages: Array<{ url: string; label: string; role: string }> = [];
     try {
-      compatibleImages = await searchCompatibleBusinessImagesFn({
+      const imgSearchPromise = searchCompatibleBusinessImagesFn({
         data: {
           niche: nicheText,
           businessName: company.name,
           count: 8,
         },
       });
+      // Timeout teto de 2.5s para garantir geração instantânea do site
+      compatibleImages = (await Promise.race([
+        imgSearchPromise,
+        new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 2500)),
+      ])) || [];
     } catch (imgSearchErr) {
       console.warn("[Prospeccao] Falha ao buscar imagens compatíveis:", imgSearchErr);
     }
 
     setFeedback(`🚀 IA Criativa planejando e desenhando site exclusivo para ${company.name}...`);
 
-    // Sorteio dinâmico de Arquétipo de Design para garantir que NENHUM site saia igual
+    // Sorteio dinâmico de Arquétipo Estrutural de Página Completa (garante esqueleto único para cada site)
     const DESIGN_ARCHETYPES = [
       {
-        style: "Editorial Luxury & Tipografia de Alta Escala",
-        heroConcept: "Hero assimétrico com tipografia expressiva em serifa contemporânea (Google Fonts Playfair Display ou Syne), espaços generosos, recortes fotográficos elegantes e atmosfera de revista de prestígio.",
-        palette: "Tons nobres de Champagne Dourado, Marfim, Areia e Grafite Nobre (#18181b), transmitindo sofisticação e valor percebido altíssimo.",
-        navbar: "Navbar flutuante minimalista tipo pill centralizada ('max-w-4xl mx-auto rounded-full bg-white/85 dark:bg-zinc-900/85 backdrop-blur-md shadow-lg border border-black/5')",
+        style: "Editorial Luxury & Storytelling de Prestígio (Padrão Revista Vogue / Kinfolk)",
+        navbar: "Navbar minimalista flutuante tipo pill centralizada ('max-w-4xl mx-auto rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-lg border border-black/5') com logo em serifa sutil e botão CTA discreto",
+        heroConcept: "Hero assimétrico com tipografia expressiva em serifa contemporânea (Google Fonts Playfair Display), espaços negativos generosos, fotografia vertical recortada com moldura fina e badge de excelência 'Atendimento Exclusivo'",
+        servicesLayout: "LISTA EDITORIAL REFINADA: Não use cards retangulares comuns! Crie uma lista elegante de tratamentos/serviços com linhas divisórias sutis (border-b border-black/10 dark:border-white/10), numeração estilizada (01, 02, 03), tipografia em serifa, descrição sucinta, tag de valor e botão discreto de agendamento ao passar o mouse.",
+        signatureSection: "SEÇÃO DE AUTORIDADE EM NÚMEROS GIGANTES: Grid minimalista com 3 ou 4 métricas expressivas em números de grande escala (ex: '+12 Anos de Tradição', '99.4% Satisfação', '+2.800 Procedimentos', 'Nota 5.0 Google') com breves legendas explicativas.",
+        locationLayout: "SPLIT EDITORIAL COM MAPA: Coluna esquerda com card de acolhimento, endereço completo e horários em tipografia elegante com os botões de GPS (Waze e Google Maps), e coluna direita com o iframe do mapa em borda curva suave.",
+        palette: "Champagne Dourado (#D4AF37), Areia Suave (#FDFBF7), Marfim e Grafite Nobre (#18181b), transmitindo prestígio e valor percebido altíssimo.",
       },
       {
-        style: "Cinematic Full-Bleed & Atmosfera Imersiva",
-        heroConcept: "Hero imersivo cinematográfico com fotografia panorâmica em tela cheia com overlay em gradiente sofisticado e títulos marcantes de alto contraste.",
-        palette: "Azul Índigo Profundo / Meia-Noite (#0f172a) com acentos em Ciano Polar ou Dourado Suave, transmitindo precisão e excelência.",
-        navbar: "Header transparente integrado suavemente ao hero",
+        style: "Modern Bento Grid & Inovação Tecnológica (Padrão Apple / Linear.app)",
+        navbar: "Header clean com cantos arredondados, backdrop blur fosco, logo moderno em sans-serif geométrica (Plus Jakarta Sans) e botão de agendamento em destaque vibrante",
+        heroConcept: "HERO EM MOSAICO BENTO GRID: Hero construído como um mosaico dinâmico de 4 blocos geométricos interconectados: Bloco principal com headline impactante e agendamento instantâneo, Bloco 2 com foto do ambiente em alta resolução, Bloco 3 com selo de reputação real do Google e Bloco 4 com badge 'Tecnologia Avançada'",
+        servicesLayout: "VITRINE EM GRID ASSIMÉTRICO (BENTO CARDS): Distribua os procedimentos em cards modulares de diferentes proporções com cantos arredondados (rounded-3xl), fundos translúcidos com borda fina (border border-slate-200/80 dark:border-zinc-800), ícones Lucide modernos e micro-badges coloridos de especialidade.",
+        signatureSection: "FAQ SANFONADO INTERATIVO: Seção moderna de Dúvidas Frequentes utilizando elementos <details class='group rounded-2xl border p-4 transition-all'> contendo 3 ou 4 perguntas reais que os clientes fazem antes de agendar (sobre preparo, agendamento online e formas de atendimento).",
+        locationLayout: "CARD BENTO DE LOCALIZAÇÃO INTEGRADA: Card amplo com cantos arredondados contendo o mapa interativo responsivo em cima e painel de navegação GPS (Waze / Google Maps) com endereço verificado embaixo.",
+        palette: "Clean Contemporâneo com base em Ardósia Polar (#f8fafc), toques de Esmeralda Tecnológica (#059669) ou Ciano Índigo (#0284c7) e contrastes escuros nítidos.",
       },
       {
-        style: "Modern Bento Grid & Mosaico de Mídia",
-        heroConcept: "Hero inovador em formato Bento Grid dinâmico (mosaico de 3 ou 4 blocos visuais combinando fotos do espaço, detalhes de atendimento, selos de reputação e chamada de ação).",
-        palette: "Clean Contemporâneo com base em Ardósia Polar (#f8fafc), bordas finas com sombra suave (shadow-xl border-slate-200/60) e acentos refinados em Esmeralda Profunda ou Terracota Suave.",
-        navbar: "Navbar elegante com cantos arredondados e logo com tipografia destacada",
+        style: "Cinematic Full-Bleed & Jornada da Experiência (Padrão Awwwards Site do Dia)",
+        navbar: "Header transparente e imersivo, perfeitamente fundido à fotografia do topo, com tipografia clara de alto contraste e botão de agendamento flutuante",
+        heroConcept: "HERO CINEMATOGRÁFICO FULL-BLEED: Fotografia panorâmica ampla em tela cheia com overlay gradiente suave em azul meia-noite ou grafite escuro, tipografia impactante, badge translúcido de disponibilidade em tempo real e CTA principal pulsante",
+        servicesLayout: "CARROSSEL OU GRID PANORÂMICO DE PROCEDIMENTOS: Cards com fotografias imersivas de alta resolução como plano de fundo com degradê escuro e textos sobrepostos em branco puro, valorizando a transformação e o resultado visual de cada serviço.",
+        signatureSection: "JORNADA DO CLIENTE / LINHA DO TEMPO EM 3 PASSOS: Seção visual 'Sua Experiência Conosco em 3 Etapas': 1. Agendamento Rápido Online ➔ 2. Acolhimento & Avaliação Personalizada ➔ 3. Procedimento com Máximo Conforto e Tecnologia.",
+        locationLayout: "PAINEL PANORÂMICO DE LOCALIZAÇÃO: Seção em largura total com o iframe do Google Maps estilizado e card flutuante escuro sobre o mapa com o endereço e os botões de GPS Waze/Maps.",
+        palette: "Azul Meia-Noite Profundo (#0B132B / #1C2541) com acentos em Dourado Radiante ou Ciano Polar (#48CAE4), transmitindo imponência e precisão.",
       },
       {
-        style: "Split-Screen Escultural 60/40",
-        heroConcept: "Hero assimétrico com grande bloco de texto persuasivo à esquerda e galeria vertical de fotografias com cartões flutuantes de estatísticas reais integrados à direita.",
-        palette: "Minimalista Preto e Branco Nobre (#09090b e #ffffff) com acento em Ouro Acetinado ou Bronze.",
-        navbar: "Barra de navegação limpa, direta e com botão de agendamento em destaque",
+        style: "Split-Screen Escultural 60/40 & Prova Social Imersiva (Padrão Stripe / Fintech de Luxo)",
+        navbar: "Barra superior compacta com navegação objetiva, telefone/WhatsApp em link rápido e botão destacado 'Agendar Horário'",
+        heroConcept: "HERO SPLIT 60/40: Layout dividido verticalmente: Lado esquerdo (60%) com headline afiada de vendas, prova social com estrelas do Google e chamada direta de agendamento; Lado direito (40%) com grande composição fotográfica de alta qualidade e cartões flutuantes de estatísticas (ex: 'Atendimento com Hora Marcada')",
+        servicesLayout: "TABELA / VITRINE ESTRUTURADA DE SERVIÇOS: Apresentação em cards horizontais ou tabela moderna com tags de categoria ('Mais Procurado', 'Destaque'), descrição objetiva dos benefícios e botão direto 'Agendar Este Serviço'.",
+        signatureSection: "MOSAICO DE PROVA SOCIAL COM DEPOIMENTOS HUMANIZADOS: Bloco de autoridade destacando a nota do Google Meu Negócio em destaque central, acompanhada de 3 citações reais de clientes com estrelas e avatares visuais.",
+        locationLayout: "CARD DE GPS COM ROTAS RÁPIDAS: Bloco estruturado com mapa responsivo e 2 grandes botões de ação em largura total com ícones: '📍 Traçar Rota no Google Maps' e '🚗 Abrir Rota no Waze'.",
+        palette: "Minimalista Contemporâneo em Preto Puro (#09090b), Branco Neve (#ffffff) com detalhes em Bronze Suave (#b45309) ou Terracota (#c2410c).",
       },
     ];
 
@@ -962,27 +985,26 @@ DIRETRIZ DE APLICAÇÃO DE IMAGENS:
 - NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
 - NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09). Use as imagens autênticas listadas acima!` : ""}
 
-CONCEITO DE DESIGN DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR PARA NÃO FICAR IGUAL A OUTROS):
-- Estilo Arquitetônico: ${chosenArchetype.style}
+BLUEPRINT ARQUITETÔNICO COMPLETO DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR DE PONTA A PONTA):
+- Estilo Arquitetônico Global: ${chosenArchetype.style}
+- Formato da Navbar: ${chosenArchetype.navbar}
 - Formato do Hero: ${chosenArchetype.heroConcept}
+- Diagramação dos Serviços: ${chosenArchetype.servicesLayout}
+- Seção de Assinatura Exclusiva: ${chosenArchetype.signatureSection}
+- Diagramação da Localização: ${chosenArchetype.locationLayout}
 - Paleta e Atmosfera Cromática: ${chosenArchetype.palette}
-- Estilo da Navbar: ${chosenArchetype.navbar}
 
-REGRAS DE OURO DE EXCLUSIVIDADE & NÃO-REPETIÇÃO (PADRÃO AWWWARDS / LOVABLE):
-1. NUNCA gere o mesmo layout previsível (NÃO crie sempre a mesma topbar verde "Biossegurança Rigorosa" nem a mesma divisão de 2 colunas com cadeira/foto à direita). Este site deve nascer com a identidade única de "${chosenArchetype.style}".
-2. Aplique a navbar indicada: "${chosenArchetype.navbar}". Nada de topbars genéricas poluídas.
-3. FOTOS E IMAGENS PÚBLICAS DINÂMICAS:
-   - Se foram fornecidas fotos reais do negócio acima, use-as nas seções principais.
-   - Sinta-se 100% livre para selecionar e formular URLs de fotos públicas temáticas de alta resolução do Unsplash (ex: https://images.unsplash.com/photo-[id]?auto=format&fit=crop&w=1200&q=80 ou palavras-chave pertinentes a "${nicheText}").
-   - Não se limite a um número fixo de fotos: use fotos no Hero, nos tratamentos/serviços, na galeria ambiental ou onde enriquecer o design.
-   - NUNCA use fotos de dentistas para outros nichos. Use sempre fotos autênticas pertinentes a "${nicheText}".
-4. RECURSOS ESSENCIAIS DE NEGÓCIO E CONVERSÃO:
-   - Botão flutuante de WhatsApp pulsante no canto inferior direito (<div class="fixed bottom-6 right-6 z-50">) com link direto para wa.me/${cleanPhone}.
-   - Seção de Localização interativa com iframe responsivo do Google Maps (${verifiedAddress || company.name}) e dois botões de GPS:
+DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
+1. SIGA RIGOROSAMENTE A ESTRUTURA DO ARQUÉTIPO ACIMA: Crie a navbar, o hero, a diagramação dos serviços e a seção de assinatura conforme especificado. NUNCA gere o mesmo layout genérico de cards repetidos.
+2. FOTOS REAIS E TEMÁTICAS: Distribua as fotos do negócio nos blocos (Hero, Ambiente, Procedimentos, Detalhes).
+3. RECURSOS ESSENCIAIS DE NEGÓCIO E CONVERSÃO (MANTER 100% FUNCIONAIS):
+   - Botão flutuante de WhatsApp pulsante no canto inferior direito (<div class="fixed bottom-6 right-6 z-50">) com wa.me/${cleanPhone}.
+   - Botões de agendamento online em destaque apontando para /agendar/{slug} com data-action="agendar".
+   - Seção de Localização com iframe do Google Maps e dois botões de GPS:
      * "📍 Traçar Rota no Google Maps"
      * "🚗 Abrir no Waze"
    - Bloco de Prova Social e Autoridade destacando a nota real de ${verifiedRating || 4.9} estrelas do Google Meu Negócio.
-   - Retorne o código HTML5 completo, moderno e autocontido com Tailwind CSS e Lucide Icons.`;
+- Retorne o código HTML5 completo, moderno e autocontido com Tailwind CSS e Lucide Icons.`;
 
     let generatedPageId: string | null = null;
     let generatedSlug: string | null = null;
@@ -1001,7 +1023,7 @@ REGRAS DE OURO DE EXCLUSIVIDADE & NÃO-REPETIÇÃO (PADRÃO AWWWARDS / LOVABLE):
           projectId: demoInfo.pageId || undefined,
           rating: verifiedRating ? Number(verifiedRating) : 4.9,
           reviewsCount: verifiedReviewsCount ? Number(verifiedReviewsCount) : 85,
-          photos: realPhotos.length > 0 ? realPhotos : compatibleImages.map((img) => img.url),
+          photos: realPhotos.length > 0 ? [...realPhotos, ...compatibleImages.map((img) => img.url).filter((u) => !realPhotos.includes(u))] : compatibleImages.map((img) => img.url),
           apiKey: clientKey,
           clientGeminiKey: clientKey,
           isRegeneration,
@@ -1490,6 +1512,15 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+          <button
+            type="button"
+            onClick={() => setFieldCaptureOpen(true)}
+            className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 px-3.5 py-2 text-xs font-bold shadow-md shadow-emerald-950/20 transition-all cursor-pointer"
+            title="Tirar foto da fachada na rua ou colar link do Google Maps para criar um site na hora"
+          >
+            <Camera className="h-4 w-4 text-emerald-400" />
+            <span>Captura em Campo (Foto ou Maps) ⚡</span>
+          </button>
           <button
             type="button"
             onClick={() => {
@@ -3483,7 +3514,13 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                             );
                           const editTo = isFood ? "/cardapio-studio" : "/studio-pro";
                           const editSearch = demo.pageId
-                            ? { page: demo.pageId }
+                            ? {
+                                page: demo.pageId,
+                                name: company.name,
+                                address: company.address || "",
+                                whatsapp: company.whatsapp || company.phone || "",
+                                niche: company.niche || "",
+                              }
                             : {
                                 name: company.name,
                                 address: company.address || "",
@@ -4038,6 +4075,19 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
           onSaved={() => {
             setActiveCompany(null);
             setFeedback("Abordagem registrada.");
+            invalidate();
+          }}
+        />
+      )}
+
+      {fieldCaptureOpen && (
+        <FieldCaptureModal
+          isOpen={fieldCaptureOpen}
+          onClose={() => setFieldCaptureOpen(false)}
+          onGenerateSite={async (company, customPhotoUrl) => {
+            return await executeCreativeStudioGeneration(company, false, customPhotoUrl);
+          }}
+          onSuccessCreated={() => {
             invalidate();
           }}
         />

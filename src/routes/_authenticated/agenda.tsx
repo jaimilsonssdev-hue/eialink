@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
@@ -49,6 +50,13 @@ import { UpgradePrompt } from "@/modules/billing/components/UpgradePrompt";
 import { GoogleCalendarIntegrationCard } from "@/components/dashboard/GoogleCalendarIntegrationCard";
 
 export const Route = createFileRoute("/_authenticated/agenda")({
+  validateSearch: z.object({
+    page: z.string().optional(),
+    name: z.string().optional(),
+    address: z.string().optional(),
+    whatsapp: z.string().optional(),
+    niche: z.string().optional(),
+  }),
   component: AgendaPage,
   head: () => ({ meta: [{ title: "Agenda — EIA Link" }] }),
 });
@@ -56,6 +64,7 @@ export const Route = createFileRoute("/_authenticated/agenda")({
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 function AgendaPage() {
+  const search = Route.useSearch();
   const access = usePlanAccess();
   const client = useQueryClient();
   const pages = useQuery({
@@ -91,7 +100,7 @@ function AgendaPage() {
 
   useEffect(() => {
     if (!pageId && pages.data?.[0]) {
-      const reqPage = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("page") : null;
+      const reqPage = search.page || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("page") : null);
       const found = reqPage ? pages.data.find((p) => p.id === reqPage) : null;
       setPageId(found ? found.id : pages.data[0].id);
     }
@@ -139,6 +148,70 @@ function AgendaPage() {
       });
     });
     toast.success("Horário comercial aplicado (Seg a Sex das 08:00 às 18:00).");
+  }
+
+  function applySuggestedServicesForNiche(targetNiche?: string) {
+    const text = (targetNiche || search.niche || "").toLowerCase();
+    const isBarber = /barb|cabelo|fade|navalha/i.test(text);
+    const isBeauty = /est[eé]tic|sal[aã]o|unha|manicure|sobrancelha|c[ií]lio|spa/i.test(text);
+    const isDental = /odonto|dentist|sorriso/i.test(text);
+
+    let suggested: Array<{ name: string; duration_minutes: number; price: number; description: string }>;
+
+    if (isBarber) {
+      suggested = [
+        { name: "Corte Degradê / Fade Moderno", duration_minutes: 45, price: 45, description: "Corte com acabamento refinado e navalha." },
+        { name: "Barba Terapia Completa", duration_minutes: 35, price: 35, description: "Alinhamento com toalha quente e óleos essenciais." },
+        { name: "Combo Cabelo + Barba Completo", duration_minutes: 70, price: 75, description: "Experiência completa de corte e barba." },
+        { name: "Pezinho & Acabamento", duration_minutes: 20, price: 20, description: "Alinhamento de contorno rápido." },
+      ];
+    } else if (isBeauty) {
+      suggested = [
+        { name: "Avaliação & Procedimento Facial", duration_minutes: 50, price: 120, description: "Higienização profunda e hidratação." },
+        { name: "Drenagem Linfática / Massagem Corporal", duration_minutes: 60, price: 140, description: "Técnica modeladora e relaxante." },
+        { name: "Manicure & Spa dos Pés", duration_minutes: 60, price: 65, description: "Cuidado completo e esmaltação." },
+        { name: "Design de Sobrancelhas", duration_minutes: 30, price: 40, description: "Mapeamento e alinhamento do olhar." },
+      ];
+    } else if (isDental) {
+      suggested = [
+        { name: "Check-up & Avaliação Digital", duration_minutes: 45, price: 0, description: "Exame clínico com câmera intraoral." },
+        { name: "Limpeza & Profilaxia Completa", duration_minutes: 50, price: 180, description: "Remoção de tártaro e polimento com flúor." },
+        { name: "Clareamento Dental em Consultório", duration_minutes: 60, price: 350, description: "Sessão com gel clareador de alta tecnologia." },
+      ];
+    } else {
+      suggested = [
+        { name: "Atendimento Inicial / Consulta", duration_minutes: 60, price: 120, description: "Primeira sessão de avaliação e diagnóstico." },
+        { name: "Sessão de Acompanhamento", duration_minutes: 45, price: 90, description: "Continuidade do atendimento personalizado." },
+      ];
+    }
+
+    setServices(
+      suggested.map((s, idx) => ({
+        id: `draft-sug-${idx}-${Date.now()}`,
+        bio_page_id: pageId,
+        name: s.name,
+        description: s.description,
+        duration_minutes: s.duration_minutes,
+        price: s.price,
+        active: true,
+        position: idx,
+      })),
+    );
+
+    if (availability.length === 0 || availability.every((a) => !a.active)) {
+      setAvailability(
+        [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({
+          id: `avail-${weekday}`,
+          bio_page_id: pageId,
+          weekday,
+          start_time: isBarber ? "09:00" : "08:00",
+          end_time: isBarber ? "19:00" : "18:00",
+          active: isBarber ? (weekday >= 2 && weekday <= 6) : (weekday >= 1 && weekday <= 5),
+        }))
+      );
+    }
+
+    toast.success(`Serviços recomendados para ${isBarber ? "Barbearia" : isBeauty ? "Estética/Beleza" : isDental ? "Odontologia" : "o nicho"} carregados com sucesso!`);
   }
 
   function addService() {
@@ -597,6 +670,45 @@ function AgendaPage() {
           )}
         </div>
       </header>
+
+      {/* Banner de Proposta Rápida (quando navegado pelo Radar de Prospecção) */}
+      {search.name && (
+        <div className="rounded-xl border border-purple-500/30 bg-purple-500/10 p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm animate-in fade-in duration-300">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-purple-500/20 text-purple-400 shrink-0">
+              <Sparkles className="h-5 w-5 text-purple-400" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="font-semibold text-sm text-foreground">
+                  Proposta de Agendamento: <span className="text-purple-400 font-bold">{search.name}</span>
+                </h2>
+                {search.niche && (
+                  <Badge variant="outline" className="text-[11px] bg-purple-500/15 text-purple-300 border-purple-500/40">
+                    {search.niche}
+                  </Badge>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {search.whatsapp ? `WhatsApp: ${search.whatsapp} • ` : ""}
+                Defina os serviços e horários ideais para apresentar e fechar este cliente.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              type="button"
+              onClick={() => applySuggestedServicesForNiche(search.niche)}
+              className="text-xs border-purple-500/40 bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 cursor-pointer shadow-xs"
+            >
+              <Zap className="h-3.5 w-3.5 mr-1.5 text-amber-400" />
+              Preencher Serviços Sugeridos
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <div className="grid grid-cols-2 sm:flex sm:items-center gap-1.5 p-1 rounded-xl bg-card border border-border w-full sm:w-fit shadow-xs">

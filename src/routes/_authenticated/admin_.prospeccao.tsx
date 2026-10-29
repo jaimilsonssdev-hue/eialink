@@ -1116,8 +1116,8 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
     const targetCategory = forceCat || meta.category;
 
     try {
-      // 1. Se for gastronomia / delivery / lanches / sorveteria:
-      if (targetCategory === "food") {
+      // 1. Se for gastronomia / delivery / lanches / sorveteria E NÃO foi forçado "service" (site institucional):
+      if (targetCategory === "food" && forceCat !== "service") {
         navigate({
           to: "/cardapio-studio",
           search: {
@@ -1130,23 +1130,10 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
         return;
       }
 
-      // 2. Se for barbearia / salão / beleza / estética:
-      if (false && targetCategory === "barber") {
-        navigate({
-          to: "/agenda",
-          search: {
-            name: company.name,
-            address: company.address || "",
-            whatsapp: company.whatsapp || "",
-            niche: company.niche || "",
-          },
-        });
-        return;
-      }
-
-      // 3. Para todos os outros nichos (serviços, indústria, B2B, clínica, geral),
-      // aciona diretamente o motor de elite do Estúdio Criativo:
-      await executeCreativeStudioGeneration(company, false);
+      // 2. Se for solicitado site institucional ou outros nichos:
+      // aciona diretamente o motor de elite do Estúdio Criativo forçando nova proposta se for troca/institucional:
+      const shouldForceNew = forceCat === "service" || Boolean(parseDemoInfo(company).url);
+      await executeCreativeStudioGeneration(company, shouldForceNew);
     } catch (err: any) {
       console.error(err);
       setFeedback(`Erro ao gerar: ${err.message}`);
@@ -1160,7 +1147,17 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
   }
 
   async function handleGenerateSiteMaquina(company: ProspectedCompany) {
-    await handleSpecializedGenerate(company);
+    setCreatingPageId(company.id);
+    setFeedback(null);
+    try {
+      // Força a regeneração de um novo site institucional completo com novo blueprint arquitetural
+      await executeCreativeStudioGeneration(company, true);
+    } catch (err: any) {
+      console.error(err);
+      setFeedback(`Erro ao gerar site institucional: ${err.message}`);
+    } finally {
+      setCreatingPageId(null);
+    }
   }
 
   async function handleRegenerateDemo(company: ProspectedCompany) {

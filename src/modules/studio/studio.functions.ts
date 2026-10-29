@@ -434,7 +434,9 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
           .maybeSingle();
         dbPage = data as any;
       }
-      if (dbPage && !effectiveHtml) {
+      if (input.isRegeneration) {
+        effectiveHtml = "";
+      } else if (dbPage && !effectiveHtml) {
         const rawSocial = (dbPage.social_links as Record<string, any>) || {};
         effectiveHtml = rawSocial.custom_html || "";
       }
@@ -1000,6 +1002,13 @@ ${effectiveHtml}`,
       const updatedSocial = {
         ...existingSocial,
         custom_html: cleanHtml,
+        // Limpa heranças de cardápio ou agenda para permitir que o site institucional assuma 100% da visualização
+        is_cardapio_page: false,
+        cardapio_data: null,
+        cardapioData: null,
+        is_agenda_page: false,
+        agenda_data: null,
+        agendaData: null,
         niche: effectiveNiche || existingSocial.niche,
         city: effectiveCity || existingSocial.city,
         google_rating: input.rating || existingSocial.google_rating || 4.9,
@@ -1016,13 +1025,14 @@ ${effectiveHtml}`,
 
       if (existing) {
         await supabase
-          .from("bio_pages")
-          .update({
-            display_name: pageName,
-            whatsapp: effectiveWhatsapp || undefined,
-            social_links: updatedSocial,
-            updated_at: new Date().toISOString(),
-          } as any)
+            .from("bio_pages")
+            .update({
+              display_name: pageName,
+              template_id: "site-maquina",
+              whatsapp: effectiveWhatsapp || undefined,
+              social_links: updatedSocial,
+              updated_at: new Date().toISOString(),
+            } as any)
           .eq("id", existing.id);
         savedPageId = existing.id;
         savedSlug = existing.slug;

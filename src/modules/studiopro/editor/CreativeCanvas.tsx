@@ -51,6 +51,7 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
   // Estado para troca de imagem
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [designModalOpen, setDesignModalOpen] = useState(false);
+  const [designModalTab, setDesignModalTab] = useState<"typography" | "colors" | "effects" | "contacts" | "images">("colors");
   const [selectedImgIndex, setSelectedImgIndex] = useState<number | null>(null);
   const [currentImgSrc, setCurrentImgSrc] = useState<string>("");
   const [newImgUrl, setNewImgUrl] = useState<string>("");
@@ -363,15 +364,32 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
           )}
 
           {html && (
-            <button
-              type="button"
-              onClick={() => setDesignModalOpen(true)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 text-xs font-semibold transition-all shadow-xs cursor-pointer"
-              title="Personalizar Fontes, Cores, Efeitos e Fotos"
-            >
-              <Palette size={13} />
-              <span className="hidden sm:inline">Design & Estilo</span>
-            </button>
+            <>
+              <button
+                type="button"
+                onClick={() => {
+                  setDesignModalTab("colors");
+                  setDesignModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-emerald-400 hover:text-emerald-300 border border-emerald-500/20 text-xs font-semibold transition-all shadow-xs cursor-pointer"
+                title="Trocar Cores e Fundo do Site (Dark, Clean Light, Sunset, etc.)"
+              >
+                <Palette size={13} />
+                <span>Fundo & Cores</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setDesignModalTab("typography");
+                  setDesignModalOpen(true);
+                }}
+                className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-zinc-900/80 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-white/[0.08] text-xs font-medium transition-all shadow-xs cursor-pointer"
+                title="Trocar Fontes do Site"
+              >
+                <span>Tipografia</span>
+              </button>
+            </>
           )}
 
           {isVisualEditing && hasUnsavedChanges && (
@@ -523,9 +541,10 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
 
       {/* Modal de Design & Estilo Visual No-Code */}
       <DesignStyleModal
-        open={designModalOpen}
-        onOpenChange={setDesignModalOpen}
-      />
+          open={designModalOpen}
+          onOpenChange={setDesignModalOpen}
+          initialTab={designModalTab}
+        />
     </div>
   );
 }

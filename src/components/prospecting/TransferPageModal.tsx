@@ -153,7 +153,6 @@ Você pode assumir o controle da página gratuitamente agora mesmo e colocar o l
           type: "success",
           message: `Página transferida com sucesso para ${res.targetUser?.name || "o cliente"} (${res.targetUser?.email})! O site já está disponível no painel dele.`,
         });
-        setOfficialDone(true);
         onSuccess?.();
       } else {
         // Usuário não possui cadastro ainda

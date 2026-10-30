@@ -27,6 +27,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface DesignStyleModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialTab?: "typography" | "colors" | "effects" | "contacts" | "images";
 }
 
 const GOOGLE_FONTS = [
@@ -55,46 +56,167 @@ const BACKGROUND_PRESETS = [
   {
     id: "dark-obsidian",
     name: "Dark Obsidian (Padrão Luxo)",
-    description: "Fundo preto puro com contraste cirúrgico para delivery e tecnologia.",
-    css: "body { background-color: #09090b !important; color: #f4f4f5 !important; }",
+    description: "Fundo preto puro profundo com contraste cirúrgico para estética e tecnologia.",
+    css: `
+      body {
+        background-color: #09090b !important;
+        background-image: none !important;
+        color: #f4f4f5 !important;
+        min-height: 100vh !important;
+      }
+      body > div, main, section, header {
+        background-color: transparent !important;
+      }
+      [class*="bg-zinc-950"], [class*="bg-zinc-900"], [class*="bg-black"], [class*="bg-slate-950"] {
+        background-color: transparent !important;
+      }
+      .card, [class*="card"], [class*="bento"], [class*="rounded-2xl"], [class*="rounded-3xl"] {
+        background-color: rgba(24, 24, 27, 0.65) !important;
+        border-color: rgba(255, 255, 255, 0.08) !important;
+        backdrop-filter: blur(12px) !important;
+      }
+    `,
   },
   {
     id: "cyber-mesh",
     name: "Cyber Mesh (Gradiente Tech)",
     description: "Luzes volumétricas de ciano e violeta nos cantos da tela.",
-    css: "body { background: radial-gradient(ellipse at 15% 15%, rgba(139, 92, 246, 0.22) 0%, transparent 45%), radial-gradient(ellipse at 85% 85%, rgba(6, 182, 212, 0.18) 0%, transparent 45%), #09090b !important; color: #f4f4f5 !important; }",
+    css: `
+      body {
+        background: radial-gradient(ellipse at 15% 15%, rgba(139, 92, 246, 0.28) 0%, transparent 45%), radial-gradient(ellipse at 85% 85%, rgba(6, 182, 212, 0.22) 0%, transparent 45%), #09090b !important;
+        background-attachment: fixed !important;
+        color: #f4f4f5 !important;
+        min-height: 100vh !important;
+      }
+      body > div, main, section, header {
+        background-color: transparent !important;
+      }
+      [class*="bg-zinc-950"], [class*="bg-zinc-900"], [class*="bg-black"], [class*="bg-slate-950"] {
+        background-color: transparent !important;
+      }
+      .card, [class*="card"], [class*="bento"], [class*="rounded-2xl"], [class*="rounded-3xl"] {
+        background-color: rgba(15, 23, 42, 0.55) !important;
+        border-color: rgba(139, 92, 246, 0.2) !important;
+        backdrop-filter: blur(12px) !important;
+      }
+    `,
   },
   {
     id: "sunset-glow",
     name: "Sunset Ember (Gastronomia & Calor)",
-    description: "Gradiente quente que desperta apetite e destaca produtos.",
-    css: "body { background: radial-gradient(ellipse at 50% 0%, rgba(249, 115, 22, 0.2) 0%, transparent 55%), #0c0a09 !important; color: #fafaf9 !important; }",
+    description: "Gradiente quente que desperta apetite e destaca produtos e fotos.",
+    css: `
+      body {
+        background: radial-gradient(ellipse at 50% 0%, rgba(249, 115, 22, 0.25) 0%, transparent 60%), #0c0a09 !important;
+        background-attachment: fixed !important;
+        color: #fafaf9 !important;
+        min-height: 100vh !important;
+      }
+      body > div, main, section, header {
+        background-color: transparent !important;
+      }
+      [class*="bg-zinc-950"], [class*="bg-zinc-900"], [class*="bg-black"], [class*="bg-slate-950"] {
+        background-color: transparent !important;
+      }
+      .card, [class*="card"], [class*="bento"], [class*="rounded-2xl"], [class*="rounded-3xl"] {
+        background-color: rgba(28, 25, 23, 0.6) !important;
+        border-color: rgba(249, 115, 22, 0.2) !important;
+        backdrop-filter: blur(12px) !important;
+      }
+    `,
   },
   {
     id: "gold-luxury",
-    name: "Gold Champagne (Barbearia & Joalheria)",
-    description: "Luminosidade dourada refinada com tons escuros.",
-    css: "body { background: radial-gradient(ellipse at 50% 0%, rgba(234, 179, 8, 0.18) 0%, transparent 50%), #0c0b06 !important; color: #fefce8 !important; }",
+    name: "Gold Champagne (Barbearia & Luxo)",
+    description: "Luminosidade nobre champagne dourada com contrastes escuros.",
+    css: `
+      body {
+        background: radial-gradient(ellipse at 50% 0%, rgba(234, 179, 8, 0.22) 0%, transparent 55%), #0c0b06 !important;
+        background-attachment: fixed !important;
+        color: #fefce8 !important;
+        min-height: 100vh !important;
+      }
+      body > div, main, section, header {
+        background-color: transparent !important;
+      }
+      [class*="bg-zinc-950"], [class*="bg-zinc-900"], [class*="bg-black"], [class*="bg-slate-950"] {
+        background-color: transparent !important;
+      }
+      .card, [class*="card"], [class*="bento"], [class*="rounded-2xl"], [class*="rounded-3xl"] {
+        background-color: rgba(24, 22, 12, 0.65) !important;
+        border-color: rgba(234, 179, 8, 0.22) !important;
+        backdrop-filter: blur(12px) !important;
+      }
+    `,
   },
   {
     id: "emerald-forest",
-    name: "Emerald Glow (Alta Conversão)",
-    description: "Destaque verde esmeralda para vendas rápidas e delivery.",
-    css: "body { background: radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.22) 0%, transparent 50%), #06120d !important; color: #ecfdf5 !important; }",
+    name: "Emerald Glow (Alta Conversão & Saúde)",
+    description: "Destaque verde esmeralda para clínicas, saúde e vendas ágeis.",
+    css: `
+      body {
+        background: radial-gradient(ellipse at 50% 0%, rgba(16, 185, 129, 0.25) 0%, transparent 55%), #06120d !important;
+        background-attachment: fixed !important;
+        color: #ecfdf5 !important;
+        min-height: 100vh !important;
+      }
+      body > div, main, section, header {
+        background-color: transparent !important;
+      }
+      [class*="bg-zinc-950"], [class*="bg-zinc-900"], [class*="bg-black"], [class*="bg-slate-950"] {
+        background-color: transparent !important;
+      }
+      .card, [class*="card"], [class*="bento"], [class*="rounded-2xl"], [class*="rounded-3xl"] {
+        background-color: rgba(6, 30, 20, 0.65) !important;
+        border-color: rgba(16, 185, 129, 0.22) !important;
+        backdrop-filter: blur(12px) !important;
+      }
+    `,
   },
   {
     id: "clean-light",
-    name: "Clean Light (Moda & Editorial)",
-    description: "Fundo branco puro com tipografia escura elegante.",
-    css: "body { background: #fdfdfd !important; color: #18181b !important; } .text-white { color: #18181b !important; } .bg-zinc-900, .bg-black { background: #f4f4f5 !important; color: #18181b !important; border-color: #e4e4e7 !important; }",
+    name: "Clean Light (Moda & Editorial Claro)",
+    description: "Fundo branco puro com tipografia preta elegante de revista.",
+    css: `
+      body {
+        background-color: #fbfbfb !important;
+        background-image: none !important;
+        color: #18181b !important;
+        min-height: 100vh !important;
+      }
+      body > div, main, section, header {
+        background-color: transparent !important;
+      }
+      [class*="bg-zinc-950"], [class*="bg-zinc-900"], [class*="bg-black"], [class*="bg-slate-950"], [class*="bg-slate-900"] {
+        background-color: transparent !important;
+      }
+      .card, [class*="card"], [class*="bento"], [class*="rounded-2xl"], [class*="rounded-3xl"] {
+        background-color: #ffffff !important;
+        border-color: #e4e4e7 !important;
+        color: #18181b !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05) !important;
+      }
+      h1, h2, h3, h4, h5, h6, p, span:not([class*="badge"]), li {
+        color: #18181b !important;
+      }
+      .text-zinc-400, .text-zinc-500, .text-muted-foreground {
+        color: #71717a !important;
+      }
+    `,
   },
 ];
 
-export function DesignStyleModal({ open, onOpenChange }: DesignStyleModalProps) {
+export function DesignStyleModal({ open, onOpenChange, initialTab = "typography" }: DesignStyleModalProps) {
   const { getActiveProject, updateActiveProjectHtml } = useCreativeStudioStore();
   const activeProject = getActiveProject();
 
-  const [activeTab, setActiveTab] = useState<"typography" | "colors" | "effects" | "contacts" | "images">("typography");
+  const [activeTab, setActiveTab] = useState<"typography" | "colors" | "effects" | "contacts" | "images">(initialTab);
+
+  useEffect(() => {
+    if (open && initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [open, initialTab]);
 
   // Estado de personalização
   const [selectedFont, setSelectedFont] = useState<string>("inter");

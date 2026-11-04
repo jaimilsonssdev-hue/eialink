@@ -2037,8 +2037,8 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
             </CardHeader>
 
             <CardContent className="space-y-4">
-              {/* Seletor de Modo: Varredura Google Maps vs Busca Rápida Instagram Apify */}
-              <div className="flex items-center gap-2 p-1 rounded-xl bg-muted/40 border border-border/60 max-w-md">
+              {/* Seletor de Modo: Varredura por Nicho (Google Maps + Apify) vs Consulta Avulsa de @ */}
+              <div className="flex items-center gap-2 p-1 rounded-xl bg-muted/40 border border-border/60 max-w-lg">
                 <button
                   type="button"
                   onClick={() => setMapsSearchMode("maps")}
@@ -2049,20 +2049,25 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                   }`}
                 >
                   <Globe2 className="h-3.5 w-3.5 text-primary" />
-                  Varredura Google Maps
+                  Varredura por Nicho & Cidade
+                  {hasApifyToken ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/15 px-1.5 py-0.5 rounded-full border border-emerald-500/30">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      Apify Ativo
+                    </span>
+                  ) : null}
                 </button>
                 <button
                   type="button"
                   onClick={() => setMapsSearchMode("apify_insta")}
-                  className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                  className={`py-1.5 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                     mapsSearchMode === "apify_insta"
                       ? "bg-background text-foreground shadow-xs border border-border/80"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Instagram className="h-3.5 w-3.5 text-pink-500" />
-                  Busca Apify (Instagram @)
-                  {hasApifyToken && <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+                  Perfil Avulso (@)
                 </button>
               </div>
 
@@ -2121,6 +2126,10 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                           <>
                             <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
                           </>
+                        ) : hasApifyToken ? (
+                          <>
+                            <Sparkles className="h-4 w-4 text-emerald-300" /> Varrer Nicho via Apify
+                          </>
                         ) : (
                           <>
                             <Search className="h-4 w-4" /> Varrer Oportunidades
@@ -2131,14 +2140,14 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                   </form>
                 </>
               ) : (
-                /* PAINEL OFICIAL DE BUSCA APIFY (INSTAGRAM SCRAPER) */
+                /* PAINEL DE CONSULTA AVULSA DE PERFIL (@ INSTAGRAM) */
                 <form onSubmit={handleLookupInstagram} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 p-3 rounded-xl border border-border/80 bg-background/50">
                   <div className="sm:col-span-9">
                     <div className="relative">
                       <input
                         value={instaLookupInput}
                         onChange={(e) => setInstaLookupInput(e.target.value)}
-                        placeholder="Digite o @ do perfil ou link (ex: @clinicainove ou instagram.com/clinicainove)"
+                        placeholder="Digite o @ do perfil ou link específico (ex: @clinicainove ou instagram.com/clinicainove)"
                         className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
                         disabled={isLookingUpInsta}
                         required
@@ -2146,7 +2155,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                     </div>
                     <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5">
                       <Sparkles className="h-3 w-3 text-pink-400" />
-                      A Apify extrai fotos em alta definição do feed, telefone, biografia e WhatsApp real para alimentar o radar.
+                      Consulta direta de 1 perfil específico quando você já tem o @ do cliente. Para buscar vários por nicho e cidade, use a aba "Varredura por Nicho & Cidade".
                     </p>
                   </div>
                   <div className="sm:col-span-3">
@@ -2161,7 +2170,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                         </>
                       ) : (
                         <>
-                          <Instagram className="h-4 w-4" /> Buscar com Apify
+                          <Instagram className="h-4 w-4" /> Consultar Perfil (@)
                         </>
                       )}
                     </button>

@@ -29,6 +29,8 @@ interface RawScrapedLead {
   has_website: boolean;
   rating?: number | null;
   reviews_count?: number | null;
+  address?: string | null;
+  photos?: string[];
   source: string;
   notes?: string;
   cid?: string | null;
@@ -474,10 +476,11 @@ export async function searchGoogleMapsAndInstagram(
   limit = 15,
   subregion?: string,
   page = 0,
+  apifyTokenOverride?: string,
 ): Promise<ProspectDraft[]> {
   // 1. Tenta varredura profissional via Apify Google Maps se o token estiver configurado
   let apifyPlaces: RawScrapedLead[] = [];
-  const apifyToken = getSavedApifyToken();
+  const apifyToken = (apifyTokenOverride || getSavedApifyToken() || "").trim();
   if (apifyToken) {
     try {
       const detectedKey = detectNicheKey(niche, null);
@@ -491,10 +494,13 @@ export async function searchGoogleMapsAndInstagram(
           city: p.city,
           phone: p.phone,
           whatsapp: p.whatsapp,
+          instagram: p.instagram || null,
           website: p.website,
           has_website: p.has_website,
           rating: p.rating,
           reviews_count: p.reviews_count,
+          address: p.address || null,
+          photos: p.photos && p.photos.length > 0 ? p.photos : undefined,
           source: "google_maps_apify",
           cid: p.cid,
           notes: p.address ? `Endereço: ${p.address}` : "Capturado via Apify Google Maps",
@@ -546,6 +552,8 @@ export async function searchGoogleMapsAndInstagram(
       has_website: raw.has_website,
       rating: raw.rating ?? null,
       reviews_count: raw.reviews_count ?? null,
+      address: raw.address ?? null,
+      photos: raw.photos && raw.photos.length > 0 ? raw.photos : null,
       source: raw.source,
       status: "novo" as const,
       notes: raw.notes ?? null,

@@ -675,14 +675,15 @@ function ProspectingPage() {
 
     try {
       let results: ProspectDraft[] = [];
+      const currentApifyToken = getSavedApifyToken() || undefined;
       try {
         // Tentativa 1: Execução com rotação de sinônimos/Apify e cache-busting
-        results = await searchGoogleMapsAndInstagram(niche, city, 15, currentSubregion || undefined, pageToFetch);
+        results = await searchGoogleMapsAndInstagram(niche, city, 15, currentSubregion || undefined, pageToFetch, currentApifyToken);
       } catch (clientErr) {
         console.warn("[Prospecção] Execução direta no cliente falhou, tentando via servidor:", clientErr);
         // Tentativa 2: Fallback para RPC do servidor caso o navegador bloqueie por adblocker
         results = await runLiveProspecting({
-          data: { niche, city, limit: 15, page: pageToFetch },
+          data: { niche, city, limit: 15, page: pageToFetch, apifyToken: currentApifyToken },
         });
       }
 
@@ -865,8 +866,11 @@ function ProspectingPage() {
 
     // Busca detalhes reais do Google Meu Negócio (fotos reais, endereço verificado e nota)
     let realPhotos: string[] = [];
-    if (customPhotoUrl) {
-      realPhotos.push(customPhotoUrl);
+    if (Array.isArray(company.photos) && company.photos.length > 0) {
+      realPhotos.push(...company.photos.filter((p): p is string => typeof p === "string" && p.startsWith("http")));
+    }
+    if (customPhotoUrl && !realPhotos.includes(customPhotoUrl)) {
+      realPhotos.unshift(customPhotoUrl);
     }
     let verifiedAddress = company.address;
     let verifiedRating = company.rating;

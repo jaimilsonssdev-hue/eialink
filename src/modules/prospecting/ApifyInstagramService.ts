@@ -48,7 +48,9 @@ export function getSavedApifyToken(): string | null {
     const local = localStorage.getItem(APIFY_TOKEN_STORAGE);
     if (local && local.trim()) return local.trim();
   }
-  const envToken = (import.meta as any).env?.VITE_APIFY_API_TOKEN;
+  const envToken =
+    (typeof process !== "undefined" && (process.env?.APIFY_API_TOKEN || process.env?.VITE_APIFY_API_TOKEN)) ||
+    (typeof import.meta !== "undefined" && ((import.meta as any).env?.VITE_APIFY_API_TOKEN || (import.meta as any).env?.APIFY_API_TOKEN));
   return envToken ? String(envToken).trim() : null;
 }
 
@@ -274,6 +276,7 @@ export interface ApifyGoogleMapsPlace {
   city: string;
   phone?: string | null;
   whatsapp?: string | null;
+  instagram?: string | null;
   website?: string | null;
   has_website: boolean;
   rating?: number | null;
@@ -368,6 +371,19 @@ export async function scrapeGoogleMapsViaApify(
             : null;
         const reviewsCount = typeof item.reviewsCount === "number" ? item.reviewsCount : null;
 
+        // Extrai Instagram se retornado pelo scraper ou no link do site
+        let detectedInsta: string | null = null;
+        if (item.instagram && typeof item.instagram === "string") {
+          detectedInsta = extractInstagramHandle(item.instagram);
+        } else if (item.socialProfiles?.instagram) {
+          detectedInsta = extractInstagramHandle(item.socialProfiles.instagram);
+        } else if (item.additionalInfo?.socialMedia?.instagram) {
+          detectedInsta = extractInstagramHandle(item.additionalInfo.socialMedia.instagram);
+        } else if (website && /(?:instagram\.com\/|instagr\.am\/)/i.test(website)) {
+          detectedInsta = extractInstagramHandle(website);
+        }
+        const instagram = detectedInsta ? `@${detectedInsta}` : null;
+
         const rawPhotos = Array.isArray(item.imageUrls)
           ? item.imageUrls
           : item.imageUrl
@@ -381,6 +397,7 @@ export async function scrapeGoogleMapsViaApify(
           city: item.city || city,
           phone: rawPhone,
           whatsapp,
+          instagram,
           website: isRealWebsite ? website : null,
           has_website: isRealWebsite,
           rating,

@@ -24,6 +24,7 @@ export const prospectingSearchSchema = z.object({
   city: safeText("A cidade", 80),
   limit: z.number().int().min(1).max(50).optional(),
   page: z.number().int().min(0).max(50).optional(),
+  apifyToken: z.string().optional(),
 });
 
 export type ProspectingSearchInput = z.infer<typeof prospectingSearchSchema>;

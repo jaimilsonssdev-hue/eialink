@@ -279,8 +279,65 @@ export async function searchCompatibleBusinessImages(
   const detectedKey = detectNicheKey(niche, businessName);
   const safeCount = Math.min(Math.max(count || 8, 4), 16);
 
-  // Termos específicos por nicho para busca web precisa
+  const combinedNicheAndName = `${niche} ${businessName || ""}`.toLowerCase();
+
+  // Detecção inteligente de sub-nichos gastronômicos, clínicos e especializados
+  let subNicheKey = detectedKey;
+  if (/churrasc|espet|picanha|carne|steakhous|rod[ií]zio/i.test(combinedNicheAndName)) {
+    subNicheKey = "churrascaria";
+  } else if (/burger|hamburg|smash/i.test(combinedNicheAndName)) {
+    subNicheKey = "hamburgueria";
+  } else if (/pizza|pizzari/i.test(combinedNicheAndName)) {
+    subNicheKey = "pizzaria";
+  } else if (/sushi|japon[eê]s|temaki|sashimi/i.test(combinedNicheAndName)) {
+    subNicheKey = "japones";
+  } else if (/caf[eé]|cafeteria|bistr[oô]/i.test(combinedNicheAndName)) {
+    subNicheKey = "cafeteria";
+  } else if (/psic[oó]log|psicoterap|sa[uú]de\s*mental|terap/i.test(combinedNicheAndName)) {
+    subNicheKey = "psicologia";
+  } else if (/fisioter/i.test(combinedNicheAndName)) {
+    subNicheKey = "fisioterapia";
+  } else if (/nutri|dieta/i.test(combinedNicheAndName)) {
+    subNicheKey = "nutricao";
+  }
+
+  // Termos específicos por nicho para busca web precisa (fotos comerciais de alta qualidade no Unsplash)
   const nicheKeywords: Record<string, string[]> = {
+    churrascaria: [
+      "churrasco picanha carne brasa grelha bbq",
+      "cortes nobres churrascaria rodizio carne assada",
+      "picanha suculenta brasa churrasco brasileiro",
+    ],
+    hamburgueria: [
+      "hamburguer artesanal burger batata frita smash",
+      "cheeseburger artesanal bacon gourmet",
+      "burger artesanal lanchonete moderna",
+    ],
+    pizzaria: [
+      "pizza artesanal forno a lenha queijo fatias",
+      "pizza calabresa margherita gourmet restaurante",
+    ],
+    japones: [
+      "sushi sashimi combinado culinaria japonesa salmao",
+      "barca sushi temaki gastronomia japonesa",
+    ],
+    cafeteria: [
+      "cafeteria moderna cafe expresso barista xicara",
+      "brunch cafe da manha doces confeitaria",
+    ],
+    psicologia: [
+      "consultorio psicologia poltrona acolhimento individual",
+      "psicologa escuta terapeutica consultorio calma",
+      "terapia individual bem estar mental consultorio",
+    ],
+    fisioterapia: [
+      "fisioterapia reabilitacao atendimento fisioterapeuta",
+      "clinica fisioterapia exercicio reabilitacao funcional",
+    ],
+    nutricao: [
+      "nutricionista consultorio dieta plano alimentar saude",
+      "consulta nutricional salada alimentacao saudavel",
+    ],
     odontologia: [
       "consultorio odontologico moderno recepcao",
       "estetica dental sorriso perfeito clareamento",
@@ -289,7 +346,7 @@ export async function searchCompatibleBusinessImages(
     ],
     clinica: [
       "clinica medica consultorio moderno recepcao",
-      "atendimento humanizado saude medico",
+      "atendimento humanizado saude medico consultorio",
       "equipamentos medicos alta tecnologia exame",
     ],
     estetica_corporal: [
@@ -338,49 +395,53 @@ export async function searchCompatibleBusinessImages(
       "restaurante gastronomia prato gourmet",
       "interior restaurante moderno mesas jantar",
     ],
+    contabilidade: [
+      "escritorio contabilidade moderno consultoria fiscal",
+      "reuniao corporativa financas escritorio",
+    ],
+    energia_solar: [
+      "painel solar fotovoltaico instalacao telhado energia limpa",
+      "usina solar fotovoltaica sustentabilidade",
+    ],
+    imobiliaria: [
+      "apartamento moderno sala de estar arquitetura decorado",
+      "casa moderna fachada iluminada imoveis",
+    ],
+    construcao: [
+      "obra construcao acabamento engenharia arquitetura",
+      "projeto arquitetura reforma moderno",
+    ],
   };
 
-  const queries = nicheKeywords[detectedKey] || [
+  const queries = nicheKeywords[subNicheKey] || nicheKeywords[detectedKey] || [
     `${niche} ambiente moderno recepcao`,
     `${niche} atendimento profissional alta resolucao`,
   ];
-
-  const normalizedLower = (niche || "").toLowerCase().trim();
-  const enMappedQuery = PT_TO_EN_TERMS[normalizedLower] || PT_TO_EN_TERMS[detectedKey] || niche;
 
   const foundWebPhotos: UnsplashPhotoItem[] = [];
 
   try {
     const q1 = `${queries[0]} site:unsplash.com`;
-    const q2 = queries[1] ? `${queries[1]} site:unsplash.com` : `${niche} servicos`;
+    const q2 = queries[1] ? `${queries[1]} site:unsplash.com` : `${niche} site:unsplash.com`;
+    const q3 = queries[2] ? `${queries[2]} site:unsplash.com` : undefined;
     
-    // Dispara busca concorrente em DuckDuckGo E na API oficial do Openverse
-    const fetchGroup = Promise.allSettled([
+    // Busca exclusivamente fotos autênticas de alta definição no Unsplash via DuckDuckGo
+    // (evita Openverse que trazia auditórios, teatros e imagens fora de contexto)
+    const fetches = [
       searchDuckDuckGoImages(q1, 8),
       searchDuckDuckGoImages(q2, 6),
-      searchOpenverseImages(enMappedQuery, 8),
-      searchOpenverseImages(`${enMappedQuery} interior`, 6),
-    ]);
+    ];
+    if (q3) fetches.push(searchDuckDuckGoImages(q3, 6));
+
     const settledList = (await Promise.race([
-      fetchGroup,
+      Promise.allSettled(fetches),
       new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 2200)),
     ])) || [];
-    const ddg1 = settledList[0];
-    const ddg2 = settledList[1];
-    const ov1 = settledList[2];
-    const ov2 = settledList[3];
 
-    if (ddg1.status === "fulfilled" && Array.isArray(ddg1.value)) {
-      foundWebPhotos.push(...ddg1.value);
-    }
-    if (ddg2.status === "fulfilled" && Array.isArray(ddg2.value)) {
-      foundWebPhotos.push(...ddg2.value);
-    }
-    if (ov1.status === "fulfilled" && Array.isArray(ov1.value)) {
-      foundWebPhotos.push(...ov1.value);
-    }
-    if (ov2.status === "fulfilled" && Array.isArray(ov2.value)) {
-      foundWebPhotos.push(...ov2.value);
+    for (const item of settledList) {
+      if (item.status === "fulfilled" && Array.isArray(item.value)) {
+        foundWebPhotos.push(...item.value);
+      }
     }
   } catch (err) {
     console.warn("[searchCompatibleBusinessImages] Busca na web falhou:", err);

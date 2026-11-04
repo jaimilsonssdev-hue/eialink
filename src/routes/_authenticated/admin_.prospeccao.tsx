@@ -993,10 +993,20 @@ ${realPhotos.slice(0, 6).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\
 ${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:
 ${compatibleImages.map((img, i) => `- Imagem ${i + 1} [Papel: ${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
 
-DIRETRIZ DE APLICAÇÃO DE IMAGENS:
-- Use as imagens acima nos atributos src="..." de acordo com o papel sugerido (Hero, Espaço, Serviços, Equipe, Detalhes).
-- NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
-- NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09). Use as imagens autênticas listadas acima!` : ""}
+DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXTO):
+1. CORRESPONDÊNCIA ESTRITA ENTRE IMAGEM E DESCRIÇÃO:
+   - A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card.
+   - Se o card for sobre "Churrasco", "Picanha" ou "Carnes Nobres", a foto DEVE OBRIGATORIAMENTE ser de carne/churrasco! NUNCA use foto de peixe, frango com verduras ou salada para ilustrar churrasco!
+   - Se o serviço for "Atendimento Individual", "Psicoterapia 1 a 1" ou "Consulta Exclusiva", a foto DEVE mostrar APENAS um ambiente acolhedor individual (poltrona, consultório) ou atendimento 1 para 1. É TERMINANTEMENTE PROIBIDO colocar foto de plateia, teatro, auditório, palestra ou multidão para ilustrar atendimento individual!
+   - Se o negócio for Barbearia, use fotos masculinas/barba. Se for Odontologia, use sorrisos/dentista. Se for Hamburgueria, use burger. Se for Pizzaria, use pizza.
+2. ENGENHARIA INVERTIDA (O CONTEÚDO SEGUE A FOTO):
+   - NUNCA invente um prato ou serviço no texto para depois forçar uma foto que não combina.
+   - Olhe a lista de fotos disponíveis e seus rótulos primeiro: crie o título e a descrição do card especificamente sobre o que a foto mostra!
+3. CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA):
+   - Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
+   - Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva.
+4. NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
+5. NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09). Use as imagens autênticas listadas acima!` : ""}
 
 BLUEPRINT ARQUITETÔNICO COMPLETO DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR DE PONTA A PONTA):
 - Estilo Arquitetônico Global: ${chosenArchetype.style}

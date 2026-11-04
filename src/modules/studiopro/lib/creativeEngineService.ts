@@ -150,11 +150,20 @@ DIRETRIZES TÉCNICAS E DE DESIGN:
      * Se o arquétipo pedir Estatísticas em Números Gigantes: crie um bloco de métricas com números grandiosos (ex: +1.500 Sorrisos, 99.8% Satisfação, 12 Anos).
    - Varie navbars: Crie navbars tipo pill flutuante centralizada, headers transparentes integrados à foto de capa, ou barras superiores elegantes com botão de agendamento em destaque.
 
-3. **Imagens de Alta Resolução Reais e Compatíveis**:
-   - Utilize as imagens compatíveis fornecidas no prompt do briefing (ou fotos reais do Google Meu Negócio se houver).
+3. **COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA ABSOLUTA (REGRA INVIOLÁVEL FOTO <-> TEXTO)**:
+   - **CORRESPONDÊNCIA ESTRITA ENTRE IMAGEM E DESCRIÇÃO**:
+     * A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card.
+     * Se o card for sobre "Churrasco", "Picanha" ou "Carnes Nobres", a foto DEVE OBRIGATORIAMENTE ser de carne/churrasco! NUNCA use foto de peixe, frango com verduras ou salada para ilustrar churrasco!
+     * Se o serviço for "Atendimento Individual", "Psicoterapia 1 a 1" ou "Consulta Exclusiva", a foto DEVE mostrar APENAS um ambiente acolhedor individual (poltrona, consultório) ou atendimento 1 para 1. É TERMINANTEMENTE PROIBIDO colocar foto de plateia, teatro, auditório, palestra ou multidão para ilustrar atendimento individual!
+     * Se o negócio for Barbearia, use fotos masculinas/barba. Se for Odontologia, use sorrisos/dentista. Se for Pizzaria, use pizza. Se for Hamburgueria, use hambúrguer.
+   - **ENGENHARIA INVERTIDA (O CONTEÚDO SEGUE A FOTO)**:
+     * NUNCA invente um prato ou serviço no texto para depois tentar forçar uma foto que não combina.
+     * Olhe a lista de fotos disponíveis e seus rótulos primeiro: crie o título e a descrição do card especificamente sobre o que a foto mostra!
+   - **CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA)**:
+     * Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
+     * Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva. Isso é infinitamente mais profissional e elegante!
    - NUNCA invente URLs do Unsplash com IDs aleatórios fictícios (evita erro 404 de imagem quebrada).
-   - NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09). Use sempre as fotos compatíveis buscadas ou fotos temáticas exclusivas do nicho.
-   - Distribua as fotos nos seus papéis corretos: Hero (foto panorâmica imersiva), Espaço/Ambiente (foto do espaço físico), Serviços/Procedimentos (fotos das soluções/tratamentos), Equipe (foto humanizada de atendimento) e Detalhes (close-up com alta definição).
+   - NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09).
    - NUNCA use placeholders cinzas como "placeholder.com".
 
 4. **FERRAMENTAS NATIVAS E INTEGRALIDADE DE NEGÓCIO (OBRIGATÓRIO)**:

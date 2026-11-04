@@ -717,7 +717,12 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
         ])) || [];
         if (found && found.length > 0) {
           businessContextParts.push(
-            `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:\n${found.map((img, i) => `- Foto ${i + 1} [${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}\nDIRETRIZ CRÍTICA DE IMAGENS: Distribua estas fotos pelos blocos (Hero, Espaço, Procedimentos, Equipe, Detalhes). NUNCA invente links fictícios e NUNCA repita a mesma foto.`,
+            `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:\n${found.map((img, i) => `- Foto ${i + 1} [${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
+DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXTO):
+1. O texto e título de cada card de serviço DEVE corresponder fielmente ao que a foto mostra (ex: se o card fala de churrasco/picanha, a foto DEVE ser de carne assada/brasa, NUNCA peixe ou verduras; se fala de Atendimento Individual, NUNCA use fotos de auditório, plateia ou multidão).
+2. Construa os serviços baseando-se nas fotos disponíveis (o conteúdo segue as imagens).
+3. Se não houver foto condizente para um serviço, crie um card elegante sem foto com ícone temático do Lucide em vez de forçar uma foto inadequada.
+4. NUNCA invente links fictícios e NUNCA repita a mesma foto.`,
           );
         }
       } catch (e) {

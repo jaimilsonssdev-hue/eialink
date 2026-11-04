@@ -11,7 +11,7 @@ function sanitizeProspectPayload(draft: ProspectDraft, userId: string | null) {
   let notes = draft.notes ?? null;
   const extraPhotos = (draft as any).photos;
   if (Array.isArray(extraPhotos) && extraPhotos.length > 0 && (!notes || !notes.includes("[Fotos:"))) {
-    const photoList = extraPhotos.slice(0, 5).join(" | ");
+    const photoList = extraPhotos.slice(0, 12).join(" | ");
     notes = notes ? `${notes} · [Fotos: ${photoList}]` : `[Fotos: ${photoList}]`;
   }
 

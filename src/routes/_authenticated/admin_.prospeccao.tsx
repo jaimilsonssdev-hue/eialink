@@ -67,8 +67,8 @@ import { runLiveProspecting, lookupBusinessProfileFn } from "@/modules/prospecti
 import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
 import { validateProspectingSearch } from "@/modules/prospecting/validation";
 import { useActionCooldown } from "@/hooks/useActionCooldown";
-import { searchGoogleMapsAndInstagram, lookupBusinessProfile } from "@/modules/prospecting/LiveProspectingEngine";
-import { getSavedApifyToken, APIFY_TOKEN_UPDATED_EVENT } from "@/modules/prospecting/ApifyInstagramService";
+import { searchGoogleMapsAndInstagram, lookupBusinessProfile, findInstagramHandleForCompany } from "@/modules/prospecting/LiveProspectingEngine";
+import { getSavedApifyToken, APIFY_TOKEN_UPDATED_EVENT, fetchInstagramProfileViaApify, extractInstagramHandle } from "@/modules/prospecting/ApifyInstagramService";
 import { PageService, type OwnedPage } from "@/modules/page/services/PageService";
 import { TransferPageModal } from "@/components/prospecting/TransferPageModal";
 import { FieldCaptureModal } from "@/components/prospecting/FieldCaptureModal";
@@ -856,7 +856,7 @@ function ProspectingPage() {
     isRegeneration = false,
     customPhotoUrl?: string,
   ): Promise<{ pageId: string; slug: string; url: string }> {
-    const cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
+    let cleanPhone = (company.whatsapp ?? company.phone ?? "").replace(/\D/g, "");
     const clientKey = getGeminiApiKey() || undefined;
     const demoInfo = parseDemoInfo(company);
     const nicheText = company.niche || "Serviços Especializados";
@@ -913,6 +913,44 @@ function ProspectingPage() {
       }
     } catch (err) {
       console.warn("[Prospeccao] Consulta Google Places falhou, prosseguindo com dados do lead:", err);
+    }
+
+    // Busca profunda e autêntica de fotos reais no Instagram da empresa via Apify
+    let targetInstaHandle = company.instagram ? extractInstagramHandle(company.instagram) : null;
+    if (!targetInstaHandle && company.website && /(?:instagram\.com\/|instagr\.am\/)/i.test(company.website)) {
+      targetInstaHandle = extractInstagramHandle(company.website);
+    }
+    if (!targetInstaHandle && company.name) {
+      try {
+        targetInstaHandle = await findInstagramHandleForCompany(company.name, company.city);
+      } catch (findErr) {
+        console.warn("[Prospeccao] Descoberta de Instagram falhou:", findErr);
+      }
+    }
+
+    if (targetInstaHandle) {
+      setFeedback(`📸 Buscando fotos reais do feed do Instagram (@${targetInstaHandle}) via Apify...`);
+      try {
+        const currentApifyToken = getSavedApifyToken() || undefined;
+        const instaPromise = fetchInstagramProfileViaApify(targetInstaHandle, currentApifyToken);
+        const instaProfile = await Promise.race([
+          instaPromise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 12000)),
+        ]);
+        if (instaProfile && Array.isArray(instaProfile.photos) && instaProfile.photos.length > 0) {
+          const instaPhotos = instaProfile.photos.filter((p) => typeof p === "string" && p.startsWith("http"));
+          for (const ip of instaPhotos) {
+            if (!realPhotos.includes(ip)) {
+              realPhotos.push(ip);
+            }
+          }
+          if (!cleanPhone && instaProfile.whatsapp) {
+            cleanPhone = instaProfile.whatsapp.replace(/\D/g, "");
+          }
+        }
+      } catch (instaErr) {
+        console.warn("[Prospeccao] Falha ao consultar feed do Instagram:", instaErr);
+      }
     }
 
     setFeedback(`🔍 Buscando imagens compatíveis em alta resolução para ${company.name}...`);
@@ -987,8 +1025,15 @@ ${verifiedAddress ? `Endereço Verificado (usar no Mapa e rotas GPS): "${verifie
 ${cleanPhone ? `WhatsApp Oficial (usar no botão pulsante e CTAs): "${cleanPhone}"` : ""}
 ${verifiedRating ? `Avaliação Google Maps: ${verifiedRating} estrelas (${verifiedReviewsCount || 90} avaliações reais)` : ""}
 
-${realPhotos.length > 0 ? `FOTOS REAIS DO GOOGLE MEU NEGÓCIO DA EMPRESA (PRIORIZAR NO HERO E SEÇÕES):
-${realPhotos.slice(0, 6).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}` : ""}
+${realPhotos.length > 0 ? `ACERVO DE FOTOS REAIS DO CLIENTE (GOOGLE MAPS & INSTAGRAM FEED):
+Você possui ${realPhotos.length} fotos autênticas reais tiradas no estabelecimento ou postadas no Instagram do cliente!
+PRIORIDADE MÁXIMA E OBRIGATÓRIA (DISTRIBUIR NO HERO, AMBIENTE, SERVIÇOS E GALERIA):
+${realPhotos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}
+
+DIRETRIZ DE USO DE FOTOS REAIS:
+- PRIORIDADE MÁXIMA: Use estas fotos reais nos atributos src="..." de todas as seções principais.
+- Se houver 4 ou mais fotos reais, O SITE DEVE SER COMPOSTO MAJORITARIAMENTE POR ESTAS FOTOS REAIS autênticas!
+- Inspire os títulos e descrições dos serviços/pratos diretamente no que as fotos reais mostram.` : ""}
 
 ${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:
 ${compatibleImages.map((img, i) => `- Imagem ${i + 1} [Papel: ${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
@@ -1105,7 +1150,15 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
       ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`
       : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`;
 
-    const companyUpdates: Partial<ProspectedCompany> = { notes: newNotes };
+    let notesWithPhotos = newNotes;
+    if (realPhotos.length > 0 && !notesWithPhotos.includes("[Fotos:")) {
+      notesWithPhotos = `${notesWithPhotos} · [Fotos: ${realPhotos.slice(0, 12).join(" | ")}]`;
+    }
+
+    const companyUpdates: Partial<ProspectedCompany> = { notes: notesWithPhotos };
+    if (targetInstaHandle && !company.instagram) {
+      companyUpdates.instagram = `@${targetInstaHandle}`;
+    }
     if (cleanPhone && !company.whatsapp) {
       companyUpdates.whatsapp = cleanPhone;
       companyUpdates.phone = cleanPhone;

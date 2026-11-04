@@ -467,6 +467,46 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
 }
 
 /**
+ * Tenta descobrir o perfil do Instagram de uma empresa pelo nome e cidade via busca indexada.
+ */
+export async function findInstagramHandleForCompany(
+  companyName: string,
+  city?: string | null,
+): Promise<string | null> {
+  const cleanCity = (city || "").replace(/[^\w\sÀ-ÿ]/g, " ").trim();
+  const query = `site:instagram.com "${companyName}" ${cleanCity ? `"${cleanCity}"` : ""}`;
+  const targetUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&hl=pt-BR&gl=BR`;
+  const jinaUrl = `https://r.jina.ai/${targetUrl}`;
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 3500);
+
+    const res = await fetch(jinaUrl, {
+      signal: controller.signal,
+      headers: { "x-locale": "pt-BR" },
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) return null;
+    const text = await res.text();
+    const regex = /https?:\/\/(?:www\.)?instagram\.com\/([a-zA-Z0-9._]+)\/?/gi;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(text)) !== null) {
+      const handle = match[1];
+      if (!["explore", "reels", "stories", "p", "accounts", "about", "direct"].includes(handle.toLowerCase())) {
+        return handle;
+      }
+    }
+  } catch {
+    // Silencioso se der timeout
+  }
+
+  return null;
+}
+
+/**
  * Motor Principal: Busca tanto no Google Maps quanto no Instagram e consolida sem duplicatas.
  * Suporta Apify Maps nativo quando conectado e varredura rotativa de sinônimos com cache-busting.
  */

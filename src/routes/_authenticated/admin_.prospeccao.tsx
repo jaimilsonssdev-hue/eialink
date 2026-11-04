@@ -869,6 +869,14 @@ function ProspectingPage() {
     if (Array.isArray(company.photos) && company.photos.length > 0) {
       realPhotos.push(...company.photos.filter((p): p is string => typeof p === "string" && p.startsWith("http")));
     }
+    // Desempacota fotos salvas nas notas se ainda não estiverem em company.photos
+    if (realPhotos.length === 0 && company.notes && company.notes.includes("[Fotos:")) {
+      const match = company.notes.match(/\[Fotos:\s*([^\]]+)\]/);
+      if (match) {
+        const extracted = match[1].split("|").map((p) => p.trim()).filter((p) => p.startsWith("http"));
+        realPhotos.push(...extracted);
+      }
+    }
     if (customPhotoUrl && !realPhotos.includes(customPhotoUrl)) {
       realPhotos.unshift(customPhotoUrl);
     }
@@ -1299,21 +1307,31 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
     const notes = typeof input === "string" ? input : (input.notes || "");
     const company = typeof input === "object" ? input : null;
 
-    // 1. URL da demo nas notas ou website
-    const urlMatch =
-      notes.match(/https?:\/\/[^\s)]+/) ||
-      notes.match(/\/p\/[a-z0-9-]+/) ||
-      (company?.website?.includes("eialink.com.br") ? [company.website] : null);
-    let url = urlMatch ? urlMatch[0] : null;
+    // 1. URL da demo nas notas ou website:
+    // ATENÇÃO: NUNCA deve capturar links soltos (como [Fotos: https://...], Instagram ou links externos de bio/wa.me)!
+    // Apenas links explicitamente prefixados com "Demo: https://..." ou links reais de páginas do EIA Link (/p/ ou *.eialink.com.br).
+    let url: string | null = null;
+    const explicitDemoMatch = notes.match(/Demo:\s*(https?:\/\/[^\s)\]]+)/i);
+    if (explicitDemoMatch) {
+      url = explicitDemoMatch[1];
+    } else {
+      const eialinkMatch =
+        notes.match(/https?:\/\/(?:[a-z0-9-]+\.)?eialink\.com\.br\/(?:p\/)?[^\s)\]]+/i) ||
+        notes.match(/\/p\/[a-z0-9-]+/i) ||
+        (company?.website && company.website.includes("eialink.com.br") ? company.website : null);
+      if (eialinkMatch) {
+        url = typeof eialinkMatch === "string" ? eialinkMatch : eialinkMatch[0];
+      }
+    }
 
     // 2. Extrai slug da URL se existir (/p/slug ou subdominio.eialink.com.br)
-    const slugMatch = url ? url.match(/\/p\/([^/?#\s)]+)/) : null;
+    const slugMatch = url ? url.match(/\/p\/([^/?#\s)\]]+)/) : null;
     const subMatch = url ? url.match(/https?:\/\/([a-z0-9-]+)\.eialink\.com\.br/i) : null;
     let slug = slugMatch
       ? slugMatch[1].toLowerCase().trim()
       : (subMatch && subMatch[1] !== "www" && subMatch[1] !== "app" ? subMatch[1].toLowerCase().trim() : null);
 
-    // 3. ID da página: a partir de (id:uuid), pelo slug em demoPagesBySlug ou pelo nome da empresa
+    // 3. ID da página: a partir de (id:uuid), pelo slug em demoPagesBySlug
     const idMatch = notes.match(/\(id:([a-f0-9-]+)\)/i);
     let pageId = idMatch ? idMatch[1] : null;
 
@@ -1323,15 +1341,6 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
     } else if (slug) {
       matchedPage = demoPagesBySlug.get(slug);
       if (matchedPage) pageId = matchedPage.id;
-    }
-
-    if (!pageId && company?.name) {
-      matchedPage = demoPagesByName.get(company.name.toLowerCase().trim());
-      if (matchedPage) {
-        pageId = matchedPage.id;
-        if (!url) url = `https://${matchedPage.slug}.eialink.com.br`;
-        if (!slug) slug = matchedPage.slug.toLowerCase().trim();
-      }
     }
 
     // 4. Modelo da página

@@ -46,7 +46,17 @@ export const ProspectingService = {
       .order("score", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    return (data ?? []) as ProspectedCompany[];
+    const rows = (data ?? []) as ProspectedCompany[];
+    return rows.map((c) => {
+      let photos = c.photos;
+      if ((!photos || photos.length === 0) && c.notes && c.notes.includes("[Fotos:")) {
+        const match = c.notes.match(/\[Fotos:\s*([^\]]+)\]/);
+        if (match) {
+          photos = match[1].split("|").map((p) => p.trim()).filter((p) => p.startsWith("http"));
+        }
+      }
+      return { ...c, photos: photos || [] };
+    });
   },
 
   async listDedupeKeys(): Promise<Set<string>> {
@@ -166,7 +176,7 @@ export const ProspectingService = {
     const { avatar_url, photos, biography, address, ...validPayload } = updates as Record<string, any>;
     const { error } = await supabase
       .from("prospected_companies")
-      .update(validPayload)
+      .update(validPayload as any)
       .eq("id", id);
     if (error) throw new Error(error.message);
   },

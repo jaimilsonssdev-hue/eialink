@@ -273,6 +273,20 @@ export function sanitizeGeneratedLuxuryHtml(rawHtml: string): string {
 
   let html = rawHtml;
 
+  // 0. Remove eventuais marcadores residuais do protocolo Copiloto (<<<EXPLANATION>>>, <<<HTML>>>, <<<END_HTML>>>)
+  if (html.includes("<<<HTML>>>")) {
+    html = html.split("<<<HTML>>>")[1] || html;
+  }
+  html = html.replace(/<<<END_HTML>>>/gi, "").replace(/<<<EXPLANATION>>>/gi, "");
+  const doctypeIdx = html.search(/<!DOCTYPE\s+html|<html\b/i);
+  if (doctypeIdx > 0) {
+    html = html.slice(doctypeIdx);
+  }
+  const htmlEndMatch = html.match(/<\/html>/i);
+  if (htmlEndMatch && htmlEndMatch.index !== undefined) {
+    html = html.slice(0, htmlEndMatch.index + 7);
+  }
+
   // 1. Substitui fotos desconexas legadas (teatro/ópera lotado, silhueta pôr do sol, praia escura, notebook loja de móveis, poltrona amarela com TV) por fotos clínicas verificadas
   let psychologyHeroCount = 0;
   html = html
@@ -297,11 +311,24 @@ export function sanitizeGeneratedLuxuryHtml(rawHtml: string): string {
       () => {
         psychologyHeroCount += 1;
         if (psychologyHeroCount === 1) {
-          return "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=85";
+          return "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1200&q=85";
         }
         return "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1200&q=85";
       },
     );
+
+  // Se for página de Psicologia/Psicoterapia, garante que nunca exiba cadeira odontológica (photo-1629909613654-28e377c37b09) ou maca hospitalar (photo-1519494026892-80bbd2d6fd0d)
+  if (/psic[oó]log|psicoterap|psican[aá]l/i.test(html) && !/odontolog|dentist|implante\s*dent/i.test(html)) {
+    html = html
+      .replace(
+        /https:\/\/images\.unsplash\.com\/photo-1629909613654-28e377c37b09[^"'\s)]*/gi,
+        "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1200&q=85",
+      )
+      .replace(
+        /https:\/\/images\.unsplash\.com\/photo-1519494026892-80bbd2d6fd0d[^"'\s)]*/gi,
+        "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85",
+      );
+  }
 
   // 3. Corrige selos/cards absolutos vazando para fora de imagens (-right-6, -right-8, -right-10, -right-12)
   html = html.replace(/\b-right-(?:6|8|10|12)\b/g, "right-4");
@@ -546,6 +573,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
               ? SURGICAL_EDIT_SYSTEM_PROMPT
               : CODE_GENERATION_SYSTEM_PROMPT,
           temperature: existingHtml && existingHtml.length > 50 ? 0.2 : 0.85,
+          maxOutputTokens: 32768,
         },
       });
 

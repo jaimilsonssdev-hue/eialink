@@ -1303,7 +1303,12 @@ REGRAS DE OURO DE EXECUÇÃO VISUAL (PADRÃO AWWWARDS / LOVABLE):
 
       const nicheRaw = (page.social_links as any)?.niche || "Serviços";
       const existingGooglePhotos: string[] = Array.isArray((page.social_links as any)?.google_photos)
-        ? (page.social_links as any).google_photos
+        ? (page.social_links as any).google_photos.filter(
+            (u: unknown): u is string =>
+              typeof u === "string" &&
+              u.startsWith("http") &&
+              !/images\.unsplash\.com|streetviewpixels-pa\.googleapis\.com/i.test(u),
+          )
         : [];
 
       const pageMemKey = `eialink_last_archetype_page_${page.id}`;
@@ -1318,6 +1323,8 @@ REGRAS DE OURO DE EXECUÇÃO VISUAL (PADRÃO AWWWARDS / LOVABLE):
 
       const nicheDirection = getNicheDesignDirection(nicheRaw, page.display_name, nextPageIdx);
       const pairedServices = nicheDirection.pairedServices;
+      const heroPhoto = existingGooglePhotos[0] || nicheDirection.heroPhotoUrl;
+      const ambientPhoto = existingGooglePhotos[1] || nicheDirection.ambientPhotoUrl;
 
       const promptReinvento = `REINVENTAR PROPOSTA DE DESIGN COMPLETA GUIADA POR NICHO:
 Empresa: "${page.display_name}"
@@ -1332,12 +1339,16 @@ Hero: ${nicheDirection.heroConcept}
 Diagramação dos Serviços (TODOS OS CARDS COM FOTO): ${nicheDirection.servicesLayout}
 Seção de Assinatura: ${nicheDirection.signatureSection}
 
+MAPA FOTOGRÁFICO EXATO E PAREAMENTO 1:1 (OBRIGATÓRIO SEGUIR SEM ALTERAR URLS):
+1. FOTO PRINCIPAL DO HERO (src obrigatório): ${heroPhoto}
+2. FOTO DO AMBIENTE / SOBRE NÓS / ESTRUTURA (src obrigatório): ${ambientPhoto}
+
 [CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1 (OBRIGATÓRIO USAR CADA IMAGEM NO SEU RESPECTIVO CARD)]:
 ${pairedServices
   .map(
     (srv, idx) =>
       `Card ${idx + 1}: "${srv.name}" (${srv.category}) — ${srv.description} — R$ ${srv.price.toFixed(2)}
-   IMAGEM OBRIGATÓRIA DESTE CARD (src exato): ${existingGooglePhotos[idx + 1] || srv.image_url}`,
+   IMAGEM OBRIGATÓRIA DESTE CARD (src exato): ${srv.image_url}`,
   )
   .join("\n")}
 

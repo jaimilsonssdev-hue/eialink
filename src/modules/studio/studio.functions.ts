@@ -743,7 +743,9 @@ DIRETRIZ DE USO DE FOTOS REAIS:
       );
     }
 
-    if (pairedCatalog.length > 0) {
+    const promptAlreadyHasNicheCatalog = /\[CAT[AÁ]LOGO OFICIAL DE SERVI[CÇ]OS/i.test(userPrompt);
+
+    if (!promptAlreadyHasNicheCatalog && pairedCatalog.length > 0) {
       businessContextParts.push(
         `[CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1 (OBRIGATÓRIO USAR CADA FOTO NO SEU RESPECTIVO CARD)]:
 ${pairedCatalog
@@ -759,31 +761,33 @@ ${pairedCatalog
       );
     }
 
-    try {
-      const found = await searchCompatibleBusinessImages(
-        effectiveNiche || "geral",
-        effectiveProjectName,
-        8,
-      );
-      const heroAndAmbientPhotos = found.filter((f) => f.role === "hero" || f.role === "ambient");
-      if (heroAndAmbientPhotos.length > 0) {
-        const distinctHeroUrl = clientRealPhotos[0] || nicheDirection.heroPhotoUrl || heroAndAmbientPhotos[0].url;
-        const distinctAmbientUrl =
-          clientRealPhotos[1] ||
-          nicheDirection.ambientPhotoUrl ||
-          (heroAndAmbientPhotos[1] || heroAndAmbientPhotos[0]).url;
-        businessContextParts.push(
-          `FOTOS COMPLEMENTARES DE CAPA (HERO) E AMBIENTE INTERNO DO NICHO (${nicheDirection.canonicalTagLabel} — PROIBIDO REPETIR ESSAS URLS NOS CARDS DE SERVIÇO):
+    if (!promptAlreadyHasNicheCatalog) {
+      try {
+        const found = await searchCompatibleBusinessImages(
+          effectiveNiche || "geral",
+          effectiveProjectName,
+          8,
+        );
+        const heroAndAmbientPhotos = found.filter((f) => f.role === "hero" || f.role === "ambient");
+        if (heroAndAmbientPhotos.length > 0) {
+          const distinctHeroUrl = clientRealPhotos[0] || nicheDirection.heroPhotoUrl || heroAndAmbientPhotos[0].url;
+          const distinctAmbientUrl =
+            clientRealPhotos[1] ||
+            nicheDirection.ambientPhotoUrl ||
+            (heroAndAmbientPhotos[1] || heroAndAmbientPhotos[0]).url;
+          businessContextParts.push(
+            `FOTOS COMPLEMENTARES DE CAPA (HERO) E AMBIENTE INTERNO DO NICHO (${nicheDirection.canonicalTagLabel} — PROIBIDO REPETIR ESSAS URLS NOS CARDS DE SERVIÇO):
 - Foto HERO Principal: ${distinctHeroUrl}
 - Foto AMBIENTE / NOSSO ESPAÇO: ${distinctAmbientUrl}
 REGRA DE OURO:
 1. Para o HERO principal: use EXATAMENTE ${distinctHeroUrl}.
 2. Para a seção "Sobre Nós / Nosso Espaço": use EXATAMENTE ${distinctAmbientUrl} acompanhada dos selos de credibilidade com ícones <i data-lucide="award"></i>, <i data-lucide="shield-check"></i>. NUNCA use foto de rosto de modelo desconhecido fingindo ser o dono e NUNCA pendure cards com -right-8 vazando para fora da foto!
 3. Para cada card de serviço: use EXATAMENTE a 'IMAGEM OBRIGATÓRIA DESTE CARD' listada no bloco [CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1] acima (todas as 6 imagens da página são 100% distintas, nunca repita a foto do Hero no Card 1).`,
-        );
+          );
+        }
+      } catch (e) {
+        console.warn("[StudioServer] Aviso ao buscar fotos compatíveis:", e);
       }
-    } catch (e) {
-      console.warn("[StudioServer] Aviso ao buscar fotos compatíveis:", e);
     }
 
     if (businessContextParts.length > 0) {
@@ -791,11 +795,12 @@ REGRA DE OURO:
     }
 
     if (input.isRegeneration) {
-      userPrompt += `\n\n[DIRETRIZ DE REINVENÇÃO TOTAL & TROCA DE MODELO]:
-O usuário solicitou explicitamente TROCAR O MODELO e criar uma PROPOSTA DE DESIGN COMPLETAMENTE NOVA, DIFERENTE E SURPREENDENTE.
-NÃO repita a mesma estrutura, ordem de blocos, hero ou paleta de cores.
-Experimente um formato e layout inovador (ex: se era clássico/cards, use um Split moderno, Bento Grid, Neobrutalismo pop com sombras duras, ou Glassmorphism translúcido com luzes neon).
-Surpreenda com uma organização criativa e única que valorize a marca do cliente ao máximo!`;
+      userPrompt += `\n\n[DIRETRIZ DE TROCA DE MODELO DENTRO DO NICHO (${nicheDirection.canonicalTagLabel})]:
+O usuário solicitou TROCAR O MODELO da página para a nova Variante Arquitetônica indicada acima (${nicheDirection.variantName}).
+REGRAS OBRIGATÓRIAS NA TROCA DE MODELO:
+1. Mantenha 100% de fidelidade à atmosfera, sobriedade e paleta de cores do nicho "${nicheDirection.canonicalTagLabel}" (${nicheDirection.palette}). NUNCA use estilos fora do nicho (proibido neon em psicologia/clínica, proibido fotos de odontologia/dentista em psicologia).
+2. Mantenha o alinhamento perfeito de layout: header full-width 'sticky top-0 z-50 w-full', todos os 4 cards de serviços com mesma altura ('flex flex-col h-full') e rodapé alinhado ('mt-auto'), e selos internos à imagem (proibido '-right-8' vazando da foto).
+3. Use EXATAMENTE as 6 fotos distintas especificadas no Mapa Fotográfico e no Catálogo Oficial de Serviços 1:1 (1 Hero + 1 Ambiente + 4 Cards de Serviços), sem repetir nenhuma imagem e sem inventar URLs externas.`;
     }
 
     if (isModification) {
@@ -1324,7 +1329,8 @@ export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
     // Se o HTML enviado for vazio ou incompleto (< 50 caracteres) e o banco já tiver HTML válido,
     // PRESERVA o HTML do banco! Nunca zera uma página válida.
     const incomingHtml = (proj.html || "").trim();
-    const safeHtml = incomingHtml.length > 50 ? incomingHtml : existingHtml;
+    const rawSafeHtml = incomingHtml.length > 50 ? incomingHtml : existingHtml;
+    const safeHtml = rawSafeHtml ? sanitizeGeneratedLuxuryHtml(rawSafeHtml) : "";
 
     const safeProj = {
       ...proj,
@@ -1335,6 +1341,12 @@ export const syncCreativeStudioProjectFn = createServerFn({ method: "POST" })
     const updatedSocial = {
       ...existingSocial,
       custom_html: safeHtml,
+      is_cardapio_page: false,
+      cardapio_data: null,
+      cardapioData: null,
+      is_agenda_page: false,
+      agenda_data: null,
+      agendaData: null,
       creative_studio_project: safeProj,
       updated_at: new Date().toISOString(),
     };

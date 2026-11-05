@@ -31,6 +31,7 @@ import {
 } from "@/modules/prospecting/nicheProvisioner";
 import {
   getPairedCatalogForBusiness,
+  getNicheDesignDirection,
   describeKnownPhotoUrl,
 } from "@/modules/prospecting/nichePresets";
 import {
@@ -343,6 +344,7 @@ import {
   BRIEFING_SYSTEM_PROMPT,
   CODE_GENERATION_SYSTEM_PROMPT,
   SURGICAL_EDIT_SYSTEM_PROMPT,
+  sanitizeGeneratedLuxuryHtml,
 } from "@/modules/studiopro/lib/creativeEngineService";
 
 /**
@@ -680,12 +682,28 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       };
     }
 
+    const nicheDirection = getNicheDesignDirection(
+      effectiveNiche || "geral",
+      effectiveProjectName,
+      input.isRegeneration ? Math.floor(Math.random() * 3) : 0,
+    );
+    const pairedCatalog = getPairedCatalogForBusiness(
+      effectiveNiche || "geral",
+      effectiveProjectName,
+    );
+
     const businessContextParts: string[] = [];
     if (effectiveProjectName) businessContextParts.push(`Nome Oficial: "${effectiveProjectName}"`);
-    if (effectiveNiche)
-      businessContextParts.push(
-        `Nicho de Atuação: "${effectiveNiche}" (Categoria: ${nicheConfig.label})`,
-      );
+    businessContextParts.push(
+      `Tag de Nicho Canônico: "${nicheDirection.nicheKey}" — ${nicheDirection.canonicalTagLabel}`,
+    );
+    businessContextParts.push(`Posicionamento de Valor do Nicho: ${nicheDirection.positioning}`);
+    businessContextParts.push(`Atmosfera Visual & Direção Estética: ${nicheDirection.atmosphere}`);
+    businessContextParts.push(`Paleta de Cores Oficial do Nicho: ${nicheDirection.palette}`);
+    businessContextParts.push(`Tipografia Recomendada: ${nicheDirection.fonts}`);
+    businessContextParts.push(
+      `Selos de Credibilidade do Nicho: ${nicheDirection.trustBadges.join(" | ")}`,
+    );
     if (effectiveCity) businessContextParts.push(`Cidade / Região: "${effectiveCity}"`);
     if (effectiveAddress)
       businessContextParts.push(
@@ -700,13 +718,8 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
         `SISTEMA DE AGENDAMENTO ONLINE EIALINK: 100% ATIVO E INTEGRADO no link "${ctaUrl}".`,
       );
       businessContextParts.push(
-        `O botão de ação principal (CTA) do Hero e das seções de serviços DEVE SER "${ctaLabel}" apontando diretamente para "${ctaUrl}".`,
+        `O botão de ação principal (CTA) do Hero e das seções de serviços DEVE SER "${ctaLabel}" apontando diretamente para "${ctaUrl}" com atributo data-action="agendar".`,
       );
-      if (nicheConfig.services.length > 0) {
-        businessContextParts.push(
-          `Serviços oficiais do negócio: ${nicheConfig.services.map((s) => `${s.name} (R$ ${s.price}, ${s.duration_minutes}min)`).join("; ")}. IMPORTANTE: Apresente estes serviços seguindo fielmente a diagramação do arquétipo estrutural (ex: lista editorial, bento cards, timeline ou tabela moderna).`,
-        );
-      }
     } else {
       businessContextParts.push(
         `CTA PRINCIPAL DE CONVERSÃO: Botão "${ctaLabel}" apontando para "${ctaUrl}".`,
@@ -722,20 +735,28 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       (u) => typeof u === "string" && u.startsWith("http"),
     );
     const clientRealPhotos = rawInputPhotos.filter((u) => !/images\.unsplash\.com/i.test(u));
-    const labeledUnsplashFromInput = rawInputPhotos
-      .filter((u) => /images\.unsplash\.com/i.test(u))
-      .map((url) => ({
-        url,
-        label: describeKnownPhotoUrl(url, effectiveNiche, effectiveProjectName).label,
-        role: "service",
-      }));
 
     if (clientRealPhotos.length > 0) {
       businessContextParts.push(
-        `FOTOS REAIS DA EMPRESA (GOOGLE MAPS & INSTAGRAM FEED - PRIORIDADE TOTAL):\n${clientRealPhotos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}
+        `FOTOS REAIS AUTÊNTICAS DA EMPRESA (GOOGLE MAPS & INSTAGRAM FEED - PRIORIDADE MÁXIMA):\n${clientRealPhotos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}
 DIRETRIZ DE USO DE FOTOS REAIS:
-- Prioridade máxima: use estas fotos reais nos atributos src="..." das seções principais (Hero, Ambiente, Procedimentos e Apresentação).
-- Para a apresentação do profissional/bio: se houver foto real do cliente, use-a; se NÃO houver foto real confirmada da pessoa, É TERMINANTEMENTE PROIBIDO colocar a foto de um modelo desconhecido fingindo ser o profissional!`,
+- Use as fotos reais acima em destaque no Hero, na seção "Nosso Espaço / Sobre Nós" e na Galeria!`,
+      );
+    }
+
+    if (pairedCatalog.length > 0) {
+      businessContextParts.push(
+        `[CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1 (OBRIGATÓRIO USAR CADA FOTO NO SEU RESPECTIVO CARD)]:
+${pairedCatalog
+  .map(
+    (srv, idx) =>
+      `Serviço ${idx + 1}: "${srv.name}" (${srv.category})
+   - Descrição: ${srv.description}
+   - Valor / Duração: R$ ${srv.price.toFixed(2)} (${srv.duration_minutes} min)
+   - IMAGEM OBRIGATÓRIA DESTE CARD (src exato): ${clientRealPhotos[idx + 1] || srv.image_url}
+   - Conteúdo Visual da Imagem: ${srv.photo_label}`,
+  )
+  .join("\n\n")}`,
       );
     }
 
@@ -745,22 +766,15 @@ DIRETRIZ DE USO DE FOTOS REAIS:
         effectiveProjectName,
         8,
       );
-      const mergedCompatible = [
-        ...found,
-        ...labeledUnsplashFromInput.filter(
-          (item) => !found.some((f) => f.url.split("?")[0] === item.url.split("?")[0]),
-        ),
-      ].slice(0, 10);
-
-      if (mergedCompatible.length > 0) {
+      const heroAndAmbientPhotos = found.filter((f) => f.role === "hero" || f.role === "ambient");
+      if (heroAndAmbientPhotos.length > 0) {
         businessContextParts.push(
-          `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:\n${mergedCompatible.map((img, i) => `- Foto ${i + 1} [${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
-DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXTO):
-1. O texto e título de cada card de serviço DEVE corresponder fielmente ao que o rótulo da foto mostra (ex: se o card fala de churrasco/picanha, a foto DEVE ser a de carne assada/brasa, NUNCA peixe ou verduras; se fala de Atendimento Individual, use a foto de consultório/atendimento 1 a 1, NUNCA auditório ou multidão).
-2. Construa os serviços/produtos baseando-se nas fotos rotuladas disponíveis (o conteúdo segue os rótulos das imagens).
-3. Se não houver foto condizente para um serviço adicional, crie um card elegante sem foto com ícone temático do Lucide em vez de forçar uma foto inadequada.
-4. PROIBIÇÃO ABSOLUTA DE ROSTOS DE MODELOS DESCONHECIDOS: NUNCA coloque foto de pessoa desconhecida de banco de imagens na apresentação do profissional! Se não houver foto real da pessoa, use a foto real do ambiente/fachada ou um card de autoridade com selos Lucide (Award, GraduationCap, ShieldCheck).
-5. NUNCA invente links fictícios e NUNCA repita a mesma foto.`,
+          `FOTOS COMPLEMENTARES DE CAPA (HERO) E AMBIENTE INTERNO DO NICHO (${nicheDirection.canonicalTagLabel}):
+${heroAndAmbientPhotos.map((img, i) => `- Foto ${img.role.toUpperCase()} ${i + 1} [${img.label}]: ${img.url}`).join("\n")}
+REGRA DE OURO:
+1. Para o HERO principal: use ${clientRealPhotos[0] ? `a Foto Real 1 (${clientRealPhotos[0]})` : `a Foto HERO 1 (${heroAndAmbientPhotos[0].url})`}.
+2. Para a seção "Sobre Nós / Nosso Espaço": use ${clientRealPhotos[1] ? `a Foto Real 2 (${clientRealPhotos[1]})` : `a Foto AMBIENT (${(heroAndAmbientPhotos[1] || heroAndAmbientPhotos[0]).url})`} acompanhada dos selos de credibilidade com ícones <i data-lucide="award"></i>, <i data-lucide="shield-check"></i>. NUNCA use foto de rosto de modelo desconhecido fingindo ser o dono!
+3. Para cada card de serviço: use EXATAMENTE a 'IMAGEM OBRIGATÓRIA DESTE CARD' listada no bloco [CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1] acima. Todos os cards de serviço DEVEM ter foto!`,
         );
       }
     } catch (e) {
@@ -1028,6 +1042,9 @@ ${effectiveHtml}`,
       if (!existing) {
         savedSlug = input.businessSlug || `${slugCandidate}-${Date.now().toString(36).slice(-4)}`;
       }
+
+      // Sanitiza tags JSX acidentais (<Award /> -> <i data-lucide="award"></i>) antes de injetar runtime
+      cleanHtml = sanitizeGeneratedLuxuryHtml(cleanHtml);
 
       // Se o nicho usa agendamento, garante que todos os botões de agendar estejam conectados ao /agendar/{savedSlug}
       if (nicheConfig.isBooking) {

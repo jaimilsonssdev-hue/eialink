@@ -1,10 +1,10 @@
 export const ACTIVE_GEMINI_MODELS = [
   "gemini-3.8-flash",
-  "gemini-3.5-flash-lite",
   "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-2.5-pro",
   "gemini-2.5-flash",
   "gemini-2.5-flash-lite",
-  "gemini-2.0-flash",
 ] as const;
 
 let cachedModelsInfo: { key: string; models: string[]; expiresAt: number } | null = null;
@@ -33,14 +33,21 @@ export async function getAvailableGeminiModels(apiKey?: string): Promise<string[
           const supported = data.models
             .filter((m: any) => m.supportedGenerationMethods?.includes("generateContent"))
             .map((m: any) => m.name.replace(/^models\//, ""))
-            // Exclui 1.5 e 1.0 obsoletos descontinuados pela Google
-            .filter((name: string) => !name.startsWith("gemini-1.5") && !name.startsWith("gemini-1.0"));
+            // Exclui 1.5 e 1.0 obsoletos descontinuados pela Google e modelos menores/experimentais que degradam HTML
+            .filter(
+              (name: string) =>
+                name.startsWith("gemini-") &&
+                !name.startsWith("gemini-1.5") &&
+                !name.startsWith("gemini-1.0") &&
+                !/embedding|imagen|veo|aqa|tts|audio|robotics|computer-use|8b|2\.0-flash-lite/i.test(name),
+            );
 
           if (supported.length > 0) {
             const priority = [
               "gemini-3.8-flash",
-              "gemini-3.5-flash-lite",
               "gemini-3.5-flash",
+              "gemini-3.5-flash-lite",
+              "gemini-2.5-pro",
               "gemini-2.5-flash",
               "gemini-2.5-flash-lite",
               "gemini-2.0-flash",

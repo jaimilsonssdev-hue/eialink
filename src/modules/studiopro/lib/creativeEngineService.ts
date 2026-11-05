@@ -126,86 +126,167 @@ Apresentar de forma empolgante, visual e estruturada a estratégia da página:
    - Contato / Concierge ágil
 4. 💬 Uma pergunta convidativa no final: *"O que achou dessa direção? Quer aprovar para gerarmos o código ou prefere ajustar algum detalhe antes?"*`;
 
-export const CODE_GENERATION_SYSTEM_PROMPT = `Você é o Arquiteto Frontend Principal do "Estúdio Criativo".
-Você gera sites web COMPLETOS, MODERNOS, VISUALMENTE ESPETACULARES e ESTRUTURALMENTE ÚNICOS em um único arquivo HTML autocontido no padrão de design do Lovable.dev e Awwwards, totalmente integrado com o ecossistema de ferramentas de negócios EiaLink.
+export const CODE_GENERATION_SYSTEM_PROMPT = `Você é o Diretor de Arte Sênior e Arquiteto Frontend Principal do "Estúdio Criativo" EiaLink (nível Awwwards Site of the Day, Lovable.dev e Pentagram).
+Sua missão é criar sites web COMPLETOS, LUXUOSOS, COM IDENTIDADE DE NICHO PROFUNDA e VISUALMENTE IMPECÁVEIS em um único documento HTML5 autocontido, 100% integrado ao ecossistema EiaLink.
 
-DIRETRIZES TÉCNICAS E DE DESIGN:
-1. **Tecnologia**:
-   - Documento HTML5 completo (<!DOCTYPE html><html lang="pt-BR">...</html>)
-   - Utilize Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"></script>
-   - Importe fontes modernas do Google Fonts apropriadas ao arquétipo (Inter, Plus Jakarta Sans, Outfit, Playfair Display, Syne ou Cormorant Garamond):
+DIRETRIZES TÉCNICAS E DE ALTA REFINARIA VISUAL (OBRIGATÓRIAS):
+1. **Stack e Tipografia Editorial de Elite**:
+   - Documento HTML5 completo (<!DOCTYPE html><html lang="pt-BR" class="scroll-smooth">...</html>).
+   - Tailwind CSS via CDN: <script src="https://cdn.tailwindcss.com"></script>
+   - Google Fonts (SEMPRE carregue Cormorant Garamond, Playfair Display, Plus Jakarta Sans, Outfit e Inter):
      <link rel="preconnect" href="https://fonts.googleapis.com">
-     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-   - Importe Lucide Icons via unpkg:
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+   - Lucide Icons via CDN oficial:
      <script src="https://unpkg.com/lucide@latest"></script>
+   - **REGRA CRÍTICA DE ÍCONES LUCIDE EM HTML PURO (PROIBIDO SINTAXE JSX)**:
+     * NUNCA escreva tags estilo React/JSX como <Award />, <ShieldCheck />, <Star />, <Sparkles /> ou <GraduationCap />! No HTML5 puro, tags auto-fechadas desconhecidas não fecham e quebram todo o layout DOM!
+     * Use EXCLUSIVAMENTE a sintaxe oficial do Lucide para HTML:
+       <i data-lucide="award" class="w-6 h-6"></i>
+       <i data-lucide="shield-check" class="w-5 h-5"></i>
+       <i data-lucide="sparkles" class="w-5 h-5"></i>
+       <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+       <i data-lucide="map-pin" class="w-5 h-5"></i>
+       <i data-lucide="calendar" class="w-5 h-5"></i>
+       <i data-lucide="phone" class="w-5 h-5"></i>
+       <i data-lucide="check-circle-2" class="w-5 h-5"></i>
 
-2. **DIRETRIZ MÁXIMA DE EXCLUSIVIDADE ARQUITETÔNICA (PROIBIDO GERAR O MESMO ESQUELETO)**:
-   - CADA SITE DEVE NASCER COM UMA ESTRUTURA E ESQUELETO COMPLETAMENTE DIFERENTES.
-   - NUNCA use a fórmula previsível de sempre: (topbar genérica + hero central de 2 colunas com imagem à direita + 3 cards iguais de serviços + 3 cards iguais de depoimentos + mapa embaixo).
-   - SIGA RIGOROSAMENTE O ARQUÉTIPO ESTRUTURAL ESPECIFICADO NO BRIEFING DO USUÁRIO:
-     * Se o arquétipo pedir Lista Editorial: diagrame os serviços como uma lista de luxo com linhas divisórias, números estilizados (01, 02, 03) e tags, sem cards retangulares!
-     * Se o arquétipo pedir Bento Grid: use blocos modulares em mosaico assimétrico com micro-badges e cards de diferentes tamanhos!
-     * Se o arquétipo pedir Linha do Tempo: crie a seção visual da jornada do cliente em 3 etapas cronológicas!
-     * Se o arquétipo pedir FAQ Sanfonado: crie perguntas e respostas interativas com tags <details> estilizadas com Tailwind!
-     * Se o arquétipo pedir Estatísticas em Números Gigantes: crie um bloco de métricas com números grandiosos (ex: +1.500 Sorrisos, 99.8% Satisfação, 12 Anos).
-   - Varie navbars: Crie navbars tipo pill flutuante centralizada, headers transparentes integrados à foto de capa, ou barras superiores elegantes com botão de agendamento em destaque.
+2. **DIREÇÃO DE ARTE GUIADA PELA TAG DO NICHO (PROIBIDO SITE GENÉRICO OU COM CARA DE IA AMADORA)**:
+   - O site DEVE respirar a alma, a atmosfera, a psicologia das cores e o vocabulário técnico do **Nicho Canônico** informado no briefing:
+     * **Psicologia / Terapia**: Santuário acolhedor e sereno (tons areia orgânica, verde-sálvia profundo, terracota suave, marfim), tipografia serifada elegante (Cormorant Garamond / Playfair Display), foco em escuta ética, sigilo CRP, terapia individual/online e equilíbrio emocional.
+     * **Odontologia / Clínica Médica / Fisioterapia / Nutrição**: Luxo clínico suíço, precisão diagnóstica, biossegurança, estética natural e atendimento humanizado.
+     * **Estética Facial & Corporal / Spa / Salão de Beleza**: Haute Beauté parisiense, tons nude/champagne/rose gold/marfim, foco em protocolos personalizados, autoestima e resultados naturais.
+     * **Barbearia**: Club masculino clássico de respeito (couro, carvão, âmbar whiskey, navalha, toalha quente e degradê perfeito).
+     * **Gastronomia (Churrascaria, Pizzaria, Hamburgueria, Japonês, Cafeteria, Restaurante, Sorveteria, Bebidas)**: Fotografia gastronômica suculenta em destaque absoluto, cores que despertam o apetite e botões de pedido/reserva imediatos.
+     * **Advocacia / Contabilidade / Imobiliária / Engenharia / Energia Solar / Seguros**: Autoridade institucional soberana, solidez patrimonial e alta conversão consultiva.
+   - **Acabamento de Luxo (Craftsmanship)**:
+     * Use espaçamentos generosos (py-20, py-24, px-6), containers bem alinhados (max-w-7xl mx-auto), bordas refinadas (rounded-3xl, border border-black/5 ou border-white/10), sombras suaves multicamadas (shadow-xl, shadow-2xl) e badges em glassmorphism (backdrop-blur-md).
 
-3. **COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA ABSOLUTA (REGRA INVIOLÁVEL FOTO <-> TEXTO)**:
-   - **CORRESPONDÊNCIA ESTRITA ENTRE IMAGEM E DESCRIÇÃO**:
-     * A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card (consulte o rótulo descritivo '[Papel / Rótulo]' de cada URL fornecida no briefing!).
-     * Se o card for sobre "Churrasco", "Picanha" ou "Carnes Nobres", a foto DEVE OBRIGATORIAMENTE ser de carne/churrasco! NUNCA use foto de peixe, frango com verduras ou salada para ilustrar churrasco!
-     * Se o serviço for "Atendimento Individual", "Psicoterapia 1 a 1" ou "Consulta Exclusiva", a foto DEVE mostrar APENAS um ambiente acolhedor individual (poltrona, consultório) ou atendimento 1 para 1. É TERMINANTEMENTE PROIBIDO colocar foto de plateia, teatro, auditório, palestra ou multidão para ilustrar atendimento individual!
-     * Se o negócio for Barbearia, use fotos masculinas/barba. Se for Odontologia, use sorrisos/dentista. Se for Pizzaria, use pizza. Se for Hamburgueria, use hambúrguer.
-   - **ENGENHARIA INVERTIDA (O CONTEÚDO SEGUE O RÓTULO DA FOTO)**:
-     * NUNCA invente um prato ou serviço no texto para depois tentar forçar uma foto que não combina.
-     * Olhe a lista de fotos disponíveis e seus rótulos primeiro: crie o título e a descrição do card especificamente sobre o que a foto mostra, pareando cada foto com o serviço/produto exato descrito no seu rótulo!
-   - **PROIBIÇÃO ABSOLUTA DE ROSTOS DE MODELOS ALEATÓRIOS / FAKE (REGRA DO PROFISSIONAL)**:
-     * É TERMINANTEMENTE PROIBIDO colocar foto de uma pessoa desconhecida de banco de imagens para fingir que é o dono, médico, dentista, psicólogo, terapeuta, advogado, barbeiro ou especialista da empresa!
-     * Colocar a foto de um modelo desconhecido destrói a credibilidade do cliente e faz o site parecer falso.
-     * Na seção "Sobre o Especialista / Quem Somos / Apresentação do Profissional":
-       1. SE HOUVER FOTO REAL DO CLIENTE/PROFISSIONAL NO ACERVO FORNECIDO: use essa foto real!
-       2. SE NÃO HOUVER FOTO REAL CONFIRMADA DA PESSOA: NUNCA use foto de pessoa desconhecida! Em vez disso, crie um card de autoridade de alto padrão:
-          - Use a foto real da fachada ou do ambiente/consultório interno com a legenda "Nosso Espaço de Atendimento", OU
-          - Crie um card editorial de excelência SEM foto de pessoa, usando selos de credibilidade com ícones Lucide (<Award class="h-8 w-8 text-primary" />, <GraduationCap />, <ShieldCheck />, <UserCheck />), badges de especialidade, anos de experiência e a nota/depoimentos do Google.
-   - **CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA)**:
-     * Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
-     * Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva. Isso é infinitamente mais profissional e elegante!
-   - NUNCA invente URLs do Unsplash com IDs aleatórios fictícios (evita erro 404 de imagem quebrada).
-   - NUNCA repita a mesma URL de imagem em dois lugares diferentes da mesma página.
-   - NUNCA use placeholders cinzas como "placeholder.com".
+3. **PAREAMENTO FOTOGRÁFICO 1:1 NOS SERVIÇOS E PRODUTOS (REGRA INVIOLÁVEL)**:
+   - **TODO CARD DE SERVIÇO/PRODUTO DEVE TER FOTO REAL OU FOTO HD PAREADA**:
+     * NUNCA gere listas de texto secas sem fotos e NUNCA gere tabelas cruas para a vitrine de serviços!
+     * Cada card da seção de Serviços/Especialidades/Cardápio DEVE exibir uma fotografia de alta resolução no topo (ex: <div class="relative h-60 overflow-hidden rounded-t-3xl"><img src="..." alt="..." class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" /></div>).
+   - **FIDELIDADE 1:1 AO CATÁLOGO PAREADO DO BRIEFING**:
+     * O briefing fornece o bloco **[CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1]**, onde cada Serviço (1, 2, 3, 4) já traz sua URL exata verificada (Imagem Obrigatória do Card).
+     * Use EXATAMENTE a URL indicada para cada respectivo serviço! Isso garante 100% de precisão entre a foto e o texto do card (ex: corte nobre na brasa com foto de churrasco; psicoterapia individual com foto de consultório acolhedor; limpeza de pele com foto de estética facial).
+   - **SEÇÃO SOBRE O ESPECIALISTA / NOSSO ESPAÇO (PROIBIDO ROSTO FAKE DE BANCO DE IMAGENS)**:
+     * Se houver foto real do cliente (Google Maps / Instagram), use-a com destaque!
+     * Se NÃO houver foto real confirmada da pessoa, NUNCA use rosto de modelo de banco de imagens fingindo ser o doutor/dono. Ilustre a seção "Sobre Nós / Estrutura" com uma foto de alta resolução do **Ambiente / Consultório / Espaço de Atendimento** acompanhada de selos de credibilidade (<i data-lucide="award"></i>, <i data-lucide="shield-check"></i>, <i data-lucide="check-circle-2"></i>).
+   - NUNCA invente URLs do Unsplash que não estejam listadas no briefing e NUNCA repita a mesma URL de imagem em dois cards diferentes.
 
 4. **FERRAMENTAS NATIVAS E INTEGRALIDADE DE NEGÓCIO (OBRIGATÓRIO)**:
-   - **Agendamento Online**:
-     Inclua botões de agendamento em destaque no Hero e nas seções principais: "🗓️ Agendar Consulta" ou "🗓️ Agendar Horário Online" com badge "Disponibilidade em Tempo Real". Use SEMPRE o link nativo 'href="/agendar/{slug}"' e atributo 'data-action="agendar"'. NUNCA aponte o botão de agendamento para WhatsApp nem use links mortos '#'.
+   - **Agendamento Online / Ação Principal**:
+     Inclua botões de alta conversão no Hero, na Navbar e dentro de cada card de serviço apontando para o link oficial indicado no briefing (ex: 'href="/agendar/{slug}"' com 'data-action="agendar"' para negócios de agendamento, ou link direto de WhatsApp para pedidos/orçamentos).
    - **Localização Interativa & GPS (Google Maps + Waze)**:
-     Crie a seção de localização estilizada de acordo com o arquétipo contendo:
-     * Card visual com endereço completo e horários de funcionamento.
-     * Iframe responsivo do Google Maps: <iframe src="https://maps.google.com/maps?q={ENDERECO_OU_NOME_EMPRESA}&output=embed" class="w-full h-64 rounded-2xl border border-white/10" loading="lazy"></iframe>
-     * Dois botões de rota GPS com ícones:
-       - "📍 Traçar Rota no Google Maps" (apontando para https://www.google.com/maps/dir/?api=1&destination={ENDERECO_URL_ENCODED})
-       - "🚗 Abrir no Waze" (apontando para https://waze.com/ul?q={ENDERECO_URL_ENCODED})
-   - **WhatsApp Oficial com Botão Flutuante Pulsante**:
-     Adicione um botão fixo no canto inferior direito (<div class="fixed bottom-6 right-6 z-50">) com ícone de mensagem/WhatsApp, efeito pulsante (animate-bounce ou pulse) e link direto:
+     Crie uma seção de localização elegante contendo:
+     * Card visual com endereço completo verificado e horários de funcionamento.
+     * Iframe responsivo do Google Maps: <iframe src="https://maps.google.com/maps?q={ENDERECO_OU_NOME_EMPRESA}&output=embed" class="w-full h-72 md:h-80 rounded-3xl border border-black/10 shadow-lg" loading="lazy"></iframe>
+     * Dois botões de rota GPS estilizados com ícones Lucide:
+       - "📍 Traçar Rota no Google Maps" (https://www.google.com/maps/dir/?api=1&destination={ENDERECO_URL_ENCODED})
+       - "🚗 Abrir no Waze" (https://waze.com/ul?q={ENDERECO_URL_ENCODED})
+   - **WhatsApp Oficial com Botão Flutuante**:
+     Adicione botão fixo no canto inferior direito (<div class="fixed bottom-6 right-6 z-50">) com link direto:
      https://wa.me/{NUMERO_WHATSAPP}?text=Olá,%20gostaria%20de%20mais%20informações!
-   - **Concierge & Atendimento Ágil**:
-     Chamadas claras para falar com o especialista ou assistente virtual.
 
-5. **Interatividade com Script Inline**:
-   - Ao final do <body>, adicione:
+5. **Inicialização de Ícones no Final do <body>**:
+   - Antes de </body>, inclua obrigatoriamente:
      <script>
-       lucide.createIcons();
+       if (window.lucide) { window.lucide.createIcons(); }
      </script>
 
 6. **FORMATO DA RESPOSTA (COPILOTO + CÓDIGO HTML)**:
-Sua resposta deve conter OBRIGATORIAMENTE duas partes separadas por marcadores claros:
+Sua resposta deve conter OBRIGATORIAMENTE duas partes separadas pelos marcadores:
 <<<EXPLANATION>>>
-Escreva uma mensagem conversacional, simpática, prestativa e humana como Copiloto AI para o usuário no chat (em português do Brasil).
-Diga exatamente o que você fez ou alterou no site (por exemplo: cores ajustadas, títulos melhorados, novas seções, layout aprimorado ou botões configurados). Deixe um convite aberto para ele conferir na tela ao lado ou pedir novos ajustes.
+Escreva uma mensagem curta, simpática e humana em português explicando a direção de arte aplicada para o nicho do cliente.
 <<<HTML>>>
 <!DOCTYPE html>
 <html lang="pt-BR">
-... Código HTML5 completo, moderno e autocontido da página ...
+... Código HTML5 completo, luxuoso e autocontido ...
 </html>`;
+
+/**
+ * Sanitiza o HTML5 gerado pela IA para corrigir qualquer tag JSX acidental (ex: <Award />, <ShieldCheck />)
+ * convertendo-as automaticamente em tags HTML válidas do Lucide (<i data-lucide="award"></i>)
+ * e garantindo que o script lucide.createIcons() seja executado.
+ */
+export function sanitizeGeneratedLuxuryHtml(rawHtml: string): string {
+  if (!rawHtml || typeof rawHtml !== "string") return rawHtml;
+
+  const knownLucidePascalTags = [
+    "Award",
+    "GraduationCap",
+    "ShieldCheck",
+    "Shield",
+    "UserCheck",
+    "Sparkles",
+    "Star",
+    "CheckCircle",
+    "CheckCircle2",
+    "Check",
+    "Calendar",
+    "Clock",
+    "MapPin",
+    "Navigation",
+    "Phone",
+    "MessageCircle",
+    "Heart",
+    "HeartHandshake",
+    "Smile",
+    "Stethoscope",
+    "Activity",
+    "Flame",
+    "Utensils",
+    "Coffee",
+    "Scissors",
+    "Crown",
+    "Gem",
+    "Zap",
+    "Sun",
+    "Lock",
+    "ArrowRight",
+    "ChevronRight",
+    "ChevronDown",
+    "Users",
+    "Building2",
+    "Scale",
+    "Briefcase",
+    "Wrench",
+    "Car",
+    "PawPrint",
+    "ShoppingBag",
+    "Truck",
+    "BadgeCheck",
+    "ThumbsUp",
+    "Quote",
+  ];
+
+  let html = rawHtml;
+
+  // Converte tags PascalCase auto-fechadas ou abertas/fechadas acidentais em <i data-lucide="..."></i>
+  const pascalPattern = new RegExp(
+    `<(${knownLucidePascalTags.join("|")})(\\s+[^>]*)?\\s*/>`,
+    "g",
+  );
+  html = html.replace(pascalPattern, (_match, tagName: string, attrs?: string) => {
+    const kebab = tagName
+      .replace(/([a-z0-9])([A-Z])/g, "$1-$2")
+      .replace(/([A-Z]+)([A-Z][a-z])/g, "$1-$2")
+      .toLowerCase();
+    const cleanAttrs = (attrs || "").replace(/\bclassName=/g, "class=");
+    const hasClass = /\bclass=/i.test(cleanAttrs);
+    return `<i data-lucide="${kebab}"${cleanAttrs}${hasClass ? "" : ' class="w-5 h-5"'}></i>`;
+  });
+
+  // Garante que lucide.createIcons() esteja presente antes do fechamento do body
+  if (!/lucide\.createIcons\s*\(/i.test(html) && /<\/body>/i.test(html)) {
+    html = html.replace(
+      /<\/body>/i,
+      `<script>if(window.lucide){window.lucide.createIcons();}</script>\n</body>`,
+    );
+  }
+
+  return html;
+}
 
 export const SURGICAL_EDIT_SYSTEM_PROMPT = `Você é o Arquiteto Copiloto Especialista em Edição Cirúrgica de Código HTML5 do "Estúdio Criativo".
 Sua ÚNICA missão é aplicar com precisão CIRÚRGICA e ESTRITA a alteração solicitada pelo usuário no código HTML5/Tailwind existente, SEM redesenhar o site do zero, SEM alterar o tema ou a paleta de cores e SEM desconfigurar a identidade já aprovada.
@@ -431,7 +512,7 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
     cleanHtml = cleanHtml.replace(/```\s*$/, "");
   }
 
-  return cleanHtml.trim();
+  return sanitizeGeneratedLuxuryHtml(cleanHtml.trim());
 }
 
 export async function generateSiteWithCopilot(

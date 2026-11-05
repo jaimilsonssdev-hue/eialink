@@ -91,6 +91,8 @@ import {
   getCanonicalNicheMeta,
   getVariantsForNiche,
   NICHE_GALLERIES,
+  getNicheDesignDirection,
+  getPairedCatalogForBusiness,
 } from "@/modules/prospecting/nichePresets";
 import {
   getProspectNicheCategory,
@@ -98,7 +100,11 @@ import {
   type ProspectNicheCategory,
 } from "@/modules/prospecting/specializedGenerators.functions";
 import { getGeminiApiKey, generateSiteHtml } from "@/modules/studiopro/lib/creativeEngineService";
-import { generateCreativeSiteFn, syncCreativeStudioProjectFn } from "@/modules/studio/studio.functions";
+import {
+  generateCreativeSiteFn,
+  syncCreativeStudioProjectFn,
+  lookupMapsForStudioFn,
+} from "@/modules/studio/studio.functions";
 import { searchCompatibleBusinessImagesFn } from "@/modules/media/unsplash.functions";
 
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
@@ -891,7 +897,7 @@ function ProspectingPage() {
     let verifiedReviewsCount = company.reviews_count;
     let compatibleImages: Array<{ url: string; label: string; role: string }> = [];
 
-    // Sempre busca o acervo de imagens compatíveis rotuladas semanticamente em alta resolução
+    // Busca em paralelo (1) imagens curadas/rotuladas para o nicho e (2) fotos reais do Google Maps se ainda não houver
     try {
       const imgTask = searchCompatibleBusinessImagesFn({
         data: {
@@ -904,14 +910,40 @@ function ProspectingPage() {
         return [];
       });
 
-      compatibleImages = (await Promise.race([
-        imgTask,
-        new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 1500)),
-      ])) || [];
+      const mapsTask =
+        realPhotos.length === 0
+          ? lookupMapsForStudioFn({
+              data: {
+                urlOrQuery: `${company.name} ${company.city || ""}`.trim(),
+              },
+            }).catch(() => null)
+          : Promise.resolve(null);
+
+      const [fetchedCompat, fetchedMaps] = await Promise.race([
+        Promise.all([imgTask, mapsTask]),
+        new Promise<[any[], any]>((resolve) => setTimeout(() => resolve([[], null]), 2200)),
+      ]);
+
+      compatibleImages = fetchedCompat || [];
+
+      if (fetchedMaps) {
+        if (!verifiedAddress && fetchedMaps.address) verifiedAddress = fetchedMaps.address;
+        if (!verifiedRating && fetchedMaps.rating) verifiedRating = fetchedMaps.rating;
+        if (!verifiedReviewsCount && fetchedMaps.reviewsCount)
+          verifiedReviewsCount = fetchedMaps.reviewsCount;
+        if (!cleanPhone && fetchedMaps.whatsapp)
+          cleanPhone = String(fetchedMaps.whatsapp).replace(/\D/g, "");
+        if (Array.isArray(fetchedMaps.photos) && fetchedMaps.photos.length > 0) {
+          for (const p of fetchedMaps.photos) {
+            if (typeof p === "string" && p.startsWith("http") && !realPhotos.includes(p)) {
+              realPhotos.push(p);
+            }
+          }
+        }
+      }
     } catch (_) {}
 
     // Se o lead possui Instagram e ainda tem poucas fotos, dispara enriquecimento em background
-    // (Garante que a próxima geração terá as 12 fotos completas SEM travar a criação imediata agora)
     let targetInstaHandle = company.instagram ? extractInstagramHandle(company.instagram) : null;
     if (!targetInstaHandle && company.website && /(?:instagram\.com\/|instagr\.am\/)/i.test(company.website)) {
       targetInstaHandle = extractInstagramHandle(company.website);
@@ -931,124 +963,96 @@ function ProspectingPage() {
       }).catch(() => {});
     }
 
-    setFeedback(`🚀 IA Criativa Gemini desenhando site exclusivo para ${company.name}...`);
-
-    // Sorteio dinâmico de Arquétipo Estrutural de Página Completa (garante esqueleto único para cada site)
-    const DESIGN_ARCHETYPES = [
-      {
-        style: "Editorial Luxury & Storytelling de Prestígio (Padrão Revista Vogue / Kinfolk)",
-        navbar: "Navbar minimalista flutuante tipo pill centralizada ('max-w-4xl mx-auto rounded-full bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md shadow-lg border border-black/5') com logo em serifa sutil e botão CTA discreto",
-        heroConcept: "Hero assimétrico com tipografia expressiva em serifa contemporânea (Google Fonts Playfair Display), espaços negativos generosos, fotografia vertical recortada com moldura fina e badge de excelência 'Atendimento Exclusivo'",
-        servicesLayout: "LISTA EDITORIAL REFINADA: Não use cards retangulares comuns! Crie uma lista elegante de tratamentos/serviços com linhas divisórias sutis (border-b border-black/10 dark:border-white/10), numeração estilizada (01, 02, 03), tipografia em serifa, descrição sucinta, tag de valor e botão discreto de agendamento ao passar o mouse.",
-        signatureSection: "SEÇÃO DE AUTORIDADE EM NÚMEROS GIGANTES: Grid minimalista com 3 ou 4 métricas expressivas em números de grande escala (ex: '+12 Anos de Tradição', '99.4% Satisfação', '+2.800 Procedimentos', 'Nota 5.0 Google') com breves legendas explicativas.",
-        locationLayout: "SPLIT EDITORIAL COM MAPA: Coluna esquerda com card de acolhimento, endereço completo e horários em tipografia elegante com os botões de GPS (Waze e Google Maps), e coluna direita com o iframe do mapa em borda curva suave.",
-        palette: "Champagne Dourado (#D4AF37), Areia Suave (#FDFBF7), Marfim e Grafite Nobre (#18181b), transmitindo prestígio e valor percebido altíssimo.",
-      },
-      {
-        style: "Modern Bento Grid & Inovação Tecnológica (Padrão Apple / Linear.app)",
-        navbar: "Header clean com cantos arredondados, backdrop blur fosco, logo moderno em sans-serif geométrica (Plus Jakarta Sans) e botão de agendamento em destaque vibrante",
-        heroConcept: "HERO EM MOSAICO BENTO GRID: Hero construído como um mosaico dinâmico de 4 blocos geométricos interconectados: Bloco principal com headline impactante e agendamento instantâneo, Bloco 2 com foto do ambiente em alta resolução, Bloco 3 com selo de reputação real do Google e Bloco 4 com badge 'Tecnologia Avançada'",
-        servicesLayout: "VITRINE EM GRID ASSIMÉTRICO (BENTO CARDS): Distribua os procedimentos em cards modulares de diferentes proporções com cantos arredondados (rounded-3xl), fundos translúcidos com borda fina (border border-slate-200/80 dark:border-zinc-800), ícones Lucide modernos e micro-badges coloridos de especialidade.",
-        signatureSection: "FAQ SANFONADO INTERATIVO: Seção moderna de Dúvidas Frequentes utilizando elementos <details class='group rounded-2xl border p-4 transition-all'> contendo 3 ou 4 perguntas reais que os clientes fazem antes de agendar (sobre preparo, agendamento online e formas de atendimento).",
-        locationLayout: "CARD BENTO DE LOCALIZAÇÃO INTEGRADA: Card amplo com cantos arredondados contendo o mapa interativo responsivo em cima e painel de navegação GPS (Waze / Google Maps) com endereço verificado embaixo.",
-        palette: "Clean Contemporâneo com base em Ardósia Polar (#f8fafc), toques de Esmeralda Tecnológica (#059669) ou Ciano Índigo (#0284c7) e contrastes escuros nítidos.",
-      },
-      {
-        style: "Cinematic Full-Bleed & Jornada da Experiência (Padrão Awwwards Site do Dia)",
-        navbar: "Header transparente e imersivo, perfeitamente fundido à fotografia do topo, com tipografia clara de alto contraste e botão de agendamento flutuante",
-        heroConcept: "HERO CINEMATOGRÁFICO FULL-BLEED: Fotografia panorâmica ampla em tela cheia com overlay gradiente suave em azul meia-noite ou grafite escuro, tipografia impactante, badge translúcido de disponibilidade em tempo real e CTA principal pulsante",
-        servicesLayout: "CARROSSEL OU GRID PANORÂMICO DE PROCEDIMENTOS: Cards com fotografias imersivas de alta resolução como plano de fundo com degradê escuro e textos sobrepostos em branco puro, valorizando a transformação e o resultado visual de cada serviço.",
-        signatureSection: "JORNADA DO CLIENTE / LINHA DO TEMPO EM 3 PASSOS: Seção visual 'Sua Experiência Conosco em 3 Etapas': 1. Agendamento Rápido Online ➔ 2. Acolhimento & Avaliação Personalizada ➔ 3. Procedimento com Máximo Conforto e Tecnologia.",
-        locationLayout: "PAINEL PANORÂMICO DE LOCALIZAÇÃO: Seção em largura total com o iframe do Google Maps estilizado e card flutuante escuro sobre o mapa com o endereço e os botões de GPS Waze/Maps.",
-        palette: "Azul Meia-Noite Profundo (#0B132B / #1C2541) com acentos em Dourado Radiante ou Ciano Polar (#48CAE4), transmitindo imponência e precisão.",
-      },
-      {
-        style: "Split-Screen Escultural 60/40 & Prova Social Imersiva (Padrão Stripe / Fintech de Luxo)",
-        navbar: "Barra superior compacta com navegação objetiva, telefone/WhatsApp em link rápido e botão destacado 'Agendar Horário'",
-        heroConcept: "HERO SPLIT 60/40: Layout dividido verticalmente: Lado esquerdo (60%) com headline afiada de vendas, prova social com estrelas do Google e chamada direta de agendamento; Lado direito (40%) com grande composição fotográfica de alta qualidade e cartões flutuantes de estatísticas (ex: 'Atendimento com Hora Marcada')",
-        servicesLayout: "TABELA / VITRINE ESTRUTURADA DE SERVIÇOS: Apresentação em cards horizontais ou tabela moderna com tags de categoria ('Mais Procurado', 'Destaque'), descrição objetiva dos benefícios e botão direto 'Agendar Este Serviço'.",
-        signatureSection: "MOSAICO DE PROVA SOCIAL COM DEPOIMENTOS HUMANIZADOS: Bloco de autoridade destacando a nota do Google Meu Negócio em destaque central, acompanhada de 3 citações reais de clientes com estrelas e avatares visuais.",
-        locationLayout: "CARD DE GPS COM ROTAS RÁPIDAS: Bloco estruturado com mapa responsivo e 2 grandes botões de ação em largura total com ícones: '📍 Traçar Rota no Google Maps' e '🚗 Abrir Rota no Waze'.",
-        palette: "Minimalista Contemporâneo em Preto Puro (#09090b), Branco Neve (#ffffff) com detalhes em Bronze Suave (#b45309) ou Terracota (#c2410c).",
-      },
-    ];
-
-    // Sorteio criativo com memória anti-repetição para que cada geração ou "Trocar Modelo" traga um arquétipo diferente
+    // Memória anti-repetição para que cada geração ou "Trocar Modelo" alterne entre as 3 arquiteturas de luxo DO PRÓPRIO NICHO
     const archetypeMemoryKey = `eialink_last_archetype_${company.id}`;
     const prevIdxRaw =
       typeof window !== "undefined" ? window.sessionStorage.getItem(archetypeMemoryKey) : null;
     const prevIdx = prevIdxRaw !== null ? Number(prevIdxRaw) : -1;
-    let nextIdx = Math.floor(Math.random() * DESIGN_ARCHETYPES.length);
-    if (nextIdx === prevIdx && DESIGN_ARCHETYPES.length > 1) {
-      nextIdx = (prevIdx + 1) % DESIGN_ARCHETYPES.length;
-    }
+    let nextIdx = prevIdx === -1 ? 0 : (prevIdx + 1) % 3;
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(archetypeMemoryKey, String(nextIdx));
     }
-    const chosenArchetype = DESIGN_ARCHETYPES[nextIdx];
 
-    // Prompt estruturado em 2 etapas: Planejamento / Direção de Arte + Execução Técnica
-    const briefingPrompt = `DIREÇÃO DE ARTE & CRIAÇÃO EXCLUSIVA DE SITE WEB:
+    const nicheMeta = getCanonicalNicheMeta(detectedKey);
+    const nicheDirection = getNicheDesignDirection(company.niche, company.name, nextIdx);
+    const pairedServices = nicheDirection.pairedServices;
+
+    setFeedback(
+      `🚀 IA Criativa Gemini desenhando site [${nicheMeta?.label || nicheDirection.canonicalTagLabel} — Modelo ${nextIdx + 1}] para ${company.name}...`,
+    );
+
+    const heroPhotoItem =
+      compatibleImages.find((img) => img.role === "hero") || compatibleImages[0];
+    const ambientPhotoItem =
+      compatibleImages.find((img) => img.role === "ambient") ||
+      compatibleImages[1] ||
+      compatibleImages[0];
+
+    const primaryHeroPhoto =
+      realPhotos[0] ||
+      heroPhotoItem?.url ||
+      pairedServices[0]?.image_url ||
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85";
+
+    const primaryAmbientPhoto =
+      realPhotos[1] ||
+      ambientPhotoItem?.url ||
+      pairedServices[1]?.image_url ||
+      primaryHeroPhoto;
+
+    // Briefing guiado 100% pela Tag Canônica do Nicho + Pareamento Fotográfico 1:1
+    const briefingPrompt = `DIREÇÃO DE ARTE DE LUXO & CRIAÇÃO EXCLUSIVA DE SITE GUIADA POR NICHO:
 Empresa: "${company.name}"
-Nicho de Atuação: "${nicheText}"
+Tag Canônica do Nicho (GUIA MESTRE OBRIGATÓRIO): "${nicheDirection.nicheKey}" (${nicheDirection.canonicalTagLabel})
+Subcategoria Original do Lead: "${nicheText}"
 Cidade / Região: "${company.city || "sua região"}"
 ${verifiedAddress ? `Endereço Verificado (usar no Mapa e rotas GPS): "${verifiedAddress}"` : ""}
 ${cleanPhone ? `WhatsApp Oficial (usar no botão pulsante e CTAs): "${cleanPhone}"` : ""}
-${verifiedRating ? `Avaliação Google Maps: ${verifiedRating} estrelas (${verifiedReviewsCount || 90} avaliações reais)` : ""}
+Avaliação Google Maps: ${verifiedRating || 4.9} estrelas (${verifiedReviewsCount || 90} avaliações reais)
 
-${realPhotos.length > 0 ? `ACERVO DE FOTOS REAIS DO CLIENTE (GOOGLE MAPS & INSTAGRAM FEED):
-Você possui ${realPhotos.length} fotos autênticas reais tiradas no estabelecimento ou postadas no Instagram do cliente!
-PRIORIDADE MÁXIMA E OBRIGATÓRIA (DISTRIBUIR NO HERO, AMBIENTE, SERVIÇOS E GALERIA):
-${realPhotos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}
+IDENTIDADE VISUAL, ATMOSFERA & POSICIONAMENTO DO NICHO (${nicheDirection.canonicalTagLabel.toUpperCase()}):
+- Posicionamento Estratégico: ${nicheDirection.positioning}
+- Atmosfera & Direção de Arte: ${nicheDirection.atmosphere}
+- Paleta de Cores Oficial deste Nicho: ${nicheDirection.palette}
+- Tipografia Oficial deste Nicho: ${nicheDirection.fonts}
+- Selos de Autoridade & Confiança do Nicho: ${nicheDirection.trustBadges.join(" • ")}
 
-DIRETRIZ DE USO DE FOTOS REAIS:
-- PRIORIDADE MÁXIMA: Use estas fotos reais nos atributos src="..." de todas as seções principais.
-- Se houver 4 ou mais fotos reais, O SITE DEVE SER COMPOSTO MAJORITARIAMENTE POR ESTAS FOTOS REAIS autênticas!
-- Inspire os títulos e descrições dos serviços/pratos diretamente no que as fotos reais mostram.
-- REGRA DO PROFISSIONAL (APRESENTAÇÃO / QUEM SOMOS / BIO):
-  * Se houver foto real do profissional/cliente no acervo: USE ESSA FOTO REAL!
-  * Se NÃO houver foto real confirmada da pessoa: É TERMINANTEMENTE PROIBIDO colocar foto de uma pessoa aleatória de banco de imagens para fingir que é o especialista/dono! NUNCA coloque o rosto de um modelo desconhecido no site do cliente!
-  * Em vez de modelo fake, use a foto real do ambiente/fachada do local OU crie um card de autoridade editorial elegante sem foto com selos de credibilidade Lucide (<Award />, <GraduationCap />, <ShieldCheck />), anos de mercado e a nota real do Google.` : ""}
+ARQUITETURA DE LAYOUT ESCOLHIDA (VARIANTE ${nextIdx + 1}: ${nicheDirection.variantName}):
+- Formato da Navbar: ${nicheDirection.navbar}
+- Formato do Hero: ${nicheDirection.heroConcept}
+- Diagramação dos Serviços (TODOS OS CARDS COM FOTO): ${nicheDirection.servicesLayout}
+- Seção de Assinatura Exclusiva: ${nicheDirection.signatureSection}
+- Diagramação da Localização: ${nicheDirection.locationLayout}
 
-${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:
-${compatibleImages.map((img, i) => `- Imagem ${i + 1} [Papel: ${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
+MAPA FOTOGRÁFICO EXATO E PAREAMENTO 1:1 (OBRIGATÓRIO SEGUIR SEM ALTERAR URLS):
+1. FOTO PRINCIPAL DO HERO (src obrigatório): ${primaryHeroPhoto}
+2. FOTO DO AMBIENTE / SOBRE NÓS / ESTRUTURA (src obrigatório): ${primaryAmbientPhoto}
+${realPhotos.length > 0 ? `3. ACERVO DE FOTOS REAIS DO ESTABELECIMENTO (${realPhotos.length} fotos reais):\n${realPhotos.slice(0, 8).map((u, i) => `   - Foto Real ${i + 1}: ${u}`).join("\n")}` : ""}
 
-DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXTO):
-1. CORRESPONDÊNCIA ESTRITA ENTRE IMAGEM E DESCRIÇÃO:
-   - A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card (olhe o rótulo descritivo '[Papel - Rótulo]' de cada imagem acima!).
-   - Se o card for sobre "Churrasco", "Picanha" ou "Carnes Nobres", a foto DEVE OBRIGATORIAMENTE ser de carne/churrasco! NUNCA use foto de peixe, frango com verduras ou salada para ilustrar churrasco!
-   - Se o serviço for "Atendimento Individual", "Psicoterapia 1 a 1" ou "Consulta Exclusiva", a foto DEVE mostrar APENAS um ambiente acolhedor individual (poltrona, consultório) ou atendimento 1 para 1. É TERMINANTEMENTE PROIBIDO colocar foto de plateia, teatro, auditório, palestra ou multidão para ilustrar atendimento individual!
-   - Se o negócio for Barbearia, use fotos masculinas/barba. Se for Odontologia, use sorrisos/dentista. Se for Hamburgueria, use burger. Se for Pizzaria, use pizza.
-2. ENGENHARIA INVERTIDA (O CONTEÚDO SEGUE O RÓTULO DA FOTO):
-   - NUNCA invente um prato ou serviço no texto para depois forçar uma foto que não combina.
-   - Olhe a lista de fotos disponíveis e seus rótulos primeiro: crie o título e a descrição do card especificamente sobre o que a foto mostra!
-3. CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA):
-   - Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
-   - Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva.
-4. PROIBIÇÃO TOTAL DE ROSTO DE MODELO DESCONHECIDO: NUNCA use foto de pessoa desconhecida de banco de imagens na apresentação do profissional! Se não houver foto real da pessoa, use foto real do ambiente/fachada ou card de autoridade sem foto de pessoa com selos Lucide (Award, GraduationCap, ShieldCheck).
-5. NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
-6. NUNCA repita a mesma foto em dois cards diferentes.` : ""}
+[CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1 (CADA CARD DEVE EXIBIR SUA IMAGEM EXATA ABAIXO)]:
+${pairedServices
+  .map(
+    (srv, idx) =>
+      `Card de Serviço ${idx + 1}:
+   - Título do Card: "${srv.name}"
+   - Badge / Categoria: "${srv.category}"
+   - Descrição Persuasiva: "${srv.description}"
+   - Valor / Duração de Referência: R$ ${srv.price.toFixed(2)} (${srv.duration_minutes} min)
+   - IMAGEM OBRIGATÓRIA DESTE CARD (usar no <img src="...">): ${realPhotos[idx + 2] || srv.image_url}
+   - Descrição Semântica da Imagem: ${srv.photo_label}`,
+  )
+  .join("\n\n")}
 
-BLUEPRINT ARQUITETÔNICO COMPLETO DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR DE PONTA A PONTA):
-- Estilo Arquitetônico Global: ${chosenArchetype.style}
-- Formato da Navbar: ${chosenArchetype.navbar}
-- Formato do Hero: ${chosenArchetype.heroConcept}
-- Diagramação dos Serviços: ${chosenArchetype.servicesLayout}
-- Seção de Assinatura Exclusiva: ${chosenArchetype.signatureSection}
-- Diagramação da Localização: ${chosenArchetype.locationLayout}
-- Paleta e Atmosfera Cromática: ${chosenArchetype.palette}
-
-DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
-1. SIGA RIGOROSAMENTE A ESTRUTURA DO ARQUÉTIPO ACIMA: Crie a navbar, o hero, a diagramação dos serviços e a seção de assinatura conforme especificado. NUNCA gere o mesmo layout genérico de cards repetidos.
-2. FOTOS REAIS E TEMÁTICAS: Distribua as fotos do negócio nos blocos (Hero, Ambiente, Procedimentos, Detalhes).
-3. RECURSOS ESSENCIAIS DE NEGÓCIO E CONVERSÃO (MANTER 100% FUNCIONAIS):
-   - Botão flutuante de WhatsApp pulsante no canto inferior direito (<div class="fixed bottom-6 right-6 z-50">) com wa.me/${cleanPhone}.
-   - Botões de agendamento online em destaque apontando para /agendar/{slug} com data-action="agendar".
-   - Seção de Localização com iframe do Google Maps e dois botões de GPS:
-     * "📍 Traçar Rota no Google Maps"
-     * "🚗 Abrir no Waze"
-   - Bloco de Prova Social e Autoridade destacando a nota real de ${verifiedRating || 4.9} estrelas do Google Meu Negócio.
-- Retorne o código HTML5 completo, moderno e autocontido com Tailwind CSS e Lucide Icons.`;
+REGRAS DE OURO DE EXECUÇÃO VISUAL (PADRÃO AWWWARDS / LOVABLE):
+1. FIDELIDADE TOTAL À TAG DO NICHO (${nicheDirection.canonicalTagLabel}): Todo o copywriting, títulos, subtítulos, paleta de cores e atmosfera devem ser 100% específicos para "${nicheDirection.canonicalTagLabel}".
+2. PAREAMENTO 1:1 DE FOTOS NOS CARDS: Cada um dos 4 cards de serviços acima DEVE ter uma tag <img src="..." class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-700"> usando EXATAMENTE a 'IMAGEM OBRIGATÓRIA DESTE CARD' indicada acima. NUNCA crie cards de serviço sem foto e NUNCA troque as fotos entre os cards!
+3. ÍCONES LUCIDE EM HTML PURO (PROIBIDO JSX): Use EXCLUSIVAMENTE <i data-lucide="nome-do-icone" class="w-5 h-5"></i> (ex: <i data-lucide="award"></i>, <i data-lucide="shield-check"></i>, <i data-lucide="sparkles"></i>, <i data-lucide="star"></i>, <i data-lucide="map-pin"></i>, <i data-lucide="calendar"></i>). NUNCA escreva <Award /> ou <ShieldCheck />!
+4. PROIBIDO ROSTO DE MODELO FAKE: Na seção Sobre Nós / Quem Somos, use a FOTO DO AMBIENTE (${primaryAmbientPhoto}) com selos de credibilidade do nicho. Nunca coloque foto de pessoa desconhecida fingindo ser o dono.
+5. FERRAMENTAS EIALINK 100% ATIVAS:
+   - Botões de agendamento/ação em destaque apontando para /agendar/{slug} com data-action="agendar" (ou WhatsApp direto se for pedido/catálogo).
+   - Seção de Localização com iframe do Google Maps e 2 botões GPS ("📍 Traçar Rota no Google Maps" e "🚗 Abrir no Waze").
+   - Botão flutuante de WhatsApp no canto inferior direito (wa.me/${cleanPhone}).
+- Retorne o código HTML5 completo, luxuoso e autocontido.`;
 
     let generatedPageId: string | null = null;
     let generatedSlug: string | null = null;
@@ -1301,14 +1305,45 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
         ? (page.social_links as any).google_photos
         : [];
 
-      const promptReinvento = `REINVENTAR PROPOSTA DE DESIGN COMPLETA:
-Crie uma proposta de design 100% NOVA, DIFERENTE e SURPREENDENTE para a página "${page.display_name}" (${nicheRaw}).
-DIRETRIZES CRÍTICAS DE INOVAÇÃO:
-- NÃO repita o layout ou organização anterior.
-- Alterne o formato e a composição: experimente hero em Split, Bento Grid com cards de vidro, Editorial Luxury, Glassmorphism translúcido com luzes suaves ou Dark Luxury minimalista de alto padrão.
-- Varie a tipografia, a paleta cromática, as ordens e diagramação dos blocos para criar uma experiência completamente nova e impactante.
+      const pageMemKey = `eialink_last_archetype_page_${page.id}`;
+      const prevPageIdx =
+        typeof window !== "undefined" && window.sessionStorage.getItem(pageMemKey) !== null
+          ? Number(window.sessionStorage.getItem(pageMemKey))
+          : 0;
+      const nextPageIdx = (prevPageIdx + 1) % 3;
+      if (typeof window !== "undefined") {
+        window.sessionStorage.setItem(pageMemKey, String(nextPageIdx));
+      }
+
+      const nicheDirection = getNicheDesignDirection(nicheRaw, page.display_name, nextPageIdx);
+      const pairedServices = nicheDirection.pairedServices;
+
+      const promptReinvento = `REINVENTAR PROPOSTA DE DESIGN COMPLETA GUIADA POR NICHO:
+Empresa: "${page.display_name}"
+Tag Canônica do Nicho (GUIA MESTRE): "${nicheDirection.nicheKey}" (${nicheDirection.canonicalTagLabel})
+Variante Arquitetônica: ${nicheDirection.variantName}
+Posicionamento do Nicho: ${nicheDirection.positioning}
+Atmosfera & Direção de Arte: ${nicheDirection.atmosphere}
+Paleta de Cores Oficial do Nicho: ${nicheDirection.palette}
+Tipografia: ${nicheDirection.fonts}
+Navbar: ${nicheDirection.navbar}
+Hero: ${nicheDirection.heroConcept}
+Diagramação dos Serviços (TODOS OS CARDS COM FOTO): ${nicheDirection.servicesLayout}
+Seção de Assinatura: ${nicheDirection.signatureSection}
+
+[CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1 (OBRIGATÓRIO USAR CADA IMAGEM NO SEU RESPECTIVO CARD)]:
+${pairedServices
+  .map(
+    (srv, idx) =>
+      `Card ${idx + 1}: "${srv.name}" (${srv.category}) — ${srv.description} — R$ ${srv.price.toFixed(2)}
+   IMAGEM OBRIGATÓRIA DESTE CARD (src exato): ${existingGooglePhotos[idx + 1] || srv.image_url}`,
+  )
+  .join("\n")}
+
+DIRETRIZES CRÍTICAS:
+- Use EXCLUSIVAMENTE <i data-lucide="nome-do-icone" class="w-5 h-5"></i> para ícones Lucide (PROIBIDO tags JSX como <Award />).
 - Mantenha todos os dados de contato reais e funcionais: WhatsApp (${cleanPhone}), endereço (${(page.social_links as any)?.address || "Local"}) e avaliação Google (${(page.social_links as any)?.google_rating || 4.9} estrelas).
-- Retorne apenas o código HTML autocontido com Tailwind CSS e Lucide Icons.`;
+- Retorne apenas o código HTML5 completo e autocontido com Tailwind CSS e Lucide Icons.`;
 
       let generatedSlug = page.slug;
       let generatedPageId = page.id;

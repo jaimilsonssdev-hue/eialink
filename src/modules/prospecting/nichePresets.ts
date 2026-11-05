@@ -2047,7 +2047,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Picanha maturada, bife ancho, costela assada lentamente na brasa e acompanhamentos tradicionais.",
       price: 89.9,
       duration_minutes: 60,
-      image_url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Corte nobre de carne e churrasco grelhado na brasa suculento",
     },
     {
@@ -2056,7 +2056,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Cortes selecionados servidos no ponto perfeito com farofa crocante da casa, vinagrete e pão de alho.",
       price: 119.0,
       duration_minutes: 40,
-      image_url: "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Picanha e bife grelhado suculento em tábua rústica",
     },
     {
@@ -2065,7 +2065,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Mesa farta de acompanhamentos quentes, queijos nobres, frios e saladas frescas em ambiente climatizado.",
       price: 64.9,
       duration_minutes: 45,
-      image_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Salão gastronômico aconchegante e mesa posta de restaurante",
     },
     {
@@ -2074,7 +2074,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Petit gâteau artesanal, pudim de leite condensado, chopp trincando e carta de vinhos selecionados.",
       price: 29.0,
       duration_minutes: 20,
-      image_url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Drinks autorais e bebidas geladas em apresentação sofisticada",
     },
   ],
@@ -2085,7 +2085,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Massa de fermentação lenta por 48h, molho de tomates italianos frescos e mussarela derretida.",
       price: 64.9,
       duration_minutes: 35,
-      image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Pizza artesanal assada no forno com queijo derretido e manjericão",
     },
     {
@@ -2094,7 +2094,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Calabresa artesanal acebolada, quatro queijos nobres, pepperoni crocante e borda recheada com Catupiry.",
       price: 72.9,
       duration_minutes: 35,
-      image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Pizza gourmet fatiada com recheio generoso e massa dourada",
     },
     {
@@ -2103,7 +2103,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Mussarela de búfala selecionada, rodelas de tomate fresco, folhas de manjericão e azeite extravirgem.",
       price: 68.0,
       duration_minutes: 30,
-      image_url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Pizza margherita clássica recém-saída do forno",
     },
     {
@@ -2112,7 +2112,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "A combinação completa para reunir a família com pizza salgada grande, brotinho de chocolate e refrigerante 2L.",
       price: 94.9,
       duration_minutes: 40,
-      image_url: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Mesa com pizzas artesanais variadas para compartilhar",
     },
   ],
@@ -2123,7 +2123,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Dois blends de carne 100% bovina selados na chapa, queijo cheddar derretido, bacon crocante e maionese da casa no brioche.",
       price: 34.9,
       duration_minutes: 25,
-      image_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Hambúrguer artesanal alto com queijo cheddar derretido e pão brioche",
     },
     {
@@ -2132,7 +2132,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Blend suculento de 180g grelhado no fogo, queijo prato, cebola caramelizada no melado e molho defumado.",
       price: 38.9,
       duration_minutes: 25,
-      image_url: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Cheeseburger gourmet artesanal em close-up apetitoso",
     },
     {
@@ -2141,8 +2141,17 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Seu burger favorito acompanhado de porção de batatas fritas crocantes com alecrim e bebida gelada.",
       price: 46.9,
       duration_minutes: 25,
-      image_url: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Combo de hambúrguer artesanal acompanhado de batatas fritas crocantes",
+    },
+    {
+      name: "Porções Crocantes & Milkshakes Artesanais",
+      category: "Acompanhamentos",
+      description: "Batatas com cheddar e bacon, onion rings douradas e milkshakes ultra cremosos para completar a experiência.",
+      price: 26.9,
+      duration_minutes: 15,
+      image_url: "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&w=1200&q=85",
+      photo_label: "Hambúrguer duplo gourmet suculento com bacon e queijo derretido",
     },
   ],
   japones: [
@@ -2152,7 +2161,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Seleção fresca de sashimis de salmão, niguiris maçaricados com azeite trufado, uramakis e jyos especiais.",
       price: 114.9,
       duration_minutes: 35,
-      image_url: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Combinado de sushi e sashimi fresco de salmão montado pelo sushiman",
     },
     {
@@ -2161,7 +2170,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Alga nori crocante recheada com salmão fresco em cubos, cream cheese e porção de hot rolls dourados com tarê.",
       price: 44.9,
       duration_minutes: 25,
-      image_url: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Prato de sushi e rolinhos orientais frescos com molho",
     },
     {
@@ -2170,8 +2179,17 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Barca completa com cortes nobres de peixe branco, atum e salmão para compartilhar no salão ou em casa.",
       price: 159.0,
       duration_minutes: 45,
-      image_url: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Barca japonesa variada com sushis e sashimis de alta gastronomia",
+    },
+    {
+      name: "Yakisoba Clássico & Pratos Quentes da Cozinha Oriental",
+      category: "Pratos Quentes",
+      description: "Macarrão oriental salteado na wok com legumes frescos, tiras nobres de carne/frango e molho shoyu especial.",
+      price: 54.9,
+      duration_minutes: 25,
+      image_url: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=85",
+      photo_label: "Prato oriental quente preparado na wok com ingredientes frescos",
     },
   ],
   cafeteria: [
@@ -2181,7 +2199,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Grãos 100% arábica moídos na hora, espresso encorpado e latte art cremoso preparado por baristas.",
       price: 14.9,
       duration_minutes: 10,
-      image_url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Xícara de café especial com latte art sobre mesa de cafeteria",
     },
     {
@@ -2190,7 +2208,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Fatias de torta belga, croissants folhados na manteiga e doces artesanais assados todos os dias.",
       price: 22.0,
       duration_minutes: 10,
-      image_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Ambiente acolhedor de cafeteria e confeitaria moderna",
     },
     {
@@ -2199,8 +2217,17 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Tostex no pão levain, ovos mexidos cremosos, suco natural prensado e café coado na hora.",
       price: 39.9,
       duration_minutes: 20,
-      image_url: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Mesa de café da manhã e brunch com cafés especiais",
+    },
+    {
+      name: "Pães Artesanais, Doces & Encomendas Especiais",
+      category: "Padaria Artesanal",
+      description: "Fornadas diárias de pães rústicos, bolos caseiros, salgados finos e cestas especiais sob encomenda.",
+      price: 32.0,
+      duration_minutes: 15,
+      image_url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=85",
+      photo_label: "Pães artesanais dourados recém-saídos do forno",
     },
   ],
   fisioterapia: [
@@ -2210,7 +2237,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Avaliação biomecânica e tratamento individualizado para dores na coluna, articulações e pós-operatório.",
       price: 150.0,
       duration_minutes: 55,
-      image_url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Consultório clínico moderno de fisioterapia e reabilitação em saúde",
     },
     {
@@ -2219,7 +2246,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Sessões guiadas em aparelhos e solo para fortalecimento do core, mobilidade articular e prevenção de lesões.",
       price: 140.0,
       duration_minutes: 55,
-      image_url: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Estúdio de pilates e exercícios de reabilitação postural",
     },
     {
@@ -2228,8 +2255,17 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Manobras terapêuticas para alívio imediato de tensões musculares, contraturas e recuperação esportiva.",
       price: 160.0,
       duration_minutes: 50,
-      image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80",
+      image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Atendimento de terapia manual corporal e alívio de tensão",
+    },
+    {
+      name: "Fisioterapia Esportiva & Recovery Avançado",
+      category: "Performance",
+      description: "Prevenção e recuperação acelerada de lesões para atletas e praticantes de atividade física.",
+      price: 170.0,
+      duration_minutes: 55,
+      image_url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=85",
+      photo_label: "Acompanhamento de reabilitação física e movimento funcional",
     },
   ],
 };
@@ -2291,8 +2327,10 @@ export function getPairedCatalogForBusiness(
       if (seenNames.has(normName)) continue;
       seenNames.add(normName);
 
-      const hdUrl = (srv.image_url || gallery.covers[items.length % gallery.covers.length]?.url || "")
-        .replace("w=400", "w=800");
+      const rawUrl = srv.image_url || gallery.covers[items.length % gallery.covers.length]?.url || "";
+      const hdUrl = rawUrl
+        .replace(/w=\d+/g, "w=1200")
+        .replace(/q=\d+/g, "q=85");
 
       const basePhotoId = hdUrl.split("?")[0];
       const matchingCover = gallery.covers.find((c) => c.url.split("?")[0] === basePhotoId);
@@ -2314,7 +2352,544 @@ export function getPairedCatalogForBusiness(
     if (items.length >= 4) break;
   }
 
+  // Se o preset tinha apenas 3 serviços, adiciona um 4º serviço usando a próxima foto única da galeria do nicho
+  if (items.length < 4 && gallery.covers.length > items.length) {
+    const usedUrls = new Set(items.map((it) => it.image_url.split("?")[0]));
+    const nextCover = gallery.covers.find((c) => !usedUrls.has(c.url.split("?")[0])) || gallery.covers[0];
+    if (nextCover) {
+      items.push({
+        name: nextCover.label,
+        category: "Exclusivo",
+        description: `Experiência personalizada de alto padrão com estrutura dedicada e atendimento exclusivo.`,
+        price: items[0]?.price || 150,
+        duration_minutes: items[0]?.duration_minutes || 50,
+        image_url: nextCover.url.replace(/w=\d+/g, "w=1200").replace(/q=\d+/g, "q=85"),
+        photo_label: nextCover.label,
+      });
+    }
+  }
+
   return items;
+}
+
+export interface NicheDesignDirection {
+  nicheKey: string;
+  canonicalTagLabel: string;
+  variantName: string;
+  positioning: string;
+  atmosphere: string;
+  palette: string;
+  fonts: string;
+  navbar: string;
+  heroConcept: string;
+  servicesLayout: string;
+  signatureSection: string;
+  locationLayout: string;
+  trustBadges: string[];
+  pairedServices: PairedCatalogItem[];
+}
+
+interface NicheAestheticProfile {
+  label: string;
+  positioning: string;
+  atmosphere: string;
+  palettes: [string, string, string];
+  fonts: string;
+  trustBadges: string[];
+}
+
+const NICHE_AESTHETIC_PROFILES: Record<string, NicheAestheticProfile> = {
+  psicologia: {
+    label: "Psicologia, Terapia & Saúde Emocional",
+    positioning: "Acolhimento humano, escuta ética com sigilo absoluto, serenidade clínica e transformação emocional.",
+    atmosphere: "Warm Organic Sanctuary — atmosfera serena, acolhedora, iluminada com luz natural, tons terrosos orgânicos, verde-sálvia e areia suave. PROIBIDO visual frio hospitalar ou corporativo escuro.",
+    palettes: [
+      "Areia Orgânica (#FAF7F2), Verde Sálvia Profundo (#2E4F4F), Terracota Suave (#C87D55) e Carvão Suave (#1E242B)",
+      "Marfim Acolhedor (#FDFBF7), Oliva Nobre (#3F4E4F), Bronze Quente (#A27B5C) e Grafite Sereno (#2C3639)",
+      "Off-White Linho (#F9F6F0), Azul Sereno Profundo (#1D3557), Dourado Champanhe (#D4A373) e Ardósia (#2B2D42)",
+    ],
+    fonts: "Títulos em 'Cormorant Garamond' ou 'Playfair Display' (serifa editorial acolhedora) + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Escuta Ética & Sigilo Absoluto (CRP)", "Atendimento Presencial & Online", "Ambiente Acolhedor & Climatizado", "Abordagem Científica Individualizada"],
+  },
+  odontologia: {
+    label: "Odontologia Estética & Reabilitação Oral",
+    positioning: "Alta precisão digital, estética do sorriso natural, biossegurança hospitalar e conforto sem dor.",
+    atmosphere: "Swiss Clinical Luxury — arquitetura clínica minimalista de altíssimo padrão, branco puro, pérola, azul meia-noite ou champanhe dourado.",
+    palettes: [
+      "Branco Pérola (#F8FAFC), Azul Royal Profundo (#0F172A), Ciano Tecnológico (#0284C7) e Prata Nobre",
+      "Marfim Clínico (#FCFBF9), Grafite Profundo (#18181B), Champagne Dourado (#C5A059) e Branco Puro (#FFFFFF)",
+      "Dark Luxury Odontológico: Grafite Meia-Noite (#090D16), Dourado Acetinado (#D4AF37) e Branco Cristal (#F8FAFC)",
+    ],
+    fonts: "Títulos em 'Plus Jakarta Sans' ou 'Playfair Display' + Corpo em 'Inter'",
+    trustBadges: ["Planejamento Digital 3D do Sorriso", "Biossegurança Rigorosa & Conforto", "Materiais Importados de Alta Estética", "Especialistas Certificados (CRO)"],
+  },
+  clinica: {
+    label: "Clínica Médica, Saúde & Diagnóstico",
+    positioning: "Excelência médica, diagnóstico preciso, corpo clínico especializado e atendimento humanizado.",
+    atmosphere: "Premium Healthcare Institute — estilo Hospital Albert Einstein / Mayo Clinic, limpidez visual, confiança imediata e sofisticação médica.",
+    palettes: [
+      "Branco Clínico (#F8FAFC), Azul Marinho Médico (#0A2540), Verde Esmeralda Saúde (#0D9488) e Ardósia (#334155)",
+      "Gelo Suave (#F4F7FB), Azul Petróleo (#113F67), Azul Celeste (#38BDF8) e Grafite (#1E293B)",
+      "Areia Médica (#FAF9F6), Verde Floresta Nobre (#14532D), Dourado Suave (#B45309) e Carvão (#1C1917)",
+    ],
+    fonts: "Títulos em 'Plus Jakarta Sans' + Corpo em 'Inter'",
+    trustBadges: ["Corpo Clínico Especializado (CRM)", "Equipamentos de Diagnóstico Modernos", "Atendimento Humanizado com Hora Marcada", "Estrutura Completa & Acessível"],
+  },
+  fisioterapia: {
+    label: "Fisioterapia, Pilates Clínico & Reabilitação",
+    positioning: "Recuperação funcional acelerada, alívio definitivo da dor, biomecânica e movimento sem limites.",
+    atmosphere: "Vitality & Precision Studio — equilíbrio entre ciência da reabilitação, movimento fluido e bem-estar físico.",
+    palettes: [
+      "Branco Gelo (#F8FAFC), Verde Esmeralda Vital (#047857), Azul Oceano (#0369A1) e Grafite (#0F172A)",
+      "Areia Clara (#FAF8F5), Terracota Vitalidade (#C2410C), Verde Sálvia (#15803D) e Carvão (#18181B)",
+      "Ardósia Clara (#F1F5F9), Azul Cobalto (#1D4ED8), Ciano Ativo (#06B6D4) e Preto Profundo (#09090B)",
+    ],
+    fonts: "Títulos em 'Outfit' ou 'Plus Jakarta Sans' + Corpo em 'Inter'",
+    trustBadges: ["Avaliação Biomecânica Individual", "Fisioterapeutas Especializados (CREFITO)", "Protocolos de Alívio Rápido da Dor", "Aparelhos de Pilates & Reabilitação"],
+  },
+  nutricao: {
+    label: "Nutrição Clínica, Esportiva & Emagrecimento",
+    positioning: "Nutrição inteligente sem terrorismo alimentar, bioimpedância de precisão e longevidade saudável.",
+    atmosphere: "Botanical Fresh & Longevity — frescor orgânico, vitalidade natural, elegância botânica e ciência nutricional.",
+    palettes: [
+      "Creme Botânico (#FAFDF7), Verde Folha Profundo (#166534), Laranja Cítrico (#EA580C) e Carvão (#1C1917)",
+      "Marfim Orgânico (#FEFCE8), Verde Oliva (#3F6212), Dourado Mel (#D97706) e Grafite (#1F2937)",
+      "Branco Puro (#FFFFFF), Esmeralda Vivo (#059669), Coral Suave (#F43F5E) e Ardósia (#0F172A)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Plus Jakarta Sans' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Exame de Bioimpedância Incluso", "Plano Alimentar 100% Personalizado", "Acompanhamento Contínuo (CRN)", "Sem Dietas Restritivas Impossíveis"],
+  },
+  estetica_facial: {
+    label: "Estética Facial & Harmonização Avançada",
+    positioning: "Rejuvenescimento elegante, naturalidade absoluta, gerenciamento da pele e alta tecnologia dermatológica.",
+    atmosphere: "Haute Beauté & Luxury Maison — estética digna de clínica parisiense/suíça, tons nude, champagne, rose gold e marfim.",
+    palettes: [
+      "Marfim Seda (#FDFBF9), Champagne Rose (#C89D7C), Bronze Nobre (#5C4033) e Carvão (#1C1917)",
+      "Nude Rosé (#FFF8F6), Ouro Velho (#B8860B), Grafite Intenso (#18181B) e Branco Puro (#FFFFFF)",
+      "Dark Maison: Ônix Profundo (#12100E), Champagne Dourado (#D4AF37), Nude Suave (#F5EBE6)",
+    ],
+    fonts: "Títulos em 'Cormorant Garamond' ou 'Playfair Display' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Resultados Naturais & Sem Exageros", "Ativos e Tecnologias Homologadas ANVISA", "Protocolos Exclusivos Personalizados", "Biossegurança e Conforto Absoluto"],
+  },
+  estetica_corporal: {
+    label: "Estética Corporal, Contorno & Bem-Estar",
+    positioning: "Remodelação corporal de alta performance, drenagem especializada e tecnologias redutoras.",
+    atmosphere: "Sculpt & Glow Boutique Clinic — atmosfera luminosa, sofisticada, transmite autoestima, leveza e ciência estética.",
+    palettes: [
+      "Areia Rosada (#FDF8F5), Terracota Nobre (#9A3412), Champagne (#D4A373) e Grafite (#1C1917)",
+      "Branco Pérola (#FAFAFA), Esmeralda Spa (#0F766E), Dourado Suave (#CA8A04) e Ardósia (#1E293B)",
+      "Marfim (#FEFDFB), Bronze Acetinado (#A16207), Carvão Profundo (#18181B)",
+    ],
+    fonts: "Títulos em 'Playfair Display' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Avaliação Corporal Personalizada", "Equipamentos de Alta Tecnologia", "Protocolos Pós-Operatório & Redução", "Ambiente Climatizado e Privativo"],
+  },
+  spa: {
+    label: "Day Spa, Massoterapia & Rituais de Relaxamento",
+    positioning: "Refúgio sensorial urbano, alívio profundo do estresse, terapias orientais e renovação corpo-mente.",
+    atmosphere: "Zen Luxury Resort Spa — inspirado no Aman Resorts, pedra natural, bambu, luz de velas, silêncio visual.",
+    palettes: [
+      "Pedra Quente (#F5F2EB), Verde Musgo Zen (#2D4A3E), Âmbar Suave (#B45309) e Carvão (#1C1917)",
+      "Areia do Deserto (#FAF6F0), Marrom Cacau (#4A3728), Dourado Solar (#D97706) e Ônix (#18181B)",
+      "Dark Sanctuary: Verde Floresta Noturno (#0D1F18), Dourado Champagne (#D4AF37) e Linho Claro (#F5F5F0)",
+    ],
+    fonts: "Títulos em 'Cormorant Garamond' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Óleos Essenciais 100% Puros", "Salas Climatizadas com Aromaterapia", "Terapeutas Certificados em Massoterapia", "Experiência Sensorial Completa"],
+  },
+  beleza: {
+    label: "Salão de Beleza, Hair Studio & Nail Design",
+    positioning: "Visagismo moderno, mechas perfeitas, saúde capilar, manicure em gel de alta durabilidade e produção impecável.",
+    atmosphere: "Vogue Beauty Lounge — glamour contemporâneo, iluminação de camarim, sofisticação fashion.",
+    palettes: [
+      "Off-White Glamour (#FCF9F8), Rose Gold (#B76E79), Preto Couture (#111111) e Champagne (#F3E5AB)",
+      "Dark Beauty Lounge: Preto Ônix (#09090B), Dourado Champagne (#E5C158), Branco Seda (#FAFAFA)",
+      "Creme Parisiense (#FAF7F5), Borgonha Nobre (#881337), Dourado (#CA8A04) e Grafite (#18181B)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Syne' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Produtos Importados de Linha Profissional", "Especialistas em Visagismo & Colorimetria", "Biossegurança 100% Esterilizada (Autoclave)", "Atendimento com Hora Marcada"],
+  },
+  barbearia: {
+    label: "Barbearia Clássica & Barber Club",
+    positioning: "Estilo masculino de respeito, visagismo de barba na toalha quente, degradê navalhado perfeito e resenha premium.",
+    atmosphere: "Gentlemen's Leather & Whiskey Club — madeira nobre, couro escuro, aço escovado, âmbar dourado, estética masculina imponente.",
+    palettes: [
+      "Preto Carvão (#09090B), Âmbar Whiskey (#D97706), Couro Envelhecido (#78350F) e Prata Acetinado (#F4F4F5)",
+      "Grafite Navalha (#111827), Dourado Ouro Velho (#CA8A04), Vermelho Barber (#991B1B) e Branco (#F9FAFB)",
+      "Verde Inglês Escuro (#062C1E), Bronze Nobre (#B45309), Creme Clássico (#FAF7F2) e Preto (#09090B)",
+    ],
+    fonts: "Títulos em 'Outfit' ou 'Syne' (peso extra-bold masculino) + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Barbaterapia com Toalha Quente & Ozônio", "Mestres Barbeiros Especialistas em Fade", "Cerveja Gelada, Café & Ambiente Climatizado", "Agendamento Online Sem Fila de Espera"],
+  },
+  churrascaria: {
+    label: "Churrascaria, Steakhouse & Parrilla",
+    positioning: "Cortes nobres maturados, fogo de chão e brasa viva, suculência incomparável e tradição gaúcha/parrilla.",
+    atmosphere: "Prime Fire Steakhouse — brasa ardente, madeira rústica nobre, ferro fundido, iluminação dramática que abre o apetite.",
+    palettes: [
+      "Preto Brasa (#0C0A09), Vermelho Rubi Carnes (#B91C1C), Âmbar Fogo (#D97706) e Creme (#FAFAF9)",
+      "Carvão Defumado (#18181B), Bronze Grelha (#B45309), Dourado Chopp (#EAB308) e Branco Quente (#FAF7F2)",
+      "Marfim Rústico (#FAF6F0), Borgonha Steakhouse (#7F1D1D), Carvão (#1C1917) e Cobre (#C2410C)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Outfit' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Cortes Nobres 100% Selecionados", "Assado na Brasa no Ponto Perfeito", "Salão Climatizado & Espaço Família", "Chopp Trincando & Carta de Bebidas"],
+  },
+  pizzaria: {
+    label: "Pizzaria Artesanal & Forneria Italiana",
+    positioning: "Massa de fermentação lenta 48h, forno a lenha de alta temperatura, ingredientes importados e borda dourada.",
+    atmosphere: "Artisanal Napoli Trattoria — calor do forno a lenha, vermelho tomate San Marzano, manjericão fresco e massa crocante.",
+    palettes: [
+      "Creme Farinha (#FDFBF7), Vermelho Napolitano (#DC2626), Verde Manjericão (#15803D) e Carvão Forno (#1C1917)",
+      "Noite Italiana: Carvão Forno (#141210), Laranja Forno a Lenha (#EA580C), Dourado Queijo (#FACC15) e Branco (#FAFAFA)",
+      "Marfim Toscano (#FAF6F0), Terracota Forneria (#B91C1C), Oliva (#3F6212) e Grafite (#18181B)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Outfit' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Massa Artesanal de Fermentação Natural", "Ingredientes Nobres & Queijos Selecionados", "Forno de Alta Temperatura & Entrega Quente", "Pedidos Rápidos Direto no WhatsApp"],
+  },
+  hamburgueria: {
+    label: "Hamburgueria Artesanal & Smash Burger",
+    positioning: "Blend 100% bovino moído no dia, crosta maillard perfeita na chapa, cheddar derretido, bacon crocante e pão brioche amanteigado.",
+    atmosphere: "Urban Craft Burger Joint — visual vibrante, apetitoso, alto contraste, fotografia suculenta em primeiro plano.",
+    palettes: [
+      "Preto Chapa (#09090B), Amarelo Cheddar (#FACC15), Laranja Brasa (#EA580C) e Branco (#FAFAFA)",
+      "Grafite Urbano (#18181B), Vermelho Ketchup (#DC2626), Âmbar Brioche (#D97706) e Creme (#FEFCE8)",
+      "Off-White Craft (#FAF8F5), Laranja Smash (#C2410C), Preto Puro (#09090B) e Mostarda (#CA8A04)",
+    ],
+    fonts: "Títulos em 'Syne' ou 'Outfit' (impacto urbano) + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Blend Artesanal 100% Carne Fresca", "Pão Brioche Selado na Manteiga", "Batatas Crocantes & Molhos da Casa", "Delivery Rápido com Embalagem Térmica"],
+  },
+  japones: {
+    label: "Restaurante Japonês, Sushi Bar & Oriental",
+    positioning: "Peixes frescos recebidos diariamente, cortes precisos do sushiman, alta gastronomia oriental e ambiente intimista.",
+    atmosphere: "Tokyo Izakaya & Omakase Luxury — minimalismo japonês contemporâneo, preto laca, vermelho carmim, madeira hinoki e ouro.",
+    palettes: [
+      "Preto Laca (#09090B), Vermelho Torii (#DC2626), Dourado Omakase (#D4AF37) e Branco Arroz (#FAFAFA)",
+      "Carvão Oriental (#141416), Coral Salmão (#F97316), Bambu Dourado (#CA8A04) e Marfim (#FAF8F5)",
+      "Off-White Washi (#FAF8F5), Preto Nanquim (#111111), Vermelho Carmim (#991B1B) e Ouro (#B45309)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Outfit' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Salmão & Peixes Frescos Selecionados", "Sushimen Especialistas em Cortes Nobres", "Barcas, Combinados & Rodízio Premium", "Delivery com Embalagem Premium"],
+  },
+  cafeteria: {
+    label: "Cafeteria Especial, Confeitaria & Padaria Artesanal",
+    positioning: "Grãos 100% arábica de torra fresca, pães de fermentação natural levain, confeitaria fina e ambiente acolhedor.",
+    atmosphere: "Artisanal Roastery & Patisserie — aroma de café passado, tons caramelo, espresso, manteiga e aconchego parisiense.",
+    palettes: [
+      "Creme Latte (#FDFBF7), Marrom Espresso (#3E2723), Caramelo Tostado (#B45309) e Carvão (#1C1917)",
+      "Areia Croissant (#FAF6F0), Verde Matcha (#3F6212), Bronze Torra (#92400E) e Grafite (#18181B)",
+      "Dark Roastery: Café Torrado (#1A120E), Dourado Crema (#D97706), Creme Baunilha (#FEFCE8)",
+    ],
+    fonts: "Títulos em 'Playfair Display' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Grãos Especiais 100% Arábica", "Fornadas Frescas Todos os Dias", "Confeitaria Artesanal & Brunch", "Espaço Aconchegante com Wi-Fi"],
+  },
+  restaurante: {
+    label: "Restaurante, Gastronomia & Bistrô",
+    positioning: "Cozinha autoral com ingredientes frescos selecionados, pratos generosos, hospitalidade calorosa e experiência gastronômica memorável.",
+    atmosphere: "Contemporary Fine Dining & Bistro — iluminação quente, pratos fotografados com brilho apetitoso, charme gastronômico.",
+    palettes: [
+      "Creme Bistrô (#FDFBF7), Terracota Gourmet (#C2410C), Verde Oliva (#15803D) e Carvão (#1C1917)",
+      "Noite Gastronômica: Grafite Profundo (#121214), Âmbar Dourado (#D97706), Vinho Nobre (#991B1B) e Branco (#FAFAFA)",
+      "Linho Natural (#FAF8F5), Borgonha Reserva (#7F1D1D), Ouro Velho (#B45309) e Preto (#18181B)",
+    ],
+    fonts: "Títulos em 'Playfair Display' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Ingredientes Frescos Selecionados", "Cozinha Autoral & Receitas da Casa", "Ambiente Climatizado & Acolhedor", "Reserva de Mesas & Delivery"],
+  },
+  delivery: {
+    label: "Delivery Gastronômico & Lanches Artesanais",
+    positioning: "Sabor irresistível que chega quentinho e rápido na sua porta, ingredientes caprichados e pedido sem burocracia.",
+    atmosphere: "High-Conversion Food Lover — cores quentes que estimulam a fome instantaneamente, botões de pedido rápido em destaque.",
+    palettes: [
+      "Preto Gourmet (#09090B), Laranja Fogo (#EA580C), Amarelo Ouro (#FACC15) e Branco (#FFFFFF)",
+      "Branco Quente (#FFFDF9), Vermelho Sabor (#DC2626), Âmbar Crocante (#D97706) e Grafite (#18181B)",
+      "Grafite Escuro (#141417), Vermelho Pimenta (#E11D48), Amarelo Mostarda (#EAB308) e Creme (#FAFAFA)",
+    ],
+    fonts: "Títulos em 'Outfit' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Entrega Rápida com Embalagem Térmica", "Ingredientes Frescos & Porções Generosas", "Pedido Fácil Direto no WhatsApp", "Campeão de Avaliações 5 Estrelas"],
+  },
+  sorveteria: {
+    label: "Gelateria Artesanal, Sorveteria & Açaí",
+    positioning: "Gelatos ultra cremosos produzidos diariamente, açaí puro da Amazônia com acompanhamentos nobres e sabor refrescante.",
+    atmosphere: "Artisanal Gelato & Berry Lounge — alegre, cremoso, refrescante e irresistível.",
+    palettes: [
+      "Creme Baunilha (#FFFDF9), Roxo Açaí Profundo (#581C87), Rosa Framboesa (#DB2777) e Carvão (#18181B)",
+      "Branco Gelato (#FAFAFA), Verde Pistache (#15803D), Caramelo Doce (#D97706) e Grafite (#1E293B)",
+      "Roxo Açaí Premium (#2E1065), Amarelo Manga (#FACC15), Rosa Morango (#EC4899) e Branco (#FFFFFF)",
+    ],
+    fonts: "Títulos em 'Outfit' ou 'Playfair Display' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Receita Artesanal Ultra Cremosa", "Açaí Puro Selecionado & Frutas Frescas", "Ambiente Climatizado para a Família", "Delivery com Embalagem Isotérmica"],
+  },
+  bebidas: {
+    label: "Adega, Distribuidora de Bebidas & Choperia",
+    positioning: "Bebidas trincando de geladas entregues em minutos, rótulos selecionados de vinhos, destilados importados e cervejas especiais.",
+    atmosphere: "Premium Cellar & Cold Brew — contraste entre o dourado do malte/whisky, o rubi do vinho e o frescor de bebida trincando.",
+    palettes: [
+      "Preto Adega (#09090B), Âmbar Malte (#F59E0B), Borgonha Vinho (#881337) e Branco Gelo (#F8FAFC)",
+      "Grafite Gelo (#0F172A), Amarelo Chopp (#EAB308), Ciano Gelado (#06B6D4) e Branco (#FFFFFF)",
+      "Creme Rótulo (#FAF8F5), Vinho Reserva (#7F1D1D), Dourado Rolha (#B45309) e Preto (#111111)",
+    ],
+    fonts: "Títulos em 'Outfit' ou 'Playfair Display' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Cervejas & Bebidas Trincando de Geladas", "Entrega Expressa para Eventos e Casa", "Destilados, Vinhos e Rótulos 100% Originais", "Preços de Distribuidora & Combos"],
+  },
+  advocacia: {
+    label: "Escritório de Advocacia & Consultoria Jurídica",
+    positioning: "Defesa intransigente dos direitos do cliente, estratégia processual de elite, sigilo absoluto e alta taxa de êxito.",
+    atmosphere: "Sovereign Legal Chambers — imponência institucional, sobriedade clássica, azul marinho profundo, mogno, ouro antigo e marfim.",
+    palettes: [
+      "Azul Marinho Soberano (#0A192F), Dourado Imperador (#C5A059), Marfim Papel (#FAF8F5) e Grafite (#1E293B)",
+      "Ônix Jurídico (#090D16), Bronze Clássico (#B45309), Prata Sóbrio (#E2E8F0) e Branco (#FFFFFF)",
+      "Marfim Clássico (#FDFBF7), Borgonha Tribunal (#7F1D1D), Ouro Velho (#A16207) e Carvão (#18181B)",
+    ],
+    fonts: "Títulos em 'Cormorant Garamond' ou 'Playfair Display' (autoridade jurídica clássica) + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Inscrito na Ordem dos Advogados (OAB)", "Atendimento Estratégico & Sigilo Absoluto", "Análise Processual Personalizada", "Atuação Presencial e Digital em Todo o Brasil"],
+  },
+  contabilidade: {
+    label: "Contabilidade Consultiva, Gestão Fiscal & BPO",
+    positioning: "Redução legal de impostos, blindagem fiscal, contabilidade digital sem burocracia e inteligência financeira para crescer.",
+    atmosphere: "Executive Wealth & Financial Advisory — precisão executiva, confiança corporativa, clareza estratégica.",
+    palettes: [
+      "Branco Executivo (#F8FAFC), Azul Marinho Corporativo (#0F172A), Verde Lucro (#059669) e Dourado (#D97706)",
+      "Grafite Wall Street (#090D16), Esmeralda Financeiro (#10B981), Azul Royal (#2563EB) e Gelo (#F1F5F9)",
+      "Marfim Corporativo (#FAF9F6), Azul Petróleo (#1E3A8A), Bronze Executivo (#B45309) e Ardósia (#1E293B)",
+    ],
+    fonts: "Títulos em 'Plus Jakarta Sans' + Corpo em 'Inter'",
+    trustBadges: ["Contadores Registrados no CRC", "Planejamento Tributário & Economia Fiscal", "Abertura de Empresa e Regularização Rápida", "Atendimento Consultivo Direto no WhatsApp"],
+  },
+  imobiliaria: {
+    label: "Imobiliária, Corretor de Imóveis & Alto Padrão",
+    positioning: "Curadoria de imóveis exclusivos, segurança jurídica em cada escritura, avaliação patrimonial precisa e negociação transparente.",
+    atmosphere: "Architectural Living & Luxury Real Estate — estilo Sotheby's International Realty, fotografia arquitetônica ampla, linhas limpas.",
+    palettes: [
+      "Branco Arquitetura (#FAFAFA), Grafite Concreto (#18181B), Dourado Cobertura (#C5A059) e Areia (#F5F3EF)",
+      "Azul Noite Patrimonial (#0B132B), Champagne Luxo (#D4AF37), Branco Puro (#FFFFFF) e Ardósia (#334155)",
+      "Areia Travertino (#FAF7F2), Verde Jardim (#14532D), Bronze Arquitetônico (#92400E) e Carvão (#1C1917)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Plus Jakarta Sans' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Credenciamento Oficial CRECI", "Assessoria Jurídica e Financiamento Completo", "Curadoria de Imóveis Selecionados", "Visitas Guiadas com Hora Marcada"],
+  },
+  construcao: {
+    label: "Engenharia Civil, Construção & Reformas",
+    positioning: "Obras entregues rigorosamente no prazo, responsabilidade técnica CREA/CAU, acabamento impecável e orçamento sem surpresas.",
+    atmosphere: "Precision Engineering & Architecture — solidez estrutural, concreto aparente, aço, linhas geométricas precisas.",
+    palettes: [
+      "Branco Projeto (#F8FAFC), Azul Engenharia (#0F172A), Laranja Segurança (#EA580C) e Cinza Concreto (#334155)",
+      "Grafite Estrutural (#111827), Amarelo Obra (#EAB308), Azul Aço (#0284C7) e Gelo (#F1F5F9)",
+      "Areia Arquitetura (#FAF8F5), Terracota Tijolo (#C2410C), Carvão (#18181B) e Bronze (#B45309)",
+    ],
+    fonts: "Títulos em 'Outfit' ou 'Plus Jakarta Sans' + Corpo em 'Inter'",
+    trustBadges: ["Projetos com Responsabilidade Técnica", "Cumprimento Rigoroso de Cronograma", "Acabamento de Alto Padrão Garantido", "Orçamento Detalhado e Transparente"],
+  },
+  energia_solar: {
+    label: "Energia Solar Fotovoltaica & Sustentabilidade",
+    positioning: "Redução de até 95% na conta de luz, engenharia fotovoltaica homologada na concessionária e retorno financeiro garantido.",
+    atmosphere: "Clean Tech Solar Future — tecnologia limpa, brilho solar, eficiência energética moderna.",
+    palettes: [
+      "Branco Solar (#F8FAFC), Azul Painel Fotovoltaico (#0F172A), Amarelo Sol (#F59E0B) e Verde Sustentável (#059669)",
+      "Dark CleanTech: Azul Meia-Noite (#090D16), Laranja Solar (#EA580C), Esmeralda (#10B981) e Branco (#FFFFFF)",
+      "Gelo Tecnológico (#F1F5F9), Azul Royal (#1D4ED8), Ouro Solar (#EAB308) e Grafite (#1E293B)",
+    ],
+    fonts: "Títulos em 'Outfit' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Economia de Até 95% na Conta de Energia", "Projeto Homologado na Concessionária", "Painéis e Inversores Tier-1 com Garantia", "Simulação Gratuita pelo WhatsApp"],
+  },
+  oficina: {
+    label: "Oficina Mecânica, Auto Center & Estética Automotiva",
+    positioning: "Diagnóstico computadorizado preciso, peças genuínas com garantia, transparência mecânica total e revisão de confiança.",
+    atmosphere: "Performance Garage & Precision Auto — estilo Porsche Service / Bosch Car Service, oficina limpa, técnica e moderna.",
+    palettes: [
+      "Grafite Carbono (#09090B), Vermelho Performance (#DC2626), Prata Metálico (#E4E4E7) e Âmbar (#F59E0B)",
+      "Branco Oficina Clean (#F8FAFC), Azul Mecânica (#0F172A), Laranja Racing (#EA580C) e Aço (#334155)",
+      "Azul Meia-Noite (#0B132B), Amarelo Diagnóstico (#EAB308), Vermelho Sport (#E11D48) e Branco (#FFFFFF)",
+    ],
+    fonts: "Títulos em 'Outfit' + Corpo em 'Inter'",
+    trustBadges: ["Diagnóstico Eletrônico Computadorizado", "Peças Originais & Garantia de Serviço", "Orçamento Transparente Antes do Reparo", "Mecânicos Especializados Multimarcas"],
+  },
+  petshop: {
+    label: "Pet Shop, Clínica Veterinária & Banho e Tosa",
+    positioning: "Carinho incondicional pelo seu pet, banho e tosa sem estresse com produtos hipoalergênicos e cuidado veterinário completo.",
+    atmosphere: "Warm Pet Care & Vet Boutique — alegre, acolhedor, confiável, higienizado e cheio de afeto.",
+    palettes: [
+      "Creme Acolhedor (#FFFDF9), Verde Veterinário (#0D9488), Laranja Carinho (#F97316) e Grafite (#1E293B)",
+      "Branco Puro (#FFFFFF), Azul Pet Care (#0284C7), Amarelo Alegre (#FACC15) e Ardósia (#0F172A)",
+      "Areia Suave (#FAF8F5), Coral Afeto (#E11D48), Esmeralda (#059669) e Carvão (#18181B)",
+    ],
+    fonts: "Títulos em 'Outfit' ou 'Plus Jakarta Sans' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Banho & Tosa com Produtos Hipoalergênicos", "Ambiente Monitorado e Livre de Estresse", "Consultório Veterinário, Vacinas e Rações", "Táxi Dog & Agendamento pelo WhatsApp"],
+  },
+  fitness: {
+    label: "Academia, Studio Fitness, CrossFit & Personal",
+    positioning: "Transformação física real, equipamentos de biomecânica avançada, acompanhamento próximo e energia motivadora.",
+    atmosphere: "High-Energy Athletic Club — estilo Equinox / Nike Training, dinamismo, força e resultado.",
+    palettes: [
+      "Preto Carbono (#09090B), Verde Neon Performance (#10B981), Cinza Titânio (#27272A) e Branco (#FAFAFA)",
+      "Grafite Intenso (#111827), Laranja Energia (#F97316), Amarelo Força (#FACC15) e Branco (#FFFFFF)",
+      "Branco Atlético (#F8FAFC), Preto Puro (#09090B), Vermelho Pulso (#E11D48) e Aço (#334155)",
+    ],
+    fonts: "Títulos em 'Syne' ou 'Outfit' + Corpo em 'Inter'",
+    trustBadges: ["Profissionais Certificados (CREF)", "Equipamentos Modernos & Climatizados", "Treinos Personalizados por Objetivo", "Agende Sua Aula Experimental"],
+  },
+  loja: {
+    label: "Loja, Boutique de Moda & Varejo",
+    positioning: "Curadoria de tendências, peças com caimento impecável, atendimento de personal stylist e envio rápido.",
+    atmosphere: "Editorial Fashion Flagship — estilo Zara Studio / Farfetch, fotografia em destaque, tipografia elegante e vitrine irresistível.",
+    palettes: [
+      "Off-White Editorial (#FAF8F5), Preto Couture (#111111), Champagne (#D4AF37) e Areia (#E7E5E4)",
+      "Branco Galeria (#FFFFFF), Terracota Fashion (#C2410C), Bronze (#A16207) e Grafite (#18181B)",
+      "Dark Boutique: Ônix (#09090B), Ouro Rose (#E5C158), Marfim Seda (#FAF7F2)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Syne' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Coleção Exclusiva & Peças Selecionadas", "Atendimento Personalizado via WhatsApp", "Troca Fácil & Entrega Rápida", "Parcelamento Facilitado"],
+  },
+  costura: {
+    label: "Ateliê de Alta Costura, Alfaiataria & Ajustes",
+    positioning: "Caimento sob medida, acabamento artesanal invisível, reforma de roupas finas e modelagem exclusiva.",
+    atmosphere: "Bespoke Atelier & Tailoring — linho natural, tesoura de alfaiate, fita métrica, elegância artesanal.",
+    palettes: [
+      "Linho Natural (#FAF7F2), Bronze Alfaiate (#92400E), Carvão (#1C1917) e Dourado (#D4AF37)",
+      "Marfim Seda (#FDFBF9), Borgonha Veludo (#881337), Ouro Velho (#B45309) e Preto (#18181B)",
+      "Branco Ateliê (#FAFAFA), Azul Marinho Alfaiataria (#0F172A), Champagne (#C5A059)",
+    ],
+    fonts: "Títulos em 'Cormorant Garamond' ou 'Playfair Display' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Acabamento Artesanal de Alta Precisão", "Ajustes em Ternos, Vestidos de Festa e Jeans", "Atendimento com Prova Sob Medida", "Pontualidade Garantida na Entrega"],
+  },
+  tecnologia: {
+    label: "Tecnologia, Assistência Técnica & Soluções de TI",
+    positioning: "Reparo avançado em placas, notebooks e smartphones, infraestrutura de TI segura e diagnóstico rápido.",
+    atmosphere: "Silicon Valley Hardware & Cyber Lab — precisão eletrônica, visual limpo de estilo Apple Care / Linear.",
+    palettes: [
+      "Preto Espacial (#09090B), Azul Ciano Tech (#06B6D4), Índigo (#4F46E5) e Branco (#F8FAFC)",
+      "Branco Apple (#F8FAFC), Grafite Titânio (#0F172A), Azul Sistema (#2563EB) e Prata (#E2E8F0)",
+      "Ardósia Escura (#0B132B), Verde Circuito (#10B981), Ciano (#38BDF8) e Branco (#FFFFFF)",
+    ],
+    fonts: "Títulos em 'Outfit' ou 'Plus Jakarta Sans' + Corpo em 'Inter'",
+    trustBadges: ["Laboratório Técnico Especializado", "Peças de Alta Qualidade com Garantia", "Diagnóstico Rápido & Backup Seguro", "Atendimento Corporativo e Residencial"],
+  },
+  marketing: {
+    label: "Agência de Marketing Digital, Tráfego & Growth",
+    positioning: "Escala previsível de vendas, tráfego pago de alto ROI, posicionamento de marca premium e funis de conversão.",
+    atmosphere: "Awwwards Creative Growth Agency — ousado, moderno, métricas de impacto, gradientes sutis de luxo.",
+    palettes: [
+      "Preto Agência (#09090B), Violeta Growth (#7C3AED), Esmeralda ROI (#10B981) e Branco (#FAFAFA)",
+      "Off-White Studio (#FAF8F5), Preto Intenso (#111111), Laranja Criativo (#EA580C) e Índigo (#4F46E5)",
+      "Azul Meia-Noite (#0B0F19), Ciano Performance (#06B6D4), Dourado (#F59E0B) e Branco (#FFFFFF)",
+    ],
+    fonts: "Títulos em 'Syne' ou 'Outfit' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Estratégias Focadas em Vendas e ROI", "Gestão Profissional de Google & Meta Ads", "Relatórios Claros de Performance", "Consultoria Estratégica pelo WhatsApp"],
+  },
+  seguros: {
+    label: "Corretora de Seguros, Planos de Saúde & Patrimônio",
+    positioning: "Proteção patrimonial completa, cotação multicálculo nas maiores seguradoras e assistência 24h em sinistros.",
+    atmosphere: "Private Banking & Family Shield — segurança, estabilidade, acolhimento familiar e solidez.",
+    palettes: [
+      "Branco Confiança (#F8FAFC), Azul Seguro (#0A2540), Dourado Proteção (#C5A059) e Esmeralda (#059669)",
+      "Marfim Patrimonial (#FAF8F5), Verde Britânico (#14532D), Bronze (#B45309) e Grafite (#1E293B)",
+      "Azul Noite Corporativo (#0F172A), Azul Celeste (#0284C7), Ouro (#D97706) e Branco (#FFFFFF)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Plus Jakarta Sans' + Corpo em 'Inter'",
+    trustBadges: ["Corretora Habilitada SUSEP", "Cotação nas Maiores Seguradoras do País", "Suporte Ágil e Humanizado em Sinistros", "Seguro Auto, Vida, Saúde e Empresarial"],
+  },
+  autonomo: {
+    label: "Profissional Especialista & Serviços Técnicos",
+    positioning: "Atendimento técnico pontual, execução limpa e segura, ferramentas profissionais e garantia total do serviço.",
+    atmosphere: "Master Craftsman & Reliable Pro — clareza, confiança imediata, apresentação impecável.",
+    palettes: [
+      "Branco Profissional (#F8FAFC), Azul Marinho (#0F172A), Âmbar Destaque (#D97706) e Ardósia (#334155)",
+      "Grafite Técnico (#18181B), Laranja Ação (#EA580C), Azul Confiança (#0284C7) e Branco (#FFFFFF)",
+      "Areia Neutra (#FAF8F5), Verde Segurança (#059669), Carvão (#1C1917) e Ouro (#CA8A04)",
+    ],
+    fonts: "Títulos em 'Outfit' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Atendimento Rápido com Hora Marcada", "Orçamento Justo e Sem Compromisso", "Serviço Limpo com Garantia de Qualidade", "Avaliação 5 Estrelas pelos Clientes"],
+  },
+  geral: {
+    label: "Excelência em Serviços & Atendimento Premium",
+    positioning: "Referência regional em qualidade, atendimento personalizado de alto padrão e soluções sob medida.",
+    atmosphere: "Contemporary Flagship Brand — sofisticação atemporal, contraste perfeito e experiência digital fluida.",
+    palettes: [
+      "Marfim Contemporâneo (#FAF8F5), Grafite Profundo (#18181B), Champagne Dourado (#C5A059) e Ardósia (#334155)",
+      "Branco Puro (#F8FAFC), Azul Meia-Noite (#0F172A), Esmeralda Nobre (#059669) e Prata (#E2E8F0)",
+      "Dark Luxury: Ônix (#09090B), Dourado Acetinado (#D4AF37), Branco Seda (#FAFAFA)",
+    ],
+    fonts: "Títulos em 'Playfair Display' ou 'Plus Jakarta Sans' + Corpo em 'Plus Jakarta Sans'",
+    trustBadges: ["Referência de Qualidade na Região", "Atendimento Exclusivo & Personalizado", "Compromisso com a Satisfação Total", "Contato Rápido via WhatsApp"],
+  },
+};
+
+/**
+ * Retorna a Direção de Arte e Arquitetura guiada 100% pelo Nicho Canônico/Sub-nicho do Lead,
+ * combinando a identidade semântica da Tag com 3 variações arquitetônicas de luxo (para o botão "Trocar Modelo")
+ * e entregando os serviços já pareados 1:1 com suas respectivas fotos em alta definição.
+ */
+export function getNicheDesignDirection(
+  nicheRaw?: string | null,
+  companyNameRaw?: string | null,
+  variantIndex = 0,
+): NicheDesignDirection {
+  const subKey = detectSpecializedSubNicheKey(nicheRaw, companyNameRaw);
+  const baseKey = detectNicheKey(nicheRaw, companyNameRaw);
+  const profile =
+    NICHE_AESTHETIC_PROFILES[subKey] ||
+    NICHE_AESTHETIC_PROFILES[baseKey] ||
+    NICHE_AESTHETIC_PROFILES.geral;
+
+  const safeIdx = Math.abs(variantIndex) % 3;
+  const palette = profile.palettes[safeIdx] || profile.palettes[0];
+  const pairedServices = getPairedCatalogForBusiness(nicheRaw, companyNameRaw);
+
+  const LAYOUT_VARIANTS = [
+    {
+      variantName: `Editorial Boutique & Vitrine Fotográfica (${profile.label})`,
+      navbar:
+        "Navbar flutuante estilo glassmorphism ('sticky top-4 z-40 max-w-6xl mx-auto rounded-full bg-white/85 backdrop-blur-xl shadow-lg border border-black/5 px-6 py-3.5') com nome da marca em destaque, links de navegação suaves e botão CTA principal com ícone",
+      heroConcept:
+        "HERO ASSIMÉTRICO DE LUXO (60/40): Coluna esquerda com badge da especialidade do nicho, headline magnética em alta tipografia, subtítulo persuasivo, botões de Agendamento/WhatsApp e selo de avaliação 5 estrelas do Google; Coluna direita com composição fotográfica imponente em moldura 'rounded-3xl shadow-2xl overflow-hidden aspect-[4/5]' exibindo a foto principal do nicho/cliente com card flutuante de credibilidade.",
+      servicesLayout:
+        "VITRINE FOTOGRÁFICA DE SERVIÇOS EM CARDS DE ALTO PADRÃO (OBRIGATÓRIO COM FOTO EM CADA CARD): Grid responsivo de 3 ou 4 colunas ('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'). CADA CARD DEVE TER OBRIGATORIAMENTE: (1) Container superior de imagem 'relative h-56 overflow-hidden rounded-t-3xl' com a tag <img src='URL_PAREADA' class='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'> e badge de categoria flutuante; (2) Corpo do card com título do serviço, descrição envolvente, faixa de valor/duração e botão direto de ação.",
+      signatureSection:
+        "SEÇÃO DE DIFERENCIAIS & AUTORIDADE DO NICHO: Bloco refinado apresentando os 4 pilares de excelência da marca com ícones Lucide ('<i data-lucide=\"shield-check\"></i>', '<i data-lucide=\"sparkles\"></i>', '<i data-lucide=\"award\"></i>', '<i data-lucide=\"heart-handshake\"></i>') + números de impacto e depoimentos reais de clientes.",
+      locationLayout:
+        "SPLIT DE LOCALIZAÇÃO & ACOLHIMENTO: Coluna esquerda com endereço verificado, horários de atendimento e os 2 botões oficiais de GPS ('📍 Traçar Rota no Google Maps' e '🚗 Abrir no Waze'); Coluna direita com o iframe do Google Maps em 'rounded-3xl shadow-xl border'.",
+    },
+    {
+      variantName: `Immersive Flagship & Bento Showcase (${profile.label})`,
+      navbar:
+        "Header executivo de largura total com backdrop-blur, logotipo tipográfico elegante, badge de localização na cidade e botão de ação destacado",
+      heroConcept:
+        "HERO CINEMATOGRÁFICO COM PAINEL DE VIDRO: Grande fotografia de capa em alta definição com iluminação dramática e overlay gradiente calibrado na paleta do nicho; sobreposto por container editorial e 3 mini-cards de vidro translúcido ('backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-4') destacando reputação Google, especialidade e atendimento.",
+      servicesLayout:
+        "BENTO GRID FOTOGRÁFICO DE ESPECIALIDADES (TODOS OS CARDS COM FOTO): Cards elegantes em 'rounded-3xl border shadow-lg overflow-hidden group' combinando fotografia de alta resolução ('h-60 w-full object-cover') no topo de cada serviço com badge da especialidade, descrição detalhada dos benefícios e botão de conversão.",
+      signatureSection:
+        "JORNADA DO CLIENTE EM 3 ETAPAS + FAQ INTERATIVO: Mostre visualmente como funciona o atendimento em 3 passos claros, seguido de perguntas frequentes em tags '<details class=\"group rounded-2xl border p-5\">' específicas sobre o nicho.",
+      locationLayout:
+        "PAINEL INTEGRADO DE VISITA & MAPA INTERATIVO: Card panorâmico de localização com mapa Google Maps embutido e barra de ação rápida para Waze, Google Maps e WhatsApp.",
+    },
+    {
+      variantName: `Architectural Split & Prestige Gallery (${profile.label})`,
+      navbar:
+        "Barra superior minimalista de alto contraste com telefone/WhatsApp rápido, selo de avaliação Google e CTA em formato pill",
+      heroConcept:
+        "HERO ARCHITECTURAL SPLIT COM GALERIA: Composição moderna destacando a proposta única de valor do nicho à esquerda e um mosaico visual com a foto principal + selos de especialidade à direita.",
+      servicesLayout:
+        "GALERIA DE PROCEDIMENTOS / PRODUTOS HORIZONTAL-VERTICAL COM FOTOS HD: Cards fotográficos luxuosos onde cada serviço exibe sua imagem exata pareada ('aspect-[4/3] w-full object-cover rounded-2xl'), tag de destaque, benefícios claros e link direto de agendamento/pedido.",
+      signatureSection:
+        "PROVA SOCIAL & COMPROMISSO DE EXCELÊNCIA: Destaque para a nota real do Google Maps com estrelas douradas, 3 depoimentos autênticos contextualizados no nicho e selos de garantia.",
+      locationLayout:
+        "ESTAÇÃO DE NAVEGAÇÃO GPS & CONTATO DIRETO: Bloco duplo com iframe do mapa à esquerda e cartão concierge à direita com botões grandes para Google Maps, Waze e WhatsApp.",
+    },
+  ];
+
+  const chosenLayout = LAYOUT_VARIANTS[safeIdx];
+
+  return {
+    nicheKey: subKey,
+    canonicalTagLabel: profile.label,
+    variantName: chosenLayout.variantName,
+    positioning: profile.positioning,
+    atmosphere: profile.atmosphere,
+    palette: palette,
+    fonts: profile.fonts,
+    navbar: chosenLayout.navbar,
+    heroConcept: chosenLayout.heroConcept,
+    servicesLayout: chosenLayout.servicesLayout,
+    signatureSection: chosenLayout.signatureSection,
+    locationLayout: chosenLayout.locationLayout,
+    trustBadges: profile.trustBadges,
+    pairedServices,
+  };
 }
 
 /**

@@ -883,18 +883,22 @@ function ProspectingPage() {
       !/images\.unsplash\.com|streetviewpixels-pa\.googleapis\.com/i.test(u);
 
     let realPhotos: string[] = [];
-    if (Array.isArray(company.photos) && company.photos.length > 0) {
-      realPhotos.push(...company.photos.filter(isTrueClientPhoto));
-    }
-    // Desempacota fotos salvas nas notas se ainda não estiverem em company.photos
-    if (realPhotos.length === 0 && company.notes && company.notes.includes("[Fotos:")) {
-      const match = company.notes.match(/\[Fotos:\s*([^\]]+)\]/);
-      if (match) {
-        const extracted = match[1]
-          .split("|")
-          .map((p) => p.trim())
-          .filter(isTrueClientPhoto);
-        realPhotos.push(...extracted);
+    // Se for "Trocar Modelo" (isRegeneration), revalida as fotos na ficha exata do lead para expurgar
+    // qualquer foto cruzada que tenha sido salva em cache antes da trava de identidade por nome próprio
+    if (!isRegeneration) {
+      if (Array.isArray(company.photos) && company.photos.length > 0) {
+        realPhotos.push(...company.photos.filter(isTrueClientPhoto));
+      }
+      // Desempacota fotos salvas nas notas se ainda não estiverem em company.photos
+      if (realPhotos.length === 0 && company.notes && company.notes.includes("[Fotos:")) {
+        const match = company.notes.match(/\[Fotos:\s*([^\]]+)\]/);
+        if (match) {
+          const extracted = match[1]
+            .split("|")
+            .map((p) => p.trim())
+            .filter(isTrueClientPhoto);
+          realPhotos.push(...extracted);
+        }
       }
     }
     if (customPhotoUrl && !realPhotos.includes(customPhotoUrl)) {
@@ -929,7 +933,7 @@ function ProspectingPage() {
 
       const [fetchedCompat, fetchedMaps] = await Promise.race([
         Promise.all([imgTask, mapsTask]),
-        new Promise<[any[], any]>((resolve) => setTimeout(() => resolve([[], null]), 2200)),
+        new Promise<[any[], any]>((resolve) => setTimeout(() => resolve([[], null]), 3200)),
       ]);
 
       compatibleImages = fetchedCompat || [];

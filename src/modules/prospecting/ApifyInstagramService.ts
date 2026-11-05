@@ -217,6 +217,11 @@ export async function fetchInstagramProfileViaApify(
       }
     }
 
+    // Garante que o avatar / foto real de perfil em HD do Instagram seja a primeira foto do acervo
+    if (profilePicHD && !photos.includes(profilePicHD)) {
+      photos.unshift(profilePicHD);
+    }
+
     const detectedPhone =
       extractPhoneFromText(firstItem.businessPhoneNumber) ||
       extractPhoneFromText(externalUrl) ||

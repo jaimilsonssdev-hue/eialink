@@ -701,7 +701,10 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       );
     if (input.photos && input.photos.length > 0) {
       businessContextParts.push(
-        `FOTOS REAIS DA EMPRESA PARA USAR NO SITE (PRIORIDADE TOTAL):\n${input.photos.slice(0, 6).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}`,
+        `FOTOS REAIS DA EMPRESA (GOOGLE MAPS & INSTAGRAM FEED - PRIORIDADE TOTAL):\n${input.photos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}
+DIRETRIZ DE USO DE FOTOS REAIS:
+- Prioridade máxima: use estas fotos reais nos atributos src="..." das seções principais (Hero, Ambiente, Procedimentos e Apresentação).
+- Para a apresentação do profissional/bio: USE UMA DAS FOTOS REAIS DO CLIENTE! É TERMINANTEMENTE PROIBIDO colocar a foto de um modelo desconhecido fingindo ser o profissional!`,
       );
     } else {
       // Se não houver fotos reais anexadas, busca fotos compatíveis em tempo real via IA/DDG/Unsplash
@@ -722,7 +725,8 @@ DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXT
 1. O texto e título de cada card de serviço DEVE corresponder fielmente ao que a foto mostra (ex: se o card fala de churrasco/picanha, a foto DEVE ser de carne assada/brasa, NUNCA peixe ou verduras; se fala de Atendimento Individual, NUNCA use fotos de auditório, plateia ou multidão).
 2. Construa os serviços baseando-se nas fotos disponíveis (o conteúdo segue as imagens).
 3. Se não houver foto condizente para um serviço, crie um card elegante sem foto com ícone temático do Lucide em vez de forçar uma foto inadequada.
-4. NUNCA invente links fictícios e NUNCA repita a mesma foto.`,
+4. PROIBIÇÃO ABSOLUTA DE ROSTOS DE MODELOS DESCONHECIDOS: NUNCA coloque foto de pessoa desconhecida de banco de imagens na apresentação do profissional! Se não houver foto real da pessoa, use a foto real do ambiente/fachada ou um card de autoridade com selos Lucide (Award, GraduationCap, ShieldCheck).
+5. NUNCA invente links fictícios e NUNCA repita a mesma foto.`,
           );
         }
       } catch (e) {

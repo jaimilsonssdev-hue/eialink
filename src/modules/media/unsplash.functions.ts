@@ -450,8 +450,10 @@ export async function searchCompatibleBusinessImages(
   // O pool curado já garante variedade máxima sem atrasar a geração
 
   // Galeria curada do nicho com shuffle determinístico pela semente do nome
+  // ATENÇÃO: Covers contém apenas ambientes, fachadas, gastronomia e equipamentos.
+  // NUNCA injetamos fotos de pessoas desconhecidas como "team" ou "avatar" para evitar pessoas aleatórias no site do cliente!
   const gallery = NICHE_GALLERIES[detectedKey] || NICHE_GALLERIES.geral;
-  const allCurated = [...(gallery.covers || []), ...(gallery.avatars || [])];
+  const allCurated = [...(gallery.covers || [])];
 
   // Seed hash para variar a seleção entre empresas diferentes
   const seedString = `${businessName || ""}-${niche}`;
@@ -509,7 +511,7 @@ export async function searchCompatibleBusinessImages(
     "ambient",
     "service",
     "service",
-    "team",
+    "ambient",
     "detail",
     "tech",
     "detail",

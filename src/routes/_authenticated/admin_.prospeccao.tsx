@@ -64,7 +64,6 @@ import {
 } from "@/components/ui/hover-card";
 
 import { runLiveProspecting, lookupBusinessProfileFn } from "@/modules/prospecting/prospecting.functions";
-import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
 import { validateProspectingSearch } from "@/modules/prospecting/validation";
 import { useActionCooldown } from "@/hooks/useActionCooldown";
 import { searchGoogleMapsAndInstagram, lookupBusinessProfile, findInstagramHandleForCompany } from "@/modules/prospecting/LiveProspectingEngine";
@@ -884,32 +883,11 @@ function ProspectingPage() {
     let verifiedReviewsCount = company.reviews_count;
     let compatibleImages: Array<{ url: string; label: string; role: string }> = [];
 
-    // OTIMIZAÇÃO CRÍTICA DE ALTA VELOCIDADE:
-    // Se o lead já possui fotos reais (>= 2) e endereço, NUNCA executa consultas externas lentas!
-    const needsAddress = !verifiedAddress;
-    const needsCompatibleImages = realPhotos.length < 2;
-
-    if (needsAddress || needsCompatibleImages) {
-      setFeedback(`🔍 Otimizando recursos visuais e direção de arte para ${company.name}...`);
-      const parallelTasks: Promise<any>[] = [];
-
-      let placesTask: Promise<any> | null = null;
-      if (needsAddress) {
-        placesTask = fetchPlaceDetailsFn({
-          data: {
-            companyName: company.name,
-            city: company.city || undefined,
-          },
-        }).catch((err) => {
-          console.warn("[Prospeccao] Falha silenciosa em Places:", err);
-          return null;
-        });
-        parallelTasks.push(placesTask);
-      }
-
-      let imgTask: Promise<any> | null = null;
-      if (needsCompatibleImages) {
-        imgTask = searchCompatibleBusinessImagesFn({
+    // Se o lead ainda tiver menos de 2 fotos (extraídas via Apify), busca imagens de apoio do nicho
+    if (realPhotos.length < 2) {
+      setFeedback(`🔍 Selecionando imagens compatíveis em alta resolução para ${company.name}...`);
+      try {
+        const imgTask = searchCompatibleBusinessImagesFn({
           data: {
             niche: nicheText,
             businessName: company.name,
@@ -919,34 +897,12 @@ function ProspectingPage() {
           console.warn("[Prospeccao] Fallback de imagens ignorado:", err);
           return [];
         });
-        parallelTasks.push(imgTask);
-      }
 
-      // Executa tarefas estritamente necessárias em paralelo com teto estrito de 1.8s
-      await Promise.race([
-        Promise.allSettled(parallelTasks),
-        new Promise((resolve) => setTimeout(resolve, 1800)),
-      ]);
-
-      if (placesTask) {
-        try {
-          const details = await placesTask;
-          if (details) {
-            if (Array.isArray(details.photos) && details.photos.length > 0 && realPhotos.length === 0) {
-              realPhotos.push(...details.photos.filter((p: string) => typeof p === "string" && p.startsWith("http")));
-            }
-            if (details.address && !verifiedAddress) verifiedAddress = details.address;
-            if (details.rating && !verifiedRating) verifiedRating = details.rating;
-            if (details.reviewsCount && !verifiedReviewsCount) verifiedReviewsCount = details.reviewsCount;
-          }
-        } catch (_) {}
-      }
-
-      if (imgTask) {
-        try {
-          compatibleImages = (await imgTask) || [];
-        } catch (_) {}
-      }
+        compatibleImages = (await Promise.race([
+          imgTask,
+          new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 1500)),
+        ])) || [];
+      } catch (_) {}
     }
 
     // Se o lead possui Instagram e ainda tem poucas fotos, dispara enriquecimento em background
@@ -1031,7 +987,11 @@ ${realPhotos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("
 DIRETRIZ DE USO DE FOTOS REAIS:
 - PRIORIDADE MÁXIMA: Use estas fotos reais nos atributos src="..." de todas as seções principais.
 - Se houver 4 ou mais fotos reais, O SITE DEVE SER COMPOSTO MAJORITARIAMENTE POR ESTAS FOTOS REAIS autênticas!
-- Inspire os títulos e descrições dos serviços/pratos diretamente no que as fotos reais mostram.` : ""}
+- Inspire os títulos e descrições dos serviços/pratos diretamente no que as fotos reais mostram.
+- REGRA DO PROFISSIONAL (APRESENTAÇÃO / QUEM SOMOS / BIO):
+  * Se houver foto real do profissional/cliente no acervo: USE ESSA FOTO REAL!
+  * Se NÃO houver foto real confirmada da pessoa: É TERMINANTEMENTE PROIBIDO colocar foto de uma pessoa aleatória de banco de imagens para fingir que é o especialista/dono! NUNCA coloque o rosto de um modelo desconhecido no site do cliente!
+  * Em vez de modelo fake, use a foto real do ambiente/fachada do local OU crie um card de autoridade editorial elegante sem foto com selos de credibilidade Lucide (<Award />, <GraduationCap />, <ShieldCheck />), anos de mercado e a nota real do Google.` : ""}
 
 ${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:
 ${compatibleImages.map((img, i) => `- Imagem ${i + 1} [Papel: ${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
@@ -1048,8 +1008,9 @@ DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXT
 3. CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA):
    - Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
    - Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva.
-4. NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
-5. NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09). Use as imagens autênticas listadas acima!` : ""}
+4. PROIBIÇÃO TOTAL DE ROSTO DE MODELO DESCONHECIDO: NUNCA use foto de pessoa desconhecida de banco de imagens na apresentação do profissional! Se não houver foto real da pessoa, use foto real do ambiente/fachada ou card de autoridade sem foto de pessoa com selos Lucide (Award, GraduationCap, ShieldCheck).
+5. NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
+6. NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09). Use as imagens autênticas listadas acima!` : ""}
 
 BLUEPRINT ARQUITETÔNICO COMPLETO DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR DE PONTA A PONTA):
 - Estilo Arquitetônico Global: ${chosenArchetype.style}

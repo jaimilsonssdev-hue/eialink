@@ -159,6 +159,14 @@ DIRETRIZES TÉCNICAS E DE DESIGN:
    - **ENGENHARIA INVERTIDA (O CONTEÚDO SEGUE A FOTO)**:
      * NUNCA invente um prato ou serviço no texto para depois tentar forçar uma foto que não combina.
      * Olhe a lista de fotos disponíveis e seus rótulos primeiro: crie o título e a descrição do card especificamente sobre o que a foto mostra!
+   - **PROIBIÇÃO ABSOLUTA DE ROSTOS DE MODELOS ALEATÓRIOS / FAKE (REGRA DO PROFISSIONAL)**:
+     * É TERMINANTEMENTE PROIBIDO colocar foto de uma pessoa desconhecida de banco de imagens para fingir que é o dono, médico, dentista, psicólogo, terapeuta, advogado, barbeiro ou especialista da empresa!
+     * Colocar a foto de um modelo desconhecido destrói a credibilidade do cliente e faz o site parecer falso.
+     * Na seção "Sobre o Especialista / Quem Somos / Apresentação do Profissional":
+       1. SE HOUVER FOTO REAL DO CLIENTE/PROFISSIONAL NO ACERVO FORNECIDO: use essa foto real!
+       2. SE NÃO HOUVER FOTO REAL CONFIRMADA DA PESSOA: NUNCA use foto de pessoa desconhecida! Em vez disso, crie um card de autoridade de alto padrão:
+          - Use a foto real da fachada ou do ambiente/consultório interno com a legenda "Nosso Espaço de Atendimento", OU
+          - Crie um card editorial de excelência SEM foto de pessoa, usando selos de credibilidade com ícones Lucide (<Award class="h-8 w-8 text-primary" />, <GraduationCap />, <ShieldCheck />, <UserCheck />), badges de especialidade, anos de experiência e a nota/depoimentos do Google.
    - **CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA)**:
      * Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
      * Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva. Isso é infinitamente mais profissional e elegante!

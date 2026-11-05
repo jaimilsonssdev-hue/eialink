@@ -63,6 +63,7 @@ export function normalizeBusinessQuery(input: string): NormalizedBusinessQuery {
   const decodedInput = decodePlus(trimmed);
 
   const isLink =
+    /share\.google/i.test(trimmed) ||
     /^https?:\/\//i.test(trimmed) ||
     /^(www\.)?(google\.[a-z.]+|maps\.app\.goo\.gl|g\.co)\//i.test(trimmed) ||
     /\/maps\/place\//i.test(trimmed);

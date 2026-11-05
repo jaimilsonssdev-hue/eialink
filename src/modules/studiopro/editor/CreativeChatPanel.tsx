@@ -216,7 +216,7 @@ export function CreativeChatPanel() {
         let briefing = "";
         const clientApiKey = await getResolvedApiKeyHelper();
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 90000);
+        const timeoutId = setTimeout(() => controller.abort(), 180000);
         try {
           const res = await planCreativeSiteBriefingFn({
             data: {
@@ -230,7 +230,7 @@ export function CreativeChatPanel() {
           briefing = res.briefing;
         } catch (serverErr: any) {
           if (controller.signal.aborted || serverErr?.name === "AbortError") {
-            throw new Error("Tempo limite de 90 segundos excedido ao elaborar o plano. Tente novamente.");
+            throw new Error("Tempo limite de 3 minutos excedido ao elaborar o plano. Tente novamente.");
           }
           throw serverErr;
         } finally {
@@ -258,7 +258,7 @@ export function CreativeChatPanel() {
         let aiExplanation = "";
         const clientApiKey = await getResolvedApiKeyHelper();
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 90000);
+        const timeoutId = setTimeout(() => controller.abort(), 180000);
         try {
           const res = await generateCreativeSiteFn({
             data: {
@@ -283,7 +283,7 @@ export function CreativeChatPanel() {
           }
         } catch (serverErr: any) {
           if (controller.signal.aborted || serverErr?.name === "AbortError") {
-            throw new Error("Tempo limite de 90 segundos excedido ao gerar o site. Tente novamente.");
+            throw new Error("Tempo limite de 3 minutos excedido ao gerar o site. Tente novamente.");
           }
           throw serverErr;
         } finally {
@@ -378,7 +378,7 @@ export function CreativeChatPanel() {
       const clientApiKey = await getResolvedApiKeyHelper();
 
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 90000);
+      const timeoutId = setTimeout(() => controller.abort(), 180000);
       try {
         const res = await generateCreativeSiteFn({
           data: {
@@ -400,7 +400,7 @@ export function CreativeChatPanel() {
         }
       } catch (serverErr: any) {
         if (controller.signal.aborted || serverErr?.name === "AbortError") {
-          throw new Error("Tempo limite de 90 segundos excedido ao gerar o site. Tente novamente.");
+          throw new Error("Tempo limite de 3 minutos excedido ao gerar o site. Tente novamente.");
         }
         throw serverErr;
       } finally {

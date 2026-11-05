@@ -80,6 +80,7 @@ import { SiteIdeationModal } from "@/components/prospecting/SiteIdeationModal";
 import {
   buildWhatsAppMessage,
   buildInstagramMessage,
+  extractDemoUrlFromCompany,
   COPY_TEMPLATES_UPDATED_EVENT,
 } from "@/modules/prospecting/copyTemplates";
 import { POPULAR_CNAES } from "@/modules/prospecting/cnaePresets";
@@ -90,7 +91,6 @@ import {
   getCanonicalNicheMeta,
   getVariantsForNiche,
   NICHE_GALLERIES,
-  getPairedCatalogForBusiness,
 } from "@/modules/prospecting/nichePresets";
 import {
   getProspectNicheCategory,
@@ -179,10 +179,10 @@ function isToday(value: string | null) {
   return date.toDateString() === now.toDateString();
 }
 
-function whatsappLink(company: ProspectedCompany) {
+function whatsappLink(company: ProspectedCompany, explicitDemoUrl?: string | null) {
   const phone = company.whatsapp ?? company.phone;
   if (!phone) return null;
-  const text = buildWhatsAppMessage(company);
+  const text = buildWhatsAppMessage(company, undefined, explicitDemoUrl);
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
 
@@ -196,8 +196,8 @@ function cleanInstagramHandle(ig?: string | null): string | null {
   return cleaned || null;
 }
 
-function buildInstagramPitch(company: ProspectedCompany) {
-  return buildInstagramMessage(company);
+function buildInstagramPitch(company: ProspectedCompany, explicitDemoUrl?: string | null) {
+  return buildInstagramMessage(company, undefined, explicitDemoUrl);
 }
 
 function ProspectingPage() {
@@ -595,29 +595,29 @@ function ProspectingPage() {
     const backfill = async () => {
       for (const company of companiesQuery.data!) {
         const notes = company.notes || "";
-        const urlMatch = notes.match(/https?:\/\/[^\s)]+/);
+        const validDemoUrl = extractDemoUrlFromCompany(company);
         const hasId = notes.includes("(id:");
-        if (urlMatch && !hasId) {
-          const url = urlMatch[0];
-          const slugMatch = url.match(/\/p\/([^/?#\s)]+)/);
-          const slug = slugMatch ? slugMatch[1].toLowerCase() : null;
-          const matched = (slug ? demoPagesBySlug.get(slug) : null) || demoPagesByName.get(company.name.toLowerCase().trim());
-          if (matched) {
-            const modelVariant = (matched.social_links as any)?.model_variant || "Design Pro";
-            const clean = notes
-              .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
-              .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
-              .replace(/\n\s*\n/g, "\n")
-              .trim();
-            const updatedNotes = clean
-              ? `${clean}\nDemo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`
-              : `Demo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`;
-            try {
-              await ProspectingService.updateNotes(company.id, updatedNotes);
-              hasUpdates = true;
-            } catch (e) {
-              console.warn("Aviso no auto-backfill de demo:", e);
-            }
+        const slugMatch = validDemoUrl ? validDemoUrl.match(/\/p\/([^/?#\s)\]]+)/) : null;
+        const slug = slugMatch ? slugMatch[1].toLowerCase() : null;
+        const matched =
+          (slug ? demoPagesBySlug.get(slug) : null) ||
+          demoPagesByName.get(company.name.toLowerCase().trim());
+
+        if (matched && (!validDemoUrl || !hasId)) {
+          const modelVariant = (matched.social_links as any)?.model_variant || "Design Pro";
+          const clean = notes
+            .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+            .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
+            .replace(/\n\s*\n/g, "\n")
+            .trim();
+          const updatedNotes = clean
+            ? `${clean}\nDemo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`
+            : `Demo: https://eialink.com.br/p/${matched.slug} [Modelo: ${modelVariant}] (id:${matched.id})`;
+          try {
+            await ProspectingService.updateNotes(company.id, updatedNotes);
+            hasUpdates = true;
+          } catch (e) {
+            console.warn("Aviso no auto-backfill de demo:", e);
           }
         }
 
@@ -891,27 +891,24 @@ function ProspectingPage() {
     let verifiedReviewsCount = company.reviews_count;
     let compatibleImages: Array<{ url: string; label: string; role: string }> = [];
 
-    // Se o lead ainda tiver menos de 2 fotos (extraídas via Apify), busca imagens de apoio do nicho
-    if (realPhotos.length < 2) {
-      setFeedback(`🔍 Selecionando imagens compatíveis em alta resolução para ${company.name}...`);
-      try {
-        const imgTask = searchCompatibleBusinessImagesFn({
-          data: {
-            niche: nicheText,
-            businessName: company.name,
-            count: 8,
-          },
-        }).catch((err) => {
-          console.warn("[Prospeccao] Fallback de imagens ignorado:", err);
-          return [];
-        });
+    // Sempre busca o acervo de imagens compatíveis rotuladas semanticamente em alta resolução
+    try {
+      const imgTask = searchCompatibleBusinessImagesFn({
+        data: {
+          niche: nicheText,
+          businessName: company.name,
+          count: 8,
+        },
+      }).catch((err) => {
+        console.warn("[Prospeccao] Fallback de imagens ignorado:", err);
+        return [];
+      });
 
-        compatibleImages = (await Promise.race([
-          imgTask,
-          new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 1500)),
-        ])) || [];
-      } catch (_) {}
-    }
+      compatibleImages = (await Promise.race([
+        imgTask,
+        new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 1500)),
+      ])) || [];
+    } catch (_) {}
 
     // Se o lead possui Instagram e ainda tem poucas fotos, dispara enriquecimento em background
     // (Garante que a próxima geração terá as 12 fotos completas SEM travar a criação imediata agora)
@@ -976,24 +973,19 @@ function ProspectingPage() {
       },
     ];
 
-    // Rotação determinística de arquétipo para garantir que "Trocar Modelo" NUNCA repita o layout anterior
+    // Sorteio criativo com memória anti-repetição para que cada geração ou "Trocar Modelo" traga um arquétipo diferente
     const archetypeMemoryKey = `eialink_last_archetype_${company.id}`;
     const prevIdxRaw =
       typeof window !== "undefined" ? window.sessionStorage.getItem(archetypeMemoryKey) : null;
     const prevIdx = prevIdxRaw !== null ? Number(prevIdxRaw) : -1;
-    const nextIdx =
-      prevIdx >= 0 && !Number.isNaN(prevIdx)
-        ? (prevIdx + 1) % DESIGN_ARCHETYPES.length
-        : Math.abs(
-            company.name.split("").reduce((acc, ch, idx) => acc + ch.charCodeAt(0) * (idx + 1), 0),
-          ) % DESIGN_ARCHETYPES.length;
+    let nextIdx = Math.floor(Math.random() * DESIGN_ARCHETYPES.length);
+    if (nextIdx === prevIdx && DESIGN_ARCHETYPES.length > 1) {
+      nextIdx = (prevIdx + 1) % DESIGN_ARCHETYPES.length;
+    }
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(archetypeMemoryKey, String(nextIdx));
     }
     const chosenArchetype = DESIGN_ARCHETYPES[nextIdx];
-
-    // Catálogo de produtos/serviços pareados 1:1 com a foto exata de cada card
-    const pairedCatalog = getPairedCatalogForBusiness(nicheText, company.name);
 
     // Prompt estruturado em 2 etapas: Planejamento / Direção de Arte + Execução Técnica
     const briefingPrompt = `DIREÇÃO DE ARTE & CRIAÇÃO EXCLUSIVA DE SITE WEB:
@@ -1004,47 +996,38 @@ ${verifiedAddress ? `Endereço Verificado (usar no Mapa e rotas GPS): "${verifie
 ${cleanPhone ? `WhatsApp Oficial (usar no botão pulsante e CTAs): "${cleanPhone}"` : ""}
 ${verifiedRating ? `Avaliação Google Maps: ${verifiedRating} estrelas (${verifiedReviewsCount || 90} avaliações reais)` : ""}
 
-${pairedCatalog.length > 0 ? `CATÁLOGO OFICIAL DE PRODUTOS / SERVIÇOS COM FOTOS PAREADAS 1:1 (OBRIGATÓRIO USAR A FOTO EXATA DE CADA CARD):
-${pairedCatalog
-  .map(
-    (item, idx) =>
-      `- Card ${idx + 1}: "${item.name}" (${item.category} — R$ ${item.price.toFixed(2).replace(".", ",")}${item.duration_minutes > 0 ? ` • ${item.duration_minutes}min` : ""})
-  * Descrição Oficial: ${item.description}
-  * O Que a Foto Mostra: ${item.photo_label}
-  * FOTO OBRIGATÓRIA DESTE CARD (usar exatamente no src="..." deste card): ${item.image_url}`,
-  )
-  .join("\n")}
-
-REGRA INVIOLÁVEL DOS CARDS DE PRODUTOS E SERVIÇOS:
-- Cada card listado acima JÁ POSSUI sua foto verificada pareada 1:1.
-- Ao montar a seção de produtos/serviços/tratamentos, use EXATAMENTE o título, a descrição e a "FOTO OBRIGATÓRIA DESTE CARD" correspondente!
-- NUNCA inverta ou troque as fotos entre os cards e NUNCA coloque uma foto que não corresponda à descrição do card!` : ""}
-
 ${realPhotos.length > 0 ? `ACERVO DE FOTOS REAIS DO CLIENTE (GOOGLE MAPS & INSTAGRAM FEED):
 Você possui ${realPhotos.length} fotos autênticas reais tiradas no estabelecimento ou postadas no Instagram do cliente!
-FOTOS REAIS PARA HERO, FACHADA, NOSSO ESPAÇO E GALERIA REAL:
-${realPhotos.slice(0, 12).map((url, i) => `- Foto Real do Cliente ${i + 1}: ${url}`).join("\n")}
+PRIORIDADE MÁXIMA E OBRIGATÓRIA (DISTRIBUIR NO HERO, AMBIENTE, SERVIÇOS E GALERIA):
+${realPhotos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}
 
 DIRETRIZ DE USO DE FOTOS REAIS:
-- Use estas fotos reais do cliente com prioridade no HERO (capa principal), na seção "Nosso Espaço / Ambiente / Estrutura" e na Galeria Real.
-- Nos cards individuais de Produtos/Serviços, use as FOTOS OBRIGATÓRIAS PAREADAS 1:1 do Catálogo Oficial acima (para garantir que a foto de cada card mostre exatamente o produto/serviço descrito) ou ícones Lucide elegantes.
+- PRIORIDADE MÁXIMA: Use estas fotos reais nos atributos src="..." de todas as seções principais.
+- Se houver 4 ou mais fotos reais, O SITE DEVE SER COMPOSTO MAJORITARIAMENTE POR ESTAS FOTOS REAIS autênticas!
+- Inspire os títulos e descrições dos serviços/pratos diretamente no que as fotos reais mostram.
 - REGRA DO PROFISSIONAL (APRESENTAÇÃO / QUEM SOMOS / BIO):
   * Se houver foto real do profissional/cliente no acervo: USE ESSA FOTO REAL!
   * Se NÃO houver foto real confirmada da pessoa: É TERMINANTEMENTE PROIBIDO colocar foto de uma pessoa aleatória de banco de imagens para fingir que é o especialista/dono! NUNCA coloque o rosto de um modelo desconhecido no site do cliente!
   * Em vez de modelo fake, use a foto real do ambiente/fachada do local OU crie um card de autoridade editorial elegante sem foto com selos de credibilidade Lucide (<Award />, <GraduationCap />, <ShieldCheck />), anos de mercado e a nota real do Google.` : ""}
 
-${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS ROTULADAS POR PAPEL SEMÂNTICO:
+${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:
 ${compatibleImages.map((img, i) => `- Imagem ${i + 1} [Papel: ${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
 
 DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXTO):
 1. CORRESPONDÊNCIA ESTRITA ENTRE IMAGEM E DESCRIÇÃO:
-   - A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card (use a FOTO OBRIGATÓRIA DESTE CARD do Catálogo Oficial acima).
+   - A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card (olhe o rótulo descritivo '[Papel - Rótulo]' de cada imagem acima!).
    - Se o card for sobre "Churrasco", "Picanha" ou "Carnes Nobres", a foto DEVE OBRIGATORIAMENTE ser de carne/churrasco! NUNCA use foto de peixe, frango com verduras ou salada para ilustrar churrasco!
    - Se o serviço for "Atendimento Individual", "Psicoterapia 1 a 1" ou "Consulta Exclusiva", a foto DEVE mostrar APENAS um ambiente acolhedor individual (poltrona, consultório) ou atendimento 1 para 1. É TERMINANTEMENTE PROIBIDO colocar foto de plateia, teatro, auditório, palestra ou multidão para ilustrar atendimento individual!
-2. CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA):
-   - Se você quiser incluir um serviço ou diferencial extra para o qual NÃO há foto pareada disponível, NÃO FORCE UMA FOTO ERRADA! Crie um card de alto padrão sem foto, usando um ícone refinado do Lucide, badge de categoria e descrição persuasiva.
-3. PROIBIÇÃO TOTAL DE ROSTO DE MODELO DESCONHECIDO: NUNCA use foto de pessoa desconhecida de banco de imagens na apresentação do profissional!
-4. NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404) e NUNCA repita a mesma foto em dois cards.` : ""}
+   - Se o negócio for Barbearia, use fotos masculinas/barba. Se for Odontologia, use sorrisos/dentista. Se for Hamburgueria, use burger. Se for Pizzaria, use pizza.
+2. ENGENHARIA INVERTIDA (O CONTEÚDO SEGUE O RÓTULO DA FOTO):
+   - NUNCA invente um prato ou serviço no texto para depois forçar uma foto que não combina.
+   - Olhe a lista de fotos disponíveis e seus rótulos primeiro: crie o título e a descrição do card especificamente sobre o que a foto mostra!
+3. CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA):
+   - Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
+   - Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva.
+4. PROIBIÇÃO TOTAL DE ROSTO DE MODELO DESCONHECIDO: NUNCA use foto de pessoa desconhecida de banco de imagens na apresentação do profissional! Se não houver foto real da pessoa, use foto real do ambiente/fachada ou card de autoridade sem foto de pessoa com selos Lucide (Award, GraduationCap, ShieldCheck).
+5. NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
+6. NUNCA repita a mesma foto em dois cards diferentes.` : ""}
 
 BLUEPRINT ARQUITETÔNICO COMPLETO DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR DE PONTA A PONTA):
 - Estilo Arquitetônico Global: ${chosenArchetype.style}
@@ -1314,7 +1297,6 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
       setFeedback(`🎨 Agente IA do Estúdio Criativo reinventando ${page.display_name}...`);
 
       const nicheRaw = (page.social_links as any)?.niche || "Serviços";
-      const pairedCatalog = getPairedCatalogForBusiness(nicheRaw, page.display_name);
       const existingGooglePhotos: string[] = Array.isArray((page.social_links as any)?.google_photos)
         ? (page.social_links as any).google_photos
         : [];
@@ -1323,18 +1305,8 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
 Crie uma proposta de design 100% NOVA, DIFERENTE e SURPREENDENTE para a página "${page.display_name}" (${nicheRaw}).
 DIRETRIZES CRÍTICAS DE INOVAÇÃO:
 - NÃO repita o layout ou organização anterior.
-- Alterne o formato e a composição: experimente hero em Split, Bento Grid com cards de vidro, Editorial Luxury ou Glassmorphism translúcido de alto padrão.
+- Alterne o formato e a composição: experimente hero em Split, Bento Grid com cards de vidro, Editorial Luxury, Glassmorphism translúcido com luzes suaves ou Dark Luxury minimalista de alto padrão.
 - Varie a tipografia, a paleta cromática, as ordens e diagramação dos blocos para criar uma experiência completamente nova e impactante.
-${
-  pairedCatalog.length > 0
-    ? `- CATÁLOGO OFICIAL DE PRODUTOS / SERVIÇOS COM FOTOS PAREADAS 1:1 (OBRIGATÓRIO USAR A FOTO EXATA DE CADA CARD):\n${pairedCatalog
-        .map(
-          (item, idx) =>
-            `  * Card ${idx + 1}: "${item.name}" (${item.category} — R$ ${item.price.toFixed(2).replace(".", ",")}) | Descrição: ${item.description} | FOTO OBRIGATÓRIA DESTE CARD: ${item.image_url}`,
-        )
-        .join("\n")}`
-    : ""
-}
 - Mantenha todos os dados de contato reais e funcionais: WhatsApp (${cleanPhone}), endereço (${(page.social_links as any)?.address || "Local"}) e avaliação Google (${(page.social_links as any)?.google_rating || 4.9} estrelas).
 - Retorne apenas o código HTML autocontido com Tailwind CSS e Lucide Icons.`;
 
@@ -1413,7 +1385,8 @@ ${
       return;
     }
 
-    const pitch = buildInstagramPitch(company);
+    const demo = parseDemoInfo(company);
+    const pitch = buildInstagramPitch(company, demo.url);
     try {
       await navigator.clipboard.writeText(pitch);
       setCopiedInstagramCompanyId(company.id);
@@ -1432,22 +1405,8 @@ ${
     const notes = typeof input === "string" ? input : (input.notes || "");
     const company = typeof input === "object" ? input : null;
 
-    // 1. URL da demo nas notas ou website:
-    // ATENÇÃO: NUNCA deve capturar links soltos (como [Fotos: https://...], Instagram ou links externos de bio/wa.me)!
-    // Apenas links explicitamente prefixados com "Demo: https://..." ou links reais de páginas do EIA Link (/p/ ou *.eialink.com.br).
-    let url: string | null = null;
-    const explicitDemoMatch = notes.match(/Demo:\s*(https?:\/\/[^\s)\]]+)/i);
-    if (explicitDemoMatch) {
-      url = explicitDemoMatch[1];
-    } else {
-      const eialinkMatch =
-        notes.match(/https?:\/\/(?:[a-z0-9-]+\.)?eialink\.com\.br\/(?:p\/)?[^\s)\]]+/i) ||
-        notes.match(/\/p\/[a-z0-9-]+/i) ||
-        (company?.website && company.website.includes("eialink.com.br") ? company.website : null);
-      if (eialinkMatch) {
-        url = typeof eialinkMatch === "string" ? eialinkMatch : eialinkMatch[0];
-      }
-    }
+    // 1. Extrai URL de demo com segurança total (nunca captura [Fotos: https://...])
+    let url: string | null = extractDemoUrlFromCompany(input);
 
     // 2. Extrai slug da URL se existir (/p/slug ou subdominio.eialink.com.br)
     const slugMatch = url ? url.match(/\/p\/([^/?#\s)\]]+)/) : null;
@@ -1456,16 +1415,27 @@ ${
       ? slugMatch[1].toLowerCase().trim()
       : (subMatch && subMatch[1] !== "www" && subMatch[1] !== "app" ? subMatch[1].toLowerCase().trim() : null);
 
-    // 3. ID da página: a partir de (id:uuid), pelo slug em demoPagesBySlug
+    // 3. ID da página: a partir de (id:uuid), pelo slug em demoPagesBySlug ou pelo nome exato em demoPagesByName
     const idMatch = notes.match(/\(id:([a-f0-9-]+)\)/i);
     let pageId = idMatch ? idMatch[1] : null;
 
     let matchedPage: OwnedPage | undefined;
     if (pageId) {
       matchedPage = demoPages.find((p) => p.id === pageId);
-    } else if (slug) {
+    }
+    if (!matchedPage && slug) {
       matchedPage = demoPagesBySlug.get(slug);
-      if (matchedPage) pageId = matchedPage.id;
+    }
+    if (!matchedPage && company?.name) {
+      matchedPage = demoPagesByName.get(company.name.toLowerCase().trim());
+    }
+
+    if (matchedPage) {
+      if (!pageId) pageId = matchedPage.id;
+      if (!slug) slug = matchedPage.slug;
+      if (!url && matchedPage.slug) {
+        url = `https://eialink.com.br/p/${matchedPage.slug}`;
+      }
     }
 
     // 4. Modelo da página
@@ -1820,6 +1790,20 @@ ${
                           </div>
                         </HoverCardContent>
                       </HoverCard>
+                      <button
+                        type="button"
+                        onClick={() => void handleRegenerateDemo(company)}
+                        disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-2.5 py-2 sm:py-1.5 text-xs font-semibold transition-all w-full sm:w-auto cursor-pointer disabled:opacity-60"
+                        title="Gerar um novo modelo e layout para esta demonstração"
+                      >
+                        {regeneratingPageId === company.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <RotateCcw className="h-3.5 w-3.5" />
+                        )}
+                        <span>{regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}</span>
+                      </button>
                       {demo.pageId && (
                         <button
                           type="button"
@@ -1894,9 +1878,19 @@ ${
                     );
                   })()}
 
-                  {whatsappLink(company) ? (
+                  {!demo.url ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/40 bg-muted/20 text-muted-foreground/50 px-2.5 py-2 sm:py-1.5 text-xs font-medium w-full sm:w-auto cursor-not-allowed opacity-60"
+                      title="Gere o site demonstrativo primeiro para liberar o envio no WhatsApp"
+                    >
+                      <MessageCircle className="h-3.5 w-3.5 text-current" />
+                      <span>WhatsApp</span>
+                    </button>
+                  ) : whatsappLink(company, demo.url) ? (
                     <a
-                      href={whatsappLink(company)!}
+                      href={whatsappLink(company, demo.url)!}
                       target="_blank"
                       rel="noreferrer"
                       onClick={(e) => {
@@ -3542,6 +3536,20 @@ ${
                                 <ExternalLink className="h-3.5 w-3.5" />
                                 <span>Ver Demo</span>
                               </a>
+                              <button
+                                type="button"
+                                onClick={() => void handleRegenerateDemo(company)}
+                                disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-3 py-2 text-xs font-semibold transition-all cursor-pointer disabled:opacity-60"
+                                title="Trocar modelo da demonstração"
+                              >
+                                {regeneratingPageId === company.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="h-3.5 w-3.5" />
+                                )}
+                                <span>{regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}</span>
+                              </button>
                               {demo.pageId && (
                                 <button
                                   type="button"
@@ -3583,30 +3591,47 @@ ${
                       );
                     })()}
 
-                    {whatsappLink(company) ? (
-                      <a
-                        href={whatsappLink(company)!}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                          company.status === "contatado"
-                            ? "border border-amber-500/40 bg-amber-500/15 text-amber-400"
-                            : "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
-                        }`}
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                        <span>{company.status === "contatado" ? "Follow-up" : "WhatsApp"}</span>
-                      </a>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => setWhatsModalCompany(company)}
-                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-muted-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400"
-                      >
-                        <MessageCircle className="h-3.5 w-3.5" />
-                        <span>WhatsApp</span>
-                      </button>
-                    )}
+                    {(() => {
+                      const demo = parseDemoInfo(company);
+                      if (!demo.url) {
+                        return (
+                          <button
+                            type="button"
+                            disabled
+                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/40 bg-muted/20 text-muted-foreground/50 px-3 py-2 text-xs font-medium cursor-not-allowed opacity-60"
+                            title="Gere o site demonstrativo primeiro para liberar o envio no WhatsApp"
+                          >
+                            <MessageCircle className="h-3.5 w-3.5" />
+                            <span>WhatsApp</span>
+                          </button>
+                        );
+                      }
+                      const waUrl = whatsappLink(company, demo.url);
+                      return waUrl ? (
+                        <a
+                          href={waUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                            company.status === "contatado"
+                              ? "border border-amber-500/40 bg-amber-500/15 text-amber-400"
+                              : "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
+                          }`}
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          <span>{company.status === "contatado" ? "Follow-up" : "WhatsApp"}</span>
+                        </a>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setWhatsModalCompany(company)}
+                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-muted-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          <span>WhatsApp</span>
+                        </button>
+                      );
+                    })()}
 
                     <button
                       type="button"
@@ -3895,11 +3920,11 @@ ${
                                     href={demo.url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10 transition-all"
+                                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/35 bg-emerald-500/10 text-emerald-400 px-2.5 py-1.5 text-xs font-semibold hover:bg-emerald-500/20 transition-all"
                                     title="Ver Página Pro no ar"
                                   >
-                                    <ExternalLink className="h-3.5 w-3.5 text-muted-foreground/70" />
-                                    <span>Ver</span>
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                    <span>Ver Demo</span>
                                   </a>
                                 </HoverCardTrigger>
                                 <HoverCardContent align="end" className="w-80 border-border bg-popover text-popover-foreground backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
@@ -3932,6 +3957,20 @@ ${
                                   </div>
                                 </HoverCardContent>
                               </HoverCard>
+                              <button
+                                type="button"
+                                onClick={() => void handleRegenerateDemo(company)}
+                                disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer disabled:opacity-60"
+                                title="Gerar um novo modelo e layout para esta demonstração"
+                              >
+                                {regeneratingPageId === company.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <RotateCcw className="h-3.5 w-3.5" />
+                                )}
+                                <span>{regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}</span>
+                              </button>
                             </>
                           ) : (
                             (() => {
@@ -4022,9 +4061,19 @@ ${
                             );
                           })()}
 
-                          {whatsappLink(company) ? (
+                          {!demo.url ? (
+                            <button
+                              type="button"
+                              disabled
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 bg-muted/20 text-muted-foreground/50 px-2.5 py-1.5 text-xs font-medium cursor-not-allowed opacity-60"
+                              title="Gere o site demonstrativo primeiro para liberar o envio no WhatsApp"
+                            >
+                              <MessageCircle className="h-3.5 w-3.5 text-current" />
+                              <span>WhatsApp</span>
+                            </button>
+                          ) : whatsappLink(company, demo.url) ? (
                             <a
-                              href={whatsappLink(company)!}
+                              href={whatsappLink(company, demo.url)!}
                               target="_blank"
                               rel="noreferrer"
                               onClick={(e) => {
@@ -4292,6 +4341,7 @@ ${
       {instaModalCompany && (
         <InstaApproachModal
           company={instaModalCompany}
+          demoUrl={parseDemoInfo(instaModalCompany).url}
           onClose={() => setInstaModalCompany(null)}
           onSuccess={() => {
             invalidate();
@@ -4303,6 +4353,7 @@ ${
       {whatsModalCompany && (
         <WhatsApproachModal
           company={whatsModalCompany}
+          demoUrl={parseDemoInfo(whatsModalCompany).url}
           onClose={() => setWhatsModalCompany(null)}
           onSuccess={() => {
             invalidate();
@@ -4322,6 +4373,7 @@ ${
 
       <ProspectAuditorModal
         company={activeAuditCompany}
+        demoUrl={activeAuditCompany ? parseDemoInfo(activeAuditCompany).url : null}
         isOpen={Boolean(activeAuditCompany)}
         onClose={() => setActiveAuditCompany(null)}
         onOpenConfig={() => {
@@ -4457,13 +4509,14 @@ function ActivityDialog({
 
 interface InstaApproachModalProps {
   company: ProspectedCompany;
+  demoUrl?: string | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-function InstaApproachModal({ company, onClose, onSuccess }: InstaApproachModalProps) {
+function InstaApproachModal({ company, demoUrl, onClose, onSuccess }: InstaApproachModalProps) {
   const [handle, setHandle] = useState(cleanInstagramHandle(company.instagram) || "");
-  const [pitch, setPitch] = useState(buildInstagramPitch(company));
+  const [pitch, setPitch] = useState(() => buildInstagramPitch(company, demoUrl));
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -4622,14 +4675,15 @@ function InstaApproachModal({ company, onClose, onSuccess }: InstaApproachModalP
 
 interface WhatsApproachModalProps {
   company: ProspectedCompany;
+  demoUrl?: string | null;
   onClose: () => void;
   onSuccess?: () => void;
 }
 
-function WhatsApproachModal({ company, onClose, onSuccess }: WhatsApproachModalProps) {
+function WhatsApproachModal({ company, demoUrl, onClose, onSuccess }: WhatsApproachModalProps) {
   const initialPhone = company.whatsapp || company.phone || "";
   const [phone, setPhone] = useState(initialPhone);
-  const [pitch, setPitch] = useState(() => buildWhatsAppMessage(company));
+  const [pitch, setPitch] = useState(() => buildWhatsAppMessage(company, undefined, demoUrl));
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);

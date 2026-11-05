@@ -286,7 +286,7 @@ export function ProspectingKanban({
                       const prevStatus = getPrevStatus(company.status);
                       const isBeingDragged = draggedId === company.id;
 
-                      const waText = buildWhatsAppMessage(company);
+                      const waText = buildWhatsAppMessage(company, undefined, demo.url);
                       const phone = company.whatsapp || company.phone;
                       const cleanPhone = phone?.replace(/\D/g, "");
                       const waHref = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waText)}` : null;
@@ -381,9 +381,20 @@ export function ProspectingKanban({
 
                           {/* Botões de Ação */}
                           <div className="space-y-1.5 pt-2.5 border-t border-border/50">
-                            {/* Linha 1: WhatsApp + Demo */}
+                            {/* Linha 1: WhatsApp (liberado apenas quando o site estiver pronto) + Demo */}
                             <div className="grid grid-cols-2 gap-1.5">
-                              {waHref ? (
+                              {!demo.url ? (
+                                <button
+                                  type="button"
+                                  disabled
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-muted/25 text-muted-foreground/50 border border-border/40 text-xs font-medium whitespace-nowrap cursor-not-allowed opacity-60"
+                                  title="Gere o site demonstrativo primeiro para liberar o envio no WhatsApp"
+                                >
+                                  <MessageCircle className="h-3.5 w-3.5 shrink-0" />
+                                  <span>WhatsApp</span>
+                                </button>
+                              ) : waHref ? (
                                 <a
                                   href={waHref}
                                   target="_blank"
@@ -447,6 +458,27 @@ export function ProspectingKanban({
                                 })()
                               )}
                             </div>
+
+                            {/* Botão Trocar Modelo visível diretamente quando a demo já está pronta */}
+                            {demo.url && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onRegenerateDemo(company);
+                                }}
+                                disabled={regeneratingPageId === company.id || creatingPageId === company.id}
+                                className="w-full inline-flex items-center justify-center gap-1.5 py-1.5 px-2.5 rounded-lg border border-purple-500/35 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 text-xs font-semibold transition-all whitespace-nowrap cursor-pointer disabled:opacity-60"
+                                title="Gerar um novo modelo e layout para esta página demonstrativa"
+                              >
+                                {regeneratingPageId === company.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0" />
+                                ) : (
+                                  <RotateCcw className="h-3.5 w-3.5 shrink-0" />
+                                )}
+                                <span>{regeneratingPageId === company.id ? "Trocando modelo..." : "Trocar Modelo"}</span>
+                              </button>
+                            )}
 
                             {/* Botão de Efetivar Venda (destaque comercial em linha própria sem amontoar) */}
                             {demo.url && demo.pageId && onOpenTransfer && (

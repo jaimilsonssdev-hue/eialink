@@ -139,14 +139,70 @@ export function interpolatePitch(
 }
 
 /**
+ * Extrai com segurança APENAS o link da página demonstrativa do EIA Link a partir das notas ou website do lead.
+ * NUNCA captura URLs de fotos ([Fotos: https://lh3.googleusercontent.com/...]), Unsplash ou Instagram.
+ */
+export function extractDemoUrlFromCompany(
+  input?: ProspectedCompany | { notes?: string | null; website?: string | null } | string | null,
+  explicitDemoUrl?: string | null,
+): string | null {
+  const isBlockedAssetUrl = (u: string) =>
+    /googleusercontent\.com|ggpht\.com|unsplash\.com|instagram\.com|cdninstagram\.com|fbcdn\.net|googleapis\.com/i.test(
+      u,
+    );
+
+  const cleanUrl = (u: string) => u.replace(/[)\]>.,;]+$/, "").trim();
+
+  if (explicitDemoUrl && explicitDemoUrl.trim()) {
+    const candidate = cleanUrl(explicitDemoUrl);
+    if (!isBlockedAssetUrl(candidate)) return candidate;
+  }
+
+  if (!input) return null;
+  const notes = typeof input === "string" ? input : input.notes || "";
+  const website = typeof input === "object" && input ? input.website || "" : "";
+
+  // Remove qualquer bloco [Fotos: ...] antes de buscar links para impedir falso positivo
+  const notesWithoutPhotos = notes.replace(/\[Fotos:\s*[^\]]*\]/gi, "");
+
+  // 1. Procura por "Demo: https://..." explícito
+  const explicitDemoMatch = notesWithoutPhotos.match(/Demo:\s*(https?:\/\/[^\s)\]]+)/i);
+  if (explicitDemoMatch && explicitDemoMatch[1]) {
+    const candidate = cleanUrl(explicitDemoMatch[1]);
+    if (!isBlockedAssetUrl(candidate)) return candidate;
+  }
+
+  // 2. Procura por URL oficial do EIA Link (/p/slug ou subdomínio eialink.com.br)
+  const eialinkMatch = notesWithoutPhotos.match(
+    /https?:\/\/(?:[a-z0-9-]+\.)?eialink\.com\.br\/(?:p\/)?[^\s)\]]+/i,
+  );
+  if (eialinkMatch && eialinkMatch[0]) {
+    return cleanUrl(eialinkMatch[0]);
+  }
+
+  // 3. Procura caminho relativo /p/slug
+  const relativeMatch = notesWithoutPhotos.match(/\/p\/([a-z0-9-]+)/i);
+  if (relativeMatch && relativeMatch[1]) {
+    return `https://eialink.com.br/p/${relativeMatch[1].toLowerCase().trim()}`;
+  }
+
+  // 4. Verifica campo website se for do domínio eialink.com.br
+  if (website && /eialink\.com\.br/i.test(website)) {
+    return cleanUrl(website);
+  }
+
+  return null;
+}
+
+/**
  * Constrói a mensagem para envio no WhatsApp para uma empresa prospectada.
  */
 export function buildWhatsAppMessage(
   company: ProspectedCompany,
   customTemplate?: string,
+  explicitDemoUrl?: string | null,
 ): string {
-  const matchDemo = company.notes?.match(/https?:\/\/[^\s)]+/);
-  const demoUrl = matchDemo ? matchDemo[0] : null;
+  const demoUrl = extractDemoUrlFromCompany(company, explicitDemoUrl);
 
   const modelMatch = company.notes?.match(/\[Modelo:\s*([^\]]+)\]/i);
   const modelVariant = modelMatch ? modelMatch[1] : "Design Pro";
@@ -173,9 +229,9 @@ export function buildWhatsAppMessage(
 export function buildInstagramMessage(
   company: ProspectedCompany,
   customTemplate?: string,
+  explicitDemoUrl?: string | null,
 ): string {
-  const matchDemo = company.notes?.match(/https?:\/\/[^\s)]+/);
-  const demoUrl = matchDemo ? matchDemo[0] : null;
+  const demoUrl = extractDemoUrlFromCompany(company, explicitDemoUrl);
 
   const modelMatch = company.notes?.match(/\[Modelo:\s*([^\]]+)\]/i);
   const modelVariant = modelMatch ? modelMatch[1] : "Design Pro";

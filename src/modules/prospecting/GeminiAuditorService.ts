@@ -1,6 +1,7 @@
 import type { ProspectedCompany } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeGeminiGateway, requestGemini } from "@/modules/ai/gemini-gateway";
+import { extractDemoUrlFromCompany } from "./copyTemplates";
 
 export interface CompanyAuditResult {
   companyName: string;
@@ -110,7 +111,7 @@ export function generateHeuristicAudit(
   const reviews = company.reviews_count ?? 0;
   const hasWebsite = Boolean(company.has_website && !company.website?.includes("wa.me"));
 
-  const matchDemo = demoUrl || company.notes?.match(/https?:\/\/[^\s)]+/)?.[0] || null;
+  const matchDemo = extractDemoUrlFromCompany(company, demoUrl);
 
   const strengths: string[] = [];
   const vulnerabilities: string[] = [];
@@ -200,7 +201,7 @@ export async function auditCompany(
   demoUrl?: string,
 ): Promise<CompanyAuditResult> {
   const apiKey = getSavedGeminiKey();
-  const matchDemo = demoUrl || company.notes?.match(/https?:\/\/[^\s)]+/)?.[0] || null;
+  const matchDemo = extractDemoUrlFromCompany(company, demoUrl);
 
   const prompt = `Você é um Consultor Especialista em Crescimento de Negócios Locais e Auditor de Presença Digital (AI SDR).
 Sua missão é analisar os dados reais de uma empresa extraídos do Google Maps e gerar um mini-diagnóstico consultivo, focado em ajudar o dono do negócio a faturar mais e parar de perder clientes para a concorrência.

@@ -83,7 +83,15 @@ import {
   COPY_TEMPLATES_UPDATED_EVENT,
 } from "@/modules/prospecting/copyTemplates";
 import { POPULAR_CNAES } from "@/modules/prospecting/cnaePresets";
-import { NICHE_PRESETS_VARIANTS, detectNicheKey, CANONICAL_NICHES, getCanonicalNicheMeta, getVariantsForNiche, NICHE_GALLERIES } from "@/modules/prospecting/nichePresets";
+import {
+  NICHE_PRESETS_VARIANTS,
+  detectNicheKey,
+  CANONICAL_NICHES,
+  getCanonicalNicheMeta,
+  getVariantsForNiche,
+  NICHE_GALLERIES,
+  getPairedCatalogForBusiness,
+} from "@/modules/prospecting/nichePresets";
 import {
   getProspectNicheCategory,
   generateSpecializedProspectSiteFn,
@@ -968,7 +976,24 @@ function ProspectingPage() {
       },
     ];
 
-    const chosenArchetype = DESIGN_ARCHETYPES[Math.floor(Math.random() * DESIGN_ARCHETYPES.length)];
+    // Rotação determinística de arquétipo para garantir que "Trocar Modelo" NUNCA repita o layout anterior
+    const archetypeMemoryKey = `eialink_last_archetype_${company.id}`;
+    const prevIdxRaw =
+      typeof window !== "undefined" ? window.sessionStorage.getItem(archetypeMemoryKey) : null;
+    const prevIdx = prevIdxRaw !== null ? Number(prevIdxRaw) : -1;
+    const nextIdx =
+      prevIdx >= 0 && !Number.isNaN(prevIdx)
+        ? (prevIdx + 1) % DESIGN_ARCHETYPES.length
+        : Math.abs(
+            company.name.split("").reduce((acc, ch, idx) => acc + ch.charCodeAt(0) * (idx + 1), 0),
+          ) % DESIGN_ARCHETYPES.length;
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(archetypeMemoryKey, String(nextIdx));
+    }
+    const chosenArchetype = DESIGN_ARCHETYPES[nextIdx];
+
+    // Catálogo de produtos/serviços pareados 1:1 com a foto exata de cada card
+    const pairedCatalog = getPairedCatalogForBusiness(nicheText, company.name);
 
     // Prompt estruturado em 2 etapas: Planejamento / Direção de Arte + Execução Técnica
     const briefingPrompt = `DIREÇÃO DE ARTE & CRIAÇÃO EXCLUSIVA DE SITE WEB:
@@ -979,38 +1004,47 @@ ${verifiedAddress ? `Endereço Verificado (usar no Mapa e rotas GPS): "${verifie
 ${cleanPhone ? `WhatsApp Oficial (usar no botão pulsante e CTAs): "${cleanPhone}"` : ""}
 ${verifiedRating ? `Avaliação Google Maps: ${verifiedRating} estrelas (${verifiedReviewsCount || 90} avaliações reais)` : ""}
 
+${pairedCatalog.length > 0 ? `CATÁLOGO OFICIAL DE PRODUTOS / SERVIÇOS COM FOTOS PAREADAS 1:1 (OBRIGATÓRIO USAR A FOTO EXATA DE CADA CARD):
+${pairedCatalog
+  .map(
+    (item, idx) =>
+      `- Card ${idx + 1}: "${item.name}" (${item.category} — R$ ${item.price.toFixed(2).replace(".", ",")}${item.duration_minutes > 0 ? ` • ${item.duration_minutes}min` : ""})
+  * Descrição Oficial: ${item.description}
+  * O Que a Foto Mostra: ${item.photo_label}
+  * FOTO OBRIGATÓRIA DESTE CARD (usar exatamente no src="..." deste card): ${item.image_url}`,
+  )
+  .join("\n")}
+
+REGRA INVIOLÁVEL DOS CARDS DE PRODUTOS E SERVIÇOS:
+- Cada card listado acima JÁ POSSUI sua foto verificada pareada 1:1.
+- Ao montar a seção de produtos/serviços/tratamentos, use EXATAMENTE o título, a descrição e a "FOTO OBRIGATÓRIA DESTE CARD" correspondente!
+- NUNCA inverta ou troque as fotos entre os cards e NUNCA coloque uma foto que não corresponda à descrição do card!` : ""}
+
 ${realPhotos.length > 0 ? `ACERVO DE FOTOS REAIS DO CLIENTE (GOOGLE MAPS & INSTAGRAM FEED):
 Você possui ${realPhotos.length} fotos autênticas reais tiradas no estabelecimento ou postadas no Instagram do cliente!
-PRIORIDADE MÁXIMA E OBRIGATÓRIA (DISTRIBUIR NO HERO, AMBIENTE, SERVIÇOS E GALERIA):
-${realPhotos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}
+FOTOS REAIS PARA HERO, FACHADA, NOSSO ESPAÇO E GALERIA REAL:
+${realPhotos.slice(0, 12).map((url, i) => `- Foto Real do Cliente ${i + 1}: ${url}`).join("\n")}
 
 DIRETRIZ DE USO DE FOTOS REAIS:
-- PRIORIDADE MÁXIMA: Use estas fotos reais nos atributos src="..." de todas as seções principais.
-- Se houver 4 ou mais fotos reais, O SITE DEVE SER COMPOSTO MAJORITARIAMENTE POR ESTAS FOTOS REAIS autênticas!
-- Inspire os títulos e descrições dos serviços/pratos diretamente no que as fotos reais mostram.
+- Use estas fotos reais do cliente com prioridade no HERO (capa principal), na seção "Nosso Espaço / Ambiente / Estrutura" e na Galeria Real.
+- Nos cards individuais de Produtos/Serviços, use as FOTOS OBRIGATÓRIAS PAREADAS 1:1 do Catálogo Oficial acima (para garantir que a foto de cada card mostre exatamente o produto/serviço descrito) ou ícones Lucide elegantes.
 - REGRA DO PROFISSIONAL (APRESENTAÇÃO / QUEM SOMOS / BIO):
   * Se houver foto real do profissional/cliente no acervo: USE ESSA FOTO REAL!
   * Se NÃO houver foto real confirmada da pessoa: É TERMINANTEMENTE PROIBIDO colocar foto de uma pessoa aleatória de banco de imagens para fingir que é o especialista/dono! NUNCA coloque o rosto de um modelo desconhecido no site do cliente!
   * Em vez de modelo fake, use a foto real do ambiente/fachada do local OU crie um card de autoridade editorial elegante sem foto com selos de credibilidade Lucide (<Award />, <GraduationCap />, <ShieldCheck />), anos de mercado e a nota real do Google.` : ""}
 
-${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:
+${compatibleImages.length > 0 ? `BANCO DE IMAGENS COMPATÍVEIS ROTULADAS POR PAPEL SEMÂNTICO:
 ${compatibleImages.map((img, i) => `- Imagem ${i + 1} [Papel: ${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
 
 DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXTO):
 1. CORRESPONDÊNCIA ESTRITA ENTRE IMAGEM E DESCRIÇÃO:
-   - A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card.
+   - A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card (use a FOTO OBRIGATÓRIA DESTE CARD do Catálogo Oficial acima).
    - Se o card for sobre "Churrasco", "Picanha" ou "Carnes Nobres", a foto DEVE OBRIGATORIAMENTE ser de carne/churrasco! NUNCA use foto de peixe, frango com verduras ou salada para ilustrar churrasco!
    - Se o serviço for "Atendimento Individual", "Psicoterapia 1 a 1" ou "Consulta Exclusiva", a foto DEVE mostrar APENAS um ambiente acolhedor individual (poltrona, consultório) ou atendimento 1 para 1. É TERMINANTEMENTE PROIBIDO colocar foto de plateia, teatro, auditório, palestra ou multidão para ilustrar atendimento individual!
-   - Se o negócio for Barbearia, use fotos masculinas/barba. Se for Odontologia, use sorrisos/dentista. Se for Hamburgueria, use burger. Se for Pizzaria, use pizza.
-2. ENGENHARIA INVERTIDA (O CONTEÚDO SEGUE A FOTO):
-   - NUNCA invente um prato ou serviço no texto para depois forçar uma foto que não combina.
-   - Olhe a lista de fotos disponíveis e seus rótulos primeiro: crie o título e a descrição do card especificamente sobre o que a foto mostra!
-3. CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA):
-   - Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
-   - Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva.
-4. PROIBIÇÃO TOTAL DE ROSTO DE MODELO DESCONHECIDO: NUNCA use foto de pessoa desconhecida de banco de imagens na apresentação do profissional! Se não houver foto real da pessoa, use foto real do ambiente/fachada ou card de autoridade sem foto de pessoa com selos Lucide (Award, GraduationCap, ShieldCheck).
-5. NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404).
-6. NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09). Use as imagens autênticas listadas acima!` : ""}
+2. CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA):
+   - Se você quiser incluir um serviço ou diferencial extra para o qual NÃO há foto pareada disponível, NÃO FORCE UMA FOTO ERRADA! Crie um card de alto padrão sem foto, usando um ícone refinado do Lucide, badge de categoria e descrição persuasiva.
+3. PROIBIÇÃO TOTAL DE ROSTO DE MODELO DESCONHECIDO: NUNCA use foto de pessoa desconhecida de banco de imagens na apresentação do profissional!
+4. NUNCA invente URLs do Unsplash com IDs aleatórios que possam quebrar (erro 404) e NUNCA repita a mesma foto em dois cards.` : ""}
 
 BLUEPRINT ARQUITETÔNICO COMPLETO DEFINIDO PARA ESTE SITE (OBRIGATÓRIO SEGUIR DE PONTA A PONTA):
 - Estilo Arquitetônico Global: ${chosenArchetype.style}
@@ -1279,12 +1313,28 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
 
       setFeedback(`🎨 Agente IA do Estúdio Criativo reinventando ${page.display_name}...`);
 
+      const nicheRaw = (page.social_links as any)?.niche || "Serviços";
+      const pairedCatalog = getPairedCatalogForBusiness(nicheRaw, page.display_name);
+      const existingGooglePhotos: string[] = Array.isArray((page.social_links as any)?.google_photos)
+        ? (page.social_links as any).google_photos
+        : [];
+
       const promptReinvento = `REINVENTAR PROPOSTA DE DESIGN COMPLETA:
-Crie uma proposta de design 100% NOVA, DIFERENTE e SURPREENDENTE para a página "${page.display_name}" (${(page.social_links as any)?.niche || "Serviços"}).
+Crie uma proposta de design 100% NOVA, DIFERENTE e SURPREENDENTE para a página "${page.display_name}" (${nicheRaw}).
 DIRETRIZES CRÍTICAS DE INOVAÇÃO:
 - NÃO repita o layout ou organização anterior.
-- Alterne o formato e a composição: experimente hero em Split, Bento Grid com cards de vidro, Neobrutalismo pop com sombras duras de 4px, Glassmorphism translúcido com luzes neon ou Dark Luxury minimalista de alto padrão.
+- Alterne o formato e a composição: experimente hero em Split, Bento Grid com cards de vidro, Editorial Luxury ou Glassmorphism translúcido de alto padrão.
 - Varie a tipografia, a paleta cromática, as ordens e diagramação dos blocos para criar uma experiência completamente nova e impactante.
+${
+  pairedCatalog.length > 0
+    ? `- CATÁLOGO OFICIAL DE PRODUTOS / SERVIÇOS COM FOTOS PAREADAS 1:1 (OBRIGATÓRIO USAR A FOTO EXATA DE CADA CARD):\n${pairedCatalog
+        .map(
+          (item, idx) =>
+            `  * Card ${idx + 1}: "${item.name}" (${item.category} — R$ ${item.price.toFixed(2).replace(".", ",")}) | Descrição: ${item.description} | FOTO OBRIGATÓRIA DESTE CARD: ${item.image_url}`,
+        )
+        .join("\n")}`
+    : ""
+}
 - Mantenha todos os dados de contato reais e funcionais: WhatsApp (${cleanPhone}), endereço (${(page.social_links as any)?.address || "Local"}) e avaliação Google (${(page.social_links as any)?.google_rating || 4.9} estrelas).
 - Retorne apenas o código HTML autocontido com Tailwind CSS e Lucide Icons.`;
 
@@ -1296,7 +1346,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
           data: {
             briefingOrPrompt: promptReinvento,
             projectName: page.display_name,
-            niche: (page.social_links as any)?.niche || "Serviços",
+            niche: nicheRaw,
             city: (page.social_links as any)?.city || "Brasil",
             businessAddress: (page.social_links as any)?.address || undefined,
             businessWhatsapp: cleanPhone || undefined,
@@ -1304,6 +1354,7 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
             projectId: page.id,
             rating: (page.social_links as any)?.google_rating ? Number((page.social_links as any).google_rating) : 4.9,
             reviewsCount: (page.social_links as any)?.reviews_count ? Number((page.social_links as any).reviews_count) : 85,
+            photos: existingGooglePhotos.length > 0 ? existingGooglePhotos : undefined,
             isRegeneration: true,
             apiKey: getGeminiApiKey() || undefined,
             clientGeminiKey: getGeminiApiKey() || undefined,

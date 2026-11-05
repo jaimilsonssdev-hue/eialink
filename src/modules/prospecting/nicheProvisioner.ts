@@ -7,6 +7,8 @@
  * - Links reais amarrados (/agendar/{slug}, /cardapio/{slug}, /loja/{slug})
  */
 
+import { getPairedCatalogForBusiness } from "@/modules/prospecting/nichePresets";
+
 export type NicheCategoryType =
   "barber" | "healthcare" | "beauty" | "auto" | "food" | "shop" | "service" | "industry";
 
@@ -541,24 +543,39 @@ export async function provisionPlatformToolsForNiche(
 
   let servicesCreated = 0;
   let chatConfigured = false;
+  let dealCreated = false;
+  let loyaltyConfigured = false;
 
-  // 1. Provisiona Agenda Online no banco se for nicho de agendamento
-  if (config.isBooking) {
+  // Busca única dos metadados da página para evitar leituras duplicadas em série
+  let pageMeta: { user_id?: string; cover_url?: string | null; social_links?: Record<string, any> } | null = null;
+  try {
+    const { data } = await supabase
+      .from("bio_pages")
+      .select("user_id, cover_url, social_links")
+      .eq("id", pageId)
+      .maybeSingle();
+    pageMeta = data as any;
+  } catch (metaErr) {
+    console.warn("[NicheProvisioner] Aviso ao ler bio_pages:", metaErr);
+  }
+
+  // Seleciona os serviços específicos do sub-nicho (ex: psicologia, fisioterapia, estética facial)
+  // em vez de usar apenas os 4 serviços genéricos da macro-categoria
+  const pairedCatalog = getPairedCatalogForBusiness(niche, businessName);
+  const effectiveServices =
+    pairedCatalog.length > 0
+      ? pairedCatalog.map((item) => ({
+          name: item.name,
+          duration_minutes: item.duration_minutes > 0 ? item.duration_minutes : 45,
+          price: item.price,
+          description: item.description,
+        }))
+      : config.services;
+
+  // 1. Task de Agenda Online (configurações, horários e insert em lote dos serviços)
+  const bookingTask = async () => {
+    if (!config.isBooking) return;
     try {
-      // 1.1 booking_settings
-      await supabase.from("booking_settings").upsert(
-        {
-          bio_page_id: pageId,
-          active: true,
-          timezone: "America/Sao_Paulo",
-          min_notice_hours: 1,
-          max_days_ahead: 30,
-          updated_at: new Date().toISOString(),
-        },
-        { onConflict: "bio_page_id" },
-      );
-
-      // 1.2 booking_availability (Segunda a Sábado, 09h às 19h)
       const availabilityRows = [1, 2, 3, 4, 5, 6].map((weekday) => ({
         bio_page_id: pageId,
         weekday,
@@ -566,195 +583,197 @@ export async function provisionPlatformToolsForNiche(
         end_time: "19:00",
         active: true,
       }));
-      await supabase
-        .from("booking_availability")
-        .upsert(availabilityRows, { onConflict: "bio_page_id,weekday" });
 
-      // 1.3 booking_services (serviços com duração e preço)
-      const { data: existingServices } = await supabase
-        .from("booking_services")
-        .select("id, name")
-        .eq("bio_page_id", pageId);
+      const [, , existingRes] = await Promise.all([
+        supabase.from("booking_settings").upsert(
+          {
+            bio_page_id: pageId,
+            active: true,
+            timezone: "America/Sao_Paulo",
+            min_notice_hours: 1,
+            max_days_ahead: 30,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "bio_page_id" },
+        ),
+        supabase
+          .from("booking_availability")
+          .upsert(availabilityRows, { onConflict: "bio_page_id,weekday" }),
+        supabase.from("booking_services").select("id, name").eq("bio_page_id", pageId),
+      ]);
 
       const existingNames = new Set(
-        (existingServices || []).map((s: any) => String(s.name).trim().toLowerCase()),
+        (existingRes.data || []).map((s: any) => String(s.name).trim().toLowerCase()),
       );
 
-      let pos = 1;
-      for (const s of config.services) {
-        if (!existingNames.has(s.name.trim().toLowerCase())) {
-          await supabase.from("booking_services").insert({
-            bio_page_id: pageId,
-            name: s.name,
-            duration_minutes: s.duration_minutes,
-            price: s.price,
-            description: s.description,
-            position: pos,
-            active: true,
-          });
-          servicesCreated++;
-        }
-        pos++;
+      const rowsToInsert = effectiveServices
+        .map((s, idx) => ({
+          bio_page_id: pageId,
+          name: s.name,
+          duration_minutes: s.duration_minutes,
+          price: s.price,
+          description: s.description,
+          position: idx + 1,
+          active: true,
+        }))
+        .filter((row) => !existingNames.has(row.name.trim().toLowerCase()));
+
+      if (rowsToInsert.length > 0) {
+        await supabase.from("booking_services").insert(rowsToInsert);
+        servicesCreated = rowsToInsert.length;
       }
     } catch (bookingErr) {
       console.warn("[NicheProvisioner] Erro ao provisionar agenda:", bookingErr);
     }
-  }
+  };
 
-  // 2. Provisiona Oferta Real no Mural de Ofertas (daily_deals) se ainda não existir
-  let dealCreated = false;
-  try {
-    const { data: pageRow } = await supabase
-      .from("bio_pages")
-      .select("user_id, cover_url")
-      .eq("id", pageId)
-      .maybeSingle();
+  // 2. Task de Oferta Real no Mural de Ofertas (daily_deals)
+  const dealTask = async () => {
+    try {
+      if (!pageMeta?.user_id) return;
+      const { data: existingDeal } = await supabase
+        .from("daily_deals")
+        .select("id")
+        .eq("bio_page_id", pageId)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
 
-    const { data: existingDeal } = await supabase
-      .from("daily_deals")
-      .select("id")
-      .eq("bio_page_id", pageId)
-      .eq("is_active", true)
-      .limit(1)
-      .maybeSingle();
+      if (!existingDeal) {
+        const dealPreset = NICHE_DEAL_PRESETS[category] || NICHE_DEAL_PRESETS.service;
+        const now = new Date();
+        const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-    if (!existingDeal && pageRow?.user_id) {
-      const dealPreset = NICHE_DEAL_PRESETS[category] || NICHE_DEAL_PRESETS.service;
-      const now = new Date();
-      const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const { error: dealErr } = await supabase.from("daily_deals").insert({
+          bio_page_id: pageId,
+          user_id: pageMeta.user_id,
+          title: dealPreset.title(businessName),
+          description: dealPreset.description(businessName),
+          original_price: dealPreset.original_price,
+          deal_price: dealPreset.deal_price,
+          discount_badge: dealPreset.discount_badge,
+          image_url: pageMeta.cover_url || null,
+          city: city || "Teixeira de Freitas",
+          niche: niche || config.label,
+          is_active: true,
+          starts_at: now.toISOString(),
+          expires_at: expires.toISOString(),
+          max_claims: 30,
+          claims_count: 0,
+          clicks_count: 0,
+        });
 
-      const { error: dealErr } = await supabase.from("daily_deals").insert({
-        bio_page_id: pageId,
-        user_id: pageRow.user_id,
-        title: dealPreset.title(businessName),
-        description: dealPreset.description(businessName),
-        original_price: dealPreset.original_price,
-        deal_price: dealPreset.deal_price,
-        discount_badge: dealPreset.discount_badge,
-        image_url: pageRow.cover_url || null,
-        city: city || "Teixeira de Freitas",
-        niche: niche || config.label,
-        is_active: true,
-        starts_at: now.toISOString(),
-        expires_at: expires.toISOString(),
-        max_claims: 30,
-        claims_count: 0,
-        clicks_count: 0,
-      });
-
-      if (!dealErr) {
-        dealCreated = true;
-      } else {
-        console.warn("[NicheProvisioner] Aviso ao criar oferta do nicho:", dealErr);
+        if (!dealErr) {
+          dealCreated = true;
+        } else {
+          console.warn("[NicheProvisioner] Aviso ao criar oferta do nicho:", dealErr);
+        }
       }
+    } catch (dealCatch) {
+      console.warn("[NicheProvisioner] Exceção ao provisionar oferta:", dealCatch);
     }
-  } catch (dealCatch) {
-    console.warn("[NicheProvisioner] Exceção ao provisionar oferta:", dealCatch);
-  }
+  };
 
-  // 3. Provisiona Agente de Atendimento e Programa de Fidelidade nos metadados da página
-  let loyaltyConfigured = false;
-  try {
-    const { data: pageData } = await supabase
-      .from("bio_pages")
-      .select("social_links")
-      .eq("id", pageId)
-      .maybeSingle();
+  // 3. Task de Agente de Atendimento e Programa de Fidelidade nos metadados da página
+  const socialUpdateTask = async () => {
+    try {
+      const currentSocial = (pageMeta?.social_links as Record<string, any>) || {};
 
-    const currentSocial = (pageData?.social_links as Record<string, any>) || {};
+      const chatFlow = {
+        enabled: true,
+        assistantName: `${businessName} - Atendente`,
+        welcomeMessage: config.chatWelcome(businessName),
+        options: config.chatOptions.map((opt) => ({
+          label: opt.label,
+          action: opt.action,
+          url:
+            opt.action === "booking"
+              ? ctaUrl
+              : opt.action === "whatsapp" && whatsapp
+                ? `https://wa.me/55${whatsapp.replace(/\D/g, "")}`
+                : undefined,
+        })),
+        nicheCategory: category,
+        autoTriggerSeconds: 4,
+      };
 
-    const chatFlow = {
-      enabled: true,
-      assistantName: `${businessName} - Atendente`,
-      welcomeMessage: config.chatWelcome(businessName),
-      options: config.chatOptions.map((opt) => ({
-        label: opt.label,
-        action: opt.action,
-        url:
-          opt.action === "booking"
-            ? ctaUrl
-            : opt.action === "whatsapp" && whatsapp
-              ? `https://wa.me/55${whatsapp.replace(/\D/g, "")}`
-              : undefined,
-      })),
-      nicheCategory: category,
-      autoTriggerSeconds: 4,
-    };
+      const loyaltySettings = currentSocial.loyalty_settings || {
+        businessPageId: pageId,
+        isActive: true,
+        pointsRatio: 1,
+        pointsExpirationDays: 180,
+        allowThermalPrint: true,
+        rewards: NICHE_LOYALTY_REWARDS[category] || NICHE_LOYALTY_REWARDS.service,
+        tiers: [
+          { name: "Bronze", minPoints: 0, perk: "Acesso ao catálogo de recompensas", color: "#cd7f32" },
+          { name: "Prata", minPoints: 150, perk: "5% de bônus em todos os pontos acumulados", color: "#94a3b8" },
+          { name: "Ouro", minPoints: 400, perk: "Atendimento ou mimo de cortesia em toda visita", color: "#f59e0b" },
+          { name: "Diamante", minPoints: 1000, perk: "Atendimento VIP exclusivo e prioritário", color: "#38bdf8" },
+        ],
+        missions: [
+          {
+            id: "mis-1",
+            title: "Avaliação 5 Estrelas no Google",
+            description: `Avalie o atendimento da ${businessName} no Google Maps e ganhe 30 pontos na hora.`,
+            pointsReward: 30,
+            actionType: "google_review",
+            badge: "⭐ Avaliação",
+          },
+          {
+            id: "mis-2",
+            title: "Post nos Stories marcando nosso @",
+            description: `Poste um Story e marque o Instagram oficial da ${businessName} para ganhar 50 pontos.`,
+            pointsReward: 50,
+            actionType: "instagram_story",
+            badge: "📸 Instagram",
+          },
+          {
+            id: "mis-3",
+            title: "Visita em Dias Especiais",
+            description: "Agende ou consuma às terças ou quartas-feiras e ganhe pontos adicionais.",
+            pointsReward: 20,
+            actionType: "weekday_visit",
+            badge: "⚡ Terça & Quarta",
+          },
+        ],
+        updatedAt: new Date().toISOString(),
+      };
 
-    const loyaltySettings = currentSocial.loyalty_settings || {
-      businessPageId: pageId,
-      isActive: true,
-      pointsRatio: 1,
-      pointsExpirationDays: 180,
-      allowThermalPrint: true,
-      rewards: NICHE_LOYALTY_REWARDS[category] || NICHE_LOYALTY_REWARDS.service,
-      tiers: [
-        { name: "Bronze", minPoints: 0, perk: "Acesso ao catálogo de recompensas", color: "#cd7f32" },
-        { name: "Prata", minPoints: 150, perk: "5% de bônus em todos os pontos acumulados", color: "#94a3b8" },
-        { name: "Ouro", minPoints: 400, perk: "Atendimento ou mimo de cortesia em toda visita", color: "#f59e0b" },
-        { name: "Diamante", minPoints: 1000, perk: "Atendimento VIP exclusivo e prioritário", color: "#38bdf8" },
-      ],
-      missions: [
-        {
-          id: "mis-1",
-          title: "Avaliação 5 Estrelas no Google",
-          description: `Avalie o atendimento da ${businessName} no Google Maps e ganhe 30 pontos na hora.`,
-          pointsReward: 30,
-          actionType: "google_review",
-          badge: "⭐ Avaliação",
-        },
-        {
-          id: "mis-2",
-          title: "Post nos Stories marcando nosso @",
-          description: `Poste um Story e marque o Instagram oficial da ${businessName} para ganhar 50 pontos.`,
-          pointsReward: 50,
-          actionType: "instagram_story",
-          badge: "📸 Instagram",
-        },
-        {
-          id: "mis-3",
-          title: "Visita em Dias Especiais",
-          description: "Agende ou consuma às terças ou quartas-feiras e ganhe pontos adicionais.",
-          pointsReward: 20,
-          actionType: "weekday_visit",
-          badge: "⚡ Terça & Quarta",
-        },
-      ],
-      updatedAt: new Date().toISOString(),
-    };
+      const updatedSocial = {
+        ...currentSocial,
+        niche_category: category,
+        booking_enabled: config.isBooking,
+        booking_active: config.isBooking,
+        booking_url: config.isBooking ? ctaUrl : undefined,
+        cta_url: ctaUrl,
+        cta_label: ctaLabel,
+        chat_flow: chatFlow,
+        ai_assistant_enabled: true,
+        loyalty_enabled: true,
+        fidelidade_enabled: true,
+        loyalty_settings: loyaltySettings,
+        city: city || currentSocial.city,
+        address: address || currentSocial.address,
+        google_rating: rating || currentSocial.google_rating || 4.9,
+        reviews_count: reviewsCount || currentSocial.reviews_count || 85,
+      };
 
-    const updatedSocial = {
-      ...currentSocial,
-      niche_category: category,
-      booking_enabled: config.isBooking,
-      booking_active: config.isBooking,
-      booking_url: config.isBooking ? ctaUrl : undefined,
-      cta_url: ctaUrl,
-      cta_label: ctaLabel,
-      chat_flow: chatFlow,
-      ai_assistant_enabled: true,
-      loyalty_enabled: true,
-      fidelidade_enabled: true,
-      loyalty_settings: loyaltySettings,
-      city: city || currentSocial.city,
-      address: address || currentSocial.address,
-      google_rating: rating || currentSocial.google_rating || 4.9,
-      reviews_count: reviewsCount || currentSocial.reviews_count || 85,
-    };
+      await supabase
+        .from("bio_pages")
+        .update({
+          social_links: updatedSocial,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", pageId);
 
-    await supabase
-      .from("bio_pages")
-      .update({
-        social_links: updatedSocial,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("id", pageId);
+      chatConfigured = true;
+      loyaltyConfigured = true;
+    } catch (chatErr) {
+      console.warn("[NicheProvisioner] Erro ao provisionar chat_flow e loyalty:", chatErr);
+    }
+  };
 
-    chatConfigured = true;
-    loyaltyConfigured = true;
-  } catch (chatErr) {
-    console.warn("[NicheProvisioner] Erro ao provisionar chat_flow e loyalty:", chatErr);
-  }
+  await Promise.allSettled([bookingTask(), dealTask(), socialUpdateTask()]);
 
   return {
     category,

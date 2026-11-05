@@ -2028,3 +2028,377 @@ export function getVariantsForNiche(nicheKey?: string | null): NichePreset[] {
 
   return baseVariants;
 }
+
+export interface PairedCatalogItem {
+  name: string;
+  category: string;
+  description: string;
+  price: number;
+  duration_minutes: number;
+  image_url: string;
+  photo_label: string;
+}
+
+const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
+  churrascaria: [
+    {
+      name: "Rodízio & Cortes Nobres na Brasa",
+      category: "Carnes Nobres",
+      description: "Picanha maturada, bife ancho, costela assada lentamente na brasa e acompanhamentos tradicionais.",
+      price: 89.9,
+      duration_minutes: 60,
+      image_url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Corte nobre de carne e churrasco grelhado na brasa suculento",
+    },
+    {
+      name: "Picanha Prime & Grelhados Especiais",
+      category: "Especialidades",
+      description: "Cortes selecionados servidos no ponto perfeito com farofa crocante da casa, vinagrete e pão de alho.",
+      price: 119.0,
+      duration_minutes: 40,
+      image_url: "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Picanha e bife grelhado suculento em tábua rústica",
+    },
+    {
+      name: "Buffet Gourmet & Guarnições da Casa",
+      category: "Buffet & Salão",
+      description: "Mesa farta de acompanhamentos quentes, queijos nobres, frios e saladas frescas em ambiente climatizado.",
+      price: 64.9,
+      duration_minutes: 45,
+      image_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Salão gastronômico aconchegante e mesa posta de restaurante",
+    },
+    {
+      name: "Sobremesas Artesanais & Carta de Bebidas",
+      category: "Sobremesas & Drinks",
+      description: "Petit gâteau artesanal, pudim de leite condensado, chopp trincando e carta de vinhos selecionados.",
+      price: 29.0,
+      duration_minutes: 20,
+      image_url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Drinks autorais e bebidas geladas em apresentação sofisticada",
+    },
+  ],
+  pizzaria: [
+    {
+      name: "Pizza Artesanal no Forno a Lenha (8 Fatias)",
+      category: "Tradicionais",
+      description: "Massa de fermentação lenta por 48h, molho de tomates italianos frescos e mussarela derretida.",
+      price: 64.9,
+      duration_minutes: 35,
+      image_url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Pizza artesanal assada no forno com queijo derretido e manjericão",
+    },
+    {
+      name: "Sabores Especiais & Borda Recheada",
+      category: "Especiais",
+      description: "Calabresa artesanal acebolada, quatro queijos nobres, pepperoni crocante e borda recheada com Catupiry.",
+      price: 72.9,
+      duration_minutes: 35,
+      image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Pizza gourmet fatiada com recheio generoso e massa dourada",
+    },
+    {
+      name: "Margherita Clássica Italiana & Napolitana",
+      category: "Autorais",
+      description: "Mussarela de búfala selecionada, rodelas de tomate fresco, folhas de manjericão e azeite extravirgem.",
+      price: 68.0,
+      duration_minutes: 30,
+      image_url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Pizza margherita clássica recém-saída do forno",
+    },
+    {
+      name: "Combo Família: Pizza Grande + Brotinho Doce + Bebida",
+      category: "Combos",
+      description: "A combinação completa para reunir a família com pizza salgada grande, brotinho de chocolate e refrigerante 2L.",
+      price: 94.9,
+      duration_minutes: 40,
+      image_url: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Mesa com pizzas artesanais variadas para compartilhar",
+    },
+  ],
+  hamburgueria: [
+    {
+      name: "Smash Burger Duplo Artesanal",
+      category: "Smash Burgers",
+      description: "Dois blends de carne 100% bovina selados na chapa, queijo cheddar derretido, bacon crocante e maionese da casa no brioche.",
+      price: 34.9,
+      duration_minutes: 25,
+      image_url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Hambúrguer artesanal alto com queijo cheddar derretido e pão brioche",
+    },
+    {
+      name: "Cheeseburger Gourmet & Cebola Caramelizada",
+      category: "Gourmet",
+      description: "Blend suculento de 180g grelhado no fogo, queijo prato, cebola caramelizada no melado e molho defumado.",
+      price: 38.9,
+      duration_minutes: 25,
+      image_url: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Cheeseburger gourmet artesanal em close-up apetitoso",
+    },
+    {
+      name: "Combo Burger + Batatas Rústicas + Bebida",
+      category: "Combos",
+      description: "Seu burger favorito acompanhado de porção de batatas fritas crocantes com alecrim e bebida gelada.",
+      price: 46.9,
+      duration_minutes: 25,
+      image_url: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Combo de hambúrguer artesanal acompanhado de batatas fritas crocantes",
+    },
+  ],
+  japones: [
+    {
+      name: "Combinado Especial do Sushiman (32 Peças)",
+      category: "Combinados",
+      description: "Seleção fresca de sashimis de salmão, niguiris maçaricados com azeite trufado, uramakis e jyos especiais.",
+      price: 114.9,
+      duration_minutes: 35,
+      image_url: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Combinado de sushi e sashimi fresco de salmão montado pelo sushiman",
+    },
+    {
+      name: "Temaki Filadélfia & Hot Rolls Crocantes",
+      category: "Temakis & Hots",
+      description: "Alga nori crocante recheada com salmão fresco em cubos, cream cheese e porção de hot rolls dourados com tarê.",
+      price: 44.9,
+      duration_minutes: 25,
+      image_url: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Prato de sushi e rolinhos orientais frescos com molho",
+    },
+    {
+      name: "Barca Premium & Festival Japonês",
+      category: "Experiência Oriental",
+      description: "Barca completa com cortes nobres de peixe branco, atum e salmão para compartilhar no salão ou em casa.",
+      price: 159.0,
+      duration_minutes: 45,
+      image_url: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Barca japonesa variada com sushis e sashimis de alta gastronomia",
+    },
+  ],
+  cafeteria: [
+    {
+      name: "Cafés Especiais & Cappuccino Italiano",
+      category: "Cafeteria",
+      description: "Grãos 100% arábica moídos na hora, espresso encorpado e latte art cremoso preparado por baristas.",
+      price: 14.9,
+      duration_minutes: 10,
+      image_url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Xícara de café especial com latte art sobre mesa de cafeteria",
+    },
+    {
+      name: "Confeitaria Fina, Tortas & Croissants",
+      category: "Confeitaria",
+      description: "Fatias de torta belga, croissants folhados na manteiga e doces artesanais assados todos os dias.",
+      price: 22.0,
+      duration_minutes: 10,
+      image_url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Ambiente acolhedor de cafeteria e confeitaria moderna",
+    },
+    {
+      name: "Combo Brunch & Pães de Fermentação Natural",
+      category: "Brunch",
+      description: "Tostex no pão levain, ovos mexidos cremosos, suco natural prensado e café coado na hora.",
+      price: 39.9,
+      duration_minutes: 20,
+      image_url: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Mesa de café da manhã e brunch com cafés especiais",
+    },
+  ],
+  fisioterapia: [
+    {
+      name: "Fisioterapia Ortopédica & Reabilitação Funcional",
+      category: "Reabilitação",
+      description: "Avaliação biomecânica e tratamento individualizado para dores na coluna, articulações e pós-operatório.",
+      price: 150.0,
+      duration_minutes: 55,
+      image_url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Consultório clínico moderno de fisioterapia e reabilitação em saúde",
+    },
+    {
+      name: "Pilates Clínico & Correção Postural",
+      category: "Pilates & Movimento",
+      description: "Sessões guiadas em aparelhos e solo para fortalecimento do core, mobilidade articular e prevenção de lesões.",
+      price: 140.0,
+      duration_minutes: 55,
+      image_url: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Estúdio de pilates e exercícios de reabilitação postural",
+    },
+    {
+      name: "Liberação Miofascial & Terapia Manual",
+      category: "Terapia Manual",
+      description: "Manobras terapêuticas para alívio imediato de tensões musculares, contraturas e recuperação esportiva.",
+      price: 160.0,
+      duration_minutes: 50,
+      image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=800&q=80",
+      photo_label: "Atendimento de terapia manual corporal e alívio de tensão",
+    },
+  ],
+};
+
+/**
+ * Detecta sub-nichos especializados (ex: churrascaria, pizzaria, hamburgueria, sushi, cafeteria, fisioterapia)
+ * ou retorna a chave canônica dos 26 nichos.
+ */
+export function detectSpecializedSubNicheKey(
+  nicheRaw?: string | null,
+  companyNameRaw?: string | null,
+): string {
+  const combined = `${nicheRaw ?? ""} ${companyNameRaw ?? ""}`.toLowerCase();
+  if (/churrasc|espet|picanha|casa\s*de\s*carne|steakhous|rod[ií]zio\s*de\s*carne|parrill/i.test(combined)) {
+    return "churrascaria";
+  }
+  if (/pizza|pizzari|forneria/i.test(combined)) {
+    return "pizzaria";
+  }
+  if (/burger|hamburg|smash\s*burger/i.test(combined)) {
+    return "hamburgueria";
+  }
+  if (/sushi|japon[eê]s|temaki|sashimi|oriental|izakaya/i.test(combined)) {
+    return "japones";
+  }
+  if (/caf[eé]|cafeteria|padaria|panificadora|confeitari|doceri|bistr[oô]/i.test(combined)) {
+    return "cafeteria";
+  }
+  if (/fisioter|pilates|osteopat|quiroprax|reabilita[çc][aã]o\s*f[ií]sica/i.test(combined)) {
+    return "fisioterapia";
+  }
+  return detectNicheKey(nicheRaw, companyNameRaw);
+}
+
+/**
+ * Retorna o catálogo oficial de produtos/serviços pareados 1:1 com suas respectivas fotos em alta resolução
+ * e rótulos semânticos exatos para evitar qualquer troca de fotos pela IA.
+ */
+export function getPairedCatalogForBusiness(
+  nicheRaw?: string | null,
+  companyNameRaw?: string | null,
+): PairedCatalogItem[] {
+  const subKey = detectSpecializedSubNicheKey(nicheRaw, companyNameRaw);
+  if (SUB_NICHE_PAIRED_CATALOGS[subKey]) {
+    return SUB_NICHE_PAIRED_CATALOGS[subKey];
+  }
+
+  const baseKey = detectNicheKey(nicheRaw, companyNameRaw);
+  const variants = NICHE_PRESETS_VARIANTS[baseKey] || NICHE_PRESETS_VARIANTS.geral;
+  const gallery = NICHE_GALLERIES[baseKey] || NICHE_GALLERIES.geral;
+
+  // Coleta todos os serviços únicos das variantes deste nicho mantendo a foto pareada
+  const seenNames = new Set<string>();
+  const items: PairedCatalogItem[] = [];
+
+  for (const variant of variants) {
+    for (const srv of variant.services || []) {
+      const normName = srv.name.trim().toLowerCase();
+      if (seenNames.has(normName)) continue;
+      seenNames.add(normName);
+
+      const hdUrl = (srv.image_url || gallery.covers[items.length % gallery.covers.length]?.url || "")
+        .replace("w=400", "w=800");
+
+      const basePhotoId = hdUrl.split("?")[0];
+      const matchingCover = gallery.covers.find((c) => c.url.split("?")[0] === basePhotoId);
+
+      items.push({
+        name: srv.name,
+        category: srv.category || "Destaque",
+        description: srv.description,
+        price: srv.price,
+        duration_minutes: srv.duration_minutes,
+        image_url: hdUrl,
+        photo_label: matchingCover
+          ? `${srv.name} — ${matchingCover.label}`
+          : `${srv.name}: ${srv.description}`,
+      });
+
+      if (items.length >= 4) break;
+    }
+    if (items.length >= 4) break;
+  }
+
+  return items;
+}
+
+/**
+ * Identifica o rótulo semântico exato de qualquer URL conhecida do acervo curado ou presets de serviços.
+ * Permite que o servidor recupere a descrição exata da imagem mesmo quando recebe apenas string[] de URLs.
+ */
+export function describeKnownPhotoUrl(
+  url: string,
+  fallbackNiche?: string | null,
+  fallbackBusinessName?: string | null,
+): { label: string; isClientRealPhoto: boolean } {
+  const cleanTarget = (url || "").split("?")[0].trim();
+  const isUnsplash = /images\.unsplash\.com/i.test(cleanTarget);
+
+  if (!isUnsplash) {
+    return {
+      label: "Foto autêntica real do estabelecimento (usar em Hero, Fachada, Ambiente ou Galeria Real)",
+      isClientRealPhoto: true,
+    };
+  }
+
+  // 1. Procura nos sub-nichos especializados
+  for (const list of Object.values(SUB_NICHE_PAIRED_CATALOGS)) {
+    for (const item of list) {
+      if (item.image_url.split("?")[0] === cleanTarget) {
+        return {
+          label: `${item.photo_label} (Ideal para o card "${item.name}")`,
+          isClientRealPhoto: false,
+        };
+      }
+    }
+  }
+
+  // 2. Procura no catálogo do nicho atual primeiro (para dar o rótulo mais específico daquele nicho)
+  if (fallbackNiche || fallbackBusinessName) {
+    const currentCatalog = getPairedCatalogForBusiness(fallbackNiche, fallbackBusinessName);
+    for (const item of currentCatalog) {
+      if (item.image_url.split("?")[0] === cleanTarget) {
+        return {
+          label: `${item.photo_label} (Ideal para o card "${item.name}")`,
+          isClientRealPhoto: false,
+        };
+      }
+    }
+    const currentGallery = getGalleryForNiche(fallbackNiche || fallbackBusinessName);
+    for (const cover of currentGallery.covers || []) {
+      if (cover.url.split("?")[0] === cleanTarget) {
+        return {
+          label: cover.label,
+          isClientRealPhoto: false,
+        };
+      }
+    }
+  }
+
+  // 3. Procura em todas as galerias curadas
+  for (const gallery of Object.values(NICHE_GALLERIES)) {
+    for (const cover of gallery.covers || []) {
+      if (cover.url.split("?")[0] === cleanTarget) {
+        return {
+          label: cover.label,
+          isClientRealPhoto: false,
+        };
+      }
+    }
+  }
+
+  // 4. Procura em todas as variantes de presets
+  for (const variants of Object.values(NICHE_PRESETS_VARIANTS)) {
+    for (const v of variants) {
+      for (const s of v.services || []) {
+        if (s.image_url && s.image_url.split("?")[0] === cleanTarget) {
+          return {
+            label: `${s.name} — ${s.description}`,
+            isClientRealPhoto: false,
+          };
+        }
+      }
+    }
+  }
+
+  return {
+    label: `Imagem profissional de alta resolução (${fallbackNiche || " institucional"})`,
+    isClientRealPhoto: false,
+  };
+}
+

@@ -30,6 +30,10 @@ import {
   NICHE_CONFIGS,
 } from "@/modules/prospecting/nicheProvisioner";
 import {
+  getPairedCatalogForBusiness,
+  describeKnownPhotoUrl,
+} from "@/modules/prospecting/nichePresets";
+import {
   injectEiaLinkFeatureRuntime,
   applyFeaturesToHtml,
   type EiaLinkFeatureFlags,
@@ -678,6 +682,8 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       businessContextParts.push(
         `WhatsApp Oficial (usar no botão pulsante e CTAs): "${effectiveWhatsapp}"`,
       );
+    const pairedCatalog = getPairedCatalogForBusiness(effectiveNiche, effectiveProjectName);
+
     if (nicheConfig.isBooking) {
       businessContextParts.push(
         `SISTEMA DE AGENDAMENTO ONLINE EIALINK: 100% ATIVO E INTEGRADO no link "${ctaUrl}".`,
@@ -685,53 +691,78 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       businessContextParts.push(
         `O botão de ação principal (CTA) do Hero e das seções de serviços DEVE SER "${ctaLabel}" apontando diretamente para "${ctaUrl}".`,
       );
-      if (nicheConfig.services.length > 0) {
-        businessContextParts.push(
-          `Serviços oficiais do negócio: ${nicheConfig.services.map((s) => `${s.name} (R$ ${s.price}, ${s.duration_minutes}min)`).join("; ")}. IMPORTANTE: Apresente estes serviços seguindo fielmente a diagramação do arquétipo estrutural (ex: lista editorial, bento cards, timeline ou tabela moderna).`,
-        );
-      }
     } else {
       businessContextParts.push(
         `CTA PRINCIPAL DE CONVERSÃO: Botão "${ctaLabel}" apontando para "${ctaUrl}".`,
       );
     }
+
+    if (pairedCatalog.length > 0) {
+      businessContextParts.push(
+        `CATÁLOGO OFICIAL DE PRODUTOS / SERVIÇOS COM FOTOS PAREADAS 1:1 (OBRIGATÓRIO USAR A FOTO EXATA DE CADA CARD):\n${pairedCatalog
+          .map(
+            (item, idx) =>
+              `  * Card ${idx + 1}: "${item.name}" [${item.category} — R$ ${item.price.toFixed(2).replace(".", ",")}${item.duration_minutes > 0 ? ` • ${item.duration_minutes}min` : ""}]\n    - Descrição Oficial: ${item.description}\n    - Conteúdo Visual da Foto: ${item.photo_label}\n    - FOTO OBRIGATÓRIA DESTE CARD (usar exatamente no src="..." deste card): ${item.image_url}`,
+          )
+          .join("\n")}\nREGRA DE OURO DOS CARDS DE PRODUTOS/SERVIÇOS: Cada card de produto/serviço listado acima JÁ POSSUI sua própria foto verificada pareada 1:1. Ao criar os cards da vitrine/menu/serviços, use EXATAMENTE o título, a descrição e a "FOTO OBRIGATÓRIA DESTE CARD" correspondente! NUNCA troque as fotos entre os cards e NUNCA coloque uma foto que não corresponda à descrição do item!`,
+      );
+    } else if (nicheConfig.services.length > 0) {
+      businessContextParts.push(
+        `Serviços oficiais do negócio: ${nicheConfig.services.map((s) => `${s.name} (R$ ${s.price}, ${s.duration_minutes}min)`).join("; ")}.`,
+      );
+    }
+
     if (input.rating)
       businessContextParts.push(
         `Avaliação no Google Maps: ${input.rating} estrelas (${input.reviewsCount || 80} avaliações reais)`,
       );
-    if (input.photos && input.photos.length > 0) {
+
+    const rawInputPhotos = (input.photos || []).filter(
+      (u) => typeof u === "string" && u.startsWith("http"),
+    );
+    const clientRealPhotos = rawInputPhotos.filter((u) => !/images\.unsplash\.com/i.test(u));
+    const labeledUnsplashFromInput = rawInputPhotos
+      .filter((u) => /images\.unsplash\.com/i.test(u))
+      .map((url) => ({
+        url,
+        label: describeKnownPhotoUrl(url, effectiveNiche, effectiveProjectName).label,
+        role: "ambient",
+      }));
+
+    if (clientRealPhotos.length > 0) {
       businessContextParts.push(
-        `FOTOS REAIS DA EMPRESA (GOOGLE MAPS & INSTAGRAM FEED - PRIORIDADE TOTAL):\n${input.photos.slice(0, 12).map((url, i) => `- Foto Real ${i + 1}: ${url}`).join("\n")}
-DIRETRIZ DE USO DE FOTOS REAIS:
-- Prioridade máxima: use estas fotos reais nos atributos src="..." das seções principais (Hero, Ambiente, Procedimentos e Apresentação).
-- Para a apresentação do profissional/bio: USE UMA DAS FOTOS REAIS DO CLIENTE! É TERMINANTEMENTE PROIBIDO colocar a foto de um modelo desconhecido fingindo ser o profissional!`,
+        `FOTOS REAIS AUTÊNTICAS DO ESTABELECIMENTO (GOOGLE MAPS & INSTAGRAM DO CLIENTE):\n${clientRealPhotos.slice(0, 10).map((url, i) => `- Foto Real do Cliente ${i + 1}: ${url}`).join("\n")}
+DIRETRIZ DE USO DAS FOTOS REAIS DO CLIENTE:
+- Use estas Fotos Reais do Cliente com prioridade no HERO (capa principal), na seção "Nosso Espaço / Ambiente / Estrutura" e na Galeria Real do Estabelecimento.
+- Nos cards específicos de Produtos / Serviços / Tratamentos, use as FOTOS OBRIGATÓRIAS PAREADAS 1:1 do Catálogo Oficial acima (para garantir que a foto de cada card mostre exatamente o produto/serviço descrito no card) ou ícones Lucide refinados!`,
       );
-    } else {
-      // Se não houver fotos reais anexadas, busca fotos compatíveis em tempo real via IA/DDG/Unsplash
-      try {
-        const foundPromise = searchCompatibleBusinessImages(
-          effectiveNiche || "geral",
-          effectiveProjectName,
-          8,
-        );
-        const found = (await Promise.race([
-          foundPromise,
-          new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 2000)),
-        ])) || [];
-        if (found && found.length > 0) {
-          businessContextParts.push(
-            `BANCO DE IMAGENS COMPATÍVEIS BUSCADAS EM TEMPO REAL PARA ESTE NEGÓCIO:\n${found.map((img, i) => `- Foto ${i + 1} [${img.role.toUpperCase()} - ${img.label}]: ${img.url}`).join("\n")}
+    }
+
+    try {
+      const found = await searchCompatibleBusinessImages(
+        effectiveNiche || "geral",
+        effectiveProjectName,
+        8,
+      );
+      const mergedCompatible = [
+        ...found,
+        ...labeledUnsplashFromInput.filter(
+          (item) => !found.some((f) => f.url.split("?")[0] === item.url.split("?")[0]),
+        ),
+      ].slice(0, 10);
+
+      if (mergedCompatible.length > 0) {
+        businessContextParts.push(
+          `BANCO DE IMAGENS ROTULADAS POR PAPEL SEMÂNTICO PARA ESTE NEGÓCIO:\n${mergedCompatible.map((img, i) => `- Foto ${i + 1} [${img.role.toUpperCase()} — ${img.label}]: ${img.url}`).join("\n")}
 DIRETRIZ INVIOLÁVEL DE COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA (FOTO <-> TEXTO):
-1. O texto e título de cada card de serviço DEVE corresponder fielmente ao que a foto mostra (ex: se o card fala de churrasco/picanha, a foto DEVE ser de carne assada/brasa, NUNCA peixe ou verduras; se fala de Atendimento Individual, NUNCA use fotos de auditório, plateia ou multidão).
-2. Construa os serviços baseando-se nas fotos disponíveis (o conteúdo segue as imagens).
-3. Se não houver foto condizente para um serviço, crie um card elegante sem foto com ícone temático do Lucide em vez de forçar uma foto inadequada.
-4. PROIBIÇÃO ABSOLUTA DE ROSTOS DE MODELOS DESCONHECIDOS: NUNCA coloque foto de pessoa desconhecida de banco de imagens na apresentação do profissional! Se não houver foto real da pessoa, use a foto real do ambiente/fachada ou um card de autoridade com selos Lucide (Award, GraduationCap, ShieldCheck).
-5. NUNCA invente links fictícios e NUNCA repita a mesma foto.`,
-          );
-        }
-      } catch (e) {
-        console.warn("[StudioServer] Aviso ao buscar fotos compatíveis:", e);
+1. Em cada card de produto/serviço, a foto DEVE corresponder 100% ao título e descrição daquele card (siga o pareamento 1:1 do Catálogo Oficial acima).
+2. Se você adicionar um serviço extra que não tenha foto específica listada acima, crie um card elegante SEM foto usando ícone temático do Lucide em vez de forçar uma foto de outro serviço.
+3. PROIBIÇÃO ABSOLUTA DE ROSTOS DE MODELOS DESCONHECIDOS: NUNCA coloque foto de pessoa desconhecida de banco de imagens na apresentação do profissional! Se não houver foto real da pessoa, use a foto do ambiente/fachada ou um card de autoridade com selos Lucide (Award, GraduationCap, ShieldCheck).
+4. NUNCA invente links fictícios e NUNCA repita a mesma URL de foto em mais de um elemento da página.`,
+        );
       }
+    } catch (e) {
+      console.warn("[StudioServer] Aviso ao buscar fotos compatíveis:", e);
     }
 
     if (businessContextParts.length > 0) {

@@ -1,6 +1,10 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { NICHE_GALLERIES, detectNicheKey } from "@/modules/prospecting/nichePresets";
+import {
+  NICHE_GALLERIES,
+  detectNicheKey,
+  getPairedCatalogForBusiness,
+} from "@/modules/prospecting/nichePresets";
 
 export interface UnsplashPhotoItem {
   id: string;
@@ -418,42 +422,12 @@ export async function searchCompatibleBusinessImages(
     `${niche} atendimento profissional alta resolucao`,
   ];
 
-  const foundWebPhotos: UnsplashPhotoItem[] = [];
-
-  try {
-    const q1 = `${queries[0]} site:unsplash.com`;
-    const q2 = queries[1] ? `${queries[1]} site:unsplash.com` : `${niche} site:unsplash.com`;
-    const q3 = queries[2] ? `${queries[2]} site:unsplash.com` : undefined;
-    
-    // Busca exclusivamente fotos autênticas de alta definição no Unsplash via DuckDuckGo
-    // (evita Openverse que trazia auditórios, teatros e imagens fora de contexto)
-    const fetches = [
-      searchDuckDuckGoImages(q1, 8),
-      searchDuckDuckGoImages(q2, 6),
-    ];
-    if (q3) fetches.push(searchDuckDuckGoImages(q3, 6));
-
-    const settledList = (await Promise.race([
-      Promise.allSettled(fetches),
-      new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 2200)),
-    ])) || [];
-
-    for (const item of settledList) {
-      if (item.status === "fulfilled" && Array.isArray(item.value)) {
-        foundWebPhotos.push(...item.value);
-      }
-    }
-  } catch (err) {
-    console.warn("[searchCompatibleBusinessImages] Busca na web falhou:", err);
-  }
-
-  // O pool curado já garante variedade máxima sem atrasar a geração
-
   // Galeria curada do nicho com shuffle determinístico pela semente do nome
   // ATENÇÃO: Covers contém apenas ambientes, fachadas, gastronomia e equipamentos.
   // NUNCA injetamos fotos de pessoas desconhecidas como "team" ou "avatar" para evitar pessoas aleatórias no site do cliente!
   const gallery = NICHE_GALLERIES[detectedKey] || NICHE_GALLERIES.geral;
   const allCurated = [...(gallery.covers || [])];
+  const pairedCatalog = getPairedCatalogForBusiness(niche, businessName);
 
   // Seed hash para variar a seleção entre empresas diferentes
   const seedString = `${businessName || ""}-${niche}`;
@@ -476,53 +450,98 @@ export async function searchCompatibleBusinessImages(
     return url;
   };
 
-  const pool: Array<{ url: string; label: string; source: "ddg" | "unsplash" | "curated" | "openverse" }> = [];
-  const seenUrls = new Set<string>();
+  const baseIdOf = (url: string) => url.split("?")[0];
 
-  // 1. Adiciona fotos encontradas na web
-  for (const item of foundWebPhotos) {
-    const formatted = cleanUrl(item.url);
-    if (!seenUrls.has(formatted) && formatted.startsWith("http")) {
-      seenUrls.add(formatted);
-      pool.push({
-        url: formatted,
-        label: item.label || `${niche} de alta resolução`,
-        source: item.source || "ddg",
-      });
-    }
+  const pool: Array<{
+    url: string;
+    label: string;
+    role: CompatibleBusinessImage["role"];
+    source: "ddg" | "unsplash" | "curated" | "openverse";
+  }> = [];
+  const seenBaseIds = new Set<string>();
+
+  // 1. Foto principal de Hero (da galeria curada rotacionada por empresa)
+  if (rotatedCurated.length > 0) {
+    const heroItem = rotatedCurated[0];
+    const formatted = cleanUrl(heroItem.url);
+    seenBaseIds.add(baseIdOf(formatted));
+    pool.push({
+      url: formatted,
+      label: `[CAPA / HERO PRINCIPAL] ${heroItem.label}`,
+      role: "hero",
+      source: "curated",
+    });
   }
 
-  // 2. Completa com a galeria curada rotacionada
-  for (const item of rotatedCurated) {
-    const formatted = cleanUrl(item.url);
-    if (!seenUrls.has(formatted)) {
-      seenUrls.add(formatted);
+  // 2. Fotos 100% pareadas com cada Produto/Serviço do negócio (prioridade absoluta para os cards de serviços)
+  for (const srv of pairedCatalog) {
+    if (!srv.image_url) continue;
+    const formatted = cleanUrl(srv.image_url);
+    const bId = baseIdOf(formatted);
+    if (!seenBaseIds.has(bId)) {
+      seenBaseIds.add(bId);
       pool.push({
         url: formatted,
-        label: item.label,
+        label: `[PRODUTO/SERVIÇO EXATO: "${srv.name}"] ${srv.photo_label} — ${srv.description}`,
+        role: "service",
         source: "curated",
       });
     }
   }
 
+  // 3. Completa com as demais fotos curadas rotacionadas para Ambiente e Detalhes
+  const extraRoles: CompatibleBusinessImage["role"][] = ["ambient", "detail", "ambient", "tech"];
+  let extraIdx = 0;
+  for (const item of rotatedCurated.slice(1)) {
+    const formatted = cleanUrl(item.url);
+    const bId = baseIdOf(formatted);
+    if (!seenBaseIds.has(bId)) {
+      seenBaseIds.add(bId);
+      pool.push({
+        url: formatted,
+        label: `[AMBIENTE / ESPAÇO] ${item.label}`,
+        role: extraRoles[extraIdx % extraRoles.length],
+        source: "curated",
+      });
+      extraIdx++;
+    }
+  }
+
+  // 4. Somente se o pool curado + catálogo pareado tiver menos itens que o solicitado,
+  // busca complemento rápido na web (evita 2.2s de latência desnecessária e fotos desconexas no topo)
+  if (pool.length < safeCount) {
+    try {
+      const q1 = `${queries[0]} site:unsplash.com`;
+      const webResults = await Promise.race([
+        searchDuckDuckGoImages(q1, safeCount - pool.length + 2),
+        new Promise<UnsplashPhotoItem[]>((resolve) => setTimeout(() => resolve([]), 1200)),
+      ]);
+      for (const item of webResults || []) {
+        const formatted = cleanUrl(item.url);
+        const bId = baseIdOf(formatted);
+        if (!seenBaseIds.has(bId) && formatted.startsWith("http")) {
+          seenBaseIds.add(bId);
+          pool.push({
+            url: formatted,
+            label: item.label || `${niche} de alta resolução`,
+            role: "detail",
+            source: item.source || "ddg",
+          });
+        }
+      }
+    } catch (err) {
+      console.warn("[searchCompatibleBusinessImages] Busca complementar na web ignorada:", err);
+    }
+  }
+
   const selected = pool.slice(0, safeCount);
-  const roles: CompatibleBusinessImage["role"][] = [
-    "hero",
-    "ambient",
-    "service",
-    "service",
-    "ambient",
-    "detail",
-    "tech",
-    "detail",
-  ];
 
   return selected.map((item, idx) => ({
     id: `compat-${idx}-${Date.now()}`,
     url: item.url,
-    thumbUrl: item.url.replace("w=1200", "w=400"),
+    thumbUrl: item.url.replace("w=1200", "w=400").replace("w=800", "w=400"),
     label: item.label,
-    role: roles[idx % roles.length],
+    role: item.role,
     source: item.source,
   }));
 }

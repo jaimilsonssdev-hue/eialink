@@ -150,28 +150,29 @@ DIRETRIZES TÉCNICAS E DE DESIGN:
      * Se o arquétipo pedir Estatísticas em Números Gigantes: crie um bloco de métricas com números grandiosos (ex: +1.500 Sorrisos, 99.8% Satisfação, 12 Anos).
    - Varie navbars: Crie navbars tipo pill flutuante centralizada, headers transparentes integrados à foto de capa, ou barras superiores elegantes com botão de agendamento em destaque.
 
-3. **COERÊNCIA VISUAL E FIDELIDADE SEMÂNTICA ABSOLUTA (REGRA INVIOLÁVEL FOTO <-> TEXTO)**:
+3. **COERÊNCIA VISUAL E PAREAMENTO ESTRITO 1:1 (REGRA INVIOLÁVEL FOTO <-> PRODUTO/SERVIÇO)**:
+   - **PAREAMENTO OBRIGATÓRIO 1:1 NOS CARDS DE PRODUTOS E SERVIÇOS**:
+     * O prompt fornecerá o **CATÁLOGO OFICIAL DE PRODUTOS / SERVIÇOS COM FOTOS PAREADAS 1:1**, onde cada item já traz seu Nome, Descrição, Preço e a sua **FOTO OBRIGATÓRIA DESTE CARD**.
+     * Ao criar cada card/item de produto ou serviço, você DEVE usar **EXATAMENTE a URL da foto pareada àquele item** no atributo 'src="..."' daquele card!
+     * **PROIBIÇÃO ABSOLUTA DE TROCA DE FOTOS**: NUNCA troque as fotos entre os cards, NUNCA coloque uma foto de fachada/recepção dentro de um card de prato/procedimento específico se houver a foto pareada do item, e NUNCA coloque uma foto que mostre algo diferente do título e da descrição do card!
+   - **SEPARAÇÃO DE PAPÉIS ENTRE FOTOS REAIS DO CLIENTE E FOTOS DE PRODUTOS/SERVIÇOS**:
+     * Fotos Reais do Estabelecimento (Google Maps / Instagram sem rótulo específico de prato/procedimento): use prioritariamente no **Hero / Capa, Seção "Nosso Espaço / Estrutura / Quem Somos" e Galeria Real**.
+     * Fotos Pareadas do Catálogo de Produtos/Serviços (com rótulo semântico exato): use nos **Cards de Produtos, Pratos, Tratamentos ou Serviços** para garantir 100% de fidelidade entre a foto e a descrição do produto/serviço.
    - **CORRESPONDÊNCIA ESTRITA ENTRE IMAGEM E DESCRIÇÃO**:
-     * A foto associada a cada card de serviço/produto DEVE corresponder EXATAMENTE ao texto e título do card.
      * Se o card for sobre "Churrasco", "Picanha" ou "Carnes Nobres", a foto DEVE OBRIGATORIAMENTE ser de carne/churrasco! NUNCA use foto de peixe, frango com verduras ou salada para ilustrar churrasco!
      * Se o serviço for "Atendimento Individual", "Psicoterapia 1 a 1" ou "Consulta Exclusiva", a foto DEVE mostrar APENAS um ambiente acolhedor individual (poltrona, consultório) ou atendimento 1 para 1. É TERMINANTEMENTE PROIBIDO colocar foto de plateia, teatro, auditório, palestra ou multidão para ilustrar atendimento individual!
-     * Se o negócio for Barbearia, use fotos masculinas/barba. Se for Odontologia, use sorrisos/dentista. Se for Pizzaria, use pizza. Se for Hamburgueria, use hambúrguer.
-   - **ENGENHARIA INVERTIDA (O CONTEÚDO SEGUE A FOTO)**:
-     * NUNCA invente um prato ou serviço no texto para depois tentar forçar uma foto que não combina.
-     * Olhe a lista de fotos disponíveis e seus rótulos primeiro: crie o título e a descrição do card especificamente sobre o que a foto mostra!
    - **PROIBIÇÃO ABSOLUTA DE ROSTOS DE MODELOS ALEATÓRIOS / FAKE (REGRA DO PROFISSIONAL)**:
      * É TERMINANTEMENTE PROIBIDO colocar foto de uma pessoa desconhecida de banco de imagens para fingir que é o dono, médico, dentista, psicólogo, terapeuta, advogado, barbeiro ou especialista da empresa!
-     * Colocar a foto de um modelo desconhecido destrói a credibilidade do cliente e faz o site parecer falso.
      * Na seção "Sobre o Especialista / Quem Somos / Apresentação do Profissional":
        1. SE HOUVER FOTO REAL DO CLIENTE/PROFISSIONAL NO ACERVO FORNECIDO: use essa foto real!
-       2. SE NÃO HOUVER FOTO REAL CONFIRMADA DA PESSOA: NUNCA use foto de pessoa desconhecida! Em vez disso, crie um card de autoridade de alto padrão:
-          - Use a foto real da fachada ou do ambiente/consultório interno com a legenda "Nosso Espaço de Atendimento", OU
-          - Crie um card editorial de excelência SEM foto de pessoa, usando selos de credibilidade com ícones Lucide (<Award class="h-8 w-8 text-primary" />, <GraduationCap />, <ShieldCheck />, <UserCheck />), badges de especialidade, anos de experiência e a nota/depoimentos do Google.
+       2. SE NÃO HOUVER FOTO REAL CONFIRMADA DA PESSOA: NUNCA use foto de pessoa desconhecida! Use a foto da fachada/ambiente interno com a legenda "Nosso Espaço de Atendimento" OU crie um card editorial de autoridade SEM foto de pessoa, usando selos de credibilidade com ícones Lucide (<Award />, <GraduationCap />, <ShieldCheck />), anos de experiência e a nota real do Google.
    - **CARDS ELEGANTES SEM FOTO (QUANDO NÃO HOUVER FOTO PERFEITA)**:
-     * Se você quiser incluir um serviço ou diferencial para o qual NÃO há foto condizente disponível, NÃO FORCE UMA FOTO ERRADA!
-     * Em vez de colocar uma foto inadequada, crie um card de alto padrão sem foto, usando um ícone refinado do Lucide (<div class="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">), badge de categoria, tipografia expressiva e descrição persuasiva. Isso é infinitamente mais profissional e elegante!
+     * Se você incluir um serviço extra ou diferencial para o qual NÃO há foto pareada disponível, NÃO FORCE UMA FOTO ERRADA! Crie um card editorial de alto padrão sem foto usando ícone Lucide refinado, badge de categoria e tipografia expressiva.
+   - **CRAFT VISUAL PROFISSIONAL (SEM CARA DE IA TRADICIONAL / ANTI-AI-SLOP)**:
+     * PROIBIDO usar gradientes genéricos roxo/azul neon ('from-indigo-500 via-purple-500 to-pink-500'), sombras exageradas sem propósito ou textos clichês robóticos ("Bem-vindo ao futuro", "Soluções inovadoras").
+     * Use hierarquia tipográfica editorial ('tracking-tight', contraste elegante entre serifas ou display fortes nos títulos e sans-serif limpa no corpo), bordas táteis sutis ('border border-black/10' ou 'border-white/10'), espaçamento generoso ('py-20', 'gap-8') e copywriting comercial humano e específico do nicho.
    - NUNCA invente URLs do Unsplash com IDs aleatórios fictícios (evita erro 404 de imagem quebrada).
-   - NUNCA use a foto repetida da cadeira odontológica (photo-1629909613654-28e377c37b09).
+   - NUNCA repita a mesma URL de imagem em dois lugares diferentes da mesma página.
    - NUNCA use placeholders cinzas como "placeholder.com".
 
 4. **FERRAMENTAS NATIVAS E INTEGRALIDADE DE NEGÓCIO (OBRIGATÓRIO)**:
@@ -374,8 +375,11 @@ Retorne o HTML completo atualizado com a alteração solicitada.`;
         model: modelToTry,
         contents: [{ role: "user", parts: currentUserParts }],
         config: {
-          systemInstruction: CODE_GENERATION_SYSTEM_PROMPT,
-          temperature: 0.65,
+          systemInstruction:
+            existingHtml && existingHtml.length > 50
+              ? SURGICAL_EDIT_SYSTEM_PROMPT
+              : CODE_GENERATION_SYSTEM_PROMPT,
+          temperature: existingHtml && existingHtml.length > 50 ? 0.2 : 0.85,
         },
       });
 

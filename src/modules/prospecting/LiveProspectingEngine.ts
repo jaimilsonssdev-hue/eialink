@@ -528,23 +528,27 @@ export async function searchGoogleMapsAndInstagram(
       const currentNicheTerm = synonyms[page % synonyms.length] || niche;
       const places = await scrapeGoogleMapsViaApify(currentNicheTerm, city, limit, apifyToken);
       if (places.length > 0) {
-        apifyPlaces = places.map((p) => ({
-          name: p.name,
-          niche: p.niche,
-          city: p.city,
-          phone: p.phone,
-          whatsapp: p.whatsapp,
-          instagram: p.instagram || null,
-          website: p.website,
-          has_website: p.has_website,
-          rating: p.rating,
-          reviews_count: p.reviews_count,
-          address: p.address || null,
-          photos: p.photos && p.photos.length > 0 ? p.photos : undefined,
-          source: "google_maps_apify",
-          cid: p.cid,
-          notes: p.address ? `Endereço: ${p.address}` : "Capturado via Apify Google Maps",
-        }));
+        apifyPlaces = places.map((p) => {
+          const detectedFromPlace = detectNicheKey(p.niche || niche, p.name);
+          const canonicalNiche = detectedFromPlace !== "geral" ? detectedFromPlace : detectedKey;
+          return {
+            name: p.name,
+            niche: canonicalNiche,
+            city: p.city,
+            phone: p.phone,
+            whatsapp: p.whatsapp,
+            instagram: p.instagram || null,
+            website: p.website,
+            has_website: p.has_website,
+            rating: p.rating,
+            reviews_count: p.reviews_count,
+            address: p.address || null,
+            photos: p.photos && p.photos.length > 0 ? p.photos : undefined,
+            source: "google_maps_apify",
+            cid: p.cid,
+            notes: p.address ? `Endereço: ${p.address}` : "Capturado via Apify Google Maps",
+          };
+        });
       }
     } catch (apifyErr) {
       console.warn("[searchGoogleMapsAndInstagram] Aviso ao rodar Apify Maps:", apifyErr);

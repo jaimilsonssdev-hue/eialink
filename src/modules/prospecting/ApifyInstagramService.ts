@@ -394,7 +394,21 @@ export async function scrapeGoogleMapsViaApify(
           : item.imageUrl
           ? [item.imageUrl]
           : [];
-        const photos = rawPhotos.filter((p: unknown) => typeof p === "string" && p.startsWith("http"));
+        const photos = rawPhotos
+          .filter(
+            (p: unknown): p is string =>
+              typeof p === "string" &&
+              p.startsWith("http") &&
+              !p.includes("streetviewpixels-pa.googleapis.com") &&
+              !p.includes("default_geocode") &&
+              !p.includes("/a/") &&
+              !p.includes("/a-/"),
+          )
+          .map((p: string) =>
+            p.includes("googleusercontent.com")
+              ? p.replace(/=w\d+.*$/, "=w1200-h800-k-no")
+              : p,
+          );
 
         places.push({
           name,

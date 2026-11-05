@@ -3,7 +3,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import {
   NICHE_GALLERIES,
   detectNicheKey,
-  getPairedCatalogForBusiness,
+  getNicheDesignDirection,
 } from "@/modules/prospecting/nichePresets";
 
 export interface UnsplashPhotoItem {
@@ -422,30 +422,18 @@ export async function searchCompatibleBusinessImages(
     `${niche} atendimento profissional alta resolucao`,
   ];
 
-  // Galeria curada do nicho com shuffle determinístico pela semente do nome
-  // ATENÇÃO: Covers contém apenas ambientes, fachadas, gastronomia e equipamentos.
-  // NUNCA injetamos fotos de pessoas desconhecidas como "team" ou "avatar" para evitar pessoas aleatórias no site do cliente!
-  const gallery = NICHE_GALLERIES[detectedKey] || NICHE_GALLERIES.geral;
+  // Direção oficial do nicho/sub-nicho com Hero, Ambiente e 4 Serviços 100% distintos e verificados
+  const direction = getNicheDesignDirection(niche, businessName, 0);
+  const gallery =
+    NICHE_GALLERIES[subNicheKey] ||
+    NICHE_GALLERIES[detectedKey] ||
+    NICHE_GALLERIES.geral;
   const allCurated = [...(gallery.covers || [])];
-  const pairedCatalog = getPairedCatalogForBusiness(niche, businessName);
-
-  // Seed hash para variar a seleção entre empresas diferentes
-  const seedString = `${businessName || ""}-${niche}`;
-  const seedNum = Math.abs(
-    seedString.split("").reduce((acc, c, i) => acc + c.charCodeAt(0) * (i + 1), 0),
-  );
-
-  // Rotação determinística do pool curado
-  const rotatedCurated = allCurated.slice().sort((a, b) => {
-    const hashA = (a.id.charCodeAt(a.id.length - 1) + seedNum) % 17;
-    const hashB = (b.id.charCodeAt(b.id.length - 1) + seedNum) % 17;
-    return hashA - hashB;
-  });
 
   // Limpa e formata URLs para CDN de alta resolução
   const cleanUrl = (url: string) => {
     if (url.includes("unsplash.com") && !url.includes("auto=format")) {
-      return `${url.split("?")[0]}?auto=format&fit=crop&w=1200&q=80`;
+      return `${url.split("?")[0]}?auto=format&fit=crop&w=1200&q=85`;
     }
     return url;
   };
@@ -460,21 +448,35 @@ export async function searchCompatibleBusinessImages(
   }> = [];
   const seenBaseIds = new Set<string>();
 
-  // 1. Foto principal de Hero (da galeria curada rotacionada por empresa)
-  if (rotatedCurated.length > 0) {
-    const heroItem = rotatedCurated[0];
-    const formatted = cleanUrl(heroItem.url);
+  // 1. Foto principal de Hero (exclusiva do nicho/sub-nicho, nunca repete nos serviços)
+  if (direction.heroPhotoUrl) {
+    const formatted = cleanUrl(direction.heroPhotoUrl);
     seenBaseIds.add(baseIdOf(formatted));
     pool.push({
       url: formatted,
-      label: `[CAPA / HERO PRINCIPAL] ${heroItem.label}`,
+      label: `[CAPA / HERO PRINCIPAL DO NICHO ${direction.canonicalTagLabel.toUpperCase()}]`,
       role: "hero",
       source: "curated",
     });
   }
 
-  // 2. Fotos 100% pareadas com cada Produto/Serviço do negócio (prioridade absoluta para os cards de serviços)
-  for (const srv of pairedCatalog) {
+  // 2. Foto exclusiva de Ambiente / Nosso Espaço (nunca repete Hero nem Serviços)
+  if (direction.ambientPhotoUrl) {
+    const formatted = cleanUrl(direction.ambientPhotoUrl);
+    const bId = baseIdOf(formatted);
+    if (!seenBaseIds.has(bId)) {
+      seenBaseIds.add(bId);
+      pool.push({
+        url: formatted,
+        label: `[AMBIENTE / NOSSO ESPAÇO DO NICHO ${direction.canonicalTagLabel.toUpperCase()}]`,
+        role: "ambient",
+        source: "curated",
+      });
+    }
+  }
+
+  // 3. Fotos 100% pareadas com cada Produto/Serviço do negócio (prioridade absoluta para os cards de serviços)
+  for (const srv of direction.pairedServices) {
     if (!srv.image_url) continue;
     const formatted = cleanUrl(srv.image_url);
     const bId = baseIdOf(formatted);
@@ -489,48 +491,18 @@ export async function searchCompatibleBusinessImages(
     }
   }
 
-  // 3. Completa com as demais fotos curadas rotacionadas para Ambiente e Detalhes
-  const extraRoles: CompatibleBusinessImage["role"][] = ["ambient", "detail", "ambient", "tech"];
-  let extraIdx = 0;
-  for (const item of rotatedCurated.slice(1)) {
+  // 4. Completa exclusivamente com fotos curadas verificadas do próprio nicho (sem buscar fotos aleatórias na web)
+  for (const item of allCurated) {
     const formatted = cleanUrl(item.url);
     const bId = baseIdOf(formatted);
     if (!seenBaseIds.has(bId)) {
       seenBaseIds.add(bId);
       pool.push({
         url: formatted,
-        label: `[AMBIENTE / ESPAÇO] ${item.label}`,
-        role: extraRoles[extraIdx % extraRoles.length],
+        label: `[GALERIA DO NICHO] ${item.label}`,
+        role: "detail",
         source: "curated",
       });
-      extraIdx++;
-    }
-  }
-
-  // 4. Somente se o pool curado + catálogo pareado tiver menos itens que o solicitado,
-  // busca complemento rápido na web (evita 2.2s de latência desnecessária e fotos desconexas no topo)
-  if (pool.length < safeCount) {
-    try {
-      const q1 = `${queries[0]} site:unsplash.com`;
-      const webResults = await Promise.race([
-        searchDuckDuckGoImages(q1, safeCount - pool.length + 2),
-        new Promise<UnsplashPhotoItem[]>((resolve) => setTimeout(() => resolve([]), 1200)),
-      ]);
-      for (const item of webResults || []) {
-        const formatted = cleanUrl(item.url);
-        const bId = baseIdOf(formatted);
-        if (!seenBaseIds.has(bId) && formatted.startsWith("http")) {
-          seenBaseIds.add(bId);
-          pool.push({
-            url: formatted,
-            label: item.label || `${niche} de alta resolução`,
-            role: "detail",
-            source: item.source || "ddg",
-          });
-        }
-      }
-    } catch (err) {
-      console.warn("[searchCompatibleBusinessImages] Busca complementar na web ignorada:", err);
     }
   }
 

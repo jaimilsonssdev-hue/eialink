@@ -273,33 +273,35 @@ export function sanitizeGeneratedLuxuryHtml(rawHtml: string): string {
 
   let html = rawHtml;
 
-  // 1. Substitui fotos desconexas legadas (teatro/ópera lotado, silhueta pôr do sol, praia escura) por fotos clínicas verificadas
+  // 1. Substitui fotos desconexas legadas (teatro/ópera lotado, silhueta pôr do sol, praia escura, notebook loja de móveis, poltrona amarela com TV) por fotos clínicas verificadas
+  let psychologyHeroCount = 0;
   html = html
     .replace(
       /https:\/\/images\.unsplash\.com\/photo-1516307365426-bea591f05011[^"'\s)]*/gi,
-      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=900&q=85",
+      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85",
     )
     .replace(
       /https:\/\/images\.unsplash\.com\/photo-1499209974431-9dddcece7f88[^"'\s)]*/gi,
-      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=85",
+      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85",
     )
     .replace(
       /https:\/\/images\.unsplash\.com\/photo-1506126613408-eca07ce68773[^"'\s)]*/gi,
-      "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=900&q=85",
+      "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=85",
+    )
+    .replace(
+      /https:\/\/images\.unsplash\.com\/photo-1586023492125-27b2c045efd7[^"'\s)]*/gi,
+      "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=1200&q=85",
+    )
+    .replace(
+      /https:\/\/images\.unsplash\.com\/photo-1573497620053-ea5300f94f21[^"'\s)]*/gi,
+      () => {
+        psychologyHeroCount += 1;
+        if (psychologyHeroCount === 1) {
+          return "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=85";
+        }
+        return "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1200&q=85";
+      },
     );
-
-  // 2. Desduplica caso a mesma foto do Hero (photo-1573497620053-ea5300f94f21) tenha sido repetida no Card 1
-  let psychologyHeroCount = 0;
-  html = html.replace(
-    /https:\/\/images\.unsplash\.com\/photo-1573497620053-ea5300f94f21[^"'\s)]*/gi,
-    (match) => {
-      psychologyHeroCount += 1;
-      if (psychologyHeroCount > 1) {
-        return "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=900&q=85";
-      }
-      return match;
-    },
-  );
 
   // 3. Corrige selos/cards absolutos vazando para fora de imagens (-right-6, -right-8, -right-10, -right-12)
   html = html.replace(/\b-right-(?:6|8|10|12)\b/g, "right-4");

@@ -731,7 +731,9 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
     const rawInputPhotos = (input.photos || []).filter(
       (u) => typeof u === "string" && u.startsWith("http"),
     );
-    const clientRealPhotos = rawInputPhotos.filter((u) => !/images\.unsplash\.com/i.test(u));
+    const clientRealPhotos = rawInputPhotos.filter(
+      (u) => !/images\.unsplash\.com|streetviewpixels-pa\.googleapis\.com/i.test(u),
+    );
 
     if (clientRealPhotos.length > 0) {
       businessContextParts.push(
@@ -750,7 +752,7 @@ ${pairedCatalog
       `Serviço ${idx + 1}: "${srv.name}" (${srv.category})
    - Descrição: ${srv.description}
    - Valor / Duração: R$ ${srv.price.toFixed(2)} (${srv.duration_minutes} min)
-   - IMAGEM OBRIGATÓRIA DESTE CARD (src exato): ${clientRealPhotos[idx + 1] || srv.image_url}
+   - IMAGEM OBRIGATÓRIA DESTE CARD (src exato): ${srv.image_url}
    - Conteúdo Visual da Imagem: ${srv.photo_label}`,
   )
   .join("\n\n")}`,

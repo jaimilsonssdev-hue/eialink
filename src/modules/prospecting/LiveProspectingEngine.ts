@@ -876,18 +876,14 @@ export async function fetchGoogleMapsPlaceDetails(
       if (res.ok) {
         const text = await res.text();
 
-        // 1. Extrai fotos reais do estabelecimento (Google Photos e Street View de fachada)
-        const imgRegex = /!\[[^\]]*\]\((https:\/\/(?:lh[0-9]\.googleusercontent\.com|streetviewpixels-pa\.googleapis\.com)[^\)]+)\)/g;
+        // 1. Extrai fotos reais do estabelecimento no Google Maps (exclui Street View 360 que pega rua/calçada/postes)
+        const imgRegex = /!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g;
         let imgMatch: RegExpExecArray | null;
         while ((imgMatch = imgRegex.exec(text)) !== null) {
           const url = imgMatch[1];
-          if (isAuthenticBusinessPhoto(url)) {
+          if (isAuthenticBusinessPhoto(url) && !url.includes("streetviewpixels-pa.googleapis.com")) {
             const cleanUrl = normalizeBusinessPhotoUrl(url);
-            if (url.includes("streetviewpixels-pa.googleapis.com")) {
-              if (!photos.includes(cleanUrl)) photos.unshift(cleanUrl);
-            } else {
-              if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
-            }
+            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
           }
         }
 
@@ -1069,14 +1065,8 @@ export async function fetchGoogleMapsPlaceDetails(
     }
   }
 
-  // Se fotos não vieram do Google Places, usa a galeria curada em altíssima definição do nicho comercial
-  if (photos.length === 0) {
-    const nicheKey = detectNicheKey(cleanName, cleanName);
-    const gallery = NICHE_GALLERIES[nicheKey] || NICHE_GALLERIES["loja"] || NICHE_GALLERIES["restaurante"];
-    if (gallery?.covers) {
-      photos.push(...gallery.covers.map((c) => c.url));
-    }
-  }
+  // Mantém photos vazio caso o Google Maps não tenha fotos reais autenticadas do local,
+  // para que o gerador utilize exclusivamente a curadoria oficial do nicho exato do lead (e nunca um fallback genérico pelo nome).
 
   if (rating === null) {
     rating = 4.9;

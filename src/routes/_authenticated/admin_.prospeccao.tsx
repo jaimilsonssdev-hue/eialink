@@ -876,16 +876,24 @@ function ProspectingPage() {
     const nicheText = company.niche || "Serviços Especializados";
     const detectedKey = detectNicheKey(company.niche, company.name);
 
-    // 1. Desempacota fotos reais já associadas ao lead (Google Maps ou Instagram pré-salvo)
+    // 1. Desempacota fotos reais já associadas ao lead (Google Maps ou Instagram pré-salvo), ignorando URLs de banco de imagens ou Street View 360
+    const isTrueClientPhoto = (u: unknown): u is string =>
+      typeof u === "string" &&
+      u.startsWith("http") &&
+      !/images\.unsplash\.com|streetviewpixels-pa\.googleapis\.com/i.test(u);
+
     let realPhotos: string[] = [];
     if (Array.isArray(company.photos) && company.photos.length > 0) {
-      realPhotos.push(...company.photos.filter((p): p is string => typeof p === "string" && p.startsWith("http")));
+      realPhotos.push(...company.photos.filter(isTrueClientPhoto));
     }
     // Desempacota fotos salvas nas notas se ainda não estiverem em company.photos
     if (realPhotos.length === 0 && company.notes && company.notes.includes("[Fotos:")) {
       const match = company.notes.match(/\[Fotos:\s*([^\]]+)\]/);
       if (match) {
-        const extracted = match[1].split("|").map((p) => p.trim()).filter((p) => p.startsWith("http"));
+        const extracted = match[1]
+          .split("|")
+          .map((p) => p.trim())
+          .filter(isTrueClientPhoto);
         realPhotos.push(...extracted);
       }
     }
@@ -935,7 +943,7 @@ function ProspectingPage() {
           cleanPhone = String(fetchedMaps.whatsapp).replace(/\D/g, "");
         if (Array.isArray(fetchedMaps.photos) && fetchedMaps.photos.length > 0) {
           for (const p of fetchedMaps.photos) {
-            if (typeof p === "string" && p.startsWith("http") && !realPhotos.includes(p)) {
+            if (isTrueClientPhoto(p) && !realPhotos.includes(p)) {
               realPhotos.push(p);
             }
           }
@@ -1031,7 +1039,7 @@ ${pairedServices
    - Badge / Categoria: "${srv.category}"
    - Descrição Persuasiva: "${srv.description}"
    - Valor / Duração de Referência: R$ ${srv.price.toFixed(2)} (${srv.duration_minutes} min)
-   - IMAGEM OBRIGATÓRIA DESTE CARD (usar no <img src="...">): ${realPhotos[idx + 2] || srv.image_url}
+   - IMAGEM OBRIGATÓRIA DESTE CARD (usar no <img src="...">): ${srv.image_url}
    - Descrição Semântica da Imagem: ${srv.photo_label}`,
   )
   .join("\n\n")}

@@ -44,11 +44,13 @@ export interface CuratedPhoto {
 export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: CuratedPhoto[] }> = {
   loja: {
     covers: [
-      { id: "loja-1", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=80", label: "Loja & Vitrine Conceito" },
-      { id: "loja-2", url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=80", label: "Moda & Compras Fashion" },
-      { id: "loja-3", url: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=1200&q=80", label: "Boutique & Coleção Exclusiva" },
-      { id: "loja-4", url: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=1200&q=80", label: "Vitrine Moderna & Tendências" },
-      { id: "loja-5", url: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200&q=80", label: "Interior de Loja & Exposição" },
+      { id: "loja-1", url: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&w=1200&q=85", label: "Loja & Vitrine Conceito de Moda" },
+      { id: "loja-2", url: "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?auto=format&fit=crop&w=1200&q=85", label: "Interior de Boutique & Araras de Roupas" },
+      { id: "loja-3", url: "https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=1200&q=85", label: "Moda Feminina & Compras Fashion" },
+      { id: "loja-4", url: "https://images.unsplash.com/photo-1472851294608-062f824d29cc?auto=format&fit=crop&w=1200&q=85", label: "Vitrine Boutique & Coleção Exclusiva" },
+      { id: "loja-5", url: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?auto=format&fit=crop&w=1200&q=85", label: "Shopping & Tendências da Estação" },
+      { id: "loja-6", url: "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?auto=format&fit=crop&w=1200&q=85", label: "Closet & Curadoria de Roupas" },
+      { id: "loja-7", url: "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&w=1200&q=85", label: "Peças Selecionadas & Alfaiataria" },
     ],
     avatars: [
       { id: "loja-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Lojista / Diretora Criativa" },
@@ -57,24 +59,82 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   delivery: {
     covers: [
-      { id: "del-1", url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=80", label: "Burger Artesanal Suculento" },
-      { id: "del-2", url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=80", label: "Pizza Saindo do Forno" },
-      { id: "del-3", url: "https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=1200&q=80", label: "Embalagem Delivery Rápido" },
-      { id: "del-4", url: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=80", label: "Combo de Lanches & Batata" },
-      { id: "del-5", url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=80", label: "Pizza Artesanal & Forno a Lenha" },
+      { id: "del-1", url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=85", label: "Burger Artesanal Suculento" },
+      { id: "del-2", url: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=85", label: "Combo de Lanches Artesanais & Batata" },
+      { id: "del-3", url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=85", label: "Pizza Artesanal Saindo do Forno" },
+      { id: "del-4", url: "https://images.unsplash.com/photo-1526367790999-0150786686a2?auto=format&fit=crop&w=1200&q=85", label: "Entrega Expressa & Embalagem Térmica" },
+      { id: "del-5", url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=85", label: "Pizza Gourmet Fatiada" },
+      { id: "del-6", url: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=1200&q=85", label: "Cheeseburger Gourmet na Chapa" },
+      { id: "del-7", url: "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&w=1200&q=85", label: "Smash Burger Duplo & Bacon Crocante" },
     ],
     avatars: [
       { id: "del-av-1", url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=400&q=80", label: "Mestre Chapeiro / Chef" },
       { id: "del-av-2", url: "https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=400&q=80", label: "Atendimento Delivery" },
     ],
   },
+  hamburgueria: {
+    covers: [
+      { id: "hamb-1", url: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=1200&q=85", label: "Hamburgueria Artesanal & Batatas Crocantes" },
+      { id: "hamb-2", url: "https://images.unsplash.com/photo-1594212699903-ec8a3eca50f5?auto=format&fit=crop&w=1200&q=85", label: "Bancada & Cozinha de Burgers Artesanais" },
+      { id: "hamb-3", url: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=1200&q=85", label: "Smash Burger Duplo Artesanal" },
+      { id: "hamb-4", url: "https://images.unsplash.com/photo-1586190848861-99aa4a171e90?auto=format&fit=crop&w=1200&q=85", label: "Cheeseburger Gourmet & Cebola Caramelizada" },
+      { id: "hamb-5", url: "https://images.unsplash.com/photo-1572802419224-296b0aeee0d9?auto=format&fit=crop&w=1200&q=85", label: "Burger Duplo com Bacon & Cheddar" },
+      { id: "hamb-6", url: "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?auto=format&fit=crop&w=1200&q=85", label: "Burger Grelhado no Fogo com Fritas" },
+    ],
+    avatars: [],
+  },
+  pizzaria: {
+    covers: [
+      { id: "piz-1", url: "https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&w=1200&q=85", label: "Pizza Artesanal Assada no Forno a Lenha" },
+      { id: "piz-2", url: "https://images.unsplash.com/photo-1579751626657-72bc17010498?auto=format&fit=crop&w=1200&q=85", label: "Forneria Italiana & Ambiente de Pizzaria" },
+      { id: "piz-3", url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=1200&q=85", label: "Pizza Especial com Borda Dourada" },
+      { id: "piz-4", url: "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?auto=format&fit=crop&w=1200&q=85", label: "Pizza Margherita Napolitana" },
+      { id: "piz-5", url: "https://images.unsplash.com/photo-1590947132387-155cc02f3212?auto=format&fit=crop&w=1200&q=85", label: "Mesa de Pizzas Artesanais para Família" },
+      { id: "piz-6", url: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&w=1200&q=85", label: "Pizza Pepperoni & Queijo Derretido" },
+    ],
+    avatars: [],
+  },
+  churrascaria: {
+    covers: [
+      { id: "chur-1", url: "https://images.unsplash.com/photo-1558030006-450675393462?auto=format&fit=crop&w=1200&q=85", label: "Cortes Nobres de Picanha na Brasa" },
+      { id: "chur-2", url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=85", label: "Salão Principal da Churrascaria & Steakhouse" },
+      { id: "chur-3", url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=85", label: "Costela & Carnes Grelhadas no Fogo" },
+      { id: "chur-4", url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=85", label: "Buffet Gourmet & Mesa Posta" },
+      { id: "chur-5", url: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?auto=format&fit=crop&w=1200&q=85", label: "Parrilla & Bife Ancho Suculento" },
+      { id: "chur-6", url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=1200&q=85", label: "Drinks & Bebidas da Steakhouse" },
+    ],
+    avatars: [],
+  },
+  japones: {
+    covers: [
+      { id: "jap-1", url: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&w=1200&q=85", label: "Sushi Bar & Combinado de Salmão Fresco" },
+      { id: "jap-2", url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=85", label: "Ambiente Intimista de Restaurante Oriental" },
+      { id: "jap-3", url: "https://images.unsplash.com/photo-1553621042-f6e147245754?auto=format&fit=crop&w=1200&q=85", label: "Sashimi, Niguiri & Hot Rolls" },
+      { id: "jap-4", url: "https://images.unsplash.com/photo-1611143669185-af224c5e3252?auto=format&fit=crop&w=1200&q=85", label: "Barca Oriental Premium" },
+      { id: "jap-5", url: "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?auto=format&fit=crop&w=1200&q=85", label: "Yakisoba & Cozinha Quente Oriental" },
+      { id: "jap-6", url: "https://images.unsplash.com/photo-1580822184713-fc5400e7fe10?auto=format&fit=crop&w=1200&q=85", label: "Alta Gastronomia Japonesa & Omakase" },
+    ],
+    avatars: [],
+  },
+  cafeteria: {
+    covers: [
+      { id: "caf-1", url: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=1200&q=85", label: "Ambiente Aconchegante de Cafeteria & Confeitaria" },
+      { id: "caf-2", url: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?auto=format&fit=crop&w=1200&q=85", label: "Bancada de Cafés Especiais & Barista" },
+      { id: "caf-3", url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?auto=format&fit=crop&w=1200&q=85", label: "Cappuccino Italiano & Latte Art" },
+      { id: "caf-4", url: "https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=85", label: "Pães Artesanais & Fornada Quente" },
+      { id: "caf-5", url: "https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=1200&q=85", label: "Croissants Folhados & Confeitaria Fina" },
+      { id: "caf-6", url: "https://images.unsplash.com/photo-1517433670267-08bbd4be890f?auto=format&fit=crop&w=1200&q=85", label: "Vitrine de Doces & Padaria Artesanal" },
+    ],
+    avatars: [],
+  },
   restaurante: {
     covers: [
-      { id: "rest-1", url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80", label: "Salão Gastronômico Iluminado" },
-      { id: "rest-2", url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=80", label: "Prato Gourmet À La Carte" },
-      { id: "rest-3", url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=80", label: "Mesa Posta & Bistrô" },
-      { id: "rest-4", url: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=1200&q=80", label: "Cozinha Contemporânea" },
-      { id: "rest-5", url: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=80", label: "Ambiente Gastronômico Sofisticado" },
+      { id: "rest-1", url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=85", label: "Salão Gastronômico Iluminado" },
+      { id: "rest-2", url: "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1200&q=85", label: "Ambiente Gastronômico Sofisticado & Bistrô" },
+      { id: "rest-3", url: "https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=1200&q=85", label: "Prato Gourmet À La Carte" },
+      { id: "rest-4", url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1200&q=85", label: "Mesa Posta & Gastronomia Autoral" },
+      { id: "rest-5", url: "https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=1200&q=85", label: "Cozinha Contemporânea & Chef" },
+      { id: "rest-6", url: "https://images.unsplash.com/photo-1414235077428-338989a2e8c0?auto=format&fit=crop&w=1200&q=85", label: "Alta Gastronomia & Empratamento Fino" },
     ],
     avatars: [
       { id: "rest-av-1", url: "https://images.unsplash.com/photo-1577219491135-ce391730fb2c?auto=format&fit=crop&w=400&q=80", label: "Chef Executivo" },
@@ -83,11 +143,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   sorveteria: {
     covers: [
-      { id: "sorv-1", url: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=1200&q=80", label: "Balcão de Gelatos Artesanais" },
-      { id: "sorv-2", url: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=1200&q=80", label: "Taça de Sorvete Cremoso" },
-      { id: "sorv-3", url: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=1200&q=80", label: "Tigela de Açaí com Frutas" },
-      { id: "sorv-4", url: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=1200&q=80", label: "Gelato Italiano Especial" },
-      { id: "sorv-5", url: "https://images.unsplash.com/photo-1576506295286-5cda18df43e7?auto=format&fit=crop&w=1200&q=80", label: "Taça de Sorvete e Sobremesas Geladas" },
+      { id: "sorv-1", url: "https://images.unsplash.com/photo-1501443762994-82bd5dace89a?auto=format&fit=crop&w=1200&q=85", label: "Vitrine de Gelatos Artesanais" },
+      { id: "sorv-2", url: "https://images.unsplash.com/photo-1576506295286-5cda18df43e7?auto=format&fit=crop&w=1200&q=85", label: "Gelateria Artesanal & Taças Geladas" },
+      { id: "sorv-3", url: "https://images.unsplash.com/photo-1563805042-7684c019e1cb?auto=format&fit=crop&w=1200&q=85", label: "Taça de Sorvete Cremoso com Calda" },
+      { id: "sorv-4", url: "https://images.unsplash.com/photo-1590080875515-8a3a8dc5735e?auto=format&fit=crop&w=1200&q=85", label: "Tigela de Açaí Puro com Frutas Frescas" },
+      { id: "sorv-5", url: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=1200&q=85", label: "Gelato Italiano na Casquinha Crocante" },
+      { id: "sorv-6", url: "https://images.unsplash.com/photo-1497034825429-c343d7c6a68f?auto=format&fit=crop&w=1200&q=85", label: "Sorvete Artesanal Colorido & Refrescante" },
     ],
     avatars: [
       { id: "sorv-av-1", url: "https://images.unsplash.com/photo-1570197788417-0e82375c9371?auto=format&fit=crop&w=400&q=80", label: "Emblema Gelato Italiano" },
@@ -96,11 +157,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   bebidas: {
     covers: [
-      { id: "beb-1", url: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=80", label: "Adega de Vinhos Selecionados" },
-      { id: "beb-2", url: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=1200&q=80", label: "Chopp Artesanal & Cerveja Gelada" },
-      { id: "beb-3", url: "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=1200&q=80", label: "Destilados & Balcão de Coquetéis" },
-      { id: "beb-4", url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=1200&q=80", label: "Prateleira de Bebidas & Conveniência" },
-      { id: "beb-5", url: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=80", label: "Bar, Balcão & Distribuidora de Bebidas" },
+      { id: "beb-1", url: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1200&q=85", label: "Adega de Vinhos & Rótulos Selecionados" },
+      { id: "beb-2", url: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1200&q=85", label: "Ambiente de Adega, Choperia & Distribuidora" },
+      { id: "beb-3", url: "https://images.unsplash.com/photo-1608270586620-248524c67de9?auto=format&fit=crop&w=1200&q=85", label: "Chopp Artesanal & Cerveja Trincando" },
+      { id: "beb-4", url: "https://images.unsplash.com/photo-1527061011665-3652c757a4d4?auto=format&fit=crop&w=1200&q=85", label: "Destilados Premium & Coquetelaria" },
+      { id: "beb-5", url: "https://images.unsplash.com/photo-1551024709-8f23befc6f87?auto=format&fit=crop&w=1200&q=85", label: "Combos de Bebidas & Conveniência" },
+      { id: "beb-6", url: "https://images.unsplash.com/photo-1584225064785-c62a8b43d148?auto=format&fit=crop&w=1200&q=85", label: "Cervejas Especiais Geladas" },
     ],
     avatars: [
       { id: "beb-av-1", url: "https://images.unsplash.com/photo-1567696911980-2eed69a46042?auto=format&fit=crop&w=400&q=80", label: "Emblema Adega & Cervejas" },
@@ -109,11 +171,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   barbearia: {
     covers: [
-      { id: "barb-1", url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=80", label: "Cadeira de Barbearia Vintage" },
-      { id: "barb-2", url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=80", label: "Bancada de Navalha & Tesouras" },
-      { id: "barb-3", url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1200&q=80", label: "Ambiente Barber Club Moderno" },
-      { id: "barb-4", url: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1200&q=80", label: "Luminária & Estilo Clássico" },
-      { id: "barb-5", url: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=1200&q=80", label: "Corte & Barbaterapia Profissional" },
+      { id: "barb-1", url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=1200&q=85", label: "Ambiente Barber Club Clássico & Cadeiras" },
+      { id: "barb-2", url: "https://images.unsplash.com/photo-1622286342621-4bd786c2447c?auto=format&fit=crop&w=1200&q=85", label: "Estrutura de Barbearia & Estilo Masculino" },
+      { id: "barb-3", url: "https://images.unsplash.com/photo-1585747860715-2ba37e788b70?auto=format&fit=crop&w=1200&q=85", label: "Corte Degradê & Bancada de Navalha" },
+      { id: "barb-4", url: "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=85", label: "Barbaterapia com Toalha Quente" },
+      { id: "barb-5", url: "https://images.unsplash.com/photo-1599351431202-1e0f0137899a?auto=format&fit=crop&w=1200&q=85", label: "Acabamento de Barba & Navalhete" },
+      { id: "barb-6", url: "https://images.unsplash.com/photo-1517832607067-4db24a2ae47c?auto=format&fit=crop&w=1200&q=85", label: "Corte Masculino na Tesoura & Fade" },
     ],
     avatars: [
       { id: "barb-av-1", url: "https://images.unsplash.com/photo-1621605815971-fbc98d665033?auto=format&fit=crop&w=400&q=80", label: "Emblema Barber Shop" },
@@ -122,11 +185,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   beleza: {
     covers: [
-      { id: "bel-1", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=80", label: "Salão de Beleza & Bancada Iluminada" },
-      { id: "bel-2", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Studio de Beleza & Cabelos" },
-      { id: "bel-3", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1200&q=80", label: "Nail Studio & Unhas em Gel" },
-      { id: "bel-4", url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1200&q=80", label: "Hair Stylist & Escova Modelada" },
-      { id: "bel-5", url: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80", label: "Design de Olhar & Lash Lifting" },
+      { id: "bel-1", url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&w=1200&q=85", label: "Salão de Beleza & Bancada Iluminada" },
+      { id: "bel-2", url: "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=85", label: "Interior de Studio de Beleza & Poltronas" },
+      { id: "bel-3", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1200&q=85", label: "Nail Studio & Alongamento de Unhas em Gel" },
+      { id: "bel-4", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=85", label: "Cabelos, Mechas & Finalização" },
+      { id: "bel-5", url: "https://images.unsplash.com/photo-1562322140-8baeececf3df?auto=format&fit=crop&w=1200&q=85", label: "Hair Stylist & Escova Modelada" },
+      { id: "bel-6", url: "https://images.unsplash.com/photo-1487412947147-5cebf100ffc2?auto=format&fit=crop&w=1200&q=85", label: "Maquiagem Profissional & Design de Sobrancelhas" },
     ],
     avatars: [
       { id: "bel-av-1", url: "https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=400&q=80", label: "Emblema Studio de Beleza" },
@@ -135,11 +199,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   estetica_corporal: {
     covers: [
-      { id: "ec-1", url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=80", label: "Drenagem Linfática & Massoterapia Corporal" },
-      { id: "ec-2", url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=80", label: "Tratamento Corporal & Bem-Estar" },
-      { id: "ec-3", url: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=1200&q=80", label: "Massagem Modeladora & Redutora" },
-      { id: "ec-4", url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80", label: "Protocolos Corporais & Relaxamento" },
-      { id: "ec-5", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80", label: "Clínica Estética & Alta Tecnologia" },
+      { id: "ec-1", url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=85", label: "Clínica de Estética Corporal & Bem-Estar" },
+      { id: "ec-2", url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=85", label: "Sala Climatizada de Procedimentos Corporais" },
+      { id: "ec-3", url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1200&q=85", label: "Drenagem Linfática & Massoterapia Corporal" },
+      { id: "ec-4", url: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=1200&q=85", label: "Massagem Modeladora & Redutora de Medidas" },
+      { id: "ec-5", url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=85", label: "Protocolos Corporais & Pós-Operatório" },
+      { id: "ec-6", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=85", label: "Tecnologia Estética Avançada" },
     ],
     avatars: [
       { id: "ec-av-1", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=400&q=80", label: "Especialista em Estética Corporal" },
@@ -148,11 +213,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   estetica_facial: {
     covers: [
-      { id: "ef-1", url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=1200&q=80", label: "Limpeza de Pele Profunda & Glow" },
-      { id: "ef-2", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=80", label: "Estética Facial & Harmonização" },
-      { id: "ef-3", url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=1200&q=80", label: "Rejuvenescimento & Skincare" },
-      { id: "ef-4", url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=80", label: "Cuidados Faciais Personalizados" },
-      { id: "ef-5", url: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=1200&q=80", label: "Protocolos Estéticos Faciais" },
+      { id: "ef-1", url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=1200&q=85", label: "Clínica de Estética Facial & Harmonização" },
+      { id: "ef-2", url: "https://images.unsplash.com/photo-1516975080664-ed2fc6a32937?auto=format&fit=crop&w=1200&q=85", label: "Consultório de Dermatologia & Skincare" },
+      { id: "ef-3", url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=1200&q=85", label: "Limpeza de Pele Profunda & Glow" },
+      { id: "ef-4", url: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=1200&q=85", label: "Rejuvenescimento & Bioestimuladores de Colágeno" },
+      { id: "ef-5", url: "https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?auto=format&fit=crop&w=1200&q=85", label: "Protocolos Estéticos Faciais Personalizados" },
+      { id: "ef-6", url: "https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?auto=format&fit=crop&w=1200&q=85", label: "Séruns & Ativos Dermatológicos de Alta Performance" },
     ],
     avatars: [
       { id: "ef-av-1", url: "https://images.unsplash.com/photo-1594824813524-42b8e3e488fb?auto=format&fit=crop&w=400&q=80", label: "Dra. Esteta Facial" },
@@ -161,11 +227,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   spa: {
     covers: [
-      { id: "spa-1", url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=80", label: "Ambiente de Spa & Aromaterapia" },
-      { id: "spa-2", url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=1200&q=80", label: "Massagem com Pedras Quentes" },
-      { id: "spa-3", url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=80", label: "Day Spa & Rituais de Relaxamento" },
-      { id: "spa-4", url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1200&q=80", label: "Massoterapia & Bem-Estar Corporal" },
-      { id: "spa-5", url: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=80", label: "Refúgio de Bem-Estar & Paz" },
+      { id: "spa-1", url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=1200&q=85", label: "Ambiente Zen de Spa & Aromaterapia" },
+      { id: "spa-2", url: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=1200&q=85", label: "Refúgio de Bem-Estar, Velas & Relaxamento" },
+      { id: "spa-3", url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=1200&q=85", label: "Terapia com Pedras Quentes Vulcânicas" },
+      { id: "spa-4", url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=1200&q=85", label: "Day Spa & Rituais de Imersão" },
+      { id: "spa-5", url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1200&q=85", label: "Massoterapia Relaxante Corporal" },
+      { id: "spa-6", url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=85", label: "Óleos Essenciais & Cuidado Sensorial" },
     ],
     avatars: [
       { id: "spa-av-1", url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=400&q=80", label: "Terapeuta Spa & Massagem" },
@@ -174,11 +241,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   oficina: {
     covers: [
-      { id: "ofic-1", url: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1200&q=80", label: "Auto Center & Elevador" },
-      { id: "ofic-2", url: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=80", label: "Mecânica & Motor de Precisão" },
-      { id: "ofic-3", url: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1200&q=80", label: "Pneus, Alinhamento & Rodas" },
-      { id: "ofic-4", url: "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&fit=crop&w=1200&q=80", label: "Diagnóstico Computadorizado" },
-      { id: "ofic-5", url: "https://images.unsplash.com/photo-1613214149922-f1809c99b414?auto=format&fit=crop&w=1200&q=80", label: "Revisão & Mecânica de Alta Performance" },
+      { id: "ofic-1", url: "https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&w=1200&q=85", label: "Auto Center Moderno & Elevador Automotivo" },
+      { id: "ofic-2", url: "https://images.unsplash.com/photo-1613214149922-f1809c99b414?auto=format&fit=crop&w=1200&q=85", label: "Box de Revisão & Estrutura de Oficina Mecânica" },
+      { id: "ofic-3", url: "https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&w=1200&q=85", label: "Mecânica de Precisão, Motor & Óleo" },
+      { id: "ofic-4", url: "https://images.unsplash.com/photo-1580273916550-e323be2ae537?auto=format&fit=crop&w=1200&q=85", label: "Pneus, Alinhamento 3D & Suspensão" },
+      { id: "ofic-5", url: "https://images.unsplash.com/photo-1487754180451-c456f719a1fc?auto=format&fit=crop&w=1200&q=85", label: "Diagnóstico Eletrônico Computadorizado" },
+      { id: "ofic-6", url: "https://images.unsplash.com/photo-1530046339160-ce3e530c7d2f?auto=format&fit=crop&w=1200&q=85", label: "Manutenção de Freios & Ferramentas Automotivas" },
     ],
     avatars: [
       { id: "ofic-av-1", url: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=400&q=80", label: "Mecânico Chefe Especialista" },
@@ -187,26 +255,38 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   clinica: {
     covers: [
-      { id: "clin-1", url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=80", label: "Recepção Médica Acolhedora" },
-      { id: "clin-2", url: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=80", label: "Consultório & Estetoscópio" },
-      { id: "clin-3", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80", label: "Exame Clínico de Precisão" },
-      { id: "clin-4", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80", label: "Estrutura Médica Integrada" },
-      { id: "clin-5", url: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1200&q=80", label: "Centro Médico & Consultório Clínico" },
+      { id: "clin-1", url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=85", label: "Recepção Médica Hospitalar & Clínica" },
+      { id: "clin-2", url: "https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=1200&q=85", label: "Centro Médico & Consultório Clínico Moderno" },
+      { id: "clin-3", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=85", label: "Consulta Médica Especializada" },
+      { id: "clin-4", url: "https://images.unsplash.com/photo-1505751172876-fa1923c5c528?auto=format&fit=crop&w=1200&q=85", label: "Check-up Clínico & Estetoscópio" },
+      { id: "clin-5", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=85", label: "Teleconsulta & Prontuário Médico Digital" },
+      { id: "clin-6", url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=85", label: "Exames & Diagnóstico de Alta Precisão" },
     ],
     avatars: [
       { id: "clin-av-1", url: "https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?auto=format&fit=crop&w=400&q=80", label: "Dr. Médico Especialista" },
       { id: "clin-av-2", url: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80", label: "Dra. Médica Clínica" },
     ],
   },
+  fisioterapia: {
+    covers: [
+      { id: "fis-1", url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=85", label: "Clínica de Fisioterapia & Reabilitação" },
+      { id: "fis-2", url: "https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=1200&q=85", label: "Estúdio de Pilates Clínico & Movimento" },
+      { id: "fis-3", url: "https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=1200&q=85", label: "Liberação Miofascial & Terapia Manual" },
+      { id: "fis-4", url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=85", label: "Fisioterapia Esportiva & Biomecânica" },
+      { id: "fis-5", url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=85", label: "Sala de Atendimento Fisioterapêutico" },
+      { id: "fis-6", url: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=85", label: "Equipamentos de Reabilitação Funcional" },
+    ],
+    avatars: [],
+  },
   psicologia: {
     covers: [
-      { id: "psi-1", url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=85", label: "Consultório de Psicologia Acolhedor & Arquitetura Orgânica" },
-      { id: "psi-2", url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=85", label: "Poltrona de Acolhimento & Espaço Clínico com Luz Natural" },
-      { id: "psi-3", url: "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=1200&q=85", label: "Sessão de Psicoterapia Individual & Escuta Ética" },
-      { id: "psi-4", url: "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=85", label: "Terapia Online por Videochamada Segura" },
-      { id: "psi-5", url: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85", label: "Terapia de Casal, Diálogo & Harmonia nas Relações" },
-      { id: "psi-6", url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=1200&q=85", label: "Primeira Sessão de Acolhimento & Planejamento Terapêutico" },
-      { id: "psi-7", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85", label: "Recepção & Ambiente Clínico Privativo" },
+      { id: "psi-1", url: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1200&q=85", label: "Psicóloga Clínica & Acolhimento Terapêutico Humanizado" },
+      { id: "psi-2", url: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=85", label: "Consultório Clínico Privativo, Iluminado e Confortável" },
+      { id: "psi-3", url: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1200&q=85", label: "Sessão de Psicoterapia Individual & Escuta Ética" },
+      { id: "psi-4", url: "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=85", label: "Terapia Online Segura por Videochamada" },
+      { id: "psi-5", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=85", label: "Mediação Terapêutica, Relacionamentos & Diálogo" },
+      { id: "psi-6", url: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=85", label: "Primeira Sessão de Acolhimento & Planejamento Terapêutico" },
+      { id: "psi-7", url: "https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&w=1200&q=85", label: "Recepção Clínica Serene & Sigilosa" },
     ],
     avatars: [
       { id: "psi-av-1", url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80", label: "Dra. Psicóloga Clínica" },
@@ -215,11 +295,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   petshop: {
     covers: [
-      { id: "pet-1", url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=1200&q=80", label: "Banho & Tosa com Cuidado" },
-      { id: "pet-2", url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1200&q=80", label: "Rações Premium & Loja Pet" },
-      { id: "pet-3", url: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=1200&q=80", label: "Consultório Veterinário" },
-      { id: "pet-4", url: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=1200&q=80", label: "Espaço Pet Care & Carinho" },
-      { id: "pet-5", url: "https://images.unsplash.com/photo-1535294435445-d7249524ef2e?auto=format&fit=crop&w=1200&q=80", label: "Veterinária & Pet Care Especializado" },
+      { id: "pet-1", url: "https://images.unsplash.com/photo-1576201836106-db1758fd1c97?auto=format&fit=crop&w=1200&q=85", label: "Espaço Pet Care & Clínica Veterinária" },
+      { id: "pet-2", url: "https://images.unsplash.com/photo-1535294435445-d7249524ef2e?auto=format&fit=crop&w=1200&q=85", label: "Estrutura Pet Shop & Atendimento Carinhoso" },
+      { id: "pet-3", url: "https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&w=1200&q=85", label: "Banho & Tosa Especializada" },
+      { id: "pet-4", url: "https://images.unsplash.com/photo-1548767797-d8c844163c4c?auto=format&fit=crop&w=1200&q=85", label: "Rações Super Premium & Acessórios Pet" },
+      { id: "pet-5", url: "https://images.unsplash.com/photo-1628009368231-7bb7cfcb0def?auto=format&fit=crop&w=1200&q=85", label: "Consulta Veterinária Preventiva & Vacinas" },
+      { id: "pet-6", url: "https://images.unsplash.com/photo-1516734212186-a967f81ad0d7?auto=format&fit=crop&w=1200&q=85", label: "Tosa na Tesoura & Estética Animal" },
     ],
     avatars: [
       { id: "pet-av-1", url: "https://images.unsplash.com/photo-1583511655857-d19b40a7a54e?auto=format&fit=crop&w=400&q=80", label: "Dra. Médica Veterinária" },
@@ -228,11 +309,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   advocacia: {
     covers: [
-      { id: "adv-1", url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=80", label: "Sala de Reuniões Jurídica Nobre" },
-      { id: "adv-2", url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80", label: "Balança da Justiça & Direito" },
-      { id: "adv-3", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80", label: "Escritório Corporativo Moderno" },
-      { id: "adv-4", url: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1200&q=80", label: "Biblioteca & Jurisprudência" },
-      { id: "adv-5", url: "https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?auto=format&fit=crop&w=1200&q=80", label: "Tribunal, Livros de Direito & Jurisprudência" },
+      { id: "adv-1", url: "https://images.unsplash.com/photo-1479142506502-19b3a3b7ff33?auto=format&fit=crop&w=1200&q=85", label: "Balança da Justiça, Códigos & Direito" },
+      { id: "adv-2", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85", label: "Sala de Reuniões do Escritório de Advocacia" },
+      { id: "adv-3", url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1200&q=85", label: "Consultoria Jurídica & Parecer Estratégico" },
+      { id: "adv-4", url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=85", label: "Acordos, Inventários & Proteção Patrimonial" },
+      { id: "adv-5", url: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=1200&q=85", label: "Biblioteca Jurídica & Jurisprudência" },
+      { id: "adv-6", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=85", label: "Análise de Contratos & Assessoria Empresarial" },
     ],
     avatars: [
       { id: "adv-av-1", url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80", label: "Dr. Advogado Sênior" },
@@ -241,21 +323,13 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   odontologia: {
     covers: [
-      { id: "odo-1", url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=80", label: "Sorriso Radiante & Estética Dental" },
-      { id: "odo-2", url: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1200&q=80", label: "Escaneamento & Tecnologia 3D" },
-      { id: "odo-3", url: "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=1200&q=80", label: "Recepção Odontológica Clean" },
-      { id: "odo-4", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=80", label: "Sala Clínica Iluminada com Luz Natural" },
-      { id: "odo-5", url: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=1200&q=80", label: "Consulta Humanizada & Cuidado Dental" },
-      { id: "odo-6", url: "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?auto=format&fit=crop&w=1200&q=80", label: "Procedimento Estético Dental de Precisão" },
-      { id: "odo-7", url: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=1200&q=80", label: "Ambiente Clínico Contemporâneo" },
-      { id: "odo-8", url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=1200&q=80", label: "Especialista em Lentes e Harmonização" },
-      { id: "odo-9", url: "https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1200&q=80", label: "Arquitetura Odontológica de Alto Padrão" },
-      { id: "odo-10", url: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=1200&q=80", label: "Tecnologia e Diagnóstico Digital" },
-      { id: "odo-11", url: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1200&q=80", label: "Corpo Clínico & Atendimento Especializado" },
-      { id: "odo-12", url: "https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&w=1200&q=80", label: "Design de Sorrisos & Odontologia Digital" },
-      { id: "odo-13", url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=1200&q=80", label: "Harmonia Facial & Estética Odontológica" },
-      { id: "odo-14", url: "https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=1200&q=80", label: "Biossegurança & Conforto Clínico" },
-      { id: "odo-15", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=80", label: "Espaço Executivo & Atendimento VIP" },
+      { id: "odo-1", url: "https://images.unsplash.com/photo-1598256989800-fe5f95da9787?auto=format&fit=crop&w=1200&q=85", label: "Clínica Odontológica Moderna & Cadeira Dental" },
+      { id: "odo-2", url: "https://images.unsplash.com/photo-1629909615184-74f495363b67?auto=format&fit=crop&w=1200&q=85", label: "Consultório Odontológico Digital & Biossegurança" },
+      { id: "odo-3", url: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=1200&q=85", label: "Avaliação Odontológica & Profilaxia" },
+      { id: "odo-4", url: "https://images.unsplash.com/photo-1588776814546-1ffcf47267a5?auto=format&fit=crop&w=1200&q=85", label: "Sorriso Radiante & Clareamento Dental" },
+      { id: "odo-5", url: "https://images.unsplash.com/photo-1606811841689-23dfddce3e95?auto=format&fit=crop&w=1200&q=85", label: "Implantes Dentários & Escaneamento 3D" },
+      { id: "odo-6", url: "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?auto=format&fit=crop&w=1200&q=85", label: "Lentes de Contato Dental & Ortodontia" },
+      { id: "odo-7", url: "https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1200&q=85", label: "Atendimento Odontológico Humanizado" },
     ],
     avatars: [
       { id: "odo-av-1", url: "https://images.unsplash.com/photo-1622253692010-333f2da6031d?auto=format&fit=crop&w=400&q=80", label: "Dr. Cirurgião-Dentista" },
@@ -264,11 +338,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   construcao: {
     covers: [
-      { id: "cons-1", url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=80", label: "Obra Residencial & Estrutura" },
-      { id: "cons-2", url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=80", label: "Planta Executiva & Engenharia" },
-      { id: "cons-3", url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=80", label: "Reforma & Acabamento de Alto Padrão" },
-      { id: "cons-4", url: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=1200&q=80", label: "Construção Civil & Ferramentas" },
-      { id: "cons-5", url: "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1200&q=80", label: "Estrutura Arquitetônica & Concreto" },
+      { id: "cons-1", url: "https://images.unsplash.com/photo-1541888946425-d0fbb186c5f7?auto=format&fit=crop&w=1200&q=85", label: "Engenharia Civil & Canteiro de Obras" },
+      { id: "cons-2", url: "https://images.unsplash.com/photo-1590381105924-c72589b9ef3f?auto=format&fit=crop&w=1200&q=85", label: "Estrutura Arquitetônica & Construção de Alto Padrão" },
+      { id: "cons-3", url: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=1200&q=85", label: "Gerenciamento & Execução de Obras" },
+      { id: "cons-4", url: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&w=1200&q=85", label: "Reformas Residenciais & Acabamentos Finos" },
+      { id: "cons-5", url: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=1200&q=85", label: "Planta Executiva & Projeto Estrutural" },
+      { id: "cons-6", url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=85", label: "Pintura, Iluminação & Interiores Reformados" },
     ],
     avatars: [
       { id: "cons-av-1", url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80", label: "Engenheiro Civil Responsável" },
@@ -277,11 +352,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   imobiliaria: {
     covers: [
-      { id: "imob-1", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80", label: "Residências de Alto Padrão" },
-      { id: "imob-2", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80", label: "Apartamentos Decorados Exclusivos" },
-      { id: "imob-3", url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=80", label: "Condomínios & Mansões" },
-      { id: "imob-4", url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=80", label: "Consultoria Imobiliária" },
-      { id: "imob-5", url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=80", label: "Mansão Contemporânea com Piscina" },
+      { id: "imob-1", url: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=1200&q=85", label: "Mansão Contemporânea de Alto Padrão" },
+      { id: "imob-2", url: "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?auto=format&fit=crop&w=1200&q=85", label: "Living Arquitetônico & Imóveis Exclusivos" },
+      { id: "imob-3", url: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=85", label: "Casas em Condomínio Fechado" },
+      { id: "imob-4", url: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=85", label: "Apartamentos Decorados & Varanda Gourmet" },
+      { id: "imob-5", url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=85", label: "Consultoria Imobiliária & Entrega de Chaves" },
+      { id: "imob-6", url: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=1200&q=85", label: "Locação e Venda de Imóveis Selecionados" },
     ],
     avatars: [
       { id: "imob-av-1", url: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=400&q=80", label: "Corretor de Imóveis CRECI" },
@@ -290,11 +366,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   seguros: {
     covers: [
-      { id: "seg-1", url: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1200&q=80", label: "Proteção Familiar & Tranquilidade" },
-      { id: "seg-2", url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80", label: "Apólice Segura & Confiança" },
-      { id: "seg-3", url: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=80", label: "Seguro Auto & Viagem Segura" },
-      { id: "seg-4", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80", label: "Planejamento Patrimonial" },
-      { id: "seg-5", url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80", label: "Aperto de Mão Corporativo & Segurança" },
+      { id: "seg-1", url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=85", label: "Corretora de Seguros & Confiança Patrimonial" },
+      { id: "seg-2", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85", label: "Atendimento Consultivo de Seguros e Planos" },
+      { id: "seg-3", url: "https://images.unsplash.com/photo-1449965408869-eaa3f722e40d?auto=format&fit=crop&w=1200&q=85", label: "Seguro Automóvel Completo & Assistência 24h" },
+      { id: "seg-4", url: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=1200&q=85", label: "Seguro de Vida & Proteção Familiar" },
+      { id: "seg-5", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=85", label: "Planos de Saúde & Consultoria de Benefícios" },
+      { id: "seg-6", url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=1200&q=85", label: "Seguro Residencial & Patrimonial" },
     ],
     avatars: [
       { id: "seg-av-1", url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80", label: "Corretor de Seguros Especialista" },
@@ -303,11 +380,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   autonomo: {
     covers: [
-      { id: "aut-1", url: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&w=1200&q=80", label: "Ferramentas & Precisão Técnica" },
-      { id: "aut-2", url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80", label: "Manutenção Especializada" },
-      { id: "aut-3", url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=80", label: "Atendimento Pontual ao Cliente" },
-      { id: "aut-4", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80", label: "Planejamento & Orçamento" },
-      { id: "aut-5", url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1200&q=80", label: "Serviços de Reparo e Instalação" },
+      { id: "aut-1", url: "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1200&q=85", label: "Serviços Técnicos de Instalação & Manutenção" },
+      { id: "aut-2", url: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1200&q=85", label: "Profissional Especialista em Reparos & Precisão" },
+      { id: "aut-3", url: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&w=1200&q=85", label: "Visita Técnica & Ferramentas Profissionais" },
+      { id: "aut-4", url: "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=85", label: "Manutenção Preventiva & Corretiva" },
+      { id: "aut-5", url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=1200&q=85", label: "Atendimento com Hora Marcada & Garantia" },
+      { id: "aut-6", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=85", label: "Orçamento Transparente & Planejamento" },
     ],
     avatars: [
       { id: "aut-av-1", url: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=400&q=80", label: "Especialista Técnico Autônomo" },
@@ -316,11 +394,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   pessoal: {
     covers: [
-      { id: "pes-1", url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=80", label: "Mesa Minimalista & Produtividade" },
-      { id: "pes-2", url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80", label: "Café, Laptop & Criação" },
-      { id: "pes-3", url: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=80", label: "Networking & Autoridade Digital" },
-      { id: "pes-4", url: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=80", label: "Portfólio & Projetos Autorais" },
-      { id: "pes-5", url: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80", label: "Workshop, Apresentação & Presença" },
+      { id: "pes-1", url: "https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=1200&q=85", label: "Portfólio & Projetos Autorais" },
+      { id: "pes-2", url: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=85", label: "Palestras, Workshops & Presença Executiva" },
+      { id: "pes-3", url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=85", label: "Mentoria Individual 1:1 & Estratégia" },
+      { id: "pes-4", url: "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1200&q=85", label: "Networking, Eventos & Treinamentos" },
+      { id: "pes-5", url: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=85", label: "Comunidade Digital, Cursos & Materiais" },
+      { id: "pes-6", url: "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=85", label: "Consultoria Executiva & Liderança" },
     ],
     avatars: [
       { id: "pes-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Criador(a) de Conteúdo" },
@@ -329,11 +408,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   fitness: {
     covers: [
-      { id: "fit-1", url: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=80", label: "Studio Fitness & Halteres" },
-      { id: "fit-2", url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=80", label: "Treino Funcional de Alta Intensidade" },
-      { id: "fit-3", url: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=80", label: "Musculação & Aparelhos Modernos" },
-      { id: "fit-4", url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=80", label: "Performance Esportiva" },
-      { id: "fit-5", url: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=80", label: "Área de Musculação & Treinamento Pesado" },
+      { id: "fit-1", url: "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?auto=format&fit=crop&w=1200&q=85", label: "Academia Completa & Aparelhos de Musculação" },
+      { id: "fit-2", url: "https://images.unsplash.com/photo-1571902943202-507ec2618e8f?auto=format&fit=crop&w=1200&q=85", label: "Espaço de Treinamento & Studio Fitness Climatizado" },
+      { id: "fit-3", url: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?auto=format&fit=crop&w=1200&q=85", label: "Musculação & Halteres de Alta Performance" },
+      { id: "fit-4", url: "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?auto=format&fit=crop&w=1200&q=85", label: "Personal Trainer & Treino Funcional" },
+      { id: "fit-5", url: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?auto=format&fit=crop&w=1200&q=85", label: "Treino de Força & Condicionamento" },
+      { id: "fit-6", url: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=1200&q=85", label: "Avaliação Física & Performance Esportiva" },
     ],
     avatars: [
       { id: "fit-av-1", url: "https://images.unsplash.com/photo-1567013127542-490d757e51fc?auto=format&fit=crop&w=400&q=80", label: "Personal Trainer Certificado" },
@@ -342,11 +422,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   nutricao: {
     covers: [
-      { id: "nut-1", url: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=80", label: "Alimentação Saudável & Equilíbrio" },
-      { id: "nut-2", url: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=80", label: "Consulta Nutricional & Fita Métrica" },
-      { id: "nut-3", url: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=80", label: "Frutas Frescas & Detox" },
-      { id: "nut-4", url: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=1200&q=80", label: "Planejamento Alimentar Individual" },
-      { id: "nut-5", url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=80", label: "Prato Nutricional Balanceado & Salada Viva" },
+      { id: "nut-1", url: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=1200&q=85", label: "Gastronomia Funcional, Saladas & Nutrição Viva" },
+      { id: "nut-2", url: "https://images.unsplash.com/photo-1490818387583-1baba5e638af?auto=format&fit=crop&w=1200&q=85", label: "Alimentos Naturais, Longevidade & Equilíbrio" },
+      { id: "nut-3", url: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=1200&q=85", label: "Consulta Nutricional & Plano Alimentar" },
+      { id: "nut-4", url: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&w=1200&q=85", label: "Reeducação Alimentar & Emagrecimento Saudável" },
+      { id: "nut-5", url: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=1200&q=85", label: "Cardápio Inteligente & Ingredientes Frescos" },
+      { id: "nut-6", url: "https://images.unsplash.com/photo-1505576399279-565b52d4ac71?auto=format&fit=crop&w=1200&q=85", label: "Nutrição Esportiva & Hipertrofia" },
     ],
     avatars: [
       { id: "nut-av-1", url: "https://images.unsplash.com/photo-1559839734-2b71ea197ec2?auto=format&fit=crop&w=400&q=80", label: "Dra. Nutricionista Clínica" },
@@ -355,11 +436,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   costura: {
     covers: [
-      { id: "cos-1", url: "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=1200&q=80", label: "Máquina de Costura & Linhas" },
-      { id: "cos-2", url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=80", label: "Ateliê & Vestido em Confecção" },
-      { id: "cos-3", url: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?auto=format&fit=crop&w=1200&q=80", label: "Tecidos Nobres & Tesoura de Alfaiate" },
-      { id: "cos-4", url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=1200&q=80", label: "Ajuste & Acabamento Sob Medida" },
-      { id: "cos-5", url: "https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?auto=format&fit=crop&w=1200&q=80", label: "Corte e Costura em Tecido de Linho" },
+      { id: "cos-1", url: "https://images.unsplash.com/photo-1605518216938-7c31b7b14ad0?auto=format&fit=crop&w=1200&q=85", label: "Ateliê de Alta Costura, Tecidos & Modelagem" },
+      { id: "cos-2", url: "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&w=1200&q=85", label: "Arara de Peças Sob Medida & Alfaiataria" },
+      { id: "cos-3", url: "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=1200&q=85", label: "Máquina de Costura, Ajustes & Reformas" },
+      { id: "cos-4", url: "https://images.unsplash.com/photo-1516762689617-e1cffcef479d?auto=format&fit=crop&w=1200&q=85", label: "Barras Originais, Jeans & Acabamento Fino" },
+      { id: "cos-5", url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85", label: "Confecção de Vestidos Sob Medida" },
+      { id: "cos-6", url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=1200&q=85", label: "Ajuste Fino de Terno & Alfaiataria" },
     ],
     avatars: [
       { id: "cos-av-1", url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=400&q=80", label: "Estilista & Mestre de Alta Costura" },
@@ -368,11 +450,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   tecnologia: {
     covers: [
-      { id: "tec-1", url: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80", label: "Bancada de Manutenção & Circuitos" },
-      { id: "tec-2", url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=1200&q=80", label: "Setup Tecnológico de TI" },
-      { id: "tec-3", url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=80", label: "Servidores & Infraestrutura" },
-      { id: "tec-4", url: "https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=1200&q=80", label: "Suporte em Notebooks & Redes" },
-      { id: "tec-5", url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=80", label: "Segurança Digital, Cibersegurança & Servidores" },
+      { id: "tec-1", url: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1200&q=85", label: "Laboratório de Tecnologia, TI & Segurança Digital" },
+      { id: "tec-2", url: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&w=1200&q=85", label: "Workstation de Suporte Técnico & Sistemas" },
+      { id: "tec-3", url: "https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=1200&q=85", label: "Formatação, Notebooks & Computadores" },
+      { id: "tec-4", url: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=85", label: "Upgrade de SSD, Placa-Mãe & Hardware" },
+      { id: "tec-5", url: "https://images.unsplash.com/photo-1597872200969-2b65d56bd16b?auto=format&fit=crop&w=1200&q=85", label: "Manutenção Especializada em Bancada Técnica" },
+      { id: "tec-6", url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=1200&q=85", label: "Redes Wi-Fi Corporativas & Servidores" },
     ],
     avatars: [
       { id: "tec-av-1", url: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80", label: "Técnico Especialista em Hardware" },
@@ -381,11 +464,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   marketing: {
     covers: [
-      { id: "mkt-1", url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80", label: "Dashboard de Performance & Analytics" },
-      { id: "mkt-2", url: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=80", label: "Equipe de Estratégia Digital" },
-      { id: "mkt-3", url: "https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=1200&q=80", label: "Campanhas de Tráfego & Conversão" },
-      { id: "mkt-4", url: "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=1200&q=80", label: "Design, Branding & Social Media" },
-      { id: "mkt-5", url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=80", label: "Estratégia de Campanhas & Performance Digital" },
+      { id: "mkt-1", url: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=85", label: "Agência de Marketing Digital & Estratégia" },
+      { id: "mkt-2", url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=85", label: "Equipe Criativa de Performance & Growth" },
+      { id: "mkt-3", url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=85", label: "Gestão de Tráfego Pago & Analytics" },
+      { id: "mkt-4", url: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=85", label: "Criação de Landing Pages de Alta Conversão" },
+      { id: "mkt-5", url: "https://images.unsplash.com/photo-1542744094-3a31f272c490?auto=format&fit=crop&w=1200&q=85", label: "Branding & Gestão de Redes Sociais" },
+      { id: "mkt-6", url: "https://images.unsplash.com/photo-1557838923-2985c318be48?auto=format&fit=crop&w=1200&q=85", label: "Consultoria de Escala & Funis de Vendas" },
     ],
     avatars: [
       { id: "mkt-av-1", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=400&q=80", label: "Estrategista de Marketing Digital" },
@@ -394,11 +478,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   contabilidade: {
     covers: [
-      { id: "cnt-1", url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=80", label: "Análise Financeira & Balanço" },
-      { id: "cnt-2", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80", label: "Planejamento Tributário & Consultoria" },
-      { id: "cnt-3", url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=1200&q=80", label: "Escritório Contábil Executivo" },
-      { id: "cnt-4", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", label: "Gestão Empresarial & BPO" },
-      { id: "cnt-5", url: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=80", label: "Auditoria Contábil e Documentação Fiscal" },
+      { id: "cnt-1", url: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=1200&q=85", label: "Auditoria Contábil & Inteligência Financeira" },
+      { id: "cnt-2", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85", label: "Sede Executiva do Escritório de Contabilidade" },
+      { id: "cnt-3", url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=1200&q=85", label: "Abertura de Empresas & Balanço Patrimonial" },
+      { id: "cnt-4", url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=85", label: "Assessoria Contábil e Fiscal Mensal" },
+      { id: "cnt-5", url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=85", label: "Planejamento Tributário & BPO Financeiro" },
+      { id: "cnt-6", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85", label: "Consultoria Empresarial & Societária" },
     ],
     avatars: [
       { id: "cnt-av-1", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=400&q=80", label: "Contadora Consultiva" },
@@ -407,11 +492,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   energia_solar: {
     covers: [
-      { id: "sol-1", url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=80", label: "Painéis Solares Fotovoltaicos" },
-      { id: "sol-2", url: "https://images.unsplash.com/photo-1508873696983-2df57046475a?auto=format&fit=crop&w=1200&q=80", label: "Instalação Solar no Telhado" },
-      { id: "sol-3", url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=1200&q=80", label: "Usina Solar & Sustentabilidade" },
-      { id: "sol-4", url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=1200&q=80", label: "Tecnologia e Inversores Solares" },
-      { id: "sol-5", url: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=1200&q=80", label: "Energia Limpa Sustentável Fotovoltaica" },
+      { id: "sol-1", url: "https://images.unsplash.com/photo-1508514177221-188b1cf16e9d?auto=format&fit=crop&w=1200&q=85", label: "Módulos Fotovoltaicos & Captação de Energia Solar" },
+      { id: "sol-2", url: "https://images.unsplash.com/photo-1559302504-64aae6ca6b6d?auto=format&fit=crop&w=1200&q=85", label: "Engenharia Solar & Instalação Fotovoltaica" },
+      { id: "sol-3", url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=1200&q=85", label: "Painéis Solares Residenciais de Alta Eficiência" },
+      { id: "sol-4", url: "https://images.unsplash.com/photo-1508873696983-2df57046475a?auto=format&fit=crop&w=1200&q=85", label: "Usinas Solares Comerciais & Rurais" },
+      { id: "sol-5", url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=1200&q=85", label: "Homologação & Projeto de Engenharia Solar" },
+      { id: "sol-6", url: "https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=1200&q=85", label: "Telhado Solar Residencial & Economia na Conta" },
     ],
     avatars: [
       { id: "sol-av-1", url: "https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=400&q=80", label: "Engenheiro de Energia Solar" },
@@ -420,11 +506,12 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   geral: {
     covers: [
-      { id: "ger-1", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=80", label: "Fachada Comercial & Recepção" },
-      { id: "ger-2", url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80", label: "Equipe em Atendimento" },
-      { id: "ger-3", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80", label: "Sede Corporativa" },
-      { id: "ger-4", url: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=80", label: "Balcão Contemporâneo" },
-      { id: "ger-5", url: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80", label: "Sede Executiva & Coworking" },
+      { id: "ger-1", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85", label: "Fachada Comercial & Recepção" },
+      { id: "ger-2", url: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=1200&q=85", label: "Espaço Executivo & Atendimento" },
+      { id: "ger-3", url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=85", label: "Equipe em Atendimento" },
+      { id: "ger-4", url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=85", label: "Sede Corporativa" },
+      { id: "ger-5", url: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=85", label: "Sede Executiva & Sala de Reunião" },
+      { id: "ger-6", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85", label: "Ambiente Profissional Moderno" },
     ],
     avatars: [
       { id: "ger-av-1", url: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=400&q=80", label: "Consultor Executivo" },
@@ -931,17 +1018,17 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     ],
     [
       [
-        { name: "Drenagem Linfática & Pós-Operatório", category: "Corporal", description: "Eliminação de toxinas, redução de edemas e aceleração da recuperação pós-cirúrgica.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Drenagem Linfática & Pós-Operatório", category: "Corporal", description: "Eliminação de toxinas, redução de edemas e aceleração da recuperação pós-cirúrgica.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1519824145371-296894a0daa9?auto=format&fit=crop&w=400&q=80" },
         { name: "Massagem Modeladora & Redutora", category: "Corporal", description: "Manobras firmes para redução de medidas, combate à celulite e melhora da circulação.", price: 140.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=400&q=80" },
         { name: "Tratamentos Corporais Avançados", category: "Tecnologia", description: "Protocolos personalizados com criolipólise, radiofrequência e bioestimulação corporal.", price: 250.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Drenagem Linfática & Pós-Operatório", category: "Corporal", description: "Eliminação de toxinas, redução de edemas e aceleração da recuperação pós-cirúrgica.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Protocolo Detox & Firmeza Corporal", category: "Remodelação", description: "Associação de ativos termogênicos, manta térmica e massoterapia para contorno corporal.", price: 190.0, duration_minutes: 70, image_url: "https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&w=400&q=80" },
         { name: "Tratamentos Corporais Avançados", category: "Tecnologia", description: "Protocolos personalizados com criolipólise, radiofrequência e bioestimulação corporal.", price: 250.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80" },
       ],
       [
         { name: "Massagem Modeladora & Redutora", category: "Corporal", description: "Manobras firmes para redução de medidas, combate à celulite e melhora da circulação.", price: 140.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1590439471364-192aa70c0b53?auto=format&fit=crop&w=400&q=80" },
-        { name: "Drenagem Linfática & Pós-Operatório", category: "Corporal", description: "Eliminação de toxinas, redução de edemas e aceleração da recuperação pós-cirúrgica.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Drenagem Linfática & Pós-Operatório", category: "Corporal", description: "Eliminação de toxinas, redução de edemas e aceleração da recuperação pós-cirúrgica.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1519824145371-296894a0daa9?auto=format&fit=crop&w=400&q=80" },
         { name: "Tratamentos Corporais Avançados", category: "Tecnologia", description: "Protocolos personalizados com criolipólise, radiofrequência e bioestimulação corporal.", price: 250.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80" },
       ],
     ]
@@ -965,15 +1052,15 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     [
       [
         { name: "Limpeza de Pele Profunda & Glow", category: "Facial", description: "Remoção de impurezas, peeling ultrassônico e hidratação profunda regeneradora.", price: 150.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=400&q=80" },
-        { name: "Protocolos de Rejuvenescimento Facial", category: "Facial", description: "Estímulo de colágeno, prevenção do envelhecimento e revitalização celular da pele.", price: 220.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Protocolos de Rejuvenescimento Facial", category: "Facial", description: "Estímulo de colágeno, prevenção do envelhecimento e revitalização celular da pele.", price: 220.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=400&q=80" },
         { name: "Harmonização & Estética Facial", category: "Avançada", description: "Procedimentos minimamente invasivos para equilíbrio estético e contorno facial harmônico.", price: 350.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Limpeza de Pele Profunda & Glow", category: "Facial", description: "Remoção de impurezas, peeling ultrassônico e hidratação profunda regeneradora.", price: 150.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Peeling Revitalizante & Hidratação", category: "Renovação", description: "Renovação celular uniforme para clareamento de manchas, textura de seda e viço imediato.", price: 190.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=400&q=80" },
         { name: "Harmonização & Estética Facial", category: "Avançada", description: "Procedimentos minimamente invasivos para equilíbrio estético e contorno facial harmônico.", price: 350.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Protocolos de Rejuvenescimento Facial", category: "Facial", description: "Estímulo de colágeno, prevenção do envelhecimento e revitalização celular da pele.", price: 220.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Protocolos de Rejuvenescimento Facial", category: "Facial", description: "Estímulo de colágeno, prevenção do envelhecimento e revitalização celular da pele.", price: 220.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1616394584738-fc6e612e71b9?auto=format&fit=crop&w=400&q=80" },
         { name: "Limpeza de Pele Profunda & Glow", category: "Facial", description: "Remoção de impurezas, peeling ultrassônico e hidratação profunda regeneradora.", price: 150.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1512290900672-1f41e05d0e2e?auto=format&fit=crop&w=400&q=80" },
         { name: "Harmonização & Estética Facial", category: "Avançada", description: "Procedimentos minimamente invasivos para equilíbrio estético e contorno facial harmônico.", price: 350.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80" },
       ],
@@ -1002,7 +1089,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
         { name: "Terapia de Pedras Quentes", category: "Terapia", description: "Termoterapia com pedras vulcânicas para relaxamento muscular profundo e equilíbrio energético.", price: 180.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Massagem Relaxante com Aromaterapia", category: "Relaxamento", description: "Óleos essenciais selecionados e toques suaves para alívio imediato do estresse.", price: 160.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=400&q=80" },
+        { name: "Ritual Zen & Escalda-Pés Botânico", category: "Ritual", description: "Imersão relaxante com sais minerais, ervas aromáticas e reflexologia podal.", price: 140.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=400&q=80" },
         { name: "Terapia de Pedras Quentes", category: "Terapia", description: "Termoterapia com pedras vulcânicas para relaxamento muscular profundo e equilíbrio energético.", price: 180.0, duration_minutes: 75, image_url: "https://images.unsplash.com/photo-1600334129128-685c5582fd35?auto=format&fit=crop&w=400&q=80" },
       ],
       [
@@ -1091,7 +1178,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     ],
     [
       [
-        { name: "Sessão de Psicoterapia Individual", category: "Atendimento", description: "Atendimento individual humanizado de 50 minutos com sigilo ético absoluto e escuta qualificada.", price: 160.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=1200&q=85" },
+        { name: "Sessão de Psicoterapia Individual", category: "Atendimento", description: "Atendimento individual humanizado de 50 minutos com sigilo ético absoluto e escuta qualificada.", price: 160.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1200&q=85" },
         { name: "Terapia Online para Ansiedade", category: "Online", description: "Sessão remota segura por videochamada com técnicas práticas de manejo do estresse e ansiedade.", price: 150.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=85" },
         { name: "Terapia de Casal & Relações", category: "Relacionamentos", description: "Espaço mediado para fortalecer o diálogo afetivo, resolver conflitos e reconstruir a harmonia.", price: 240.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85" },
       ],
@@ -1099,7 +1186,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
         { name: "Primeira Sessão de Acolhimento", category: "Inicial", description: "Conversa inicial estruturada para compreender suas demandas e traçar objetivos terapêuticos.", price: 140.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=1200&q=85" },
       ],
       [
-        { name: "Pacote Mensal de Terapia (4 Sessões)", category: "Planos", description: "Acompanhamento contínuo semanal com horário fixo reservado e foco em evolução consistente.", price: 560.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=1200&q=85" },
+        { name: "Pacote Mensal de Terapia (4 Sessões)", category: "Planos", description: "Acompanhamento contínuo semanal com horário fixo reservado e foco em evolução consistente.", price: 560.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1200&q=85" },
       ],
     ]
   ),
@@ -1152,11 +1239,11 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     [
       [
         { name: "Consulta Jurídica Especializada", category: "Consultoria", description: "Análise detalhada do seu caso com emissão de parecer técnico e definição de estratégia.", price: 280.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80" },
-        { name: "Planejamento Sucessório & Inventário", category: "Família", description: "Resolução ágil de inventários, partilhas e proteção de bens com total discrição.", price: 950.0, duration_minutes: 90, image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Planejamento Sucessório & Inventário", category: "Família", description: "Resolução ágil de inventários, partilhas e proteção de bens com total discrição.", price: 950.0, duration_minutes: 90, image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" },
         { name: "Defesa Trabalhista & Contratos", category: "Trabalhista", description: "Ações judiciais, cálculos trabalhistas e elaboração de contratos blindados.", price: 450.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Assessoria Preventiva Mensal", category: "Empresarial", description: "Suporte jurídico contínuo para redução de riscos e conformidade legal.", price: 1200.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80" },
+        { name: "Assessoria Preventiva Mensal", category: "Empresarial", description: "Suporte jurídico contínuo para redução de riscos e conformidade legal.", price: 1200.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=400&q=80" },
       ],
       [
         { name: "Revisão Contratual Urgente", category: "Contratos", description: "Leitura de cláusulas e identificação de armadilhas contratuais em 24h.", price: 320.0, duration_minutes: 45, image_url: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=400&q=80" },
@@ -1276,10 +1363,10 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
         { name: "Plano de Saúde Individual & Familiar", category: "Saúde", description: "Rede credenciada de hospitais, laboratórios e clínicas com preços acessíveis.", price: 290.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Seguro Residencial com Serviços Emergenciais", category: "Residencial", description: "Proteção contra incêndio e danos elétricos com eletricista e encanador inclusos.", price: 45.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1511895426328-dc8714191300?auto=format&fit=crop&w=400&q=80" },
+        { name: "Seguro Residencial com Serviços Emergenciais", category: "Residencial", description: "Proteção contra incêndio e danos elétricos com eletricista e encanador inclusos.", price: 45.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Seguro Empresarial & Patrimonial", category: "Empresas", description: "Cobertura sob medida para maquinário, estoque e responsabilidade civil do seu negócio.", price: 220.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Seguro Empresarial & Patrimonial", category: "Empresas", description: "Cobertura sob medida para maquinário, estoque e responsabilidade civil do seu negócio.", price: 220.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1521791136064-7986c2920216?auto=format&fit=crop&w=400&q=80" },
       ],
     ]
   ),
@@ -1426,7 +1513,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
         { name: "Confecção de Vestido de Festa Sob Medida", category: "Sob Medida", description: "Modelagem anatômica exclusiva desenvolvida especialmente para o seu evento.", price: 480.0, duration_minutes: 90, image_url: "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Ajuste Fino de Terno / Paletó", category: "Alfaiataria", description: "Alinhamento de ombros e mangas para um visual elegante e corporativo.", price: 95.0, duration_minutes: 45, image_url: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=400&q=80" },
+        { name: "Ajuste Fino de Terno / Paletó", category: "Alfaiataria", description: "Alinhamento de ombros e mangas para um visual elegante e corporativo.", price: 95.0, duration_minutes: 45, image_url: "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=400&q=80" },
       ],
       [
         { name: "Customização & Transformação de Peças", category: "Estilo", description: "Modernize peças antigas do seu guarda-roupa com novos cortes e detalhes.", price: 70.0, duration_minutes: 45, image_url: "https://images.unsplash.com/photo-1528459801416-a9e53bbf4e17?auto=format&fit=crop&w=400&q=80" },
@@ -1453,7 +1540,7 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
       [
         { name: "Formatação Completa com Backup Seguro", category: "Software", description: "Instalação limpa do Windows/macOS, pacote de programas essenciais e preservação total dos seus arquivos.", price: 120.0, duration_minutes: 90, image_url: "https://images.unsplash.com/photo-1588508065123-287b28e013da?auto=format&fit=crop&w=400&q=80" },
         { name: "Upgrade para SSD Rápido + Limpeza Térmica", category: "Hardware", description: "Deixe seu notebook até 10x mais rápido com novo SSD e troca de pasta térmica de prata.", price: 240.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=400&q=80" },
-        { name: "Troca de Tela & Bateria de Celular", category: "Mobile", description: "Peça de qualidade original trocada em poucas horas com garantia comprovada.", price: 190.0, duration_minutes: 45, image_url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&w=400&q=80" },
+        { name: "Troca de Tela & Bateria de Celular", category: "Mobile", description: "Peça de qualidade original trocada em poucas horas com garantia comprovada.", price: 190.0, duration_minutes: 45, image_url: "https://images.unsplash.com/photo-1591799264318-7e6ef8ddb7ea?auto=format&fit=crop&w=400&q=80" },
       ],
       [
         { name: "Configuração de Rede Wi-Fi & Servidores", category: "Redes", description: "Sinal estável em todos os cômodos e segurança contra acessos indevidos.", price: 280.0, duration_minutes: 120, image_url: "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&w=400&q=80" },
@@ -1517,17 +1604,17 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
       [
         { name: "Abertura & Regularização de Empresas", category: "Legalização", description: "Processo 100% digital, rápido e sem complicações para você começar a faturar.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80" },
         { name: "Assessoria Contábil & Fiscal Mensal", category: "Contábil", description: "Emissão de guias, balancetes, folha de pagamento e apuração com precisão.", price: 299.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" },
-        { name: "Planejamento Tributário para Redução de Impostos", category: "Tributário", description: "Enquadramento no melhor regime para economizar impostos de forma 100% legal.", price: 600.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Planejamento Tributário para Redução de Impostos", category: "Tributário", description: "Enquadramento no melhor regime para economizar impostos de forma 100% legal.", price: 600.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "BPO Financeiro & Gestão de Contas", category: "Financeiro", description: "Terceirização de contas a pagar, receber, conciliação e relatórios de fluxo de caixa.", price: 850.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80" },
+        { name: "BPO Financeiro & Gestão de Contas", category: "Financeiro", description: "Terceirização de contas a pagar, receber, conciliação e relatórios de fluxo de caixa.", price: 850.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80" },
         { name: "Migração de MEI para ME", category: "Transição", description: "Assessoria para empresas em expansão que ultrapassaram o teto do MEI.", price: 350.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80" },
         { name: "Declaração de Imposto de Renda (IRPF)", category: "Pessoa Física", description: "Declaração segura, restituição otimizada e blindagem contra malha fina.", price: 180.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=400&q=80" },
       ],
       [
-        { name: "Consultoria Contábil para Prestadores de Serviço", category: "Consultoria", description: "Solução sob medida para médicos, advogados, profissionais de TI e consultores.", price: 320.0, duration_minutes: 30, image_url: "https://images.unsplash.com/photo-1450133064473-71024230f91b?auto=format&fit=crop&w=400&q=80" },
+        { name: "Consultoria Contábil para Prestadores de Serviço", category: "Consultoria", description: "Solução sob medida para médicos, advogados, profissionais de TI e consultores.", price: 320.0, duration_minutes: 30, image_url: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?auto=format&fit=crop&w=400&q=80" },
         { name: "Certidões Negativas & Conformidade Legal", category: "Conformidade", description: "Monitoramento e emissão de certidões da Receita Federal, FGTS e Prefeitura.", price: 120.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=400&q=80" },
-        { name: "Recuperação de Créditos Tributários", category: "Recuperação", description: "Auditoria fiscal para reaver tributos pagos a mais nos últimos 5 anos.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80" },
+        { name: "Recuperação de Créditos Tributários", category: "Recuperação", description: "Auditoria fiscal para reaver tributos pagos a mais nos últimos 5 anos.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=400&q=80" },
       ],
     ]
   ),
@@ -1554,14 +1641,14 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
         { name: "Homologação & Projeto de Engenharia", category: "Engenharia", description: "Aprovação rápida junto à concessionária de energia local sem burocracia.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=400&q=80" },
       ],
       [
+        { name: "Limpeza & Manutenção de Painéis Solares", category: "Manutenção", description: "Higienização técnica para restaurar a eficiência máxima de captação solar.", price: 250.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=400&q=80" },
         { name: "Simulação de Economia Gratuita", category: "Simulação", description: "Cálculo detalhado de geração mensal, tempo de retorno (payback) e economia prevista.", price: 0.0, duration_minutes: 15, image_url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=400&q=80" },
-        { name: "Limpeza & Manutenção de Painéis Solares", category: "Manutenção", description: "Higienização técnica para restaurar a eficiência máxima de captação solar.", price: 250.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=400&q=80" },
         { name: "Instalação de Inversores com Monitoramento Wi-Fi", category: "Equipamentos", description: "Acompanhe a geração de energia em tempo real pelo aplicativo no seu celular.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1508873696983-2df57046475a?auto=format&fit=crop&w=400&q=80" },
       ],
       [
         { name: "Consultoria para Financiamento Solar", category: "Financiamento", description: "Parcelamento com economia onde a parcela é paga com o valor que você economiza.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1509391365360-2e959784a276?auto=format&fit=crop&w=400&q=80" },
         { name: "Ampliação de Sistema Solar Existente", category: "Ampliação", description: "Adição de módulos para suprir novo consumo (ar-condicionado, piscina, etc.).", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?auto=format&fit=crop&w=400&q=80" },
-        { name: "Seguro & Monitoramento de Usinas", category: "Segurança", description: "Proteção contra descargas elétricas, vendavais e roubo de componentes.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?auto=format&fit=crop&w=400&q=80" },
+        { name: "Seguro & Monitoramento de Usinas", category: "Segurança", description: "Proteção contra descargas elétricas, vendavais e roubo de componentes.", price: 0.0, duration_minutes: 0, image_url: "https://images.unsplash.com/photo-1613665813446-82a78c468a1d?auto=format&fit=crop&w=400&q=80" },
       ],
     ]
   ),
@@ -1586,6 +1673,9 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
         { name: "Atendimento & Orçamento Personalizado", category: "Atendimento", description: "Análise sob medida para entregar a solução ideal com agilidade.", price: 0.0, duration_minutes: 30, image_url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=400&q=80" },
         { name: "Serviço Padrão de Excelência", category: "Soluções", description: "Execução profissional com garantia e acompanhamento contínuo.", price: 150.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=400&q=80" },
         { name: "Suporte Prioritário ao Cliente", category: "Suporte", description: "Canal direto no WhatsApp para tirar dúvidas e solicitar agendamentos rápidos.", price: 0.0, duration_minutes: 15, image_url: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=400&q=80" },
+      ],
+      [
+        { name: "Consultoria & Acompanhamento Dedicado", category: "Consultoria", description: "Atendimento próximo com equipe preparada para entregar resultados superiores.", price: 180.0, duration_minutes: 45, image_url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=400&q=80" },
       ],
     ]
   ),
@@ -2257,7 +2347,7 @@ const SUB_NICHE_PAIRED_CATALOGS: Record<string, PairedCatalogItem[]> = {
       description: "Manobras terapêuticas para alívio imediato de tensões musculares, contraturas e recuperação esportiva.",
       price: 160.0,
       duration_minutes: 50,
-      image_url: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?auto=format&fit=crop&w=1200&q=85",
+      image_url: "https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=1200&q=85",
       photo_label: "Atendimento de terapia manual corporal e alívio de tensão",
     },
     {
@@ -2317,10 +2407,11 @@ export function getPairedCatalogForBusiness(
 
   const baseKey = detectNicheKey(nicheRaw, companyNameRaw);
   const variants = NICHE_PRESETS_VARIANTS[baseKey] || NICHE_PRESETS_VARIANTS.geral;
-  const gallery = NICHE_GALLERIES[baseKey] || NICHE_GALLERIES.geral;
+  const gallery = NICHE_GALLERIES[subKey] || NICHE_GALLERIES[baseKey] || NICHE_GALLERIES.geral;
 
-  // Coleta todos os serviços únicos das variantes deste nicho mantendo a foto pareada
+  // Coleta todos os serviços únicos das variantes deste nicho mantendo a foto pareada e garantindo zero duplicação de foto entre os 4 cards
   const seenNames = new Set<string>();
+  const usedBasePhotos = new Set<string>();
   const items: PairedCatalogItem[] = [];
 
   for (const variant of variants) {
@@ -2329,12 +2420,24 @@ export function getPairedCatalogForBusiness(
       if (seenNames.has(normName)) continue;
       seenNames.add(normName);
 
-      const rawUrl = srv.image_url || gallery.covers[items.length % gallery.covers.length]?.url || "";
+      let rawUrl = srv.image_url || "";
+      let basePhotoId = rawUrl.split("?")[0];
+
+      // Se a foto deste serviço já foi usada por outro card anterior, pega a próxima foto exclusiva da galeria do nicho
+      if (!rawUrl || usedBasePhotos.has(basePhotoId)) {
+        const unusedCover = gallery.covers.find((c) => !usedBasePhotos.has(c.url.split("?")[0]));
+        if (unusedCover) {
+          rawUrl = unusedCover.url;
+          basePhotoId = rawUrl.split("?")[0];
+        }
+      }
+
+      usedBasePhotos.add(basePhotoId);
+
       const hdUrl = rawUrl
         .replace(/w=\d+/g, "w=1200")
         .replace(/q=\d+/g, "q=85");
 
-      const basePhotoId = hdUrl.split("?")[0];
       const matchingCover = gallery.covers.find((c) => c.url.split("?")[0] === basePhotoId);
 
       items.push({
@@ -2356,8 +2459,7 @@ export function getPairedCatalogForBusiness(
 
   // Se o preset tinha apenas 3 serviços, adiciona um 4º serviço usando a próxima foto única da galeria do nicho
   if (items.length < 4 && gallery.covers.length > items.length) {
-    const usedUrls = new Set(items.map((it) => it.image_url.split("?")[0]));
-    const nextCover = gallery.covers.find((c) => !usedUrls.has(c.url.split("?")[0])) || gallery.covers[0];
+    const nextCover = gallery.covers.find((c) => !usedBasePhotos.has(c.url.split("?")[0])) || gallery.covers[0];
     if (nextCover) {
       items.push({
         name: nextCover.label,
@@ -2834,26 +2936,24 @@ export function getNicheDesignDirection(
   const palette = profile.palettes[safeIdx] || profile.palettes[0];
   const pairedServices = getPairedCatalogForBusiness(nicheRaw, companyNameRaw);
 
-  // Garante que a foto do Hero e a foto do Ambiente ("Nosso Espaço") NUNCA repitam nenhuma das 4 fotos dos cards de serviços!
-  const gallery = NICHE_GALLERIES[baseKey] || NICHE_GALLERIES.geral;
+  // Garante que a foto do Hero e a foto do Ambiente ("Nosso Espaço") NUNCA repitam nenhuma das 4 fotos dos cards de serviços e pertençam 100% ao nicho/sub-nicho exato!
+  const gallery = NICHE_GALLERIES[subKey] || NICHE_GALLERIES[baseKey] || NICHE_GALLERIES.geral;
   const serviceBaseUrls = new Set(pairedServices.map((s) => s.image_url.split("?")[0]));
   const distinctGalleryCovers = (gallery.covers || [])
     .map((c) => c.url.replace(/w=\d+/g, "w=1200").replace(/q=\d+/g, "q=85"))
     .filter((u) => !serviceBaseUrls.has(u.split("?")[0]));
 
-  const fallbackArchitecturalCovers = [
-    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=85",
-    "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85",
-    "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85",
-  ].filter((u) => !serviceBaseUrls.has(u.split("?")[0]));
+  const allNicheCovers = (gallery.covers || []).map((c) =>
+    c.url.replace(/w=\d+/g, "w=1200").replace(/q=\d+/g, "q=85"),
+  );
 
-  const availableScenePhotos = [...distinctGalleryCovers, ...fallbackArchitecturalCovers];
+  const availableScenePhotos = [...distinctGalleryCovers, ...allNicheCovers];
   const heroPhotoUrl =
     availableScenePhotos[0] ||
-    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=85";
+    "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85";
   const ambientPhotoUrl =
     availableScenePhotos.find((u) => u.split("?")[0] !== heroPhotoUrl.split("?")[0]) ||
-    "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85";
+    heroPhotoUrl;
 
   const LAYOUT_VARIANTS = [
     {

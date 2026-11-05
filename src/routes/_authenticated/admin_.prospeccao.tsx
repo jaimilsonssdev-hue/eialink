@@ -981,23 +981,16 @@ function ProspectingPage() {
       `🚀 IA Criativa Gemini desenhando site [${nicheMeta?.label || nicheDirection.canonicalTagLabel} — Modelo ${nextIdx + 1}] para ${company.name}...`,
     );
 
-    const heroPhotoItem =
-      compatibleImages.find((img) => img.role === "hero") || compatibleImages[0];
-    const ambientPhotoItem =
-      compatibleImages.find((img) => img.role === "ambient") ||
-      compatibleImages[1] ||
-      compatibleImages[0];
-
     const primaryHeroPhoto =
       realPhotos[0] ||
-      heroPhotoItem?.url ||
-      pairedServices[0]?.image_url ||
+      nicheDirection.heroPhotoUrl ||
+      compatibleImages.find((img) => img.role === "hero")?.url ||
       "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85";
 
     const primaryAmbientPhoto =
       realPhotos[1] ||
-      ambientPhotoItem?.url ||
-      pairedServices[1]?.image_url ||
+      nicheDirection.ambientPhotoUrl ||
+      compatibleImages.find((img) => img.role === "ambient")?.url ||
       primaryHeroPhoto;
 
     // Briefing guiado 100% pela Tag Canônica do Nicho + Pareamento Fotográfico 1:1

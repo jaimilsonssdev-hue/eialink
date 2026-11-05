@@ -159,20 +159,31 @@ DIRETRIZES TÉCNICAS E DE ALTA REFINARIA VISUAL (OBRIGATÓRIAS):
      * **Barbearia**: Club masculino clássico de respeito (couro, carvão, âmbar whiskey, navalha, toalha quente e degradê perfeito).
      * **Gastronomia (Churrascaria, Pizzaria, Hamburgueria, Japonês, Cafeteria, Restaurante, Sorveteria, Bebidas)**: Fotografia gastronômica suculenta em destaque absoluto, cores que despertam o apetite e botões de pedido/reserva imediatos.
      * **Advocacia / Contabilidade / Imobiliária / Engenharia / Energia Solar / Seguros**: Autoridade institucional soberana, solidez patrimonial e alta conversão consultiva.
-   - **Acabamento de Luxo (Craftsmanship)**:
-     * Use espaçamentos generosos (py-20, py-24, px-6), containers bem alinhados (max-w-7xl mx-auto), bordas refinadas (rounded-3xl, border border-black/5 ou border-white/10), sombras suaves multicamadas (shadow-xl, shadow-2xl) e badges em glassmorphism (backdrop-blur-md).
+   - **Acabamento de Luxo & Engenharia de Alinhamento Preciso (REGRA CRÍTICA DE LAYOUT)**:
+     * **NAVBAR FULL-WIDTH SEM INVADIR TÍTULOS**: Use SEMPRE '<header class="sticky top-0 z-50 w-full backdrop-blur-xl border-b">' ocupando 100% da largura no topo (top-0). **PROIBIDO** criar pílulas flutuantes estreitas com 'sticky top-4' ou 'fixed top-6 max-w-5xl rounded-full', pois ao rolar a página elas cortam os títulos das seções ao meio!
+     * **RESPIRO DE SEÇÃO E SCROLL**: Toda '<section>' DEVE ter 'py-20 lg:py-28 scroll-mt-24' para que o cabeçalho fixo nunca encoste ou corte fotos e títulos.
+     * **ALINHAMENTO MATEMÁTICO DE CARDS DE SERVIÇOS (ALTURA IGUAL E RODAPÉ ALINHADO)**:
+       - Na '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">', CADA card DEVE ter 'class="group flex flex-col h-full rounded-3xl overflow-hidden ..."'.
+       - A imagem do topo do card DEVE ter altura fixa uniforme ('h-56 w-full shrink-0 overflow-hidden').
+       - O corpo textual do card DEVE ter 'class="p-6 flex flex-col flex-1"'.
+       - A linha inferior com Preço / Duração + Botão de Ação DEVE estar dentro de '<div class="mt-auto pt-5 border-t border-current/10 flex items-center justify-between">' para que todos os 4 preços e botões fiquem milimetricamente alinhados na mesma linha horizontal, mesmo quando uma descrição tiver 2 linhas e outra tiver 3 linhas!
+     * **PROIBIDO CARDS FLUTUANTES VAZANDO DA IMAGEM**: Na seção "Sobre Nós / Espaço de Transformação", NUNCA use 'absolute -right-6', '-right-8' ou '-bottom-8' pendurado para fora da foto invadindo a coluna de texto ao lado. Se usar um selo sobre a foto, posicione-o **100% dentro** da moldura ('bottom-4 left-4 right-4' ou 'bottom-5 left-5').
+     * **ESPAÇO SEGURO NOS CANTOS INFERIORES**: Adicione 'pb-24' no '<body>' ou no '<footer>' para que o botão flutuante de WhatsApp (canto inferior direito) e o widget de Atendimento Online (canto inferior esquerdo) nunca fiquem em cima de botões CTA do Hero ou textos importantes.
 
-3. **PAREAMENTO FOTOGRÁFICO 1:1 NOS SERVIÇOS E PRODUTOS (REGRA INVIOLÁVEL)**:
+3. **PAREAMENTO FOTOGRÁFICO 1:1 E ZERO REPETIÇÃO DE FOTOS (REGRA INVIOLÁVEL)**:
+   - **6 FOTOS 100% DISTINTAS (PROIBIDO REPETIR A FOTO DO HERO NOS CARDS)**:
+     * A foto usada no **Hero** (Foto Principal 1) e a foto usada na seção **Nosso Espaço / Sobre Nós** (Foto Ambiente 2) NUNCA podem ser repetidas dentro dos 4 cards da seção de Serviços!
+     * Cada um dos 6 espaços visuais da página (1 Hero + 1 Ambiente + 4 Cards de Serviços) DEVE ter uma URL única e diferente.
    - **TODO CARD DE SERVIÇO/PRODUTO DEVE TER FOTO REAL OU FOTO HD PAREADA**:
      * NUNCA gere listas de texto secas sem fotos e NUNCA gere tabelas cruas para a vitrine de serviços!
-     * Cada card da seção de Serviços/Especialidades/Cardápio DEVE exibir uma fotografia de alta resolução no topo (ex: <div class="relative h-60 overflow-hidden rounded-t-3xl"><img src="..." alt="..." class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" /></div>).
+     * Cada card da seção de Serviços/Especialidades/Cardápio DEVE exibir uma fotografia de alta resolução no topo ('<div class="relative h-56 w-full shrink-0 overflow-hidden"><img src="..." alt="..." class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" /></div>').
    - **FIDELIDADE 1:1 AO CATÁLOGO PAREADO DO BRIEFING**:
      * O briefing fornece o bloco **[CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1]**, onde cada Serviço (1, 2, 3, 4) já traz sua URL exata verificada (Imagem Obrigatória do Card).
-     * Use EXATAMENTE a URL indicada para cada respectivo serviço! Isso garante 100% de precisão entre a foto e o texto do card (ex: corte nobre na brasa com foto de churrasco; psicoterapia individual com foto de consultório acolhedor; limpeza de pele com foto de estética facial).
-   - **SEÇÃO SOBRE O ESPECIALISTA / NOSSO ESPAÇO (PROIBIDO ROSTO FAKE DE BANCO DE IMAGENS)**:
+     * Use EXATAMENTE a URL indicada para cada respectivo serviço! Isso garante 100% de precisão semântica entre a foto e o título do card (ex: Terapia de Casal com foto de casal conversando em terapia — jamais plateia de teatro ou silhuetas aleatórias; Psicoterapia Individual com foto de sessão clínica; Primeira Sessão com consultório acolhedor).
+   - **SEÇÃO SOBRE O ESPECIALISTA / NOSSO ESPAÇO (PROIBIDO ROSTO FAKE OU SILHUETA DE PÔR DO SOL)**:
      * Se houver foto real do cliente (Google Maps / Instagram), use-a com destaque!
-     * Se NÃO houver foto real confirmada da pessoa, NUNCA use rosto de modelo de banco de imagens fingindo ser o doutor/dono. Ilustre a seção "Sobre Nós / Estrutura" com uma foto de alta resolução do **Ambiente / Consultório / Espaço de Atendimento** acompanhada de selos de credibilidade (<i data-lucide="award"></i>, <i data-lucide="shield-check"></i>, <i data-lucide="check-circle-2"></i>).
-   - NUNCA invente URLs do Unsplash que não estejam listadas no briefing e NUNCA repita a mesma URL de imagem em dois cards diferentes.
+     * Se NÃO houver foto real confirmada da pessoa, NUNCA use rosto de modelo de banco de imagens fingindo ser o doutor/dono e NUNCA use fotos de paisagem/pôr do sol/praia. Ilustre a seção "Sobre Nós / Estrutura" exclusivamente com a **Foto do Ambiente / Consultório / Espaço de Atendimento** indicada no item 2 do Mapa Fotográfico do briefing.
+   - NUNCA invente URLs do Unsplash que não estejam listadas no briefing e NUNCA repita a mesma URL de imagem em dois lugares diferentes da página.
 
 4. **FERRAMENTAS NATIVAS E INTEGRALIDADE DE NEGÓCIO (OBRIGATÓRIO)**:
    - **Agendamento Online / Ação Principal**:
@@ -262,7 +273,38 @@ export function sanitizeGeneratedLuxuryHtml(rawHtml: string): string {
 
   let html = rawHtml;
 
-  // Converte tags PascalCase auto-fechadas ou abertas/fechadas acidentais em <i data-lucide="..."></i>
+  // 1. Substitui fotos desconexas legadas (teatro/ópera lotado, silhueta pôr do sol, praia escura) por fotos clínicas verificadas
+  html = html
+    .replace(
+      /https:\/\/images\.unsplash\.com\/photo-1516307365426-bea591f05011[^"'\s)]*/gi,
+      "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=900&q=85",
+    )
+    .replace(
+      /https:\/\/images\.unsplash\.com\/photo-1499209974431-9dddcece7f88[^"'\s)]*/gi,
+      "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1000&q=85",
+    )
+    .replace(
+      /https:\/\/images\.unsplash\.com\/photo-1506126613408-eca07ce68773[^"'\s)]*/gi,
+      "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=900&q=85",
+    );
+
+  // 2. Desduplica caso a mesma foto do Hero (photo-1573497620053-ea5300f94f21) tenha sido repetida no Card 1
+  let psychologyHeroCount = 0;
+  html = html.replace(
+    /https:\/\/images\.unsplash\.com\/photo-1573497620053-ea5300f94f21[^"'\s)]*/gi,
+    (match) => {
+      psychologyHeroCount += 1;
+      if (psychologyHeroCount > 1) {
+        return "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=900&q=85";
+      }
+      return match;
+    },
+  );
+
+  // 3. Corrige selos/cards absolutos vazando para fora de imagens (-right-6, -right-8, -right-10, -right-12)
+  html = html.replace(/\b-right-(?:6|8|10|12)\b/g, "right-4");
+
+  // 4. Converte tags PascalCase auto-fechadas ou abertas/fechadas acidentais em <i data-lucide="..."></i>
   const pascalPattern = new RegExp(
     `<(${knownLucidePascalTags.join("|")})(\\s+[^>]*)?\\s*/>`,
     "g",
@@ -277,7 +319,49 @@ export function sanitizeGeneratedLuxuryHtml(rawHtml: string): string {
     return `<i data-lucide="${kebab}"${cleanAttrs}${hasClass ? "" : ' class="w-5 h-5"'}></i>`;
   });
 
-  // Garante que lucide.createIcons() esteja presente antes do fechamento do body
+  // 5. Injeta guarda CSS de precisão de layout (alinhamento de cards, scroll-margin contra navbar colada e padding inferior seguro)
+  const layoutGuardStyle = `<style id="eialink-layout-precision-guard">
+    html { scroll-padding-top: 6.5rem; }
+    body { padding-bottom: 5.5rem !important; overflow-x: hidden; }
+    section { scroll-margin-top: 6.5rem; }
+    /* Garante que navbars pílula antigas não cortem títulos ao rolar */
+    nav.sticky.top-4, nav.sticky.top-6, header.sticky.top-4, header.sticky.top-6 {
+      top: 0.75rem !important;
+      z-index: 50 !important;
+    }
+    /* Alinha todos os cards em grids de 3 ou 4 colunas com a mesma altura e rodapé (preço/seta) na mesma linha horizontal */
+    .grid[class*="grid-cols-"] {
+      align-items: stretch;
+    }
+    .grid[class*="lg:grid-cols-4"] > div,
+    .grid[class*="lg:grid-cols-3"] > div,
+    .grid[class*="md:grid-cols-2"] > div {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+    .grid[class*="lg:grid-cols-4"] > div > div:last-child,
+    .grid[class*="lg:grid-cols-3"] > div > div:last-child {
+      display: flex;
+      flex-direction: column;
+      flex: 1 1 auto;
+    }
+    .grid[class*="lg:grid-cols-4"] > div > div:last-child > div:last-child,
+    .grid[class*="lg:grid-cols-3"] > div > div:last-child > div:last-child {
+      margin-top: auto;
+      padding-top: 1rem;
+    }
+  </style>`;
+
+  if (!html.includes("id=\"eialink-layout-precision-guard\"")) {
+    if (/<\/head>/i.test(html)) {
+      html = html.replace(/<\/head>/i, `${layoutGuardStyle}\n</head>`);
+    } else {
+      html = `${layoutGuardStyle}\n${html}`;
+    }
+  }
+
+  // 6. Garante que lucide.createIcons() esteja presente antes do fechamento do body
   if (!/lucide\.createIcons\s*\(/i.test(html) && /<\/body>/i.test(html)) {
     html = html.replace(
       /<\/body>/i,

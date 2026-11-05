@@ -200,11 +200,13 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   psicologia: {
     covers: [
-      { id: "psi-1", url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=1200&q=80", label: "Consultório & Poltrona de Acolhimento" },
-      { id: "psi-2", url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=80", label: "Espaço Tranquilo & Luz Natural" },
-      { id: "psi-3", url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=1200&q=80", label: "Mindfulness & Equilíbrio Mental" },
-      { id: "psi-4", url: "https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=1200&q=80", label: "Apoio Emocional & Escuta Ativa" },
-      { id: "psi-5", url: "https://images.unsplash.com/photo-1499209974431-9dddcece7f88?auto=format&fit=crop&w=1200&q=80", label: "Sessão de Psicoterapia & Bem-Estar" },
+      { id: "psi-1", url: "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=85", label: "Consultório de Psicologia Acolhedor & Arquitetura Orgânica" },
+      { id: "psi-2", url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=1200&q=85", label: "Poltrona de Acolhimento & Espaço Clínico com Luz Natural" },
+      { id: "psi-3", url: "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=1200&q=85", label: "Sessão de Psicoterapia Individual & Escuta Ética" },
+      { id: "psi-4", url: "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=85", label: "Terapia Online por Videochamada Segura" },
+      { id: "psi-5", url: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85", label: "Terapia de Casal, Diálogo & Harmonia nas Relações" },
+      { id: "psi-6", url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=1200&q=85", label: "Primeira Sessão de Acolhimento & Planejamento Terapêutico" },
+      { id: "psi-7", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85", label: "Recepção & Ambiente Clínico Privativo" },
     ],
     avatars: [
       { id: "psi-av-1", url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80", label: "Dra. Psicóloga Clínica" },
@@ -1089,15 +1091,15 @@ export const NICHE_PRESETS_VARIANTS: Record<string, NichePreset[]> = {
     ],
     [
       [
-        { name: "Sessão de Psicoterapia Individual", category: "Atendimento", description: "Atendimento individual humanizado de 50 minutos com sigilo ético absoluto.", price: 160.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=400&q=80" },
-        { name: "Terapia Online para Ansiedade", category: "Online", description: "Sessão remota segura com técnicas práticas de manejo do estresse e controle da ansiedade.", price: 150.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1506126613408-eca07ce68773?auto=format&fit=crop&w=400&q=80" },
-        { name: "Terapia de Casal & Relações", category: "Relacionamentos", description: "Espaço mediado para fortalecer o diálogo, resolver conflitos e reconstruir a harmonia.", price: 240.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1516307365426-bea591f05011?auto=format&fit=crop&w=400&q=80" },
+        { name: "Sessão de Psicoterapia Individual", category: "Atendimento", description: "Atendimento individual humanizado de 50 minutos com sigilo ético absoluto e escuta qualificada.", price: 160.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=1200&q=85" },
+        { name: "Terapia Online para Ansiedade", category: "Online", description: "Sessão remota segura por videochamada com técnicas práticas de manejo do estresse e ansiedade.", price: 150.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=85" },
+        { name: "Terapia de Casal & Relações", category: "Relacionamentos", description: "Espaço mediado para fortalecer o diálogo afetivo, resolver conflitos e reconstruir a harmonia.", price: 240.0, duration_minutes: 60, image_url: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85" },
       ],
       [
-        { name: "Primeira Sessão de Acolhimento", category: "Inicial", description: "Conversa inicial para entender suas necessidades e traçar objetivos terapêuticos.", price: 140.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=400&q=80" },
+        { name: "Primeira Sessão de Acolhimento", category: "Inicial", description: "Conversa inicial estruturada para compreender suas demandas e traçar objetivos terapêuticos.", price: 140.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=1200&q=85" },
       ],
       [
-        { name: "Pacote Mensal de Terapia (4 Sessões)", category: "Planos", description: "Acompanhamento contínuo semanal com economia e foco em resultados duradouros.", price: 560.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=400&q=80" },
+        { name: "Pacote Mensal de Terapia (4 Sessões)", category: "Planos", description: "Acompanhamento contínuo semanal com horário fixo reservado e foco em evolução consistente.", price: 560.0, duration_minutes: 50, image_url: "https://images.unsplash.com/photo-1573497620053-ea5300f94f21?auto=format&fit=crop&w=1200&q=85" },
       ],
     ]
   ),
@@ -2386,6 +2388,8 @@ export interface NicheDesignDirection {
   signatureSection: string;
   locationLayout: string;
   trustBadges: string[];
+  heroPhotoUrl: string;
+  ambientPhotoUrl: string;
   pairedServices: PairedCatalogItem[];
 }
 
@@ -2830,45 +2834,66 @@ export function getNicheDesignDirection(
   const palette = profile.palettes[safeIdx] || profile.palettes[0];
   const pairedServices = getPairedCatalogForBusiness(nicheRaw, companyNameRaw);
 
+  // Garante que a foto do Hero e a foto do Ambiente ("Nosso Espaço") NUNCA repitam nenhuma das 4 fotos dos cards de serviços!
+  const gallery = NICHE_GALLERIES[baseKey] || NICHE_GALLERIES.geral;
+  const serviceBaseUrls = new Set(pairedServices.map((s) => s.image_url.split("?")[0]));
+  const distinctGalleryCovers = (gallery.covers || [])
+    .map((c) => c.url.replace(/w=\d+/g, "w=1200").replace(/q=\d+/g, "q=85"))
+    .filter((u) => !serviceBaseUrls.has(u.split("?")[0]));
+
+  const fallbackArchitecturalCovers = [
+    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85",
+    "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85",
+  ].filter((u) => !serviceBaseUrls.has(u.split("?")[0]));
+
+  const availableScenePhotos = [...distinctGalleryCovers, ...fallbackArchitecturalCovers];
+  const heroPhotoUrl =
+    availableScenePhotos[0] ||
+    "https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=1200&q=85";
+  const ambientPhotoUrl =
+    availableScenePhotos.find((u) => u.split("?")[0] !== heroPhotoUrl.split("?")[0]) ||
+    "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85";
+
   const LAYOUT_VARIANTS = [
     {
       variantName: `Editorial Boutique & Vitrine Fotográfica (${profile.label})`,
       navbar:
-        "Navbar flutuante estilo glassmorphism ('sticky top-4 z-40 max-w-6xl mx-auto rounded-full bg-white/85 backdrop-blur-xl shadow-lg border border-black/5 px-6 py-3.5') com nome da marca em destaque, links de navegação suaves e botão CTA principal com ícone",
+        "Header fixo de largura total ('sticky top-0 z-50 w-full bg-white/95 backdrop-blur-xl border-b border-black/5 px-6 py-4') com container interno 'max-w-7xl mx-auto flex items-center justify-between'. PROIBIDO criar navbar pill estreita que deixe títulos vazando por trás ao rolar a página!",
       heroConcept:
-        "HERO ASSIMÉTRICO DE LUXO (60/40): Coluna esquerda com badge da especialidade do nicho, headline magnética em alta tipografia, subtítulo persuasivo, botões de Agendamento/WhatsApp e selo de avaliação 5 estrelas do Google; Coluna direita com composição fotográfica imponente em moldura 'rounded-3xl shadow-2xl overflow-hidden aspect-[4/5]' exibindo a foto principal do nicho/cliente com card flutuante de credibilidade.",
+        "HERO ASSIMÉTRICO DE LUXO (60/40) COM ALINHAMENTO PERFEITO ('py-16 lg:py-24 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center'): Coluna esquerda (7 cols) com badge da especialidade do nicho, headline magnética em alta tipografia, subtítulo persuasivo, botões de Agendamento/WhatsApp e selo de avaliação 5 estrelas do Google; Coluna direita (5 cols) com composição fotográfica imponente em moldura 'relative rounded-3xl shadow-2xl overflow-hidden aspect-[4/5]' exibindo a FOTO PRINCIPAL DO HERO com um badge de vidro INTERNO ('absolute bottom-4 left-4 right-4 backdrop-blur-md bg-white/90 p-4 rounded-2xl'). PROIBIDO usar cards com negative right ('-right-8') vazando para fora da foto!",
       servicesLayout:
-        "VITRINE FOTOGRÁFICA DE SERVIÇOS EM CARDS DE ALTO PADRÃO (OBRIGATÓRIO COM FOTO EM CADA CARD): Grid responsivo de 3 ou 4 colunas ('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'). CADA CARD DEVE TER OBRIGATORIAMENTE: (1) Container superior de imagem 'relative h-56 overflow-hidden rounded-t-3xl' com a tag <img src='URL_PAREADA' class='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'> e badge de categoria flutuante; (2) Corpo do card com título do serviço, descrição envolvente, faixa de valor/duração e botão direto de ação.",
+        "VITRINE FOTOGRÁFICA DE SERVIÇOS NIVELADA (OBRIGATÓRIO ALINHAMENTO HORIZONTAL DE ALTURA): Seção com 'py-24 scroll-mt-24'. Grid responsivo de 4 colunas ('grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch'). CADA CARD DEVE TER OBRIGATORIAMENTE 'flex flex-col h-full rounded-3xl overflow-hidden border shadow-sm hover:shadow-xl transition-all': (1) Topo com imagem 'relative h-52 w-full overflow-hidden shrink-0' e <img src='URL_PAREADA' class='w-full h-full object-cover'> + badge no canto superior esquerdo; (2) Corpo 'flex flex-col flex-1 p-6' com título, descrição e rodapé 'mt-auto pt-4 border-t flex items-center justify-between' para que TODOS os preços e botões fiquem 100% alinhados na mesma linha horizontal!",
       signatureSection:
-        "SEÇÃO DE DIFERENCIAIS & AUTORIDADE DO NICHO: Bloco refinado apresentando os 4 pilares de excelência da marca com ícones Lucide ('<i data-lucide=\"shield-check\"></i>', '<i data-lucide=\"sparkles\"></i>', '<i data-lucide=\"award\"></i>', '<i data-lucide=\"heart-handshake\"></i>') + números de impacto e depoimentos reais de clientes.",
+        "SEÇÃO SOBRE NOSSO ESPAÇO & DIFERENCIAIS ('py-24 scroll-mt-24'): Grid 2 colunas alinhadas pelo centro ('grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'): Coluna da foto usando a FOTO DO AMBIENTE em 'rounded-3xl overflow-hidden shadow-xl aspect-[4/3]' (SEM cards pendurados para fora da borda da imagem!) e Coluna de texto com título editorial, narrativa sobre o espaço e grid 2x2 dos 4 pilares de excelência com ícones Lucide.",
       locationLayout:
-        "SPLIT DE LOCALIZAÇÃO & ACOLHIMENTO: Coluna esquerda com endereço verificado, horários de atendimento e os 2 botões oficiais de GPS ('📍 Traçar Rota no Google Maps' e '🚗 Abrir no Waze'); Coluna direita com o iframe do Google Maps em 'rounded-3xl shadow-xl border'.",
+        "SPLIT DE LOCALIZAÇÃO & ACOLHIMENTO ('py-24 scroll-mt-24'): Coluna esquerda com endereço verificado, horários de atendimento e os 2 botões oficiais de GPS ('📍 Traçar Rota no Google Maps' e '🚗 Abrir no Waze'); Coluna direita com o iframe do Google Maps em 'rounded-3xl shadow-xl border h-80 w-full'.",
     },
     {
       variantName: `Immersive Flagship & Bento Showcase (${profile.label})`,
       navbar:
-        "Header executivo de largura total com backdrop-blur, logotipo tipográfico elegante, badge de localização na cidade e botão de ação destacado",
+        "Header executivo de largura total ('sticky top-0 z-50 w-full backdrop-blur-xl border-b px-6 py-4') com container 'max-w-7xl mx-auto flex items-center justify-between', logotipo tipográfico elegante e botão de ação destacado",
       heroConcept:
-        "HERO CINEMATOGRÁFICO COM PAINEL DE VIDRO: Grande fotografia de capa em alta definição com iluminação dramática e overlay gradiente calibrado na paleta do nicho; sobreposto por container editorial e 3 mini-cards de vidro translúcido ('backdrop-blur-md bg-white/10 border border-white/20 rounded-2xl p-4') destacando reputação Google, especialidade e atendimento.",
+        "HERO CINEMATOGRÁFICO COM PAINEL DE VIDRO ('relative py-20 lg:py-28 overflow-hidden'): Grande fotografia de capa (FOTO PRINCIPAL DO HERO) com overlay gradiente calibrado na paleta do nicho; container 'max-w-7xl mx-auto px-6' com headline impactante, CTA principal e 3 cards de vidro alinhados em grid ('grid grid-cols-1 md:grid-cols-3 gap-4 mt-12') destacando reputação Google, especialidade e atendimento.",
       servicesLayout:
-        "BENTO GRID FOTOGRÁFICO DE ESPECIALIDADES (TODOS OS CARDS COM FOTO): Cards elegantes em 'rounded-3xl border shadow-lg overflow-hidden group' combinando fotografia de alta resolução ('h-60 w-full object-cover') no topo de cada serviço com badge da especialidade, descrição detalhada dos benefícios e botão de conversão.",
+        "BENTO GRID FOTOGRÁFICO DE ESPECIALIDADES NIVELADO ('py-24 scroll-mt-24'): Grid 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch'. Cada card com 'flex flex-col h-full rounded-3xl border shadow-lg overflow-hidden group', fotografia de alta resolução ('h-52 w-full object-cover shrink-0') no topo, corpo 'flex flex-col flex-1 p-6' e rodapé 'mt-auto pt-4 flex items-center justify-between' alinhado na base.",
       signatureSection:
-        "JORNADA DO CLIENTE EM 3 ETAPAS + FAQ INTERATIVO: Mostre visualmente como funciona o atendimento em 3 passos claros, seguido de perguntas frequentes em tags '<details class=\"group rounded-2xl border p-5\">' específicas sobre o nicho.",
+        "JORNADA DO CLIENTE EM 3 ETAPAS + SOBRE NOSSO ESPAÇO ('py-24 scroll-mt-24'): Bloco duplo alinhado apresentando a FOTO DO AMBIENTE em moldura 'rounded-3xl overflow-hidden aspect-[4/3]' (sem elementos vazando para fora) + 3 etapas claras do atendimento e FAQ em tags '<details class=\"group rounded-2xl border p-5\">'.",
       locationLayout:
-        "PAINEL INTEGRADO DE VISITA & MAPA INTERATIVO: Card panorâmico de localização com mapa Google Maps embutido e barra de ação rápida para Waze, Google Maps e WhatsApp.",
+        "PAINEL INTEGRADO DE VISITA & MAPA INTERATIVO ('py-24 scroll-mt-24'): Card panorâmico de localização com mapa Google Maps embutido e barra de ação rápida para Waze, Google Maps e WhatsApp.",
     },
     {
       variantName: `Architectural Split & Prestige Gallery (${profile.label})`,
       navbar:
-        "Barra superior minimalista de alto contraste com telefone/WhatsApp rápido, selo de avaliação Google e CTA em formato pill",
+        "Barra superior de largura total ('sticky top-0 z-50 w-full backdrop-blur-xl border-b px-6 py-4') com container 'max-w-7xl mx-auto flex items-center justify-between', selo de avaliação Google e CTA em formato pill",
       heroConcept:
-        "HERO ARCHITECTURAL SPLIT COM GALERIA: Composição moderna destacando a proposta única de valor do nicho à esquerda e um mosaico visual com a foto principal + selos de especialidade à direita.",
+        "HERO ARCHITECTURAL SPLIT ('py-16 lg:py-24 max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center'): Coluna esquerda com proposta única de valor do nicho, CTAs e prova social; Coluna direita com a FOTO PRINCIPAL DO HERO em 'rounded-3xl overflow-hidden shadow-2xl aspect-[4/3]' e selos alinhados abaixo da foto.",
       servicesLayout:
-        "GALERIA DE PROCEDIMENTOS / PRODUTOS HORIZONTAL-VERTICAL COM FOTOS HD: Cards fotográficos luxuosos onde cada serviço exibe sua imagem exata pareada ('aspect-[4/3] w-full object-cover rounded-2xl'), tag de destaque, benefícios claros e link direto de agendamento/pedido.",
+        "GALERIA DE PROCEDIMENTOS / PRODUTOS COM FOTOS HD NIVELADAS ('py-24 scroll-mt-24'): Grid 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch' onde cada card possui 'flex flex-col h-full rounded-3xl border overflow-hidden', imagem exata pareada ('h-52 w-full object-cover shrink-0'), corpo 'flex flex-col flex-1 p-6' e rodapé de preço/botão com 'mt-auto pt-4 flex items-center justify-between'.",
       signatureSection:
-        "PROVA SOCIAL & COMPROMISSO DE EXCELÊNCIA: Destaque para a nota real do Google Maps com estrelas douradas, 3 depoimentos autênticos contextualizados no nicho e selos de garantia.",
+        "ESTRUTURA & PROVA SOCIAL ('py-24 scroll-mt-24'): Apresentação do espaço com a FOTO DO AMBIENTE + 3 depoimentos autênticos contextualizados no nicho com 5 estrelas em cards de mesma altura ('h-full flex flex-col justify-between').",
       locationLayout:
-        "ESTAÇÃO DE NAVEGAÇÃO GPS & CONTATO DIRETO: Bloco duplo com iframe do mapa à esquerda e cartão concierge à direita com botões grandes para Google Maps, Waze e WhatsApp.",
+        "ESTAÇÃO DE NAVEGAÇÃO GPS & CONTATO DIRETO ('py-24 scroll-mt-24'): Bloco duplo com iframe do mapa à esquerda e cartão concierge à direita com botões grandes para Google Maps, Waze e WhatsApp.",
     },
   ];
 
@@ -2888,6 +2913,8 @@ export function getNicheDesignDirection(
     signatureSection: chosenLayout.signatureSection,
     locationLayout: chosenLayout.locationLayout,
     trustBadges: profile.trustBadges,
+    heroPhotoUrl,
+    ambientPhotoUrl,
     pairedServices,
   };
 }

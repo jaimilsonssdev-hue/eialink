@@ -37,7 +37,75 @@ function getRuntimeNichePack(niche?: string, businessName?: string): RuntimeNich
   const text = `${niche || ""} ${businessName || ""}`.toLowerCase();
 
   if (
-    /odonto|dent|sorriso|cl[ií]nica|m[eé]dic|pediatr|oftalmo|fisioter|psic[oó]l|terapeuta|nutri|sa[uú]de|ortoped|dermatolog/i.test(
+    /psic[oó]l|psicoterap|terapia|terapeuta|psican[aá]l|psiquiatr|sa[uú]de\s*mental|neuropsic/i.test(
+      text,
+    )
+  ) {
+    return {
+      category: "psychology",
+      ctaLabel: "🗓️ Agendar Sessão",
+      isBooking: true,
+      services: [
+        {
+          name: "Sessão de Psicoterapia Individual",
+          price: "R$ 160",
+          duration: "50 min",
+          desc: "Atendimento individual humanizado com sigilo ético absoluto.",
+        },
+        {
+          name: "Terapia Online para Ansiedade",
+          price: "R$ 150",
+          duration: "50 min",
+          desc: "Sessão remota segura com técnicas práticas de manejo emocional.",
+        },
+        {
+          name: "Terapia de Casal & Relações",
+          price: "R$ 240",
+          duration: "60 min",
+          desc: "Espaço mediado para fortalecer o diálogo e a harmonia.",
+        },
+        {
+          name: "Primeira Sessão de Acolhimento",
+          price: "R$ 140",
+          duration: "50 min",
+          desc: "Conversa inicial para alinhar necessidades e objetivos terapêuticos.",
+        },
+      ],
+      deal: {
+        title: "Primeira Sessão de Acolhimento com Condição Especial",
+        description:
+          "Agende sua primeira sessão de acolhimento presencial ou online com prioridade na agenda desta semana.",
+        originalPrice: "R$ 180,00",
+        dealPrice: "R$ 140,00",
+        badge: "ACOLHIMENTO",
+        codePrefix: "ACOLHER",
+        remaining: 4,
+      },
+      loyaltyRewards: [
+        {
+          id: "r1",
+          title: "Guia Digital de Autocuidado & Mindfulness",
+          points: 100,
+          desc: "Material exclusivo de apoio emocional entre sessões.",
+        },
+        {
+          id: "r2",
+          title: "Prioridade de Horário na Agenda Mensal",
+          points: 200,
+          desc: "Flexibilidade preferencial para reagendamentos.",
+        },
+        {
+          id: "r3",
+          title: "Sessão Bônus de Acompanhamento",
+          points: 400,
+          desc: "Benefício especial para pacotes de acompanhamento contínuo.",
+        },
+      ],
+    };
+  }
+
+  if (
+    /odonto|dent|sorriso|cl[ií]nica|m[eé]dic|pediatr|oftalmo|fisioter|nutri|sa[uú]de|ortoped|dermatolog/i.test(
       text,
     )
   ) {
@@ -563,29 +631,29 @@ export function injectEiaLinkFeatureRuntime(html: string, ctx: FeatureRuntimeCon
         }
         #eialink-widgets-dock {
           position: fixed;
-          left: 16px;
-          bottom: 18px;
+          left: 14px;
+          bottom: 14px;
           z-index: 9995;
           display: flex;
           flex-direction: column;
           align-items: flex-start;
-          gap: 8px;
+          gap: 6px;
           pointer-events: none;
         }
         .eia-pill-btn {
           pointer-events: auto;
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 9px 14px;
+          gap: 6px;
+          padding: 7px 12px;
           border-radius: 9999px;
-          font-size: 12px;
-          font-weight: 700;
+          font-size: 11px;
+          font-weight: 600;
           color: #ffffff;
-          background: rgba(15, 15, 20, 0.92);
+          background: rgba(15, 15, 20, 0.88);
           backdrop-filter: blur(12px);
           border: 1px solid rgba(255, 255, 255, 0.14);
-          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45);
+          box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
           cursor: pointer;
           transition: transform 0.18s ease, border-color 0.18s ease;
         }

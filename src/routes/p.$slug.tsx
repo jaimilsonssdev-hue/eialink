@@ -37,6 +37,7 @@ import type { LojaData } from "@/modules/loja/lojaAiService";
 import { AgendaPublicViewer } from "@/modules/agenda/AgendaPublicViewer";
 import type { AgendaData } from "@/modules/agenda/agendaAiService";
 import { injectEiaLinkFeatureRuntime } from "@/lib/eialinkFeatureRuntime";
+import { sanitizeGeneratedLuxuryHtml } from "@/modules/studiopro/lib/creativeEngineService";
 
 
 // The generated Supabase types predate page_blocks; keep the compatibility adapter local.
@@ -731,10 +732,15 @@ function PublicBio() {
     const isDealsActive = rawSocial.deals_enabled === true || (isFoodOrRetail && rawSocial.deals_enabled !== false && rawSocial.mural_ofertas_enabled !== false);
     const isLoyaltyActive = rawSocial.loyalty_enabled === true || (isFoodOrRetail && rawSocial.loyalty_enabled !== false && rawSocial.fidelidade_enabled !== false);
 
+    // Sanitiza HTML (corrige fotos legadas desconexas, desduplica fotos repetidas e injeta alinhamento de cards/seções)
+    const sanitizedCustomHtml = isCardapioPage
+      ? effectiveHtml
+      : sanitizeGeneratedLuxuryHtml(effectiveHtml);
+
     // Injeta orquestrador de recursos (Agendamento, Mural de Ofertas, Fidelidade, Atendente, GPS, WhatsApp)
     const htmlWithRuntime = isCardapioPage
-      ? effectiveHtml
-      : injectEiaLinkFeatureRuntime(effectiveHtml, {
+      ? sanitizedCustomHtml
+      : injectEiaLinkFeatureRuntime(sanitizedCustomHtml, {
           slug: bio.slug,
           businessName: bio.display_name,
           whatsapp: bio.whatsapp,
@@ -774,14 +780,15 @@ function PublicBio() {
             bookingUrl={bookingActive ? `/agendar/${bio.slug}` : undefined}
           />
         )}
-        {renderAiChatWidget()}
-        <LoyaltyCustomerWalletModal
-          bioPageId={bio.id}
-          businessName={bio.display_name}
-          slug={bio.slug}
-          instagram={bio.instagram}
-          claimTokenId={claimTokenId}
-        />
+        {claimTokenId && (
+          <LoyaltyCustomerWalletModal
+            bioPageId={bio.id}
+            businessName={bio.display_name}
+            slug={bio.slug}
+            instagram={bio.instagram}
+            claimTokenId={claimTokenId}
+          />
+        )}
       </div>
     );
   }

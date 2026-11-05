@@ -687,10 +687,7 @@ export const generateCreativeSiteFn = createServerFn({ method: "POST" })
       effectiveProjectName,
       input.isRegeneration ? Math.floor(Math.random() * 3) : 0,
     );
-    const pairedCatalog = getPairedCatalogForBusiness(
-      effectiveNiche || "geral",
-      effectiveProjectName,
-    );
+    const pairedCatalog = nicheDirection.pairedServices;
 
     const businessContextParts: string[] = [];
     if (effectiveProjectName) businessContextParts.push(`Nome Oficial: "${effectiveProjectName}"`);
@@ -768,13 +765,19 @@ ${pairedCatalog
       );
       const heroAndAmbientPhotos = found.filter((f) => f.role === "hero" || f.role === "ambient");
       if (heroAndAmbientPhotos.length > 0) {
+        const distinctHeroUrl = clientRealPhotos[0] || nicheDirection.heroPhotoUrl || heroAndAmbientPhotos[0].url;
+        const distinctAmbientUrl =
+          clientRealPhotos[1] ||
+          nicheDirection.ambientPhotoUrl ||
+          (heroAndAmbientPhotos[1] || heroAndAmbientPhotos[0]).url;
         businessContextParts.push(
-          `FOTOS COMPLEMENTARES DE CAPA (HERO) E AMBIENTE INTERNO DO NICHO (${nicheDirection.canonicalTagLabel}):
-${heroAndAmbientPhotos.map((img, i) => `- Foto ${img.role.toUpperCase()} ${i + 1} [${img.label}]: ${img.url}`).join("\n")}
+          `FOTOS COMPLEMENTARES DE CAPA (HERO) E AMBIENTE INTERNO DO NICHO (${nicheDirection.canonicalTagLabel} — PROIBIDO REPETIR ESSAS URLS NOS CARDS DE SERVIÇO):
+- Foto HERO Principal: ${distinctHeroUrl}
+- Foto AMBIENTE / NOSSO ESPAÇO: ${distinctAmbientUrl}
 REGRA DE OURO:
-1. Para o HERO principal: use ${clientRealPhotos[0] ? `a Foto Real 1 (${clientRealPhotos[0]})` : `a Foto HERO 1 (${heroAndAmbientPhotos[0].url})`}.
-2. Para a seção "Sobre Nós / Nosso Espaço": use ${clientRealPhotos[1] ? `a Foto Real 2 (${clientRealPhotos[1]})` : `a Foto AMBIENT (${(heroAndAmbientPhotos[1] || heroAndAmbientPhotos[0]).url})`} acompanhada dos selos de credibilidade com ícones <i data-lucide="award"></i>, <i data-lucide="shield-check"></i>. NUNCA use foto de rosto de modelo desconhecido fingindo ser o dono!
-3. Para cada card de serviço: use EXATAMENTE a 'IMAGEM OBRIGATÓRIA DESTE CARD' listada no bloco [CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1] acima. Todos os cards de serviço DEVEM ter foto!`,
+1. Para o HERO principal: use EXATAMENTE ${distinctHeroUrl}.
+2. Para a seção "Sobre Nós / Nosso Espaço": use EXATAMENTE ${distinctAmbientUrl} acompanhada dos selos de credibilidade com ícones <i data-lucide="award"></i>, <i data-lucide="shield-check"></i>. NUNCA use foto de rosto de modelo desconhecido fingindo ser o dono e NUNCA pendure cards com -right-8 vazando para fora da foto!
+3. Para cada card de serviço: use EXATAMENTE a 'IMAGEM OBRIGATÓRIA DESTE CARD' listada no bloco [CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1] acima (todas as 6 imagens da página são 100% distintas, nunca repita a foto do Hero no Card 1).`,
         );
       }
     } catch (e) {

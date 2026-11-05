@@ -7,18 +7,25 @@ export const ACTIVE_GEMINI_MODELS = [
   "gemini-2.0-flash",
 ] as const;
 
+let cachedModelsInfo: { key: string; models: string[]; expiresAt: number } | null = null;
+
 /**
  * Consulta a API do Google AI Studio em tempo real para descobrir quais modelos estão
  * ativos e autorizados para a chave do usuário que suportam generateContent.
+ * Possui cache em memória com TTL de 15 minutos para velocidade instantânea (0ms em chamadas subsequentes).
  * Isso garante que o sistema NUNCA tente um modelo inexistente ou com cota bloqueada (404).
  */
 export async function getAvailableGeminiModels(apiKey?: string): Promise<string[]> {
   const cleanKey = apiKey?.trim() || resolveGeminiApiKey() || "";
+  if (cachedModelsInfo && cachedModelsInfo.key === cleanKey && Date.now() < cachedModelsInfo.expiresAt) {
+    return [...cachedModelsInfo.models];
+  }
+
   if (cleanKey && cleanKey.length > 5) {
     try {
       const res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models?key=${cleanKey}`,
-        { signal: AbortSignal.timeout(4000) },
+        { signal: AbortSignal.timeout(2000) },
       );
       if (res.ok) {
         const data = await res.json();
@@ -46,6 +53,11 @@ export async function getAvailableGeminiModels(apiKey?: string): Promise<string[
               if (idxB !== -1) return 1;
               return 0;
             });
+            cachedModelsInfo = {
+              key: cleanKey,
+              models: supported,
+              expiresAt: Date.now() + 15 * 60 * 1000,
+            };
             return supported;
           }
         }
@@ -55,7 +67,15 @@ export async function getAvailableGeminiModels(apiKey?: string): Promise<string[
     }
   }
 
-  return [...ACTIVE_GEMINI_MODELS];
+  const fallback = [...ACTIVE_GEMINI_MODELS];
+  if (cleanKey) {
+    cachedModelsInfo = {
+      key: cleanKey,
+      models: fallback,
+      expiresAt: Date.now() + 5 * 60 * 1000,
+    };
+  }
+  return fallback;
 }
 
 export type ActiveGeminiModel = (typeof ACTIVE_GEMINI_MODELS)[number];

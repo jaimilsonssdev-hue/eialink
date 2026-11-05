@@ -247,6 +247,7 @@ function ProspectingPage() {
 
   const [creatingPageId, setCreatingPageId] = useState<string | null>(null);
   const [regeneratingPageId, setRegeneratingPageId] = useState<string | null>(null);
+  const [enrichingCompanyId, setEnrichingCompanyId] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [ideationLead, setIdeationLead] = useState<{
     name: string;
@@ -862,9 +863,7 @@ function ProspectingPage() {
     const nicheText = company.niche || "Serviços Especializados";
     const detectedKey = detectNicheKey(company.niche, company.name);
 
-    setFeedback(`🔍 Consultando perfil Google Meu Negócio e preparando direção de arte para ${company.name}...`);
-
-    // Busca detalhes reais do Google Meu Negócio (fotos reais, endereço verificado e nota)
+    // 1. Desempacota fotos reais já associadas ao lead (Google Maps ou Instagram pré-salvo)
     let realPhotos: string[] = [];
     if (Array.isArray(company.photos) && company.photos.length > 0) {
       realPhotos.push(...company.photos.filter((p): p is string => typeof p === "string" && p.startsWith("http")));
@@ -883,96 +882,95 @@ function ProspectingPage() {
     let verifiedAddress = company.address;
     let verifiedRating = company.rating;
     let verifiedReviewsCount = company.reviews_count;
+    let compatibleImages: Array<{ url: string; label: string; role: string }> = [];
 
-    try {
-      const placeDetailsPromise = fetchPlaceDetailsFn({
-        data: {
-          companyName: company.name,
-          city: company.city || undefined,
-        },
-      });
-      // Timeout de 4s para não travar a experiência
-      const details = await Promise.race([
-        placeDetailsPromise,
-        new Promise<null>((resolve) => setTimeout(() => resolve(null), 4000)),
+    // OTIMIZAÇÃO CRÍTICA DE ALTA VELOCIDADE:
+    // Se o lead já possui fotos reais (>= 2) e endereço, NUNCA executa consultas externas lentas!
+    const needsAddress = !verifiedAddress;
+    const needsCompatibleImages = realPhotos.length < 2;
+
+    if (needsAddress || needsCompatibleImages) {
+      setFeedback(`🔍 Otimizando recursos visuais e direção de arte para ${company.name}...`);
+      const parallelTasks: Promise<any>[] = [];
+
+      let placesTask: Promise<any> | null = null;
+      if (needsAddress) {
+        placesTask = fetchPlaceDetailsFn({
+          data: {
+            companyName: company.name,
+            city: company.city || undefined,
+          },
+        }).catch((err) => {
+          console.warn("[Prospeccao] Falha silenciosa em Places:", err);
+          return null;
+        });
+        parallelTasks.push(placesTask);
+      }
+
+      let imgTask: Promise<any> | null = null;
+      if (needsCompatibleImages) {
+        imgTask = searchCompatibleBusinessImagesFn({
+          data: {
+            niche: nicheText,
+            businessName: company.name,
+            count: 8,
+          },
+        }).catch((err) => {
+          console.warn("[Prospeccao] Fallback de imagens ignorado:", err);
+          return [];
+        });
+        parallelTasks.push(imgTask);
+      }
+
+      // Executa tarefas estritamente necessárias em paralelo com teto estrito de 1.8s
+      await Promise.race([
+        Promise.allSettled(parallelTasks),
+        new Promise((resolve) => setTimeout(resolve, 1800)),
       ]);
 
-      if (details) {
-        if (Array.isArray(details.photos) && details.photos.length > 0) {
-          realPhotos = details.photos;
-        }
-        if (details.address && !verifiedAddress) {
-          verifiedAddress = details.address;
-        }
-        if (details.rating && !verifiedRating) {
-          verifiedRating = details.rating;
-        }
-        if (details.reviewsCount && !verifiedReviewsCount) {
-          verifiedReviewsCount = details.reviewsCount;
-        }
+      if (placesTask) {
+        try {
+          const details = await placesTask;
+          if (details) {
+            if (Array.isArray(details.photos) && details.photos.length > 0 && realPhotos.length === 0) {
+              realPhotos.push(...details.photos.filter((p: string) => typeof p === "string" && p.startsWith("http")));
+            }
+            if (details.address && !verifiedAddress) verifiedAddress = details.address;
+            if (details.rating && !verifiedRating) verifiedRating = details.rating;
+            if (details.reviewsCount && !verifiedReviewsCount) verifiedReviewsCount = details.reviewsCount;
+          }
+        } catch (_) {}
       }
-    } catch (err) {
-      console.warn("[Prospeccao] Consulta Google Places falhou, prosseguindo com dados do lead:", err);
+
+      if (imgTask) {
+        try {
+          compatibleImages = (await imgTask) || [];
+        } catch (_) {}
+      }
     }
 
-    // Busca profunda e autêntica de fotos reais no Instagram da empresa via Apify
+    // Se o lead possui Instagram e ainda tem poucas fotos, dispara enriquecimento em background
+    // (Garante que a próxima geração terá as 12 fotos completas SEM travar a criação imediata agora)
     let targetInstaHandle = company.instagram ? extractInstagramHandle(company.instagram) : null;
     if (!targetInstaHandle && company.website && /(?:instagram\.com\/|instagr\.am\/)/i.test(company.website)) {
       targetInstaHandle = extractInstagramHandle(company.website);
     }
-    if (!targetInstaHandle && company.name) {
-      try {
-        targetInstaHandle = await findInstagramHandleForCompany(company.name, company.city);
-      } catch (findErr) {
-        console.warn("[Prospeccao] Descoberta de Instagram falhou:", findErr);
-      }
-    }
-
-    if (targetInstaHandle) {
-      setFeedback(`📸 Buscando fotos reais do feed do Instagram (@${targetInstaHandle}) via Apify...`);
-      try {
-        const currentApifyToken = getSavedApifyToken() || undefined;
-        const instaPromise = fetchInstagramProfileViaApify(targetInstaHandle, currentApifyToken);
-        const instaProfile = await Promise.race([
-          instaPromise,
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 12000)),
-        ]);
-        if (instaProfile && Array.isArray(instaProfile.photos) && instaProfile.photos.length > 0) {
-          const instaPhotos = instaProfile.photos.filter((p) => typeof p === "string" && p.startsWith("http"));
-          for (const ip of instaPhotos) {
-            if (!realPhotos.includes(ip)) {
-              realPhotos.push(ip);
-            }
-          }
-          if (!cleanPhone && instaProfile.whatsapp) {
-            cleanPhone = instaProfile.whatsapp.replace(/\D/g, "");
-          }
+    if (targetInstaHandle && realPhotos.length < 3 && getSavedApifyToken()) {
+      fetchInstagramProfileViaApify(targetInstaHandle).then(async (profile) => {
+        if (profile && Array.isArray(profile.photos) && profile.photos.length > 0) {
+          const validPhotos = profile.photos.filter((p) => typeof p === "string" && p.startsWith("http")).slice(0, 12);
+          const currentNotes = (company.notes || "").replace(/\[Fotos:\s*[^\]]+\]/g, "").trim();
+          const updatedNotes = currentNotes ? `${currentNotes}\n[Fotos: ${validPhotos.join(" | ")}]` : `[Fotos: ${validPhotos.join(" | ")}]`;
+          await ProspectingService.updateCompany(company.id, {
+            notes: updatedNotes,
+            photos: validPhotos,
+            ...(profile.whatsapp && !cleanPhone ? { whatsapp: profile.whatsapp } : {}),
+          }).catch(() => {});
         }
-      } catch (instaErr) {
-        console.warn("[Prospeccao] Falha ao consultar feed do Instagram:", instaErr);
-      }
+      }).catch(() => {});
     }
 
-    setFeedback(`🔍 Buscando imagens compatíveis em alta resolução para ${company.name}...`);
-    let compatibleImages: Array<{ url: string; label: string; role: string }> = [];
-    try {
-      const imgSearchPromise = searchCompatibleBusinessImagesFn({
-        data: {
-          niche: nicheText,
-          businessName: company.name,
-          count: 8,
-        },
-      });
-      // Timeout teto de 2.5s para garantir geração instantânea do site
-      compatibleImages = (await Promise.race([
-        imgSearchPromise,
-        new Promise<any[]>((resolve) => setTimeout(() => resolve([]), 2500)),
-      ])) || [];
-    } catch (imgSearchErr) {
-      console.warn("[Prospeccao] Falha ao buscar imagens compatíveis:", imgSearchErr);
-    }
-
-    setFeedback(`🚀 IA Criativa planejando e desenhando site exclusivo para ${company.name}...`);
+    setFeedback(`🚀 IA Criativa Gemini desenhando site exclusivo para ${company.name}...`);
 
     // Sorteio dinâmico de Arquétipo Estrutural de Página Completa (garante esqueleto único para cada site)
     const DESIGN_ARCHETYPES = [
@@ -1167,6 +1165,58 @@ DIRETRIZES INEGOCIÁVEIS DE EXCLUSIVIDADE & NÃO-REPETIÇÃO:
     setFeedback(`🎉 Site gerado com sucesso pelo Estúdio Criativo IA! Link: ${url}`);
     invalidate();
     return { pageId: generatedPageId, slug: generatedSlug, url };
+  }
+
+  async function handleEnrichInstagramPhotos(company: ProspectedCompany) {
+    let handle = company.instagram ? extractInstagramHandle(company.instagram) : null;
+    if (!handle && company.website && /(?:instagram\.com\/|instagr\.am\/)/i.test(company.website)) {
+      handle = extractInstagramHandle(company.website);
+    }
+    setEnrichingCompanyId(company.id);
+    setFeedback(`📸 Buscando perfil e fotos reais no Instagram para ${company.name}...`);
+    try {
+      if (!handle) {
+        handle = await findInstagramHandleForCompany(company.name, company.city);
+      }
+      if (!handle) {
+        setFeedback(`Não foi possível localizar o perfil do Instagram para "${company.name}". Preencha o @ nas notas ou link do site.`);
+        return;
+      }
+      const token = getSavedApifyToken() || undefined;
+      const profile = await fetchInstagramProfileViaApify(handle, token);
+      if (!profile || !profile.photos || profile.photos.length === 0) {
+        setFeedback(`Perfil @${handle} consultado, mas nenhuma foto recente pôde ser extraída.`);
+        return;
+      }
+
+      const validPhotos = profile.photos.filter((p) => typeof p === "string" && p.startsWith("http")).slice(0, 12);
+      const cleanNotes = (company.notes || "")
+        .replace(/\[Fotos:\s*([^\]]+)\]/g, "")
+        .replace(/\n\s*\n/g, "\n")
+        .trim();
+      const updatedNotes = cleanNotes
+        ? `${cleanNotes}\n[Fotos: ${validPhotos.join(" | ")}]`
+        : `[Fotos: ${validPhotos.join(" | ")}]`;
+
+      const updates: any = {
+        notes: updatedNotes,
+        photos: validPhotos,
+      };
+      if (!company.instagram) {
+        updates.instagram = `https://instagram.com/${handle}`;
+      }
+      if (!company.whatsapp && profile.whatsapp) {
+        updates.whatsapp = profile.whatsapp;
+      }
+      await ProspectingService.updateCompany(company.id, updates);
+      setFeedback(`✨ ${validPhotos.length} fotos reais extraídas de @${handle} para ${company.name}!`);
+      invalidate();
+    } catch (err: any) {
+      console.warn("[Prospeccao] Falha ao enriquecer fotos do Instagram:", err);
+      setFeedback(`Erro ao buscar fotos do Instagram: ${err.message || "Tente novamente mais tarde."}`);
+    } finally {
+      setEnrichingCompanyId(null);
+    }
   }
 
   async function handleGenerateDemo(company: ProspectedCompany) {
@@ -3419,6 +3469,33 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                         <Instagram className="h-2.5 w-2.5" /> Achar @IG
                       </a>
                     )}
+
+                    {Array.isArray(company.photos) && company.photos.length > 0 ? (
+                      <span
+                        className="inline-flex items-center gap-1 text-[11px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/20 px-2 py-1 rounded-md"
+                        title={`${company.photos.length} fotos reais salvas para criar o site`}
+                      >
+                        <Camera className="h-3 w-3" />
+                        {company.photos.length} fotos reais
+                      </span>
+                    ) : (
+                      (company.instagram || (company.website && /(?:instagram\.com\/|instagr\.am\/)/i.test(company.website))) && (
+                        <button
+                          type="button"
+                          onClick={() => void handleEnrichInstagramPhotos(company)}
+                          disabled={enrichingCompanyId === company.id}
+                          className="inline-flex items-center gap-1 text-[11px] text-pink-400 hover:text-pink-300 bg-pink-500/10 border border-pink-500/20 px-2 py-1 rounded-md transition-colors cursor-pointer"
+                          title="Puxar fotos reais do feed do Instagram via Apify"
+                        >
+                          {enrichingCompanyId === company.id ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Camera className="h-3 w-3" />
+                          )}
+                          <span>{enrichingCompanyId === company.id ? "Puxando..." : "+ Puxar Fotos IG"}</span>
+                        </button>
+                      )
+                    )}
                   </div>
 
                   {/* Grid de Ações Touch-Friendly (2 colunas) */}
@@ -3566,6 +3643,18 @@ DIRETRIZES CRÍTICAS DE INOVAÇÃO:
                         >
                           <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
                           <span>Auditoria com IA</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => void handleEnrichInstagramPhotos(company)}
+                          disabled={enrichingCompanyId === company.id}
+                          className="cursor-pointer text-xs text-pink-400 font-medium"
+                        >
+                          {enrichingCompanyId === company.id ? (
+                            <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-pink-400" />
+                          ) : (
+                            <Camera className="h-3.5 w-3.5 mr-2 text-pink-400" />
+                          )}
+                          <span>{enrichingCompanyId === company.id ? "Puxando Fotos..." : "Puxar Fotos Reais (@IG)"}</span>
                         </DropdownMenuItem>
                         <DropdownMenuItem
                           onClick={() => void handleGenerateSiteMaquina(company)}

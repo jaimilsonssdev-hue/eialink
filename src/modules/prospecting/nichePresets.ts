@@ -280,17 +280,17 @@ export const NICHE_GALLERIES: Record<string, { covers: CuratedPhoto[]; avatars: 
   },
   psicologia: {
     covers: [
-      { id: "psi-1", url: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1200&q=85", label: "Psicóloga Clínica & Acolhimento Terapêutico Humanizado" },
-      { id: "psi-2", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85", label: "Espaço Terapêutico Privativo, Iluminado e Confortável" },
+      { id: "psi-1", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85", label: "Consultório de Psicologia Acolhedor & Poltronas de Atendimento" },
+      { id: "psi-2", url: "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85", label: "Espaço Terapêutico Privativo, Iluminado e Confortável" },
       { id: "psi-3", url: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1200&q=85", label: "Sessão de Psicoterapia Individual & Escuta Ética" },
       { id: "psi-4", url: "https://images.unsplash.com/photo-1588196749597-9ff075ee6b5b?auto=format&fit=crop&w=1200&q=85", label: "Terapia Online Segura por Videochamada" },
       { id: "psi-5", url: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=1200&q=85", label: "Terapia de Casal, Relacionamentos & Diálogo Afetivo" },
       { id: "psi-6", url: "https://images.unsplash.com/photo-1527689368864-3a821dbccc34?auto=format&fit=crop&w=1200&q=85", label: "Primeira Sessão de Acolhimento & Planejamento Terapêutico" },
-      { id: "psi-7", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1200&q=85", label: "Atendimento Psicológico com Sigilo e Empatia" },
+      { id: "psi-7", url: "https://images.unsplash.com/photo-1499750310107-5fef28a66643?auto=format&fit=crop&w=1200&q=85", label: "Ambiente Sereno de Reflexão, Diário Terapêutico & Autoconhecimento" },
     ],
     avatars: [
-      { id: "psi-av-1", url: "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=400&q=80", label: "Dra. Psicóloga Clínica" },
-      { id: "psi-av-2", url: "https://images.unsplash.com/photo-1537368910025-700350fe46c7?auto=format&fit=crop&w=400&q=80", label: "Dr. Terapeuta & Psicanalista" },
+      { id: "psi-av-1", url: "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=400&q=80", label: "Consultório de Psicologia" },
+      { id: "psi-av-2", url: "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=400&q=80", label: "Espaço Terapêutico" },
     ],
   },
   petshop: {

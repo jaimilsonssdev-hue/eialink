@@ -311,18 +311,22 @@ export function sanitizeGeneratedLuxuryHtml(rawHtml: string): string {
       () => {
         psychologyHeroCount += 1;
         if (psychologyHeroCount === 1) {
-          return "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1200&q=85";
+          return "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85";
         }
         return "https://images.unsplash.com/photo-1544027993-37dbfe43562a?auto=format&fit=crop&w=1200&q=85";
       },
     );
 
-  // Se for página de Psicologia/Psicoterapia, garante que nunca exiba cadeira odontológica (photo-1629909613654-28e377c37b09) ou maca hospitalar (photo-1519494026892-80bbd2d6fd0d)
+  // Se for página de Psicologia/Psicoterapia, garante que nunca exiba rosto de modelo de banco de imagens (photo-1573497019940-1c28c88b4f3e), cadeira odontológica (photo-1629909613654-28e377c37b09) ou maca hospitalar (photo-1519494026892-80bbd2d6fd0d)
   if (/psic[oó]log|psicoterap|psican[aá]l/i.test(html) && !/odontolog|dentist|implante\s*dent/i.test(html)) {
     html = html
       .replace(
+        /https:\/\/images\.unsplash\.com\/photo-1573497019940-1c28c88b4f3e[^"'\s)]*/gi,
+        "https://images.unsplash.com/photo-1497366811353-6870744d04b2?auto=format&fit=crop&w=1200&q=85",
+      )
+      .replace(
         /https:\/\/images\.unsplash\.com\/photo-1629909613654-28e377c37b09[^"'\s)]*/gi,
-        "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1200&q=85",
+        "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85",
       )
       .replace(
         /https:\/\/images\.unsplash\.com\/photo-1519494026892-80bbd2d6fd0d[^"'\s)]*/gi,

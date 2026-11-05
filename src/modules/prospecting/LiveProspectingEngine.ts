@@ -467,13 +467,40 @@ async function scrapeInstagram(niche: string, city: string): Promise<RawScrapedL
 }
 
 /**
+ * Extrai tokens distintivos do nome de uma empresa/profissional (ignorando títulos e termos genéricos de nicho)
+ * para garantir que fotos e perfis encontrados pertençam realmente àquela pessoa/empresa.
+ */
+function extractDistinctiveNameTokens(name: string): string[] {
+  const genericWords = new Set([
+    "clinica", "consultorio", "espaco", "studio", "estudio", "centro", "instituto",
+    "psicologa", "psicologo", "psicologia", "psicoterapia", "terapia", "terapeuta",
+    "dentista", "odontologia", "odonto", "ortodontia", "medica", "medico", "medicina",
+    "advogado", "advogada", "advocacia", "escritorio", "arquitetura", "arquiteto", "arquiteta",
+    "nutricionista", "nutricao", "fisioterapia", "fisioterapeuta", "estetica", "beleza",
+    "salao", "barbearia", "restaurante", "lanchonete", "pizzaria", "hamburgueria",
+    "academia", "fitness", "escola", "colegio", "curso", "imobiliaria", "corretor",
+    "contabilidade", "contador", "oficina", "estetica", "automotiva", "pet", "shop", "veterinaria",
+    "dr", "dra", "prof", "ltda", "me", "eireli", "de", "da", "do", "das", "dos", "em", "para", "com",
+  ]);
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s]/g, " ")
+    .split(/\s+/)
+    .filter((w) => w.length >= 3 && !genericWords.has(w));
+}
+
+/**
  * Tenta descobrir o perfil do Instagram de uma empresa pelo nome e cidade via busca indexada.
+ * Valida se o @handle ou título do resultado realmente contém o nome distintivo do profissional/empresa.
  */
 export async function findInstagramHandleForCompany(
   companyName: string,
   city?: string | null,
 ): Promise<string | null> {
   const cleanCity = (city || "").replace(/[^\w\sÀ-ÿ]/g, " ").trim();
+  const distinctiveTokens = extractDistinctiveNameTokens(companyName);
   const query = `site:instagram.com "${companyName}" ${cleanCity ? `"${cleanCity}"` : ""}`;
   const targetUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}&hl=pt-BR&gl=BR`;
   const jinaUrl = `https://r.jina.ai/${targetUrl}`;
@@ -490,12 +517,24 @@ export async function findInstagramHandleForCompany(
 
     if (!res.ok) return null;
     const text = await res.text();
-    const regex = /https?:\/\/(?:www\.)?instagram\.com\/([a-zA-Z0-9._]+)\/?/gi;
+    const regex = /(?:\[([^\]]*)\]\()?https?:\/\/(?:www\.)?instagram\.com\/([a-zA-Z0-9._]+)\/?/gi;
     let match: RegExpExecArray | null;
 
     while ((match = regex.exec(text)) !== null) {
-      const handle = match[1];
-      if (!["explore", "reels", "stories", "p", "accounts", "about", "direct"].includes(handle.toLowerCase())) {
+      const linkTitle = (match[1] || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "");
+      const handle = match[2];
+      const handleNorm = handle.toLowerCase().replace(/[._]/g, "");
+      if (["explore", "reels", "stories", "p", "accounts", "about", "direct"].includes(handle.toLowerCase())) {
+        continue;
+      }
+      // Só aceita o Instagram se o @handle ou o título do link contiver pelo menos um nome próprio/distintivo do lead
+      if (
+        distinctiveTokens.length === 0 ||
+        distinctiveTokens.some((tok) => handleNorm.includes(tok) || linkTitle.includes(tok))
+      ) {
         return handle;
       }
     }
@@ -810,31 +849,31 @@ export async function fetchGoogleMapsPlaceDetails(
 
       if (res.ok) {
         const text = await res.text();
+        const distinctiveTokens = extractDistinctiveNameTokens(cleanName);
 
-        // 1. Detecta CID diretamente da página (inclusive em redirecionamentos e telas de login/localização)
-        const directCidMatch = text.match(/(?:!1s|%211s)([0-9a-fx%:]+)/i);
-        if (directCidMatch) {
-          targetCid = decodeURIComponent(directCidMatch[1]);
-        }
-
-        // 2. WhatsApp
+        // 1. WhatsApp e Horários diretos caso seja ficha única
         const waMatch = text.match(/(?:wa\.me\/|api\.whatsapp\.com\/send\?phone=)(\d+)/i);
         if (waMatch) {
           whatsapp = waMatch[1];
         }
 
-        // 3. Horários
         const hoursMatch = text.match(/(?:Aberto|Fechado)[^\n]*(?:·\s*Fecha[^\n]*|·\s*Abre[^\n]*)?/i);
         if (hoursMatch) {
           openingHours = hoursMatch[0].replace(//g, "").trim();
         }
 
-        // 4. Se for lista de resultados, usa parseGoogleMapsMarkdown
+        // 2. Se for lista de resultados, usa parseGoogleMapsMarkdown e valida correspondência real de nome
         const leads = parseGoogleMapsMarkdown(text, "geral", city || "");
         if (leads.length > 0) {
-          const matched =
-            leads.find((l) => l.name.toLowerCase().includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(l.name.toLowerCase())) ||
-            leads[0];
+          const matched = leads.find((l) => {
+            const leadNorm = l.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const cleanNorm = cleanName.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            if (leadNorm.includes(cleanNorm) || cleanNorm.includes(leadNorm)) return true;
+            if (distinctiveTokens.length > 0) {
+              return distinctiveTokens.every((tok) => leadNorm.includes(tok));
+            }
+            return false;
+          });
 
           if (matched) {
             if (matched.rating) rating = matched.rating;
@@ -849,9 +888,15 @@ export async function fetchGoogleMapsPlaceDetails(
               const hoursM = matched.notes.match(/Horário:\s*([^·]+)/);
               if (hoursM && !openingHours) openingHours = hoursM[1].trim();
             }
-            if (matched.cid && !targetCid) {
+            if (matched.cid) {
               targetCid = matched.cid;
             }
+          }
+        } else {
+          // Só usa directCidMatch se a página for uma ficha única (não lista de vários concorrentes)
+          const allCids = [...text.matchAll(/(?:!1s|%211s)([0-9a-fx%:]+)/gi)];
+          if (allCids.length === 1) {
+            targetCid = decodeURIComponent(allCids[0][1]);
           }
         }
       }
@@ -880,11 +925,14 @@ export async function fetchGoogleMapsPlaceDetails(
       if (res.ok) {
         const text = await res.text();
 
-        // 1. Extrai fotos reais do estabelecimento no Google Maps (exclui Street View 360 que pega rua/calçada/postes)
-        const imgRegex = /!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g;
+        // 1. Extrai fotos reais do estabelecimento no Google Maps (exclui Street View 360 e avatares de avaliadores)
+        const imgRegex = /!\[([^\]]*)\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g;
         let imgMatch: RegExpExecArray | null;
         while ((imgMatch = imgRegex.exec(text)) !== null) {
-          const url = imgMatch[1];
+          const altText = (imgMatch[1] || "").toLowerCase();
+          const url = imgMatch[2];
+          // Ignora avatares de clientes que avaliaram no Google Maps
+          if (altText.includes("foto do perfil") || altText.includes("profile photo")) continue;
           if (isAuthenticBusinessPhoto(url) && !url.includes("streetviewpixels-pa.googleapis.com")) {
             const cleanUrl = normalizeBusinessPhotoUrl(url);
             if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
@@ -1005,37 +1053,32 @@ export async function fetchGoogleMapsPlaceDetails(
           }
         }
 
-        // Fotos no painel do Google (exclui fotos de carros Street View que pegam calçadas e árvores)
-        const googlePhotos = [...text.matchAll(/!\[[^\]]*\]\((https:\/\/lh[0-9]\.googleusercontent\.com\/[^\)]+)\)/g)];
-        for (const gp of googlePhotos) {
-          const url = gp[1];
-          if (isAuthenticBusinessPhoto(url) && !url.includes("streetviewpixels-pa.googleapis.com")) {
-            const cleanUrl = normalizeBusinessPhotoUrl(url);
-            if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
-          }
-        }
-
-        // Se encontrou fid ou ludocid no Google Search e ainda não temos fotos, consulta o CID
+        // Não puxa fotos soltas da página de busca web geral (pois contém carrosséis "Pessoas também pesquisam"
+        // com rostos de outros psicólogos/profissionais da mesma cidade).
+        // Só consulta fotos se houver um único Knowledge Panel (ludocid / fid) exclusivo para este lead.
         if (photos.length === 0) {
-          const fidM = text.match(/fid\/([0-9a-fx:]+)/i) || text.match(/ludocid=(\d+)/i);
-          if (fidM) {
+          const allFids = [...text.matchAll(/(?:fid\/([0-9a-fx:]+)|ludocid=(\d+))/gi)];
+          if (allFids.length === 1) {
+            const uniqueCid = allFids[0][1] || allFids[0][2];
             try {
-              const extraCidUrl = `https://maps.google.com/maps?cid=${fidM[1]}`;
+              const extraCidUrl = `https://maps.google.com/maps?cid=${uniqueCid}`;
               const cidRes = await fetch(`https://r.jina.ai/${extraCidUrl}`, {
                 headers: { "Accept-Language": "pt-BR,pt;q=0.9", "x-locale": "pt-BR" },
               });
               if (cidRes.ok) {
                 const cidText = await cidRes.text();
-                const cidPhotos = [...cidText.matchAll(/!\[[^\]]*\]\((https:\/\/(?:lh[0-9]\.googleusercontent\.com)[^\)]+)\)/g)];
+                const cidPhotos = [...cidText.matchAll(/!\[([^\]]*)\]\((https:\/\/(?:lh[0-9]\.googleusercontent\.com)[^\)]+)\)/g)];
                 for (const cp of cidPhotos) {
-                  const url = cp[1];
+                  const altText = (cp[1] || "").toLowerCase();
+                  const url = cp[2];
+                  if (altText.includes("foto do perfil") || altText.includes("profile photo")) continue;
                   if (isAuthenticBusinessPhoto(url) && !url.includes("streetviewpixels-pa.googleapis.com")) {
                     const cleanUrl = normalizeBusinessPhotoUrl(url);
                     if (!photos.includes(cleanUrl)) photos.push(cleanUrl);
                   }
                 }
               }
-            } catch (e) {
+            } catch {
               // silencioso
             }
           }

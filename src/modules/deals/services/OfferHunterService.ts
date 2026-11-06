@@ -1,6 +1,13 @@
 import { supabase } from "@/integrations/supabase/client";
 import { getSavedGeminiKey } from "@/modules/prospecting/GeminiAuditorService";
 import { requestGemini } from "@/modules/ai/gemini-gateway";
+import {
+  scrapeGoogleMapsViaApify,
+  fetchInstagramProfileViaApify,
+  getSavedApifyToken,
+  extractInstagramHandle,
+} from "@/modules/prospecting/ApifyInstagramService";
+import { searchGoogleMapsAndInstagram } from "@/modules/prospecting/LiveProspectingEngine";
 import type { DailyDeal } from "../types";
 import { findCategoryByKeyword } from "../categories";
 
@@ -97,35 +104,110 @@ export const OfferHunterService = {
     const apiKey = (options.apiKey || getSavedGeminiKey() || "").trim();
 
     let gatheredRawText = "";
+    let authenticPlacesContext = "";
 
-    // 1. Se forneceu um link ou perfil direto (ex: Instagram ou site do negócio)
+    // 1. Se forneceu um link ou perfil direto (Instagram ou site do negócio)
     if (options.targetUrl && options.targetUrl.trim().length > 4) {
-      try {
-        let target = options.targetUrl.trim();
-        if (!target.startsWith("http://") && !target.startsWith("https://")) {
-          if (target.startsWith("@") || !target.includes(".")) {
-            target = `https://www.instagram.com/${target.replace(/^@/, "")}/`;
-          } else {
-            target = `https://${target}`;
-          }
-        }
+      const handle = extractInstagramHandle(options.targetUrl.trim());
+      const apifyToken = getSavedApifyToken();
 
-        const jinaUrl = `https://r.jina.ai/${target}`;
-        const res = await fetch(jinaUrl, {
-          headers: {
-            "Accept-Language": "pt-BR,pt;q=0.9",
-            "x-timeout": "25",
-          },
-          signal: AbortSignal.timeout(20000),
-        });
-        if (res.ok) {
-          gatheredRawText = await res.text();
+      // Prioridade 1: Apify Instagram oficial se for @handle ou URL de Instagram com token configurado
+      if (handle && apifyToken) {
+        try {
+          const profile = await fetchInstagramProfileViaApify(handle, apifyToken);
+          if (profile) {
+            const postsSummaries = (profile.posts || [])
+              .slice(0, 8)
+              .map(
+                (p, i) =>
+                  `Post ${i + 1} (${p.timestamp || "recente"}): Legenda: "${(p.caption || "").replace(/\n+/g, " ")}" | Imagem: ${p.imageUrl}`,
+              )
+              .join("\n");
+
+            gatheredRawText = `[DADOS OFICIAIS DO INSTAGRAM DA EMPRESA]:
+Nome no Perfil: "${profile.fullName || profile.username}"
+@Instagram: "@${profile.username}"
+Bio: "${profile.biography || ""}"
+WhatsApp na Bio / Oficial: "${profile.whatsapp || profile.businessPhone || ""}"
+Telefone: "${profile.businessPhone || ""}"
+Endereço: "${profile.businessAddress || ""}"
+POSTS REAIS DO FEED (PROMOÇÕES / COMBOS / SERVIÇOS):
+${postsSummaries || "Nenhuma legenda de post encontrada."}`;
+          }
+        } catch (apifyErr) {
+          console.warn("[OfferHunterService] Aviso ao consultar Instagram via Apify:", apifyErr);
         }
-      } catch (err) {
-        console.warn("[OfferHunterService] Aviso ao consultar link específico via Jina:", err);
+      }
+
+      // Se o Apify não rodou ou não preencheu, tenta Jina Reader como fallback
+      if (!gatheredRawText) {
+        try {
+          let target = options.targetUrl.trim();
+          if (!target.startsWith("http://") && !target.startsWith("https://")) {
+            if (target.startsWith("@") || !target.includes(".")) {
+              target = `https://www.instagram.com/${target.replace(/^@/, "")}/`;
+            } else {
+              target = `https://${target}`;
+            }
+          }
+
+          const jinaUrl = `https://r.jina.ai/${target}`;
+          const res = await fetch(jinaUrl, {
+            headers: {
+              "Accept-Language": "pt-BR,pt;q=0.9",
+              "x-timeout": "25",
+            },
+            signal: AbortSignal.timeout(20000),
+          });
+          if (res.ok) {
+            gatheredRawText = await res.text();
+          }
+        } catch (err) {
+          console.warn("[OfferHunterService] Aviso ao consultar link específico via Jina:", err);
+        }
       }
     } else {
-      // 2. Busca Dorking no Instagram e Google para promoções ativas na cidade
+      // 2. Busca negócios REAIS na cidade via Apify Google Maps ou motor de prospecção do EIA LINK
+      const apifyToken = getSavedApifyToken();
+      let realBusinesses: any[] = [];
+
+      if (apifyToken) {
+        try {
+          const term = niche ? `${niche} ${city}` : `restaurantes lanchonetes lojas ${city}`;
+          realBusinesses = await scrapeGoogleMapsViaApify(term, city, 8, apifyToken);
+        } catch (apErr) {
+          console.warn("[OfferHunterService] Falha no scrapeGoogleMapsViaApify:", apErr);
+        }
+      }
+
+      if (!realBusinesses || realBusinesses.length === 0) {
+        try {
+          const liveRes = await searchGoogleMapsAndInstagram(niche || "comércio", city);
+          realBusinesses = (liveRes.results || []).slice(0, 8);
+        } catch (liveErr) {
+          console.warn("[OfferHunterService] Falha na busca de negócios locais:", liveErr);
+        }
+      }
+
+      if (realBusinesses && realBusinesses.length > 0) {
+        authenticPlacesContext = realBusinesses
+          .map((b, i) => {
+            const rawPhone = b.phone || b.whatsapp || "";
+            const cleanPhone = rawPhone ? rawPhone.replace(/\D/g, "") : "";
+            const insta = b.instagram ? (b.instagram.startsWith("@") ? b.instagram : `@${b.instagram}`) : "";
+            return `EMPRESA REAL ${i + 1}:
+- Nome Oficial: "${b.name}"
+- Nicho / Categoria: "${b.niche || niche || "Comércio"}"
+- Cidade: "${b.city || city}"
+- Telefone / WhatsApp Oficial: "${cleanPhone ? (cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`) : ""}"
+- Instagram Oficial: "${insta}"
+- Endereço Real: "${b.address || ""}"
+- Fotos Reais: ${Array.isArray(b.photos) && b.photos.length > 0 ? b.photos.slice(0, 2).join(", ") : ""}`;
+          })
+          .join("\n\n");
+      }
+
+      // Varredura web complementar via Jina
       try {
         const queryTerms = options.customSearch
           ? options.customSearch
@@ -149,39 +231,47 @@ export const OfferHunterService = {
       }
     }
 
-    // 3. Sintetiza e estrutura as ofertas com o Gemini 2.5 / 2.0 Flash
-    const systemPrompt = `[CAÇADOR DE OFERTAS & OPORTUNIDADES EIA LINK]
+    // 3. Sintetiza e estrutura as ofertas com Gemini
+    const systemPrompt = `[CAÇADOR DE OFERTAS & OPORTUNIDADES EIA LINK - REGRAS RÍGIDAS DE DADOS REAIS]
 Você é um Auditor Especialista em Promoções Locais e Estratégia de Prospecção para o "Mural de Oportunidades de Hoje".
-Sua missão é extrair ou estruturar de 4 a 6 ofertas reais e de alta conversão de comércios locais na cidade de "${city}"${niche ? ` no nicho "${niche}"` : ""}.
+Sua missão é extrair ou estruturar ofertas altamente atrativas para comércios locais na cidade de "${city}"${niche ? ` no nicho "${niche}"` : ""}.
 
-DADOS COLETADOS DA WEB/INSTAGRAM DA REGIÃO:
-${gatheredRawText ? gatheredRawText.slice(0, 14000) : "Nenhum resultado direto de busca da web. Gere ofertas altamente plausíveis, realistas e irresistíveis baseadas no comércio típico e restaurantes populares da cidade indicada."}
+[EMPRESAS REAIS VERIFICADAS NA REGIÃO]:
+${authenticPlacesContext || "Nenhuma lista consolidada do Google Maps encontrada no momento."}
 
-REGRAS OBRIGATÓRIAS:
-1. Extraia o nome real do estabelecimento comercial e a oferta irresistível.
-2. Cada oferta deve ter título atraente (ex: "Combo Burger Duplo Artesanal + Fritas + Refri", "Rodízio Completo com 30% OFF", "Limpeza de Pele Profunda com Peeling").
-3. Preço promocional justo e realista da região (BRL) e preço original.
-4. Badge chamativo (ex: "35% OFF", "DOBRO", "COMBO VIP", "SÓ HOJE").
-5. Se for de tempo limitado ou horário ocioso, marque is_flash: true.
-6. Crie uma mensagem pronta de prospecção para enviar no WhatsApp do lojista (outreach_message). Essa mensagem deve parabenizar a loja pela oferta, avisar que colocamos ela gratuitamente em destaque no Mural de ${city} no EIA LINK e convidar para conferir e ativar o pedido direto no WhatsApp.
+[DADOS COLETADOS DO INSTAGRAM / POSTS / WEB DA CIDADE]:
+${gatheredRawText ? gatheredRawText.slice(0, 14000) : "Nenhum texto bruto adicional coletado da web."}
+
+REGRAS CRÍTICAS E OBRIGATÓRIAS (PROIBIDO DADOS FICTÍCIOS):
+1. **NUNCA INVENTE EMPRESAS NEM TELEFONES**:
+   - Utilize OBRIGATORIAMENTE os nomes oficiais e os telefones/WhatsApps das [EMPRESAS REAIS VERIFICADAS NA REGIÃO] ou dos perfis reais do Instagram coletados acima.
+   - NUNCA invente telefones aleatórios como 5573999999999. Use o telefone e o Instagram das empresas reais da lista!
+2. **OFERTA ATRAENTE E COERENTE**:
+   - Se o post/feed da empresa citou um combo, prato, promoção ou serviço real, use o nome real do prato/combo.
+   - Se não houver post explícito de desconto, crie uma **proposta de oferta irresistível típica do cardápio/serviço daquela empresa real** (ex: se a empresa é uma pizzaria real de Teixeira de Freitas, estruture um combo promocional de Pizza Grande + Refrigerante com preço realista da praça local).
+3. Cada oferta deve ter título atraente (ex: "Combo Burger Duplo Artesanal + Fritas + Refri", "Rodízio Completo com 30% OFF", "Limpeza de Pele Profunda com Peeling").
+4. Preço promocional justo e realista da região (BRL) e preço original com desconto perceptível.
+5. Badge chamativo (ex: "35% OFF", "DOBRO", "COMBO VIP", "SÓ HOJE").
+6. Mensagem de abordagem consultiva para WhatsApp (outreach_message):
+   - Deve ser cordial, citando o nome real da empresa e parabenizando pela oferta destacada gratuitamente no Mural de ${city} no EIA LINK.
 7. Retorne RIGOROSAMENTE apenas um JSON no formato:
 {
   "deals": [
     {
-      "business_name": "Nome da Empresa",
+      "business_name": "Nome da Empresa Real",
       "title": "Título Magnético da Oferta",
-      "description": "Descrição envolvente com detalhes do que está incluso e regras.",
+      "description": "Descrição detalhada do combo/serviço com regras claras.",
       "deal_price": 39.90,
       "original_price": 59.90,
       "discount_badge": "33% OFF",
-      "niche": "Gastronomia",
+      "niche": "${niche || "Gastronomia"}",
       "city": "${city}",
-      "contact_whatsapp": "5573999999999",
-      "contact_instagram": "@nomedaempresa",
-      "source_url": "https://instagram.com/...",
+      "contact_whatsapp": "5573...",
+      "contact_instagram": "@nomereal",
+      "source_url": "",
       "image_url": "",
       "is_flash": false,
-      "outreach_message": "Olá! Vimos a promoção excelente de vocês..."
+      "outreach_message": "Olá [Nome]! Vimos a oferta excelente de vocês..."
     }
   ]
 }`;
@@ -427,35 +517,103 @@ REGRAS OBRIGATÓRIAS:
     const apiKey = (options.apiKey || getSavedGeminiKey() || "").trim();
 
     let gatheredRawText = "";
+    let authenticPlacesContext = "";
 
     // 1. Se forneceu link/perfil direto de um profissional
     if (options.targetUrl && options.targetUrl.trim().length > 4) {
-      try {
-        let target = options.targetUrl.trim();
-        if (!target.startsWith("http://") && !target.startsWith("https://")) {
-          if (target.startsWith("@") || !target.includes(".")) {
-            target = `https://www.instagram.com/${target.replace(/^@/, "")}/`;
-          } else {
-            target = `https://${target}`;
-          }
-        }
+      const handle = extractInstagramHandle(options.targetUrl.trim());
+      const apifyToken = getSavedApifyToken();
 
-        const jinaUrl = `https://r.jina.ai/${target}`;
-        const res = await fetch(jinaUrl, {
-          headers: {
-            "Accept-Language": "pt-BR,pt;q=0.9",
-            "x-timeout": "25",
-          },
-          signal: AbortSignal.timeout(20000),
-        });
-        if (res.ok) {
-          gatheredRawText = await res.text();
+      if (handle && apifyToken) {
+        try {
+          const profile = await fetchInstagramProfileViaApify(handle, apifyToken);
+          if (profile) {
+            gatheredRawText = `[PERFIL OFICIAL DO PROFISSIONAL NO INSTAGRAM]:
+Nome: "${profile.fullName || profile.username}"
+@Instagram: "@${profile.username}"
+Bio: "${profile.biography || ""}"
+WhatsApp na Bio / Oficial: "${profile.whatsapp || profile.businessPhone || ""}"
+Telefone: "${profile.businessPhone || ""}"
+Endereço: "${profile.businessAddress || ""}"
+POSTS E SERVIÇOS DO FEED:
+${(profile.posts || [])
+  .slice(0, 8)
+  .map((p) => `- ${(p.caption || "").replace(/\n+/g, " ")}`)
+  .join("\n")}`;
+          }
+        } catch (e) {
+          console.warn("[OfferHunterService] Aviso ao consultar Instagram via Apify:", e);
         }
-      } catch (err) {
-        console.warn("[OfferHunterService] Aviso ao consultar perfil do prestador via Jina:", err);
+      }
+
+      if (!gatheredRawText) {
+        try {
+          let target = options.targetUrl.trim();
+          if (!target.startsWith("http://") && !target.startsWith("https://")) {
+            if (target.startsWith("@") || !target.includes(".")) {
+              target = `https://www.instagram.com/${target.replace(/^@/, "")}/`;
+            } else {
+              target = `https://${target}`;
+            }
+          }
+
+          const jinaUrl = `https://r.jina.ai/${target}`;
+          const res = await fetch(jinaUrl, {
+            headers: {
+              "Accept-Language": "pt-BR,pt;q=0.9",
+              "x-timeout": "25",
+            },
+            signal: AbortSignal.timeout(20000),
+          });
+          if (res.ok) {
+            gatheredRawText = await res.text();
+          }
+        } catch (err) {
+          console.warn("[OfferHunterService] Aviso ao consultar perfil do prestador via Jina:", err);
+        }
       }
     } else {
-      // 2. Busca na web / Instagram por prestadores de serviços da cidade
+      // 2. Busca profissionais REAIS na cidade via Apify Google Maps ou motor de prospecção
+      const apifyToken = getSavedApifyToken();
+      let realBusinesses: any[] = [];
+
+      if (apifyToken) {
+        try {
+          const term = niche ? `${niche} ${city}` : `prestadores de servicos clinicas oficinas ${city}`;
+          realBusinesses = await scrapeGoogleMapsViaApify(term, city, 8, apifyToken);
+        } catch (apErr) {
+          console.warn("[OfferHunterService] Falha no scrapeGoogleMapsViaApify para profissionais:", apErr);
+        }
+      }
+
+      if (!realBusinesses || realBusinesses.length === 0) {
+        try {
+          const liveRes = await searchGoogleMapsAndInstagram(niche || "serviços", city);
+          realBusinesses = (liveRes.results || []).slice(0, 8);
+        } catch (liveErr) {
+          console.warn("[OfferHunterService] Falha na busca de negócios locais:", liveErr);
+        }
+      }
+
+      if (realBusinesses && realBusinesses.length > 0) {
+        authenticPlacesContext = realBusinesses
+          .map((b, i) => {
+            const rawPhone = b.phone || b.whatsapp || "";
+            const cleanPhone = rawPhone ? rawPhone.replace(/\D/g, "") : "";
+            const insta = b.instagram ? (b.instagram.startsWith("@") ? b.instagram : `@${b.instagram}`) : "";
+            return `PROFISSIONAL/EMPRESA REAL ${i + 1}:
+- Nome Oficial: "${b.name}"
+- Nicho / Especialidade: "${b.niche || niche || "Serviços"}"
+- Cidade: "${b.city || city}"
+- Telefone / WhatsApp Oficial: "${cleanPhone ? (cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`) : ""}"
+- Instagram Oficial: "${insta}"
+- Endereço Real: "${b.address || ""}"
+- Fotos Reais: ${Array.isArray(b.photos) && b.photos.length > 0 ? b.photos.slice(0, 2).join(", ") : ""}`;
+          })
+          .join("\n\n");
+      }
+
+      // Varredura web complementar
       try {
         const queryTerms = options.customSearch
           ? options.customSearch
@@ -480,20 +638,25 @@ REGRAS OBRIGATÓRIAS:
     }
 
     // 3. Estruturação dos dados com Gemini
-    const systemPrompt = `[RADAR DE PRESTADORES DE SERVIÇOS & PROFISSIONAIS EIA LINK]
+    const systemPrompt = `[RADAR DE PRESTADORES DE SERVIÇOS & PROFISSIONAIS EIA LINK - REGRAS RÍGIDAS DE DADOS REAIS]
 Você é um Especialista em Mapeamento de Negócios Locais e Prospecção B2B.
-Sua missão é extrair ou estruturar de 4 a 6 perfis de prestadores de serviços, autônomos ou profissionais liberais conceituados na cidade de "${city}"${niche ? ` na área "${niche}"` : ""}.
+Sua missão é extrair ou estruturar perfis de prestadores de serviços e empresas locais na cidade de "${city}"${niche ? ` na área "${niche}"` : ""}.
 
-DADOS COLETADOS:
-${gatheredRawText ? gatheredRawText.slice(0, 14000) : "Nenhum resultado direto da web. Gere perfis profissionais altamente plausíveis, realistas e bem avaliados da cidade indicada."}
+[PROFISSIONAIS/EMPRESAS REAIS VERIFICADAS NA REGIÃO]:
+${authenticPlacesContext || "Nenhuma lista consolidada do Google Maps encontrada no momento."}
 
-REGRAS OBRIGATÓRIAS:
-1. Extraia o nome do profissional ou empresa de serviços (ex: "Dr. Marcelo Ramos - Odontologia", "Elétrica Silva & Climatização", "Studio Bella - Cabelo & Estética", "Advocacia Oliveira & Associados").
+[DADOS COLETADOS DO INSTAGRAM / WEB DA CIDADE]:
+${gatheredRawText ? gatheredRawText.slice(0, 14000) : "Nenhum texto bruto adicional coletado da web."}
+
+REGRAS CRÍTICAS E OBRIGATÓRIAS (PROIBIDO DADOS FICTÍCIOS):
+1. **NUNCA INVENTE PROFISSIONAIS NEM TELEFONES**:
+   - Utilize OBRIGATORIAMENTE os nomes oficiais e os telefones/WhatsApps das [PROFISSIONAIS/EMPRESAS REAIS VERIFICADAS NA REGIÃO] ou do Instagram oficial coletado acima.
+   - NUNCA invente telefones aleatórios como 5573999999999. Use o telefone e o Instagram das empresas reais da lista!
 2. Identifique o nicho específico e a categoria correspondente:
    Categorias válidas: "gastronomia", "beleza", "reformas", "saude", "automotivo", "profissionais", "fitness", "comercio".
 3. Descrição persuasiva das especialidades e diferenciais do profissional.
 4. Lista de 2 a 4 principais serviços prestados com nome claro e valor estimado médio se aplicável.
-5. Crie uma mensagem consultiva pronta para WhatsApp (outreach_message) informando com entusiasmo que o profissional foi cadastrado e destacado no Guia Oficial de Profissionais de ${city} no EIA LINK, permitindo receber contatos diretos no WhatsApp.
+5. Crie uma mensagem consultiva pronta para WhatsApp (outreach_message) citando com entusiasmo o nome real da empresa/profissional informando que foi destacado no Guia Oficial de ${city} no EIA LINK.
 6. Retorne RIGOROSAMENTE apenas um JSON no formato:
 {
   "providers": [

@@ -4,6 +4,8 @@ import { requestGemini } from "@/modules/ai/gemini-gateway";
 import {
   scrapeGoogleMapsViaApify,
   fetchInstagramProfileViaApify,
+  scrapeMetaAdsViaApify,
+  scrapeIfoodDealsViaApify,
   getSavedApifyToken,
   extractInstagramHandle,
 } from "@/modules/prospecting/ApifyInstagramService";
@@ -54,6 +56,7 @@ export interface HuntCityDealsOptions {
   customSearch?: string;
   targetUrl?: string;
   apiKey?: string;
+  sourceType?: "all" | "meta_ads" | "ifood" | "instagram_maps";
 }
 
 const NICHE_COVERS_MAP: Record<string, string> = {
@@ -105,6 +108,62 @@ export const OfferHunterService = {
 
     let gatheredRawText = "";
     let authenticPlacesContext = "";
+    let metaAdsContext = "";
+    let ifoodDealsContext = "";
+
+    const apifyToken = getSavedApifyToken();
+    const sourceType = options.sourceType || "all";
+
+    // 0. Se solicitado ou no modo "all": raspa anúncios reais da Biblioteca de Anúncios da Meta
+    if (apifyToken && (sourceType === "all" || sourceType === "meta_ads")) {
+      try {
+        const queryTerm = options.customSearch || (niche ? `${niche} ${city}` : `promoção ${city}`);
+        const metaAds = await scrapeMetaAdsViaApify(queryTerm, 6, apifyToken);
+        if (metaAds.length > 0) {
+          metaAdsContext = metaAds
+            .map(
+              (ad, i) =>
+                `ANÚNCIO META ADS ${i + 1}:
+- Empresa/Página: "${ad.pageName}"
+- Texto da Oferta: "${ad.adText.replace(/\n+/g, " ")}"
+- Chamada para Ação: "${ad.ctaText || "Saiba mais"}"
+- Link de Destino / WhatsApp: "${ad.destinationUrl || ""}"
+- Imagem do Anúncio: "${ad.imageUrl || ""}"`,
+            )
+            .join("\n\n");
+        }
+      } catch (metaErr) {
+        console.warn("[OfferHunterService] Falha ao coletar Meta Ads:", metaErr);
+      }
+    }
+
+    // 0.1 Se for nicho gastronômico ou modo "ifood": raspa cardápio promocional do iFood na cidade
+    if (
+      apifyToken &&
+      (sourceType === "ifood" ||
+        (sourceType === "all" && (!niche || /gastronomia|pizza|burger|restaurante|lanche/i.test(niche))))
+    ) {
+      try {
+        const ifoodDeals = await scrapeIfoodDealsViaApify(city, niche || "pizza burger lanches", 6, apifyToken);
+        if (ifoodDeals.length > 0) {
+          ifoodDealsContext = ifoodDeals
+            .map(
+              (deal, i) =>
+                `OFERTA IFOOD ${i + 1}:
+- Restaurante: "${deal.restaurantName}"
+- Prato/Combo Real: "${deal.itemName}"
+- Descrição: "${deal.description}"
+- Preço da Oferta: R$ ${deal.dealPrice.toFixed(2)}
+- Preço Original: ${deal.originalPrice ? `R$ ${deal.originalPrice.toFixed(2)}` : "Não informado"}
+- Selo: "${deal.discountBadge || "Destaque iFood"}"
+- Foto do Prato: "${deal.imageUrl || ""}"`,
+            )
+            .join("\n\n");
+        }
+      } catch (ifoodErr) {
+        console.warn("[OfferHunterService] Falha ao coletar iFood:", ifoodErr);
+      }
+    }
 
     // 1. Se forneceu um link ou perfil direto (Instagram ou site do negócio)
     if (options.targetUrl && options.targetUrl.trim().length > 4) {
@@ -235,6 +294,12 @@ ${postsSummaries || "Nenhuma legenda de post encontrada."}`;
     const systemPrompt = `[CAÇADOR DE OFERTAS & OPORTUNIDADES EIA LINK - REGRAS RÍGIDAS DE DADOS REAIS E COMPROVADOS]
 Você é um Auditor Especialista em Promoções Locais e Estratégia de Prospecção para o "Mural de Oportunidades de Hoje".
 Sua missão é extrair ESTRITAMENTE ofertas, combos, promoções ou pratos/serviços promocionais REAIS E COMPROVADOS para comércios locais na cidade de "${city}"${niche ? ` no nicho "${niche}"` : ""}.
+
+[ANÚNCIOS ATIVOS NA BIBLIOTECA DA META (FACEBOOK/INSTAGRAM ADS - PRIORIDADE MÁXIMA)]:
+${metaAdsContext || "Nenhum anúncio patrocinado ativo detectado no momento."}
+
+[OFERTAS & COMBOS REAIS DO IFOOD NA CIDADE]:
+${ifoodDealsContext || "Nenhuma oferta do iFood coletada no momento."}
 
 [EMPRESAS REAIS VERIFICADAS NA REGIÃO]:
 ${authenticPlacesContext || "Nenhuma lista consolidada do Google Maps encontrada no momento."}
@@ -523,6 +588,62 @@ REGRAS CRÍTICAS DE PRECISÃO CIRÚRGICA (100% FATUAL):
 
     let gatheredRawText = "";
     let authenticPlacesContext = "";
+    let metaAdsContext = "";
+    let ifoodDealsContext = "";
+
+    const apifyToken = getSavedApifyToken();
+    const sourceType = options.sourceType || "all";
+
+    // 0. Se solicitado ou no modo "all": raspa anúncios reais da Biblioteca de Anúncios da Meta
+    if (apifyToken && (sourceType === "all" || sourceType === "meta_ads")) {
+      try {
+        const queryTerm = options.customSearch || (niche ? `${niche} ${city}` : `promoção ${city}`);
+        const metaAds = await scrapeMetaAdsViaApify(queryTerm, 6, apifyToken);
+        if (metaAds.length > 0) {
+          metaAdsContext = metaAds
+            .map(
+              (ad, i) =>
+                `ANÚNCIO META ADS ${i + 1}:
+- Empresa/Página: "${ad.pageName}"
+- Texto da Oferta: "${ad.adText.replace(/\n+/g, " ")}"
+- Chamada para Ação: "${ad.ctaText || "Saiba mais"}"
+- Link de Destino / WhatsApp: "${ad.destinationUrl || ""}"
+- Imagem do Anúncio: "${ad.imageUrl || ""}"`,
+            )
+            .join("\n\n");
+        }
+      } catch (metaErr) {
+        console.warn("[OfferHunterService] Falha ao coletar Meta Ads:", metaErr);
+      }
+    }
+
+    // 0.1 Se for nicho gastronômico ou modo "ifood": raspa cardápio promocional do iFood na cidade
+    if (
+      apifyToken &&
+      (sourceType === "ifood" ||
+        (sourceType === "all" && (!niche || /gastronomia|pizza|burger|restaurante|lanche/i.test(niche))))
+    ) {
+      try {
+        const ifoodDeals = await scrapeIfoodDealsViaApify(city, niche || "pizza burger lanches", 6, apifyToken);
+        if (ifoodDeals.length > 0) {
+          ifoodDealsContext = ifoodDeals
+            .map(
+              (deal, i) =>
+                `OFERTA IFOOD ${i + 1}:
+- Restaurante: "${deal.restaurantName}"
+- Prato/Combo Real: "${deal.itemName}"
+- Descrição: "${deal.description}"
+- Preço da Oferta: R$ ${deal.dealPrice.toFixed(2)}
+- Preço Original: ${deal.originalPrice ? `R$ ${deal.originalPrice.toFixed(2)}` : "Não informado"}
+- Selo: "${deal.discountBadge || "Destaque iFood"}"
+- Foto do Prato: "${deal.imageUrl || ""}"`,
+            )
+            .join("\n\n");
+        }
+      } catch (ifoodErr) {
+        console.warn("[OfferHunterService] Falha ao coletar iFood:", ifoodErr);
+      }
+    }
 
     // 1. Se forneceu link/perfil direto de um profissional
     if (options.targetUrl && options.targetUrl.trim().length > 4) {

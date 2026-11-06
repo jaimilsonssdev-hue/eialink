@@ -60,6 +60,7 @@ export function DailyDealsBroadcastCard() {
   // Caçador de Ofertas (Offer Hunter AI) states
   const [hunterCity, setHunterCity] = useState("Teixeira de Freitas");
   const [hunterNiche, setHunterNiche] = useState("Gastronomia & Delivery");
+  const [hunterSource, setHunterSource] = useState<"all" | "meta_ads" | "ifood" | "instagram_maps">("all");
   const [hunterTargetUrl, setHunterTargetUrl] = useState("");
   const [hunterResults, setHunterResults] = useState<HuntedDeal[]>([]);
   const [isHunting, setIsHunting] = useState(false);
@@ -113,6 +114,7 @@ export function DailyDealsBroadcastCard() {
         city: hunterCity || city,
         niche: hunterNiche,
         targetUrl: hunterTargetUrl,
+        sourceType: hunterSource,
       });
       setHunterResults(results);
       if (results.length > 0) {
@@ -632,6 +634,24 @@ export function DailyDealsBroadcastCard() {
                     <option value="Moda & Vestuário">Moda & Vestuário Local</option>
                     <option value="Fitness & Academia">Academias, Crossfit & Personal</option>
                     <option value="Comércio Geral">Comércio Geral & Varejo</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="hunterSourceSelect" className="text-xs font-semibold flex items-center gap-1">
+                    <Target className="h-3.5 w-3.5 text-amber-400" />
+                    Fonte de Ofertas Reais
+                  </Label>
+                  <select
+                    id="hunterSourceSelect"
+                    value={hunterSource}
+                    onChange={(e) => setHunterSource(e.target.value as any)}
+                    className="w-full h-9 px-3 rounded-lg border border-border bg-background text-foreground text-xs focus:ring-1 focus:ring-emerald-500 outline-none"
+                  >
+                    <option value="all">⚡ Todas as Fontes (Meta Ads + iFood + Maps)</option>
+                    <option value="meta_ads">📢 Anúncios Ativos (Meta Ads Library)</option>
+                    <option value="ifood">🍔 Cardápios & Promoções Reais (iFood)</option>
+                    <option value="instagram_maps">📍 Fichas Verificadas (Instagram & Google Maps)</option>
                   </select>
                 </div>
 

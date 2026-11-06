@@ -438,4 +438,165 @@ export async function scrapeGoogleMapsViaApify(
   return [];
 }
 
+/**
+ * Scraper da Biblioteca de Anúncios da Meta (Facebook e Instagram Ads) via Apify.
+ * Rastreia anúncios ativos patrocinados por empresas na cidade ou por nicho/termo.
+ */
+export interface ApifyMetaAd {
+  pageName: string;
+  adText: string;
+  adSnapshotUrl?: string;
+  imageUrl?: string;
+  ctaText?: string;
+  destinationUrl?: string;
+  startDate?: string;
+}
+
+export async function scrapeMetaAdsViaApify(
+  searchQuery: string,
+  limit = 8,
+  overrideToken?: string,
+): Promise<ApifyMetaAd[]> {
+  const token = (overrideToken || getSavedApifyToken() || "").trim();
+  if (!token) return [];
+
+  try {
+    const encodedQuery = encodeURIComponent(searchQuery);
+    const metaLibraryUrl = `https://www.facebook.com/ads/library/?active_status=active&ad_type=all&country=BR&q=${encodedQuery}&search_type=keyword_unordered&media_type=all`;
+    const endpoint = `https://api.apify.com/v2/acts/apify~facebook-ads-scraper/run-sync-get-dataset-items?token=${token}&timeout=45`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 48000);
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        startUrls: [{ url: metaLibraryUrl }],
+        resultsLimit: limit,
+        activeStatus: "active",
+      }),
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.warn(`[ApifyMetaAds] Retornou status ${res.status}`);
+      return [];
+    }
+
+    const items = await res.json();
+    if (!Array.isArray(items)) return [];
+
+    const ads: ApifyMetaAd[] = [];
+    for (const item of items) {
+      const pageName = (item.pageName || item.publisherPlatform || item.title || "").trim();
+      const rawText = (item.adCreativeBody || item.caption || item.text || item.adBody || "").trim();
+      if (!pageName && !rawText) continue;
+
+      const imageUrl =
+        item.adCreativeImage ||
+        item.imageUrl ||
+        (Array.isArray(item.images) ? item.images[0] : null);
+
+      ads.push({
+        pageName: pageName || "Empresa Local",
+        adText: rawText,
+        imageUrl: imageUrl || undefined,
+        ctaText: item.ctaText || item.callToAction || undefined,
+        destinationUrl: item.linkUrl || item.adCreativeLinkUrl || undefined,
+        startDate: item.startDate || undefined,
+        adSnapshotUrl: item.adSnapshotUrl || undefined,
+      });
+    }
+
+    return ads;
+  } catch (err) {
+    console.warn("[ApifyMetaAds] Falha ao coletar anúncios da Meta:", err);
+    return [];
+  }
+}
+
+/**
+ * Scraper de Pratos, Combos e Preços Reais do iFood via Apify.
+ * Extrai pratos promocionais reais da cidade para gastronômicos e delivery.
+ */
+export interface ApifyIfoodDeal {
+  restaurantName: string;
+  itemName: string;
+  description: string;
+  dealPrice: number;
+  originalPrice: number | null;
+  discountBadge?: string;
+  imageUrl?: string;
+  restaurantId?: string;
+}
+
+export async function scrapeIfoodDealsViaApify(
+  city: string,
+  nicheQuery = "lanches pizza burger",
+  limit = 8,
+  overrideToken?: string,
+): Promise<ApifyIfoodDeal[]> {
+  const token = (overrideToken || getSavedApifyToken() || "").trim();
+  if (!token) return [];
+
+  try {
+    const endpoint = `https://api.apify.com/v2/acts/yasmany.casanova~ifood-scraper/run-sync-get-dataset-items?token=${token}&timeout=45`;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 48000);
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      signal: controller.signal,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        mode: "search",
+        search: `${nicheQuery} ${city}`,
+        maxResults: limit,
+      }),
+    });
+    clearTimeout(timeout);
+
+    if (!res.ok) {
+      console.warn(`[ApifyIfood] Retornou status ${res.status}`);
+      return [];
+    }
+
+    const items = await res.json();
+    if (!Array.isArray(items)) return [];
+
+    const deals: ApifyIfoodDeal[] = [];
+    for (const item of items) {
+      const restName = (item.name || item.title || item.restaurant_name || "").trim();
+      const menu = Array.isArray(item.menu) ? item.menu : Array.isArray(item.items) ? item.items : [];
+
+      for (const menuItem of menu.slice(0, 3)) {
+        const title = (menuItem.name || menuItem.title || "").trim();
+        const price = Number(menuItem.price || menuItem.promotionalPrice || 0);
+        const original = menuItem.originalPrice ? Number(menuItem.originalPrice) : null;
+        if (!title || price <= 0) continue;
+
+        deals.push({
+          restaurantName: restName || "Restaurante Local",
+          itemName: title,
+          description: (menuItem.description || "").trim(),
+          dealPrice: price,
+          originalPrice: original,
+          discountBadge: original && original > price ? `${Math.round(((original - price) / original) * 100)}% OFF` : "Destaque iFood",
+          imageUrl: menuItem.imagePath || menuItem.imageUrl || undefined,
+          restaurantId: item.id || item.store_id || undefined,
+        });
+      }
+    }
+
+    return deals;
+  } catch (err) {
+    console.warn("[ApifyIfood] Falha ao coletar dados do iFood:", err);
+    return [];
+  }
+}
+
+
 

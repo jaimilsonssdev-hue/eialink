@@ -74,6 +74,105 @@ export const PageService = {
     if (linksError) throw new Error(linksError.message);
     return { userId: auth.user.id, bio: realBio, profile, links: links ?? [] };
   },
+
+  async createOrUpdateModularSiteDemo(
+    company: {
+      id: string;
+      name: string;
+      phone?: string | null;
+      whatsapp?: string | null;
+      city?: string | null;
+      endereco?: string | null;
+      address?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+      niche?: string | null;
+      niche_slug?: string | null;
+      nota_google?: number | null;
+      rating?: number | null;
+      total_avaliacoes?: number | null;
+      reviews_count?: number | null;
+      photos?: string[] | null;
+      notes?: string | null;
+    },
+    siteConfig: any,
+  ): Promise<{ pageId: string; slug: string; url: string }> {
+    const userId = await this.getCurrentUserId();
+    const sanitizedName = company.name.trim();
+
+    // Extrai PageId existente se houver nas notas
+    const pageIdMatch = (company.notes || "").match(/\[PageId:\s*([a-f0-9-]+)\]/i);
+    const existingPageId = pageIdMatch ? pageIdMatch[1] : null;
+
+    const baseSlug = slugify(sanitizedName);
+    const slugSuffix = Math.random().toString(36).substring(2, 6);
+    const slug = `${baseSlug}-${slugSuffix}`;
+
+    const socialLinks = {
+      is_demo: true,
+      demo_status: "published",
+      modular_site_config: siteConfig,
+      company_id: company.id,
+      address: company.endereco || company.address || null,
+      endereco: company.endereco || company.address || null,
+      latitude: company.latitude ?? null,
+      longitude: company.longitude ?? null,
+      telefone: company.phone || company.whatsapp || null,
+      phone: company.phone || company.whatsapp || null,
+      niche_slug: company.niche_slug || company.niche || null,
+      google_rating: company.nota_google ?? company.rating ?? 4.9,
+      reviews_count: company.total_avaliacoes ?? company.reviews_count ?? 50,
+      photos: company.photos || [],
+      updated_at: new Date().toISOString(),
+    };
+
+    if (existingPageId) {
+      // Atualiza página existente
+      const { data, error } = await supabase
+        .from("bio_pages")
+        .update({
+          display_name: sanitizedName,
+          whatsapp: company.phone || company.whatsapp || null,
+          template_id: "modular-site",
+          social_links: socialLinks as any,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", existingPageId)
+        .select("id, slug")
+        .maybeSingle();
+
+      if (!error && data) {
+        const origin = typeof window !== "undefined" ? window.location.origin : "https://eialink.com.br";
+        return { pageId: data.id, slug: data.slug, url: `${origin}/p/${data.slug}?demo=1` };
+      }
+    }
+
+    // Insere nova página
+    const { data, error } = await supabase
+      .from("bio_pages")
+      .insert({
+        user_id: userId,
+        display_name: sanitizedName,
+        slug,
+        whatsapp: company.phone || company.whatsapp || null,
+        whatsapp_button_label: "Falar no WhatsApp",
+        whatsapp_message: siteConfig.whatsapp_msg || `Olá! Vi o site oficial da ${sanitizedName} e gostaria de atendimento.`,
+        template_id: "modular-site",
+        theme: "custom",
+        description: `[DEMO] Presença digital de luxo para ${sanitizedName}`,
+        published: true,
+        social_links: socialLinks as any,
+      })
+      .select("id, slug")
+      .single();
+
+    if (error || !data) {
+      throw new Error(`Falha ao registrar página modular: ${error?.message || "Erro desconhecido"}`);
+    }
+
+    const origin = typeof window !== "undefined" ? window.location.origin : "https://eialink.com.br";
+    return { pageId: data.id, slug: data.slug, url: `${origin}/p/${data.slug}?demo=1` };
+  },
   async listOwnedPages({ includeDemos = false }: { includeDemos?: boolean } = {}): Promise<OwnedPage[]> {
     const userId = await this.getCurrentUserId();
     const { data, error } = await supabase

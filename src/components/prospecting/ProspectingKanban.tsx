@@ -399,7 +399,12 @@ export function ProspectingKanban({
                                   href={waHref}
                                   target="_blank"
                                   rel="noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (company.status === "novo") {
+                                      onStatusChange(company.id, "contatado");
+                                    }
+                                  }}
                                   className="inline-flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 text-xs font-semibold transition-all whitespace-nowrap"
                                   title={`WhatsApp: ${formatPhone(phone)}`}
                                 >

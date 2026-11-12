@@ -1015,13 +1015,18 @@ export type Database = {
           created_by: string | null
           dedupe_key: string
           email: string | null
+          endereco: string | null
           has_website: boolean
           id: string
           instagram: string | null
           last_contacted_at: string | null
+          latitude: number | null
+          longitude: number | null
           name: string
           next_action_at: string | null
           niche: string | null
+          niche_slug: string | null
+          nota_google: number | null
           notes: string | null
           phone: string | null
           priority: string
@@ -1031,6 +1036,8 @@ export type Database = {
           source: string
           state: string | null
           status: string
+          telefone: string | null
+          total_avaliacoes: number | null
           updated_at: string
           website: string | null
           whatsapp: string | null
@@ -1041,13 +1048,18 @@ export type Database = {
           created_by?: string | null
           dedupe_key: string
           email?: string | null
+          endereco?: string | null
           has_website?: boolean
           id?: string
           instagram?: string | null
           last_contacted_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name: string
           next_action_at?: string | null
           niche?: string | null
+          niche_slug?: string | null
+          nota_google?: number | null
           notes?: string | null
           phone?: string | null
           priority?: string
@@ -1057,6 +1069,8 @@ export type Database = {
           source?: string
           state?: string | null
           status?: string
+          telefone?: string | null
+          total_avaliacoes?: number | null
           updated_at?: string
           website?: string | null
           whatsapp?: string | null
@@ -1067,13 +1081,18 @@ export type Database = {
           created_by?: string | null
           dedupe_key?: string
           email?: string | null
+          endereco?: string | null
           has_website?: boolean
           id?: string
           instagram?: string | null
           last_contacted_at?: string | null
+          latitude?: number | null
+          longitude?: number | null
           name?: string
           next_action_at?: string | null
           niche?: string | null
+          niche_slug?: string | null
+          nota_google?: number | null
           notes?: string | null
           phone?: string | null
           priority?: string
@@ -1083,6 +1102,8 @@ export type Database = {
           source?: string
           state?: string | null
           status?: string
+          telefone?: string | null
+          total_avaliacoes?: number | null
           updated_at?: string
           website?: string | null
           whatsapp?: string | null

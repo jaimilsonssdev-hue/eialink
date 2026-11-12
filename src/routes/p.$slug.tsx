@@ -33,6 +33,7 @@ import { CardapioPublicViewer } from "@/modules/cardapio/CardapioPublicViewer";
 import type { CardapioData } from "@/modules/cardapio/cardapioAiService";
 import { generateIfoodCardapioHtml } from "@/modules/cardapio/cardapioGenerator";
 import { LojaPublicViewer } from "@/modules/loja/LojaPublicViewer";
+import { ModularSiteRenderer, type ModularSiteConfig } from "@/components/public/ModularSiteRenderer";
 import type { LojaData } from "@/modules/loja/lojaAiService";
 import { AgendaPublicViewer } from "@/modules/agenda/AgendaPublicViewer";
 import type { AgendaData } from "@/modules/agenda/agendaAiService";
@@ -674,6 +675,31 @@ function PublicBio() {
       </>
     );
   };
+
+  // PRIORIDADE 0.9: Modular Site Architecture (Regra 1, 2 e 3: Dados 100% determinísticos, fotos isoladas, design system)
+  const modularSiteConfig = (rawSocial.modular_site_config || rawSocial.modularSiteConfig) as ModularSiteConfig | undefined;
+  const isModularSite = effectiveTemplateId === "modular-site" || Boolean(modularSiteConfig);
+  if (isModularSite && modularSiteConfig) {
+    return (
+      <div className="min-h-screen w-full overflow-x-hidden flex flex-col relative">
+        {isDemo && bio.display_name && <DemoConversionBanner companyName={bio.display_name} />}
+        <ModularSiteRenderer
+          nome={bio.display_name}
+          telefone={bio.whatsapp || (rawSocial.telefone as string) || (rawSocial.phone as string)}
+          endereco={rawSocial.address || (rawSocial.endereco as string)}
+          latitude={rawSocial.latitude ? Number(rawSocial.latitude) : null}
+          longitude={rawSocial.longitude ? Number(rawSocial.longitude) : null}
+          niche_slug={(rawSocial.niche_slug as string) || (rawSocial.niche as string) || nicheKey}
+          photos={Array.isArray(rawSocial.photos) ? rawSocial.photos : []}
+          nota_google={rawSocial.google_rating ? Number(rawSocial.google_rating) : (rawSocial.nota_google ? Number(rawSocial.nota_google) : null)}
+          total_avaliacoes={rawSocial.reviews_count ? Number(rawSocial.reviews_count) : (rawSocial.total_avaliacoes ? Number(rawSocial.total_avaliacoes) : null)}
+          config={modularSiteConfig}
+          isDemo={isDemo}
+        />
+        {renderAiChatWidget()}
+      </div>
+    );
+  }
 
   // PRIORIDADE 1: Se a página possui HTML puro oficial (ex: modelo do Zequinha, delivery rico com cupons e fidelidade)
   const cardapioData = (rawSocial.cardapio_data || rawSocial.cardapioData) as CardapioData | undefined;

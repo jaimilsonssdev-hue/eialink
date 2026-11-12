@@ -39,6 +39,13 @@ export type ProspectedCompany = {
   has_website: boolean;
   rating: number | null;
   reviews_count: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  endereco?: string | null;
+  telefone?: string | null;
+  nota_google?: number | null;
+  total_avaliacoes?: number | null;
+  niche_slug?: string | null;
   source: string;
   score: number;
   priority: ProspectPriority;

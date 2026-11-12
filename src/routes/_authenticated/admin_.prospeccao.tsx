@@ -185,8 +185,17 @@ function isToday(value: string | null) {
   return date.toDateString() === now.toDateString();
 }
 
+function cleanWhatsAppPhone(rawPhone?: string | null): string {
+  if (!rawPhone) return "";
+  let digits = rawPhone.replace(/\D/g, "");
+  if ((digits.length === 10 || digits.length === 11) && !digits.startsWith("55")) {
+    digits = `55${digits}`;
+  }
+  return digits;
+}
+
 function whatsappLink(company: ProspectedCompany, explicitDemoUrl?: string | null) {
-  const phone = company.whatsapp ?? company.phone;
+  const phone = cleanWhatsAppPhone(company.whatsapp ?? company.phone ?? (company as any).telefone);
   if (!phone) return null;
   const text = buildWhatsAppMessage(company, undefined, explicitDemoUrl);
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
@@ -689,16 +698,80 @@ function ProspectingPage() {
 
     try {
       let results: ProspectDraft[] = [];
-      const currentApifyToken = getSavedApifyToken() || undefined;
+
+      // Tentativa 1: Chamada da nova Edge Function prospectar-gemini com Gemini API, Google Maps e Search Grounding
       try {
-        // Tentativa 1: Execução com rotação de sinônimos/Apify e cache-busting
-        results = await searchGoogleMapsAndInstagram(niche, city, 15, currentSubregion || undefined, pageToFetch, currentApifyToken);
-      } catch (clientErr) {
-        console.warn("[Prospecção] Execução direta no cliente falhou, tentando via servidor:", clientErr);
-        // Tentativa 2: Fallback para RPC do servidor caso o navegador bloqueie por adblocker
-        results = await runLiveProspecting({
-          data: { niche, city, limit: 15, page: pageToFetch, apifyToken: currentApifyToken },
+        const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+          "prospectar-gemini",
+          {
+            body: { niche, city, page: pageToFetch, saveToDatabase: true },
+          },
+        );
+
+        if (edgeError) {
+          throw new Error(edgeError.message || "Erro na Edge Function prospectar-gemini");
+        }
+
+        if (edgeData?.error) {
+          throw new Error(edgeData.error);
+        }
+
+        const rawList = Array.isArray(edgeData?.leads) ? edgeData.leads : [];
+        results = rawList.map((item: any) => {
+          const leadNome = (item.nome || "").trim();
+          const leadNiche = item.niche_slug || niche;
+          const leadPhone = item.telefone || null;
+          const dedupeKey = buildDedupeKey(leadNome, leadPhone || item.endereco || city);
+          const score = typeof item.nota_google === "number"
+            ? Math.min(100, Math.round((item.nota_google * 15) + (leadPhone ? 25 : 0)))
+            : 70;
+
+          return {
+            name: leadNome,
+            niche: leadNiche,
+            niche_slug: item.niche_slug || leadNiche,
+            city,
+            state: null,
+            phone: leadPhone,
+            telefone: leadPhone,
+            whatsapp: leadPhone,
+            email: null,
+            instagram: null,
+            website: null,
+            has_website: false,
+            endereco: item.endereco || null,
+            address: item.endereco || null,
+            latitude: typeof item.latitude === "number" ? item.latitude : null,
+            longitude: typeof item.longitude === "number" ? item.longitude : null,
+            rating: typeof item.nota_google === "number" ? item.nota_google : null,
+            nota_google: typeof item.nota_google === "number" ? item.nota_google : null,
+            reviews_count: typeof item.total_avaliacoes === "number" ? item.total_avaliacoes : null,
+            total_avaliacoes: typeof item.total_avaliacoes === "number" ? item.total_avaliacoes : null,
+            source: "gemini-maps",
+            score,
+            priority: score >= 80 ? "alta" : "media",
+            status: "novo" as const,
+            notes: item.endereco ? `[Google Maps Grounding] ${item.endereco}` : "[Google Maps Grounding]",
+            dedupe_key: dedupeKey,
+          };
         });
+      } catch (geminiErr: any) {
+        console.warn("[Prospecção] Chamada da Edge Function prospectar-gemini falhou, tentando fallback RPC:", geminiErr);
+        results = await runLiveProspecting({
+          data: { niche, city, limit: 15, page: pageToFetch },
+        });
+      }
+
+      // Salva imediatamente os leads na tabela de prospecção (prospected_companies)
+      let importedCount = 0;
+      if (results.length > 0) {
+        try {
+          const importRes = await ProspectingService.importMany(results);
+          importedCount = importRes.inserted;
+          invalidate();
+        } catch (dbErr) {
+          console.warn("[Prospecção] Aviso ao salvar leads no banco:", dbErr);
+        }
       }
 
       setScanVariationCount(pageToFetch);
@@ -759,15 +832,13 @@ function ProspectingPage() {
 
       if (results.length === 0) {
         setFeedback(
-          "Nenhuma empresa encontrada com esses termos. Tente outro nicho comum (ex: Dentista, Clínica, Barbearia) ou o nome da cidade.",
+          "Nenhuma empresa sem site próprio encontrada no Google Maps para esses termos. Tente outro nicho (ex: Barbearia, Clínica, Restaurante) ou outra cidade.",
         );
       } else {
-        const totalNew = enrichedResults.filter((r) => !r.alreadyInRadar).length;
-        const totalExisting = enrichedResults.filter((r) => r.alreadyInRadar).length;
         setFeedback(
           isNextPage
-            ? `🔥 Próxima leva concluída! +${enrichedResults.length} empresas analisadas (+${totalNew} inéditas para seu radar).`
-            : `Varredura concluída! ${results.length} empresa(s) localizada(s) em tempo real: ${totalNew} novas e ${totalExisting} já salvas no radar.`
+            ? `🔥 Próxima leva Gemini concluída! +${results.length} empresas analisadas (+${importedCount} novas salvas na tabela de prospecção).`
+            : `✨ Prospecção com Gemini & Google Maps concluída! ${results.length} empresa(s) qualificada(s) encontrada(s) e ${importedCount} nova(s) salva(s) na tabela de prospecção.`,
         );
       }
     } catch (err: unknown) {
@@ -990,150 +1061,80 @@ function ProspectingPage() {
     const pairedServices = nicheDirection.pairedServices;
 
     setFeedback(
-      `🚀 IA Criativa Gemini desenhando site [${nicheMeta?.label || nicheDirection.canonicalTagLabel} — Modelo ${nextIdx + 1}] para ${company.name}...`,
+      `🚀 IA Criativa Gemini atuando como Diretora de Arte para ${company.name}...`,
     );
 
-    const primaryHeroPhoto =
-      realPhotos[0] ||
-      nicheDirection.heroPhotoUrl ||
-      compatibleImages.find((img) => img.role === "hero")?.url ||
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?auto=format&fit=crop&w=1200&q=85";
-
-    const primaryAmbientPhoto =
-      realPhotos[1] ||
-      nicheDirection.ambientPhotoUrl ||
-      compatibleImages.find((img) => img.role === "ambient")?.url ||
-      primaryHeroPhoto;
-
-    // Briefing guiado 100% pela Tag Canônica do Nicho + Pareamento Fotográfico 1:1
-    const briefingPrompt = `DIREÇÃO DE ARTE DE LUXO & CRIAÇÃO EXCLUSIVA DE SITE GUIADA POR NICHO:
-Empresa: "${company.name}"
-Tag Canônica do Nicho (GUIA MESTRE OBRIGATÓRIO): "${nicheDirection.nicheKey}" (${nicheDirection.canonicalTagLabel})
-Subcategoria Original do Lead: "${nicheText}"
-Cidade / Região: "${company.city || "sua região"}"
-${verifiedAddress ? `Endereço Verificado (usar no Mapa e rotas GPS): "${verifiedAddress}"` : ""}
-${cleanPhone ? `WhatsApp Oficial (usar no botão pulsante e CTAs): "${cleanPhone}"` : ""}
-Avaliação Google Maps: ${verifiedRating || 4.9} estrelas (${verifiedReviewsCount || 90} avaliações reais)
-
-IDENTIDADE VISUAL, ATMOSFERA & POSICIONAMENTO DO NICHO (${nicheDirection.canonicalTagLabel.toUpperCase()}):
-- Posicionamento Estratégico: ${nicheDirection.positioning}
-- Atmosfera & Direção de Arte: ${nicheDirection.atmosphere}
-- Paleta de Cores Oficial deste Nicho: ${nicheDirection.palette}
-- Tipografia Oficial deste Nicho: ${nicheDirection.fonts}
-- Selos de Autoridade & Confiança do Nicho: ${nicheDirection.trustBadges.join(" • ")}
-
-ARQUITETURA DE LAYOUT ESCOLHIDA (VARIANTE ${nextIdx + 1}: ${nicheDirection.variantName}):
-- Formato da Navbar: ${nicheDirection.navbar}
-- Formato do Hero: ${nicheDirection.heroConcept}
-- Diagramação dos Serviços (TODOS OS CARDS COM FOTO): ${nicheDirection.servicesLayout}
-- Seção de Assinatura Exclusiva: ${nicheDirection.signatureSection}
-- Diagramação da Localização: ${nicheDirection.locationLayout}
-
-MAPA FOTOGRÁFICO EXATO E PAREAMENTO 1:1 (OBRIGATÓRIO SEGUIR SEM ALTERAR URLS):
-1. FOTO PRINCIPAL DO HERO (src obrigatório): ${primaryHeroPhoto}
-2. FOTO DO AMBIENTE / SOBRE NÓS / ESTRUTURA (src obrigatório): ${primaryAmbientPhoto}
-${realPhotos.length > 0 ? `3. ACERVO DE FOTOS REAIS DO ESTABELECIMENTO (${realPhotos.length} fotos reais):\n${realPhotos.slice(0, 8).map((u, i) => `   - Foto Real ${i + 1}: ${u}`).join("\n")}` : ""}
-
-[CATÁLOGO OFICIAL DE SERVIÇOS + FOTO EXATA PAREADA 1:1 (CADA CARD DEVE EXIBIR SUA IMAGEM EXATA ABAIXO)]:
-${pairedServices
-  .map(
-    (srv, idx) =>
-      `Card de Serviço ${idx + 1}:
-   - Título do Card: "${srv.name}"
-   - Badge / Categoria: "${srv.category}"
-   - Descrição Persuasiva: "${srv.description}"
-   - Valor / Duração de Referência: R$ ${srv.price.toFixed(2)} (${srv.duration_minutes} min)
-   - IMAGEM OBRIGATÓRIA DESTE CARD (usar no <img src="...">): ${srv.image_url}
-   - Descrição Semântica da Imagem: ${srv.photo_label}`,
-  )
-  .join("\n\n")}
-
-REGRAS DE OURO DE EXECUÇÃO VISUAL (PADRÃO AWWWARDS / LOVABLE):
-1. FIDELIDADE TOTAL À TAG DO NICHO (${nicheDirection.canonicalTagLabel}): Todo o copywriting, títulos, subtítulos, paleta de cores e atmosfera devem ser 100% específicos para "${nicheDirection.canonicalTagLabel}".
-2. PAREAMENTO 1:1 DE FOTOS NOS CARDS: Cada um dos 4 cards de serviços acima DEVE ter uma tag <img src="..." class="w-full h-56 object-cover group-hover:scale-105 transition-transform duration-700"> usando EXATAMENTE a 'IMAGEM OBRIGATÓRIA DESTE CARD' indicada acima. NUNCA crie cards de serviço sem foto e NUNCA troque as fotos entre os cards!
-3. ÍCONES LUCIDE EM HTML PURO (PROIBIDO JSX): Use EXCLUSIVAMENTE <i data-lucide="nome-do-icone" class="w-5 h-5"></i> (ex: <i data-lucide="award"></i>, <i data-lucide="shield-check"></i>, <i data-lucide="sparkles"></i>, <i data-lucide="star"></i>, <i data-lucide="map-pin"></i>, <i data-lucide="calendar"></i>). NUNCA escreva <Award /> ou <ShieldCheck />!
-4. PROIBIDO ROSTO DE MODELO FAKE: Na seção Sobre Nós / Quem Somos, use a FOTO DO AMBIENTE (${primaryAmbientPhoto}) com selos de credibilidade do nicho. Nunca coloque foto de pessoa desconhecida fingindo ser o dono.
-5. FERRAMENTAS EIALINK 100% ATIVAS:
-   - Botões de agendamento/ação em destaque apontando para /agendar/{slug} com data-action="agendar" (ou WhatsApp direto se for pedido/catálogo).
-   - Seção de Localização com iframe do Google Maps e 2 botões GPS ("📍 Traçar Rota no Google Maps" e "🚗 Abrir no Waze").
-   - Botão flutuante de WhatsApp no canto inferior direito (wa.me/${cleanPhone}).
-- Retorne o código HTML5 completo, luxuoso e autocontido.`;
-
-    let generatedPageId: string | null = null;
-    let generatedSlug: string | null = null;
-
-    // Tentativa 1: Via Endpoint do Servidor
+    let siteConfig: any = null;
     try {
-      const serverRes = await generateCreativeSiteFn({
-        data: {
-          briefingOrPrompt: briefingPrompt,
-          projectName: company.name,
-          niche: nicheText,
-          city: company.city || "Brasil",
-          businessAddress: verifiedAddress || company.address || undefined,
-          businessWhatsapp: cleanPhone || undefined,
-          businessSlug: demoInfo.slug || undefined,
-          projectId: demoInfo.pageId || undefined,
-          rating: verifiedRating ? Number(verifiedRating) : 4.9,
-          reviewsCount: verifiedReviewsCount ? Number(verifiedReviewsCount) : 85,
-          photos: realPhotos.length > 0 ? [...realPhotos, ...compatibleImages.map((img) => img.url).filter((u) => !realPhotos.includes(u))] : compatibleImages.map((img) => img.url),
-          apiKey: clientKey,
-          clientGeminiKey: clientKey,
-          isRegeneration,
+      const { data: edgeRes, error: edgeErr } = await supabase.functions.invoke(
+        "gerar-site-gemini",
+        {
+          body: {
+            name: company.name,
+            niche: nicheText,
+            city: company.city || "Brasil",
+            niche_slug: company.niche_slug || detectedKey,
+          },
         },
-      });
+      );
 
-      if (serverRes.ok && serverRes.pageId) {
-        generatedPageId = serverRes.pageId;
-        generatedSlug = serverRes.slug;
+      if (!edgeErr && edgeRes?.site_config) {
+        siteConfig = edgeRes.site_config;
       }
-    } catch (serverErr) {
-      console.warn("[Prospecção] Chamada de servidor falhou, acionando motor direto do Estúdio Criativo:", serverErr);
+    } catch (edgeCallErr) {
+      console.warn("[Prospecção] Chamada de Edge Function gerar-site-gemini falhou:", edgeCallErr);
     }
 
-    // Tentativa 2 (Contingência idêntica ao Estúdio Criativo): Se o servidor falhou, gera via SDK direto no cliente
-    if (!generatedPageId) {
-      try {
-        setFeedback(`⚡ Conectando ao Google Gemini do Estúdio Criativo para ${company.name}...`);
-        const localHtml = await generateSiteHtml(briefingPrompt, undefined, clientKey);
-        if (localHtml && localHtml.length > 50) {
-          const syncRes = await syncCreativeStudioProjectFn({
-            data: {
-              project: {
-                id: demoInfo.pageId || `proj-${Date.now()}`,
-                name: company.name,
-                html: localHtml,
-                briefing: briefingPrompt,
-                eialinkPageId: demoInfo.pageId || undefined,
-                slug: demoInfo.slug || undefined,
-              },
-            },
-          });
-          if (syncRes.success && syncRes.pageId) {
-            generatedPageId = syncRes.pageId;
-            generatedSlug = syncRes.slug;
-          }
-        }
-      } catch (clientErr: any) {
-        console.error("[Prospecção] Falha no motor local do Estúdio Criativo:", clientErr);
-        throw new Error(clientErr.message || "Falha ao gerar o site com o Estúdio Criativo IA.");
-      }
+    if (!siteConfig) {
+      // Fallback seguro de Direção de Arte
+      const n = (company.niche || "").toLowerCase();
+      let palette = "emerald_gold";
+      if (n.includes("odonto") || n.includes("dent") || n.includes("clinica")) palette = "navy_blue";
+      else if (n.includes("estetica") || n.includes("salao") || n.includes("beleza") || n.includes("spa")) palette = "rose_nude";
+      else if (n.includes("auto") || n.includes("mecanic") || n.includes("barber")) palette = "dark_amber";
+      else if (n.includes("clima") || n.includes("ar")) palette = "navy_blue";
+
+      siteConfig = {
+        hero_variant: isRegeneration ? "hero_editorial" : "hero_split",
+        services_variant: isRegeneration ? "lista_precos" : "grid_cards",
+        palette,
+        headline: `Excelência e Atendimento Especializado na ${company.name}`,
+        subheadline: `Presença digital oficial com serviços sob medida e atendimento direto pelo WhatsApp em ${company.city || "sua região"}.`,
+        services: [
+          { title: "Atendimento Personalizado", description: "Avaliação detalhada e soluções sob medida para cada necessidade." },
+          { title: "Serviço Especializado", description: "Profissionais qualificados e materiais com rigoroso padrão de qualidade." },
+          { title: "Garantia e Confiança", description: "Transparência total em cada etapa com suporte dedicado." },
+          { title: "Agendamento Prático", description: "Horários flexíveis e atendimento ágil direto pelo WhatsApp oficial." },
+        ],
+        whatsapp_msg: `Olá! Acessei o site oficial da ${company.name} e gostaria de agendar um atendimento.`,
+      };
     }
 
-    if (!generatedPageId || !generatedSlug) {
-      throw new Error("Não foi possível gerar a página demonstrativa. Tente clicar novamente.");
-    }
+    // Registra ou atualiza no Supabase via PageService com dados 100% determinísticos
+    const { pageId, slug, url } = await PageService.createOrUpdateModularSiteDemo(
+      {
+        ...company,
+        endereco: verifiedAddress || company.endereco,
+        phone: cleanPhone || company.phone,
+        whatsapp: cleanPhone || company.whatsapp,
+        nota_google: verifiedRating ? Number(verifiedRating) : company.nota_google,
+        total_avaliacoes: verifiedReviewsCount ? Number(verifiedReviewsCount) : company.total_avaliacoes,
+        photos: realPhotos,
+      },
+      siteConfig,
+    );
 
-    const url = `https://eialink.com.br/p/${generatedSlug}`;
     const cleanNotes = (company.notes || "")
       .replace(/Demo:\s*https?:\/\/[^\s)]+(?:\s*\[Modelo:[^\]]+\])?(?:\s*\(id:[a-f0-9-]+\))?/gi, "")
+      .replace(/\[Demo:\s*https?:\/\/[^\]]+\]/gi, "")
+      .replace(/\[PageId:\s*[a-f0-9-]+\]/gi, "")
       .replace(/https?:\/\/eialink\.com\.br\/p\/[^\s)]+/gi, "")
       .replace(/\n\s*\n/g, "\n")
       .trim();
 
     const newNotes = cleanNotes
-      ? `${cleanNotes}\nDemo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`
-      : `Demo: ${url} [Modelo: Estúdio Criativo IA] (id:${generatedPageId})`;
+      ? `${cleanNotes}\n[Demo: ${url}] [PageId: ${pageId}]`
+      : `[Demo: ${url}] [PageId: ${pageId}]`;
 
     let notesWithPhotos = newNotes;
     if (realPhotos.length > 0 && !notesWithPhotos.includes("[Fotos:")) {
@@ -1148,10 +1149,13 @@ REGRAS DE OURO DE EXECUÇÃO VISUAL (PADRÃO AWWWARDS / LOVABLE):
       companyUpdates.whatsapp = cleanPhone;
       companyUpdates.phone = cleanPhone;
     }
+    if (verifiedAddress && !company.endereco) {
+      companyUpdates.endereco = verifiedAddress;
+    }
     await ProspectingService.updateCompany(company.id, companyUpdates);
-    setFeedback(`🎉 Site gerado com sucesso pelo Estúdio Criativo IA! Link: ${url}`);
+    setFeedback(`🎉 Site modular gerado com sucesso pelo Eia Link! Link: ${url}`);
     invalidate();
-    return { pageId: generatedPageId, slug: generatedSlug, url };
+    return { pageId, slug, url };
   }
 
   async function handleEnrichInstagramPhotos(company: ProspectedCompany) {
@@ -1217,6 +1221,47 @@ REGRAS DE OURO DE EXECUÇÃO VISUAL (PADRÃO AWWWARDS / LOVABLE):
     } finally {
       setCreatingPageId(null);
     }
+  }
+
+  async function handleSendWhatsAppLead(company: ProspectedCompany, explicitDemoUrl?: string | null) {
+    const rawPhone = company.whatsapp || company.phone || (company as any).telefone;
+    const telefoneLimpo = cleanWhatsAppPhone(rawPhone);
+    if (!telefoneLimpo) {
+      setWhatsModalCompany(company);
+      setFeedback(`Por favor, informe o número de WhatsApp de "${company.name}" para prosseguir com o envio.`);
+      return;
+    }
+
+    const demoInfo = parseDemoInfo(company);
+    const demoUrl = explicitDemoUrl || demoInfo.url || undefined;
+    const message = buildWhatsAppMessage(company, undefined, demoUrl);
+    const waUrl = `https://wa.me/${telefoneLimpo}?text=${encodeURIComponent(message)}`;
+
+    // 1. Abre a conversa no WhatsApp em nova aba
+    window.open(waUrl, "_blank", "noopener,noreferrer");
+
+    // 2. Marca automaticamente o status do lead como 'Contatado'
+    if (company.status !== "contatado" && company.status !== "respondeu" && company.status !== "cliente") {
+      statusMutation.mutate({ id: company.id, status: "contatado" });
+    }
+
+    // 3. Registra atividade no histórico se houver usuário autenticado
+    try {
+      const { data: user } = await supabase.auth.getUser();
+      if (user?.user) {
+        await ProspectingService.registerActivity({
+          companyId: company.id,
+          channel: "whatsapp",
+          outcome: "enviado",
+          message: message.slice(0, 500),
+          status: "contatado",
+        });
+      }
+    } catch (err) {
+      console.warn("[Prospeccao] Falha ao registrar atividade de envio no WhatsApp:", err);
+    }
+
+    setFeedback(`🚀 WhatsApp aberto para ${company.name}! O status foi marcado como 'Contatado'.`);
   }
 
   async function handleSpecializedGenerate(
@@ -2189,26 +2234,17 @@ DIRETRIZES CRÍTICAS:
             <CardHeader className="pb-3 flex flex-row flex-wrap items-center justify-between gap-2 space-y-0">
               <div>
                 <CardTitle className="text-base sm:text-lg font-bold text-foreground flex items-center gap-2">
-                  <Globe2 className="h-5 w-5 text-primary" /> Radar de Oportunidades: Google Maps & Apify
+                  <Globe2 className="h-5 w-5 text-primary" /> Radar de Oportunidades: Google Maps & Gemini AI
                 </CardTitle>
                 <CardDescription className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                  Varredura inteligente de empresas locais no Google Maps com fotos em alta definição, contatos e extração de perfis via Apify.
+                  Varredura de empresas reais sem site oficial utilizando a API oficial do Gemini com Google Maps e Google Search Grounding.
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
-                {hasApifyToken ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
-                    <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-                    Apify Conectado & Ativo
-                  </span>
-                ) : (
-                  <Link
-                    to="/admin"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300 hover:bg-amber-500/20 transition-all"
-                  >
-                    ⚠️ Conectar Apify no Painel
-                  </Link>
-                )}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                  <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                  Gemini & Maps Grounding Ativo
+                </span>
                 <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                   ⚡ Anti-Repetição Inteligente
                 </span>
@@ -2216,7 +2252,7 @@ DIRETRIZES CRÍTICAS:
             </CardHeader>
 
             <CardContent className="space-y-4">
-              {/* Seletor de Modo: Varredura por Nicho (Google Maps + Apify) vs Consulta Avulsa de @ */}
+              {/* Seletor de Modo: Varredura por Nicho (Google Maps + Gemini) vs Consulta Avulsa de @ */}
               <div className="flex items-center gap-2 p-1 rounded-xl bg-muted/40 border border-border/60 max-w-lg">
                 <button
                   type="button"
@@ -2228,13 +2264,11 @@ DIRETRIZES CRÍTICAS:
                   }`}
                 >
                   <Globe2 className="h-3.5 w-3.5 text-primary" />
-                  Varredura por Nicho & Cidade
-                  {hasApifyToken ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/15 px-1.5 py-0.5 rounded-full border border-emerald-500/30">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      Apify Ativo
-                    </span>
-                  ) : null}
+                  Varredura com Gemini & Maps
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/15 px-1.5 py-0.5 rounded-full border border-emerald-500/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Gemini 3.8
+                  </span>
                 </button>
                 <button
                   type="button"
@@ -2299,19 +2333,16 @@ DIRETRIZES CRÍTICAS:
                       <button
                         type="submit"
                         disabled={isSearching}
-                        className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium bg-primary hover:bg-primary/90 text-white transition-all shadow-sm"
+                        className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white transition-all shadow-sm"
+                        title="Prospectar empresas reais sem site oficial usando Gemini 3.8 com Google Maps & Search Grounding"
                       >
                         {isSearching ? (
                           <>
-                            <Loader2 className="h-4 w-4 animate-spin" /> Buscando...
-                          </>
-                        ) : hasApifyToken ? (
-                          <>
-                            <Sparkles className="h-4 w-4 text-emerald-300" /> Varrer Nicho via Apify
+                            <Loader2 className="h-4 w-4 animate-spin" /> Prospectando com Gemini...
                           </>
                         ) : (
                           <>
-                            <Search className="h-4 w-4" /> Varrer Oportunidades
+                            <Sparkles className="h-4 w-4 text-amber-300" /> Prospectar com Gemini & Maps
                           </>
                         )}
                       </button>
@@ -2362,11 +2393,9 @@ DIRETRIZES CRÍTICAS:
                   <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
                   <div>
                     <p className="font-medium text-foreground text-xs sm:text-sm">
-                      {hasApifyToken
-                        ? "Executando varredura profunda no Google Maps via Apify & Redes Locais..."
-                        : "Varrendo Google Maps com rotação inteligente de termos e sem cache preso..."}
+                      Buscando empresas reais via Gemini com Google Maps e Google Search Grounding...
                     </p>
-                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Identificando empresas sem site, avaliações reais e números de WhatsApp.</p>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Identificando empresas sem site oficial, extraindo avaliações e telefones comerciais.</p>
                   </div>
                 </div>
               )}
@@ -3618,15 +3647,15 @@ DIRETRIZES CRÍTICAS:
                               type="button"
                               onClick={() => void handleGenerateDemo(company)}
                               disabled={creatingPageId === company.id}
-                              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 px-3 py-2 text-xs font-semibold transition-all shadow-sm cursor-pointer"
-                              title="Gerar site moderno com IA Gemini para este lead"
+                              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 px-3 py-2 text-xs font-semibold transition-all shadow-sm cursor-pointer disabled:opacity-60"
+                              title="Gerar Prévia com IA Gemini para este lead"
                             >
                               {creatingPageId === company.id ? (
                                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                               ) : (
                                 <Sparkles className="h-3.5 w-3.5 text-purple-300" />
                               )}
-                              <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Site com IA 🪄"}</span>
+                              <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Prévia"}</span>
                             </button>
                           )}
                           <Link
@@ -3644,42 +3673,27 @@ DIRETRIZES CRÍTICAS:
 
                     {(() => {
                       const demo = parseDemoInfo(company);
-                      if (!demo.url) {
-                        return (
-                          <button
-                            type="button"
-                            disabled
-                            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/40 bg-muted/20 text-muted-foreground/50 px-3 py-2 text-xs font-medium cursor-not-allowed opacity-60"
-                            title="Gere o site demonstrativo primeiro para liberar o envio no WhatsApp"
-                          >
-                            <MessageCircle className="h-3.5 w-3.5" />
-                            <span>WhatsApp</span>
-                          </button>
-                        );
-                      }
-                      const waUrl = whatsappLink(company, demo.url);
-                      return waUrl ? (
-                        <a
-                          href={waUrl}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
-                            company.status === "contatado"
-                              ? "border border-amber-500/40 bg-amber-500/15 text-amber-400"
-                              : "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400"
-                          }`}
-                        >
-                          <MessageCircle className="h-3.5 w-3.5" />
-                          <span>{company.status === "contatado" ? "Follow-up" : "WhatsApp"}</span>
-                        </a>
-                      ) : (
+                      return (
                         <button
                           type="button"
-                          onClick={() => setWhatsModalCompany(company)}
-                          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border/60 bg-muted/30 text-muted-foreground px-3 py-2 text-xs font-medium hover:text-emerald-400"
+                          onClick={() => void handleSendWhatsAppLead(company, demo.url)}
+                          className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                            company.status === "contatado"
+                              ? "border border-amber-500/40 bg-amber-500/15 text-amber-400 hover:bg-amber-500/25"
+                              : demo.url
+                                ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 shadow-[0_0_12px_-3px_rgba(16,185,129,0.3)]"
+                                : "border border-border/60 bg-muted/20 text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/40"
+                          }`}
+                          title={
+                            company.status === "contatado"
+                              ? `Follow-up via WhatsApp com ${company.name}`
+                              : demo.url
+                                ? `Enviar proposta no WhatsApp com link da prévia para ${company.name}`
+                                : `Enviar no WhatsApp para ${company.name}`
+                          }
                         >
-                          <MessageCircle className="h-3.5 w-3.5" />
-                          <span>WhatsApp</span>
+                          <MessageCircle className="h-3.5 w-3.5 text-emerald-400" />
+                          <span>{company.status === "contatado" ? "Follow-up WhatsApp" : "Enviar no WhatsApp"}</span>
                         </button>
                       );
                     })()}
@@ -3962,58 +3976,26 @@ DIRETRIZES CRÍTICAS:
                           : "—"}
                       </TableCell>
                       <TableCell className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        <div className="flex items-center justify-end gap-2 flex-wrap">
+                          {/* 1. Botão 'Gerar Prévia' (ou 'Ver Prévia' se já gerada) */}
                           {demo.url ? (
-                            <>
-                              <HoverCard openDelay={150} closeDelay={150}>
-                                <HoverCardTrigger asChild>
-                                  <a
-                                    href={demo.url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/35 bg-emerald-500/10 text-emerald-400 px-2.5 py-1.5 text-xs font-semibold hover:bg-emerald-500/20 transition-all"
-                                    title="Ver Página Pro no ar"
-                                  >
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                    <span>Ver Demo</span>
-                                  </a>
-                                </HoverCardTrigger>
-                                <HoverCardContent align="end" className="w-80 border-border bg-popover text-popover-foreground backdrop-blur-md p-4 shadow-2xl space-y-3 z-50">
-                                  <div className="flex items-center justify-between border-b border-border/60 pb-2">
-                                    <div className="flex items-center gap-2">
-                                      <div className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                                      <span className="text-xs font-semibold text-foreground">Modelo Demonstrativo</span>
-                                    </div>
-                                    <span className="text-[11px] text-muted-foreground font-mono">EIA Link</span>
-                                  </div>
-                                  <div className="rounded-lg border border-border/70 bg-background/80 p-3 space-y-1">
-                                    <p className="text-xs font-bold text-foreground tracking-tight">{company.name}</p>
-                                    <p className="text-[11px] text-muted-foreground">
-                                      {[company.niche, company.city].filter(Boolean).join(" · ")}
-                                    </p>
-                                    <div className="pt-2 flex items-center justify-between text-[11px]">
-                                      <span className="text-emerald-400 font-medium">WhatsApp Pronto</span>
-                                      <span className="text-purple-400 font-mono">Online</span>
-                                    </div>
-                                  </div>
-                                  <div className="pt-1">
-                                    <a
-                                      href={demo.url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      className="text-xs text-primary hover:underline inline-flex items-center gap-1 font-medium"
-                                    >
-                                      Abrir página em nova aba <ExternalLink className="h-3 w-3" />
-                                    </a>
-                                  </div>
-                                </HoverCardContent>
-                              </HoverCard>
+                            <div className="inline-flex items-center gap-1.5">
+                              <a
+                                href={demo.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/35 bg-emerald-500/10 text-emerald-400 px-3 py-1.5 text-xs font-semibold hover:bg-emerald-500/20 shadow-sm transition-all"
+                                title="Visualizar a URL pública da prévia no ar"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                <span>Ver Prévia</span>
+                              </a>
                               <button
                                 type="button"
                                 onClick={() => void handleRegenerateDemo(company)}
                                 disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer disabled:opacity-60"
-                                title="Gerar um novo modelo e layout para esta demonstração"
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/15 text-purple-300 px-2.5 py-1.5 text-xs font-medium transition-all cursor-pointer disabled:opacity-60"
+                                title="Regenerar prévia com novo layout/paleta"
                               >
                                 {regeneratingPageId === company.id ? (
                                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -4022,48 +4004,53 @@ DIRETRIZES CRÍTICAS:
                                 )}
                                 <span>{regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}</span>
                               </button>
-                            </>
+                            </div>
                           ) : (
-                            (() => {
-                              const meta = getProspectNicheCategory(company.niche, company.name);
-                              const isGeneratingThis = creatingPageId === company.id;
-                              const isFood = meta.category === "food";
-
-                              return (
-                                <button
-                                  className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold shadow-md transition-all cursor-pointer disabled:opacity-60 ${meta.buttonClass}`}
-                                  onClick={() => {
-                                    if (isFood) {
-                                      navigate({
-                                        to: "/cardapio-studio",
-                                        search: demo.pageId
-                                          ? { page: demo.pageId }
-                                          : {
-                                              name: company.name,
-                                              address: company.address || "",
-                                              whatsapp: company.whatsapp || company.phone || "",
-                                              niche: company.niche || "",
-                                            },
-                                      });
-                                    } else {
-                                      handleSpecializedGenerate(company);
-                                    }
-                                  }}
-                                  disabled={isGeneratingThis}
-                                  title={meta.buttonLabel}
-                                >
-                                  {isGeneratingThis ? (
-                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                  ) : (
-                                    <span>{isFood ? "🍔" : meta.icon}</span>
-                                  )}
-                                  <span>
-                                    {isGeneratingThis ? "Gerando..." : meta.buttonLabel}
-                                  </span>
-                                </button>
-                              );
-                            })()
+                            <button
+                              type="button"
+                              onClick={() => void handleGenerateDemo(company)}
+                              disabled={creatingPageId === company.id}
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-3 py-1.5 text-xs font-semibold shadow-sm transition-all cursor-pointer disabled:opacity-60"
+                              title="Gerar Prévia com IA Gemini e salvar no banco"
+                            >
+                              {creatingPageId === company.id ? (
+                                <>
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                  <span>Gerando Prévia...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                                  <span>Gerar Prévia</span>
+                                </>
+                              )}
+                            </button>
                           )}
+
+                          {/* 2. Botão 'Enviar no WhatsApp' */}
+                          <button
+                            type="button"
+                            onClick={() => void handleSendWhatsAppLead(company, demo.url)}
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition-all cursor-pointer ${
+                              company.status === "contatado"
+                                ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
+                                : demo.url
+                                  ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
+                                  : "border border-border/60 bg-transparent text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
+                            }`}
+                            title={
+                              company.status === "contatado"
+                                ? `Follow-up via WhatsApp com ${company.name}`
+                                : demo.url
+                                  ? `Enviar no WhatsApp com link da prévia para ${company.name}`
+                                  : `Enviar no WhatsApp para ${company.name}`
+                            }
+                          >
+                            <MessageCircle className="h-3.5 w-3.5 text-emerald-400" />
+                            <span>{company.status === "contatado" ? "Follow-up WhatsApp" : "Enviar no WhatsApp"}</span>
+                          </button>
+
+                          {/* Opções secundárias organizadas no DropdownMenu */}
                           {(() => {
                             const meta = getProspectNicheCategory(company.niche, company.name);
                             const isFood =
@@ -4087,251 +4074,85 @@ DIRETRIZES CRÍTICAS:
                                 };
 
                             return (
-                              <>
-                                <Link
-                                  to={editTo as any}
-                                  search={editSearch as any}
-                                  className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-blue-400 hover:border-blue-500/40 hover:bg-blue-500/10 transition-all"
-                                  title="Editar com IA"
-                                >
-                                  <Pencil className="h-3.5 w-3.5 text-muted-foreground/70" />
-                                  <span>Editar com IA</span>
-                                </Link>
-                                {isBarber && (
-                                  <Link
-                                    to={"/agenda" as any}
-                                    search={editSearch as any}
-                                    className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-violet-400 hover:border-violet-500/40 hover:bg-violet-500/10 transition-all"
-                                    title="Configurar agenda"
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    type="button"
+                                    className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+                                    title="Mais opções para este lead"
                                   >
-                                    <Sparkles className="h-3.5 w-3.5 text-violet-400" />
-                                    <span>Configurar agenda</span>
-                                  </Link>
-                                )}
-                              </>
-                            );
-                          })()}
-
-                          {!demo.url ? (
-                            <button
-                              type="button"
-                              disabled
-                              className="inline-flex items-center gap-1.5 rounded-lg border border-border/40 bg-muted/20 text-muted-foreground/50 px-2.5 py-1.5 text-xs font-medium cursor-not-allowed opacity-60"
-                              title="Gere o site demonstrativo primeiro para liberar o envio no WhatsApp"
-                            >
-                              <MessageCircle className="h-3.5 w-3.5 text-current" />
-                              <span>WhatsApp</span>
-                            </button>
-                          ) : whatsappLink(company, demo.url) ? (
-                            <a
-                              href={whatsappLink(company, demo.url)!}
-                              target="_blank"
-                              rel="noreferrer"
-                              onClick={(e) => {
-                                if (!canRunAction(`whats-${company.id}`)) {
-                                  e.preventDefault();
-                                  setFeedback(
-                                    `Aguarde ${remainingCooldown(`whats-${company.id}`)}s para enviar novamente para ${company.name}.`,
-                                  );
-                                }
-                              }}
-                              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
-                                company.status === "contatado"
-                                  ? "border border-amber-500/40 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/20 shadow-[0_0_12px_-3px_rgba(245,158,11,0.2)]"
-                                  : demo.url && (company.status === "novo")
-                                    ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
-                                    : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
-                              }`}
-                              title={company.status === "contatado" ? `Follow-up via WhatsApp com ${company.name}` : `Enviar proposta via WhatsApp para ${company.name}`}
-                            >
-                              <MessageCircle className="h-3.5 w-3.5 text-current" />
-                              <span>{company.status === "contatado" ? "Follow-up" : "WhatsApp"}</span>
-                            </a>
-                          ) : (
-                            <button
-                              type="button"
-                              onClick={() => setWhatsModalCompany(company)}
-                              className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-all ${
-                                demo.url && (company.status === "novo")
-                                  ? "border border-emerald-500/40 bg-emerald-500/15 text-emerald-400 font-semibold hover:bg-emerald-500/25 shadow-[0_0_14px_-3px_rgba(16,185,129,0.3)]"
-                                  : "border border-border/60 bg-transparent text-muted-foreground font-medium hover:text-emerald-400 hover:border-emerald-500/40 hover:bg-emerald-500/10"
-                              }`}
-                              title={`Definir WhatsApp e enviar proposta para ${company.name}`}
-                            >
-                              <MessageCircle className="h-3.5 w-3.5 text-current" />
-                              <span>WhatsApp</span>
-                            </button>
-                          )}
-
-                          <button
-                            type="button"
-                            onClick={() => void handleInstagramApproach(company)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-transparent text-muted-foreground px-2.5 py-1.5 text-xs font-medium hover:text-pink-400 hover:border-pink-500/40 hover:bg-pink-500/10 transition-all"
-                            title={
-                              copiedInstagramCompanyId === company.id
-                                ? "Mensagem copiada!"
-                                : company.instagram
-                                  ? `Copiar pitch e abrir Direct de @${cleanInstagramHandle(company.instagram)}`
-                                  : "Definir perfil e abrir Direct no Instagram com mensagem pronta"
-                            }
-                          >
-                            {copiedInstagramCompanyId === company.id ? (
-                              <Check className="h-3.5 w-3.5 text-emerald-400" />
-                            ) : (
-                              <Instagram className="h-3.5 w-3.5 text-muted-foreground/70" />
-                            )}
-                            <span>
-                              {copiedInstagramCompanyId === company.id
-                                ? "Copiado!"
-                                : "Direct IG"}
-                            </span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => setActiveAuditCompany(company)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 text-purple-400 hover:bg-purple-500/20 px-2.5 py-1.5 text-xs font-semibold transition-all shadow-xs"
-                            title={`Auditoria de Presença & Pitch com IA para ${company.name}`}
-                          >
-                            <Bot className="h-3.5 w-3.5" />
-                            <span>Auditoria IA</span>
-                          </button>
-
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                type="button"
-                                className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-border/60 text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
-                                title="Mais opções"
-                              >
-                                <MoreHorizontal className="h-4 w-4 text-muted-foreground/80" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-52">
-                              <DropdownMenuItem
-                                onClick={() => setActiveAuditCompany(company)}
-                                className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
-                              >
-                                <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
-                                <span>Auditoria com IA</span>
-                              </DropdownMenuItem>
-
-                              {/* Opção Trocar Modelo / Gerar Modelo universal para TODAS as empresas */}
-                              <DropdownMenuItem
-                                onClick={() => void handleRegenerateDemo(company)}
-                                  disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                                  className="cursor-pointer text-xs text-purple-300 hover:text-purple-200 focus:text-purple-200 focus:bg-purple-500/10 font-medium"
-                                >
-                                  {regeneratingPageId === company.id || creatingPageId === company.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-purple-400" />
-                                  ) : (
-                                    <RotateCcw className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                    <MoreHorizontal className="h-4 w-4 text-muted-foreground/80" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  <DropdownMenuItem asChild>
+                                    <Link to={editTo as any} search={editSearch as any} className="cursor-pointer text-xs flex items-center">
+                                      <Pencil className="h-3.5 w-3.5 mr-2 text-muted-foreground/70" />
+                                      <span>Editar com IA</span>
+                                    </Link>
+                                  </DropdownMenuItem>
+                                  {isBarber && (
+                                    <DropdownMenuItem asChild>
+                                      <Link to={"/agenda" as any} search={editSearch as any} className="cursor-pointer text-xs flex items-center text-violet-400">
+                                        <Sparkles className="h-3.5 w-3.5 mr-2 text-violet-400" />
+                                        <span>Configurar agenda</span>
+                                      </Link>
+                                    </DropdownMenuItem>
                                   )}
-                                  <span>
-                                    {regeneratingPageId === company.id
-                                      ? "Trocando modelo..."
-                                      : demo.url
-                                        ? "Trocar Modelo"
-                                        : "Gerar / Escolher Modelo"}
-                                  </span>
-                                </DropdownMenuItem>
-
-                                <DropdownMenuItem
-                                  onClick={() => handleOpenIdeation(company)}
-                                  className="cursor-pointer text-xs text-emerald-400 hover:text-emerald-300 font-semibold"
-                                >
-                                  <Sparkles className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                  <span>Ideação & Super Prompt ⚡</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => void handleGenerateSiteMaquina(company)}
-                                  disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                                  className="cursor-pointer text-xs text-sky-400 hover:text-sky-300 focus:text-sky-300 focus:bg-sky-500/10 font-medium"
-                                >
-                                  {creatingPageId === company.id ? (
-                                    <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-sky-400" />
-                                  ) : (
-                                    <Globe2 className="h-3.5 w-3.5 mr-2 text-sky-400" />
-                                  )}
-                                  <span>Gerar com Studio Pro (IA)</span>
-                                </DropdownMenuItem>
-
-                                {(() => {
-                                  const meta = getProspectNicheCategory(company.niche, company.name);
-                                  const isFood =
-                                    meta.category === "food" ||
-                                    /restaurante|pizzaria|hamburguer|lanche|lanchonete|cafeteria|a[cç]a[ií]|sorvete|gastronom|delivery|padaria|churrasc|japon[eê]s|sushi|doceria|confeitaria/i.test(
-                                      `${company.niche || ""} ${company.name || ""}`,
-                                    );
-                                  const isBarber =
-                                    meta.category === "barber" ||
-                                    /barbearia|barber|est[eé]tica|sal[aã]o|cl[ií]nica|beleza|sobrancelha|unha|manicure|odonto|dentista/i.test(
-                                      `${company.niche || ""} ${company.name || ""}`,
-                                    );
-                                  const editTo = isFood ? "/cardapio-studio" : "/studio-pro";
-                                  const editSearch = demo.pageId
-                                    ? { page: demo.pageId }
-                                    : {
-                                        name: company.name,
-                                        address: company.address || "",
-                                        whatsapp: company.whatsapp || company.phone || "",
-                                        niche: company.niche || "",
-                                      };
-
-                                  return (
-                                    <>
-                                      <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                        <Link to={editTo as any} search={editSearch as any}>
-                                          <Pencil className="h-3.5 w-3.5 mr-2 text-emerald-400" />
-                                          <span>Editar com IA</span>
-                                        </Link>
-                                      </DropdownMenuItem>
-                                      {isBarber && (
-                                        <DropdownMenuItem asChild className="cursor-pointer text-xs">
-                                          <Link to={"/agenda" as any} search={editSearch as any}>
-                                            <Sparkles className="h-3.5 w-3.5 mr-2 text-violet-400" />
-                                            <span>Configurar agenda</span>
-                                          </Link>
-                                        </DropdownMenuItem>
-                                      )}
-                                    </>
-                                  );
-                                })()}
-
-                                {demo.url && (
-                                  <>
-
-                                    
-
+                                  <DropdownMenuItem
+                                    onClick={() => void handleInstagramApproach(company)}
+                                    className="cursor-pointer text-xs text-pink-400 font-medium"
+                                  >
+                                    <Instagram className="h-3.5 w-3.5 mr-2 text-pink-400" />
+                                    <span>Direct IG</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => setActiveAuditCompany(company)}
+                                    className="cursor-pointer text-xs text-purple-400 font-medium"
+                                  >
+                                    <Bot className="h-3.5 w-3.5 mr-2 text-purple-400" />
+                                    <span>Auditoria IA</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => void handleEnrichInstagramPhotos(company)}
+                                    disabled={enrichingCompanyId === company.id}
+                                    className="cursor-pointer text-xs text-pink-400 font-medium"
+                                  >
+                                    {enrichingCompanyId === company.id ? (
+                                      <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin text-pink-400" />
+                                    ) : (
+                                      <Camera className="h-3.5 w-3.5 mr-2 text-pink-400" />
+                                    )}
+                                    <span>Puxar Fotos Reais (@IG)</span>
+                                  </DropdownMenuItem>
+                                  {demo.url && demo.pageId && (
                                     <DropdownMenuItem
-                                      onClick={() => handleOpenTransfer(company, demo.pageId || "", demo.url!)}
-                                      className="cursor-pointer text-xs"
+                                      onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
+                                      className="cursor-pointer text-xs text-emerald-400 font-medium"
                                     >
-                                      <Share2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                      <Share2 className="h-3.5 w-3.5 mr-2 text-emerald-400" />
                                       <span>Entregar / Transferir</span>
                                     </DropdownMenuItem>
-                                  </>
-                                )}
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                onClick={() => setActiveCompany(company)}
-                                className="cursor-pointer text-xs"
-                              >
-                                <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
-                                <span>Registrar Abordagem</span>
-                              </DropdownMenuItem>
-
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteCompany(company)}
-                                className="cursor-pointer text-xs text-rose-400 hover:text-rose-300 focus:text-rose-400 focus:bg-rose-500/10"
-                              >
-                                <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
-                                <span>Remover do Radar</span>
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                                  )}
+                                  <DropdownMenuItem
+                                    onClick={() => setActiveCompany(company)}
+                                    className="cursor-pointer text-xs"
+                                  >
+                                    <CheckCircle2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                                    <span>Registrar Abordagem</span>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteCompany(company)}
+                                    className="cursor-pointer text-xs text-rose-400 hover:text-rose-300 focus:text-rose-400 focus:bg-rose-500/10"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5 mr-2 text-rose-400" />
+                                    <span>Remover do Radar</span>
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            );
+                          })()}
                         </div>
                       </TableCell>
                     </TableRow>

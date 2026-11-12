@@ -15,22 +15,34 @@ function sanitizeProspectPayload(draft: ProspectDraft, userId: string | null) {
     notes = notes ? `${notes} · [Fotos: ${photoList}]` : `[Fotos: ${photoList}]`;
   }
 
+  const phoneValue = draft.phone ?? draft.telefone ?? draft.whatsapp ?? null;
+  const whatsappValue = draft.whatsapp ?? draft.telefone ?? draft.phone ?? null;
+  const ratingValue = typeof draft.rating === "number" ? draft.rating : (typeof draft.nota_google === "number" ? draft.nota_google : null);
+  const reviewsCountValue = typeof draft.reviews_count === "number" ? draft.reviews_count : (typeof draft.total_avaliacoes === "number" ? draft.total_avaliacoes : null);
+
   return {
     name: draft.name.trim(),
-    niche: draft.niche ?? null,
+    niche: draft.niche ?? draft.niche_slug ?? null,
+    niche_slug: draft.niche_slug ?? draft.niche ?? null,
     city: draft.city ?? null,
     state: draft.state ?? null,
-    phone: draft.phone ?? null,
-    whatsapp: draft.whatsapp ?? null,
+    phone: phoneValue,
+    telefone: draft.telefone ?? phoneValue,
+    whatsapp: whatsappValue,
     email: draft.email ?? null,
     instagram: draft.instagram ?? null,
     website: draft.website ?? null,
     has_website: Boolean(draft.has_website),
-    rating: typeof draft.rating === "number" ? draft.rating : null,
-    reviews_count: typeof draft.reviews_count === "number" ? draft.reviews_count : null,
+    endereco: draft.endereco ?? draft.address ?? null,
+    latitude: typeof draft.latitude === "number" ? draft.latitude : null,
+    longitude: typeof draft.longitude === "number" ? draft.longitude : null,
+    rating: ratingValue,
+    nota_google: typeof draft.nota_google === "number" ? draft.nota_google : ratingValue,
+    reviews_count: reviewsCountValue,
+    total_avaliacoes: typeof draft.total_avaliacoes === "number" ? draft.total_avaliacoes : reviewsCountValue,
     score: typeof draft.score === "number" ? draft.score : 0,
     priority: draft.priority ?? "media",
-    source: draft.source ?? "radar",
+    source: draft.source ?? "gemini-maps",
     status: draft.status ?? "novo",
     notes,
     dedupe_key: draft.dedupe_key,
@@ -174,6 +186,9 @@ export const ProspectingService = {
 
   async updateCompany(id: string, updates: Partial<ProspectedCompany>) {
     const { avatar_url, photos, biography, address, ...validPayload } = updates as Record<string, any>;
+    if (address && !validPayload.endereco) {
+      validPayload.endereco = address;
+    }
     const { error } = await supabase
       .from("prospected_companies")
       .update(validPayload as any)

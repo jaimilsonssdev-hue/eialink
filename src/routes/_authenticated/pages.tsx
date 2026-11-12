@@ -46,7 +46,9 @@ import {
   Share2,
   LayoutGrid,
   Layers,
+  Download,
 } from "lucide-react";
+import { downloadSiteHtml, downloadHtmlString } from "@/utils/exportSiteToHtml";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { PageService, type OwnedPage } from "@/modules/page/services/PageService";
@@ -417,6 +419,34 @@ function PagesWorkspace() {
     void navigator.clipboard.writeText(url);
     setCopiedSlug(slug);
     setTimeout(() => setCopiedSlug(null), 2000);
+  }
+
+  function handleDownloadPageHtml(page: OwnedPage) {
+    if (page.custom_html) {
+      downloadHtmlString(`${page.slug}-site.html`, page.custom_html);
+      return;
+    }
+
+    const social = (page.social_links as any) || {};
+    const modularConfig = social.modular_site_config;
+
+    downloadSiteHtml({
+      nome: page.display_name,
+      telefone: page.whatsapp || social.telefone || social.phone,
+      endereco: social.address || social.endereco,
+      latitude: social.latitude ? Number(social.latitude) : null,
+      longitude: social.longitude ? Number(social.longitude) : null,
+      niche_slug: social.niche_slug || social.niche,
+      palette: modularConfig?.palette,
+      hero_variant: modularConfig?.hero_variant,
+      services_variant: modularConfig?.services_variant,
+      headline: modularConfig?.headline || page.display_name,
+      subheadline: modularConfig?.subheadline || page.description,
+      services: modularConfig?.services,
+      photos: Array.isArray(social.google_photos) ? social.google_photos : null,
+      whatsapp_msg: modularConfig?.whatsapp_msg,
+      slug: page.slug,
+    });
   }
 
   async function handleMagicCreate(e: React.FormEvent) {
@@ -1108,7 +1138,18 @@ function PagesWorkspace() {
                         )}
                       </button>
 
-                      {/* 3. Editar no Studio (Admin) ou Editor Seguro (Lojista) */}
+                      {/* 3. Baixar HTML Standalone */}
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadPageHtml(activePage)}
+                        className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 text-xs font-semibold transition-all cursor-pointer shadow-xs"
+                        title="Baixar site em arquivo .html independente para hospedar externamente (Cloudflare Pages)"
+                      >
+                        <Download className="h-4 w-4" />
+                        <span className="hidden sm:inline">Baixar HTML</span>
+                      </button>
+
+                      {/* 4. Editar no Studio (Admin) ou Editor Seguro (Lojista) */}
                       {isAdmin ? (
                         <Link
                           to="/studio-pro"
@@ -1288,6 +1329,16 @@ function PagesWorkspace() {
                       >
                         <ExternalLink className="h-4 w-4" />
                       </a>
+
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadPageHtml(page)}
+                        className="inline-flex items-center justify-center rounded-xl border border-border bg-card hover:border-sky-500/40 hover:bg-sky-500/10 text-muted-foreground hover:text-sky-400 p-2 text-xs transition-colors"
+                        title="Baixar arquivo .html independente para hospedar externamente (Cloudflare Pages)"
+                        aria-label={`Baixar HTML de ${page.display_name}`}
+                      >
+                        <Download className="h-4 w-4" />
+                      </button>
 
                       {isAdmin && !(page.social_links as any)?.is_demo && (
                         <button

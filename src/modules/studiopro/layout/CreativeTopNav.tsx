@@ -16,7 +16,9 @@ import {
   Globe,
   Flame,
   Crown,
+  Download,
 } from "lucide-react";
+import { downloadHtmlString } from "@/utils/exportSiteToHtml";
 import { DesignStyleModal } from "@/modules/studiopro/editor/DesignStyleModal";
 import { SeoPanelModal } from "@/modules/studiopro/editor/SeoPanelModal";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
@@ -227,6 +229,32 @@ export function CreativeTopNav() {
     }
   }
 
+  const handleDownloadHtml = () => {
+    const html = activeProject?.html;
+    if (!html) {
+      toast.error("Nenhum conteúdo HTML gerado para exportar.");
+      return;
+    }
+    const baseSlug = (activeProject?.slug || activeProject?.name || "site")
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "");
+
+    let standaloneHtml = html;
+    if (!standaloneHtml.includes("cdn.tailwindcss.com")) {
+      standaloneHtml = standaloneHtml.replace(
+        /<head[^>]*>/i,
+        `$&\n  <script src="https://cdn.tailwindcss.com"></script>`,
+      );
+    }
+    standaloneHtml = standaloneHtml.replace(/<!--\s*EiaLink[\s\S]*?-->/gi, "");
+
+    downloadHtmlString(`${baseSlug || "site"}-site.html`, standaloneHtml);
+    toast.success("Site exportado com sucesso como arquivo .html independente!");
+  };
+
   return (
     <header className="h-12 bg-[#0a0a0f] border-b border-white/[0.08] flex items-center justify-between px-3 sm:px-4 fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center gap-2 sm:gap-3">
@@ -287,6 +315,18 @@ export function CreativeTopNav() {
         >
           <SlidersHorizontal size={13} className="text-emerald-400" />
           <span className="hidden sm:inline">Recursos</span>
+        </button>
+
+        {/* Botão Baixar HTML Standalone */}
+        <button
+          type="button"
+          onClick={handleDownloadHtml}
+          disabled={!hasHtml}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-sky-400 text-xs font-semibold transition-all border border-sky-500/30 shadow-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          title="Baixar página em arquivo .html independente (pronto para Cloudflare Pages)"
+        >
+          <Download size={13} />
+          <span className="hidden sm:inline">Baixar HTML</span>
         </button>
 
         <button

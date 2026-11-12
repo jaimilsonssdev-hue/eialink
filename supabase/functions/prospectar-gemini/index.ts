@@ -17,6 +17,29 @@ interface ProspectLeadItem {
   niche_slug: string;
 }
 
+const ALLOWED_NICHES = [
+  "clinica",
+  "odontologia",
+  "estetica",
+  "automotivo",
+  "climatizacao",
+  "servicos",
+] as const;
+
+type AllowedNiche = (typeof ALLOWED_NICHES)[number];
+
+function resolveAllowedNicheSlug(raw: unknown, fallback?: string): string {
+  const text = String(raw || fallback || "servicos").toLowerCase().trim();
+  const slug = slugify(text);
+  if (ALLOWED_NICHES.includes(slug as AllowedNiche)) return slug;
+  if (slug.includes("odont") || slug.includes("dent")) return "odontologia";
+  if (slug.includes("clinic") || slug.includes("medic") || slug.includes("saude") || slug.includes("terap")) return "clinica";
+  if (slug.includes("estet") || slug.includes("beleza") || slug.includes("salao") || slug.includes("barber") || slug.includes("unha") || slug.includes("sobrancelh")) return "estetica";
+  if (slug.includes("auto") || slug.includes("mecanic") || slug.includes("car") || slug.includes("oficina") || slug.includes("pneu")) return "automotivo";
+  if (slug.includes("clima") || slug.includes("ar") || slug.includes("refriger") || slug.includes("condicionad")) return "climatizacao";
+  return "servicos";
+}
+
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -164,7 +187,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const nicheSlug = slugify(niche);
+    const nicheSlug = resolveAllowedNicheSlug(niche);
 
     // Regra 2: Chave e modelo via Deno.env
     const apiKey = (await resolveApiKey()) || body?.apiKey?.trim();
@@ -182,45 +205,45 @@ Deno.serve(async (req) => {
     const modelEnv = Deno.env.get("GEMINI_MODEL")?.trim();
     const model = (modelEnv || "gemini-3.8-flash").replace(/^models\//, "");
 
-    // Regra 4: Prompt instruindo busca de empresas reais do nicho e cidade que NÃO tenham site próprio
+    // Regra: Prompt instruindo busca no Google de empresas reais sem domínio próprio (.com/.com.br)
     const prompt = `Você é um especialista em inteligência de prospecção comercial B2B.
-Sua tarefa é encontrar empresas REAIS e ATIVAS localizadas em "${city}" que operam no nicho/segmento de "${niche}" utilizando as ferramentas nativas do Google Maps e Google Search.
+Sua tarefa é encontrar empresas REAIS e ATIVAS localizadas em "${city}" que operam no nicho/segmento de "${niche}" utilizando a ferramenta de busca do Google (Google Search).
 
 CRITÉRIOS OBRIGATÓRIOS DE QUALIFICAÇÃO:
-1. As empresas encontradas NÃO PODEM ter site institucional próprio (domínio exclusivo como .com, .com.br).
+1. As empresas encontradas NÃO PODEM ter domínio próprio (.com, .com.br ou qualquer site institucional exclusivo).
 2. Aceite APENAS empresas sem website cadastrado, ou cujo único canal digital informado seja perfil do Instagram, Linktree ou link direto de WhatsApp.
-3. Não invente dados fictícios. Busque empresas reais presentes no Google Maps da cidade de "${city}".
+3. Não invente dados fictícios. Busque empresas reais presentes no Google e ativas na cidade de "${city}".
 
 FORMATO ESTRITO DE RESPOSTA:
 Retorne ESTRITAMENTE um objeto JSON válido (sem qualquer texto introdutório, sem explicações, sem formatação markdown fora do JSON):
 {
   "leads": [
     {
-      "nome": "Nome oficial da empresa",
+      "nome": "Nome comercial oficial da empresa",
       "telefone": "5511999998888",
       "endereco": "Endereço físico completo com logradouro, número e bairro",
       "latitude": -23.55052,
       "longitude": -46.633308,
-      "nota_google": 4.8,
-      "total_avaliacoes": 42,
-      "niche_slug": "${nicheSlug}"
+      "niche_slug": "${nicheSlug}",
+      "avaliacao": 4.8,
+      "total_avaliacoes": 42
     }
   ]
 }
 
 REGRAS DOS CAMPOS:
-- "nome": Nome comercial verificado da empresa.
-- "telefone": Número de telefone/WhatsApp com DDD no padrão 55 + DDD (2 dígitos) + número (8 ou 9 dígitos), apenas dígitos (ex: "5511987654321"). Se não encontrar, preencher com null.
+- "nome": Nome comercial oficial verificado da empresa.
+- "telefone": Número de telefone/WhatsApp com DDD no padrão 55 + DDD (2 dígitos) + número (8 ou 9 dígitos), APENAS NÚMEROS (ex: "5511987654321"). Se não encontrar, retorne null.
 - "endereco": Endereço físico completo com rua, número e bairro da cidade de ${city}.
 - "latitude": Coordenada numérica decimal de latitude (ex: -23.55052) ou null se não disponível.
 - "longitude": Coordenada numérica decimal de longitude (ex: -46.633308) ou null se não disponível.
-- "nota_google": Nota de avaliação dos clientes no Google (número de 1.0 a 5.0) ou null.
+- "niche_slug": Escolha ESTRITAMENTE entre: "clinica", "odontologia", "estetica", "automotivo", "climatizacao", "servicos".
+- "avaliacao": Nota de avaliação dos clientes no Google (número decimal de 1.0 a 5.0) ou null.
 - "total_avaliacoes": Quantidade total de avaliações recebidas no Google (inteiro) ou null.
-- "niche_slug": "${nicheSlug}".
 
-Encontre entre 5 e 15 empresas qualificadas que atendam a todos os critérios acima.`;
+Encontre entre 5 e 15 empresas qualificadas reais que atendam a todos os critérios acima.`;
 
-    // Regra 3: Ferramentas nativas tools: [{ googleMaps: {} }, { googleSearch: {} }] com temperature: 0.1
+    // Regra: Usar APENAS tools: [{ googleSearch: {} }] com temperature: 0.1 (combinar com googleMaps causa erro 400 no Gemini)
     const requestPayload = {
       contents: [
         {
@@ -228,7 +251,7 @@ Encontre entre 5 e 15 empresas qualificadas que atendam a todos os critérios ac
           parts: [{ text: prompt }],
         },
       ],
-      tools: [{ googleMaps: {} }, { googleSearch: {} }],
+      tools: [{ googleSearch: {} }],
       generationConfig: {
         temperature: 0.1,
       },
@@ -297,9 +320,9 @@ Encontre entre 5 e 15 empresas qualificadas que atendam a todos os critérios ac
         const endereco = item.endereco ? String(item.endereco).trim() : null;
         const latitude = parseCoordinate(item.latitude);
         const longitude = parseCoordinate(item.longitude);
-        const nota_google = parseRating(item.nota_google ?? item.rating);
+        const nota_google = parseRating(item.avaliacao ?? item.nota_google ?? item.rating);
         const total_avaliacoes = parseReviewsCount(item.total_avaliacoes ?? item.reviews_count);
-        const finalNicheSlug = item.niche_slug ? slugify(String(item.niche_slug)) : nicheSlug;
+        const finalNicheSlug = resolveAllowedNicheSlug(item.niche_slug, nicheSlug);
 
         return {
           nome,
@@ -338,12 +361,12 @@ Encontre entre 5 e 15 empresas qualificadas que atendam a todos os critérios ac
             reviews_count: lead.total_avaliacoes,
             total_avaliacoes: lead.total_avaliacoes,
             has_website: false,
-            source: "gemini-maps",
+            source: "gemini-search",
             priority: (lead.nota_google && lead.nota_google >= 4.5) ? "alta" : "media",
             status: "novo",
             score: Math.min(100, Math.round(((lead.nota_google || 4.0) * 15) + (lead.telefone ? 25 : 0))),
             dedupe_key: dedupeKey,
-            notes: `[Gemini + Maps] ${lead.endereco || ""}`.trim(),
+            notes: `[Gemini + Search] ${lead.endereco || ""}`.trim(),
           };
         });
 

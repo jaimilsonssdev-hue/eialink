@@ -33,7 +33,11 @@ import {
   LayoutList,
   Tag,
   Camera,
+  Download,
+  AlertCircle,
 } from "lucide-react";
+import { toast } from "sonner";
+import { downloadSiteHtml, downloadHtmlString } from "@/utils/exportSiteToHtml";
 
 import {
   DropdownMenu,
@@ -247,6 +251,7 @@ function ProspectingPage() {
   const [searchNiche, setSearchNiche] = useState("Clínica");
   const [searchCity, setSearchCity] = useState("Teixeira de Freitas, BA");
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
   const [scanVariationCount, setScanVariationCount] = useState(0);
   const [liveResults, setLiveResults] = useState<ProspectDraft[]>([]);
   const [liveSiteFilter, setLiveSiteFilter] = useState<"hot" | "no_website" | "has_website" | "high_rating" | "only_new" | "all">("hot");
@@ -691,6 +696,7 @@ function ProspectingPage() {
     const { niche, city } = validation.data;
     const pageToFetch = isNextPage ? scanVariationCount + 1 : 0;
     setIsSearching(true);
+    setSearchError(null);
     setFeedback(null);
 
     const SUBREGIONS = ["", "centro", "bairros", "comercial", "avenida", "zona sul", "zona norte"];
@@ -699,68 +705,79 @@ function ProspectingPage() {
     try {
       let results: ProspectDraft[] = [];
 
-      // Tentativa 1: Chamada da nova Edge Function prospectar-gemini com Gemini API, Google Maps e Search Grounding
-      try {
-        const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
-          "prospectar-gemini",
-          {
-            body: { niche, city, page: pageToFetch, saveToDatabase: true },
-          },
-        );
+      // Chamada da Edge Function prospectar-gemini com Gemini API e Google Search Grounding
+      const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
+        "prospectar-gemini",
+        {
+          body: { niche, city, page: pageToFetch, saveToDatabase: true },
+        },
+      );
 
-        if (edgeError) {
-          throw new Error(edgeError.message || "Erro na Edge Function prospectar-gemini");
+      let realErrorMessage = "";
+      if (edgeError) {
+        realErrorMessage = edgeError.message || "Erro na Edge Function prospectar-gemini";
+        if ("context" in edgeError && (edgeError as any).context) {
+          try {
+            const bodyJson = await (edgeError as any).context.json();
+            if (bodyJson?.error) {
+              realErrorMessage = bodyJson.error + (bodyJson.details ? `: ${bodyJson.details}` : "");
+            }
+          } catch {
+            try {
+              const bodyText = await (edgeError as any).context.text();
+              if (bodyText) realErrorMessage = bodyText;
+            } catch {
+              // fallback context text
+            }
+          }
         }
-
-        if (edgeData?.error) {
-          throw new Error(edgeData.error);
-        }
-
-        const rawList = Array.isArray(edgeData?.leads) ? edgeData.leads : [];
-        results = rawList.map((item: any) => {
-          const leadNome = (item.nome || "").trim();
-          const leadNiche = item.niche_slug || niche;
-          const leadPhone = item.telefone || null;
-          const dedupeKey = buildDedupeKey(leadNome, leadPhone || item.endereco || city);
-          const score = typeof item.nota_google === "number"
-            ? Math.min(100, Math.round((item.nota_google * 15) + (leadPhone ? 25 : 0)))
-            : 70;
-
-          return {
-            name: leadNome,
-            niche: leadNiche,
-            niche_slug: item.niche_slug || leadNiche,
-            city,
-            state: null,
-            phone: leadPhone,
-            telefone: leadPhone,
-            whatsapp: leadPhone,
-            email: null,
-            instagram: null,
-            website: null,
-            has_website: false,
-            endereco: item.endereco || null,
-            address: item.endereco || null,
-            latitude: typeof item.latitude === "number" ? item.latitude : null,
-            longitude: typeof item.longitude === "number" ? item.longitude : null,
-            rating: typeof item.nota_google === "number" ? item.nota_google : null,
-            nota_google: typeof item.nota_google === "number" ? item.nota_google : null,
-            reviews_count: typeof item.total_avaliacoes === "number" ? item.total_avaliacoes : null,
-            total_avaliacoes: typeof item.total_avaliacoes === "number" ? item.total_avaliacoes : null,
-            source: "gemini-maps",
-            score,
-            priority: score >= 80 ? "alta" : "media",
-            status: "novo" as const,
-            notes: item.endereco ? `[Google Maps Grounding] ${item.endereco}` : "[Google Maps Grounding]",
-            dedupe_key: dedupeKey,
-          };
-        });
-      } catch (geminiErr: any) {
-        console.warn("[Prospecção] Chamada da Edge Function prospectar-gemini falhou, tentando fallback RPC:", geminiErr);
-        results = await runLiveProspecting({
-          data: { niche, city, limit: 15, page: pageToFetch },
-        });
+      } else if (edgeData?.error) {
+        realErrorMessage = edgeData.error + (edgeData.details ? `: ${edgeData.details}` : "");
       }
+
+      if (realErrorMessage) {
+        throw new Error(realErrorMessage);
+      }
+
+      const rawList = Array.isArray(edgeData?.leads) ? edgeData.leads : [];
+      results = rawList.map((item: any) => {
+        const leadNome = (item.nome || "").trim();
+        const leadNiche = item.niche_slug || niche;
+        const leadPhone = item.telefone || null;
+        const dedupeKey = buildDedupeKey(leadNome, leadPhone || item.endereco || city);
+        const score = typeof item.nota_google === "number"
+          ? Math.min(100, Math.round((item.nota_google * 15) + (leadPhone ? 25 : 0)))
+          : 70;
+
+        return {
+          name: leadNome,
+          niche: leadNiche,
+          niche_slug: item.niche_slug || leadNiche,
+          city,
+          state: null,
+          phone: leadPhone,
+          telefone: leadPhone,
+          whatsapp: leadPhone,
+          email: null,
+          instagram: null,
+          website: null,
+          has_website: false,
+          endereco: item.endereco || null,
+          address: item.endereco || null,
+          latitude: typeof item.latitude === "number" ? item.latitude : null,
+          longitude: typeof item.longitude === "number" ? item.longitude : null,
+          rating: typeof item.nota_google === "number" ? item.nota_google : null,
+          nota_google: typeof item.nota_google === "number" ? item.nota_google : null,
+          reviews_count: typeof item.total_avaliacoes === "number" ? item.total_avaliacoes : null,
+          total_avaliacoes: typeof item.total_avaliacoes === "number" ? item.total_avaliacoes : null,
+          source: "gemini-search",
+          score,
+          priority: score >= 80 ? "alta" : "media",
+          status: "novo" as const,
+          notes: item.endereco ? `[Google Search Grounding] ${item.endereco}` : "[Google Search Grounding]",
+          dedupe_key: dedupeKey,
+        };
+      });
 
       // Salva imediatamente os leads na tabela de prospecção (prospected_companies)
       let importedCount = 0;
@@ -831,19 +848,22 @@ function ProspectingPage() {
       setSelectedLiveIndices(newIndices);
 
       if (results.length === 0) {
-        setFeedback(
-          "Nenhuma empresa sem site próprio encontrada no Google Maps para esses termos. Tente outro nicho (ex: Barbearia, Clínica, Restaurante) ou outra cidade.",
-        );
+        const noResultsMsg =
+          "Nenhuma empresa sem site próprio encontrada no Google para esses termos. Tente outro nicho (ex: Clínica, Barbearia, Restaurante) ou outra cidade.";
+        setFeedback(noResultsMsg);
+        toast.info(noResultsMsg);
       } else {
-        setFeedback(
-          isNextPage
-            ? `🔥 Próxima leva Gemini concluída! +${results.length} empresas analisadas (+${importedCount} novas salvas na tabela de prospecção).`
-            : `✨ Prospecção com Gemini & Google Maps concluída! ${results.length} empresa(s) qualificada(s) encontrada(s) e ${importedCount} nova(s) salva(s) na tabela de prospecção.`,
-        );
+        const okMsg = isNextPage
+          ? `🔥 Próxima leva Gemini concluída! +${results.length} empresas analisadas (+${importedCount} novas salvas na tabela de prospecção).`
+          : `✨ Prospecção com Gemini concluída! ${results.length} empresa(s) qualificada(s) encontrada(s) e ${importedCount} nova(s) salva(s) na tabela de prospecção.`;
+        setFeedback(okMsg);
+        toast.success(okMsg);
       }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Erro ao realizar a varredura.";
       setFeedback(message);
+      setSearchError(message);
+      toast.error(message, { duration: 7000 });
     } finally {
       setIsSearching(false);
     }
@@ -1262,6 +1282,66 @@ function ProspectingPage() {
     }
 
     setFeedback(`🚀 WhatsApp aberto para ${company.name}! O status foi marcado como 'Contatado'.`);
+  }
+
+  async function handleDownloadCompanyHtml(company: ProspectedCompany) {
+    const demo = parseDemoInfo(company);
+    let siteConfig: any = null;
+
+    if (demo.pageId) {
+      try {
+        const { data: page } = await supabase
+          .from("bio_pages")
+          .select("social_links, custom_html")
+          .eq("id", demo.pageId)
+          .maybeSingle();
+
+        if (page?.social_links && (page.social_links as any).modular_site_config) {
+          siteConfig = (page.social_links as any).modular_site_config;
+        } else if (page?.custom_html) {
+          const baseSlug = (demo.slug || company.name)
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[^a-z0-9]+/g, "-");
+          downloadHtmlString(`${baseSlug || "site"}-site.html`, page.custom_html);
+          setFeedback(`📥 Site de "${company.name}" exportado como HTML independente com sucesso!`);
+          return;
+        }
+      } catch (err) {
+        console.warn("[Prospeccao] Erro ao buscar config da bio_page para exportação:", err);
+      }
+    }
+
+    const detectedKey = detectNicheKey(company.niche_slug || company.niche, company.name);
+    const resolvedPalette = siteConfig?.palette || (
+      detectedKey === "odonto" ? "navy_blue" :
+      detectedKey === "estetica" ? "rose_nude" :
+      detectedKey === "automotivo" ? "dark_amber" :
+      detectedKey === "climatizacao" ? "navy_blue" : "emerald_gold"
+    );
+
+    downloadSiteHtml({
+      nome: company.name,
+      telefone: company.whatsapp || company.phone || (company as any).telefone,
+      endereco: company.endereco || company.address,
+      latitude: company.latitude,
+      longitude: company.longitude,
+      niche_slug: company.niche_slug || detectedKey,
+      palette: resolvedPalette,
+      hero_variant: siteConfig?.hero_variant || "hero_split",
+      services_variant: siteConfig?.services_variant || "grid_cards",
+      headline: siteConfig?.headline,
+      subheadline: siteConfig?.subheadline,
+      services: siteConfig?.services,
+      photos: company.photos,
+      nota_google: company.nota_google || company.rating,
+      total_avaliacoes: company.total_avaliacoes || company.reviews_count,
+      whatsapp_msg: siteConfig?.whatsapp_msg,
+      slug: demo.slug,
+    });
+
+    setFeedback(`📥 Site de "${company.name}" baixado como HTML independente (pronto para Cloudflare Pages)!`);
   }
 
   async function handleSpecializedGenerate(
@@ -2295,7 +2375,10 @@ DIRETRIZES CRÍTICAS:
                       <button
                         key={item.code}
                         type="button"
-                        onClick={() => setSearchNiche(item.niche)}
+                        onClick={() => {
+                          setSearchNiche(item.niche);
+                          if (searchError) setSearchError(null);
+                        }}
                         className={`px-2.5 py-1 rounded-full border text-[11px] whitespace-nowrap transition-all ${
                           searchNiche.toLowerCase().includes(item.niche.toLowerCase())
                             ? "border-primary bg-primary/15 text-primary dark:text-white font-semibold shadow-xs"
@@ -2308,13 +2391,34 @@ DIRETRIZES CRÍTICAS:
                     ))}
                   </div>
 
+                  {searchError && (
+                    <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-3.5 text-destructive flex items-start gap-2.5 animate-in fade-in">
+                      <AlertCircle className="h-5 w-5 shrink-0 mt-0.5 text-red-400" />
+                      <div className="flex-1 text-xs sm:text-sm">
+                        <p className="font-semibold text-red-200">Falha ao prospectar leads</p>
+                        <p className="text-red-300/90 mt-0.5 break-words font-mono text-xs">{searchError}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSearchError(null)}
+                        className="text-red-400 hover:text-red-200 text-xs p-1"
+                        aria-label="Fechar alerta de erro"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+
                   <form onSubmit={(e) => handleLiveSearch(e, false)} className="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                     <div className="sm:col-span-5">
                       <input
                         value={searchNiche}
-                        onChange={(e) => setSearchNiche(e.target.value)}
+                        onChange={(e) => {
+                          setSearchNiche(e.target.value);
+                          if (searchError) setSearchError(null);
+                        }}
                         placeholder="Nicho (ex: Clínica, Barbearia, Dentista)"
-                        className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors disabled:opacity-60"
                         disabled={isSearching}
                         required
                       />
@@ -2322,9 +2426,12 @@ DIRETRIZES CRÍTICAS:
                     <div className="sm:col-span-4">
                       <input
                         value={searchCity}
-                        onChange={(e) => setSearchCity(e.target.value)}
+                        onChange={(e) => {
+                          setSearchCity(e.target.value);
+                          if (searchError) setSearchError(null);
+                        }}
                         placeholder="Cidade (ex: São Paulo, SP)"
-                        className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors"
+                        className="w-full rounded-lg border border-border bg-background px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/40 transition-colors disabled:opacity-60"
                         disabled={isSearching}
                         required
                       />
@@ -2333,16 +2440,18 @@ DIRETRIZES CRÍTICAS:
                       <button
                         type="submit"
                         disabled={isSearching}
-                        className="w-full h-full min-h-[42px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white transition-all shadow-sm"
-                        title="Prospectar empresas reais sem site oficial usando Gemini 3.8 com Google Maps & Search Grounding"
+                        className="w-full h-full min-h-[44px] inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold bg-gradient-to-r from-primary to-indigo-600 hover:from-primary/90 hover:to-indigo-600/90 text-white transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer active:scale-[0.98]"
+                        title="Prospectar empresas reais sem domínio próprio usando Gemini com Google Search Grounding"
                       >
                         {isSearching ? (
                           <>
-                            <Loader2 className="h-4 w-4 animate-spin" /> Prospectando com Gemini...
+                            <Loader2 className="h-4 w-4 animate-spin text-white" />
+                            <span>Buscando com IA...</span>
                           </>
                         ) : (
                           <>
-                            <Sparkles className="h-4 w-4 text-amber-300" /> Prospectar com Gemini & Maps
+                            <Sparkles className="h-4 w-4 text-amber-300" />
+                            <span>Prospectar com Gemini</span>
                           </>
                         )}
                       </button>
@@ -2389,13 +2498,15 @@ DIRETRIZES CRÍTICAS:
               )}
 
               {isSearching && (
-                <div className="flex items-center gap-3 rounded-xl border border-border bg-background/40 p-4 text-sm text-muted-foreground animate-pulse">
+                <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 p-4 text-sm text-muted-foreground animate-pulse">
                   <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
                   <div>
-                    <p className="font-medium text-foreground text-xs sm:text-sm">
-                      Buscando empresas reais via Gemini com Google Maps e Google Search Grounding...
+                    <p className="font-semibold text-foreground text-xs sm:text-sm">
+                      Buscando empresas reais via Gemini com Google Search Grounding...
                     </p>
-                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">Identificando empresas sem site oficial, extraindo avaliações e telefones comerciais.</p>
+                    <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+                      Identificando empresas sem domínio próprio (.com / .com.br), extraindo telefones, endereços e avaliações.
+                    </p>
                   </div>
                 </div>
               )}
@@ -2481,11 +2592,11 @@ DIRETRIZES CRÍTICAS:
                         type="button"
                         disabled={isSearching}
                         onClick={() => handleLiveSearch(undefined, true)}
-                        className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-primary/15 hover:bg-primary/25 text-primary dark:text-white border border-primary/30 transition-all flex items-center gap-1.5 shadow-2xs"
-                        title="Avança para a próxima leva de variações/bairros sem repetir as que já vieram"
+                        className="rounded-lg px-3 py-1.5 text-xs font-semibold bg-primary/15 hover:bg-primary/25 text-primary dark:text-white border border-primary/30 transition-all flex items-center gap-1.5 shadow-2xs disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                        title="Avança para a próxima leva de variações sem repetir as que já vieram"
                       >
                         {isSearching ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCcw className="h-3 w-3" />}
-                        Buscar Mais (Próxima Leva)
+                        {isSearching ? "Buscando..." : "Buscar Mais (Próxima Leva)"}
                       </button>
 
                       <button
@@ -4004,6 +4115,15 @@ DIRETRIZES CRÍTICAS:
                                 )}
                                 <span>{regeneratingPageId === company.id ? "Trocando..." : "Trocar Modelo"}</span>
                               </button>
+                              <button
+                                type="button"
+                                onClick={() => void handleDownloadCompanyHtml(company)}
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-sky-500/30 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 px-2.5 py-1.5 text-xs font-semibold transition-all cursor-pointer shadow-xs"
+                                title="Baixar site em arquivo .html independente pronto para hospedar externamente"
+                              >
+                                <Download className="h-3.5 w-3.5 text-sky-400" />
+                                <span>Baixar HTML</span>
+                              </button>
                             </div>
                           ) : (
                             <button
@@ -4134,6 +4254,13 @@ DIRETRIZES CRÍTICAS:
                                       <span>Entregar / Transferir</span>
                                     </DropdownMenuItem>
                                   )}
+                                  <DropdownMenuItem
+                                    onClick={() => void handleDownloadCompanyHtml(company)}
+                                    className="cursor-pointer text-xs text-sky-400 font-medium"
+                                  >
+                                    <Download className="h-3.5 w-3.5 mr-2 text-sky-400" />
+                                    <span>Baixar HTML (Standalone)</span>
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => setActiveCompany(company)}
                                     className="cursor-pointer text-xs"

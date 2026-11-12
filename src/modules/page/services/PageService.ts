@@ -96,6 +96,7 @@ export const PageService = {
       notes?: string | null;
     },
     siteConfig: any,
+    siteHtml?: string | null,
   ): Promise<{ pageId: string; slug: string; url: string }> {
     const userId = await this.getCurrentUserId();
     const sanitizedName = company.name.trim();
@@ -112,6 +113,8 @@ export const PageService = {
       is_demo: true,
       demo_status: "published",
       modular_site_config: siteConfig,
+      site_html: siteHtml || null,
+      custom_html: siteHtml || null,
       company_id: company.id,
       address: company.endereco || company.address || null,
       endereco: company.endereco || company.address || null,

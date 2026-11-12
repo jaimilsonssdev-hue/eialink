@@ -639,10 +639,13 @@ function PublicBio() {
   const rawSocial = (bio.social_links as Record<string, any>) || {};
   const studioproConfig = (rawSocial.studiopro_config || rawSocial.studioproConfig) as SiteConfig | undefined;
   const isStudioPro = effectiveTemplateId === "studiopro" || Boolean(studioproConfig);
-  const customHtml =
-    ((bio as any).custom_html as string | undefined) ||
+  const siteHtml =
+    (rawSocial.site_html as string | undefined) ||
     (rawSocial.custom_html as string | undefined) ||
+    ((bio as any).custom_html as string | undefined) ||
+    ((bio.social_links as any)?.site_html as string | undefined) ||
     ((bio.social_links as any)?.custom_html as string | undefined);
+  const customHtml = siteHtml;
 
   const renderAiChatWidget = () => {
     if (!isAiChatActive || effectiveTemplateId === "ai-chat-agent") return null;
@@ -675,6 +678,26 @@ function PublicBio() {
       </>
     );
   };
+
+  // PRIORIDADE 0.8: Renderização direta do HTML completo retornado pela IA / Agência Digital
+  if (siteHtml && (effectiveTemplateId === "modular-site" || Boolean(rawSocial.site_html))) {
+    const preparedHtml = siteHtml.includes("<head>")
+      ? siteHtml.replace("<head>", `<head><base target="_top">`)
+      : `<base target="_top">${siteHtml}`;
+
+    return (
+      <div className="min-h-screen w-full overflow-x-hidden flex flex-col relative bg-background">
+        {isDemo && bio.display_name && <DemoConversionBanner companyName={bio.display_name} />}
+        <iframe
+          srcDoc={preparedHtml}
+          title={bio.display_name}
+          className="w-full flex-1 min-h-screen border-none block"
+          sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+        />
+        {renderAiChatWidget()}
+      </div>
+    );
+  }
 
   // PRIORIDADE 0.9: Modular Site Architecture (Regra 1, 2 e 3: Dados 100% determinísticos, fotos isoladas, design system)
   const modularSiteConfig = (rawSocial.modular_site_config || rawSocial.modularSiteConfig) as ModularSiteConfig | undefined;

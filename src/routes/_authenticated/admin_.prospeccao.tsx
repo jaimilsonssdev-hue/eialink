@@ -1081,9 +1081,10 @@ function ProspectingPage() {
     const pairedServices = nicheDirection.pairedServices;
 
     setFeedback(
-      `🚀 IA Criativa Gemini atuando como Diretora de Arte para ${company.name}...`,
+      `🎨 Agência Digital Gemini criando página de alta conversão para ${company.name}...`,
     );
 
+    let siteHtml: string | null = null;
     let siteConfig: any = null;
     try {
       const { data: edgeRes, error: edgeErr } = await supabase.functions.invoke(
@@ -1094,12 +1095,23 @@ function ProspectingPage() {
             niche: nicheText,
             city: company.city || "Brasil",
             niche_slug: company.niche_slug || detectedKey,
+            phone: cleanPhone || company.phone,
+            endereco: verifiedAddress || company.endereco,
+            latitude: company.latitude,
+            longitude: company.longitude,
+            nota_google: verifiedRating ? Number(verifiedRating) : company.nota_google,
+            total_avaliacoes: verifiedReviewsCount ? Number(verifiedReviewsCount) : company.total_avaliacoes,
           },
         },
       );
 
-      if (!edgeErr && edgeRes?.site_config) {
-        siteConfig = edgeRes.site_config;
+      if (!edgeErr && edgeRes) {
+        if (typeof edgeRes.html === "string" && edgeRes.html.trim().length > 100) {
+          siteHtml = edgeRes.html.trim();
+        }
+        if (edgeRes.site_config) {
+          siteConfig = edgeRes.site_config;
+        }
       }
     } catch (edgeCallErr) {
       console.warn("[Prospecção] Chamada de Edge Function gerar-site-gemini falhou:", edgeCallErr);
@@ -1130,7 +1142,7 @@ function ProspectingPage() {
       };
     }
 
-    // Registra ou atualiza no Supabase via PageService com dados 100% determinísticos
+    // Registra ou atualiza no Supabase via PageService salvando o HTML completo retornado pela IA
     const { pageId, slug, url } = await PageService.createOrUpdateModularSiteDemo(
       {
         ...company,
@@ -1142,6 +1154,7 @@ function ProspectingPage() {
         photos: realPhotos,
       },
       siteConfig,
+      siteHtml,
     );
 
     const cleanNotes = (company.notes || "")
@@ -1286,6 +1299,7 @@ function ProspectingPage() {
 
   async function handleDownloadCompanyHtml(company: ProspectedCompany) {
     const demo = parseDemoInfo(company);
+    let siteHtml: string | null = null;
     let siteConfig: any = null;
 
     if (demo.pageId) {
@@ -1296,21 +1310,27 @@ function ProspectingPage() {
           .eq("id", demo.pageId)
           .maybeSingle();
 
-        if (page?.social_links && (page.social_links as any).modular_site_config) {
-          siteConfig = (page.social_links as any).modular_site_config;
-        } else if (page?.custom_html) {
-          const baseSlug = (demo.slug || company.name)
-            .toLowerCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[^a-z0-9]+/g, "-");
-          downloadHtmlString(`${baseSlug || "site"}-site.html`, page.custom_html);
-          setFeedback(`📥 Site de "${company.name}" exportado como HTML independente com sucesso!`);
-          return;
+        const social = page?.social_links as any;
+        siteHtml = social?.site_html || social?.custom_html || page?.custom_html || null;
+        if (social?.modular_site_config) {
+          siteConfig = social.modular_site_config;
         }
       } catch (err) {
-        console.warn("[Prospeccao] Erro ao buscar config da bio_page para exportação:", err);
+        console.warn("[Prospeccao] Erro ao buscar HTML da bio_page para download:", err);
       }
+    }
+
+    const baseSlug = (demo.slug || company.name)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/[^a-z0-9]+/g, "-");
+
+    if (siteHtml) {
+      downloadHtmlString(`${baseSlug || "site"}-site.html`, siteHtml);
+      setFeedback(`📥 Site de "${company.name}" baixado com sucesso!`);
+      toast.success(`Site de "${company.name}" baixado com sucesso!`);
+      return;
     }
 
     const detectedKey = detectNicheKey(company.niche_slug || company.niche, company.name);

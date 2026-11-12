@@ -422,12 +422,13 @@ function PagesWorkspace() {
   }
 
   function handleDownloadPageHtml(page: OwnedPage) {
-    if (page.custom_html) {
-      downloadHtmlString(`${page.slug}-site.html`, page.custom_html);
+    const social = (page.social_links as any) || {};
+    const siteHtml = social.site_html || social.custom_html || page.custom_html;
+    if (siteHtml) {
+      downloadHtmlString(`${page.slug}-site.html`, siteHtml);
       return;
     }
 
-    const social = (page.social_links as any) || {};
     const modularConfig = social.modular_site_config;
 
     downloadSiteHtml({

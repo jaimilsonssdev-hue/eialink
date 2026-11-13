@@ -706,12 +706,47 @@ function ProspectingPage() {
       let results: ProspectDraft[] = [];
 
       // Chamada da Edge Function prospectar-gemini com Gemini API e Google Search Grounding
-      const { data: edgeData, error: edgeError } = await supabase.functions.invoke(
-        "prospectar-gemini",
-        {
-          body: { niche, city, page: pageToFetch, saveToDatabase: true },
-        },
-      );
+      let edgeData: any = null;
+      let edgeError: any = null;
+
+      try {
+        const res = await supabase.functions.invoke(
+          "prospectar-gemini",
+          {
+            body: { niche, city, page: pageToFetch, saveToDatabase: true },
+          },
+        );
+        edgeData = res.data;
+        edgeError = res.error;
+      } catch (invokeErr: any) {
+        edgeError = invokeErr;
+      }
+
+      // Se falhar a chamada padrão via cliente, tenta requisição direta e resiliente
+      if (edgeError || !edgeData) {
+        try {
+          const directRes = await fetch(
+            "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/prospectar-gemini",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM",
+              },
+              body: JSON.stringify({ niche, city, page: pageToFetch, saveToDatabase: true }),
+            },
+          );
+          if (directRes.ok) {
+            edgeData = await directRes.json();
+            edgeError = null;
+          } else {
+            const errBody = await directRes.json().catch(() => ({}));
+            edgeError = new Error(errBody?.error || `Falha HTTP ${directRes.status} na Edge Function prospectar-gemini.`);
+          }
+        } catch (fetchErr: any) {
+          if (!edgeError) edgeError = fetchErr;
+        }
+      }
 
       let realErrorMessage = "";
       if (edgeError) {
@@ -1087,23 +1122,64 @@ function ProspectingPage() {
     let siteHtml: string | null = null;
     let siteConfig: any = null;
     try {
-      const { data: edgeRes, error: edgeErr } = await supabase.functions.invoke(
-        "gerar-site-gemini",
-        {
-          body: {
-            name: company.name,
-            niche: nicheText,
-            city: company.city || "Brasil",
-            niche_slug: company.niche_slug || detectedKey,
-            phone: cleanPhone || company.phone,
-            endereco: verifiedAddress || company.endereco,
-            latitude: company.latitude,
-            longitude: company.longitude,
-            nota_google: verifiedRating ? Number(verifiedRating) : company.nota_google,
-            total_avaliacoes: verifiedReviewsCount ? Number(verifiedReviewsCount) : company.total_avaliacoes,
+      let edgeRes: any = null;
+      let edgeErr: any = null;
+      try {
+        const invokeResult = await supabase.functions.invoke(
+          "gerar-site-gemini",
+          {
+            body: {
+              name: company.name,
+              niche: nicheText,
+              city: company.city || "Brasil",
+              niche_slug: company.niche_slug || detectedKey,
+              phone: cleanPhone || company.phone,
+              endereco: verifiedAddress || company.endereco,
+              latitude: company.latitude,
+              longitude: company.longitude,
+              nota_google: verifiedRating ? Number(verifiedRating) : company.nota_google,
+              total_avaliacoes: verifiedReviewsCount ? Number(verifiedReviewsCount) : company.total_avaliacoes,
+            },
           },
-        },
-      );
+        );
+        edgeRes = invokeResult.data;
+        edgeErr = invokeResult.error;
+      } catch (invErr) {
+        edgeErr = invErr;
+      }
+
+      if (edgeErr || !edgeRes) {
+        try {
+          const directRes = await fetch(
+            "https://nitzhrmcbotdriajaxhw.supabase.co/functions/v1/gerar-site-gemini",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                apikey: "sb_publishable_wSndRFAjfVECz_RjpTa-LQ_qvKyX2GM",
+              },
+              body: JSON.stringify({
+                name: company.name,
+                niche: nicheText,
+                city: company.city || "Brasil",
+                niche_slug: company.niche_slug || detectedKey,
+                phone: cleanPhone || company.phone,
+                endereco: verifiedAddress || company.endereco,
+                latitude: company.latitude,
+                longitude: company.longitude,
+                nota_google: verifiedRating ? Number(verifiedRating) : company.nota_google,
+                total_avaliacoes: verifiedReviewsCount ? Number(verifiedReviewsCount) : company.total_avaliacoes,
+              }),
+            },
+          );
+          if (directRes.ok) {
+            edgeRes = await directRes.json();
+            edgeErr = null;
+          }
+        } catch (_fetchErr) {
+          // segue para fallback
+        }
+      }
 
       if (!edgeErr && edgeRes) {
         if (typeof edgeRes.html === "string" && edgeRes.html.trim().length > 100) {

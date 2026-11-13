@@ -269,12 +269,13 @@ Encontre entre 5 e 15 empresas qualificadas reais que atendam a todos os critér
       signal: AbortSignal.timeout(45_000),
     });
 
-    // Se o modelo principal falhar temporariamente por sobrecarga, usa fallback oficial permitido
+    // Se o modelo principal falhar temporariamente por sobrecarga (503) ou cota de Search Grounding esgotada (429)
     if (!response.ok && (response.status === 429 || response.status >= 500)) {
-      const fallbackModel = "gemini-3.5-flash";
-      console.warn(`[prospectar-gemini] ${model} retornou HTTP ${response.status}. Tentando fallback com ${fallbackModel}...`);
-      const fallbackEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/${fallbackModel}:generateContent`;
-      const fallbackResponse = await fetch(fallbackEndpoint, {
+      console.warn(`[prospectar-gemini] ${model} com googleSearch retornou HTTP ${response.status}. Ativando contingência inteligente...`);
+
+      // 1. Tenta gemini-3.5-flash com tools
+      const fallbackEndpoint1 = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent`;
+      const fallbackResponse1 = await fetch(fallbackEndpoint1, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -284,8 +285,53 @@ Encontre entre 5 e 15 empresas qualificadas reais que atendam a todos os critér
         signal: AbortSignal.timeout(45_000),
       }).catch(() => null);
 
-      if (fallbackResponse && fallbackResponse.ok) {
-        response = fallbackResponse;
+      if (fallbackResponse1 && fallbackResponse1.ok) {
+        response = fallbackResponse1;
+      } else {
+        // 2. Se for 429 (Search Grounding quota esgotada) ou 503, consulta sem tools usando o conhecimento profundo do modelo
+        const noToolsPayload = {
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json",
+          },
+        };
+
+        const liteEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent`;
+        const liteResponse = await fetch(liteEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": apiKey,
+          },
+          body: JSON.stringify(noToolsPayload),
+          signal: AbortSignal.timeout(35_000),
+        }).catch(() => null);
+
+        if (liteResponse && liteResponse.ok) {
+          response = liteResponse;
+        } else {
+          // 3. Fallback final: gemini-3.8-flash sem tools
+          const flashEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent`;
+          const flashResponse = await fetch(flashEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-goog-api-key": apiKey,
+            },
+            body: JSON.stringify(noToolsPayload),
+            signal: AbortSignal.timeout(35_000),
+          }).catch(() => null);
+
+          if (flashResponse && flashResponse.ok) {
+            response = flashResponse;
+          }
+        }
       }
     }
 

@@ -1,7 +1,6 @@
-project_id = "gctwvvnjcxnsjiovhmsv"
+project_id = "nitzhrmcbotdriajaxhw"
 
 [functions.gemini-gateway]
-# The function validates the legacy project's user JWT itself.
 verify_jwt = false
 
 [functions.prospectar-gemini]

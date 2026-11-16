@@ -8,46 +8,94 @@ import type {
 } from "./types";
 
 function sanitizeProspectPayload(draft: ProspectDraft, userId: string | null) {
-  let notes = draft.notes ?? null;
+  let notes = draft.notes ?? "";
+
+  // Incorpora fotos reais adicionais
   const extraPhotos = (draft as any).photos;
-  if (Array.isArray(extraPhotos) && extraPhotos.length > 0 && (!notes || !notes.includes("[Fotos:"))) {
+  if (Array.isArray(extraPhotos) && extraPhotos.length > 0 && !notes.includes("[Fotos:")) {
     const photoList = extraPhotos.slice(0, 12).join(" | ");
     notes = notes ? `${notes} · [Fotos: ${photoList}]` : `[Fotos: ${photoList}]`;
   }
 
+  // Preserva endereço em notes (coluna 'endereco' não existe fisicamente na tabela)
+  const enderecoVal = (draft.endereco || (draft as any).address || "").trim();
+  if (enderecoVal && !notes.includes("[Endereço:") && !notes.includes(enderecoVal)) {
+    notes = notes ? `${notes} · [Endereço: ${enderecoVal}]` : `[Endereço: ${enderecoVal}]`;
+  }
+
+  // Preserva coordenadas em notes (colunas 'latitude'/'longitude' não existem fisicamente na tabela)
+  if (
+    typeof draft.latitude === "number" &&
+    typeof draft.longitude === "number" &&
+    !notes.includes("[Geo:")
+  ) {
+    notes = notes
+      ? `${notes} · [Geo: ${draft.latitude},${draft.longitude}]`
+      : `[Geo: ${draft.latitude},${draft.longitude}]`;
+  }
+
   const phoneValue = draft.phone ?? draft.telefone ?? draft.whatsapp ?? null;
   const whatsappValue = draft.whatsapp ?? draft.telefone ?? draft.phone ?? null;
-  const ratingValue = typeof draft.rating === "number" ? draft.rating : (typeof draft.nota_google === "number" ? draft.nota_google : null);
-  const reviewsCountValue = typeof draft.reviews_count === "number" ? draft.reviews_count : (typeof draft.total_avaliacoes === "number" ? draft.total_avaliacoes : null);
+  const ratingValue =
+    typeof draft.rating === "number"
+      ? draft.rating
+      : typeof draft.nota_google === "number"
+      ? draft.nota_google
+      : null;
+  const reviewsCountValue =
+    typeof draft.reviews_count === "number"
+      ? draft.reviews_count
+      : typeof draft.total_avaliacoes === "number"
+      ? draft.total_avaliacoes
+      : null;
 
-  return {
+  const cleanScore =
+    typeof draft.score === "number"
+      ? Math.min(100, Math.max(0, Math.round(draft.score)))
+      : 0;
+  const cleanPriority = ["alta", "media", "baixa"].includes(
+    draft.priority as string,
+  )
+    ? draft.priority
+    : "media";
+  const cleanStatus = [
+    "novo",
+    "contatado",
+    "respondeu",
+    "reuniao",
+    "proposta",
+    "cliente",
+    "descartado",
+  ].includes(draft.status as string)
+    ? draft.status
+    : "novo";
+
+  const payload: Record<string, any> = {
     name: draft.name.trim(),
     niche: draft.niche ?? draft.niche_slug ?? null,
-    niche_slug: draft.niche_slug ?? draft.niche ?? null,
     city: draft.city ?? null,
     state: draft.state ?? null,
     phone: phoneValue,
-    telefone: draft.telefone ?? phoneValue,
     whatsapp: whatsappValue,
     email: draft.email ?? null,
     instagram: draft.instagram ?? null,
     website: draft.website ?? null,
     has_website: Boolean(draft.has_website),
-    endereco: draft.endereco ?? draft.address ?? null,
-    latitude: typeof draft.latitude === "number" ? draft.latitude : null,
-    longitude: typeof draft.longitude === "number" ? draft.longitude : null,
     rating: ratingValue,
-    nota_google: typeof draft.nota_google === "number" ? draft.nota_google : ratingValue,
     reviews_count: reviewsCountValue,
-    total_avaliacoes: typeof draft.total_avaliacoes === "number" ? draft.total_avaliacoes : reviewsCountValue,
-    score: typeof draft.score === "number" ? draft.score : 0,
-    priority: draft.priority ?? "media",
-    source: draft.source ?? "gemini-maps",
-    status: draft.status ?? "novo",
-    notes,
+    score: cleanScore,
+    priority: cleanPriority,
+    source: draft.source ?? "gemini-search",
+    status: cleanStatus,
+    notes: notes ? notes.trim() : null,
     dedupe_key: draft.dedupe_key,
-    created_by: userId,
   };
+
+  if (userId) {
+    payload.created_by = userId;
+  }
+
+  return payload;
 }
 
 export const ProspectingService = {
@@ -58,23 +106,70 @@ export const ProspectingService = {
       .order("score", { ascending: false })
       .order("created_at", { ascending: false });
     if (error) throw new Error(error.message);
-    const rows = (data ?? []) as ProspectedCompany[];
+    const rows = (data ?? []) as any[];
     return rows.map((c) => {
       let photos = c.photos;
       if ((!photos || photos.length === 0) && c.notes && c.notes.includes("[Fotos:")) {
         const match = c.notes.match(/\[Fotos:\s*([^\]]+)\]/);
         if (match) {
-          photos = match[1].split("|").map((p) => p.trim()).filter((p) => p.startsWith("http"));
+          photos = match[1].split("|").map((p: string) => p.trim()).filter((p: string) => p.startsWith("http"));
         }
       }
-      return { ...c, photos: photos || [] };
+
+      let endereco = c.endereco || null;
+      if (!endereco && c.notes) {
+        const addrMatch = c.notes.match(/\[(?:Endereço|Google Search Grounding|Gemini \+ Search):\s*([^\]]+)\]/i);
+        if (addrMatch) endereco = addrMatch[1].trim();
+      }
+
+      let latitude = typeof c.latitude === "number" ? c.latitude : null;
+      let longitude = typeof c.longitude === "number" ? c.longitude : null;
+      if ((latitude === null || longitude === null) && c.notes) {
+        const geoMatch = c.notes.match(/\[Geo:\s*([-\d.]+)\s*,\s*([-\d.]+)\]/i);
+        if (geoMatch) {
+          latitude = parseFloat(geoMatch[1]);
+          longitude = parseFloat(geoMatch[2]);
+        }
+      }
+
+      const phoneVal = c.phone || c.telefone || null;
+      const ratingVal =
+        typeof c.rating === "number"
+          ? c.rating
+          : typeof c.nota_google === "number"
+          ? c.nota_google
+          : null;
+      const reviewsVal =
+        typeof c.reviews_count === "number"
+          ? c.reviews_count
+          : typeof c.total_avaliacoes === "number"
+          ? c.total_avaliacoes
+          : null;
+
+      return {
+        ...c,
+        photos: photos || [],
+        endereco: endereco || null,
+        address: endereco || null,
+        latitude,
+        longitude,
+        phone: phoneVal,
+        telefone: phoneVal,
+        whatsapp: c.whatsapp || phoneVal,
+        niche: c.niche || c.niche_slug || null,
+        niche_slug: c.niche_slug || c.niche || "servicos",
+        rating: ratingVal,
+        nota_google: ratingVal,
+        reviews_count: reviewsVal,
+        total_avaliacoes: reviewsVal,
+      };
     });
   },
 
   async listDedupeKeys(): Promise<Set<string>> {
     const { data, error } = await supabase.from("prospected_companies").select("dedupe_key");
     if (error) throw new Error(error.message);
-    return new Set((data ?? []).map((row) => row.dedupe_key));
+    return new Set((data ?? []).map((row: any) => row.dedupe_key));
   },
 
   async listActivities(companyId: string): Promise<ProspectingActivity[]> {
@@ -185,13 +280,43 @@ export const ProspectingService = {
   },
 
   async updateCompany(id: string, updates: Partial<ProspectedCompany>) {
-    const { avatar_url, photos, biography, address, ...validPayload } = updates as Record<string, any>;
-    if (address && !validPayload.endereco) {
-      validPayload.endereco = address;
+    const {
+      avatar_url,
+      photos,
+      biography,
+      address,
+      endereco,
+      latitude,
+      longitude,
+      telefone,
+      niche_slug,
+      nota_google,
+      total_avaliacoes,
+      ...validPayload
+    } = updates as Record<string, any>;
+
+    let notes = validPayload.notes;
+    if (endereco && typeof notes === "string" && !notes.includes("[Endereço:")) {
+      notes = `${notes} · [Endereço: ${endereco}]`;
+      validPayload.notes = notes;
     }
+
+    if (niche_slug && !validPayload.niche) {
+      validPayload.niche = niche_slug;
+    }
+    if (telefone && !validPayload.phone) {
+      validPayload.phone = telefone;
+    }
+    if (nota_google !== undefined && validPayload.rating === undefined) {
+      validPayload.rating = nota_google;
+    }
+    if (total_avaliacoes !== undefined && validPayload.reviews_count === undefined) {
+      validPayload.reviews_count = total_avaliacoes;
+    }
+
     const { error } = await supabase
       .from("prospected_companies")
-      .update(validPayload as any)
+      .update(validPayload)
       .eq("id", id);
     if (error) throw new Error(error.message);
   },

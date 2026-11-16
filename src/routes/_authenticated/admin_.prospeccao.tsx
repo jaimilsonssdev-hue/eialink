@@ -481,18 +481,24 @@ function ProspectingPage() {
       ProspectingService.importMany(drafts),
     onSuccess: ({ inserted }) => {
       if (inserted > 0) {
-        setFeedback(`✅ ${inserted} empresa(s) importada(s) para o radar com sucesso!`);
+        const successMsg = `✅ ${inserted} empresa(s) importada(s) para o radar com sucesso!`;
+        setFeedback(successMsg);
+        toast.success(successMsg);
         // Remove dos resultados ao vivo apenas as empresas que estavam selecionadas e foram importadas
         setLiveResults((prev) => prev.filter((_, idx) => !selectedLiveIndices.has(idx)));
         setSelectedLiveIndices(new Set());
       } else {
-        setFeedback("⚠️ Nenhuma oportunidade nova foi inserida (as empresas selecionadas já existiam no Radar com o mesmo contato/nome).");
+        const infoMsg = "⚠️ Nenhuma oportunidade nova foi inserida (as empresas selecionadas já existiam no Radar com o mesmo contato/nome).";
+        setFeedback(infoMsg);
+        toast.info(infoMsg);
       }
       setPreview(null);
       invalidate();
     },
     onError: (error: Error) => {
-      setFeedback(`❌ Falha ao salvar no banco de dados: ${error.message}`);
+      const errMsg = `❌ Falha ao salvar no banco de dados: ${error.message}`;
+      setFeedback(errMsg);
+      toast.error(errMsg);
     },
   });
 

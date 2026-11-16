@@ -391,28 +391,25 @@ Encontre entre 5 e 15 empresas qualificadas reais que atendam a todos os critér
         const adminClient = createClient(supabaseUrl, serviceRoleKey);
         const rowsToInsert = leads.map((lead) => {
           const dedupeKey = `${slugify(lead.nome)}_${slugify(city)}_${lead.telefone || slugify(lead.endereco || "")}`.slice(0, 160);
+          let notes = `[Gemini + Search] ${lead.endereco || ""}`.trim();
+          if (typeof lead.latitude === "number" && typeof lead.longitude === "number") {
+            notes = `${notes} · [Geo: ${lead.latitude},${lead.longitude}]`;
+          }
           return {
             name: lead.nome,
             niche: lead.niche_slug || niche,
-            niche_slug: lead.niche_slug,
             city,
-            phone: lead.telefone,
-            telefone: lead.telefone,
-            whatsapp: lead.telefone,
-            endereco: lead.endereco,
-            latitude: lead.latitude,
-            longitude: lead.longitude,
-            rating: lead.nota_google,
-            nota_google: lead.nota_google,
-            reviews_count: lead.total_avaliacoes,
-            total_avaliacoes: lead.total_avaliacoes,
+            phone: lead.telefone || null,
+            whatsapp: lead.telefone || null,
+            rating: typeof lead.nota_google === "number" ? lead.nota_google : null,
+            reviews_count: typeof lead.total_avaliacoes === "number" ? lead.total_avaliacoes : null,
             has_website: false,
             source: "gemini-search",
             priority: (lead.nota_google && lead.nota_google >= 4.5) ? "alta" : "media",
             status: "novo",
             score: Math.min(100, Math.round(((lead.nota_google || 4.0) * 15) + (lead.telefone ? 25 : 0))),
             dedupe_key: dedupeKey,
-            notes: `[Gemini + Search] ${lead.endereco || ""}`.trim(),
+            notes,
           };
         });
 

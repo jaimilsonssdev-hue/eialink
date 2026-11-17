@@ -35,6 +35,7 @@ import {
   Camera,
   Download,
   AlertCircle,
+  Wand2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { downloadSiteHtml, downloadHtmlString } from "@/utils/exportSiteToHtml";

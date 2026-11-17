@@ -35,6 +35,7 @@ import {
 } from "@/modules/prospecting/geminiSiteStudio.service";
 import { PageService } from "@/modules/page/services/PageService";
 import { ProspectingService } from "@/modules/prospecting/ProspectingService";
+import { GeminiApiKeyModal } from "@/components/ai/GeminiApiKeyModal";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ProspectedCompany } from "@/modules/prospecting/types";
 
@@ -329,6 +330,7 @@ export function SiteIdeationModal({
           </div>
 
           <div className="flex items-center gap-2">
+            <GeminiApiKeyModal compact />
             {savedDemoUrl && (
               <a
                 href={savedDemoUrl}

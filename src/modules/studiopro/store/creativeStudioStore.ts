@@ -110,7 +110,7 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
     (set, get) => ({
       projects: [],
       activeProjectId: null,
-      mode: "plan",
+      mode: "build",
       isGenerating: false,
       statusMessage: "",
       previewDevice: "desktop",
@@ -153,7 +153,7 @@ export const useCreativeStudioStore = create<CreativeEngineState>()(
               id: `msg-${Date.now()}`,
               role: "assistant",
               content:
-                "Olá! Sou seu arquiteto de criação no Estúdio Criativo. Descreva a empresa ou envie um lead e eu vou planejar a estrutura ideal de alta conversão para você aprovar.",
+                "Olá! Sou o **Google Gemini 3.8 Flash** integrado ao EiaLink.\n\nMe diga o que você deseja criar ou qual empresa vamos transformar hoje — posso gerar uma demonstração completa do zero, aplicar os dados do Google Meu Negócio ou refinar cada detalhe visual em tempo real na tela ao lado.",
               timestamp: Date.now(),
             },
           ],

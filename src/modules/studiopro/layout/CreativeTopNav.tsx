@@ -25,6 +25,7 @@ import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudio
 import { syncCreativeStudioProjectFn } from "@/modules/studio/studio.functions";
 import { applyFeaturesToHtml } from "@/lib/eialinkFeatureRuntime";
 import { supabase } from "@/integrations/supabase/client";
+import { GeminiApiKeyModal } from "@/components/ai/GeminiApiKeyModal";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -277,9 +278,7 @@ export function CreativeTopNav() {
           <span className="text-xs font-semibold text-zinc-200 truncate max-w-[120px] sm:max-w-xs">
             {activeProject?.name || "Estúdio Criativo"}
           </span>
-          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-1.5 py-0.5 rounded-full uppercase hidden md:inline">
-            Gemini 3.8 Flash
-          </span>
+          <GeminiApiKeyModal compact />
         </div>
       </div>
 

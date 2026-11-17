@@ -1,5 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
-import { getGeminiApiKey } from "@/modules/studiopro/lib/creativeEngineService";
+import {
+  getGeminiApiKey,
+  resolveCreativeStudioApiKeyAsync,
+} from "@/modules/studiopro/lib/creativeEngineService";
+import { generateCreativeSiteFn } from "@/modules/studio/studio.functions";
 
 export interface GeminiSiteChatMessage {
   id: string;
@@ -32,7 +36,15 @@ export interface GenerateGeminiSiteResult {
 export async function generateGeminiSiteWithStudio(
   params: GenerateGeminiSiteParams,
 ): Promise<GenerateGeminiSiteResult> {
-  const clientKey = getGeminiApiKey();
+  // 1. Resolve a chave da API de forma assíncrona, sincronizando do Supabase Auth e Banco se necessário
+  let clientKey = getGeminiApiKey();
+  if (!clientKey) {
+    try {
+      clientKey = await resolveCreativeStudioApiKeyAsync();
+    } catch (err) {
+      console.warn("[geminiSiteStudio] Chave não resolvida localmente, prosseguindo com credenciais de servidor:", err);
+    }
+  }
 
   const payload = {
     name: params.name,
@@ -54,7 +66,7 @@ export async function generateGeminiSiteWithStudio(
   let resData: any = null;
   let lastErr: any = null;
 
-  // 1. Tenta via supabase.functions.invoke
+  // 1. Tenta via supabase.functions.invoke na Edge Function oficial
   try {
     const { data, error } = await supabase.functions.invoke("gerar-site-gemini", {
       body: payload,
@@ -94,6 +106,61 @@ export async function generateGeminiSiteWithStudio(
     }
   }
 
+  // 3. Fallback de altíssima segurança: Motor de Servidor (generateCreativeSiteFn)
+  // Caso a Edge Function não tenha a chave configurada em suas secrets de nuvem,
+  // aciona a função de servidor do TanStack Start que possui acesso direto aos bancos e credenciais!
+  if (!resData?.html) {
+    try {
+      console.info("[geminiSiteStudio] Acionando fallback resiliente via servidor Node.js...");
+      const fullPrompt = [
+        params.prompt || `Crie um site moderno e completo para ${params.name} (${params.niche}) em ${params.city}.`,
+        params.endereco ? `Endereço Google: ${params.endereco}` : "",
+        params.phone ? `WhatsApp: ${params.phone}` : "",
+        params.nota_google ? `Avaliação Google: ${params.nota_google} estrelas (${params.total_avaliacoes || 45} avaliações)` : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const serverRes = await generateCreativeSiteFn({
+        data: {
+          briefingOrPrompt: fullPrompt,
+          existingHtml: params.currentHtml || undefined,
+          projectName: params.name,
+          niche: params.niche,
+          city: params.city,
+          businessAddress: params.endereco || undefined,
+          businessWhatsapp: params.phone || undefined,
+          rating: params.nota_google ? Number(params.nota_google) : 4.9,
+          reviewsCount: params.total_avaliacoes ? Number(params.total_avaliacoes) : 45,
+          photos: params.photos || undefined,
+          apiKey: clientKey || undefined,
+          clientGeminiKey: clientKey || undefined,
+          conversationHistory: params.messages?.map((m) => ({
+            role: m.role === "assistant" || m.role === "model" ? "assistant" : "user",
+            content: m.content,
+          })),
+        },
+      });
+
+      if (serverRes?.html && serverRes.html.length > 50) {
+        resData = {
+          html: serverRes.html,
+          explanation: serverRes.explanation || "Site gerado pelo Google Gemini 3.8 Flash através do motor seguro de servidor.",
+          suggestions: [
+            "✨ Otimizar cores e tipografia editorial",
+            "💬 Adicionar botão de WhatsApp flutuante",
+            "⭐ Destacar depoimentos do Google",
+            "📍 Adicionar mapa interativo e horários",
+          ],
+          model: "gemini-3.8-flash",
+        };
+      }
+    } catch (serverErr) {
+      console.warn("[geminiSiteStudio] Falha no fallback de servidor:", serverErr);
+      if (!lastErr) lastErr = serverErr;
+    }
+  }
+
   if (resData?.html) {
     return {
       html: resData.html,
@@ -104,6 +171,6 @@ export async function generateGeminiSiteWithStudio(
   }
 
   throw new Error(
-    lastErr?.message || "Não foi possível gerar o site no momento. Tente novamente.",
+    lastErr?.message || "Não foi possível gerar o site no momento. Verifique sua chave da API do Google AI Studio.",
   );
 }

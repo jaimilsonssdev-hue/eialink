@@ -160,7 +160,7 @@ export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
       addChatMessage({
         id: `lead-init-${Date.now()}`,
         role: "assistant",
-        content: `Fala, mestre! 🚀 Já preparei o projeto da **${leadData.name}**.\n\n📌 **Dados coletados do Radar:**\n- **Nicho:** ${leadData.niche || "Geral"}\n- **WhatsApp:** ${leadData.whatsapp || "Não informado"}\n- **Local:** ${leadData.address || "Não informado"}\n\nComo você quer que eu monte essa página institucional? Quer focar em alta conversão no WhatsApp ou tem alguma preferência de estilo visual (Dark Sofisticado, Clean Moderno ou Minimalista)?`,
+        content: `Olá! Sou o **Google Gemini 3.8 Flash** integrado ao EiaLink.\n\nSincronizei a ficha do **Google Meu Negócio** de **${leadData.name}**:\n- 📍 **Endereço:** ${leadData.address || "Localizado no Google Maps"}\n- 📞 **WhatsApp:** ${leadData.whatsapp || "Disponível para conversão"}\n- 💼 **Nicho:** ${leadData.niche || "Comércio / Serviços"}\n\nJá posso gerar a demonstração completa agora mesmo na tela ao lado! Como prefere: clique em uma sugestão abaixo ou me envie suas instruções livres de estilo.`,
         timestamp: Date.now(),
       });
     }
@@ -235,7 +235,7 @@ export function StudioProApp({ pageId, leadData }: CreativeStudioAppProps) {
           addChatMessage({
             id: `welcome-${data.id}-${Date.now()}`,
             role: "assistant",
-            content: `👋 Olá! Carreguei o projeto de **${data.display_name}** (${data.slug}).\n\n📌 **Dados do Lead:**\n- **WhatsApp:** ${data.whatsapp || rawSocial.whatsapp || "Não informado"}\n- **Instagram:** ${data.instagram || rawSocial.instagram || "Não informado"}\n- **Nicho:** ${rawSocial.niche || "Geral"}\n\nA prévia já está visível na tela ao lado. Como gostaria de aprimorá-la? Você pode pedir alterações de layout, novos blocos, ajustar fotos e cores ou gerar um site 100% customizado!`,
+            content: `Olá! Sou o **Google Gemini 3.8 Flash**.\n\nCarreguei o projeto de **${data.display_name}** (${data.slug}).\n\n📌 **Dados do Lead:**\n- **WhatsApp:** ${data.whatsapp || rawSocial.whatsapp || "Não informado"}\n- **Instagram:** ${data.instagram || rawSocial.instagram || "Não informado"}\n- **Nicho:** ${rawSocial.niche || "Geral"}\n\nA prévia já está visível na tela ao lado. Como gostaria de aprimorá-la? Você pode pedir alterações livres de layout, novos blocos, ajustar fotos e cores ou gerar um site 100% customizado!`,
             timestamp: Date.now(),
           });
         }

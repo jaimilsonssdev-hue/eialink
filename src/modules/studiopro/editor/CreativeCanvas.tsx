@@ -15,6 +15,10 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Palette,
+  Sparkles,
+  MapPin,
+  Star,
+  Building2,
 } from "lucide-react";
 import { useCreativeStudioStore } from "@/modules/studiopro/store/creativeStudioStore";
 import { DesignStyleModal } from "@/modules/studiopro/editor/DesignStyleModal";
@@ -442,14 +446,61 @@ export function CreativeCanvas({ desktopChatOpen, onToggleDesktopChat }: Creativ
       {/* Área do Iframe */}
       <div className="flex-1 flex items-center justify-center p-2 md:p-4 overflow-hidden relative">
         <div
-          className={`h-full ${deviceWidths[previewDevice]} transition-all duration-300 rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.6)] bg-zinc-950 flex flex-col`}
+          className={`h-full ${deviceWidths[previewDevice]} transition-all duration-300 rounded-2xl overflow-hidden border border-white/[0.08] shadow-[0_20px_50px_rgba(0,0,0,0.6)] bg-zinc-950 flex flex-col relative`}
         >
-          <iframe
-            ref={iframeRef}
-            title="Prévia do Estúdio Criativo"
-            className="w-full h-full border-none bg-zinc-950"
-            sandbox="allow-scripts allow-same-origin allow-forms"
-          />
+          {html || activeProject?.slug ? (
+            <iframe
+              ref={iframeRef}
+              title="Prévia do Estúdio Criativo"
+              className="w-full h-full border-none bg-zinc-950"
+              sandbox="allow-scripts allow-same-origin allow-forms"
+            />
+          ) : (
+            <div className="w-full h-full flex flex-col items-center justify-center p-6 md:p-10 text-center bg-gradient-to-b from-[#0e0e14] to-[#08080c] select-none overflow-y-auto">
+              <div className="relative mb-6">
+                <div className="absolute -inset-4 bg-gradient-to-tr from-blue-500/25 via-purple-500/25 to-amber-500/25 rounded-full blur-2xl animate-pulse" />
+                <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 via-purple-500 to-amber-400 p-[2px] shadow-2xl">
+                  <div className="w-full h-full rounded-[14px] bg-zinc-950 flex items-center justify-center text-white">
+                    <Sparkles size={32} className="text-amber-300" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold mb-3">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Google Gemini 3.8 Flash • Canvas Ativo</span>
+              </div>
+
+              <h2 className="text-xl md:text-2xl font-bold text-white tracking-tight mb-2">
+                Demonstração em Tempo Real
+              </h2>
+              <p className="text-xs md:text-sm text-zinc-400 max-w-md mb-8 leading-relaxed">
+                Digite qualquer instrução no Copiloto à esquerda ou clique em <strong>"Google Meu Negócio"</strong> no topo para gerar o site ao vivo.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg text-left">
+                <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-white/10 hover:border-emerald-500/40 transition-colors">
+                  <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <MapPin size={13} className="text-amber-400" />
+                    <span>Google Meu Negócio</span>
+                  </p>
+                  <p className="text-[11px] text-zinc-400 mt-1">
+                    Endereço real, WhatsApp, avaliações e fotos coletadas do Google Maps.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-white/10 hover:border-emerald-500/40 transition-colors">
+                  <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-purple-400" />
+                    <span>Design Editorial & Luxo</span>
+                  </p>
+                  <p className="text-[11px] text-zinc-400 mt-1">
+                    Layout Awwwards, tipografia moderna e integração direta com WhatsApp.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

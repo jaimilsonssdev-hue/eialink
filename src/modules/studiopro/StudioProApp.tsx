@@ -92,28 +92,10 @@ function CreativeEditorView() {
 }
 
 function StudioContent({ pageId }: { pageId?: string }) {
-  const { pathname } = useLocation();
-  const navigate = useNavigate();
-
-  // Se veio com pageId e está na raiz inicial, direciona para o editor diretamente
-  useEffect(() => {
-    if (pageId && (pathname === "/" || pathname === "")) {
-      navigate("/editor");
-    }
-  }, [pageId]);
-
-  if (pathname === "/editor" || pathname.startsWith("/editor")) {
-    return (
-      <div className="flex flex-col h-screen w-screen overflow-hidden pt-12 bg-[#09090b]">
-        <CreativeTopNav />
-        <CreativeEditorView />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen w-screen bg-[#09090b]">
-      <CreativeDashboard />
+    <div className="flex flex-col h-screen w-screen overflow-hidden pt-12 bg-[#09090b]">
+      <CreativeTopNav />
+      <CreativeEditorView />
     </div>
   );
 }

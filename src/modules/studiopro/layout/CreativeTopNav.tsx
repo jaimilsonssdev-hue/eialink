@@ -26,6 +26,7 @@ import { syncCreativeStudioProjectFn } from "@/modules/studio/studio.functions";
 import { applyFeaturesToHtml } from "@/lib/eialinkFeatureRuntime";
 import { supabase } from "@/integrations/supabase/client";
 import { GeminiApiKeyModal } from "@/components/ai/GeminiApiKeyModal";
+import { GoogleBusinessLeadDrawer } from "@/modules/studiopro/components/GoogleBusinessLeadDrawer";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -45,6 +46,7 @@ export function CreativeTopNav() {
   const [showFeaturesModal, setShowFeaturesModal] = useState(false);
   const [showDesignModal, setShowDesignModal] = useState(false);
   const [showSeoModal, setShowSeoModal] = useState(false);
+  const [showGoogleLeads, setShowGoogleLeads] = useState(false);
   const [features, setFeatures] = useState({
     agenda_enabled: true,
     ai_concierge_enabled: true,
@@ -283,6 +285,17 @@ export function CreativeTopNav() {
       </div>
 
       <div className="flex items-center gap-2">
+        {/* Botão de Leads do Google Meu Negócio */}
+        <button
+          type="button"
+          onClick={() => setShowGoogleLeads(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-semibold transition-all border border-amber-500/30 shadow-xs cursor-pointer"
+          title="Escolher empresa prospectada no Google Meu Negócio para criar demonstração"
+        >
+          <MapPin size={13} className="text-amber-400" />
+          <span className="hidden sm:inline">Google Meu Negócio</span>
+        </button>
+
         {/* Botão de Design & Estilo Visual No-Code */}
         <button
           type="button"
@@ -598,6 +611,12 @@ export function CreativeTopNav() {
       <SeoPanelModal
         open={showSeoModal}
         onOpenChange={setShowSeoModal}
+      />
+
+      {/* Drawer de Leads do Google Meu Negócio */}
+      <GoogleBusinessLeadDrawer
+        open={showGoogleLeads}
+        onOpenChange={setShowGoogleLeads}
       />
     </header>
   );

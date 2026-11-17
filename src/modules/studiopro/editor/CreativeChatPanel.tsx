@@ -34,6 +34,7 @@ import {
 import { fetchPlaceDetailsFn } from "@/modules/prospecting/places.functions";
 import { normalizeBusinessQuery } from "@/modules/prospecting/normalizeBusinessLink";
 import { GeminiApiKeyModal } from "@/components/ai/GeminiApiKeyModal";
+import { GoogleBusinessLeadDrawer } from "@/modules/studiopro/components/GoogleBusinessLeadDrawer";
 import { toast } from "sonner";
 
 const QUICK_GEMINI_PROMPTS = [
@@ -66,6 +67,7 @@ export function CreativeChatPanel() {
   const [showMapsInput, setShowMapsInput] = useState(false);
   const [mapsQuery, setMapsQuery] = useState("");
   const [isSearchingMaps, setIsSearchingMaps] = useState(false);
+  const [showGoogleLeads, setShowGoogleLeads] = useState(false);
 
   const {
     getActiveProject,
@@ -75,6 +77,8 @@ export function CreativeChatPanel() {
     addChatMessage,
     updateActiveProjectHtml,
     updateActiveProjectMeta,
+    createProject,
+    selectProject,
   } = useCreativeStudioStore();
 
   const activeProject = getActiveProject();
@@ -402,6 +406,30 @@ export function CreativeChatPanel() {
         <GeminiApiKeyModal compact />
       </div>
 
+      {/* BARRA DE AÇÕES RÁPIDAS (NOVO SITE & CARREGAR LEAD) */}
+      <div className="px-3 py-2 border-b border-white/[0.06] bg-zinc-950/60 flex items-center justify-between gap-2 shrink-0">
+        <button
+          type="button"
+          onClick={() => {
+            const id = createProject("Nova Demonstração");
+            selectProject(id);
+            toast.success("Nova demonstração iniciada com Gemini!");
+          }}
+          className="flex-1 py-1.5 px-2 rounded-xl bg-zinc-900 hover:bg-zinc-850 border border-white/10 text-zinc-300 hover:text-white text-[11px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+        >
+          <span>+ Novo Site</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setShowGoogleLeads(true)}
+          className="flex-1 py-1.5 px-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[11px] font-semibold transition-all flex items-center justify-center gap-1 cursor-pointer shadow-xs"
+        >
+          <MapPin size={11} className="text-amber-400" />
+          <span>Google Meu Negócio</span>
+        </button>
+      </div>
+
       {/* CARD DE DADOS DO GOOGLE MEU NEGÓCIO (SE EXISTIR LEAD NO CONTEXTO) */}
       {googleBusinessData && (
         <div className="mx-3 mt-3 p-3 rounded-2xl bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 shadow-sm shrink-0">
@@ -679,6 +707,12 @@ export function CreativeChatPanel() {
           </div>
         </div>
       </div>
+
+      {/* Drawer de Leads do Google Meu Negócio */}
+      <GoogleBusinessLeadDrawer
+        open={showGoogleLeads}
+        onOpenChange={setShowGoogleLeads}
+      />
     </div>
   );
 }

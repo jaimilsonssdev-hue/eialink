@@ -277,6 +277,7 @@ function ProspectingPage() {
   const [enrichingCompanyId, setEnrichingCompanyId] = useState<string | null>(null);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [ideationLead, setIdeationLead] = useState<{
+    id?: string;
     name: string;
     niche: string;
     city: string;
@@ -286,6 +287,7 @@ function ProspectingPage() {
     reviews_count?: number | null;
     instagram?: string | null;
     photos?: string[];
+    company?: ProspectedCompany;
   } | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string>("");
 
@@ -297,15 +299,17 @@ function ProspectingPage() {
 
   function handleOpenIdeation(company: ProspectedCompany) {
     setIdeationLead({
+      id: company.id,
       name: company.name,
       niche: company.niche || "Geral",
       city: company.city || "",
-      whatsapp: company.whatsapp ?? company.phone ?? null,
-      address: company.address ?? null,
-      rating: company.rating ?? null,
-      reviews_count: company.reviews_count ?? null,
+      whatsapp: company.whatsapp ?? company.phone ?? (company as any).telefone ?? null,
+      address: company.address ?? (company as any).endereco ?? null,
+      rating: company.rating ?? (company as any).nota_google ?? null,
+      reviews_count: company.reviews_count ?? (company as any).total_avaliacoes ?? null,
       instagram: company.instagram ?? null,
       photos: (company as any).photos || [],
+      company,
     });
   }
   const [instaModalCompany, setInstaModalCompany] = useState<ProspectedCompany | null>(null);
@@ -2095,19 +2099,30 @@ DIRETRIZES CRÍTICAS:
                       )}
                     </>
                   ) : (
-                    <button
-                      className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-3 py-2 sm:py-1.5 text-xs font-semibold hover:bg-primary/25 shadow-[0_0_14px_-3px_rgba(168,85,247,0.4)] transition-all w-full sm:w-auto"
-                      onClick={() => void handleGenerateDemo(company)}
-                      disabled={creatingPageId === company.id}
-                      title="Gerar modelo demonstrativo para prospecção"
-                    >
-                      {creatingPageId === company.id ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary dark:text-white" />
-                      ) : (
-                        <Sparkles className="h-3.5 w-3.5 text-purple-300" />
-                      )}
-                      <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Demo 🪄"}</span>
-                    </button>
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto">
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 px-2.5 py-2 sm:py-1.5 text-xs font-semibold shadow-xs transition-all w-full sm:w-auto cursor-pointer"
+                        onClick={() => handleOpenIdeation(company)}
+                        title="Abrir o Copiloto Gemini (chat e prévia com dados do Google Meu Negócio)"
+                      >
+                        <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>Copiloto Gemini ✨</span>
+                      </button>
+                      <button
+                        className="inline-flex items-center justify-center gap-1 rounded-lg border border-primary/50 bg-primary/15 text-primary dark:text-white px-2.5 py-2 sm:py-1.5 text-xs font-semibold hover:bg-primary/25 shadow-xs transition-all w-full sm:w-auto"
+                        onClick={() => void handleGenerateDemo(company)}
+                        disabled={creatingPageId === company.id}
+                        title="Gerar modelo demonstrativo rápido em 1 clique"
+                      >
+                        {creatingPageId === company.id ? (
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-primary dark:text-white" />
+                        ) : (
+                          <Wand2 className="h-3.5 w-3.5 text-purple-300" />
+                        )}
+                        <span>{creatingPageId === company.id ? "Gerando..." : "Instantâneo 🪄"}</span>
+                      </button>
+                    </div>
                   )}
                   {(() => {
                     const meta = getProspectNicheCategory(company.niche, company.name);
@@ -3831,9 +3846,18 @@ DIRETRIZES CRÍTICAS:
                               </a>
                               <button
                                 type="button"
+                                onClick={() => handleOpenIdeation(company)}
+                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer"
+                                title="Ajustar e dar instruções ao Copiloto Gemini com prévia ao vivo"
+                              >
+                                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                                <span>Ajustar com Gemini</span>
+                              </button>
+                              <button
+                                type="button"
                                 onClick={() => void handleRegenerateDemo(company)}
                                 disabled={regeneratingPageId === company.id || creatingPageId === company.id}
-                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-3 py-2 text-xs font-semibold transition-all cursor-pointer disabled:opacity-60"
+                                className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/40 bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer disabled:opacity-60"
                                 title="Trocar modelo da demonstração"
                               >
                                 {regeneratingPageId === company.id ? (
@@ -3847,7 +3871,7 @@ DIRETRIZES CRÍTICAS:
                                 <button
                                   type="button"
                                   onClick={() => handleOpenTransfer(company, demo.pageId!, demo.url!)}
-                                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 px-3 py-2 text-xs font-semibold transition-all cursor-pointer"
+                                  className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-400 hover:bg-emerald-500/25 px-2.5 py-2 text-xs font-semibold transition-all cursor-pointer"
                                   title="Efetivar venda e transferir posse para a conta do cliente"
                                 >
                                   <UserCheck className="h-3.5 w-3.5" />
@@ -3856,20 +3880,31 @@ DIRETRIZES CRÍTICAS:
                               )}
                             </>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() => void handleGenerateDemo(company)}
-                              disabled={creatingPageId === company.id}
-                              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 px-3 py-2 text-xs font-semibold transition-all shadow-sm cursor-pointer disabled:opacity-60"
-                              title="Gerar Prévia com IA Gemini para este lead"
-                            >
-                              {creatingPageId === company.id ? (
-                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                              ) : (
-                                <Sparkles className="h-3.5 w-3.5 text-purple-300" />
-                              )}
-                              <span>{creatingPageId === company.id ? "Gerando..." : "Gerar Prévia"}</span>
-                            </button>
+                            <div className="flex items-center gap-1.5 w-full">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenIdeation(company)}
+                                className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/50 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 px-2.5 py-2 text-xs font-semibold transition-all shadow-sm cursor-pointer"
+                                title="Abrir Copiloto Gemini (chat e prévia com dados do Google Meu Negócio)"
+                              >
+                                <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+                                <span>Copiloto Gemini ✨</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void handleGenerateDemo(company)}
+                                disabled={creatingPageId === company.id}
+                                className="inline-flex items-center justify-center gap-1 rounded-lg border border-purple-500/50 bg-purple-500/15 text-purple-300 hover:bg-purple-500/25 px-2 py-2 text-xs font-semibold transition-all shadow-sm cursor-pointer disabled:opacity-60"
+                                title="Gerar Prévia Instantânea com IA Gemini"
+                              >
+                                {creatingPageId === company.id ? (
+                                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                ) : (
+                                  <Wand2 className="h-3.5 w-3.5 text-purple-300" />
+                                )}
+                                <span>{creatingPageId === company.id ? "Gerando..." : "Instantâneo"}</span>
+                              </button>
+                            </div>
                           )}
                           <Link
                             to={editTo as any}
@@ -4488,6 +4523,7 @@ DIRETRIZES CRÍTICAS:
         open={Boolean(ideationLead)}
         onOpenChange={(open) => !open && setIdeationLead(null)}
         lead={ideationLead}
+        onSavedDemo={() => invalidate()}
       />
     </div>
   );

@@ -372,6 +372,10 @@ Deno.serve(async (req) => {
     const endereco = (body?.endereco || body?.address || "").trim();
     const rating = typeof body?.nota_google === "number" ? body.nota_google : (typeof body?.rating === "number" ? body.rating : 4.9);
     const reviewsCount = typeof body?.total_avaliacoes === "number" ? body.total_avaliacoes : (typeof body?.reviews_count === "number" ? body.reviews_count : 48);
+    const customPrompt = (body?.prompt || body?.custom_instructions || body?.instructions || "").trim();
+    const currentHtml = (body?.current_html || body?.currentHtml || "").trim();
+    const photos: string[] = Array.isArray(body?.photos) ? body.photos.filter((p: unknown) => typeof p === "string" && (p as string).startsWith("http")) : [];
+    const chatHistory = Array.isArray(body?.messages) ? body.messages : [];
 
     if (!name) {
       return jsonResponse({ error: "O nome da empresa é obrigatório." }, 400);
@@ -395,6 +399,12 @@ Deno.serve(async (req) => {
         fallback: true,
         model: "deterministic-agency",
         html: fallbackHtml,
+        explanation: "Site gerado com o padrão de agência digital de alta conversão.",
+        suggestions: [
+          "Mudar para tema escuro e dourado",
+          "Adicionar tabela de preços dos serviços",
+          "Destacar mais as avaliações do Google",
+        ],
       });
     }
 
@@ -408,114 +418,132 @@ Deno.serve(async (req) => {
     const mapsEmbedUrl = `https://maps.google.com/maps?q=${mapsQuery}&z=16&output=embed`;
     const mapsSearchUrl = `https://www.google.com/maps/search/?api=1&query=${mapsQuery}`;
 
-    // Regra 2: Prompt de Design de Agência com regras rígidas de qualidade visual, contraste e zero imagens quebradas
-    const prompt = `Você é um Diretor de Arte e Desenvolvedor Front-end sênior de uma agência digital premiada de alta conversão.
-Sua missão é criar o código HTML5 + Tailwind CSS COMPLETO, moderno, luxuoso e de altíssima conversão para a seguinte empresa:
+    // Monta fotos reais do Google Meu Negócio se existirem
+    const photosContext = photos.length > 0
+      ? `\n- Fotos Reais do Google Meu Negócio / Instagram (${photos.length} fotos disponíveis): ${photos.slice(0, 6).join(", ")}`
+      : "";
 
-DADOS REAIS DA EMPRESA:
-- Nome da Empresa: "${name}"
-- Nicho de Atuação: "${niche}" (segmento: "${nicheSlug}")
+    let systemPrompt = "";
+    let userPrompt = "";
+
+    const isRefinement = Boolean(currentHtml && currentHtml.length > 100 && customPrompt);
+
+    if (isRefinement) {
+      // MODO COPILOTO / REFINAMENTO CONVERSACIONAL (Estilo Gemini / Claude Artifacts / ChatGPT Canvas)
+      systemPrompt = `Você é o Arquiteto Copiloto Especialista em Criação e Refinamento de Sites HTML5 do "Estúdio Criativo Gemini".
+Sua missão é atender com total liberdade criativa e máxima qualidade técnica as instruções do usuário para o site da empresa.
+
+DADOS REAIS DA EMPRESA (GOOGLE MEU NEGÓCIO):
+- Nome Oficial: "${name}"
+- Nicho / Especialidade: "${niche}" (${nicheSlug})
+- Cidade e Região: "${city}"
+- WhatsApp / Contato: "${phone || "Disponível no WhatsApp"}" (${waBaseUrl})
+- Endereço Físico Completo: "${endereco || city}"
+- Avaliação Google Oficial: ${rating} ★ (${reviewsCount} avaliações reais)
+- Google Maps Iframe: "${mapsEmbedUrl}"
+- Google Maps Rota: "${mapsSearchUrl}"${photosContext}
+
+DIRETRIZES DE REFINAMENTO:
+1. Aplique com perfeição as alterações solicitadas pelo usuário (ex: alterar cores, adicionar seções, ofertas, depoimentos, tabela de preços, botões de ação, FAQs, novos blocos).
+2. Mantenha o código HTML5 completo, responsivo com Tailwind CSS (CDN), limpo, moderno e sem dependências externas quebradas.
+3. Se for trocar paleta ou estilo, siga o padrão de agência premiada (WCAG AAA de alto contraste).
+4. Preserve o link oficial de WhatsApp (${waBaseUrl}) e iframe do Google Maps.
+
+FORMATO OBRIGATÓRIO DE RESPOSTA:
+<<<EXPLANATION>>>
+Escreva uma resposta conversacional e simpática no chat (em português do Brasil) explicando o que você criou/ajustou no site conforme as instruções.
+<<<HTML>>>
+<!DOCTYPE html>
+<html lang="pt-BR">
+... código HTML5 completo e funcional ...
+</html>
+<<<END_HTML>>>
+<<<SUGGESTIONS>>>
+["Sugestão 1 de melhoria", "Sugestão 2 de melhoria", "Sugestão 3 de melhoria"]
+<<<END_SUGGESTIONS>>>`;
+
+      userPrompt = `CÓDIGO HTML ATUAL DO SITE:
+${currentHtml}
+
+INSTRUÇÕES DO USUÁRIO:
+"${customPrompt}"
+
+Aplique as instruções solicitadas e retorne a explicação, o código HTML5 completo atualizado e 3 novas sugestões no formato estrito.`;
+    } else {
+      // MODO GERAÇÃO INICIAL COM MÁXIMA LIBERDADE CRIATIVA E PADRÃO DE AGÊNCIA
+      systemPrompt = `Você é o Diretor de Arte e Desenvolvedor Front-end sênior de uma agência digital premiada de alta conversão.
+Sua missão é criar um site HTML5 + Tailwind CSS COMPLETO, moderno, luxuoso e de altíssima conversão para a empresa a partir dos dados do Google Meu Negócio e das instruções fornecidas.
+
+DADOS REAIS DA EMPRESA (GOOGLE MEU NEGÓCIO):
+- Nome Oficial: "${name}"
+- Nicho / Segmento: "${niche}" (${nicheSlug})
 - Cidade / Região: "${city}"
 - Telefone / WhatsApp: "${phone || "Disponível no WhatsApp"}"
 - Endereço Físico Completo: "${endereco || city}"
-- Avaliação Google: ${rating} ★ (${reviewsCount} avaliações no Google)
+- Avaliação Google Oficial: ${rating} ★ (${reviewsCount} avaliações no Google)
 - Link WhatsApp Direto: "${waBaseUrl}"
 - Iframe Oficial Google Maps: "${mapsEmbedUrl}"
-- Link Botão Como Chegar Google Maps: "${mapsSearchUrl}"
+- Link Botão Como Chegar Google Maps: "${mapsSearchUrl}"${photosContext}
 
-DIRETRIZES RÍGIDAS DE ARQUITETURA E QUALIDADE VISUAL:
+DIRETRIZES DE ARQUITETURA E QUALIDADE VISUAL:
+1. HEAD & TIPOGRAFIA:
+   - Inclua no <head> meta viewport, title "${name} | Site Oficial", Tailwind CDN (https://cdn.tailwindcss.com), fontes Inter e Plus Jakarta Sans via Google Fonts.
+   - Script Tailwind estendendo as fontes 'sans' e 'display'.
+2. PALETA ADAPTATIVA COM CONTRASTE WCAG AAA:
+   - Se Saúde/Odonto/Clínica: Fundo claro (#F8FAFC), cards brancos, texto escuro (#0F172A), destaques em Esmeralda/Teal ou Azul Real.
+   - Se Automotivo/Mecânica/Barbearia/Climatização/Engenharia: Dark premium (#09090B / bg-zinc-950), cards #18181B, texto branco puro, acentos em Âmbar/Dourado (#F59E0B).
+   - Se Estética/Beleza/Spa: Fundo claro luxuoso ou dark champagne, acentos em Rose Nude/Dourado suave.
+   - NUNCA coloque texto claro sobre fundo claro ou texto escuro sobre fundo escuro.
+3. ZERO IMAGENS QUEBRADAS:
+   - Use gradientes modernos, cards com efeito vidro fosco (backdrop-blur-md), badges oficiais do Google (${rating} ★ com ${reviewsCount} avaliações) e ícones SVG inline estilizados para cada diferencial e serviço.
+   ${photos.length > 0 ? `- Se desejar usar imagens reais, use EXCLUSIVAMENTE as fotos fornecidas: ${photos.slice(0, 4).join(", ")}.` : "- É PROIBIDO inventar URLs aleatórias de imagens externas."}
+4. ESTRUTURA COMPLETA DE CONVERSÃO:
+   - Header Fixo com indicador de atendimento aberto em ${city} e botão de WhatsApp.
+   - Hero Section com badge de confiança Google, headline magnética, subheadline e CTA principal para WhatsApp (${waBaseUrl}).
+   - Seção de Métricas / Números de credibilidade (Nota ${rating} ★ no Google, Atendimento Ágil, etc.).
+   - Grid com 4 a 6 Serviços Específicos com cards, descrições persuasivas e botões individuais de WhatsApp.
+   - Seção de Localização "Onde Estamos" com endereço completo e iframe responsivo Google Maps (${mapsEmbedUrl}) + botão "Como Chegar" (${mapsSearchUrl}).
+   - Botão flutuante de WhatsApp fixo no canto inferior direito.
+   - Rodapé 100% white-label sem marca d'água de IA.
 
-1. SAÍDA EXCLUSIVAMENTE EM HTML:
-   Retorne EXCLUSIVAMENTE o código HTML5 completo (começando em <!DOCTYPE html> e terminando em </html>).
-   NÃO inclua explicações, NÃO inclua texto introdutório e NÃO envolva a resposta em blocos de markdown (\`\`\`html ou \`\`\`). Apenas o código HTML puro.
+FORMATO OBRIGATÓRIO DE RESPOSTA:
+<<<EXPLANATION>>>
+Escreva uma apresentação simpática e objetiva no chat explicando a estratégia visual e de conversão adotada para a empresa.
+<<<HTML>>>
+<!DOCTYPE html>
+<html lang="pt-BR">
+... código HTML5 completo e autocontido ...
+</html>
+<<<END_HTML>>>
+<<<SUGGESTIONS>>>
+["Sugestão 1 de melhoria", "Sugestão 2 de melhoria", "Sugestão 3 de melhoria"]
+<<<END_SUGGESTIONS>>>`;
 
-2. HEAD & TIPOGRAFIA DE LUXO:
-   - Inclua no <head>:
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>${name} | Site Oficial</title>
-     <script src="https://cdn.tailwindcss.com"></script>
-     <link rel="preconnect" href="https://fonts.googleapis.com">
-     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
-     <script>
-       tailwind.config = {
-         theme: {
-           extend: {
-             fontFamily: {
-               sans: ['Inter', 'sans-serif'],
-               display: ['Plus Jakarta Sans', 'sans-serif']
-             }
-           }
-         }
-       }
-     </script>
-     <style>
-       html { scroll-behavior: smooth; }
-       body { font-family: 'Inter', sans-serif; }
-       h1, h2, h3, h4, .font-display { font-family: 'Plus Jakarta Sans', sans-serif; }
-     </style>
+      userPrompt = customPrompt
+        ? `Por favor, crie o site oficial para a empresa "${name}" considerando os dados do Google Meu Negócio e as seguintes instruções personalizadas: "${customPrompt}".`
+        : `Por favor, crie o site oficial completo e de alta conversão para a empresa "${name}" utilizando todos os dados do Google Meu Negócio.`;
+    }
 
-3. PALETA ADAPTATIVA AO NICHO COM CONTRASTE ABSOLUTO (SEM ERROS DE LEITURA):
-   - Se o nicho for Saúde, Odontologia ou Clínica:
-     * Fundo geral: Claro (#F8FAFC / bg-slate-50).
-     * Cards: Brancos (#FFFFFF / bg-white) com bordas sutis (border border-slate-200/80) e sombra suave (shadow-sm hover:shadow-md).
-     * Texto: Escuro (#0F172A / text-slate-900) e subtítulos (#475569 / text-slate-600).
-     * Destaques / Acentos: Esmeralda (#0D9488 / text-teal-600 / bg-teal-600) ou Azul (#2563EB / text-blue-600 / bg-blue-600).
-   - Se o nicho for Estética Automotiva, Oficina, Barbearia, Climatização, Engenharia ou Industrial:
-     * Fundo geral: Dark premium profundo (#09090B / bg-zinc-950).
-     * Cards: #18181B (bg-zinc-900/90) com bordas elegantes (#27272A / border border-zinc-800) e leve reflexo.
-     * Texto: Branco puro (#FAFAFA / text-zinc-50) e subtítulos (#A1A1AA / text-zinc-400).
-     * Destaques / Acentos: Âmbar/Dourado (#F59E0B / text-amber-500 / bg-amber-500) ou Dourado (#D97706).
-   - Se for Estética Feminina, Beleza ou Spa:
-     * Fundo claro premium (#FAFAF9) ou dark luxuoso, acentos em rose nude/champagne (#E11D48 ou #BE185D ou dourado suave).
-   - REGRA DE OURO DO CONTRASTE: NUNCA coloque texto claro em fundo claro e NUNCA coloque texto escuro em fundo escuro. Todo texto deve ter legibilidade imediata (WCAG AAA).
+    // Monta o histórico de chat formatado para a API do Gemini
+    const contents: any[] = [];
+    if (chatHistory.length > 0) {
+      for (const m of chatHistory.slice(-8)) {
+        contents.push({
+          role: m.role === "assistant" || m.role === "model" ? "model" : "user",
+          parts: [{ text: m.content }],
+        });
+      }
+    }
+    contents.push({
+      role: "user",
+      parts: [{ text: userPrompt }],
+    });
 
-4. ZERO IMAGENS QUEBRADAS (REGRA CRÍTICA):
-   - É TOTALMENTE PROIBIDO inventar URLs de imagens externas (URLs de unsplash.com/photo-... inventadas quebram e exibem erro 404).
-   - O visual deve ser construído usando:
-     * Gradientes modernos em Tailwind (ex: bg-gradient-to-br from-teal-500/10 via-transparent to-blue-500/10).
-     * Cards modernos com efeito vidro fosco (backdrop-blur-md bg-opacity).
-     * Badges de avaliação oficial do Google com estrelas douradas SVG (${rating} ★) e contador de avaliações reais (${reviewsCount}).
-     * Ícones SVG vetoriais inline estilizados (com stroke-width="2", viewBox="0 0 24 24", fill="none", stroke="currentColor") para cada serviço e diferencial.
-     * Tipografia forte e microinterações com hover e transições suaves.
-     Isso garante que 100% dos elementos visuais carreguem perfeitamente em qualquer dispositivo sem depender de servidores de imagens externos.
-
-5. ESTRUTURA COMPLETA DE CONVERSÃO:
-   - Header Fixo (Sticky/Nav):
-     * Nome da empresa em tipografia destacada com logotipo vetorial ou monograma elegante.
-     * Indicador discreto "● Atendimento Aberto em ${city}" com ponto verde pulsante.
-     * Botão direto de WhatsApp em destaque com ícone SVG.
-   - Hero Section Impactante:
-     * Badge de confiança no topo: "★ ${rating} no Google · Referência em ${city}".
-     * Headline magnética e persuasiva voltada para o cliente (máx 70 caracteres).
-     * Subheadline clara explicando os benefícios exclusivos e agilidade no atendimento (máx 140 caracteres).
-     * Botão CTA principal chamativo: "Agendar pelo WhatsApp" abrindo "${waBaseUrl}?text=${encodeURIComponent(`Olá! Gostaria de mais informações sobre os serviços da ${name}.`)}" com ícone de WhatsApp.
-     * Botão secundário de rolagem suave para "#servicos" ou "#localizacao".
-   - Seção de Diferenciais / Prova Social (Números):
-     * Grid com 3 a 4 métricas de credibilidade (ex: "Nota ${rating} ★ no Google", "Atendimento Ágil", "Garantia e Qualidade", "Profissionais Certificados").
-   - Seção de Serviços (Grid com 4 a 6 Serviços Específicos do Nicho):
-     * Cada serviço com card bem trabalhado, ícone SVG temático de alta qualidade, título claro, descrição de benefício persuasiva e botão individual: "Solicitar este Serviço" abrindo o WhatsApp com mensagem pré-preenchida.
-   - Seção de Localização e Como Chegar:
-     * Título "Onde Estamos" e endereço completo "${endereco || city}".
-     * Iframe responsivo com borda arredondada e sombra carregando "${mapsEmbedUrl}".
-     * Botão "Abrir no Google Maps / Como Chegar" com link para "${mapsSearchUrl}" e target="_blank".
-   - Botão Flutuante de WhatsApp:
-     * Botão fixo no canto inferior direito com pulsação suave e ícone oficial de WhatsApp, abrindo "${waBaseUrl}".
-   - Rodapé Limpo e Profissional:
-     * Nome da empresa, nicho, endereço completo, telefone e copyright "© ${new Date().getFullYear()} ${name}. Todos os direitos reservados."
-     * PROIBIÇÃO ABSOLUTA: NUNCA mencione "Eia Link", "Inteligência Artificial", "Gemini", "Criado por IA" ou qualquer marca d'água de agência geradora. O site é 100% white-label para a empresa ${name}.
-
-Gere o código HTML completo e perfeito agora:`;
-
-    // Regra 1: Chamada da API do Gemini com temperature: 0.4
     const requestPayload = {
-      contents: [
-        {
-          role: "user",
-          parts: [{ text: prompt }],
-        },
-      ],
+      systemInstruction: {
+        parts: [{ text: systemPrompt }],
+      },
+      contents,
       generationConfig: {
         temperature: 0.4,
       },
@@ -530,7 +558,7 @@ Gere o código HTML completo e perfeito agora:`;
         "x-goog-api-key": apiKey,
       },
       body: JSON.stringify(requestPayload),
-      signal: AbortSignal.timeout(45_000),
+      signal: AbortSignal.timeout(60_000),
     });
 
     // Se o modelo principal falhar temporariamente por sobrecarga, usa fallback oficial permitido (3.5-flash)
@@ -545,7 +573,7 @@ Gere o código HTML completo e perfeito agora:`;
           "x-goog-api-key": apiKey,
         },
         body: JSON.stringify(requestPayload),
-        signal: AbortSignal.timeout(45_000),
+        signal: AbortSignal.timeout(60_000),
       }).catch(() => null);
 
       if (fallbackResponse && fallbackResponse.ok) {
@@ -571,14 +599,43 @@ Gere o código HTML completo e perfeito agora:`;
         fallback: true,
         model,
         html: fallbackHtml,
+        explanation: "Site gerado com o padrão de agência digital de alta conversão.",
+        suggestions: [
+          "Mudar para tema escuro e dourado",
+          "Adicionar tabela de preços dos serviços",
+          "Destacar mais as avaliações do Google",
+        ],
       });
     }
 
     const data = await response.json();
     const candidateText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
 
+    let rawText = candidateText.trim();
+    let explanation = "";
+    let htmlOutput = "";
+    let suggestions: string[] = [];
+
+    // Extrai <<<EXPLANATION>>>, <<<HTML>>>, <<<SUGGESTIONS>>>
+    if (rawText.includes("<<<HTML>>>")) {
+      const explMatch = rawText.match(/<<<EXPLANATION>>>([\s\S]*?)<<<HTML>>>/i);
+      if (explMatch) explanation = explMatch[1].trim();
+
+      const htmlMatch = rawText.match(/<<<HTML>>>([\s\S]*?)(?:<<<END_HTML>>>|$)/i);
+      if (htmlMatch) htmlOutput = htmlMatch[1].trim();
+
+      const suggMatch = rawText.match(/<<<SUGGESTIONS>>>([\s\S]*?)(?:<<<END_SUGGESTIONS>>>|$)/i);
+      if (suggMatch) {
+        try {
+          const parsedSugg = JSON.parse(suggMatch[1].trim());
+          if (Array.isArray(parsedSugg)) suggestions = parsedSugg;
+        } catch (_) {}
+      }
+    } else {
+      htmlOutput = rawText;
+    }
+
     // Limpa blocos de markdown e espaços extras
-    let htmlOutput = candidateText.trim();
     if (htmlOutput.startsWith("```")) {
       htmlOutput = htmlOutput.replace(/^```(?:html)?\s*/i, "").replace(/\s*```$/, "").trim();
     }
@@ -598,10 +655,26 @@ Gere o código HTML completo e perfeito agora:`;
       });
     }
 
+    if (suggestions.length === 0) {
+      suggestions = [
+        "Mudar cores para tema escuro e dourado",
+        "Adicionar tabela de preços dos serviços",
+        "Destacar mais a localização no Google Maps",
+      ];
+    }
+
+    if (!explanation) {
+      explanation = isRefinement
+        ? "Apliquei as alterações solicitadas no código do seu site."
+        : `Criei o site oficial de alta conversão para ${name} com base nos dados do Google Meu Negócio.`;
+    }
+
     return jsonResponse({
       success: true,
       model,
       html: htmlOutput,
+      explanation,
+      suggestions,
     });
   } catch (error) {
     console.error("[gerar-site-gemini] Erro geral:", error);
